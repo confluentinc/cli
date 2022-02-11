@@ -4,14 +4,14 @@ import (
 	"context"
 	"net/http"
 
-	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 func OrgApiContext(authToken string) context.Context {
-	auth := context.WithValue(context.Background(), org.ContextAccessToken, authToken)
+	auth := context.WithValue(context.Background(), orgv2.ContextAccessToken, authToken)
 	return auth
 }
 
-func ListEnvironments(client *org.APIClient, authToken string) (org.OrgV2EnvironmentList, *http.Response, error) {
+func ListEnvironments(client *orgv2.APIClient, authToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
 	return client.EnvironmentsOrgV2Api.ListOrgV2Environments(OrgApiContext(authToken)).Execute()
 }

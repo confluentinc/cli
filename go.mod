@@ -8,16 +8,16 @@ require (
 	github.com/brianstrauch/cobra-shell v0.2.2
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/billing v0.753.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.1054.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0
 	github.com/confluentinc/cc-structs/kafka/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.945.0
-	github.com/confluentinc/cc-structs/kafka/org v0.945.0
+	github.com/confluentinc/cc-structs/kafka/org v0.1077.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.753.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1006.0
 	github.com/confluentinc/cc-structs/kafka/util v0.753.0
 	github.com/confluentinc/cc-structs/operator v0.911.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.92
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.98
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20210804214833-917e401d6677
 	github.com/confluentinc/go-editor v0.4.0
@@ -68,12 +68,12 @@ require (
 	github.com/travisjeffery/mocker v1.1.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
+	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	gopkg.in/square/go-jose.v2 v2.5.1
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 )
 
-require github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.3.0
+require github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.5.0
 
 require (
 	4d63.com/gochecknoglobals v0.0.0-20201008074935-acfc0b28355a // indirect
@@ -134,7 +134,11 @@ require (
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.833.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/org v0.4.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2 v0.0.0-20220203200354-242cbda1fd68 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.5.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.3.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 // indirect
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.299.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20180912191759-fb17e76fc076 // indirect
@@ -316,11 +320,11 @@ require (
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.4.2 // indirect
-	golang.org/x/net v0.0.0-20210410081132-afb366fc7cd1 // indirect
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
-	golang.org/x/text v0.3.6 // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	golang.org/x/tools v0.1.3 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
@@ -330,7 +334,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20210617175327-b9e0b3197ced // indirect
 	google.golang.org/grpc v1.38.0 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.62.0 // indirect

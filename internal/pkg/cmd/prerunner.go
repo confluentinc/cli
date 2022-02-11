@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -69,8 +69,8 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
-	CmkClient         *cmk.APIClient
-	OrgClient         *org.APIClient
+	CmkClient         *cmkv2.APIClient
+	OrgClient         *orgv2.APIClient
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -79,12 +79,12 @@ type AuthenticatedCLICommand struct {
 }
 
 func (c *AuthenticatedCLICommand) CmkApiContext() context.Context {
-	auth := context.WithValue(context.Background(), cmk.ContextAccessToken, c.AuthToken())
+	auth := context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.AuthToken())
 	return auth
 }
 
 func (c *AuthenticatedCLICommand) OrgApiContext() context.Context {
-	auth := context.WithValue(context.Background(), org.ContextAccessToken, c.AuthToken())
+	auth := context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken())
 	return auth
 }
 
@@ -511,42 +511,42 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 	}), nil
 }
 
-func (r *PreRun) createCmkClient(ctx *DynamicContext, ver *version.Version) *cmk.APIClient {
+func (r *PreRun) createCmkClient(ctx *DynamicContext, ver *version.Version) *cmkv2.APIClient {
 	var baseURL string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
 	cmkServer := baseURL[:8] + "api." + baseURL[8:]
-	server := cmk.ServerConfigurations{
+	server := cmkv2.ServerConfigurations{
 		{URL: cmkServer, Description: "Confluent Cloud"},
 	}
-	cfg := &cmk.Configuration{
+	cfg := &cmkv2.Configuration{
 		DefaultHeader:    make(map[string]string),
 		UserAgent:        "OpenAPI-Generator/1.0.0/go",
 		Debug:            false,
 		Servers:          server,
-		OperationServers: map[string]cmk.ServerConfigurations{},
+		OperationServers: map[string]cmkv2.ServerConfigurations{},
 	}
-	return cmk.NewAPIClient(cfg)
+	return cmkv2.NewAPIClient(cfg)
 }
 
-func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *org.APIClient {
+func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *orgv2.APIClient {
 	var baseURL string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
 	orgServer := baseURL[:8] + "api." + baseURL[8:]
-	server := org.ServerConfigurations{
+	server := orgv2.ServerConfigurations{
 		{URL: orgServer, Description: "Confluent Cloud"},
 	}
-	cfg := &org.Configuration{
+	cfg := &orgv2.Configuration{
 		DefaultHeader:    make(map[string]string),
 		UserAgent:        "OpenAPI-Generator/1.0.0/go",
 		Debug:            false,
 		Servers:          server,
-		OperationServers: map[string]org.ServerConfigurations{},
+		OperationServers: map[string]orgv2.ServerConfigurations{},
 	}
-	return org.NewAPIClient(cfg)
+	return orgv2.NewAPIClient(cfg)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.

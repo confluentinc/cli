@@ -6,7 +6,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,7 +19,7 @@ import (
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloud.Client
-	CmkClient         *cmk.APIClient
+	CmkClient         *cmkv2.APIClient
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
@@ -29,7 +29,7 @@ type Commander struct {
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmk.APIClient, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmkv2.APIClient, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,

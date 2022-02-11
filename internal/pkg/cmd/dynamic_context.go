@@ -7,7 +7,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -21,11 +21,11 @@ type DynamicContext struct {
 	*v1.Context
 	resolver  FlagResolver
 	client    *ccloud.Client
-	cmkClient *cmk.APIClient
+	cmkClient *cmkv2.APIClient
 	orgClient *org.APIClient
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmk.APIClient, orgClient *org.APIClient) *DynamicContext {
+func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *org.APIClient) *DynamicContext {
 	return &DynamicContext{
 		Context:   context,
 		resolver:  resolver,
