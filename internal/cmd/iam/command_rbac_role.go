@@ -18,7 +18,7 @@ import (
 
 var (
 	roleFields = []string{"Name", "AccessPolicy"}
-	roleLabels = []string{"Name", "AccessPolicy"}
+	roleLabels = []string{"Name", "Access Policy"}
 )
 
 type roleCommand struct {

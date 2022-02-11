@@ -21,6 +21,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+var (
+	listFields       = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	humanLabels      = []string{"Principal", "Permission", "Operation", "Resource Type", "Resource Name", "Pattern Type"}
+	structuredLabels = []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+)
+
 type AclRequestDataWithError struct {
 	ResourceType kafkarestv3.AclResourceType
 	ResourceName string
@@ -32,13 +38,13 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, aclListFields, aclListStructuredRenames []string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, listFields, humanLabels, structuredLabels []string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		pcmd.AddOutputFlag(cmd)
 	}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -82,9 +88,7 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -359,9 +363,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -403,9 +405,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
