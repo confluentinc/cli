@@ -189,19 +189,19 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 
 	var decrypted []byte
 
-	if algo == AES_CBC {
+	if algo == AES_CBC { // Backwards compatability
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
 	} else if algo == AES_GCM {
-		aesgcm, err := cipher.NewGCM(block)
+		aesGcm, err := cipher.NewGCM(block)
 		if err != nil {
-			panic(err.Error())
+			return []byte{}, err
 		}
 
-		decrypted, err = aesgcm.Open(nil, iv, crypt, nil)
+		decrypted, err = aesGcm.Open(nil, iv, crypt, nil)
 		if err != nil {
-			panic(err.Error())
+			return []byte{}, err
 		}
 	}
 
