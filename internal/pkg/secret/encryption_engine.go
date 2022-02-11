@@ -123,7 +123,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		return "", "", err
 	}
 
-	ivStr, err = c.generateRandomString(12)
+	ivStr, err = c.generateRandomString(MetadataIVLength)
 	if err != nil {
 		return "", "", err
 	}

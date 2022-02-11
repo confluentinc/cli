@@ -20,6 +20,7 @@ const (
 	MetadataKeyDefaultLengthBytes = 32
 	MetadataKeyDefaultIterations  = 10000
 	MetadataPrefix                = "_metadata"
+	MetadataIVLength              = 12 // Recommended for AES GCM https://confluentinc.atlassian.net/l/c/B1N81ozp
 )
 
 const (
