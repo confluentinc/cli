@@ -133,9 +133,9 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 		return "", "", err
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
+	aesGcm, err := cipher.NewGCM(block)
 	if err != nil {
-		panic(err.Error())
+		return "", "", err
 	}
 
 	content := []byte(plainText)
@@ -193,7 +193,6 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
-
 	} else if algo == "AES/GCM/PKCS5Padding" {
 		aesgcm, err := cipher.NewGCM(block)
 		if err != nil {
