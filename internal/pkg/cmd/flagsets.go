@@ -13,3 +13,23 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 	set.SortFlags = false
 	return set
 }
+
+func OnPremAuthenticationSet() *pflag.FlagSet {
+	set := pflag.NewFlagSet("onprem-authentication", pflag.ExitOnError)
+	set.String("bootstrap", "", `List of broker hosts, formatted as "host" or "host:port". Separate hosts with comma.`)
+	set.String("username", "", "SASL_SSL username for use with PLAIN mechanism.")
+	set.String("password", "", "SASL_SSL password for use with PLAIN mechanism.")
+	set.String("ca-location", "", "File or directory path to CA certificate(s) for SSL verifying the broker's key.")
+	set.String("cert-location", "", "Path to client's public key (PEM) used for SSL authentication.")
+	set.String("key-location", "", "Path to client's private key (PEM) used for SSL authentication.")
+	set.String("key-password", "", "Private key passphrase for SSL authentication.")
+	set.SortFlags = false
+	return set
+}
+
+func CombineFlagSet(flagSet *pflag.FlagSet, toAdd ...*pflag.FlagSet) *pflag.FlagSet {
+	for _, set := range toAdd {
+		flagSet.AddFlagSet(set)
+	}
+	return flagSet
+}

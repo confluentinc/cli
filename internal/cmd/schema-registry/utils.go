@@ -35,6 +35,14 @@ func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *
 	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
 }
 
+func GetAPIClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
+}
+
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
 	var entries [][]string

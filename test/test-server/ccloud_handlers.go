@@ -26,6 +26,8 @@ import (
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
@@ -72,14 +74,14 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 		}
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		b, err := utilv1.MarshalJSONToBytes(&orgv1.GetUserReply{
+		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
 			User: &orgv1.User{
 				Id:         23,
 				Email:      "cody@confluent.io",
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts:     environments,
+			Accounts: environments,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -103,6 +105,15 @@ func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *h
 		switch auth.Email {
 		case "incorrect@user.com":
 			w.WriteHeader(http.StatusForbidden)
+		case "suspended@user.com":
+			w.WriteHeader(http.StatusForbidden)
+			e := &struct {
+				Error corev1.Error `json:"error"`
+			}{
+				Error: corev1.Error{Message: errors.SuspendedOrganizationSuggestions},
+			}
+			err := json.NewEncoder(w).Encode(e)
+			req.NoError(err)
 		case "expired@user.com":
 			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
 		case "malformed@user.com":
@@ -380,6 +391,14 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
+
+			if req.ApiKey.UserResourceId == "sa-123456" {
+				b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{Error: &corev1.Error{Message: "service account is not valid"}})
+				require.NoError(t, err)
+				_, err = io.WriteString(w, string(b))
+				require.NoError(t, err)
+			}
+
 			apiKey := req.ApiKey
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)

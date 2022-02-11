@@ -724,7 +724,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(prerunner, nil, mdsClientManager, cliMock.NewDummyAnalyticsMock(), mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
+	loginCmd := New(prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
 	loginCmd.loginOrganizationManager = mockLoginOrganizationManager
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -921,13 +921,13 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := New(prerunner, ccloudClientFactory, mdsClientManager, cliMock.NewDummyAnalyticsMock(), netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	loginCmd.loginOrganizationManager = loginOrganizationManager
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v1.Config) {
-	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), cliMock.NewDummyAnalyticsMock(), netrcHandler)
+	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

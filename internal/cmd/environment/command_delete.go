@@ -6,7 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -30,8 +29,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err := c.Client.Account.Delete(context.Background(), account); err != nil {
 		return err
 	}
-
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
 
 	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
 	return nil

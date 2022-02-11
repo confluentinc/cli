@@ -61,7 +61,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingApi.ClustersClusterIdLinksGet(kafkaREST.Context, lkc)
+	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinks(kafkaREST.Context, lkc)
 	if err != nil {
 		return handleOpenApiError(httpResp, err, kafkaREST)
 	}
@@ -73,8 +73,8 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		for _, link := range listLinksRespDataList.Data {
-			if len(link.TopicNames) > 0 {
-				for _, topic := range link.TopicNames {
+			if len(link.TopicsNames) > 0 {
+				for _, topic := range link.TopicsNames {
 					outputWriter.AddElement(
 						&LinkTopicWriter{
 							LinkName:        link.LinkName,

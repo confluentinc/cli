@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	segment "github.com/segmentio/analytics-go"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -12,8 +11,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -27,10 +24,8 @@ const (
 
 type ServiceAccountTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	userMock        *ccsdkmock.User
-	analyticsOutput []segment.Message
-	analyticsClient analytics.Client
+	conf     *v1.Config
+	userMock *ccsdkmock.User
 }
 
 func (suite *ServiceAccountTestSuite) SetupTest() {
@@ -49,8 +44,6 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 			return nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCommand {
@@ -63,22 +56,20 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCom
 
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"create", serviceName, "--description", serviceDescription}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"create", serviceName, "--description", serviceDescription})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.CreateServiceAccountCalled())
-	//test_utils.CheckTrackedResourceIDInt32(suite.analyticsOutput[0], serviceAccountId, req)
 }
 
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	args := []string{"delete", serviceAccountId}
-	err := utils.ExecuteCommandWithAnalytics(cmd.Command, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"delete", serviceAccountId})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.userMock.DeleteServiceAccountCalled())
-	//test_utils.CheckTrackedResourceIDInt32(suite.analyticsOutput[0], serviceAccountId, req)
 }
 
 func TestServiceAccountTestSuite(t *testing.T) {

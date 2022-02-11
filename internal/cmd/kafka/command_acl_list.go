@@ -61,7 +61,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		aclGetResp, httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsGet(kafkaREST.Context, lkc, &opts)
+		aclGetResp, httpResp, err := kafkaREST.Client.ACLV3Api.GetKafkaAcls(kafkaREST.Context, lkc, &opts)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred

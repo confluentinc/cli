@@ -14,7 +14,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -194,11 +193,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.KafkaClusterTime)
+		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, *kafkaCluster.Id)
-	return c.outputKafkaClusterDescription(cmd, &kafkaCluster)
+	return outputKafkaClusterDescription(cmd, &kafkaCluster)
 }
 
 func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
@@ -350,4 +348,15 @@ func setClusterConfig(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 		}
 	}
 	return nil
+}
+
+func getKafkaProvisionEstimate(sku productv1.Sku) string {
+	fmtEstimate := "It may take up to %s for the Kafka cluster to be ready."
+
+	switch sku {
+	case productv1.Sku_DEDICATED:
+		return fmt.Sprintf(fmtEstimate, "1 hour") + " The organization admin will receive an email once the dedicated cluster is provisioned."
+	default:
+		return fmt.Sprintf(fmtEstimate, "5 minutes")
+	}
 }

@@ -7,9 +7,9 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -22,23 +22,23 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	analyticsClient         analytics.Client
-	ccloudClientFactory     pauth.CCloudClientFactory
-	mdsClientManager        pauth.MDSClientManager
-	netrcHandler            netrc.NetrcHandler
-	loginCredentialsManager pauth.LoginCredentialsManager
+	ccloudClientFactory      pauth.CCloudClientFactory
+	mdsClientManager         pauth.MDSClientManager
+	netrcHandler             netrc.NetrcHandler
+	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
-	authTokenHandler        pauth.AuthTokenHandler
-	isTest                  bool
+	authTokenHandler         pauth.AuthTokenHandler
+	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
 			fmt.Sprintf("You can log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			"Confluent Platform configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html." +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args: cobra.NoArgs,
@@ -52,15 +52,14 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
 
 	c := &Command{
-		CLICommand:              pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		analyticsClient:         analyticsClient,
-		mdsClientManager:        mdsClientManager,
-		ccloudClientFactory:     ccloudClientFactory,
-		netrcHandler:            netrcHandler,
-		loginCredentialsManager: loginCredentialsManager,
+		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		mdsClientManager:         mdsClientManager,
+		ccloudClientFactory:      ccloudClientFactory,
+		netrcHandler:             netrcHandler,
+		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
-		authTokenHandler:        authTokenHandler,
-		isTest:                  isTest,
+		authTokenHandler:         authTokenHandler,
+		isTest:                   isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
@@ -108,6 +107,10 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
+		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
+		}
+
 		return err
 	}
 

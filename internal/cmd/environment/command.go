@@ -3,16 +3,14 @@ package environment
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	analyticsClient analytics.Client
 }
 
-func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "environment",
 		Aliases:     []string{"env"},
@@ -20,10 +18,7 @@ func New(prerunner pcmd.PreRunner, analyticsClient analytics.Client) *cobra.Comm
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		analyticsClient:               analyticsClient,
-	}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())

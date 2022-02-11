@@ -14,8 +14,8 @@ func NewRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Long:  "Manage Role-Based Access Control (RBAC) permissions.",
 	}
 
-	cmd.AddCommand(NewRoleCommand(cfg, prerunner))
-	cmd.AddCommand(NewRoleBindingCommand(cfg, prerunner))
+	cmd.AddCommand(newRoleCommand(cfg, prerunner))
+	cmd.AddCommand(newRoleBindingCommand(cfg, prerunner))
 
 	return cmd
 }

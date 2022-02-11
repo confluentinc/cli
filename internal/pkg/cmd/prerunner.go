@@ -17,7 +17,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -40,13 +39,10 @@ type PreRunner interface {
 	AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
 
-const DoNotTrack = "do-not-track-analytics"
-
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *v1.Config
 	UpdateClient            update.Client
-	Analytics               analytics.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
 	CCloudClientFactory     pauth.CCloudClientFactory
@@ -194,19 +190,6 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
-// CanCompleteCommand returns whether or not the specified command can be completed.
-// If the prerunner of the command returns no error, true is returned,
-// and if an error is encountered, false is returned.
-func CanCompleteCommand(cmd *cobra.Command) bool {
-	if cmd.Annotations == nil {
-		cmd.Annotations = make(map[string]string)
-	}
-	cmd.Annotations[DoNotTrack] = ""
-	err := cmd.PersistentPreRunE(cmd, []string{})
-	delete(cmd.Annotations, DoNotTrack)
-	return err == nil
-}
-
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
@@ -215,10 +198,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 				return err
 			}
-		}
-
-		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
-			r.Analytics.TrackCommand(cmd, args)
 		}
 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver); err != nil {
@@ -241,9 +220,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 					return err
 				}
 				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
-				if err := r.Analytics.SessionTimedOut(); err != nil {
-					log.CliLogger.Debug(err.Error())
-				}
 			}
 		}
 
@@ -399,7 +375,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
-		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
 		}
@@ -413,7 +389,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
 			if err != nil {
 				return nil, err
 			}
@@ -446,36 +422,36 @@ func (r *PreRun) setOrgClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
+func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", nil
+		return "", "", nil
 	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if clusterConfig.RestEndpoint != "" {
-		return clusterConfig.RestEndpoint, nil
+		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
 	}
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
 	client := NewContextClient(ctx)
 	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
 	// no need to update the config if it's still empty
 	if kafkaCluster.RestEndpoint == "" {
-		return "", nil
+		return "", clusterConfig.ID, nil
 	}
 	// update config to have updated cluster if rest endpoint is no longer ""
 	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
 	err = ctx.Save() //should we fail on this error or log and continue?
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
-	return kafkaCluster.RestEndpoint, nil
+	return kafkaCluster.RestEndpoint, clusterConfig.ID, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
@@ -952,6 +928,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		//nolint
 		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }

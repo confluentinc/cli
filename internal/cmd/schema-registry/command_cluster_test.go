@@ -6,19 +6,15 @@ import (
 	"testing"
 	"time"
 
-	segment "github.com/segmentio/analytics-go"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/cmd/utils"
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -29,14 +25,12 @@ const (
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	kafkaCluster    *schedv1.KafkaCluster
-	srCluster       *schedv1.SchemaRegistryCluster
-	srMock          *ccsdkmock.SchemaRegistry
-	srClientMock    *srsdk.APIClient
-	metricsApi      *ccsdkmock.MetricsApi
-	analyticsClient analytics.Client
-	analyticsOutput []segment.Message
+	conf         *v1.Config
+	kafkaCluster *schedv1.KafkaCluster
+	srCluster    *schedv1.SchemaRegistryCluster
+	srMock       *ccsdkmock.SchemaRegistry
+	srClientMock *srsdk.APIClient
+	metricsApi   *ccsdkmock.MetricsApi
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -92,8 +86,6 @@ func (suite *ClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.analyticsOutput = make([]segment.Message, 0)
-	suite.analyticsClient = utils.NewTestAnalyticsClient(suite.conf, &suite.analyticsOutput)
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
@@ -101,26 +93,21 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 		MetricsApi:     suite.metricsApi,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock, suite.analyticsClient)
-	return cmd
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	args := []string{"cluster", "enable", "--cloud", "aws", "--geo", "us"}
-
-	err := utils.ExecuteCommandWithAnalytics(cmd, args, suite.analyticsClient)
+	cmd.SetArgs([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"})
+	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
-	// TODO add back when analytics are on
-	// test_utils.CheckTrackedResourceIDString(suite.analyticsOutput[0], srClusterID, req)
 }
 
 func (suite *ClusterTestSuite) TestDescribeSR() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"cluster", "describe"})
-
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

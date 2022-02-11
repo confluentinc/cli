@@ -16,10 +16,15 @@ import (
 var (
 	basicDescribeFields  = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	describeHumanRenames = map[string]string{
-		"NetworkIngress":  "Ingress",
-		"NetworkEgress":   "Egress",
-		"ServiceProvider": "Provider",
-		"EncryptionKeyId": "Encryption Key ID"}
+		"ClusterSize":        "Cluster Size",
+		"EncryptionKeyId":    "Encryption Key ID",
+		"Id":                 "ID",
+		"NetworkEgress":      "Egress",
+		"NetworkIngress":     "Ingress",
+		"PendingClusterSize": "Pending Cluster Size",
+		"RestEndpoint":       "REST Endpoint",
+		"ServiceProvider":    "Provider",
+	}
 	describeStructuredRenames = map[string]string{
 		"Id":                 "id",
 		"Name":               "name",
@@ -58,28 +63,8 @@ type describeStruct struct {
 	Availability       string
 	Status             string
 	Endpoint           string
-	ApiEndpoint        string
 	EncryptionKeyId    string
 	RestEndpoint       string
-}
-
-type describeStructWithKAPI struct {
-	Id                 string
-	Name               string
-	Type               string
-	ClusterSize        int32
-	PendingClusterSize int32
-	NetworkIngress     int32
-	NetworkEgress      int32
-	Storage            string
-	ServiceProvider    string
-	Region             string
-	Availability       string
-	Status             string
-	Endpoint           string
-	EncryptionKeyId    string
-	RestEndpoint       string
-	KAPI               string
 }
 
 func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
@@ -109,7 +94,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, _, err := cmk.DescribeKafkaCluster(c.CmkClient, lkc, c.EnvironmentId(), c.AuthToken())
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0])
+		return errors.CatchKafkaNotFoundError(err, lkc)
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster)

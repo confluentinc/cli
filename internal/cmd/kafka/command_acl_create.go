@@ -78,7 +78,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		kafkaRestExists := true
 		for i, binding := range bindings {
 			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
-			httpResp, err := kafkaREST.Client.ACLApi.ClustersClusterIdAclsPost(kafkaREST.Context, lkc, &opts)
+			httpResp, err := kafkaREST.Client.ACLV3Api.CreateKafkaAcls(kafkaREST.Context, lkc, &opts)
 
 			if err != nil && httpResp == nil {
 				if i == 0 {

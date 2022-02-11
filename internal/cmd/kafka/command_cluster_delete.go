@@ -3,7 +3,6 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -40,6 +39,5 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, args[0])
 	return nil
 }

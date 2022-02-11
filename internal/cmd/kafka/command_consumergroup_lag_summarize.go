@@ -65,7 +65,7 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupApi.ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(kafkaREST.Context, lkc, consumerGroupId)
+	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
 		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}

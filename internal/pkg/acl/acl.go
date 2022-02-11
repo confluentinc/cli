@@ -283,8 +283,8 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsPostOpts {
-	var opts kafkarestv3.ClustersClusterIdAclsPostOpts
+func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.CreateKafkaAclsOpts {
+	var opts kafkarestv3.CreateKafkaAclsOpts
 	requestData := kafkarestv3.CreateAclRequestData{
 		ResourceType: acl.ResourceType,
 		ResourceName: acl.ResourceName,
@@ -300,8 +300,8 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Clus
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsGetOpts {
-	opts := kafkarestv3.ClustersClusterIdAclsGetOpts{}
+func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.GetKafkaAclsOpts {
+	opts := kafkarestv3.GetKafkaAclsOpts{}
 	if acl.ResourceType != "" {
 		opts.ResourceType = optional.NewInterface(acl.ResourceType)
 	}
@@ -326,8 +326,8 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Cluste
 	return &opts
 }
 
-func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *kafkarestv3.ClustersClusterIdAclsDeleteOpts {
-	opts := kafkarestv3.ClustersClusterIdAclsDeleteOpts{
+func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *kafkarestv3.DeleteKafkaAclsOpts {
+	opts := kafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
 		PatternType:  optional.NewInterface(acl.PatternType),
@@ -440,21 +440,32 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 	return outputWriter.Out()
 }
 
-func getPrefixAndResourceIdFromPrincipal(principal string, idMap map[int32]string) (string, string, error) {
-	var prefix, resourceId string
-	if principal != "" {
-		splitPrincipal := strings.Split(principal, ":")
-		if len(splitPrincipal) < 2 {
-			return prefix, resourceId, errors.Errorf("Unrecognized principal format %s", principal)
-		}
-		prefix = splitPrincipal[0]
-		userId := splitPrincipal[1]
-		idp, _ := strconv.ParseInt(userId, 10, 32)
-		resourceId, ok := idMap[int32(idp)]
-		if !ok {
-			return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-		}
-		return prefix, resourceId, nil
+func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId map[int32]string) (string, string, error) {
+	if principal == "" {
+		return "", "", nil
 	}
-	return "", "", nil
+
+	x := strings.Split(principal, ":")
+	if len(x) < 2 {
+		return "", "", errors.Errorf("unrecognized principal format %s", principal)
+	}
+	prefix := x[0]
+	suffix := x[1]
+
+	if strings.HasPrefix(suffix, "sa-") {
+		return prefix, suffix, nil
+	}
+
+	// The principal may contain a numeric ID. Try to map it to a resource ID.
+	id, err := strconv.ParseInt(suffix, 10, 32)
+	if err != nil {
+		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
+	}
+
+	resourceId, ok := numericIdToResourceId[int32(id)]
+	if !ok {
+		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
+	}
+
+	return prefix, resourceId, nil
 }
