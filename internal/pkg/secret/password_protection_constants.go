@@ -53,3 +53,8 @@ const (
 	Space                 = " "
 	KeySeparator          = "/"
 )
+
+const (
+	AES_CBC = "AES/CBC/PKCS5Padding"
+	AES_GCM = "AES/GCM/PKCS5Padding"
+)

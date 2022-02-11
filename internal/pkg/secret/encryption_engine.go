@@ -141,7 +141,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	content := []byte(plainText)
 	content = c.pKCS5Padding(content, block.BlockSize())
 
-	ciphertext := aesgcm.Seal(nil, ivBytes, content, nil)
+	ciphertext := aesGcm.Seal(nil, ivBytes, content, nil)
 	result := base64.StdEncoding.EncodeToString(ciphertext)
 	return result, ivStr, nil
 }
@@ -189,11 +189,11 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 
 	var decrypted []byte
 
-	if algo == "AES/CBC/PKCS5Padding" {
+	if algo == AES_CBC {
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
-	} else if algo == "AES/GCM/PKCS5Padding" {
+	} else if algo == AES_GCM {
 		aesgcm, err := cipher.NewGCM(block)
 		if err != nil {
 			panic(err.Error())
