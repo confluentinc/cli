@@ -406,7 +406,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 					} else {
 						validateTextFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
 					}
-					validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+					validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 				}
 			}
 
@@ -784,7 +784,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
 				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 
 			// Clean Up
@@ -884,7 +884,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
 				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 			// Clean Up
 			os.Unsetenv(ConfluentKeyEnvVar)
@@ -1373,6 +1373,12 @@ func validateTextFileContents(path string, expectedFileContent string, req *requ
 	readContent, err := ioutil.ReadFile(path)
 	req.NoError(err)
 	req.Equal(expectedFileContent, string(readContent))
+}
+
+func validateTextFileContains(path string, expectedFileContent string, req *require.Assertions) {
+	readContent, err := ioutil.ReadFile(path)
+	req.NoError(err)
+	req.Contains(string(readContent), expectedFileContent)
 }
 
 func validateJSONFileContents(path string, expectedFileContent string, req *require.Assertions) {
