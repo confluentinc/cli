@@ -21,14 +21,9 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			RootCAs:    caCertPool,
-		},
-		ForceAttemptHTTP2: true,
-	}
-	return &http.Client{Transport: transport}, nil
+	client := utils.DefaultClient()
+	client.TLSClientConfig.RootCAs = caCertPool
+	return client, nil
 }
 
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
