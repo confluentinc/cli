@@ -199,7 +199,7 @@ func RequireListRequiredFlagsFirst() CommandRule {
 		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 			if pcmd.IsFlagRequired(flag) {
 				if hasVisitedAnOptionalFlag {
-					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `--%s` must be listed before non-required flags", cmd.CommandPath(), flag.Name))
+					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `--%s` must be listed before optional flags", cmd.CommandPath(), flag.Name))
 				}
 			} else {
 				hasVisitedAnOptionalFlag = true
