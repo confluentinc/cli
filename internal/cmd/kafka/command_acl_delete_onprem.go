@@ -22,6 +22,7 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().AddFlagSet(aclutil.AclFlags())
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
