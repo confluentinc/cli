@@ -21,46 +21,19 @@ type ACLConfiguration struct {
 	errors error
 }
 
-// aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
-func addACLFlags() *pflag.FlagSet {
-	// An error is only returned if the flag name is not present.
-	flgSet := aclFlags()
-	_ = cobra.MarkFlagRequired(flgSet, "principal")
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
-	return flgSet
-}
-
-func deleteACLFlags() *pflag.FlagSet {
-	flgSet := aclFlags()
-	// MDS delete apis allow principal/operation/host to be skipped, but we deliberately
-	// want cli delete to only work on 1 acl at a time.
-	_ = cobra.MarkFlagRequired(flgSet, "principal")
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	_ = cobra.MarkFlagRequired(flgSet, "host")
-	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
-	return flgSet
-}
-
-func listACLFlags() *pflag.FlagSet {
-	flgSet := aclFlags()
-	_ = cobra.MarkFlagRequired(flgSet, "kafka-cluster-id")
-	return flgSet
-}
-
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
-	flgSet.Bool("allow", false, "ACL permission to allow access.")
-	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
 			mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE, mds.ACLOPERATION_ALTER,
 			mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_CLUSTER_ACTION,
 			mds.ACLOPERATION_DESCRIBE_CONFIGS, mds.ACLOPERATION_ALTER_CONFIGS,
 			mds.ACLOPERATION_IDEMPOTENT_WRITE)))
+	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
+	flgSet.Bool("allow", false, "ACL permission to allow access.")
+	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
 	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
 access to the provided operations on the Kafka cluster itself.`)
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")

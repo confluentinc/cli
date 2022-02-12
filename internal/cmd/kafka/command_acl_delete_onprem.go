@@ -23,9 +23,12 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("principal")
+	_ = cmd.MarkFlagRequired("operation")
+	_ = cmd.MarkFlagRequired("host")
 
 	return cmd
 }

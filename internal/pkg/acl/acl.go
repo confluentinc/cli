@@ -111,21 +111,6 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 	return outputWriter.Out()
 }
 
-func CreateACLFlags() *pflag.FlagSet {
-	flgSet := AclFlags()
-	_ = cobra.MarkFlagRequired(flgSet, "principal")
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	return flgSet
-}
-
-func DeleteACLFlags() *pflag.FlagSet {
-	flgSet := AclFlags()
-	_ = cobra.MarkFlagRequired(flgSet, "principal")
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	_ = cobra.MarkFlagRequired(flgSet, "host")
-	return flgSet
-}
-
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.Bool("allow", false, "ACL permission to allow access.")

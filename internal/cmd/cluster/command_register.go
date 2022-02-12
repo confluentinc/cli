@@ -39,13 +39,13 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.RunE = pcmd.NewCLIRunE(c.register)
 
+	c.Flags().String("hosts", "", "A comma separated list of hosts.")
+	c.Flags().String("protocol", "", "Security protocol.")
 	c.Flags().String("cluster-name", "", "Cluster name.")
 	c.Flags().String("kafka-cluster-id", "", "Kafka cluster ID.")
 	c.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID.")
 	c.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID.")
 	c.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID.")
-	c.Flags().String("hosts", "", "A comma separated list of hosts.")
-	c.Flags().String("protocol", "", "Security protocol.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = c.MarkFlagRequired("cluster-name")

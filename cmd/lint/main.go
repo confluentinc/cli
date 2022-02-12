@@ -29,6 +29,8 @@ var commandRules = []linter.CommandRule{
 	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns), linter.ExcludeCommand("completion")),
 	linter.RequireStartWithCapital("Long"),
 
+	linter.RequireListRequiredFlagsFirst(),
+
 	// Soft Requirements
 	linter.RequireLengthBetween("Short", 10, 60),
 }
