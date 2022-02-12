@@ -163,7 +163,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
 		if isCloud && c.ccloudRbacDataplaneEnabled {
-			parsedResourcePattern, err := c.parseAndValidateResourcePatternV2(resource, prefix)
+			parsedResourcePattern, err := parseAndValidateResourcePatternV2(resource, prefix)
 			if err != nil {
 				return nil, err
 			}
@@ -185,7 +185,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				ResourcePatterns: []mdsv2alpha1.ResourcePattern{parsedResourcePattern},
 			}
 		} else if !isCloud {
-			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+			parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
 			}
@@ -328,7 +328,7 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	return scopeV2, nil
 }
 
-func (c *roleBindingCommand) parseAndValidateResourcePatternV2(typename string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
+func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
 	var result mdsv2alpha1.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
@@ -336,7 +336,7 @@ func (c *roleBindingCommand) parseAndValidateResourcePatternV2(typename string, 
 		result.PatternType = "LITERAL"
 	}
 
-	parts := strings.Split(typename, ":")
+	parts := strings.SplitN(resource, ":", 2)
 	if len(parts) != 2 {
 		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 	}
@@ -413,7 +413,7 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	return nil
 }
 
-func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, prefix bool) (mds.ResourcePattern, error) {
+func parseAndValidateResourcePattern(resource string, prefix bool) (mds.ResourcePattern, error) {
 	var result mds.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
@@ -421,7 +421,7 @@ func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, pr
 		result.PatternType = "LITERAL"
 	}
 
-	parts := strings.Split(typename, ":")
+	parts := strings.SplitN(resource, ":", 2)
 	if len(parts) != 2 {
 		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 	}
