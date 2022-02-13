@@ -51,6 +51,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
+	flgSet.SortFlags = false
 
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
 	_ = cobra.MarkFlagRequired(flgSet, "service-account")

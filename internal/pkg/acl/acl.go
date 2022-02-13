@@ -131,6 +131,7 @@ access to the provided operations on the Kafka cluster itself.`)
 operations on the topics that start with that prefix, depending on whether
 the --prefix option was also passed.`)
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
+	flgSet.SortFlags = false
 	return flgSet
 }
 
