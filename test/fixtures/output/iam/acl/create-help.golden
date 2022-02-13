@@ -18,11 +18,11 @@ Create an ACL that assigns a group READ access to all topics that use the specif
 
 Flags:
       --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
+      --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
+      --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --host string               Set host for access. Only IP addresses are supported. (default "*")
       --allow                     ACL permission to allow access.
       --deny                      ACL permission to restrict access to resource.
-      --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
-      --host string               Set host for access. Only IP addresses are supported. (default "*")
-      --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --cluster-scope             Set the cluster resource. With this option the ACL grants
                                   access to the provided operations on the Kafka cluster itself.
       --consumer-group string     Set the Consumer Group resource.

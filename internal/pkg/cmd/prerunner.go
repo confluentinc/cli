@@ -217,11 +217,15 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 func LabelRequiredFlags(cmd *cobra.Command) {
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
-		if len(annotations) == 1 && annotations[0] == "true" {
+		if IsFlagRequired(flag) {
 			flag.Usage = "REQUIRED: " + flag.Usage
 		}
 	})
+}
+
+func IsFlagRequired(flag *pflag.Flag) bool {
+	annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
+	return len(annotations) == 1 && annotations[0] == "true"
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
