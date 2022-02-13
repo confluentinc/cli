@@ -289,6 +289,8 @@ func (r *PublicRepo) DownloadChecksums(name, version string) (string, error) {
 		return "", err
 	}
 
+	log.CliLogger.Tracef("Downloaded the following checksums for version %s:\n%s", version, string(body))
+
 	return string(body), nil
 }
 

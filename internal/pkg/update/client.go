@@ -214,6 +214,8 @@ func (c *client) verifyChecksum(newBin, cliName, version string) error {
 		return errors.Wrapf(err, "failed to download checksums file")
 	}
 
+	log.CliLogger.Tracef("Actual hash of new binary: %s", actualHash)
+
 	// Step 3: Check if checksums match
 
 	// Don't filter checksums for the current platform, just
@@ -222,6 +224,8 @@ func (c *client) verifyChecksum(newBin, cliName, version string) error {
 	if !strings.Contains(allChecksumsForVersion, actualHash) {
 		return errors.Errorf("checksum verification failed: new file's checksum is: %s, but not found in the list of valid checksums:\n%s", actualHash, allChecksumsForVersion)
 	}
+
+	log.CliLogger.Tracef("Checksum verification succeeded")
 
 	return nil
 }
