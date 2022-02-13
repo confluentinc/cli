@@ -21,8 +21,9 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
-	client := utils.DefaultClient()
-	client.TLSClientConfig.RootCAs = caCertPool
+	transport := DefaultTransport()
+	transport.TLSClientConfig.RootCAs = caCertPool
+	client := DefaultClientWithTransport(transport)
 	return client, nil
 }
 
@@ -138,15 +139,23 @@ func isEmptyClientCert(cert tls.Certificate) bool {
 	return cert.Certificate == nil && cert.Leaf == nil && cert.OCSPStaple == nil && cert.PrivateKey == nil && cert.SignedCertificateTimestamps == nil && cert.SupportedSignatureAlgorithms == nil
 }
 
-func DefaultClient() *http.Client {
-	transport := &http.Transport{
+func DefaultTransport() *http.Transport {
+	return &http.Transport{
 		TLSClientConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		},
 		ForceAttemptHTTP2: true,
 	}
-	client := &http.Client{
+}
+
+func DefaultClient() *http.Client {
+	return &http.Client{
+		Transport: DefaultTransport(),
+	}
+}
+
+func DefaultClientWithTransport(transport *http.Transport) *http.Client {
+	return &http.Client{
 		Transport: transport,
 	}
-	return client
 }
