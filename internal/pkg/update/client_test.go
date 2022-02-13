@@ -771,7 +771,7 @@ func TestUpdateBinary(t *testing.T) {
 			if tt.client.Out == nil {
 				tt.client.Out = os.Stdout
 			}
-			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path); (err != nil) != tt.wantErr {
+			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path, true); (err != nil) != tt.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

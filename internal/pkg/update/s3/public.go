@@ -276,7 +276,9 @@ func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) 
 }
 
 func (r *PublicRepo) DownloadChecksums(name, version string) (string, error) {
-	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, fmt.Sprintf(r.S3BinPrefixFmt, name), version, fmt.Sprintf("%s_%s_checksums.txt", name, version))
+	cliBinDir := fmt.Sprintf(r.S3BinPrefixFmt, name)
+	checksumFileName := fmt.Sprintf("%s_%s_checksums.txt", name, version)
+	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, cliBinDir, version, checksumFileName)
 	resp, err := r.getHttpResponse(downloadURL)
 	if err != nil {
 		return "", err
