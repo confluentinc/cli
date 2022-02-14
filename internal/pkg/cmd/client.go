@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -20,19 +21,20 @@ func NewContextClient(ctx *DynamicContext) *contextClient {
 	}
 }
 
-func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
-	envId, err := c.context.AuthenticatedEnvId()
-	if err != nil {
-		return nil, err
-	}
+func (c *contextClient) FetchCluster(clusterId string) (*cmkv2.CmkV2Cluster, error) {
+	// envId, err := c.context.AuthenticatedEnvId()
+	// if err != nil {
+	// 	return nil, err
+	// }
 
-	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	cluster, err := c.context.client.Kafka.Describe(context.Background(), req)
+	// req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
+	// cluster, err := c.context.client.Kafka.Describe(context.Background(), req)
+	cluster, _, err := c.context.cmkClient.ClustersCmkV2Api.GetCmkV2Cluster(context.Background(), clusterId).Execute()
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
 	}
 
-	return cluster, nil
+	return &cluster, nil
 }
 
 func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {

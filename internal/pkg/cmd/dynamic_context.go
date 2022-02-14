@@ -8,7 +8,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -22,10 +22,10 @@ type DynamicContext struct {
 	resolver  FlagResolver
 	client    *ccloud.Client
 	cmkClient *cmkv2.APIClient
-	orgClient *org.APIClient
+	orgClient *orgv2.APIClient
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *org.APIClient) *DynamicContext {
+func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *DynamicContext {
 	return &DynamicContext{
 		Context:   context,
 		resolver:  resolver,
@@ -136,14 +136,13 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	return cluster, nil
 }
 
-func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig {
+func KafkaClusterToKafkaClusterConfig(kcc *cmkv2.CmkV2Cluster) *v1.KafkaClusterConfig {
 	clusterConfig := &v1.KafkaClusterConfig{
-		ID:           kcc.Id,
-		Name:         kcc.Name,
-		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
-		APIEndpoint:  kcc.ApiEndpoint,
+		ID:           *kcc.Id,
+		Name:         *kcc.Spec.DisplayName,
+		Bootstrap:    strings.TrimPrefix(*kcc.Spec.KafkaBootstrapEndpoint, "SASL_SSL://"),
 		APIKeys:      make(map[string]*v1.APIKeyPair),
-		RestEndpoint: kcc.RestEndpoint,
+		RestEndpoint: *kcc.Spec.HttpEndpoint,
 	}
 	return clusterConfig
 }

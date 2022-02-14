@@ -21,10 +21,10 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -81,7 +81,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
+			Accounts:     environments,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -470,6 +470,7 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 
 // Handler for: "/api/clusters"
 func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("handling clusters:")
 	write := func(w http.ResponseWriter, resp proto.Message) {
 		type errorer interface {
 			GetError() *corev1.Error
@@ -498,33 +499,48 @@ func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r
 		}
 
 		if r.Method == http.MethodPost {
+			fmt.Println("we create a cluster")
 			c.HandleKafkaClusterCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
-			cluster := schedv1.KafkaCluster{
-				Id:              "lkc-123",
-				Name:            "abc",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      0,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
+			fmt.Println("returning list of cluster:")
+			cluster := cmkv2.CmkV2Cluster{
+				Id: cmkv2.PtrString("lkc-123"),
+				Spec: &cmkv2.CmkV2ClusterSpec{
+					DisplayName: cmkv2.PtrString("abc"),
+					Cloud:       cmkv2.PtrString("gcp"),
+					Region:      cmkv2.PtrString("us-central1"),
+					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+					},
+					Availability: cmkv2.PtrString("SINGLE_ZONE"),
+				},
+				Status: &cmkv2.CmkV2ClusterStatus{
+					Phase: "PROVISIONING",
+				},
 			}
-			clusterMultizone := schedv1.KafkaCluster{
-				Id:              "lkc-456",
-				Name:            "def",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      1,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
+			clusterMultizone := cmkv2.CmkV2Cluster{
+				Id: cmkv2.PtrString("lkc-456"),
+				Spec: &cmkv2.CmkV2ClusterSpec{
+					DisplayName: cmkv2.PtrString("def"),
+					Cloud:       cmkv2.PtrString("gcp"),
+					Region:      cmkv2.PtrString("us-central1"),
+					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+					},
+					Availability: cmkv2.PtrString("MULTI_ZONE"),
+				},
+				Status: &cmkv2.CmkV2ClusterStatus{
+					Phase: "PROVISIONING",
+				},
 			}
-			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
-			})
+			// b, err := utilv1.MarshalJSONToBytes(&cmkv2.CmkV2ClusterList{Data: {cluster, clusterMultizone}})
+			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
+			b, err := json.Marshal(clusterList)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		}
+		fmt.Println("running in handler")
 	}
 }
 

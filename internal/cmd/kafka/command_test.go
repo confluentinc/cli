@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	logger "log"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -15,6 +16,8 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -652,13 +655,22 @@ func TestDefaults2(t *testing.T) {
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
-	mockKafka := &mock.Kafka{
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, new(errors.NotLoggedInError)
+	// mockKafka := &mock.Kafka{
+	// 	ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
+	// 		return nil, new(errors.NotLoggedInError)
+	// 	},
+	// }
+	// client := &ccloud.Client{Kafka: mockKafka}
+	cmkApiMock := &cmkmock.ClustersCmkV2Api{
+		ListCmkV2ClustersFunc: func(ctx context.Context) cmkv2.ApiListCmkV2ClustersRequest {
+			return cmkv2.ApiListCmkV2ClustersRequest{}
+		},
+		ListCmkV2ClustersExecuteFunc: func(req cmkv2.ApiListCmkV2ClustersRequest) (cmkv2.CmkV2ClusterList, *http.Response, error) {
+			return cmkv2.CmkV2ClusterList{}, nil, new(errors.NotLoggedInError)
 		},
 	}
-	client := &ccloud.Client{Kafka: mockKafka}
-	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, conf), "test-client")
+	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
+	cmd := New(conf, cliMock.NewPreRunnerMock(nil, cmkClient, nil, nil, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)

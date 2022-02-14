@@ -7,6 +7,10 @@
     "http://127.0.0.1:1024": {
       "name": "http://127.0.0.1:1024",
       "server": "http://test"
+    },
+    "http://1api.27.0.0.1:1024": {
+      "name": "1api.27.0.0.1:1024",
+      "server": "http://test-cmk"
     }
   },
   "credentials": {

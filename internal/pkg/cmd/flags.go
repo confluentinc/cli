@@ -90,19 +90,20 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.Client)
+		return AutocompleteClusters(command.EnvironmentId(), command.CmkClient, command.AuthToken())
 	})
 }
 
-func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
-	clusters, err := kafka.ListKafkaClusters(client, environmentId)
+func AutocompleteClusters(environmentId string, client *cmkv2.APIClient, authToken string) []string {
+	resp, _, err := kafka.ListKafkaClusters(client, authToken, environmentId)
 	if err != nil {
 		return nil
 	}
+	clusters := resp.Data
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
 	}
 	return suggestions
 }

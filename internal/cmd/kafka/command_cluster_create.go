@@ -168,7 +168,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setClusterConfig(typeString),
+			Config:       setClusterConfigType(typeString),
 			// EncryptionKeyId: encryptionKeyID,
 		},
 	}
@@ -184,7 +184,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
-		cluster.Spec.Config.CmkV2Dedicated.Cku = int32(cku)
+		setClusterConfigCku(&cluster, int32(cku))
 	}
 
 	kafkaCluster, r, err := cmk.CreateKafkaCluster(c.CmkClient, cluster, c.AuthToken())
@@ -337,7 +337,7 @@ func stringToSku(typeString string) (productv1.Sku, error) {
 	return sku, nil
 }
 
-func setClusterConfig(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setClusterConfigType(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
@@ -353,6 +353,10 @@ func setClusterConfig(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 		}
 	}
 	return nil
+}
+
+func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
+	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
 }
 
 func getKafkaProvisionEstimate(sku productv1.Sku) string {

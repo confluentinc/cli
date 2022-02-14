@@ -164,6 +164,20 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 		Endpoint:        "SASL_SSL://kafka-endpoint",
 		ApiEndpoint:     "http://kafka-api-url",
 		RestEndpoint:    "http://kafka-rest-url",
+		// Spec: &cmkv2.CmkV2ClusterSpec{
+		// 	DisplayName: cmkv2.PtrString(name),
+		// 	Cloud:       cmkv2.PtrString("aws"),
+		// 	Region:      cmkv2.PtrString("us-west-2"),
+		// 	// Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+		// 	// 	CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+		// 	// },
+		// 	KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+		// 	HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+		// },
+		// Id: cmkv2.PtrString(id),
+		// Status: &cmkv2.CmkV2ClusterStatus{
+		// 	Phase: "PROVISIONING",
+		// },
 	}
 }
 

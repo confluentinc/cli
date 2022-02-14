@@ -136,6 +136,7 @@ func checkURL(url string) error {
 // Create a new authenticatedTopicCommand. Should be called before each test case.
 func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	// Define testAPIClient
+	fmt.Println("ah ha!")
 	suite.testClient = kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
 	suite.testClient.ClusterV3Api = &kafkarestv3mock.ClusterV3Api{
 		ClustersGetFunc: func(ctx context.Context) (kafkarestv3.ClusterDataList, *http.Response, error) {

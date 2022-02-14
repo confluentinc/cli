@@ -1,6 +1,7 @@
 package test_server
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -99,6 +100,7 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter
 
 // Handler for: "/api/clusters/{id}"
 func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("trying to handle cluster....")
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
