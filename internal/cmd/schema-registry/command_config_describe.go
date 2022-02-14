@@ -49,16 +49,16 @@ func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
 
 func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
-	var config srsdk.Config
-	var r *http.Response
 	if err != nil {
 		return err
 	}
 
+	var config srsdk.Config
+	var resp *http.Response
 	if subject != "" {
-		config, r, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
+		config, resp, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 		if err != nil {
-			return errors.CatchNoSubjectLevelConfigError(err, r, subject)
+			return errors.CatchNoSubjectLevelConfigError(err, resp, subject)
 		}
 	} else {
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
