@@ -299,6 +299,7 @@ const (
 	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
 	InvalidFilePathErrorMsg            = "invalid file path \"%s\""
 	UnsupportedFileFormatErrorMsg      = "unsupported file format for file \"%s\""
+	InvalidAlgorithmErrorMsg           = "invalid algorithm \"%s\""
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"

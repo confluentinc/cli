@@ -24,7 +24,7 @@ const (
 )
 
 const (
-	MetadataEncAlgorithm = "AES/GCM/PKCS5Padding"
+	MetadataEncAlgorithm = "AES/GCM/NoPadding"
 	DataPattern          = "data\\:(.*?)\\,"
 	IVPattern            = "iv\\:(.*?)\\,"
 	EncPattern           = "ENC\\[(.*?)\\,"
@@ -56,5 +56,5 @@ const (
 
 const (
 	AES_CBC = "AES/CBC/PKCS5Padding"
-	AES_GCM = "AES/GCM/PKCS5Padding"
+	AES_GCM = "AES/GCM/NoPadding"
 )

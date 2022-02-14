@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -139,7 +138,6 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	}
 
 	content := []byte(plainText)
-	content = c.pKCS5Padding(content, block.BlockSize())
 
 	ciphertext := aesGcm.Seal(nil, ivBytes, content, nil)
 	result := base64.StdEncoding.EncodeToString(ciphertext)
@@ -193,6 +191,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
+		return c.pKCS5Trimming(decrypted)
 	} else if algo == AES_GCM {
 		aesGcm, err := cipher.NewGCM(block)
 		if err != nil {
@@ -203,16 +202,10 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 		if err != nil {
 			return []byte{}, err
 		}
+		return decrypted, nil
+	} else {
+		return []byte{}, errors.Errorf(errors.InvalidAlgorithmErrorMsg, algo)
 	}
-
-	return c.pKCS5Trimming(decrypted)
-}
-
-func (c *EncryptEngineImpl) pKCS5Padding(ciphertext []byte, blockSize int) []byte {
-	length := len(ciphertext) % blockSize
-	padding := blockSize - length
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
 }
 
 func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {

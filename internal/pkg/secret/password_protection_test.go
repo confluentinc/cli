@@ -197,7 +197,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt config file with last line as Comment, create new dek",
@@ -219,7 +219,7 @@ config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 # LAST LINE SHOULD NOT BE DELETED
 `,
-			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt config file with config param",
@@ -242,7 +242,7 @@ ssl.keystore.key = ssl
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `config.properties/ssl.keystore.password = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.properties/ssl.keystore.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt properties file with jaas entry",
@@ -269,7 +269,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config = org.apache.kafka.common.
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt properties file with multiple jaas entry",
@@ -324,7 +324,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
   }
 }
 `,
-			wantSecretsFile: `config.json/credentials.ssl\.keystore\.password = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.json/credentials.ssl\.keystore\.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "InvalidTestCase: encrypt invalid configuration in a JSON file",
@@ -451,8 +451,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -467,19 +467,19 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsa
 		{
 			name: "InvalidTestCase: Corrupted encrypted data",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = FQ9drhJXYsXktiIvxOk3vLS8gtMyUd5mP5R2b3/s/Qc=
-_metadata.symmetric_key.0.created_at = 2022-02-02 22:14:39.26918 -0800 PST m=+0.044909685
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:asdsdsssddsoooofsccqtsaEmDlA==,iv:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:asdsdsssddsoooofVXowRlNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -487,7 +487,7 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:asdsdsssddsoooofs
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
 				setNewMEK:              true,
-				newMasterKey:           "2RPcWTtsiN3z7VAueI0Hj9w100icqva4q++DeEPESl4=",
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
@@ -506,8 +506,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -523,19 +523,19 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:SclgTBDDeLwccqtsa
 		{
 			name: "InvalidTestCase: Corrupted Data few characters interchanged",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = FQ9drhJXYsXktiIvxOk3vLS8gtMyUd5mP5R2b3/s/Qc=
-_metadata.symmetric_key.0.created_at = 2022-02-02 22:14:39.26918 -0800 PST m=+0.044909685
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:6aMBA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,iv:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:lNyVXowR9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -543,7 +543,7 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:6aMBA04NWeR6NuWOO
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
 				setNewMEK:              true,
-				newMasterKey:           "2RPcWTtsiN3z7VAueI0Hj9w100icqva4q++DeEPESl4=",
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
@@ -551,19 +551,19 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:6aMBA04NWeR6NuWOO
 		{
 			name: "InvalidTestCase: Corrupted Data few characters removed",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = FQ9drhJXYsXktiIvxOk3vLS8gtMyUd5mP5R2b3/s/Qc=
-_metadata.symmetric_key.0.created_at = 2022-02-02 22:14:39.26918 -0800 PST m=+0.044909685
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+=,iv:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:lNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -571,7 +571,7 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
 				setNewMEK:              true,
-				newMasterKey:           "2RPcWTtsiN3z7VAueI0Hj9w100icqva4q++DeEPESl4=",
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
@@ -579,7 +579,7 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO
 		{
 			name: "ValidTestCase: Decrypt Config File (AES CBC)",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
@@ -607,19 +607,19 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIU
 		{
 			name: "ValidTestCase: Decrypt Config File (AES GCM)",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = FQ9drhJXYsXktiIvxOk3vLS8gtMyUd5mP5R2b3/s/Qc=
-_metadata.symmetric_key.0.created_at = 2022-02-02 22:14:39.26918 -0800 PST m=+0.044909685
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = cUSbm7zQVh/iz38xCoXZ6IWIXJIkTJ4AQwyBI8a1aCs=
-_metadata.symmetric_key.0.enc = ENC[AES/GCM/PKCS5Padding,data:VscIzB+TcXqSjxBMJC28rBO0NqlEyz7VKNK/kQVP/7wM1JXajrhvaeOzAAdxPS7uvY8SGbHwqdmM/LqqDuaixA==,iv:Se4yEpzO+mJmMJIa,type:str]
-config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO1V9AzK8JL5Q9jkcUQvA+KviA6w=,iv:POkDq4Pd8VXpEXnw,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
@@ -627,7 +627,7 @@ config.properties/testPassword = ENC[AES/GCM/PKCS5Padding,data:aM6BA04NWeR6NuWOO
 				secureDir:              "/tmp/securePass987/decrypt",
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				setNewMEK:              true,
-				newMasterKey:           "2RPcWTtsiN3z7VAueI0Hj9w100icqva4q++DeEPESl4=",
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:        false,
 			wantOutputFile: "testPassword = password\n",
@@ -761,7 +761,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
   }
 }
 `,
-			wantSecretsFile: `config.json/credentials.password = ENC[AES/GCM/PKCS5Padding,data:`,
+			wantSecretsFile: `config.json/credentials.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 	}
 	for _, tt := range tests {
