@@ -82,12 +82,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
 		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
-	transport := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-		},
-		ForceAttemptHTTP2: true,
-	}
+	transport := DefaultTransport()
 
 	var caCertPool *x509.CertPool
 	if caCertReader != nil && caCertReader != (*os.File)(nil) {
