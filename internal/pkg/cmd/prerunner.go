@@ -433,8 +433,8 @@ func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *
 	var userAgent string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
-		userAgent = ver.UserAgent
 	}
+	userAgent = ver.UserAgent
 
 	cfg := quotasv2.NewConfiguration()
 	cfg.Servers[0].URL = baseURL + "/api"

@@ -148,13 +148,10 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 	quotaList := []quotasv2.QuotasV2AppliedQuota{quota1, quota2, quota3, quota4}
 
 	type test struct {
-		name               string
-		filterQuotaCode    string
-		filterEnvironment  string
-		filterNetwork      string
-		filterKafkaCluster string
-		originData         []quotasv2.QuotasV2AppliedQuota
-		expectedData       []quotasv2.QuotasV2AppliedQuota
+		name            string
+		filterQuotaCode string
+		originData      []quotasv2.QuotasV2AppliedQuota
+		expectedData    []quotasv2.QuotasV2AppliedQuota
 	}
 
 	tests := []*test{
@@ -169,29 +166,11 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 			originData:      quotaList,
 			expectedData:    []quotasv2.QuotasV2AppliedQuota{quota1, quota2},
 		},
-		{
-			name:              "Filter by environment",
-			filterEnvironment: "env-1",
-			originData:        quotaList,
-			expectedData:      []quotasv2.QuotasV2AppliedQuota{quota1, quota3},
-		},
-		{
-			name:               "Filter by kafka cluster",
-			filterKafkaCluster: "lkc-1",
-			originData:         quotaList,
-			expectedData:       []quotasv2.QuotasV2AppliedQuota{quota1, quota3},
-		},
-		{
-			name:          "Filter by network",
-			filterNetwork: "n-1",
-			originData:    quotaList,
-			expectedData:  []quotasv2.QuotasV2AppliedQuota{quota1},
-		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			filterResult := filterQuotaResults(test.originData, test.filterQuotaCode, test.filterEnvironment, test.filterNetwork, test.filterKafkaCluster)
+			filterResult := filterQuotaResults(test.originData, test.filterQuotaCode)
 			require.Equal(t, test.expectedData, filterResult)
 		})
 	}

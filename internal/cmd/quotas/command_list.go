@@ -32,11 +32,12 @@ var (
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <quota-scope>",
-		Short: "List Confluent Cloud service quota limits by a scope.",
-		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Use:     "list <quota-scope>",
+		Short:   "List Confluent Cloud service quota limits by a scope.",
+		Long:    "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
+		Example: "list environment",
+		Args:    cobra.ExactArgs(1),
+		RunE:    pcmd.NewCLIRunE(c.list),
 	}
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -76,7 +77,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	// Since we use paginated results, get all results by iterating the list.
 	for {
 		req := c.QuotasClient.AppliedQuotaQuotasV2Api.ListQuotasV2AppliedQuota(c.createContext()).
-			Scope(quotaScope).PageToken(token)
+			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {
 			return err
@@ -97,7 +98,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	quotaList = filterQuotaResults(quotaList, quotaCode, environment, network, kafkaCluster)
+	quotaList = filterQuotaResults(quotaList, quotaCode)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -132,7 +133,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode string, environment string, network string, kafkaCluster string) []quotasv2.QuotasV2AppliedQuota {
+// TODO: will remove this filter func when quotas api support to filter by quota code.
+func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode string) []quotasv2.QuotasV2AppliedQuota {
 	//filter by quota id
 	filtered := []quotasv2.QuotasV2AppliedQuota{}
 	if quotaCode != "" {
@@ -143,39 +145,5 @@ func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode str
 		}
 		quotaList = filtered
 	}
-
-	//filter by environment id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if environment != "" {
-		for _, qt := range quotaList {
-			if qt.Environment != nil && qt.Environment.Id == environment {
-				filtered = append(filtered, qt)
-			}
-		}
-		quotaList = filtered
-	}
-
-	//filter by cluster id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if kafkaCluster != "" {
-		for _, qt := range quotaList {
-			if qt.KafkaCluster != nil && qt.KafkaCluster.Id == kafkaCluster {
-				filtered = append(filtered, qt)
-			}
-		}
-		quotaList = filtered
-	}
-
-	//filter by network id
-	filtered = []quotasv2.QuotasV2AppliedQuota{}
-	if network != "" {
-		for _, qt := range quotaList {
-			if qt.Network != nil && qt.Network.Id == network {
-				filtered = append(filtered, qt)
-			}
-		}
-		quotaList = filtered
-	}
-
 	return quotaList
 }

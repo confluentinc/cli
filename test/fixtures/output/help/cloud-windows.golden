@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   admin           Perform administrative tasks for the current organization.
   api-key         Manage the API keys.
-  applied-quota   Look up Confluent Cloud service quota limits.
+  service-quota   Look up Confluent Cloud service quota limits.
   audit-log       Manage audit log configuration.
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
