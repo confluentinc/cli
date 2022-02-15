@@ -434,6 +434,7 @@ func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, pr
 func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, resourceType string) error {
 	ctx := c.createContext()
 	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
+	fmt.Println("role:", role)
 	if err != nil || resp.StatusCode == 204 {
 		if err == nil {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
@@ -463,6 +464,7 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, reso
 func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 	ctx := c.createContext()
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
+	fmt.Println("roles,", roles)
 	if err != nil {
 		return err
 	}

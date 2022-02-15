@@ -28,7 +28,7 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	serviceAccounts, _, err := iam.ListIamServiceAccounts(*c.IamClient, c.AuthToken())
+	resp, _, err := iam.ListIamServiceAccounts(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, u := range serviceAccounts {
+	for _, u := range resp.Data {
 		element := &serviceAccountStruct{ResourceId: *u.Id, ServiceName: *u.DisplayName, ServiceDescription: *u.Description}
 		outputWriter.AddElement(element)
 	}

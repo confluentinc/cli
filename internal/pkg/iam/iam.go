@@ -15,35 +15,38 @@ func iamApiContext(authToken string) context.Context {
 }
 
 func CreateIamServiceAccount(client iamv2.APIClient, serviceAccount iamv2.IamV2ServiceAccount, authToken string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return client.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(iamApiContext(authToken)).IamV2ServiceAccount(serviceAccount).Execute()
+	req := client.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(iamApiContext(authToken)).IamV2ServiceAccount(serviceAccount)
+	return client.ServiceAccountsIamV2Api.CreateIamV2ServiceAccountExecute(req)
 }
 
 func DeleteIamServiceAccount(client iamv2.APIClient, id, authToken string) (*http.Response, error) {
-	return client.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(iamApiContext(authToken), id).Execute()
+	req := client.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(iamApiContext(authToken), id)
+	return client.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
 }
 
 func GetIamServiceAccount(client iamv2.APIClient, id, authToken string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return client.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(iamApiContext(authToken), id).Execute()
+	req := client.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(iamApiContext(authToken), id)
+	return client.ServiceAccountsIamV2Api.GetIamV2ServiceAccountExecute(req)
 }
 
-func ListIamServiceAccounts(client iamv2.APIClient, authToken string) ([]iamv2.IamV2ServiceAccount, *http.Response, error) {
-	resp, r, err := client.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(iamApiContext(authToken)).Execute()
-	if err != nil {
-		return nil, nil, err
-	}
-	return resp.Data, r, err
+func ListIamServiceAccounts(client iamv2.APIClient, authToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+	req := client.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(iamApiContext(authToken))
+	return client.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
 }
 
 func UpdateIamServiceAccount(client iamv2.APIClient, id string, update iamv2.IamV2ServiceAccountUpdate, authToken string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	return client.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(iamApiContext(authToken), id).IamV2ServiceAccountUpdate(update).Execute()
+	req := client.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(iamApiContext(authToken), id).IamV2ServiceAccountUpdate(update)
+	return client.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccountExecute(req)
 }
 
 func DeleteIamUser(client iamv2.APIClient, id, authToken string) (*http.Response, error) {
-	return client.UsersIamV2Api.DeleteIamV2User(iamApiContext(authToken), id).Execute()
+	req := client.UsersIamV2Api.DeleteIamV2User(iamApiContext(authToken), id)
+	return client.UsersIamV2Api.DeleteIamV2UserExecute(req)
 }
 
 func GetIamUser(client iamv2.APIClient, id, authToken string) (iamv2.IamV2User, *http.Response, error) {
-	return client.UsersIamV2Api.GetIamV2User(iamApiContext(authToken), id).Execute()
+	req := client.UsersIamV2Api.GetIamV2User(iamApiContext(authToken), id)
+	return client.UsersIamV2Api.GetIamV2UserExecute(req)
 }
 
 func GetIamUserByEmail(client iamv2.APIClient, email, authToken string) (iamv2.IamV2User, error) {
@@ -60,12 +63,9 @@ func GetIamUserByEmail(client iamv2.APIClient, email, authToken string) (iamv2.I
 	return iamv2.IamV2User{}, fmt.Errorf(errors.InvalidEmailErrorMsg, email)
 }
 
-func ListIamUsers(client iamv2.APIClient, authToken string) ([]iamv2.IamV2User, *http.Response, error) {
-	resp, r, err := client.UsersIamV2Api.ListIamV2Users(iamApiContext(authToken)).Execute()
-	if err != nil {
-		return nil, nil, err
-	}
-	return resp.Data, r, err
+func ListIamUsers(client iamv2.APIClient, authToken string) (iamv2.IamV2UserList, *http.Response, error) {
+	req := client.UsersIamV2Api.ListIamV2Users(iamApiContext(authToken))
+	return client.UsersIamV2Api.ListIamV2UsersExecute(req)
 }
 
 // func UpdateIamUser(client iam.APIClient, id string, update iam.IamV2UserUpdate, authToken string) (iam.IamV2User, *http.Response, error) {

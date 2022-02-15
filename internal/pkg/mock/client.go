@@ -3,6 +3,10 @@ package mock
 import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	mdsmock "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2/mock"
 )
 
 func NewClientMock() *ccloud.Client {
@@ -19,4 +23,15 @@ func NewClientMock() *ccloud.Client {
 		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
+}
+
+func NewIamClientMock() *iamv2.APIClient {
+	return &iamv2.APIClient{
+		ServiceAccountsIamV2Api: &iammock.ServiceAccountsIamV2Api{},
+		UsersIamV2Api:           &iammock.UsersIamV2Api{},
+	}
+}
+
+func NewMdsClientMock() *mdsv2.APIClient {
+	return &mdsv2.APIClient{RoleBindingsIamV2Api: &mdsmock.RoleBindingsIamV2Api{}}
 }

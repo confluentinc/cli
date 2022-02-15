@@ -7,27 +7,36 @@ import (
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 )
 
-func mdsApiContext(authToken string) context.Context {
+func MdsApiContext(authToken string) context.Context {
 	auth := context.WithValue(context.Background(), mdsv2.ContextAccessToken, authToken)
 	return auth
 }
 
 func CreateIamRoleBinding(client mdsv2.APIClient, roleBinding mdsv2.IamV2RoleBinding, authToken string) (mdsv2.IamV2RoleBinding, *http.Response, error) {
-	return client.RoleBindingsIamV2Api.CreateIamV2RoleBinding(mdsApiContext(authToken)).IamV2RoleBinding(roleBinding).Execute()
+	req := client.RoleBindingsIamV2Api.CreateIamV2RoleBinding(MdsApiContext(authToken)).IamV2RoleBinding(roleBinding)
+	return client.RoleBindingsIamV2Api.CreateIamV2RoleBindingExecute(req)
 }
 
-func DeleteIamRoleBinding(client mdsv2.APIClient, id, authToken string) (*http.Response, error) {
-	return client.RoleBindingsIamV2Api.DeleteIamV2RoleBinding(mdsApiContext(authToken), id).Execute()
+func DeleteIamRoleBinding(client mdsv2.APIClient, id, authToken string) (mdsv2.IamV2RoleBinding, *http.Response, error) {
+	req := client.RoleBindingsIamV2Api.DeleteIamV2RoleBinding(MdsApiContext(authToken), id)
+	return client.RoleBindingsIamV2Api.DeleteIamV2RoleBindingExecute(req)
 }
 
 func GetIamRoleBinding(client mdsv2.APIClient, id, authToken string) (mdsv2.IamV2RoleBinding, *http.Response, error) {
-	return client.RoleBindingsIamV2Api.GetIamV2RoleBinding(mdsApiContext(authToken), id).Execute()
+	req := client.RoleBindingsIamV2Api.GetIamV2RoleBinding(MdsApiContext(authToken), id)
+	return client.RoleBindingsIamV2Api.GetIamV2RoleBindingExecute(req)
 }
 
-func ListIamRoleBinding(client mdsv2.APIClient, principal, roleName, authToken string) ([]mdsv2.IamV2RoleBinding, *http.Response, error) {
-	resp, r, err := client.RoleBindingsIamV2Api.ListIamV2RoleBindings(context.Background()).Principal(principal).RoleName(roleName).Execute()
-	if err != nil {
-		return nil, nil, err
+func ListIamRoleBinding(client mdsv2.APIClient, principal, role, crnPattern, authToken string) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
+	req := client.RoleBindingsIamV2Api.ListIamV2RoleBindings(MdsApiContext(authToken))
+	if principal != "" {
+		req = req.Principal(principal)
 	}
-	return resp.Data, r, err
+	if role != "" {
+		req = req.RoleName(role)
+	}
+	if crnPattern != "" {
+		req = req.CrnPattern(crnPattern)
+	}
+	return client.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
 }

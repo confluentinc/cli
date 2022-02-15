@@ -31,7 +31,7 @@ func (c userCommand) newListCommand() *cobra.Command {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	users, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
+	resp, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, user := range users {
+	for _, user := range resp.Data {
 		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
 			return err

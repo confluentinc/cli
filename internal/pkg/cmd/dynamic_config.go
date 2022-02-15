@@ -11,17 +11,19 @@ import (
 
 type DynamicConfig struct {
 	*v1.Config
-	Resolver  FlagResolver
-	Client    *ccloud.Client
-	IamClient *iamv2.APIClient
-	MdsClient *mdsv2.APIClient
+	Resolver       FlagResolver
+	Client         *ccloud.Client
+	IamClient      *iamv2.APIClient
+	MdsV2ApiClient *mdsv2.APIClient
 }
 
-func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client) *DynamicConfig {
+func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client, iamClient *iamv2.APIClient, mdsV2ApiClient *mdsv2.APIClient) *DynamicConfig {
 	return &DynamicConfig{
-		Config:   config,
-		Resolver: resolver,
-		Client:   client,
+		Config:         config,
+		Resolver:       resolver,
+		Client:         client,
+		IamClient:      iamClient,
+		MdsV2ApiClient: mdsV2ApiClient,
 	}
 }
 
@@ -57,7 +59,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.IamClient, d.MdsV2ApiClient), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -66,5 +68,5 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client)
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.IamClient, d.MdsV2ApiClient)
 }

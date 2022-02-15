@@ -371,7 +371,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	conf := v1.AuthenticatedCloudConfigMock()
 	cmd := suite.newCmd(conf)
-	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil)
+	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil, nil, nil)
 	lkc, err := cmd.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

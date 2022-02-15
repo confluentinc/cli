@@ -66,7 +66,7 @@ type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
 	IamClient         *iamv2.APIClient
-	MdsClient         *mdsv2.APIClient
+	MdsV2ApiClient    *mdsv2.APIClient
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -403,9 +403,9 @@ func (r *PreRun) setMdsClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 
 	mdsClient := r.createMdsClient(ctx, cliCmd.Version)
-	cliCmd.MdsClient = mdsClient
-	cliCmd.Context.mdsClient = mdsClient
-	cliCmd.Config.MdsClient = mdsClient
+	cliCmd.MdsV2ApiClient = mdsClient
+	cliCmd.Context.mdsV2ApiClient = mdsClient
+	cliCmd.Config.MdsV2ApiClient = mdsClient
 	return nil
 }
 
@@ -751,8 +751,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			command.Config.IamClient = iamClient
 
 			mdsClient := r.createMdsClient(ctx, command.Version)
-			ctx.mdsClient = mdsClient
-			command.Config.MdsClient = mdsClient
+			ctx.mdsV2ApiClient = mdsClient
+			command.Config.MdsV2ApiClient = mdsClient
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err
