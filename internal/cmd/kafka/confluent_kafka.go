@@ -504,7 +504,7 @@ func setDebugConfig(cmd *cobra.Command, configMap *kafka.ConfigMap) error {
 		return err
 	}
 	if debug != "" {
-		configMap.Set("debug=" + debug)
+		return configMap.Set("debug=" + debug)
 	}
 	return nil
 }
