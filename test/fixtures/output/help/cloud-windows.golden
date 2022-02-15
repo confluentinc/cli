@@ -6,7 +6,6 @@ Usage:
 Available Commands:
   admin           Perform administrative tasks for the current organization.
   api-key         Manage the API keys.
-  service-quota   Look up Confluent Cloud service quota limits.
   audit-log       Manage audit log configuration.
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
@@ -22,6 +21,7 @@ Available Commands:
   price           See Confluent Cloud pricing information.
   prompt          Add Confluent CLI context to your terminal prompt.
   schema-registry Manage Schema Registry.
+  service-quota   Look up Confluent Cloud service quota limits.
   shell           Start an interactive shell.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
