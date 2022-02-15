@@ -46,6 +46,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.Flags().String("debug", "", "List of comma-separated debug contexts to enable: broker, topic, msg, protocol, consumer, cgrp, fetch, all.")
 
 	return cmd
 }
@@ -104,9 +105,9 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
+	consumer, err := NewConsumer(cmd, group, cluster, c.clientID, beginning)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+		return errors.CatchCloudInvalidDebugValueError(errors.FailedToCreateConsumerMsg, err)
 	}
 	log.CliLogger.Trace("Create consumer succeeded")
 

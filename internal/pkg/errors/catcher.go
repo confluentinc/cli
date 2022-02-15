@@ -232,3 +232,20 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	}
 	return err
 }
+
+/*
+Error: failed to create producer: Invalid value " " for configuration property "debug"
+*/
+func CatchInvalidDebugValueError(failMsg string, err error) error {
+	if strings.Contains(err.Error(), "Invalid value") && strings.Contains(err.Error(), "debug") {
+		return NewErrorWithSuggestions(fmt.Errorf(failMsg, err).Error(), DebugOptionSuggestion+OnPremConfigGuideSuggestion)
+	}
+	return NewErrorWithSuggestions(fmt.Errorf(failMsg, err).Error(), OnPremConfigGuideSuggestion)
+}
+
+func CatchCloudInvalidDebugValueError(failMsg string, err error) error {
+	if strings.Contains(err.Error(), "Invalid value") && strings.Contains(err.Error(), "debug") {
+		return NewErrorWithSuggestions(fmt.Errorf(failMsg, err).Error(), DebugOptionSuggestion)
+	}
+	return fmt.Errorf(failMsg, err)
+}

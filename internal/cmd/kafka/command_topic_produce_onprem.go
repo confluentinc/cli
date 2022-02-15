@@ -46,6 +46,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("debug", "", "List of comma-separated debug contexts to enable: broker, topic, msg, protocol, consumer, cgrp, fetch, all.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
@@ -62,7 +63,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	producer, err := ckafka.NewProducer(configMap)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
+		return errors.CatchOnPremInvalidDebugValueError(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")

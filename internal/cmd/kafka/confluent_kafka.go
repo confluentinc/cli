@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/google/uuid"
@@ -130,8 +131,12 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-func NewProducer(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
+func NewProducer(cmd *cobra.Command, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
+	if err != nil {
+		return nil, err
+	}
+	err = setDebugConfig(cmd, configMap)
 	if err != nil {
 		return nil, err
 	}
@@ -139,8 +144,12 @@ func NewProducer(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.P
 }
 
 // NewConsumer returns a ConsumerGroup configured for the CLI config
-func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.Consumer, error) {
+func NewConsumer(cmd *cobra.Command, group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
+	if err != nil {
+		return nil, err
+	}
+	err = setDebugConfig(cmd, configMap)
 	if err != nil {
 		return nil, err
 	}
@@ -177,6 +186,10 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
 	}
+	err = setDebugConfig(cmd, configMap)
+	if err != nil {
+		return nil, err
+	}
 	return setProtocolConfig(cmd, configMap)
 }
 
@@ -207,6 +220,10 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"bootstrap.servers":                     bootstrap,
 		"enable.ssl.certificate.verification":   true,
 		"ssl.ca.location":                       caLocation,
+	}
+	err = setDebugConfig(cmd, configMap)
+	if err != nil {
+		return nil, err
 	}
 	autoOffsetReset := "latest"
 	if beginning {
@@ -479,4 +496,15 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 		return "", "", err
 	}
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
+}
+
+func setDebugConfig(cmd *cobra.Command, configMap *kafka.ConfigMap) error {
+	debug, err := cmd.Flags().GetString("debug")
+	if err != nil {
+		return err
+	}
+	if debug != "" {
+		configMap.Set("debug=" + debug)
+	}
+	return nil
 }
