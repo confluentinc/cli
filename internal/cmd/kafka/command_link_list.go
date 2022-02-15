@@ -21,7 +21,7 @@ var (
 type LinkTopicWriter struct {
 	LinkName        string
 	TopicName       string
-	SourceClusterId string
+	SourceClusterId *string
 }
 
 func (c *linkCommand) newListCommand() *cobra.Command {

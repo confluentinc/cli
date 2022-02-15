@@ -62,7 +62,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				Permission:   "ALLOW",
 				Host:         "*",
 				Principal:    "User:12345",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  string(kafkarestv3.ACLPATTERNTYPE_LITERAL),
 			}}})
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -515,7 +515,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 				{
 					Kind:            "",
 					Metadata:        kafkarestv3.ResourceMetadata{},
-					SourceClusterId: "cluster-1",
+					SourceClusterId: stringPtr("cluster-1"),
 					LinkName:        "link-1",
 					LinkId:          "LINKID1",
 					TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
@@ -523,7 +523,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 				{
 					Kind:            "",
 					Metadata:        kafkarestv3.ResourceMetadata{},
-					SourceClusterId: "cluster-1",
+					SourceClusterId: stringPtr("cluster-1"),
 					LinkName:        "link-2",
 					LinkId:          "LINKID2",
 					TopicsNames:     []string{"link-2-topic-1", "link-2-topic-2"},
@@ -551,7 +551,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 						ConsumerGroupId:   "consumer-group-1",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
-						State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+						State:             string(kafkarestv3.CONSUMERGROUPSTATE_STABLE),
 						Coordinator:       kafkarestv3.Relationship{},
 						Consumer:          kafkarestv3.Relationship{},
 						LagSummary:        kafkarestv3.Relationship{},
@@ -563,7 +563,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 						ConsumerGroupId:   "consumer-group-2",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
-						State:             kafkarestv3.CONSUMERGROUPSTATE_DEAD,
+						State:             string(kafkarestv3.CONSUMERGROUPSTATE_DEAD),
 						Coordinator:       kafkarestv3.Relationship{},
 						Consumer:          kafkarestv3.Relationship{},
 						LagSummary:        kafkarestv3.Relationship{},
@@ -584,7 +584,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.Response
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        kafkarestv3.ResourceMetadata{},
-				SourceClusterId: "cluster-1",
+				SourceClusterId: stringPtr("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
 				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
@@ -612,7 +612,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 					ConsumerGroupId:   "consumer-group-1",
 					IsSimple:          true,
 					PartitionAssignor: "RoundRobin",
-					State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+					State:             string(kafkarestv3.CONSUMERGROUPSTATE_STABLE),
 					Coordinator:       kafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
 					Consumer:          kafkarestv3.Relationship{},
 					LagSummary:        kafkarestv3.Relationship{},
@@ -1602,4 +1602,8 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, responseBody)
 	return err
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

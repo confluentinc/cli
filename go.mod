@@ -405,6 +405,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 => ../kafka-rest-sdk-go/kafkarestv3
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0

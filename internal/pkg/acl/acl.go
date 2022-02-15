@@ -288,11 +288,11 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Crea
 	requestData := kafkarestv3.CreateAclRequestData{
 		ResourceType: acl.ResourceType,
 		ResourceName: acl.ResourceName,
-		PatternType:  acl.PatternType,
+		PatternType:  string(acl.PatternType),
 		Principal:    acl.Principal,
 		Host:         acl.Host,
-		Operation:    acl.Operation,
-		Permission:   acl.Permission,
+		Operation:    string(acl.Operation),
+		Permission:   string(acl.Permission),
 	}
 	opts.CreateAclRequestData = optional.NewInterface(requestData)
 	return &opts
@@ -309,7 +309,7 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.GetKaf
 		opts.ResourceName = optional.NewString(acl.ResourceName)
 	}
 	if acl.PatternType != "" {
-		opts.PatternType = optional.NewInterface(acl.PatternType)
+		opts.PatternType = optional.NewString(string(acl.PatternType))
 	}
 	if acl.Principal != "" {
 		opts.Principal = optional.NewString(acl.Principal)
@@ -318,10 +318,10 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.GetKaf
 		opts.Host = optional.NewString(acl.Host)
 	}
 	if acl.Operation != "" {
-		opts.Operation = optional.NewInterface(acl.Operation)
+		opts.Operation = optional.NewString(string(acl.Operation))
 	}
 	if acl.Permission != "" {
-		opts.Permission = optional.NewInterface(acl.Permission)
+		opts.Permission = optional.NewString(string(acl.Permission))
 	}
 	return &opts
 }
@@ -330,11 +330,11 @@ func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Dele
 	opts := kafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
-		PatternType:  optional.NewInterface(acl.PatternType),
+		PatternType:  optional.NewString(string(acl.PatternType)),
 		Principal:    optional.NewString(acl.Principal),
 		Host:         optional.NewString(acl.Host),
-		Operation:    optional.NewInterface(acl.Operation),
-		Permission:   optional.NewInterface(acl.Permission),
+		Operation:    optional.NewString(string(acl.Operation)),
+		Permission:   optional.NewString(string(acl.Permission)),
 	}
 	return &opts
 }
@@ -343,11 +343,11 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	aclData := kafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
-		PatternType:  data.PatternType,
+		PatternType:  string(data.PatternType),
 		Principal:    data.Principal,
 		Host:         data.Host,
-		Operation:    data.Operation,
-		Permission:   data.Permission,
+		Operation:    string(data.Operation),
+		Permission:   string(data.Permission),
 	}
 	return aclData
 }
