@@ -27,8 +27,8 @@ var (
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "https://toby-cluster:9092"
-	kafkaApiEndpoint   = "https://is-the-worst:9092"
+	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
+	kafkaApiEndpoint   = "https://pkac-abc123:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 

@@ -138,8 +138,14 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false
+	if ctx == nil || ctx.Context == nil {
+		anonUser = true
+		key := uuid.New().String()
+		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
+		return userBuilder.Build(), anonUser
+	}
 	var user *orgv1.User
-	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
+	if ctx.State != nil && ctx.State.Auth != nil {
 		user = ctx.State.Auth.User
 	}
 	// Basic user info
@@ -158,7 +164,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 	}
 
 	var organization *orgv1.Organization
-	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
+	if ctx.State != nil && ctx.State.Auth != nil {
 		organization = ctx.State.Auth.Organization
 	}
 	// org info
@@ -166,7 +172,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 		setCustomAttribute(custom, "org.resource_id", ldvalue.String(organization.ResourceId))
 	}
 	var account *orgv1.Account
-	if ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
+	if ctx.State != nil && ctx.State.Auth != nil {
 		account = ctx.State.Auth.Account
 	}
 	// environment (account) info
