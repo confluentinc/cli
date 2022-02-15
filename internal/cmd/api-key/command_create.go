@@ -44,7 +44,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of API key.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand, c.AuthToken())
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired(resourceFlagName)

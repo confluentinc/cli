@@ -32,10 +32,6 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	// user := &orgv1.User{ResourceId: args[0]}
-	// if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
-	// 	return err
-	// }
 	_, err := iam.DeleteIamServiceAccount(*c.IamClient, args[0], c.AuthToken())
 	if err != nil {
 		return err

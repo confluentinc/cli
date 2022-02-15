@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -66,7 +65,6 @@ type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
 	IamClient         *iamv2.APIClient
-	MdsV2ApiClient    *mdsv2.APIClient
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -268,9 +266,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.setIamClient(command); err != nil {
 			return err
 		}
-		if err := r.setMdsClient(command); err != nil {
-			return err
-		}
 		return r.setCCloudClient(command)
 	}
 }
@@ -399,16 +394,6 @@ func (r *PreRun) setIamClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setMdsClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx := cliCmd.Config.Context()
-
-	mdsClient := r.createMdsClient(ctx, cliCmd.Version)
-	cliCmd.MdsV2ApiClient = mdsClient
-	cliCmd.Context.mdsV2ApiClient = mdsClient
-	cliCmd.Config.MdsV2ApiClient = mdsClient
-	return nil
-}
-
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", "", nil
@@ -491,25 +476,6 @@ func (r *PreRun) createIamClient(ctx *DynamicContext, ver *version.Version) *iam
 		OperationServers: map[string]iamv2.ServerConfigurations{},
 	}
 	return iamv2.NewAPIClient(cfg)
-}
-
-func (r *PreRun) createMdsClient(ctx *DynamicContext, ver *version.Version) *mdsv2.APIClient {
-	var baseURL string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-	}
-	mdsServer := baseURL[:8] + "api." + baseURL[8:]
-	server := mdsv2.ServerConfigurations{
-		{URL: mdsServer, Description: "Confluent Cloud"},
-	}
-	cfg := &mdsv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]mdsv2.ServerConfigurations{},
-	}
-	return mdsv2.NewAPIClient(cfg)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
@@ -749,10 +715,6 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			iamClient := r.createIamClient(ctx, command.Version)
 			ctx.iamClient = iamClient
 			command.Config.IamClient = iamClient
-
-			mdsClient := r.createMdsClient(ctx, command.Version)
-			ctx.mdsV2ApiClient = mdsClient
-			command.Config.MdsV2ApiClient = mdsClient
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

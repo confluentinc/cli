@@ -25,7 +25,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand, c.AuthToken())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
