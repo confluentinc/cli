@@ -27,6 +27,7 @@ type Client interface {
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string, noVerify bool) error
+	VerifyChecksum(newBin, cliName, version string) error
 }
 
 type client struct {
@@ -191,7 +192,7 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 	}
 }
 
-func (c *client) verifyChecksum(newBin, cliName, version string) error {
+func (c *client) VerifyChecksum(newBin, cliName, version string) error {
 	// Step 1: Compute actual hash of downloaded file
 
 	f, err := os.Open(newBin)
@@ -256,7 +257,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
 	if !noVerify {
-		if err := c.verifyChecksum(newBin, cliName, version); err != nil {
+		if err := c.VerifyChecksum(newBin, cliName, version); err != nil {
 			return errors.Wrapf(err, "checksum verification failed for new binary")
 		}
 	}

@@ -22,6 +22,9 @@ type Client struct {
 	lockUpdateBinary sync.Mutex
 	UpdateBinaryFunc func(cliName, version, path string, noVerify bool) error
 
+	lockVerifyChecksum sync.Mutex
+	VerifyChecksumFunc func(newBin, cliName, version string) error
+
 	calls struct {
 		CheckForUpdates []struct {
 			CliName        string
@@ -44,6 +47,11 @@ type Client struct {
 			Version  string
 			Path     string
 			NoVerify bool
+		}
+		VerifyChecksum []struct {
+			NewBin  string
+			CliName string
+			Version string
 		}
 	}
 }
@@ -230,6 +238,50 @@ func (m *Client) UpdateBinaryCalls() []struct {
 	return m.calls.UpdateBinary
 }
 
+// VerifyChecksum mocks base method by wrapping the associated func.
+func (m *Client) VerifyChecksum(newBin, cliName, version string) error {
+	m.lockVerifyChecksum.Lock()
+	defer m.lockVerifyChecksum.Unlock()
+
+	if m.VerifyChecksumFunc == nil {
+		panic("mocker: Client.VerifyChecksumFunc is nil but Client.VerifyChecksum was called.")
+	}
+
+	call := struct {
+		NewBin  string
+		CliName string
+		Version string
+	}{
+		NewBin:  newBin,
+		CliName: cliName,
+		Version: version,
+	}
+
+	m.calls.VerifyChecksum = append(m.calls.VerifyChecksum, call)
+
+	return m.VerifyChecksumFunc(newBin, cliName, version)
+}
+
+// VerifyChecksumCalled returns true if VerifyChecksum was called at least once.
+func (m *Client) VerifyChecksumCalled() bool {
+	m.lockVerifyChecksum.Lock()
+	defer m.lockVerifyChecksum.Unlock()
+
+	return len(m.calls.VerifyChecksum) > 0
+}
+
+// VerifyChecksumCalls returns the calls made to VerifyChecksum.
+func (m *Client) VerifyChecksumCalls() []struct {
+	NewBin  string
+	CliName string
+	Version string
+} {
+	m.lockVerifyChecksum.Lock()
+	defer m.lockVerifyChecksum.Unlock()
+
+	return m.calls.VerifyChecksum
+}
+
 // Reset resets the calls made to the mocked methods.
 func (m *Client) Reset() {
 	m.lockCheckForUpdates.Lock()
@@ -244,4 +296,7 @@ func (m *Client) Reset() {
 	m.lockUpdateBinary.Lock()
 	m.calls.UpdateBinary = nil
 	m.lockUpdateBinary.Unlock()
+	m.lockVerifyChecksum.Lock()
+	m.calls.VerifyChecksum = nil
+	m.lockVerifyChecksum.Unlock()
 }

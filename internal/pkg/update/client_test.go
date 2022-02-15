@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
+	"github.com/confluentinc/cli/test"
 )
 
 func TestNewClient(t *testing.T) {
@@ -452,6 +454,76 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 		req.Equal("v3", latestMinorVersion)
 		req.True(repo.GetLatestMajorAndMinorVersionCalled())
 		repo.Reset()
+	}
+}
+
+func TestVerifyChecksum(t *testing.T) {
+	checksums := test.LoadFixture(t, "update/checksums.golden")
+
+	mockRepository := &updateMock.Repository{
+		DownloadChecksumsFunc: func(name, version string) (string, error) {
+			if version == "2.5.1" {
+				return checksums, nil
+			} else {
+				return "", errors.New("No checksums for given version")
+			}
+		},
+	}
+
+	mockClient := &updateMock.Client{
+		VerifyChecksumFunc: func(newBin, cliName, version string) error {
+			if strings.Contains(checksums, newBin) {
+				return nil
+			}
+			return errors.New("checksum verification failed")
+		},
+	}
+
+	tests := []struct {
+		name            string
+		checksum        string
+		version         string
+		wantDownloadErr bool
+		wantVerifyErr   bool
+	}{
+		{
+			name:            "valid checksum for valid version verifies successfully",
+			checksum:        "cc066356f5a36c532b88651e31450dffa008f2626119c94e2ef808ddbe4da48a",
+			version:         "2.5.1",
+			wantDownloadErr: false,
+			wantVerifyErr:   false,
+		},
+		{
+			name:            "invalid checksum for valid version fails",
+			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
+			version:         "2.5.1",
+			wantDownloadErr: false,
+			wantVerifyErr:   true,
+		},
+		{
+			name:            "checksum for invalid version fails",
+			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
+			version:         "0.1234.0",
+			wantDownloadErr: true,
+			wantVerifyErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := mockRepository.DownloadChecksums("confluent", tt.version)
+			if tt.wantDownloadErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			err = mockClient.VerifyChecksum(tt.checksum, "confluent", tt.version)
+			if tt.wantVerifyErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
