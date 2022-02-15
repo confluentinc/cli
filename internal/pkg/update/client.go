@@ -2,7 +2,9 @@
 package update
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -24,7 +26,8 @@ type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
-	UpdateBinary(cliName, version, path string) error
+	UpdateBinary(cliName, version, path string, noVerify bool) error
+	VerifyChecksum(newBin, cliName, version string) error
 }
 
 type client struct {
@@ -189,8 +192,47 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 	}
 }
 
+func (c *client) VerifyChecksum(newBin, cliName, version string) error {
+	// Step 1: Compute actual hash of downloaded file
+
+	f, err := os.Open(newBin)
+	if err != nil {
+		return errors.Wrap(err, "failed to open new binary file for checksum verification")
+	}
+
+	defer f.Close()
+	h := sha256.New()
+	if _, err := io.Copy(h, f); err != nil {
+		return errors.Wrap(err, "failed to load new binary file for checksum verification")
+	}
+
+	actualHash := fmt.Sprintf("%x", h.Sum(nil))
+
+	// Step 2: Download expected checksum
+
+	allChecksumsForVersion, err := c.Repository.DownloadChecksums(cliName, version)
+	if err != nil {
+		return errors.Wrapf(err, "failed to download checksums file")
+	}
+
+	log.CliLogger.Tracef("Actual hash of new binary: %s", actualHash)
+
+	// Step 3: Check if checksums match
+
+	// Don't filter checksums for the current platform, just
+	// check if any platform's checksum is a match (this is arguably better
+	// in case we add more platforms in the future)
+	if !strings.Contains(allChecksumsForVersion, actualHash) {
+		return errors.Errorf("checksum verification failed: new file's checksum is: %s, but not found in the list of valid checksums:\n%s", actualHash, allChecksumsForVersion)
+	}
+
+	log.CliLogger.Tracef("Checksum verification succeeded")
+
+	return nil
+}
+
 // UpdateBinary replaces the named binary at path with the desired version
-func (c *client) UpdateBinary(cliName, version, path string) error {
+func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
 	downloadDir, err := c.fs.TempDir("", cliName)
 	if err != nil {
 		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
@@ -214,9 +256,15 @@ func (c *client) UpdateBinary(cliName, version, path string) error {
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
+	if !noVerify {
+		if err := c.VerifyChecksum(newBin, cliName, version); err != nil {
+			return errors.Wrapf(err, "checksum verification failed for new binary")
+		}
+	}
+
 	// On Windows, we have to move the old binary out of the way first, then copy the new one into place,
 	// because Windows doesn't support directly overwriting a running binary.
-	// Note, this should _only_ be done on Windows; on unix platforms, cross-devices moves can fail (e.g.
+	// Note, this should _only_ be done on Windows; on unix platforms, cross-device moves can fail (e.g.
 	// binary is on another device than the system tmp dir); but on such platforms we don't need to do moves anyway
 
 	newPath := filepath.Join(filepath.Dir(path), cliName)
