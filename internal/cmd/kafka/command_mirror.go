@@ -29,7 +29,7 @@ type listMirrorWrite struct {
 	MirrorTopicName          string
 	SourceTopicName          string
 	MirrorStatus             string
-	StatusTimeMs             int64
+	StatusTimeMs             int32
 	NumPartition             int32
 	MaxPerPartitionMirrorLag int64
 }
@@ -39,7 +39,7 @@ type describeMirrorWrite struct {
 	MirrorTopicName       string
 	SourceTopicName       string
 	MirrorStatus          string
-	StatusTimeMs          int64
+	StatusTimeMs          int32
 	Partition             int32
 	PartitionMirrorLag    int64
 	LastSourceFetchOffset int64

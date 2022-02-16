@@ -86,7 +86,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
-		var maxLag int64 = 0
+		var maxLag int32 = 0
 		for _, mirrorLag := range mirror.MirrorLags {
 			if mirrorLag.Lag > maxLag {
 				maxLag = mirrorLag.Lag
@@ -97,7 +97,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			LinkName:                 mirror.LinkName,
 			MirrorTopicName:          mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
-			MirrorStatus:             string(mirror.MirrorStatus),
+			MirrorStatus:             string(mirror.MirrorTopicStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
 			NumPartition:             mirror.NumPartitions,
 			MaxPerPartitionMirrorLag: int64(maxLag),

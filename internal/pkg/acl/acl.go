@@ -24,11 +24,11 @@ import (
 type AclRequestDataWithError struct {
 	ResourceType kafkarestv3.AclResourceType
 	ResourceName string
-	PatternType  kafkarestv3.AclPatternType
+	PatternType  string
 	Principal    string
 	Host         string
-	Operation    kafkarestv3.AclOperation
-	Permission   kafkarestv3.AclPermission
+	Operation    string
+	Permission   string
 	Errors       error
 }
 
@@ -114,12 +114,8 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(kafkarestv3.ACLOPERATION_ALL, kafkarestv3.ACLOPERATION_READ, kafkarestv3.ACLOPERATION_WRITE,
-			kafkarestv3.ACLOPERATION_CREATE, kafkarestv3.ACLOPERATION_DELETE, kafkarestv3.ACLOPERATION_ALTER,
-			kafkarestv3.ACLOPERATION_DESCRIBE, kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
-			kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS, kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
-			kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE",
+		"CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -161,11 +157,11 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "transactional-id":
 			setAclRequestResourcePattern(conf, n, v)
 		case "allow":
-			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_ALLOW)
+			setAclRequestPermission(conf, "ALLOW")
 		case "deny":
-			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_DENY)
+			setAclRequestPermission(conf, "DENY")
 		case "prefix":
-			conf.PatternType = kafkarestv3.ACLPATTERNTYPE_PREFIXED
+			conf.PatternType = "PREFIXED"
 		case "principal":
 			conf.Principal = v
 		case "host":
@@ -175,22 +171,22 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 			v = strings.ReplaceAll(v, "-", "_")
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
-				kafkarestv3.ACLOPERATION_UNKNOWN,
-				kafkarestv3.ACLOPERATION_ANY,
-				kafkarestv3.ACLOPERATION_ALL,
-				kafkarestv3.ACLOPERATION_READ,
-				kafkarestv3.ACLOPERATION_WRITE,
-				kafkarestv3.ACLOPERATION_CREATE,
-				kafkarestv3.ACLOPERATION_DELETE,
-				kafkarestv3.ACLOPERATION_ALTER,
-				kafkarestv3.ACLOPERATION_DESCRIBE,
-				kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
-				kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS,
-				kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
-				kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE,
+				"UNKNOWN",
+				"ANY",
+				"ALL",
+				"READ",
+				"WRITE",
+				"CREATE",
+				"DELETE",
+				"ALTER",
+				"DESCRIBE",
+				"CLUSTER_ACTION",
+				"DESCRIBE_CONFIGS",
+				"ALTER_CONFIGS",
+				"IDEMPOTENT_WRITE",
 			)
 			if op, ok := enumUtils[v]; ok {
-				conf.Operation = op.(kafkarestv3.AclOperation)
+				conf.Operation = op.(string)
 				break
 			}
 			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("Invalid operation value: "+v))
@@ -198,7 +194,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 	}
 }
 
-func setAclRequestPermission(conf *AclRequestDataWithError, permission kafkarestv3.AclPermission) {
+func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
 	if conf.Permission != "" {
 		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
 	}
@@ -224,7 +220,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
 
 	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
-		conf.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
+		conf.PatternType = "LITERAL"
 	}
 	conf.ResourceName = v
 }
@@ -258,7 +254,7 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	}
 
 	if aclConfiguration.PatternType == "" {
-		aclConfiguration.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
+		aclConfiguration.PatternType = "LITERAL"
 	}
 
 	if aclConfiguration.ResourceType == "" {

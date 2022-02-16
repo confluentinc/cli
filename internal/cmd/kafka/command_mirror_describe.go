@@ -70,7 +70,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			LinkName:              mirror.LinkName,
 			MirrorTopicName:       mirror.MirrorTopicName,
 			SourceTopicName:       mirror.SourceTopicName,
-			MirrorStatus:          string(mirror.MirrorStatus),
+			MirrorStatus:          string(mirror.MirrorTopicStatus),
 			StatusTimeMs:          mirror.StateTimeMs,
 			Partition:             partitionLag.Partition,
 			PartitionMirrorLag:    int64(partitionLag.Lag),

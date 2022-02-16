@@ -79,6 +79,7 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
 			"destination-bootstrap-server",
+			"destination-cluster-id",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
@@ -96,6 +97,7 @@ var flagRules = []linter.FlagRule{
 			"client-key-path",
 			"connect-cluster-id",
 			"destination-bootstrap-server",
+			"destination-cluster-id",
 			"enable-systest-events",
 			"if-not-exists",
 			"kafka-cluster-id",
