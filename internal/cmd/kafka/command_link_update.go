@@ -28,13 +28,14 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 
-	if c.cfg.IsOnPremLogin() {
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	_ = cmd.MarkFlagRequired(configFileFlagName)
 
