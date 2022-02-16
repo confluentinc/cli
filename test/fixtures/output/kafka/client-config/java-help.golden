@@ -1,22 +1,22 @@
-Create a Java Client configuration file, of which the client configuration file is printed to stdout and the warnings is printed to stderr. Please see our examples on how to redirect the command output.
+Create a Java client configuration file, of which the client configuration file is printed to stdout and the warnings is printed to stderr. Please see our examples on how to redirect the command output.
 
 Usage:
   confluent kafka client-config create java [flags]
 
 Examples:
-Create a Java Client configuration file.
+Create a Java client configuration file.
 
   $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret
 
-Create a Java Client configuration file with arguments passed via flags.
+Create a Java client configuration file with arguments passed via flags.
 
   $ confluent kafka client-config create java --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret --sr-apikey my-sr-key --sr-apisecret my-sr-secret
 
-Create a Java Client configuration file, redirecting the configuration to a file and the warnings to a separate file.
+Create a Java client configuration file, redirecting the configuration to a file and the warnings to a separate file.
 
   $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret 1> my-client-config-file.config 2> my-warnings-file
 
-Create a Java Client configuration file, redirecting the configuration to a file and keeping the warnings in the console.
+Create a Java client configuration file, redirecting the configuration to a file and keeping the warnings in the console.
 
   $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret 1> my-client-config-file.config 2>&1
 

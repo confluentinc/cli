@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"time"
 	"unicode"
 
@@ -34,7 +35,7 @@ type clientConfig struct {
 
 const (
 	clientConfigUrlFmt         = "https://raw.githubusercontent.com/confluentinc/examples/master/clients/docs/includes/configs/cloud/%s.config"
-	clientConfigDescriptionFmt = "Create a %s Client configuration file"
+	clientConfigDescriptionFmt = "Create a %s client configuration file"
 
 	contextExampleFmt = "confluent kafka client-config create %s"
 	flagExampleFmt    = "confluent kafka client-config create %s --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret"
@@ -48,13 +49,16 @@ const (
 	springbootSrConfig = "springboot-sr"
 	restproxySrConfig  = "restproxy-sr"
 
-	brokerEndpointTemplate       = "{{ BROKER_ENDPOINT }}"
-	clusterApiKeyTemplate        = "{{ CLUSTER_API_KEY }}"
-	clusterApiSecretTemplate     = "{{ CLUSTER_API_SECRET }}"
-	srEndpointTemplate           = "https://{{ SR_ENDPOINT }}"
-	srApiKeyTemplate             = "{{ SR_API_KEY }}"
-	srApiSecretTemplate          = "{{ SR_API_SECRET }}"
-	srBasicAuthCredentialsSource = "USER_INFO"
+	brokerEndpointTemplate   = "{{ BROKER_ENDPOINT }}"
+	clusterApiKeyTemplate    = "{{ CLUSTER_API_KEY }}"
+	clusterApiSecretTemplate = "{{ CLUSTER_API_SECRET }}"
+	srEndpointTemplate       = "https://{{ SR_ENDPOINT }}"
+	srApiKeyTemplate         = "{{ SR_API_KEY }}"
+	srApiSecretTemplate      = "{{ SR_API_SECRET }}"
+
+	srEndpointProperty          = "schema.registry.url"
+	srCredentialsSourceProperty = "basic.auth.credentials.source"
+	srUserInfoProperty          = "basic.auth.user.info"
 )
 
 var (
@@ -76,35 +80,34 @@ var (
 
 	languages = []*clientConfig{
 		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI}
+
+	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
 func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
-	cliCmd := pcmd.NewHasAPIKeyCLICommand(
-		&cobra.Command{
-			Use:         "create",
-			Short:       "Create a Kafka Client configuration file.",
-			Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		}, c.prerunner)
+	cmd := &cobra.Command{
+		Use:         "create",
+		Short:       "Create a Kafka client configuration file.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+	}
 
-	cmd := &createCommand{
-		HasAPIKeyCLICommand: cliCmd,
+	cc := &createCommand{
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, c.prerunner),
 		prerunner:           c.prerunner,
 		clientId:            c.clientId,
 	}
 
 	for _, language := range languages {
-		cmd.addCommand(language)
+		cc.addCommand(language)
 	}
 
-	return cmd.Command
+	return cc.Command
 }
 
 func (c *createCommand) addCommand(clientConfig *clientConfig) {
-	var clientConfigDescription, contextExample, flagExample string
-
-	clientConfigDescription = fmt.Sprintf(clientConfigDescriptionFmt, clientConfig.language)
-	contextExample = fmt.Sprintf(contextExampleFmt, clientConfig.languageId)
-	flagExample = fmt.Sprintf(flagExampleFmt, clientConfig.languageId)
+	clientConfigDescription := fmt.Sprintf(clientConfigDescriptionFmt, clientConfig.language)
+	contextExample := fmt.Sprintf(contextExampleFmt, clientConfig.languageId)
+	flagExample := fmt.Sprintf(flagExampleFmt, clientConfig.languageId)
 
 	if clientConfig.srApiAvailable {
 		contextExample += srFlagExample
@@ -139,12 +142,9 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 		),
 	}
 
-	//add authenticated state flags
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-
-	//add api key flags
 	cmd.Flags().String("api-key", "", "API key.")
 	pcmd.AddApiSecretFlag(cmd)
 
@@ -171,10 +171,12 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 			return err
 		}
 
-		// replace SR_ENDPOINT, SR_API_KEY, and SR_API_SECRET templates
-		configFile, err = c.setSchemaRegistryCluster(cmd, configFile, srApiAvailable)
-		if err != nil {
-			return err
+		// replace SR_ENDPOINT, SR_API_KEY, and SR_API_SECRET templates if necessary
+		if srApiAvailable {
+			configFile, err = c.setSchemaRegistryCluster(cmd, configFile)
+			if err != nil {
+				return err
+			}
 		}
 
 		// print configuration file to stdout
@@ -198,7 +200,7 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile []byte) (
 	if err != nil {
 		return nil, err
 	}
-	if len(flagKey) != 0 && len(flagSecret) != 0 {
+	if flagKey != "" && flagSecret != "" {
 		err = c.validateKafkaCredentials(kafkaCluster)
 		if err != nil {
 			return nil, err
@@ -206,53 +208,53 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile []byte) (
 	}
 
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
-	configFile = bytes.ReplaceAll(configFile, []byte(brokerEndpointTemplate), []byte(kafkaCluster.Bootstrap))
-	configFile = bytes.ReplaceAll(configFile, []byte(clusterApiKeyTemplate), []byte(kafkaCluster.APIKey))
-	configFile = bytes.ReplaceAll(configFile, []byte(clusterApiSecretTemplate), []byte(kafkaCluster.APIKeys[kafkaCluster.APIKey].Secret))
+	configFile = replaceTemplates(configFile, map[string]string{
+		brokerEndpointTemplate:   kafkaCluster.Bootstrap,
+		clusterApiKeyTemplate:    kafkaCluster.APIKey,
+		clusterApiSecretTemplate: kafkaCluster.APIKeys[kafkaCluster.APIKey].Secret,
+	})
 	return configFile, nil
 }
 
-func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile []byte, srApiAvailable bool) ([]byte, error) {
-	// the language does not support SR so no need to modify configuration file. return directly
-	if !srApiAvailable {
-		return configFile, nil
-	}
-
+func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile []byte) ([]byte, error) {
 	// get schema registry cluster from context and flags, including key pair
 	srCluster, err := c.getSchemaRegistryCluster(cmd)
 	if err != nil {
 		// if SR not enabled, comment out SR in the configuration file and warn users
-		if errors.CatchSchemaRegistryNotEnabledError(err) {
-			return commentAndWarnAboutSr(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions, configFile)
+		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
+			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile)
 		}
 		return nil, err
 	}
+
+	// replace SR_ENDPOINT template
+	configFile = replaceTemplates(configFile, map[string]string{
+		srEndpointTemplate: srCluster.SchemaRegistryEndpoint,
+	})
 
 	// if empty api key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
 	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
 		// comment out SR and warn users
 		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
 			// both key and secret empty
-			configFile, err = commentAndWarnAboutSr(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
+			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
 			if err != nil {
 				return nil, err
 			}
 		} else if len(srCluster.SrCredentials.Key) == 0 {
 			// only key empty
-			configFile, err = commentAndWarnAboutSr(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
+			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 			if err != nil {
 				return nil, err
 			}
 		} else {
 			// only secret empty
-			configFile, err = commentAndWarnAboutSr(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
+			configFile, err = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		// replace SR_ENDPOINT template
-		configFile = bytes.ReplaceAll(configFile, []byte(srEndpointTemplate), []byte(srCluster.SchemaRegistryEndpoint))
 		return configFile, nil
 	}
 
@@ -266,10 +268,11 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		}
 	}
 
-	// replace SR_ENDPOINT, SR_API_KEY and SR_API_SECRET templates
-	configFile = bytes.ReplaceAll(configFile, []byte(srEndpointTemplate), []byte(srCluster.SchemaRegistryEndpoint))
-	configFile = bytes.ReplaceAll(configFile, []byte(srApiKeyTemplate), []byte(srCluster.SrCredentials.Key))
-	configFile = bytes.ReplaceAll(configFile, []byte(srApiSecretTemplate), []byte(srCluster.SrCredentials.Secret))
+	// replace SR_API_KEY and SR_API_SECRET templates
+	configFile = replaceTemplates(configFile, map[string]string{
+		srApiKeyTemplate:    srCluster.SrCredentials.Key,
+		srApiSecretTemplate: srCluster.SrCredentials.Secret,
+	})
 	return configFile, nil
 }
 
@@ -358,22 +361,21 @@ func fetchConfigFile(configId string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
-func commentAndWarnAboutSr(reason string, suggestions string, configFile []byte) ([]byte, error) {
+func replaceTemplates(configFile []byte, m map[string]string) []byte {
+	for template, value := range m {
+		configFile = bytes.ReplaceAll(configFile, []byte(template), []byte(value))
+	}
+	return configFile
+}
+
+func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, configFile []byte) ([]byte, error) {
 	warning := errors.NewWarningWithSuggestions(
 		errors.SRInConfigFileWarning,
 		reason,
 		suggestions+"\n"+errors.SRInConfigFileSuggestions)
 	warning.DisplayWarningWithSuggestions()
 
-	configFile, err := comment(configFile, srEndpointTemplate)
-	if err != nil {
-		return nil, err
-	}
-	configFile, err = comment(configFile, srBasicAuthCredentialsSource)
-	if err != nil {
-		return nil, err
-	}
-	configFile, err = comment(configFile, srApiKeyTemplate)
+	configFile, err := commentSchemaRegistryLines(configFile)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +383,7 @@ func commentAndWarnAboutSr(reason string, suggestions string, configFile []byte)
 	return configFile, nil
 }
 
-func comment(configFile []byte, template string) ([]byte, error) {
+func commentSchemaRegistryLines(configFile []byte) ([]byte, error) {
 	/* Examples:
 	1. Case where SR properties start at the beginning of the line
 	# Required connection configs for Confluent Cloud Schema Registry
@@ -413,32 +415,23 @@ func comment(configFile []byte, template string) ([]byte, error) {
 		#basic.auth.user.info = "{{ SR_API_KEY }}:{{ SR_API_SECRET }}"
 	}
 	*/
+	lines := bytes.Split(configFile, []byte("\n"))
 
-	// find the index of the template -- aka find the line of the template
-	endpointIdx := bytes.Index(configFile, []byte(template))
-
-	// find the last new line index before the template -- aka find the beginning of the template line
-	lastNewLineIdx := bytes.LastIndex(configFile[:endpointIdx], []byte("\n"))
-
-	// sanity check
-	if lastNewLineIdx == -1 || lastNewLineIdx+1 >= endpointIdx {
-		return nil, errors.New(errors.WriteConfigFileErrorMsg)
+	for idx, line := range lines {
+		// if contains one of the SR lines
+		if re.Match(line) {
+			// find the first non-space index in the line -- aka find where to insert #
+			fistNonSpaceIdx := bytes.IndexFunc(line, func(c rune) bool {
+				return !unicode.IsSpace(c)
+			})
+			// insert #
+			lines[idx] = insertByte(line, '#', fistNonSpaceIdx)
+		}
 	}
 
-	// find the first non-space index in the template line -- aka find where to insert #
-	fistNonSpaceIdx := bytes.IndexFunc(configFile[lastNewLineIdx:], func(c rune) bool {
-		return !unicode.IsSpace(c)
-	})
-
-	// insert #
-	configFile = insertByte(configFile, '#', lastNewLineIdx+fistNonSpaceIdx)
-
-	return configFile, nil
+	return bytes.Join(lines, []byte("\n")), nil
 }
 
 func insertByte(arr []byte, element byte, idx int) []byte {
-	arr = append(arr, 0)
-	copy(arr[idx+1:], arr[idx:])
-	arr[idx] = element
-	return arr
+	return append(arr[:idx], append([]byte{element}, arr[idx:]...)...)
 }

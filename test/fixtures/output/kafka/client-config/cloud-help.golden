@@ -4,7 +4,7 @@ Usage:
   confluent kafka client-config [command]
 
 Available Commands:
-  create      Create a Kafka Client configuration file.
+  create      Create a Kafka client configuration file.
 
 Global Flags:
   -h, --help            Show help for this command.

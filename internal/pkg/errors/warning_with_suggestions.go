@@ -7,7 +7,7 @@ import (
 
 const (
 	warningsMessageHeader = "Warning: "
-	reasonMessageHeader   = "\nReason: "
+	reasonMessageHeader   = "Reason: "
 )
 
 type WarningWithSuggestions struct {
@@ -27,6 +27,7 @@ func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg 
 func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() {
 	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
 		msg := warningsMessageHeader + w.warnMsg + "\n"
+		msg += "\n" // a new line between warning and reason
 		msg += reasonMessageHeader + w.reasonMsg + "\n"
 		msg += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
 

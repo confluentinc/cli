@@ -146,7 +146,7 @@ var properNouns = []string{
 	"ZooKeeper™",
 	"ksqlDB Server",
 	"ksqlDB",
-	"Client",
+	"Clients",
 	"Clojure",
 	"C/C++",
 	"C#",
