@@ -121,7 +121,7 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 			"the warnings is printed to stderr. Please see our examples on how to redirect the command output.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.create(clientConfig.configId, clientConfig.srApiAvailable)),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: clientConfigDescription + ".",
