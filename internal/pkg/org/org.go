@@ -4,31 +4,36 @@ import (
 	"context"
 	"net/http"
 
-	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-func OrgApiContext(authToken string) context.Context {
-	auth := context.WithValue(context.Background(), org.ContextAccessToken, authToken)
+func orgApiContext(authToken string) context.Context {
+	auth := context.WithValue(context.Background(), orgv2.ContextAccessToken, authToken)
 	return auth
 }
 
-func CreateOrgEnvironment(client *org.APIClient, environment org.OrgV2Environment, authToken string) (org.OrgV2Environment, *http.Response, error) {
-	return client.EnvironmentsOrgV2Api.CreateOrgV2Environment(OrgApiContext(authToken)).OrgV2Environment(environment).Execute()
+func CreateOrgEnvironment(client *orgv2.APIClient, environment orgv2.OrgV2Environment, authToken string) (orgv2.OrgV2Environment, *http.Response, error) {
+	req := client.EnvironmentsOrgV2Api.CreateOrgV2Environment(orgApiContext(authToken)).OrgV2Environment(environment)
+	return client.EnvironmentsOrgV2Api.CreateOrgV2EnvironmentExecute(req)
 
 }
 
-func GetOrgEnvironment(client *org.APIClient, envId string, authToken string) (org.OrgV2Environment, *http.Response, error) {
-	return client.EnvironmentsOrgV2Api.GetOrgV2Environment(OrgApiContext(authToken), envId).Execute()
+func GetOrgEnvironment(client *orgv2.APIClient, envId string, authToken string) (orgv2.OrgV2Environment, *http.Response, error) {
+	req := client.EnvironmentsOrgV2Api.GetOrgV2Environment(orgApiContext(authToken), envId)
+	return client.EnvironmentsOrgV2Api.GetOrgV2EnvironmentExecute(req)
 }
 
-func ListEnvironments(client *org.APIClient, authToken string) (org.OrgV2EnvironmentList, *http.Response, error) {
-	return client.EnvironmentsOrgV2Api.ListOrgV2Environments(OrgApiContext(authToken)).Execute()
+func ListEnvironments(client *orgv2.APIClient, authToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
+	req := client.EnvironmentsOrgV2Api.ListOrgV2Environments(orgApiContext(authToken))
+	return client.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }
 
-func UpdateOrgEnvironment(client *org.APIClient, envId string, updateEnvironment org.OrgV2Environment, authToken string) (org.OrgV2Environment, *http.Response, error) {
-	return client.EnvironmentsOrgV2Api.UpdateOrgV2Environment(OrgApiContext(authToken), envId).OrgV2Environment(updateEnvironment).Execute()
+func UpdateOrgEnvironment(client *orgv2.APIClient, envId string, updateEnvironment orgv2.OrgV2Environment, authToken string) (orgv2.OrgV2Environment, *http.Response, error) {
+	req := client.EnvironmentsOrgV2Api.UpdateOrgV2Environment(orgApiContext(authToken), envId).OrgV2Environment(updateEnvironment)
+	return client.EnvironmentsOrgV2Api.UpdateOrgV2EnvironmentExecute(req)
 }
 
-func DeleteOrgEnvironment(client *org.APIClient, envId string, authToken string) (*http.Response, error) {
-	return client.EnvironmentsOrgV2Api.DeleteOrgV2Environment(OrgApiContext(authToken), envId).Execute()
+func DeleteOrgEnvironment(client *orgv2.APIClient, envId string, authToken string) (*http.Response, error) {
+	req := client.EnvironmentsOrgV2Api.DeleteOrgV2Environment(orgApiContext(authToken), envId)
+	return client.EnvironmentsOrgV2Api.DeleteOrgV2EnvironmentExecute(req)
 }

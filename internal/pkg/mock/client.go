@@ -3,6 +3,8 @@ package mock
 import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 )
 
 func NewClientMock() *ccloud.Client {
@@ -19,4 +21,8 @@ func NewClientMock() *ccloud.Client {
 		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
+}
+
+func NewOrgClientMock() *orgv2.APIClient {
+	return &orgv2.APIClient{EnvironmentsOrgV2Api: &orgmock.EnvironmentsOrgV2Api{}}
 }
