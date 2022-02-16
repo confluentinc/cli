@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -9,19 +10,28 @@ import (
 
 const includeTopicsFlagName = "include-topics"
 
-var (
-	listLinkFieldsIncludeTopics           = []string{"LinkName", "TopicName", "SourceClusterId"}
-	structuredListLinkFieldsIncludeTopics = camelToSnake(listLinkFieldsIncludeTopics)
-	humanListLinkFieldsIncludeTopics      = camelToSpaced(listLinkFieldsIncludeTopics)
-	listLinkFields                        = []string{"LinkName", "SourceClusterId"}
-	structuredListLinkFields              = camelToSnake(listLinkFields)
-	humanListLinkFields                   = camelToSpaced(listLinkFields)
-)
+type link struct {
+	LinkName             string
+	TopicName            string
+	SourceClusterId      string
+	DestinationClusterId string
+}
 
-type LinkTopicWriter struct {
-	LinkName        string
-	TopicName       string
-	SourceClusterId *string
+func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
+	l := &link{
+		LinkName:  data.LinkName,
+		TopicName: topic,
+	}
+
+	if data.SourceClusterId != nil {
+		l.SourceClusterId = *data.SourceClusterId
+	}
+
+	if data.DestinationClusterId != nil {
+		l.DestinationClusterId = *data.DestinationClusterId
+	}
+
+	return l
 }
 
 func (c *linkCommand) newListCommand() *cobra.Command {
@@ -62,46 +72,40 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	if includeTopics {
-		outputWriter, err := output.NewListOutputWriter(cmd, listLinkFieldsIncludeTopics, humanListLinkFieldsIncludeTopics, structuredListLinkFieldsIncludeTopics)
-		if err != nil {
-			return err
-		}
+	listFields := getListFields(includeTopics, c.cfg.IsCloudLogin())
+	humanLabels := camelToSpaced(listFields)
+	structuredLabels := camelToSnake(listFields)
 
-		for _, link := range listLinksRespDataList.Data {
-			if len(link.TopicsNames) > 0 {
-				for _, topic := range link.TopicsNames {
-					outputWriter.AddElement(
-						&LinkTopicWriter{
-							LinkName:        link.LinkName,
-							TopicName:       topic,
-							SourceClusterId: link.SourceClusterId,
-						})
-				}
-			} else {
-				outputWriter.AddElement(
-					&LinkTopicWriter{
-						LinkName:        link.LinkName,
-						TopicName:       "",
-						SourceClusterId: link.SourceClusterId,
-					})
-			}
-		}
-
-		return outputWriter.Out()
-	} else {
-		outputWriter, err := output.NewListOutputWriter(cmd, listLinkFields, humanListLinkFields, structuredListLinkFields)
-		if err != nil {
-			return err
-		}
-
-		for _, link := range listLinksRespDataList.Data {
-			outputWriter.AddElement(&LinkTopicWriter{
-				LinkName:        link.LinkName,
-				SourceClusterId: link.SourceClusterId,
-			})
-		}
-
-		return outputWriter.Out()
+	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
+	if err != nil {
+		return err
 	}
+
+	for _, data := range listLinksRespDataList.Data {
+		if includeTopics && len(data.TopicsNames) > 0 {
+			for _, topic := range data.TopicsNames {
+				w.AddElement(newLink(data, topic))
+			}
+		} else {
+			w.AddElement(newLink(data, ""))
+		}
+	}
+
+	return w.Out()
+}
+
+func getListFields(includeTopics, isCloud bool) []string {
+	x := []string{"LinkName"}
+
+	if includeTopics {
+		x = append(x, "TopicName")
+	}
+
+	if isCloud {
+		x = append(x, "SourceClusterId")
+	} else {
+		x = append(x, "DestinationClusterId")
+	}
+
+	return x
 }
