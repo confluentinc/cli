@@ -36,17 +36,20 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a new cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --config-file config.txt",
-			},
-			examples.Example{
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
-			},
-		),
 	}
 
+	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
+	example2 := examples.Example{Text: "Create a cluster link, using an API key and secret."}
+	if c.cfg.IsCloudLogin() {
+		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --config-file config.txt"
+		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
+	} else {
+		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --config-file config.txt"
+		example2.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2)
+
+	// As of now, only CP --> CC links are supported.
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster.")
 		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")

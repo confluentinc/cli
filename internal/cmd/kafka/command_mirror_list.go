@@ -100,7 +100,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			MirrorStatus:             string(mirror.MirrorTopicStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
 			NumPartition:             mirror.NumPartitions,
-			MaxPerPartitionMirrorLag: int64(maxLag),
+			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}
 

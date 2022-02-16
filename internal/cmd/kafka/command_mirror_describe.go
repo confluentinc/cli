@@ -73,7 +73,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			MirrorStatus:          string(mirror.MirrorTopicStatus),
 			StatusTimeMs:          mirror.StateTimeMs,
 			Partition:             partitionLag.Partition,
-			PartitionMirrorLag:    int64(partitionLag.Lag),
+			PartitionMirrorLag:    partitionLag.Lag,
 			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
