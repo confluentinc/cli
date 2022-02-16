@@ -71,13 +71,14 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
 	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
 
-	if c.cfg.IsOnPremLogin() {
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	if c.cfg.IsCloudLogin() {
 		_ = cmd.MarkFlagRequired(sourceBootstrapServerFlagName)

@@ -44,13 +44,14 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 
 	cmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
 
-	if c.cfg.IsOnPremLogin() {
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
