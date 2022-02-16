@@ -1,3 +1,5 @@
+//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli launch_darkly.go LaunchDarklyManager
+
 package launch_darkly
 
 import (
@@ -8,6 +10,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	//"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
@@ -45,7 +48,9 @@ type FeatureFlagManager struct {
 }
 
 func InitManager(version *version.Version, isTest  bool) {
-	// TODO if isTest, return a mock
+	if isTest {
+	//	LdManager = &mock.LaunchDarklyManager{}
+	}
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)

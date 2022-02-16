@@ -21,6 +21,23 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 	}
 }
 
+// For the flag variation tests, only testing
+func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
+	req := require.New(suite.T())
+	flagMananger := FeatureFlagManager{
+		flagVals: map[string]interface{}{"test":true},
+	}
+	ctx := cmd.NewDynamicContext(nil, nil, nil)
+	flagMananger.flagValsAreForAnonUser = true
+	evaluatedFlag := flagMananger.BoolVariation("test", ctx, false)
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+
+	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	flagMananger.flagValsAreForAnonUser = false
+	evaluatedFlag = flagMananger.BoolVariation("test", ctx, false)
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+}
+
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
 	ctx := cmd.NewDynamicContext(nil, nil, nil)
