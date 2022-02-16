@@ -13,6 +13,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type (
@@ -186,6 +188,25 @@ func RequireNotTitleCase(field string, properNouns []string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		return requireNotTitleCaseHelper(fieldValue, properNouns, field, FullCommand(cmd))
+	}
+}
+
+func RequireListRequiredFlagsFirst() CommandRule {
+	return func(cmd *cobra.Command) error {
+		hasVisitedAnOptionalFlag := false
+		errs := new(multierror.Error)
+
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			if pcmd.IsFlagRequired(flag) {
+				if hasVisitedAnOptionalFlag {
+					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `--%s` must be listed before optional flags", cmd.CommandPath(), flag.Name))
+				}
+			} else {
+				hasVisitedAnOptionalFlag = true
+			}
+		})
+
+		return errs
 	}
 }
 

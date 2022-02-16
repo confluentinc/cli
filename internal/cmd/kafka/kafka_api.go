@@ -41,21 +41,21 @@ func aclConfigFlags() *pflag.FlagSet {
 
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
-	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "Confluent Cloud cluster ID.")
-	flgSet.Bool("allow", false, "Access to the resource is allowed.") // permission
-	flgSet.Bool("deny", false, "Access to the resource is denied.")
-	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
-	flgSet.String("service-account", "", "The service account ID.")
 	operationHelpOneLine := fmt.Sprintf("The ACL Operation: (%s).\nNote: This flag may be specified more than once.",
 		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"}))
 	operationHelpParts := strings.SplitAfter(operationHelpOneLine, "delete, ")
 	operationHelp := operationHelpParts[0] + "\n" + operationHelpParts[1]
+
+	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.StringArray("operation", []string{""}, operationHelp)
-	// An error is only returned if the flag name is not present.
-	// We know the flag name is present so its safe to ignore this.
-	_ = cobra.MarkFlagRequired(flgSet, "service-account")
+	flgSet.String("service-account", "", "The service account ID.")
+	flgSet.Bool("allow", false, "Access to the resource is allowed.")
+	flgSet.Bool("deny", false, "Access to the resource is denied.")
+	flgSet.SortFlags = false
+
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "service-account")
+
 	return flgSet
 }
 

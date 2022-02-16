@@ -6,15 +6,16 @@ import (
 	"os"
 	"os/signal"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
@@ -35,9 +36,10 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
+
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
@@ -45,6 +47,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
+
 	_ = cmd.MarkFlagRequired("bootstrap")
 	_ = cmd.MarkFlagRequired("ca-location")
 
