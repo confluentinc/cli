@@ -49,11 +49,11 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsGetOpts() 
 
 	r := aclBindingToClustersClusterIdAclsGetOpts(&binding)
 	req.True(r.Host == optional.NewString("myhost"))
-	req.True(r.Operation == optional.NewInterface(kafkarestv3.AclOperation("CREATE")))
+	req.True(r.Operation == optional.NewString("CREATE"))
 	req.True(r.ResourceName == optional.NewString("mygroup"))
 	req.True(r.Principal == optional.NewString("myprincipal"))
-	req.True(r.Permission == optional.NewInterface(kafkarestv3.AclPermission("ALLOW")))
-	req.True(r.PatternType == optional.NewInterface(kafkarestv3.AclPatternType("PREFIXED")))
+	req.True(r.Permission == optional.NewString("ALLOW"))
+	req.True(r.PatternType == optional.NewString("PREFIXED"))
 }
 
 func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts() {
@@ -118,11 +118,11 @@ func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts(
 
 	r := aclFilterToClustersClusterIdAclsDeleteOpts(&filter)
 	req.Equal(r.Host, optional.NewString("myhost"))
-	req.Equal(r.Operation, optional.NewInterface(kafkarestv3.AclOperation("WRITE")))
+	req.Equal(r.Operation, optional.NewString("WRITE"))
 	req.Equal(r.ResourceName, optional.NewString("mytopic"))
 	req.Equal(r.Principal, optional.NewString("myprincipal"))
-	req.Equal(r.Permission, optional.NewInterface(kafkarestv3.AclPermission("ALLOW")))
-	req.Equal(r.PatternType, optional.NewInterface(kafkarestv3.AclPatternType("LITERAL")))
+	req.Equal(r.Permission, optional.NewString("ALLOW"))
+	req.Equal(r.PatternType, optional.NewString("LITERAL"))
 }
 
 func (suite *KafkaRestTestSuite) TestKafkaRestError() {

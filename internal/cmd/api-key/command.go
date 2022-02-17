@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
@@ -17,14 +16,13 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	keystore        keystore.KeyStore
-	flagResolver    pcmd.FlagResolver
-	analyticsClient analytics.Client
+	keystore     keystore.KeyStore
+	flagResolver pcmd.FlagResolver
 }
 
 const resourceFlagName = "resource"
 
-func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver, analyticsClient analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
 		Short:       "Manage the API keys.",
@@ -35,7 +33,6 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
 		keystore:                      keystore,
 		flagResolver:                  resolver,
-		analyticsClient:               analyticsClient,
 	}
 
 	c.AddCommand(c.newCreateCommand())

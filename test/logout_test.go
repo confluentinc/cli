@@ -35,30 +35,30 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			mdsUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			mdsUrl,
 			testBin,
 		},
@@ -79,7 +79,11 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		// run login to provide context, then logout command and check output
 		output := runCommand(s.T(), tt.bin, env, "login -vvvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
+		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
+		}
 
 		output = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
 		s.Contains(output, loggedOutOutput)
@@ -112,16 +116,16 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
 			true,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
 			cloudUrl,
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
 			false,
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
 			mdsUrl,
 			testBin,
 		},

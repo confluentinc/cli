@@ -16,7 +16,7 @@ import (
 func (c *mirrorCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List all mirror topics in the cluster or under the given cluster link.",
+		Short: "List mirror topics in a cluster or under a cluster link.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
@@ -77,7 +77,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName, opts)
 	}
 	if err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST)
+		return handleOpenApiError(httpResp, err, kafkaREST.Client)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)
@@ -97,10 +97,10 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			LinkName:                 mirror.LinkName,
 			MirrorTopicName:          mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
-			MirrorStatus:             string(mirror.MirrorStatus),
+			MirrorStatus:             string(mirror.MirrorTopicStatus),
 			StatusTimeMs:             mirror.StateTimeMs,
 			NumPartition:             mirror.NumPartitions,
-			MaxPerPartitionMirrorLag: int64(maxLag),
+			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}
 

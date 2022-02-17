@@ -3,6 +3,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/confluentinc/cli/internal/pkg/log"

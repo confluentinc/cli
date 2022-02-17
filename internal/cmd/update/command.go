@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -32,11 +31,9 @@ type command struct {
 	*pcmd.CLICommand
 	version *pversion.Version
 	client  update.Client
-	// for testing
-	analyticsClient analytics.Client
 }
 
-func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Client, analytics analytics.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
 		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
@@ -46,12 +43,12 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 
 	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	cmd.Flags().Bool("major", false, "Allow major version updates.")
+	cmd.Flags().Bool("no-verify", false, "Skip checksum verification of new binary.")
 
 	c := &command{
-		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		version:         version,
-		client:          client,
-		analyticsClient: analytics,
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		version:    version,
+		client:     client,
 	}
 
 	c.RunE = pcmd.NewCLIRunE(c.update)
@@ -84,6 +81,11 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	major, err := cmd.Flags().GetBool("major")
+	if err != nil {
+		return err
+	}
+
+	noVerify, err := cmd.Flags().GetBool("no-verify")
 	if err != nil {
 		return err
 	}
@@ -132,7 +134,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin); err != nil {
+	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 
@@ -158,7 +160,6 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 
 	if errMsg != "" {
 		log.CliLogger.Debugf(errMsg)
-		c.analyticsClient.SetSpecialProperty(analytics.ReleaseNotesErrorPropertiesKeys, errMsg)
 		return ""
 	}
 

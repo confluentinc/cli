@@ -15,7 +15,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -38,13 +37,10 @@ type PreRunner interface {
 	AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
 
-const DoNotTrack = "do-not-track-analytics"
-
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *v1.Config
 	UpdateClient            update.Client
-	Analytics               analytics.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
 	CCloudClientFactory     pauth.CCloudClientFactory
@@ -180,19 +176,6 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 	h.Command.AddCommand(command)
 }
 
-// CanCompleteCommand returns whether or not the specified command can be completed.
-// If the prerunner of the command returns no error, true is returned,
-// and if an error is encountered, false is returned.
-func CanCompleteCommand(cmd *cobra.Command) bool {
-	if cmd.Annotations == nil {
-		cmd.Annotations = make(map[string]string)
-	}
-	cmd.Annotations[DoNotTrack] = ""
-	err := cmd.PersistentPreRunE(cmd, []string{})
-	delete(cmd.Annotations, DoNotTrack)
-	return err == nil
-}
-
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
@@ -201,10 +184,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 				return err
 			}
-		}
-
-		if _, ok := cmd.Annotations[DoNotTrack]; !ok {
-			r.Analytics.TrackCommand(cmd, args)
 		}
 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config, r.FlagResolver); err != nil {
@@ -227,9 +206,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 					return err
 				}
 				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
-				if err := r.Analytics.SessionTimedOut(); err != nil {
-					log.CliLogger.Debug(err.Error())
-				}
 			}
 		}
 
@@ -241,11 +217,15 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 func LabelRequiredFlags(cmd *cobra.Command) {
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
-		if len(annotations) == 1 && annotations[0] == "true" {
+		if IsFlagRequired(flag) {
 			flag.Usage = "REQUIRED: " + flag.Usage
 		}
 	})
+}
+
+func IsFlagRequired(flag *pflag.Flag) bool {
+	annotations := flag.Annotations[cobra.BashCompOneRequiredFlag]
+	return len(annotations) == 1 && annotations[0] == "true"
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
@@ -285,7 +265,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
-
 		return r.setCCloudClient(command)
 	}
 }
@@ -330,12 +309,12 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 		return nil
 	}
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
 	if err != nil {
 		return err
 	}
 	log.CliLogger.Debug(errors.AutoLoginMsg)
-	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 	return nil
 }
@@ -377,7 +356,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
-		restEndpoint, err := getKafkaRestEndpoint(ctx, cliCmd)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
 		if err != nil {
 			return nil, err
 		}
@@ -391,7 +370,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server)
+			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
 			if err != nil {
 				return nil, err
 			}
@@ -404,36 +383,36 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, error) {
+func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", nil
+		return "", "", nil
 	}
 	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	if clusterConfig.RestEndpoint != "" {
-		return clusterConfig.RestEndpoint, nil
+		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
 	}
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
 	client := NewContextClient(ctx)
 	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
 	// no need to update the config if it's still empty
 	if kafkaCluster.RestEndpoint == "" {
-		return "", nil
+		return "", clusterConfig.ID, nil
 	}
 	// update config to have updated cluster if rest endpoint is no longer ""
 	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
 	err = ctx.Save() //should we fail on this error or log and continue?
 	if err != nil {
-		return "", err
+		return "", clusterConfig.ID, err
 	}
-	return kafkaCluster.RestEndpoint, nil
+	return kafkaCluster.RestEndpoint, clusterConfig.ID, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
@@ -569,6 +548,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 
 func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
+	mdsConfig.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsConfig.Debug = true
 	}
@@ -586,7 +566,6 @@ func (r *PreRun) createMDSClient(ctx *DynamicContext, ver *version.Version) *mds
 	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
 		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsConfig.HTTPClient = utils.DefaultClient()
 	} else {
 		mdsConfig.HTTPClient = client
 	}
@@ -672,7 +651,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 		}
 		return client, nil
 	}
-	return http.DefaultClient, nil
+	return utils.DefaultClient(), nil
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
@@ -864,12 +843,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+		//nolint
 		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 
 func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
+	mdsv2Config.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
 		mdsv2Config.Debug = true
 	}
@@ -887,7 +868,6 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
 	if err != nil {
 		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-		mdsv2Config.HTTPClient = utils.DefaultClient()
 	} else {
 		mdsv2Config.HTTPClient = client
 	}
@@ -896,6 +876,7 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	cfg := kafkarestv3.NewConfiguration()
+	cfg.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
 		cfg.Debug = true
 	}

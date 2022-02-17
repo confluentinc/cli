@@ -492,8 +492,12 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 					err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.originalConfigs, plugin)
 					req.NoError(err)
 				} else {
-					validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-					validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+					if strings.HasSuffix(tt.args.configFilePath, ".json") {
+						validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+					} else {
+						validateTextFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+					}
+					validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 				}
 			}
 
@@ -713,7 +717,7 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIU
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
 			if !tt.wantErr {
-				validateFileContents(tt.args.outputConfigPath, tt.wantOutputFile, req)
+				validateTextFileContents(tt.args.outputConfigPath, tt.wantOutputFile, req)
 			}
 
 			// Clean Up
@@ -848,8 +852,8 @@ config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6Xgso
 			}
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
-				validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 
 			// Clean Up
@@ -948,8 +952,8 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			}
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
-				validateFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 			// Clean Up
 			os.Unsetenv(ConfluentKeyEnvVar)
@@ -1434,10 +1438,16 @@ func createNewConfigFile(path string, contents string) error {
 	return err
 }
 
-func validateFileContents(path string, expectedFileContent string, req *require.Assertions) {
+func validateTextFileContents(path string, expectedFileContent string, req *require.Assertions) {
 	readContent, err := ioutil.ReadFile(path)
 	req.NoError(err)
 	req.Equal(expectedFileContent, string(readContent))
+}
+
+func validateJSONFileContents(path string, expectedFileContent string, req *require.Assertions) {
+	readContent, err := ioutil.ReadFile(path)
+	req.NoError(err)
+	req.JSONEq(expectedFileContent, string(readContent))
 }
 
 func generateCorruptedData(cipher string) (string, error) {

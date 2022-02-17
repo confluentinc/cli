@@ -7,6 +7,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -118,6 +119,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			srConfig.BasePath = endpoint
 		}
 		srConfig.UserAgent = ver.UserAgent
+		srConfig.HTTPClient = utils.DefaultClient()
 		srClient := srsdk.NewAPIClient(srConfig)
 
 		// Test credentials
@@ -141,4 +143,38 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		return srClient, srCtx, nil
 	}
+}
+
+func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	srConfig := srsdk.NewConfiguration()
+
+	caCertPath, err := cmd.Flags().GetString("ca-location")
+	if err != nil {
+		return nil, nil, err
+	}
+	if caCertPath == "" {
+		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+	}
+	endpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(endpoint) == 0 {
+		return nil, nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+	}
+
+	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
+
+	srConfig.BasePath = endpoint
+	srConfig.UserAgent = ver.UserAgent
+	srConfig.HTTPClient, err = utils.GetCAClient(caCertPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	srClient := srsdk.NewAPIClient(srConfig)
+
+	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
+		return nil, nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+	}
+	return srClient, srCtx, nil
 }

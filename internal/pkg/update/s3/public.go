@@ -275,6 +275,25 @@ func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) 
 	return string(body), nil
 }
 
+func (r *PublicRepo) DownloadChecksums(name, version string) (string, error) {
+	cliBinDir := fmt.Sprintf(r.S3BinPrefixFmt, name)
+	checksumFileName := fmt.Sprintf("%s_%s_checksums.txt", name, version)
+	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, cliBinDir, version, checksumFileName)
+	resp, err := r.getHttpResponse(downloadURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	log.CliLogger.Tracef("Downloaded the following checksums for version %s:\n%s", version, string(body))
+
+	return string(body), nil
+}
+
 // must close the response afterwards
 func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 	resp, err := http.Get(url)

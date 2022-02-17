@@ -3,34 +3,29 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
 	*pcmd.CLICommand
-	analyticsClient analytics.Client
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string, analyticsClient analytics.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
 		Short: "Manage Apache Kafka.",
 	}
 
-	c := &command{
-		CLICommand:      pcmd.NewCLICommand(cmd, prerunner),
-		analyticsClient: analyticsClient,
-	}
+	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
 
 	aclCmd := newAclCommand(cfg, prerunner)
-	clusterCmd := newClusterCommand(cfg, prerunner, c.analyticsClient)
+	clusterCmd := newClusterCommand(cfg, prerunner)
 	groupCmd := newConsumerGroupCommand(prerunner)
 	topicCmd := newTopicCommand(cfg, prerunner, clientID)
 
 	c.AddCommand(newBrokerCommand(prerunner))
-	c.AddCommand(newLinkCommand(prerunner))
+	c.AddCommand(newLinkCommand(cfg, prerunner))
 	c.AddCommand(newMirrorCommand(prerunner))
 	c.AddCommand(newPartitionCommand(prerunner))
 	c.AddCommand(newReplicaCommand(prerunner))

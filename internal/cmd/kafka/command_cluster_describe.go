@@ -18,10 +18,16 @@ var (
 	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 	describeHumanRenames               = map[string]string{
-		"NetworkIngress":  "Ingress",
-		"NetworkEgress":   "Egress",
-		"ServiceProvider": "Provider",
-		"EncryptionKeyId": "Encryption Key ID"}
+		"ApiEndpoint":        "API Endpoint",
+		"ClusterSize":        "Cluster Size",
+		"EncryptionKeyId":    "Encryption Key ID",
+		"Id":                 "ID",
+		"NetworkEgress":      "Egress",
+		"NetworkIngress":     "Ingress",
+		"PendingClusterSize": "Pending Cluster Size",
+		"RestEndpoint":       "REST Endpoint",
+		"ServiceProvider":    "Provider",
+	}
 	describeStructuredRenames = map[string]string{
 		"Id":                 "id",
 		"Name":               "name",
@@ -120,7 +126,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
 	cluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0])
+		return errors.CatchKafkaNotFoundError(err, lkc)
 	}
 
 	return outputKafkaClusterDescriptionWithKAPI(cmd, cluster, all)

@@ -93,5 +93,5 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST)
+	return handleOpenApiError(httpResp, err, kafkaREST.Client)
 }

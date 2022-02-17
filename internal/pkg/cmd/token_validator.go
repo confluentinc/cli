@@ -22,7 +22,7 @@ type JWTValidatorImpl struct {
 
 func NewJWTValidator() *JWTValidatorImpl {
 	return &JWTValidatorImpl{
-		Clock:  clockwork.NewRealClock(),
+		Clock: clockwork.NewRealClock(),
 	}
 }
 

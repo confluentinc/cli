@@ -23,11 +23,11 @@ func TestParseAclRequest(t *testing.T) {
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				ResourceName: "kafka-cluster",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  "LITERAL",
 				Principal:    "User:Alice",
 				Host:         "127.0.0.1",
-				Operation:    kafkarestv3.ACLOPERATION_READ,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Operation:    "READ",
+				Permission:   "ALLOW",
 				Errors:       nil,
 			},
 		},
@@ -36,11 +36,11 @@ func TestParseAclRequest(t *testing.T) {
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_TOPIC,
 				ResourceName: "Test",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_PREFIXED,
+				PatternType:  "PREFIXED",
 				Principal:    "Group:Admin",
 				Host:         "*",
-				Operation:    kafkarestv3.ACLOPERATION_DELETE,
-				Permission:   kafkarestv3.ACLPERMISSION_DENY,
+				Operation:    "DELETE",
+				Permission:   "DENY",
 				Errors:       nil,
 			},
 		},
@@ -83,12 +83,12 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 		{
 			initialAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Permission:   "ALLOW",
 			},
 			expectedAcl: AclRequestDataWithError{
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  "LITERAL",
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Permission:   "ALLOW",
 			},
 		},
 		{
@@ -108,5 +108,38 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 			req.Nil(validatedAcl.Errors)
 			req.Equal(s.expectedAcl, *validatedAcl)
 		}
+	}
+}
+
+func TestGetPrefixAndResourceIdFromPrincipal_Empty(t *testing.T) {
+	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("", nil)
+	require.NoError(t, err)
+	require.Equal(t, "", prefix)
+	require.Equal(t, "", resourceId)
+}
+
+func TestGetPrefixAndResourceIdFromPrincipal_UnrecognizedFormat(t *testing.T) {
+	_, _, err := getPrefixAndResourceIdFromPrincipal("string with no colon", nil)
+	require.Error(t, err)
+}
+
+func TestGetPrefixAndResourceIdFromPrincipal_ResourceId(t *testing.T) {
+	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:sa-123456", nil)
+	require.NoError(t, err)
+	require.Equal(t, "User", prefix)
+	require.Equal(t, "sa-123456", resourceId)
+}
+
+func TestGetPrefixAndResourceIdFromPrincipal_NumericId(t *testing.T) {
+	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:123456", map[int32]string{123456: "sa-123456"})
+	require.NoError(t, err)
+	require.Equal(t, "User", prefix)
+	require.Equal(t, "sa-123456", resourceId)
+}
+
+func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
+	for _, principal := range []string{"User:123456", "User:abcdef"} {
+		_, _, err := getPrefixAndResourceIdFromPrincipal(principal, nil)
+		require.Error(t, err)
 	}
 }

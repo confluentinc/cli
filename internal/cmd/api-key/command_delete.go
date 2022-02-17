@@ -6,7 +6,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -42,12 +41,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
-	err = c.keystore.DeleteAPIKey(apiKey)
-	if err != nil {
-		return err
-	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, key.UserResourceId)
-	c.analyticsClient.SetSpecialProperty(analytics.ApiKeyPropertiesKey, key.Key)
-	return nil
+	return c.keystore.DeleteAPIKey(apiKey)
 }
