@@ -1,12 +1,14 @@
 package launch_darkly
 
 import (
+	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type LaunchDarklyTestSuite struct {
@@ -16,8 +18,8 @@ type LaunchDarklyTestSuite struct {
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
 	suite.flagManager = FeatureFlagManager{
-		client:                 nil,
-		version:                version.NewVersion("v1.2", "", "", ""),
+		client:  nil,
+		version: version.NewVersion("v1.2", "", "", ""),
 	}
 }
 
@@ -25,7 +27,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 	req := require.New(suite.T())
 	flagMananger := FeatureFlagManager{
-		flagVals: map[string]interface{}{"test":true},
+		flagVals: map[string]interface{}{"test": true},
 	}
 	ctx := cmd.NewDynamicContext(nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true
@@ -41,7 +43,7 @@ func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 func (suite *LaunchDarklyTestSuite) TestStringVariation() {
 	req := require.New(suite.T())
 	flagMananger := FeatureFlagManager{
-		flagVals: map[string]interface{}{"test":"value"},
+		flagVals: map[string]interface{}{"test": "value"},
 	}
 	ctx := cmd.NewDynamicContext(nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true

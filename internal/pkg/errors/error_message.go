@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions 			= "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"

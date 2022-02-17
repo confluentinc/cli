@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"os"
+
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"

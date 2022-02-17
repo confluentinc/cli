@@ -5,33 +5,34 @@ package launch_darkly
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"os"
+	"regexp"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/dghubble/sling"
+	"github.com/google/uuid"
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
+	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/dghubble/sling"
-	"github.com/google/uuid"
-	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
-	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
-	"os"
-	"regexp"
 )
 
 const (
-	baseURL = "https://confluent.cloud/ldapi/sdk/eval/%s/"
-	userPath = "users/%s"
+	baseURL         = "https://confluent.cloud/ldapi/sdk/eval/%s/"
+	userPath        = "users/%s"
 	prodEnvClientId = "61af57740127630ce47de5be"
 	testEnvClientId = "61af57740127630ce47de5bd"
 )
 
 var (
-	LdManager LaunchDarklyManager // Global LdManager
-	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id" , "cluster.physicalClusterId"}
+	LdManager  LaunchDarklyManager // Global LdManager
+	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 )
-
 
 type LaunchDarklyManager interface {
 	BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool
@@ -41,13 +42,13 @@ type LaunchDarklyManager interface {
 }
 
 type FeatureFlagManager struct {
-	client		*sling.Sling
-	flagVals	map[string]interface{}
+	client                 *sling.Sling
+	flagVals               map[string]interface{}
 	flagValsAreForAnonUser bool
-	version		*version.Version
+	version                *version.Version
 }
 
-func InitManager(version *version.Version, isTest  bool) {
+func InitManager(version *version.Version, isTest bool) {
 	if isTest {
 		// Any flag values needed for CLI tests can be hardcoded here
 		LdManager = &mock.LaunchDarklyManager{}
@@ -59,8 +60,8 @@ func InitManager(version *version.Version, isTest  bool) {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
 	LdManager = &FeatureFlagManager{
-		client: 	sling.New().Base(basePath),
-		version: 	version,
+		client:  sling.New().Base(basePath),
+		version: version,
 	}
 }
 
@@ -95,7 +96,7 @@ func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, d
 }
 
 func (f *FeatureFlagManager) JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
-	flagVal:= f.generalVariation(key, ctx, defaultVal)
+	flagVal := f.generalVariation(key, ctx, defaultVal)
 	return flagVal
 }
 
