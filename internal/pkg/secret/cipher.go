@@ -9,12 +9,12 @@ type Cipher struct {
 	EncryptedDataKey string
 }
 
-func NewDefaultCipher() *Cipher {
+func NewCipher(cipherMode string) *Cipher {
 	return &Cipher{
 		Iterations:       MetadataKeyDefaultIterations,
 		KeyLength:        MetadataKeyDefaultLengthBytes,
 		SaltMEK:          "",
 		SaltDEK:          "",
-		EncryptionAlgo:   MetadataEncAlgorithm,
+		EncryptionAlgo:   cipherMode,
 		EncryptedDataKey: ""}
 }
