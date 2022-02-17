@@ -10,7 +10,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	//"github.com/confluentinc/cli/internal/pkg/mock"
+	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
@@ -49,7 +49,8 @@ type FeatureFlagManager struct {
 
 func InitManager(version *version.Version, isTest  bool) {
 	if isTest {
-	//	LdManager = &mock.LaunchDarklyManager{}
+		// Any flag values needed for CLI tests can be hardcoded here
+		LdManager = &mock.LaunchDarklyManager{}
 	}
 	var basePath string
 	if os.Getenv("XX_LD_TEST_ENV") != "" {
@@ -103,14 +104,25 @@ func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContex
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	if f.areCachedFlagsAvailable(isAnonUser) {
-		return f.flagVals[key]
+		if _, ok := f.flagVals[key]; ok {
+			return f.flagVals[key]
+		} else {
+			log.CliLogger.Debugf("unable to find value for requested flag \"%s\"", key)
+			return defaultVal
+		}
 	}
 	err := f.fetchFlags(user, isAnonUser)
 	if err != nil {
 		log.CliLogger.Debug(err.Error())
 		return defaultVal
 	}
-	return f.flagVals[key]
+
+	if _, ok := f.flagVals[key]; ok {
+		return f.flagVals[key]
+	} else {
+		log.CliLogger.Debugf("unable to find value for requested flag \"%s\"", key)
+		return defaultVal
+	}
 }
 
 func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error {
@@ -205,7 +217,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 	return userBuilder.Build(), anonUser
 }
 
-func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) error {
+func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
 	found := false
 	for _, attribute := range attributes {
 		if key == attribute {
@@ -217,7 +229,6 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
-	return nil
 }
 
 func parsePkcFromBootstrap(bootstrap string) string {

@@ -21,7 +21,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 	}
 }
 
-// For the flag variation tests, only testing
+// For the flag variation tests, only testing use of cached flags to avoid API calls (using cc-system-tests for this)
 func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 	req := require.New(suite.T())
 	flagMananger := FeatureFlagManager{
@@ -38,10 +38,46 @@ func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
 }
 
+func (suite *LaunchDarklyTestSuite) TestStringVariation() {
+	req := require.New(suite.T())
+	flagMananger := FeatureFlagManager{
+		flagVals: map[string]interface{}{"test":"value"},
+	}
+	ctx := cmd.NewDynamicContext(nil, nil, nil)
+	flagMananger.flagValsAreForAnonUser = true
+	evaluatedFlag := flagMananger.StringVariation("test", ctx, "")
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+
+	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	flagMananger.flagValsAreForAnonUser = false
+	evaluatedFlag = flagMananger.StringVariation("test", ctx, "")
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+}
+
+func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
+	req := require.New(suite.T())
+	flagMananger := FeatureFlagManager{
+		flagVals: map[string]interface{}{"test": struct {
+			key string
+			val string
+		}{key: "key", val: "val"}},
+	}
+	ctx := cmd.NewDynamicContext(nil, nil, nil)
+	flagMananger.flagValsAreForAnonUser = true
+	evaluatedFlag := flagMananger.JsonVariation("test", ctx, nil)
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+
+	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	flagMananger.flagValsAreForAnonUser = false
+	evaluatedFlag = flagMananger.JsonVariation("test", ctx, nil)
+	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
+}
+
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
 	ctx := cmd.NewDynamicContext(nil, nil, nil)
 	user, anon := suite.flagManager.contextToLDUser(ctx)
+	req.True(user.GetAnonymous())
 	req.True(anon)
 
 	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
