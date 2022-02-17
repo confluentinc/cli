@@ -576,7 +576,7 @@ func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) (bool, erro
 }
 
 func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
-	return "ENC[" + c.CipherMode + ",data:" + cipher + ",iv:" + iv + ",type:str]"
+	return fmt.Sprintf("ENC[%s,data:%s,iv:%s,type:str]", c.CipherMode, cipher, iv)
 }
 
 func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
