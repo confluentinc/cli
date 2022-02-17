@@ -1467,7 +1467,6 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 		os.Unsetenv(ConfluentKeyEnvVar)
 		os.RemoveAll(tt.args.secureDir)
 	}
-
 }
 
 func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {

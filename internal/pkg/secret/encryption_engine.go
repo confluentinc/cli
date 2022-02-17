@@ -123,7 +123,6 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte, algo string) (
 	} else {
 		return c.encryptGCMMode(plainText, key)
 	}
-
 }
 
 func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
@@ -165,7 +164,7 @@ func (c *EncryptEngineImpl) encryptCBCMode(plainText string, key []byte) (data s
 	}
 	ecb := cipher.NewCBCEncrypter(block, ivBytes)
 	content := []byte(plainText)
-	content = c.pKCS5Padding(content, block.BlockSize())
+	content = c.pkcs5Padding(content, block.BlockSize())
 	crypted := make([]byte, len(content))
 	ecb.CryptBlocks(crypted, content)
 	result := base64.StdEncoding.EncodeToString(crypted)
@@ -225,7 +224,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
-		return c.pKCS5Trimming(decrypted)
+		return c.pkcs5Trimming(decrypted)
 	} else if algo == AES_GCM {
 		aesGcm, err := cipher.NewGCM(block)
 		if err != nil {
@@ -242,7 +241,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 	}
 }
 
-func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {
+func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
 	padding := encrypt[len(encrypt)-1]
 	length := len(encrypt) - int(padding)
 	if length < 0 || length > len(encrypt) {
@@ -251,7 +250,7 @@ func (c *EncryptEngineImpl) pKCS5Trimming(encrypt []byte) ([]byte, error) {
 	return encrypt[:len(encrypt)-int(padding)], nil
 }
 
-func (c *EncryptEngineImpl) pKCS5Padding(ciphertext []byte, blockSize int) []byte {
+func (c *EncryptEngineImpl) pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	length := len(ciphertext) % blockSize
 	padding := blockSize - length
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)

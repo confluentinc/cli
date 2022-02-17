@@ -59,6 +59,4 @@ const (
 	AES_GCM = "AES/GCM/NoPadding"
 )
 
-const (
-	MdsFeatureCipherFlag = "secrets.gcm.encryption.1.enabled"
-)
+const MdsFeatureCipherFlag = "secrets.gcm.encryption.1.enabled"

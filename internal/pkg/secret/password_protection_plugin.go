@@ -728,5 +728,5 @@ func (c *PasswordProtectionSuite) GetCipherMode() string {
 	if c.CipherMode != ""  {
 		return c.CipherMode
 	}
-	return  AES_CBC
+	return AES_CBC
 }

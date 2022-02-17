@@ -73,10 +73,8 @@ func (c *command) getCipherMode() string {
 		return secret.AES_CBC
 	}
 
-	_, exists := featureInfo.Features[secret.MdsFeatureCipherFlag]
-	if exists == false {
-		return secret.AES_CBC
+	if _, ok := featureInfo.Features[secret.MdsFeatureCipherFlag]; ok {
+		return secret.AES_GCM
 	}
-
-	return secret.AES_GCM
+	return secret.AES_CBC
 }
