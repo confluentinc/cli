@@ -728,5 +728,5 @@ func (c *PasswordProtectionSuite) GetCipherMode() string {
 	if c.CipherMode != ""  {
 		return c.CipherMode
 	}
-	return  MetadataEncAlgorithm
+	return  AES_CBC
 }
