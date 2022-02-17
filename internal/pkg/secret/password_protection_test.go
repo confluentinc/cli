@@ -1375,7 +1375,6 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 		newMasterKeyPassphrase string
 		cipherMode             string
 		newCipherMode          string
-		invalidKeyPassphrase   string
 		configFilePath         string
 		localSecureConfigPath  string
 		remoteSecureConfigPath string
