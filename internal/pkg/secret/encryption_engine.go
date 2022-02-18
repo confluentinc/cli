@@ -14,7 +14,7 @@ import (
 
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
-	Encrypt(plainText string, key []byte, algo string,) (string, string, error)
+	Encrypt(plainText string, key []byte, algo string) (string, string, error)
 	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
 	GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error)
@@ -171,7 +171,7 @@ func (c *EncryptEngineImpl) encryptCBCMode(plainText string, key []byte) (data s
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) encryptGCMMode(plainText string, key []byte) (data string, ivStr string, err error) {
+func (c *EncryptEngineImpl) encryptGCMMode(plainText string, key []byte) (string, string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", "", err
