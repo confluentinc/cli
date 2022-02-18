@@ -663,8 +663,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 							LastSourceFetchOffset: 5739304,
 						},
 					},
-					MirrorTopicStatus: "active",
-					StateTimeMs:       111111111,
+					MirrorStatus: "active",
+					StateTimeMs:  111111111,
 				},
 				{
 					Kind:            "",
@@ -685,8 +685,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.Re
 							LastSourceFetchOffset: 0,
 						},
 					},
-					MirrorTopicStatus: "stopped",
-					StateTimeMs:       222222222,
+					MirrorStatus: "stopped",
+					StateTimeMs:  222222222,
 				},
 			}})
 			require.NoError(t, err)
@@ -770,8 +770,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 							LastSourceFetchOffset: 5739304,
 						},
 					},
-					MirrorTopicStatus: "active",
-					StateTimeMs:       111111111,
+					MirrorStatus: "active",
+					StateTimeMs:  111111111,
 				},
 				{
 					Kind:            "",
@@ -792,8 +792,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.Respo
 							LastSourceFetchOffset: 0,
 						},
 					},
-					MirrorTopicStatus: "stopped",
-					StateTimeMs:       222222222,
+					MirrorStatus: "stopped",
+					StateTimeMs:  222222222,
 				},
 			}})
 			require.NoError(t, err)
@@ -1018,8 +1018,8 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.Respon
 						LastSourceFetchOffset: 5739304,
 					},
 				},
-				MirrorTopicStatus: "active",
-				StateTimeMs:       111111111,
+				MirrorStatus: "active",
+				StateTimeMs:  111111111,
 			})
 			require.NoError(t, err)
 		}
