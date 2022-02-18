@@ -41,6 +41,9 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cipherMode := c.getCipherMode()
+	c.plugin.SetCipherMode(cipherMode)
+
 	if rotateMEK {
 		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
