@@ -158,11 +158,10 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckaf
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
 	}
-	var err error
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		err = configMap.Set("debug=all")
+	if err := setDebugOption(configMap); err != nil {
+		return nil, err
 	}
-	return configMap, err
+	return configMap, nil
 }
 
 func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
