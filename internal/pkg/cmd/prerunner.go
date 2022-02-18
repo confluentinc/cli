@@ -74,16 +74,6 @@ type AuthenticatedCLICommand struct {
 	State             *v1.ContextState
 }
 
-func (c *AuthenticatedCLICommand) CmkApiContext() context.Context {
-	auth := context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.AuthToken())
-	return auth
-}
-
-func (c *AuthenticatedCLICommand) OrgApiContext() context.Context {
-	auth := context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken())
-	return auth
-}
-
 type AuthenticatedStateFlagCommand struct {
 	*AuthenticatedCLICommand
 }

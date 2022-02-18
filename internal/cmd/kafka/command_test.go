@@ -655,12 +655,6 @@ func TestDefaults2(t *testing.T) {
 /*************** TEST command_cluster ***************/
 // TODO: do this for all commands/subcommands... and for all common error messages
 func Test_HandleError_NotLoggedIn(t *testing.T) {
-	// mockKafka := &mock.Kafka{
-	// 	ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-	// 		return nil, new(errors.NotLoggedInError)
-	// 	},
-	// }
-	// client := &ccloud.Client{Kafka: mockKafka}
 	cmkApiMock := &cmkmock.ClustersCmkV2Api{
 		ListCmkV2ClustersFunc: func(ctx context.Context) cmkv2.ApiListCmkV2ClustersRequest {
 			return cmkv2.ApiListCmkV2ClustersRequest{}
@@ -670,7 +664,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
-	cmd := New(conf, cliMock.NewPreRunnerMock(nil, cmkClient, nil, nil, conf), "test-client")
+	cmd := New(conf, cliMock.NewPreRunnerMock(nil, cmkClient, nil, nil, nil, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
@@ -1212,7 +1206,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		}
 		return nil, nil
 	})
-	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, &provider, conf), "test-client")
+	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, &provider, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

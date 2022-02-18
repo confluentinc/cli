@@ -1,10 +1,13 @@
 package environment
 
 import (
+	"bytes"
 	"context"
+	"net/http"
 	"os"
 	"testing"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -13,20 +16,33 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
-	environmentID   = "env-123"
-	environmentName = "test-env"
+	environmentID          = "env-123"
+	environmentName        = "test-env"
+	environmentNameUpdated = "test-env-updated"
 )
 
 type EnvironmentTestSuite struct {
 	suite.Suite
 	conf              *v1.Config
 	accountClientMock *ccsdkmock.Account
+	orgClientMock     *orgmock.EnvironmentsOrgV2Api
+}
+
+var orgEnvironment = orgv2.OrgV2Environment{
+	Id:          orgv2.PtrString(environmentID),
+	DisplayName: orgv2.PtrString(environmentName),
+}
+
+var orgEnvironmentUpdated = orgv2.OrgV2Environment{
+	Id:          orgv2.PtrString(environmentID),
+	DisplayName: orgv2.PtrString(environmentNameUpdated),
 }
 
 func TestEnvironmentTestSuite(t *testing.T) {
@@ -42,25 +58,25 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 				Name: environmentName,
 			}, nil
 		},
-		GetFunc: func(arg0 context.Context, arg1 *orgv1.Account) (account *orgv1.Account, e error) {
-			return &orgv1.Account{
-				Id:   environmentID,
-				Name: environmentName,
-			}, nil
+	}
+	suite.orgClientMock = &orgmock.EnvironmentsOrgV2Api{
+		ListOrgV2EnvironmentsFunc: func(_ context.Context) orgv2.ApiListOrgV2EnvironmentsRequest {
+			return orgv2.ApiListOrgV2EnvironmentsRequest{}
 		},
-		ListFunc: func(arg0 context.Context, arg1 *orgv1.Account) (accounts []*orgv1.Account, e error) {
-			return []*orgv1.Account{
-				{
-					Id:   environmentID,
-					Name: environmentName,
-				},
-			}, nil
+		ListOrgV2EnvironmentsExecuteFunc: func(req orgv2.ApiListOrgV2EnvironmentsRequest) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
+			return orgv2.OrgV2EnvironmentList{Data: []orgv2.OrgV2Environment{orgEnvironment, orgEnvironmentUpdated}}, nil, nil
 		},
-		UpdateFunc: func(arg0 context.Context, arg1 *orgv1.Account) error {
-			return nil
+		UpdateOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiUpdateOrgV2EnvironmentRequest {
+			return orgv2.ApiUpdateOrgV2EnvironmentRequest{}
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *orgv1.Account) error {
-			return nil
+		UpdateOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiUpdateOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
+			return orgEnvironmentUpdated, nil, nil
+		},
+		DeleteOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiDeleteOrgV2EnvironmentRequest {
+			return orgv2.ApiDeleteOrgV2EnvironmentRequest{}
+		},
+		DeleteOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiDeleteOrgV2EnvironmentRequest) (*http.Response, error) {
+			return nil, nil
 		},
 	}
 }
@@ -69,6 +85,9 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 	client := &ccloud.Client{
 		Account: suite.accountClientMock,
 	}
+	orgClient := &orgv2.APIClient{
+		EnvironmentsOrgV2Api: suite.orgClientMock,
+	}
 	resolverMock := &pcmd.FlagResolverImpl{
 		Out: os.Stdout,
 	}
@@ -76,7 +95,16 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,
+		OrgClient:    orgClient,
 		Config:       suite.conf,
+	}
+	prerunner.Config.Context().State = &v1.ContextState{
+		Auth: &v1.AuthConfig{
+			Account: &orgv1.Account{
+				Id: "abc",
+			},
+		},
+		AuthToken: "auth-token",
 	}
 	return New(prerunner)
 }
@@ -90,11 +118,35 @@ func (suite *EnvironmentTestSuite) TestCreateEnvironment() {
 	req.True(suite.accountClientMock.CreateCalled())
 }
 
+func (suite *EnvironmentTestSuite) TestListEnvironments() {
+	cmd := suite.newCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"list"})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	got := string(buf.Bytes())
+	req.Contains(got, environmentID)
+	req.Contains(got, environmentName)
+	req.Contains(got, environmentNameUpdated)
+}
+
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"delete", environmentID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.accountClientMock.DeleteCalled())
+}
+
+func (suite *EnvironmentTestSuite) TestUpdateEnvironment() {
+	cmd := suite.newCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"update", environmentID, "--name", "test-env-updated"})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.Equal([]byte("Updated the name of environment \"env-123\" to \"test-env-updated\".\n"), buf.Bytes())
 }

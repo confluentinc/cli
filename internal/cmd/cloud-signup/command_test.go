@@ -172,7 +172,7 @@ func testCloudSignup(t *testing.T, prompt form.Prompt, expected ...string) {
 
 func newCmd(conf *v1.Config) *command {
 	client := mockCcloudClient()
-	prerunner := cliMock.NewPreRunnerMock(client, nil,nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, conf)
 	auth := &ccloudmock.Auth{
 		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
 			return testToken, nil

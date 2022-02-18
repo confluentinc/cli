@@ -15,6 +15,8 @@ var TestCloudURL = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined
 type TestBackend struct {
 	cloud          *httptest.Server
+	cmkApi         *httptest.Server
+	orgApi         *httptest.Server
 	kafkaApi       *httptest.Server
 	kafkaRestProxy *httptest.Server
 	mds            *httptest.Server
@@ -23,13 +25,17 @@ type TestBackend struct {
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
+	cmkRouter := NewCmkRouter(t)
+	// orgRouter := NewOrgRouter(t)
 	kafkaRouter := NewKafkaRouter(t)
 	mdsRouter := NewMdsRouter(t)
 	srRouter := NewSRRouter(t)
 	kafkaRPServer := configureKafkaRestServer(kafkaRouter.KafkaRP)
 
 	backend := &TestBackend{
-		cloud:          newTestCloudServer(cloudRouter),
+		cloud: newTestCloudServer(cloudRouter),
+		// cmkApi: newTestCloudServer(cmkRouter),
+		// orgApi:         orgRouter,
 		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: kafkaRPServer,
 		mds:            httptest.NewServer(mdsRouter),
@@ -39,7 +45,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
-
+	cmkRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
 	return backend
 }
 

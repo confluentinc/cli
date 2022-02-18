@@ -216,7 +216,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	cmkClient := &cmkv2.APIClient{
 		ClustersCmkV2Api: suite.cmkClusterApi,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, cmkClient, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, cmkClient, nil, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 

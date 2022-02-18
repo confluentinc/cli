@@ -15,7 +15,6 @@ func orgApiContext(authToken string) context.Context {
 func CreateOrgEnvironment(client *orgv2.APIClient, environment orgv2.OrgV2Environment, authToken string) (orgv2.OrgV2Environment, *http.Response, error) {
 	req := client.EnvironmentsOrgV2Api.CreateOrgV2Environment(orgApiContext(authToken)).OrgV2Environment(environment)
 	return client.EnvironmentsOrgV2Api.CreateOrgV2EnvironmentExecute(req)
-
 }
 
 func GetOrgEnvironment(client *orgv2.APIClient, envId string, authToken string) (orgv2.OrgV2Environment, *http.Response, error) {
