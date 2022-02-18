@@ -39,7 +39,6 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.Flags().String("debug", "", "List of comma-separated debug contexts to enable: broker, topic, msg, protocol, consumer, cgrp, fetch, all.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -52,9 +51,9 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	producer, err := NewProducer(cmd, cluster, c.clientID)
+	producer, err := NewProducer(cluster, c.clientID)
 	if err != nil {
-		return errors.CatchCloudInvalidDebugValueError(errors.FailedToCreateProducerMsg, err)
+		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")

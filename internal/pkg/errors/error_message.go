@@ -394,7 +394,6 @@ const (
 	NotLoggedInErrorMsg         = "not logged in"
 	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
 	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
-	DebugOptionSuggestion       = "Available debug contexts for producer: broker, topic, msg, protocol; For consumer: consumer, cgrp, topic, fetch, protocol.\n"
 	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"

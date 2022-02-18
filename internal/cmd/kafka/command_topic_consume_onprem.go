@@ -44,7 +44,6 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().String("debug", "", "List of comma-separated debug contexts to enable: broker, topic, msg, protocol, all.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
@@ -94,7 +93,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	consumer, err := ckafka.NewConsumer(configMap)
 	if err != nil {
-		return errors.CatchOnPremInvalidDebugValueError(errors.FailedToCreateConsumerMsg, err)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
