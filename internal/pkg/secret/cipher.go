@@ -10,21 +10,16 @@ type Cipher struct {
 }
 
 func NewCipher(cipherMode string) *Cipher {
-	if cipherMode != "" {
-		return &Cipher{
-			Iterations:       MetadataKeyDefaultIterations,
-			KeyLength:        MetadataKeyDefaultLengthBytes,
-			SaltMEK:          "",
-			SaltDEK:          "",
-			EncryptionAlgo:   cipherMode,
-			EncryptedDataKey: ""}
-	} else {
-		return &Cipher{
-			Iterations:       MetadataKeyDefaultIterations,
-			KeyLength:        MetadataKeyDefaultLengthBytes,
-			SaltMEK:          "",
-			SaltDEK:          "",
-			EncryptionAlgo:   AES_CBC,
-			EncryptedDataKey: ""}
+	
+	cipher := &Cipher{
+		Iterations:     MetadataKeyDefaultIterations,
+		KeyLength:      MetadataKeyDefaultLengthBytes,
+		EncryptionAlgo: AES_CBC,
 	}
+	
+	if cipherMode != "" {
+		cipher.EncryptionAlgo = cipherMode
+	}
+	
+	return cipher
 }
