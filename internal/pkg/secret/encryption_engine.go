@@ -177,7 +177,7 @@ func (c *EncryptEngineImpl) encryptGCMMode(plainText string, key []byte) (string
 		return "", "", err
 	}
 
-	ivStr, err = c.generateRandomString(MetadataIVLength)
+	ivStr, err := c.generateRandomString(MetadataIVLength)
 	if err != nil {
 		return "", "", err
 	}

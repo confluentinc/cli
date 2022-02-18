@@ -723,10 +723,3 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 func (c *PasswordProtectionSuite) SetCipherMode(cipherMode string) {
 	c.CipherMode = cipherMode
 }
-
-func (c *PasswordProtectionSuite) GetCipherMode() string {
-	if c.CipherMode != ""  {
-		return c.CipherMode
-	}
-	return AES_CBC
-}
