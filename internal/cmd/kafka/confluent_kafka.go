@@ -158,9 +158,6 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckaf
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
 	}
-	if err := setDebugOption(configMap); err != nil {
-		return nil, err
-	}
 	return configMap, nil
 }
 
@@ -182,7 +179,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
 	}
-	if err := setDebugOption(configMap); err != nil {
+	if err := setProducerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
@@ -223,7 +220,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
 		return nil, err
 	}
-	if err := setDebugOption(configMap); err != nil {
+	if err := setConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
@@ -316,6 +313,9 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
 		return nil, err
 	}
+	if err := setProducerDebugOption(configMap); err != nil {
+		return nil, err
+	}
 	return configMap, nil
 }
 
@@ -332,6 +332,9 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		autoOffsetReset = "earliest"
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
+		return nil, err
+	}
+	if err := setConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return configMap, nil
@@ -498,10 +501,20 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-func setDebugOption(configMap *ckafka.ConfigMap) error {
+func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
 	switch log.CliLogger.GetLevel() {
 	case log.DEBUG:
-		return configMap.Set("debug=broker, topic, msg, protocol, consumer")
+		return configMap.Set("debug=broker, topic, msg, protocol")
+	case log.TRACE:
+		return configMap.Set("debug=all")
+	}
+	return nil
+}
+
+func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
+	switch log.CliLogger.GetLevel() {
+	case log.DEBUG:
+		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
 	case log.TRACE:
 		return configMap.Set("debug=all")
 	}
