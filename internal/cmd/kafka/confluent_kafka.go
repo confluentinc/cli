@@ -499,7 +499,10 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 }
 
 func setDebugOption(configMap *ckafka.ConfigMap) error {
-	if log.CliLogger.GetLevel() >= log.DEBUG {
+	switch log.CliLogger.GetLevel() {
+	case log.DEBUG:
+		return configMap.Set("debug=broker, topic, msg, protocol, consumer")
+	case log.TRACE:
 		return configMap.Set("debug=all")
 	}
 	return nil
