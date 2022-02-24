@@ -1,23 +1,13 @@
 package quotas
 
 import (
-	"encoding/json"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"os"
 	"testing"
 
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
-	"github.com/gorilla/mux"
-	"github.com/spf13/cobra"
-
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type QuotasTestSuite struct {
@@ -30,76 +20,12 @@ func TestQuotasTestSuite(t *testing.T) {
 	suite.Run(t, new(QuotasTestSuite))
 }
 
-func (suite *QuotasTestSuite) SetupTest() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.StartBackEndServer()
-	url := suite.StartBackEndServer()
-	cfg := quotasv2.NewConfiguration()
-
-	cfg.Servers[0].URL = url + "/api"
-	suite.QuotasClient = quotasv2.NewAPIClient(cfg)
-	suite.StartBackEndServer()
-}
-
-func (suite *QuotasTestSuite) newCmd() *cobra.Command {
-	resolverMock := &pcmd.FlagResolverImpl{
-		Out: os.Stdout,
-	}
-	prerunner := &cliMock.Commander{
-		FlagResolver: resolverMock,
-		QuotasClient: suite.QuotasClient,
-		Config:       suite.conf,
-	}
-	return New(prerunner)
-}
-
-func (suite *QuotasTestSuite) StartBackEndServer() string {
-	r := mux.NewRouter()
-	r.HandleFunc("/api/quotas/v2/applied-quotas", HandleAppliedQuotas(suite.T()))
-	s := httptest.NewServer(r)
-	return s.URL
-}
-
-func HandleAppliedQuotas(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		quota1 := quotasv2.QuotasV2AppliedQuota{
-			Id:           stringToPtr("quota_a"),
-			Scope:        stringToPtr("kafka_cluster"),
-			DisplayName:  stringToPtr(""),
-			Organization: quotasv2.NewObjectReference("org-123", "", ""),
-			KafkaCluster: quotasv2.NewObjectReference("lkc-1", "", ""),
-			Environment:  quotasv2.NewObjectReference("env-1", "", ""),
-			AppliedLimit: int32ToPtr(15),
-		}
-		quotaList := &quotasv2.QuotasV2AppliedQuotaList{
-			ApiVersion: "quotas/v2",
-			Kind:       "AppliedQuotaList",
-			Data:       []quotasv2.QuotasV2AppliedQuota{quota1},
-		}
-		reply, err := json.Marshal(quotaList)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
-		require.NoError(t, err)
-	}
-}
-
 func stringToPtr(s string) *string {
 	return &s
 }
 
 func int32ToPtr(i int32) *int32 {
 	return &i
-}
-
-func (suite *QuotasTestSuite) TestListQuotas() {
-	cmd := suite.newCmd()
-	args := []string{"list", "kafka_cluster"}
-	cmd.SetArgs(args)
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-
 }
 
 func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
