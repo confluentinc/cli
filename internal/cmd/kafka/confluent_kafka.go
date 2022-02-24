@@ -148,7 +148,7 @@ func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 	return ckafka.NewConsumer(configMap)
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
 	configMap := &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
@@ -158,7 +158,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckaf
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
 	}
-	return configMap, nil
+	return configMap
 }
 
 func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
@@ -303,10 +303,7 @@ func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Con
 }
 
 func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap, err := getCommonConfig(kafka, clientID)
-	if err != nil {
-		return nil, err
-	}
+	configMap := getCommonConfig(kafka, clientID)
 	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
 		return nil, err
 	}
@@ -320,10 +317,7 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 }
 
 func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
-	configMap, err := getCommonConfig(kafka, clientID)
-	if err != nil {
-		return nil, err
-	}
+	configMap := getCommonConfig(kafka, clientID)
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
