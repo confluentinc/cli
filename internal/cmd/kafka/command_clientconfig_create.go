@@ -1,12 +1,12 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 	"unicode"
 
@@ -27,10 +27,10 @@ type createCommand struct {
 }
 
 type clientConfig struct {
-	language       string // human-friendly language name
-	languageId     string // unique id for language used as CLI command
-	configId       string // config id used for fetching language config file from he examples github repo
-	srApiAvailable bool   // whether SR key pair is supported in the language config file
+	language         string // human-friendly language name
+	languageId       string // unique id for language used as CLI command
+	configId         string // config id used for fetching language config file from the examples Github repo
+	isSrApiAvailable bool   // whether SR key pair is supported in the language config file
 }
 
 const (
@@ -78,7 +78,7 @@ var (
 	scala      = &clientConfig{"Scala", "scala", javaConfig, false}
 	springBoot = &clientConfig{"Spring Boot", "springboot", springbootSrConfig, true}
 
-	languages = []*clientConfig{
+	clientConfigurations = []*clientConfig{
 		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI}
 
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
@@ -97,7 +97,7 @@ func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
 		clientId:            c.clientId,
 	}
 
-	for _, language := range languages {
+	for _, language := range clientConfigurations {
 		cc.addCommand(language)
 	}
 
@@ -109,7 +109,7 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 	contextExample := fmt.Sprintf(contextExampleFmt, clientConfig.languageId)
 	flagExample := fmt.Sprintf(flagExampleFmt, clientConfig.languageId)
 
-	if clientConfig.srApiAvailable {
+	if clientConfig.isSrApiAvailable {
 		contextExample += srFlagExample
 		flagExample += srFlagExample
 	}
@@ -118,9 +118,9 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 		Use:   clientConfig.languageId,
 		Short: clientConfigDescription + ".",
 		Long: clientConfigDescription + ", of which the client configuration file is printed to stdout and " +
-			"the warnings is printed to stderr. Please see our examples on how to redirect the command output.",
+			"the warnings are printed to stderr. Please see our examples on how to redirect the command output.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.create(clientConfig.configId, clientConfig.srApiAvailable)),
+		RunE:        pcmd.NewCLIRunE(c.create(clientConfig.configId, clientConfig.isSrApiAvailable)),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -149,7 +149,7 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 	pcmd.AddApiSecretFlag(cmd)
 
 	// add sr flags
-	if clientConfig.srApiAvailable {
+	if clientConfig.isSrApiAvailable {
 		cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
 		cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
 	}
@@ -185,11 +185,11 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 	}
 }
 
-func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile []byte) ([]byte, error) {
+func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// only validate that the key pair matches with the cluster if it's passed via the flag.
@@ -198,12 +198,11 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile []byte) (
 	// TODO: always validate key pair after feature enhancement: https://confluentinc.atlassian.net/browse/CLI-1575
 	flagKey, flagSecret, err := c.Context.KeyAndSecretFlags(cmd)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	if flagKey != "" && flagSecret != "" {
-		err = c.validateKafkaCredentials(kafkaCluster)
-		if err != nil {
-			return nil, err
+		if err := c.validateKafkaCredentials(kafkaCluster); err != nil {
+			return "", err
 		}
 	}
 
@@ -216,7 +215,7 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile []byte) (
 	return configFile, nil
 }
 
-func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile []byte) ([]byte, error) {
+func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get schema registry cluster from context and flags, including key pair
 	srCluster, err := c.getSchemaRegistryCluster(cmd)
 	if err != nil {
@@ -224,7 +223,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
 			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile)
 		}
-		return nil, err
+		return "", err
 	}
 
 	// replace SR_ENDPOINT template
@@ -239,19 +238,19 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 			// both key and secret empty
 			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 		} else if len(srCluster.SrCredentials.Key) == 0 {
 			// only key empty
 			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 		} else {
 			// only secret empty
 			configFile, err = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 		}
 
@@ -259,12 +258,11 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	}
 
 	// validate that the key pair matches with the cluster
-	err = c.validateSchemaRegistryCredentials(srCluster)
-	if err != nil {
+	if err := c.validateSchemaRegistryCredentials(srCluster); err != nil {
 		if err.Error() == "ccloud" {
-			return nil, new(errors.SRNotAuthenticatedError)
+			return "", new(errors.SRNotAuthenticatedError)
 		} else {
-			return nil, err
+			return "", err
 		}
 	}
 
@@ -302,15 +300,13 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 }
 
 func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterConfig) error {
-	// validate
 	adminClient, err := ckafka.NewAdminClient(getCommonConfig(kafkaCluster, c.clientId))
 	if err != nil {
 		return err
 	}
 	defer adminClient.Close()
 	timeout := 5 * time.Second
-	_, err = adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
-	if err != nil {
+	if _, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds())); err != nil {
 		if err.Error() == ckafka.ErrTransport.String() {
 			err = errors.NewErrorWithSuggestions(errors.KafkaCredsValidationFailedErrorMsg, errors.KafkaCredsValidationFailedSuggestions)
 		}
@@ -345,30 +341,36 @@ func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRe
 	return nil
 }
 
-func fetchConfigFile(configId string) ([]byte, error) {
+func fetchConfigFile(configId string) (string, error) {
 	url := fmt.Sprintf(clientConfigUrlFmt, configId)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.Errorf(errors.FetchConfigFileErrorMsg, resp.StatusCode)
+		return "", errors.Errorf(errors.FetchConfigFileErrorMsg, resp.StatusCode)
 	}
 
 	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+
+	configFile, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	return string(configFile), nil
 }
 
-func replaceTemplates(configFile []byte, m map[string]string) []byte {
+func replaceTemplates(configFile string, m map[string]string) string {
 	for template, value := range m {
-		configFile = bytes.ReplaceAll(configFile, []byte(template), []byte(value))
+		configFile = strings.ReplaceAll(configFile, template, value)
 	}
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, configFile []byte) ([]byte, error) {
+func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, configFile string) (string, error) {
 	warning := errors.NewWarningWithSuggestions(
 		errors.SRInConfigFileWarning,
 		reason,
@@ -377,13 +379,13 @@ func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, config
 
 	configFile, err := commentSchemaRegistryLines(configFile)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return configFile, nil
 }
 
-func commentSchemaRegistryLines(configFile []byte) ([]byte, error) {
+func commentSchemaRegistryLines(configFile string) (string, error) {
 	/* Examples:
 	1. Case where SR properties start at the beginning of the line
 	# Required connection configs for Confluent Cloud Schema Registry
@@ -415,23 +417,19 @@ func commentSchemaRegistryLines(configFile []byte) ([]byte, error) {
 		#basic.auth.user.info = "{{ SR_API_KEY }}:{{ SR_API_SECRET }}"
 	}
 	*/
-	lines := bytes.Split(configFile, []byte("\n"))
+	lines := strings.Split(configFile, "\n")
 
 	for idx, line := range lines {
 		// if contains one of the SR lines
-		if re.Match(line) {
+		if re.MatchString(line) {
 			// find the first non-space index in the line -- aka find where to insert #
-			fistNonSpaceIdx := bytes.IndexFunc(line, func(c rune) bool {
+			firstNonSpaceIdx := strings.IndexFunc(line, func(c rune) bool {
 				return !unicode.IsSpace(c)
 			})
 			// insert #
-			lines[idx] = insertByte(line, '#', fistNonSpaceIdx)
+			lines[idx] = line[:firstNonSpaceIdx] + "#" + line[firstNonSpaceIdx:]
 		}
 	}
 
-	return bytes.Join(lines, []byte("\n")), nil
-}
-
-func insertByte(arr []byte, element byte, idx int) []byte {
-	return append(arr[:idx], append([]byte{element}, arr[idx:]...)...)
+	return strings.Join(lines, "\n"), nil
 }
