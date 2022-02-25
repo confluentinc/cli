@@ -245,7 +245,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
 		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
-		fmt.Println("went through...output:", output)
 		if *debug {
 			fmt.Println(output)
 		}

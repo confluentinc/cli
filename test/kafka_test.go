@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/bincover"
 )
 
-func (s *CLITestSuite) TestKafka() {
+func (s *CLITestSuite) TestKafka123() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
@@ -20,10 +20,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster list -o json", fixture: "kafka/7.golden"},
 		{args: "kafka cluster list -o yaml", fixture: "kafka/8.golden"},
 
-		// {args: "environment use env-123", fixture: "kafka/46.golden"},
-		// {args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone", fixture: "kafka/2.golden"},
-		// {args: "kafka cluster list", fixture: "kafka/6.golden"},
-		// {args: "kafka cluster list --all", fixture: "kafka/47.golden"},
+		{args: "environment use env-123", fixture: "kafka/46.golden"},
+		{args: "kafka cluster create my-new-cluster --cloud aws --region us-east-1 --availability single-zone", fixture: "kafka/2.golden"},
+		{args: "kafka cluster list", fixture: "kafka/6.golden"},
+		{args: "kafka cluster list --all", fixture: "kafka/47.golden"},
 
 		// {args: "environment use a-595", fixture: "kafka/0.golden"},
 		// {args: "kafka cluster create", fixture: "kafka/1.golden", wantErrCode: 1},

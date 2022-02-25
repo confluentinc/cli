@@ -482,7 +482,7 @@ func (r *PreRun) createCmkClient(ctx *DynamicContext, ver *version.Version) *cmk
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
-	cmkServer := baseURL[:8] + "api." + baseURL[8:]
+	cmkServer := getV2ServerUrl(baseURL)
 	server := cmkv2.ServerConfigurations{
 		{URL: cmkServer, Description: "Confluent Cloud"},
 	}
@@ -501,7 +501,7 @@ func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *org
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
-	orgServer := baseURL[:8] + "api." + baseURL[8:]
+	orgServer := getV2ServerUrl(baseURL)
 	server := orgv2.ServerConfigurations{
 		{URL: orgServer, Description: "Confluent Cloud"},
 	}
@@ -513,6 +513,20 @@ func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *org
 		OperationServers: map[string]orgv2.ServerConfigurations{},
 	}
 	return orgv2.NewAPIClient(cfg)
+}
+
+func getV2ServerUrl(baseURL string) string {
+	// if isTest {
+	// 	return "http://127.0.0.1:2048"
+	// }
+	// // regex check for baseURL
+	if strings.Contains(baseURL, "devel") {
+		return "https://api.devel.cpdev.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://api.stag.cpdev.cloud"
+	}
+	// return "https://api.confluent.cloud"
+	return "http://127.0.0.1:2048"
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.

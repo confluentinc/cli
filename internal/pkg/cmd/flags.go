@@ -95,7 +95,7 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteClusters(environmentId string, client *cmkv2.APIClient, authToken string) []string {
-	resp, _, err := kafka.ListKafkaClusters(client, authToken, environmentId)
+	resp, _, err := kafka.ListCmkKafkaClusters(client, authToken, environmentId)
 	if err != nil {
 		return nil
 	}

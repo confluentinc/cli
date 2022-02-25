@@ -9,6 +9,8 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -164,20 +166,25 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 		Endpoint:        "SASL_SSL://kafka-endpoint",
 		ApiEndpoint:     "http://kafka-api-url",
 		RestEndpoint:    "http://kafka-rest-url",
-		// Spec: &cmkv2.CmkV2ClusterSpec{
-		// 	DisplayName: cmkv2.PtrString(name),
-		// 	Cloud:       cmkv2.PtrString("aws"),
-		// 	Region:      cmkv2.PtrString("us-west-2"),
-		// 	// Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-		// 	// 	CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-		// 	// },
-		// 	KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-		// 	HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
-		// },
-		// Id: cmkv2.PtrString(id),
-		// Status: &cmkv2.CmkV2ClusterStatus{
-		// 	Phase: "PROVISIONING",
-		// },
+	}
+}
+
+func getCmkBaseDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			// Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+			// 	CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+			// },
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONING",
+		},
 	}
 }
 
@@ -210,4 +217,13 @@ func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool,
 		}
 	}
 	return false, nil
+}
+
+func isValidOrgEnvironmentId(environments []orgv2.OrgV2Environment, reqEnvId string) (bool, orgv2.OrgV2Environment) {
+	for _, env := range environments {
+		if reqEnvId == *env.Id {
+			return true, env
+		}
+	}
+	return false, orgv2.OrgV2Environment{}
 }

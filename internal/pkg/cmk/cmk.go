@@ -2,7 +2,6 @@ package cmk
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -25,7 +24,6 @@ func DescribeKafkaCluster(client *cmkv2.APIClient, clusterId string, environment
 
 func ListKafkaClusters(client *cmkv2.APIClient, environment string, authToken string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
 	req := client.ClustersCmkV2Api.ListCmkV2Clusters(cmkApiContext(authToken)).Environment(environment)
-	fmt.Println("created the list request")
 	return client.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }
 

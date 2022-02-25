@@ -57,7 +57,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	} else {
 		clusterList, _, err := cmk.ListKafkaClusters(c.CmkClient, c.EnvironmentId(), c.AuthToken())
 		if err != nil {
-			fmt.Println("we got an err...")
 			return err
 		}
 		clusters = clusterList.Data

@@ -24,7 +24,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -145,7 +144,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 		envId := vars["id"]
 		if valid, env := isValidEnvironmentId(environments, envId); valid {
 			switch r.Method {
-			case http.MethodGet:
+			case http.MethodGet: // used for `environment use`
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
@@ -159,13 +158,13 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
-			case http.MethodDelete:
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
+				// case http.MethodDelete:
+				// 	b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
+				// 	require.NoError(t, err)
+				// 	_, err = io.WriteString(w, string(b))
+				// 	require.NoError(t, err)
+				// 	_, err = io.WriteString(w, string(b))
+				// 	require.NoError(t, err)
 			}
 		} else {
 			// env not found
@@ -174,14 +173,14 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	}
 }
 
-// Handler for: "/api/accounts"
+// Handler for: "/api/accounts" Post
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
+			// b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
+			// require.NoError(t, err)
+			// _, err = io.WriteString(w, string(b))
+			// require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
 			req := &orgv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
@@ -470,7 +469,6 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 
 // Handler for: "/api/clusters"
 func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("handling clusters:")
 	write := func(w http.ResponseWriter, resp proto.Message) {
 		type errorer interface {
 			GetError() *corev1.Error
@@ -497,50 +495,47 @@ func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r
 			// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
 			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
 		}
-
-		if r.Method == http.MethodPost {
-			fmt.Println("we create a cluster")
-			c.HandleKafkaClusterCreate(t)(w, r)
-		} else if r.Method == http.MethodGet {
-			fmt.Println("returning list of cluster:")
-			cluster := cmkv2.CmkV2Cluster{
-				Id: cmkv2.PtrString("lkc-123"),
-				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString("abc"),
-					Cloud:       cmkv2.PtrString("gcp"),
-					Region:      cmkv2.PtrString("us-central1"),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-					},
-					Availability: cmkv2.PtrString("SINGLE_ZONE"),
-				},
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-				},
-			}
-			clusterMultizone := cmkv2.CmkV2Cluster{
-				Id: cmkv2.PtrString("lkc-456"),
-				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString("def"),
-					Cloud:       cmkv2.PtrString("gcp"),
-					Region:      cmkv2.PtrString("us-central1"),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-					},
-					Availability: cmkv2.PtrString("MULTI_ZONE"),
-				},
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-				},
-			}
-			// b, err := utilv1.MarshalJSONToBytes(&cmkv2.CmkV2ClusterList{Data: {cluster, clusterMultizone}})
-			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
-			b, err := json.Marshal(clusterList)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-		fmt.Println("running in handler")
+		// if r.Method == http.MethodPost {
+		// c.HandleKafkaClusterCreate(t)(w, r)
+		// } else if r.Method == http.MethodGet {
+		// cluster := cmkv2.CmkV2Cluster{
+		// 	Id: cmkv2.PtrString("lkc-123"),
+		// 	Spec: &cmkv2.CmkV2ClusterSpec{
+		// 		DisplayName: cmkv2.PtrString("abc"),
+		// 		Cloud:       cmkv2.PtrString("gcp"),
+		// 		Region:      cmkv2.PtrString("us-central1"),
+		// 		Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+		// 			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+		// 		},
+		// 		Availability: cmkv2.PtrString("SINGLE_ZONE"),
+		// 	},
+		// 	Status: &cmkv2.CmkV2ClusterStatus{
+		// 		Phase: "PROVISIONING",
+		// 	},
+		// }
+		// clusterMultizone := cmkv2.CmkV2Cluster{
+		// 	Id: cmkv2.PtrString("lkc-456"),
+		// 	Spec: &cmkv2.CmkV2ClusterSpec{
+		// 		DisplayName: cmkv2.PtrString("def"),
+		// 		Cloud:       cmkv2.PtrString("gcp"),
+		// 		Region:      cmkv2.PtrString("us-central1"),
+		// 		Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+		// 			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+		// 		},
+		// 		Availability: cmkv2.PtrString("MULTI_ZONE"),
+		// 	},
+		// 	Status: &cmkv2.CmkV2ClusterStatus{
+		// 		Phase: "PROVISIONING",
+		// 	},
+		// }
+		// w.Header().Set("Content-Type", "application/json")
+		// var listClusterReply *cmkv2.CmkV2ClusterList
+		// listClusterReply = &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
+		// reply, err := json.Marshal(listClusterReply)
+		// require.NoError(t, err)
+		// _, err = io.WriteString(w, string(reply))
+		// require.NoError(t, err)
+		// }
 	}
 }
 
