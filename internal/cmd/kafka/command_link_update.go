@@ -27,9 +27,15 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	}
+
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	_ = cmd.MarkFlagRequired(configFileFlagName)
 
@@ -38,6 +44,7 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 
 func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
+
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
@@ -52,25 +59,19 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
 
-	kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
+	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
+		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
+			Data: toAlterConfigBatchRequestData(configsMap),
+		}),
+	}
 
-	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs})}
-	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(kafkaREST.Context, lkc, linkName, opts)
-	if err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST)
+	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
+		return handleOpenApiError(httpResp, err, client)
 	}
 
 	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)

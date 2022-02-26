@@ -530,7 +530,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	var fieldsSelected []string
-	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
+
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -548,7 +548,11 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
 		displayStruct.ResourceType = "Cluster"
 	}
-	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
+
+	humanRenames := map[string]string{"ResourceType": "Resource Type", "PatternType": "Pattern Type"}
+	structuredRenames := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
+
+	return output.DescribeObject(cmd, displayStruct, fieldsSelected, humanRenames, structuredRenames)
 }
 
 func (c *roleBindingCommand) createContext() context.Context {

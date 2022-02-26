@@ -16,13 +16,18 @@ import (
 const (
 	apiKeyFlagName                     = "source-api-key"
 	apiSecretFlagName                  = "source-api-secret"
+	destinationBootstrapServerFlagName = "destination-bootstrap-server"
+	destinationClusterIdFlagName       = "destination-cluster-id"
 	noValidateFlagName                 = "no-validate"
-	saslJaasConfigPropertyName         = "sasl.jaas.config"
-	saslMechanismPropertyName          = "sasl.mechanism"
-	securityProtocolPropertyName       = "security.protocol"
-	sourceBootstrapServersFlagName     = "source-bootstrap-server"
-	sourceBootstrapServersPropertyName = "bootstrap.servers"
+	sourceBootstrapServerFlagName      = "source-bootstrap-server"
 	sourceClusterIdFlagName            = "source-cluster-id"
+)
+
+const (
+	bootstrapServersPropertyName = "bootstrap.servers"
+	saslJaasConfigPropertyName   = "sasl.jaas.config"
+	saslMechanismPropertyName    = "sasl.mechanism"
+	securityProtocolPropertyName = "security.protocol"
 )
 
 func (c *linkCommand) newCreateCommand() *cobra.Command {
@@ -31,39 +36,57 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a new cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Create a cluster link, using supplied source URL and properties.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --config-file config.txt",
-			},
-			examples.Example{
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-abcde --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
-			},
-		),
 	}
 
-	cmd.Flags().String(sourceBootstrapServersFlagName, "", "Bootstrap-server address of the source cluster.")
-	cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
+	example2 := examples.Example{Text: "Create a cluster link, using an API key and secret."}
+	if c.cfg.IsCloudLogin() {
+		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --config-file config.txt"
+		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
+	} else {
+		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --config-file config.txt"
+		example2.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2)
+
+	// As of now, only CP --> CC links are supported.
+	if c.cfg.IsCloudLogin() {
+		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster.")
+		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+	} else {
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster.")
+		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
+	}
+
 	cmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
-		"and add the security configs in the config file. "+
-		"Must be used with --source-api-secret.")
+		"and add the security configs in the config file.")
 	cmd.Flags().String(apiSecretFlagName, "", "An API secret for the source cluster. "+
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
-		"and add the security configs in the config file. "+
-		"Must be used with --source-api-key.")
+		"and add the security configs in the config file.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
 	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired(sourceBootstrapServersFlagName)
-	_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	}
+
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	if c.cfg.IsCloudLogin() {
+		_ = cmd.MarkFlagRequired(sourceBootstrapServerFlagName)
+		_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
+	} else {
+		_ = cmd.MarkFlagRequired(destinationBootstrapServerFlagName)
+		_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
+	}
 
 	return cmd
 }
@@ -71,12 +94,24 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	bootstrapServers, err := cmd.Flags().GetString(sourceBootstrapServersFlagName)
+	var bootstrapServer string
+	var err error
+	if c.cfg.IsCloudLogin() {
+		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
+	} else {
+		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
+	}
 	if err != nil {
 		return err
 	}
 
-	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
+	var sourceClusterId string
+	var destinationClusterId string
+	if c.cfg.IsCloudLogin() {
+		sourceClusterId, err = cmd.Flags().GetString(sourceClusterIdFlagName)
+	} else {
+		destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+	}
 	if err != nil {
 		return err
 	}
@@ -91,12 +126,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Two optional flags: --source-api-key and --source-api-secret
-	// 1. if I have neither flag set, then no change in behavior – use config-file as normal
-	//
-	// 2. if I have only 1 flag set, but not the other, then throw an error
-	//
-	// 3. if I have both set, then the CLI should add these configs on top of configs passed in config-file
 	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)
 	if err != nil {
 		return err
@@ -107,49 +136,34 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Overriding the security props by the flag value
+	configMap[bootstrapServersPropertyName] = bootstrapServer
+
 	if apiKey != "" && apiSecret != "" {
 		configMap[securityProtocolPropertyName] = "SASL_SSL"
 		configMap[saslMechanismPropertyName] = "PLAIN"
-		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(
-			"org.apache.kafka.common.security.plain.PlainLoginModule required "+
-				"username=\"%s\" "+
-				"password=\"%s\";", apiKey, apiSecret)
-	} else if apiKey != "" {
-		return errors.New("--source-api-key and --source-api-secret must be used together. " +
-			"You cannot pass in one without the other.")
+		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, apiKey, apiSecret)
+	} else if apiKey != "" || apiSecret != "" {
+		return errors.New("--source-api-key and --source-api-secret must be supplied together")
 	}
 
-	// Overriding the bootstrap server prop by the flag value
-	configMap[sourceBootstrapServersPropertyName] = bootstrapServers
-
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
 
-	createLinkOpt := &kafkarestv3.CreateKafkaLinkOpts{
-		CreateLinkRequestData: optional.NewInterface(kafkarestv3.CreateLinkRequestData{
-			SourceClusterId: sourceClusterId,
-			Configs:         toCreateTopicConfigs(configMap),
-		}),
+	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
+	if c.cfg.IsCloudLogin() {
+		data.SourceClusterId = sourceClusterId
+	} else {
+		data.DestinationClusterId = destinationClusterId
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(
-		kafkaREST.Context, lkc, linkName, createLinkOpt)
+	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
 
-	if err == nil {
-		utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
-		return nil
+	if httpResp, err := client.ClusterLinkingV3Api.CreateKafkaLink(ctx, clusterId, linkName, opts); err != nil {
+		return handleOpenApiError(httpResp, err, client)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST)
+	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
+	return nil
 }

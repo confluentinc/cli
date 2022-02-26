@@ -1,12 +1,12 @@
-+---------------+------------------+
-| Cluster       | cluster-1        |
-| ConsumerGroup | consumer-group-1 |
-| Lag           |              100 |
-| LogEndOffset  |              101 |
-| CurrentOffset |                1 |
-| Consumer      | consumer-1       |
-| Instance      | instance-1       |
-| Client        | client-1         |
-| Topic         | topic-1          |
-| Partition     |                1 |
-+---------------+------------------+
++----------------+------------------+
+| Cluster        | cluster-1        |
+| Consumer Group | consumer-group-1 |
+| Lag            |              100 |
+| Log End Offset |              101 |
+| Current Offset |                1 |
+| Consumer       | consumer-1       |
+| Instance       | instance-1       |
+| Client         | client-1         |
+| Topic          | topic-1          |
+| Partition      |                1 |
++----------------+------------------+

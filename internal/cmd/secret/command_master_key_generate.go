@@ -51,6 +51,9 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cipherMode := c.getCipherMode()
+	c.plugin.SetCipherMode(cipherMode)
+
 	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsPath)
 	if err != nil {
 		return err

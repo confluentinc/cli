@@ -1,9 +1,14 @@
 package secret
 
 import (
+	"context"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/spf13/cobra"
+	"net/http"
+	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -54,4 +59,22 @@ func (c *command) getConfigs(configSource string, inputType string, prompt strin
 		return "", err
 	}
 	return newConfigs, nil
+}
+
+func (c *command) getCipherMode() string {
+	if os.Getenv("XX_SECRETS_GCM_MODE") != "" {
+		return secret.AES_GCM
+	}
+
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	featureInfo, response, err := c.MDSClient.MetadataServiceOperationsApi.Features(ctx)
+
+	if err != nil || response.StatusCode == http.StatusNotFound {
+		return secret.AES_CBC
+	}
+
+	if _, ok := featureInfo.Features[secret.MdsFeatureCipherFlag]; ok {
+		return secret.AES_GCM
+	}
+	return secret.AES_CBC
 }

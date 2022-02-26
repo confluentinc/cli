@@ -21,24 +21,30 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+var (
+	listFields       = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+	humanLabels      = []string{"Principal", "Permission", "Operation", "Resource Type", "Resource Name", "Pattern Type"}
+	structuredLabels = []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
+)
+
 type AclRequestDataWithError struct {
 	ResourceType kafkarestv3.AclResourceType
 	ResourceName string
-	PatternType  kafkarestv3.AclPatternType
+	PatternType  string
 	Principal    string
 	Host         string
-	Operation    kafkarestv3.AclOperation
-	Permission   kafkarestv3.AclPermission
+	Operation    string
+	Permission   string
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, aclListFields, aclListStructuredRenames []string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, listFields, humanLabels, structuredLabels []string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		pcmd.AddOutputFlag(cmd)
 	}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -82,9 +88,7 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -114,12 +118,8 @@ func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(kafkarestv3.ACLOPERATION_ALL, kafkarestv3.ACLOPERATION_READ, kafkarestv3.ACLOPERATION_WRITE,
-			kafkarestv3.ACLOPERATION_CREATE, kafkarestv3.ACLOPERATION_DELETE, kafkarestv3.ACLOPERATION_ALTER,
-			kafkarestv3.ACLOPERATION_DESCRIBE, kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
-			kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS, kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
-			kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE",
+		"CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -161,11 +161,11 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 		case "transactional-id":
 			setAclRequestResourcePattern(conf, n, v)
 		case "allow":
-			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_ALLOW)
+			setAclRequestPermission(conf, "ALLOW")
 		case "deny":
-			setAclRequestPermission(conf, kafkarestv3.ACLPERMISSION_DENY)
+			setAclRequestPermission(conf, "DENY")
 		case "prefix":
-			conf.PatternType = kafkarestv3.ACLPATTERNTYPE_PREFIXED
+			conf.PatternType = "PREFIXED"
 		case "principal":
 			conf.Principal = v
 		case "host":
@@ -175,22 +175,22 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 			v = strings.ReplaceAll(v, "-", "_")
 			enumUtils := utils.EnumUtils{}
 			enumUtils.Init(
-				kafkarestv3.ACLOPERATION_UNKNOWN,
-				kafkarestv3.ACLOPERATION_ANY,
-				kafkarestv3.ACLOPERATION_ALL,
-				kafkarestv3.ACLOPERATION_READ,
-				kafkarestv3.ACLOPERATION_WRITE,
-				kafkarestv3.ACLOPERATION_CREATE,
-				kafkarestv3.ACLOPERATION_DELETE,
-				kafkarestv3.ACLOPERATION_ALTER,
-				kafkarestv3.ACLOPERATION_DESCRIBE,
-				kafkarestv3.ACLOPERATION_CLUSTER_ACTION,
-				kafkarestv3.ACLOPERATION_DESCRIBE_CONFIGS,
-				kafkarestv3.ACLOPERATION_ALTER_CONFIGS,
-				kafkarestv3.ACLOPERATION_IDEMPOTENT_WRITE,
+				"UNKNOWN",
+				"ANY",
+				"ALL",
+				"READ",
+				"WRITE",
+				"CREATE",
+				"DELETE",
+				"ALTER",
+				"DESCRIBE",
+				"CLUSTER_ACTION",
+				"DESCRIBE_CONFIGS",
+				"ALTER_CONFIGS",
+				"IDEMPOTENT_WRITE",
 			)
 			if op, ok := enumUtils[v]; ok {
-				conf.Operation = op.(kafkarestv3.AclOperation)
+				conf.Operation = op.(string)
 				break
 			}
 			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("Invalid operation value: "+v))
@@ -198,7 +198,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 	}
 }
 
-func setAclRequestPermission(conf *AclRequestDataWithError, permission kafkarestv3.AclPermission) {
+func setAclRequestPermission(conf *AclRequestDataWithError, permission string) {
 	if conf.Permission != "" {
 		conf.Errors = multierror.Append(conf.Errors, errors.Errorf(errors.OnlySetAllowOrDenyErrorMsg))
 	}
@@ -224,7 +224,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
 
 	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
-		conf.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
+		conf.PatternType = "LITERAL"
 	}
 	conf.ResourceName = v
 }
@@ -258,7 +258,7 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 	}
 
 	if aclConfiguration.PatternType == "" {
-		aclConfiguration.PatternType = kafkarestv3.ACLPATTERNTYPE_LITERAL
+		aclConfiguration.PatternType = "LITERAL"
 	}
 
 	if aclConfiguration.ResourceType == "" {
@@ -274,11 +274,11 @@ func AclRequestToCreateAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Crea
 	requestData := kafkarestv3.CreateAclRequestData{
 		ResourceType: acl.ResourceType,
 		ResourceName: acl.ResourceName,
-		PatternType:  acl.PatternType,
+		PatternType:  string(acl.PatternType),
 		Principal:    acl.Principal,
 		Host:         acl.Host,
-		Operation:    acl.Operation,
-		Permission:   acl.Permission,
+		Operation:    string(acl.Operation),
+		Permission:   string(acl.Permission),
 	}
 	opts.CreateAclRequestData = optional.NewInterface(requestData)
 	return &opts
@@ -295,7 +295,7 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.GetKaf
 		opts.ResourceName = optional.NewString(acl.ResourceName)
 	}
 	if acl.PatternType != "" {
-		opts.PatternType = optional.NewInterface(acl.PatternType)
+		opts.PatternType = optional.NewString(string(acl.PatternType))
 	}
 	if acl.Principal != "" {
 		opts.Principal = optional.NewString(acl.Principal)
@@ -304,10 +304,10 @@ func AclRequestToListAclReqest(acl *AclRequestDataWithError) *kafkarestv3.GetKaf
 		opts.Host = optional.NewString(acl.Host)
 	}
 	if acl.Operation != "" {
-		opts.Operation = optional.NewInterface(acl.Operation)
+		opts.Operation = optional.NewString(string(acl.Operation))
 	}
 	if acl.Permission != "" {
-		opts.Permission = optional.NewInterface(acl.Permission)
+		opts.Permission = optional.NewString(string(acl.Permission))
 	}
 	return &opts
 }
@@ -316,11 +316,11 @@ func AclRequestToDeleteAclReqest(acl *AclRequestDataWithError) *kafkarestv3.Dele
 	opts := kafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
-		PatternType:  optional.NewInterface(acl.PatternType),
+		PatternType:  optional.NewString(string(acl.PatternType)),
 		Principal:    optional.NewString(acl.Principal),
 		Host:         optional.NewString(acl.Host),
-		Operation:    optional.NewInterface(acl.Operation),
-		Permission:   optional.NewInterface(acl.Permission),
+		Operation:    optional.NewString(string(acl.Operation)),
+		Permission:   optional.NewString(string(acl.Permission)),
 	}
 	return &opts
 }
@@ -329,11 +329,11 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	aclData := kafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
-		PatternType:  data.PatternType,
+		PatternType:  string(data.PatternType),
 		Principal:    data.Principal,
 		Host:         data.Host,
-		Operation:    data.Operation,
-		Permission:   data.Permission,
+		Operation:    string(data.Operation),
+		Permission:   string(data.Permission),
 	}
 	return aclData
 }
@@ -345,9 +345,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetR
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}
@@ -389,9 +387,7 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBi
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	aclListFields := []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	aclListStructuredRenames := []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, aclListFields, aclListFields, aclListStructuredRenames, writer)
+	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
 	if err != nil {
 		return err
 	}

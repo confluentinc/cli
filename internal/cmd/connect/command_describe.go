@@ -81,13 +81,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputOption == output.Human.String() {
-		return printHumanDescribe(cmd, connectorExpansion)
-	} else {
-		return printStructuredDescribe(connectorExpansion, outputOption)
+		printHumanDescribe(cmd, connectorExpansion)
+		return nil
 	}
+
+	return printStructuredDescribe(connectorExpansion, outputOption)
 }
 
-func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) error {
+func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) {
 	utils.Println(cmd, "Connector Details")
 	data := &connectorDescribeDisplay{
 		Name:   connector.Status.Name,
@@ -100,25 +101,20 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 
 	utils.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
-	titleRow := []string{"TaskId", "State"}
 	for _, task := range connector.Status.Tasks {
-		tasks = append(tasks, printer.ToRow(&taskDescribeDisplay{
-			task.Id,
-			task.State,
-		}, titleRow))
+		row := printer.ToRow(&taskDescribeDisplay{task.Id, task.State}, []string{"TaskId", "State"})
+		tasks = append(tasks, row)
 	}
-	printer.RenderCollectionTable(tasks, titleRow)
+	printer.RenderCollectionTable(tasks, []string{"Task ID", "State"})
+
 	utils.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
-	titleRow = []string{"Config", "Value"}
+	titleRow := []string{"Config", "Value"}
 	for name, value := range connector.Info.Config {
-		configs = append(configs, printer.ToRow(&configDescribeDisplay{
-			name,
-			value,
-		}, titleRow))
+		row := printer.ToRow(&configDescribeDisplay{name, value}, titleRow)
+		configs = append(configs, row)
 	}
 	printer.RenderCollectionTable(configs, titleRow)
-	return nil
 }
 
 func printStructuredDescribe(connector *opv1.ConnectorExpansion, format string) error {
