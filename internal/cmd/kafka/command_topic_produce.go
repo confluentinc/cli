@@ -235,7 +235,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 
 		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
 		if err != nil {
-			if err.Error() == "ccloud" {
+			if err.Error() == errors.NotLoggedInErrorMsg {
 				return nil, nil, new(errors.SRNotAuthenticatedError)
 			} else {
 				return nil, nil, err

@@ -219,6 +219,9 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	// get schema registry cluster from context and flags, including key pair
 	srCluster, err := c.getSchemaRegistryCluster(cmd)
 	if err != nil {
+		if err.Error() == errors.NotLoggedInErrorMsg {
+			return "", new(errors.SRNotAuthenticatedError)
+		}
 		// if SR not enabled, comment out SR in the configuration file and warn users
 		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
 			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile)
@@ -259,11 +262,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 
 	// validate that the key pair matches with the cluster
 	if err := c.validateSchemaRegistryCredentials(srCluster); err != nil {
-		if err.Error() == "ccloud" {
-			return "", new(errors.SRNotAuthenticatedError)
-		} else {
-			return "", err
-		}
+		return "", err
 	}
 
 	// replace SR_API_KEY and SR_API_SECRET templates
@@ -274,6 +273,9 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	return configFile, nil
 }
 
+// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR api key stored in the context and
+// the key passed via the flags, please remove this function entirely because there is no more need to
+// manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	// get SR cluster from context
 	srCluster, err := c.Context.SchemaRegistryCluster(cmd)
