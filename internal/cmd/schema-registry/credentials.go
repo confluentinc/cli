@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -50,6 +51,9 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 
 func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
+	if log.CliLogger.GetLevel() >= log.DEBUG {
+		srConfig.de
+	}
 
 	ctx := cfg.Context()
 
@@ -58,6 +62,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
+			log.CliLogger.Debug("failed to find active schema registry cluster")
 			return nil, nil, err
 		}
 		srCluster = cluster
