@@ -2,16 +2,15 @@
 | ID                   | lkc-update-dedicated-expand |
 | Name                 | lkc-update-dedicated-expand |
 | Type                 | DEDICATED                   |
-| Ingress              |                         100 |
-| Egress               |                         300 |
-| Storage              |                       60000 |
+| Ingress              |                          50 |
+| Egress               |                         150 |
+| Storage              | Infinite                    |
 | Provider             | aws                         |
 | Availability         | single-zone                 |
 | Region               | us-west-2                   |
 | Status               | EXPANDING                   |
 | Endpoint             | SASL_SSL://kafka-endpoint   |
-| API Endpoint         | http://kafka-api-url        |
-| REST Endpoint        |                             |
+| REST Endpoint        | http://kafka-rest-url       |
 | Cluster Size         |                           1 |
 | Pending Cluster Size |                           2 |
 +----------------------+-----------------------------+

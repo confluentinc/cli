@@ -125,12 +125,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	ctxClient := NewContextClient(d)
 	kcc, err := ctxClient.FetchCluster(clusterId)
 	if err != nil {
+		fmt.Println("can't fetch cluster")
 		return nil, err
 	}
 	cluster := KafkaClusterToKafkaClusterConfig(kcc)
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 	if err != nil {
+		fmt.Println("can't save and add cluster")
 		return nil, err
 	}
 	return cluster, nil

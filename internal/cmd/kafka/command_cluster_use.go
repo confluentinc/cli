@@ -33,6 +33,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 
 	if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
+		fmt.Println("36:", err)
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 

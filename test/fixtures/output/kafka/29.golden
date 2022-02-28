@@ -1,4 +1,3 @@
-api_endpoint: http://kafka-api-url
 availability: single-zone
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint
@@ -8,6 +7,6 @@ name: lkc-update-name
 provider: aws
 region: us-west-2
 rest_endpoint: http://kafka-rest-url
-status: UP
-storage: "500"
+status: PROVISIONED
+storage: 5 TB
 type: BASIC

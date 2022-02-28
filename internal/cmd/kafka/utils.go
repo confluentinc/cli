@@ -138,7 +138,7 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 
 func getCmkClusterIngressAndEgress(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
 	if isDedicated(cluster) {
-		return 50 * (*cluster.Status.Cku), 100 * (*cluster.Status.Cku)
+		return 50 * (*cluster.Status.Cku), 150 * (*cluster.Status.Cku)
 	}
 	return 100, 100
 }

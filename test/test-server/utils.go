@@ -149,6 +149,7 @@ var (
 )
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
 	return err
 }
@@ -169,21 +170,43 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 	}
 }
 
-func getCmkBaseDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
 			Cloud:       cmkv2.PtrString("aws"),
 			Region:      cmkv2.PtrString("us-west-2"),
-			// Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			// 	CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-			// },
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
 			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),
 		Status: &cmkv2.CmkV2ClusterStatus{
-			Phase: "PROVISIONING",
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+			Cku:   cmkv2.PtrInt32(cku),
 		},
 	}
 }
@@ -219,11 +242,11 @@ func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool,
 	return false, nil
 }
 
-func isValidOrgEnvironmentId(environments []orgv2.OrgV2Environment, reqEnvId string) (bool, orgv2.OrgV2Environment) {
+func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) (bool, *orgv2.OrgV2Environment) {
 	for _, env := range environments {
 		if reqEnvId == *env.Id {
 			return true, env
 		}
 	}
-	return false, orgv2.OrgV2Environment{}
+	return false, nil
 }

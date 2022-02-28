@@ -1,7 +1,6 @@
 package test_server
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -88,7 +87,7 @@ func newV2TestCloudServer(handler http.Handler) *httptest.Server {
 	server.Listener = l
 
 	server.Start()
-	fmt.Println("v2 server:", server.URL)
+
 	return server
 }
 
