@@ -31,6 +31,23 @@ func (e *SRNotAuthenticatedError) UserFacingError() error {
 	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
 }
 
+type SRNotEnabledError struct {
+	ErrorMsg       string
+	SuggestionsMsg string
+}
+
+func NewSRNotEnabledError() CLITypedError {
+	return &SRNotEnabledError{ErrorMsg: SRNotEnabledErrorMsg, SuggestionsMsg: SRNotEnabledSuggestions}
+}
+
+func (e *SRNotEnabledError) Error() string {
+	return e.ErrorMsg
+}
+
+func (e *SRNotEnabledError) UserFacingError() error {
+	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
+}
+
 type KafkaClusterNotFoundError struct {
 	ClusterID string
 }
