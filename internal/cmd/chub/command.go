@@ -93,7 +93,6 @@ func (c *command) init() {
 	installCmd.Flags().Bool("no-prompt", false, "Force installation without interactively confirming details such as license and component directory")
 	// Already supported by top-level CLI logic. We may want to preserve this flag here just to ease migration from the existing confluent-hub tool
 	// installCmd.Flags().Boolean("verbose", false, "Log extra information about the installation as it takes place")
-	installCmd.Flags().SortFlags = false
 	c.AddCommand(installCmd)
 
 	// TODO:
