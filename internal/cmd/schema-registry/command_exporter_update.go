@@ -7,6 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -97,12 +98,12 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	if configFile != "" {
-		configMap, err := utils.ReadConfigsFromFile(configFile)
+		updateRequest.Config, err = properties.FileToMap(configFile)
 		if err != nil {
 			return err
 		}
-		updateRequest.Config = configMap
 	}
 
 	if _, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
