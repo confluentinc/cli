@@ -73,8 +73,6 @@ require (
 
 require github.com/golang/protobuf v1.5.2
 
-require github.com/confluentinc/ccloud-sdk-go-v2/quotas v0.1.0
-
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	cloud.google.com/go v0.99.0 // indirect
