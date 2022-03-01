@@ -30,7 +30,7 @@ const (
 )
 
 var (
-	LdManager  LaunchDarklyManager // Global LdManager
+	Manager  LaunchDarklyManager // Global LD Manager
 	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 )
 
@@ -51,15 +51,15 @@ type FeatureFlagManager struct {
 func InitManager(version *version.Version, isTest bool) {
 	if isTest {
 		// Any flag values needed for CLI tests can be hardcoded here
-		LdManager = &mock.LaunchDarklyManager{}
+		Manager = &mock.LaunchDarklyManager{}
 	}
 	var basePath string
-	if os.Getenv("XX_LD_TEST_ENV") != "" {
+	if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)
 	} else {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
-	LdManager = &FeatureFlagManager{
+	Manager = &FeatureFlagManager{
 		client:  sling.New().Base(basePath),
 		version: version,
 	}
@@ -69,7 +69,7 @@ func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, 
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
-		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "bool", f.flagVals[key])
+		log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, "bool", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -79,7 +79,7 @@ func (f *FeatureFlagManager) StringVariation(key string, ctx *cmd.DynamicContext
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(string)
 	if !ok {
-		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "string", f.flagVals[key])
+		log.CliLogger.Debugf(`value for flag "%s" was expected to be type %s but was type %T`, key, "string", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -89,7 +89,7 @@ func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, d
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(int)
 	if !ok {
-		log.CliLogger.Debugf("value for flag \"%s\" was expected to be type %s but was type %T", key, "int", f.flagVals[key])
+		log.CliLogger.Debugf(`value for flag "%s" was expected to be type %s but was type %T`, key, "int", f.flagVals[key])
 		return defaultVal
 	}
 	return flagVal
@@ -233,6 +233,6 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 }
 
 func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile("pkc-([^.]+)")
+	r := regexp.MustCompile("pkc-([a-z0-9]+)")
 	return r.FindString(bootstrap)
 }

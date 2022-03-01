@@ -445,5 +445,5 @@ const (
 	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
 
 	// Launch Darkly errors
-	UnsupportedCustomAttributeErrorMsg = `attribute key "%s" is not one of the supported LaunchDarkly targeting values`
+	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported LaunchDarkly targeting values`
 )
