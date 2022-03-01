@@ -57,7 +57,7 @@ const (
 
 	daemonOption = "-daemon"
 
-	connectProcessRegex = "org\\.apache\\.kafka\\.connect\\.cli\\.Connect(Distributed|Standalone)"
+	connectProcessRegex = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
 )
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
