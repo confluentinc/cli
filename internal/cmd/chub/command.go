@@ -66,9 +66,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Confluent Hub.",
 		Args:  cobra.NoArgs,
 	}
-	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-	}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 	c.init()
 
 	return c.Command
