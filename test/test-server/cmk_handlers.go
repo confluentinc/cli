@@ -2,7 +2,6 @@ package test_server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -145,7 +144,6 @@ func (c *V2Router) HandleCmkCluster(t *testing.T) func(w http.ResponseWriter, r 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
-		// fmt.Println("in HandleCmkCluster. id:", clusterId)
 		switch clusterId {
 		case "lkc-describe":
 			c.HandleKafkaClusterDescribe(t)(w, r)
@@ -237,7 +235,7 @@ func (c *V2Router) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func
 // 	}
 // }
 
-// Handler for GET "/api/clusters/lkc-describe-infinite
+// Handler for GET "/cmk/v2/clusters/lkc-describe-infinite
 func (c *V2Router) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return c.HandleKafkaClusterDescribeDedicated(t) // dedicated cluster has infinite storage
 }
@@ -245,7 +243,6 @@ func (c *V2Router) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.
 // Default handler for get, list, delete, describe "/cmk/v2/clusters/{id}"
 func (c *V2Router) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in cmk HandleKafkaClusterGetListDeleteDescribe:", r.Method)
 		vars := mux.Vars(r)
 		id := vars["id"]
 		if r.Method == http.MethodDelete {
@@ -289,7 +286,7 @@ func (c *V2Router) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.Res
 	}
 }
 
-// Handler for GET/PUT "api/clusters/lkc-update-dedicated-expand"
+// Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-expand"
 func (c *V2Router) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
@@ -314,7 +311,7 @@ func (c *V2Router) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w htt
 	}
 }
 
-// Handler for GET/PUT "api/clusters/lkc-update-dedicated-shrink"
+// Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-shrink"
 func (c *V2Router) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {

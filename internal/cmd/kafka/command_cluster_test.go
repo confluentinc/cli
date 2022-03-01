@@ -295,7 +295,7 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 | Name          | gcp-byok-test |
 | Type          | DEDICATED     |
 | Ingress       |            50 |
-| Egress        |           100 |
+| Egress        |           150 |
 | Storage       | Infinite      |
 | Provider      | gcp           |
 | Availability  | single-zone   |

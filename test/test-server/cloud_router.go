@@ -18,6 +18,7 @@ const (
 	accounts            = "/api/accounts"
 	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
+	cluster             = "/api/clusters/{id}"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
 	serviceAccount      = "/api/service_accounts/{id}"
@@ -81,6 +82,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
 	c.addApiKeyRoutes(t)
+	c.addClusterRoutes(t)
 	c.addKsqlRoutes(t)
 	c.addUserRoutes(t)
 	c.addConnectorsRoutes(t)
@@ -129,6 +131,10 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
 	c.HandleFunc(ksqls, c.HandleKsqls(t))
 	c.HandleFunc(ksql, c.HandleKsql(t))
+}
+
+func (c *CloudRouter) addClusterRoutes(t *testing.T) {
+	c.HandleFunc(cluster, c.HandleCluster(t))
 }
 
 func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {

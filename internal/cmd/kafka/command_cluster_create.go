@@ -168,8 +168,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setClusterConfigType(typeString),
-			// EncryptionKeyId: encryptionKeyID,
+			Config:       setCmkClusterConfig(typeString, encryptionKeyID),
 		},
 	}
 
@@ -337,7 +336,7 @@ func stringToSku(typeString string) (productv1.Sku, error) {
 	return sku, nil
 }
 
-func setClusterConfigType(typeString string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setCmkClusterConfig(typeString, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{

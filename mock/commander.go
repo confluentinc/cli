@@ -1,7 +1,6 @@
 package mock
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -37,7 +36,6 @@ func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClie
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
-	fmt.Println("setting up here.")
 	return &Commander{
 		FlagResolver:      flagResolverMock,
 		Client:            client,

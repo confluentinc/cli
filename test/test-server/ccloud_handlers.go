@@ -149,7 +149,6 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 			case http.MethodPut: // called by `environment create`
-				fmt.Println("in ccloud handle env put")
 				req := &orgv1.UpdateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)

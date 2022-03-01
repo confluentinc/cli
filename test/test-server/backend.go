@@ -95,6 +95,9 @@ func (b *TestBackend) Close() {
 	if b.cloud != nil {
 		b.cloud.Close()
 	}
+	if b.v2Api != nil {
+		b.v2Api.Close()
+	}
 	if b.kafkaApi != nil {
 		b.kafkaApi.Close()
 	}

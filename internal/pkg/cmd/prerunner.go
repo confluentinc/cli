@@ -431,7 +431,7 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 		return "", clusterConfig.ID, err
 	}
 	// no need to update the config if it's still empty
-	if *kafkaCluster.Spec.HttpEndpoint == "" {
+	if kafkaCluster.RestEndpoint == "" {
 		return "", clusterConfig.ID, nil
 	}
 	// update config to have updated cluster if rest endpoint is no longer ""
@@ -441,7 +441,7 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 	if err != nil {
 		return "", clusterConfig.ID, err
 	}
-	return *kafkaCluster.Spec.HttpEndpoint, clusterConfig.ID, nil
+	return kafkaCluster.RestEndpoint, clusterConfig.ID, nil
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
