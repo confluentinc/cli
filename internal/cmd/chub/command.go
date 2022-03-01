@@ -215,7 +215,7 @@ func pickInstallation(prompt bool, input *bufio.Reader) (*Installation, error) {
 		fmt.Printf("  %d. %s (%s)\n", i+1, installation.Path, installation.Use)
 	}
 	var choice int
-	for /*ever*/ {
+	for {
 		fmt.Printf("Choose one of these to continue the installation (%d-%d): ", 1, len(installations))
 		line, err := readLine(input)
 		if err != nil {
