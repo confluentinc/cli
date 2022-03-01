@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"

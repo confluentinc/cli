@@ -3,7 +3,7 @@ package quotas
 import (
 	"testing"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

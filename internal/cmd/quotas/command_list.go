@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
 
 	"github.com/spf13/cobra"
 
@@ -73,10 +73,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	token := ""
 	quotaList := []quotasv2.QuotasV2AppliedQuota{}
-
 	// Since we use paginated results, get all results by iterating the list.
 	for {
-		req := c.QuotasClient.AppliedQuotaQuotasV2Api.ListQuotasV2AppliedQuota(c.createContext()).
+		req := c.QuotasClient.AppliedQuotasQuotasV2Api.ListQuotasV2AppliedQuotas(c.createContext()).
 			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {
@@ -135,15 +134,14 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 // TODO: will remove this filter func when quotas api support to filter by quota code.
 func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode string) []quotasv2.QuotasV2AppliedQuota {
-	//filter by quota id
-	filtered := []quotasv2.QuotasV2AppliedQuota{}
+	filteredQuotas := []quotasv2.QuotasV2AppliedQuota{}
 	if quotaCode != "" {
-		for _, qt := range quotaList {
-			if *qt.Id == quotaCode {
-				filtered = append(filtered, qt)
+		for _, quota := range quotaList {
+			if *quota.Id == quotaCode {
+				filteredQuotas = append(filteredQuotas, quota)
 			}
 		}
-		quotaList = filtered
+		quotaList = filteredQuotas
 	}
 	return quotaList
 }

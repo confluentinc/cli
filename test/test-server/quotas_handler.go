@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	qtv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/quotas/v2"
+	qtv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -85,9 +85,9 @@ func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment strin
 	//filter by environment id
 	filtered := []qtv2.QuotasV2AppliedQuota{}
 	if environment != "" {
-		for _, qt := range quotaList {
-			if qt.Environment != nil && qt.Environment.Id == environment {
-				filtered = append(filtered, qt)
+		for _, quota := range quotaList {
+			if quota.Environment != nil && quota.Environment.Id == environment {
+				filtered = append(filtered, quota)
 			}
 		}
 		quotaList = filtered
@@ -96,9 +96,9 @@ func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment strin
 	//filter by cluster id
 	filtered = []qtv2.QuotasV2AppliedQuota{}
 	if kafkaCluster != "" {
-		for _, qt := range quotaList {
-			if qt.KafkaCluster != nil && qt.KafkaCluster.Id == kafkaCluster {
-				filtered = append(filtered, qt)
+		for _, quota := range quotaList {
+			if quota.KafkaCluster != nil && quota.KafkaCluster.Id == kafkaCluster {
+				filtered = append(filtered, quota)
 			}
 		}
 		quotaList = filtered
@@ -107,9 +107,9 @@ func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment strin
 	//filter by network id
 	filtered = []qtv2.QuotasV2AppliedQuota{}
 	if network != "" {
-		for _, qt := range quotaList {
-			if qt.Network != nil && qt.Network.Id == network {
-				filtered = append(filtered, qt)
+		for _, quota := range quotaList {
+			if quota.Network != nil && quota.Network.Id == network {
+				filtered = append(filtered, quota)
 			}
 		}
 		quotaList = filtered
