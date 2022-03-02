@@ -10,7 +10,7 @@
 | Region               | us-west-2                   |
 | Status               | EXPANDING                   |
 | Endpoint             | SASL_SSL://kafka-endpoint   |
-| API Endpoint         | http://127.0.0.1:56226      |
+| API Endpoint         | http://kafka-api-url        |
 | REST Endpoint        | http://kafka-rest-url       |
 | Cluster Size         |                           1 |
 | Pending Cluster Size |                           2 |

@@ -10,6 +10,6 @@
   "availability": "single-zone",
   "status": "PROVISIONED",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://127.0.0.1:56226",
+  "api_endpoint": "http://kafka-api-url",
   "rest_endpoint": "http://kafka-rest-url"
 }

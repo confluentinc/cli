@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 	"testing"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -147,8 +146,6 @@ func (c *V2Router) HandleCmkCluster(t *testing.T) func(w http.ResponseWriter, r 
 		switch clusterId {
 		case "lkc-describe":
 			c.HandleKafkaClusterDescribe(t)(w, r)
-		case "lkc-topics", "lkc-no-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api", "lkc-groups":
-			c.HandleKafkaApiOrRestClusters(t)(w, r)
 		case "lkc-describe-dedicated":
 			c.HandleKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
@@ -178,20 +175,6 @@ func (c *V2Router) HandleKafkaClusterDescribe(t *testing.T) func(w http.Response
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
-		marshalCmkCluster(t, w, r, cluster)
-	}
-}
-
-// Handler for GET "/cmk/v2/clusters"
-func (c *V2Router) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		clusterId := vars["id"]
-		cluster := getCmkBasicDescribeCluster(clusterId, "kafka-cluster")
-		if !strings.Contains(clusterId, "kafka-api") {
-			cluster.Spec.HttpEndpoint = cmkv2.PtrString(c.kafkaRPUrl)
-		}
-		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("SASL_SSL://127.0.0.1:")
 		marshalCmkCluster(t, w, r, cluster)
 	}
 }
