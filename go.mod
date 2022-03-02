@@ -27,7 +27,7 @@ require (
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.12
+	github.com/confluentinc/schema-registry-sdk-go v0.0.13
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.0
 	github.com/fatih/color v1.13.0
