@@ -1,3 +1,4 @@
+api_endpoint: http://127.0.0.1:56226
 availability: single-zone
 egress: 100
 endpoint: SASL_SSL://kafka-endpoint

@@ -42,20 +42,20 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 
 	var clusters []cmkv2.CmkV2Cluster
 	if listAllClusters {
-		environments, _, err := org.ListEnvironments(c.OrgClient, c.AuthToken())
+		environments, _, err := org.ListEnvironments(c.V2Client.OrgClient, c.AuthToken())
 		if err != nil {
 			return err
 		}
 
 		for _, env := range environments.Data {
-			clusterList, _, err := cmk.ListKafkaClusters(c.CmkClient, *env.Id, c.AuthToken())
+			clusterList, _, err := cmk.ListKafkaClusters(c.V2Client.CmkClient, *env.Id, c.AuthToken())
 			if err != nil {
 				return err
 			}
 			clusters = append(clusters, clusterList.Data...)
 		}
 	} else {
-		clusterList, _, err := cmk.ListKafkaClusters(c.CmkClient, c.EnvironmentId(), c.AuthToken())
+		clusterList, _, err := cmk.ListKafkaClusters(c.V2Client.CmkClient, c.EnvironmentId(), c.AuthToken())
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
+		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster, ""))
 	}
 
 	return outputWriter.Out()

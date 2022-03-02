@@ -20,8 +20,7 @@ import (
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloud.Client
-	CmkClient         *cmkv2.APIClient
-	OrgClient         *orgv2.APIClient
+	V2Client          *pcmd.V2Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
@@ -39,8 +38,7 @@ func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClie
 	return &Commander{
 		FlagResolver:      flagResolverMock,
 		Client:            client,
-		CmkClient:         cmkClient,
-		OrgClient:         orgClient,
+		V2Client:          &pcmd.V2Client{CmkClient: cmkClient, OrgClient: orgClient},
 		MDSClient:         mdsClient,
 		KafkaRESTProvider: kafkaRESTProvider,
 		Config:            cfg,
@@ -152,8 +150,7 @@ func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) fun
 
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
-	command.CmkClient = c.CmkClient
-	command.OrgClient = c.OrgClient
+	command.V2Client = &pcmd.V2Client{CmkClient: c.V2Client.CmkClient, OrgClient: c.V2Client.OrgClient}
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client

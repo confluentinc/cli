@@ -29,7 +29,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	_, err := cmk.DeleteKafkaCluster(c.CmkClient, args[0], c.EnvironmentId(), c.AuthToken())
+	_, err := cmk.DeleteKafkaCluster(c.V2Client.CmkClient, args[0], c.EnvironmentId(), c.AuthToken())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0])
 	}

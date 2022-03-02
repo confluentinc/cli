@@ -44,7 +44,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setClusterConfigType("dedicated"),
+		Config:       setCmkClusterConfig("dedicated", ""),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -258,7 +258,7 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 		AuthToken: "auth-token",
 	}
 	root.Client = client
-	root.CmkClient = cmkClient
+	root.V2Client.CmkClient = cmkClient
 	var buf bytes.Buffer
 	root.SetOut(&buf)
 	cmd, args, err := root.Command.Find([]string{
@@ -314,7 +314,7 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 	req.Equal("gcp", *createdCluster.Spec.Cloud)
 	req.Equal("us-central1", *createdCluster.Spec.Region)
 	// req.Equal("xyz", kafkaMock.CreateCalls()[0].Config.EncryptionKeyId)
-	// pending....
+	req.Equal("xyz", &createdCluster.Spec.Config.CmkV2Dedicated.EncryptionKey)
 	req.NotEqual(nil, createdCluster.Spec.Config.CmkV2Dedicated)
 	req.Equal(int32(1), createdCluster.Spec.Config.CmkV2Dedicated.Cku)
 

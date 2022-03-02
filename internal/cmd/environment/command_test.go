@@ -32,7 +32,11 @@ type EnvironmentTestSuite struct {
 	suite.Suite
 	conf              *v1.Config
 	accountClientMock *ccsdkmock.Account
-	orgClientMock     *orgmock.EnvironmentsOrgV2Api
+	V2ClientMock      *V2ClientMock
+}
+
+type V2ClientMock struct {
+	orgClientMock *orgmock.EnvironmentsOrgV2Api
 }
 
 var orgEnvironment = orgv2.OrgV2Environment{
@@ -59,7 +63,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.orgClientMock = &orgmock.EnvironmentsOrgV2Api{
+	orgClientMock := &orgmock.EnvironmentsOrgV2Api{
 		ListOrgV2EnvironmentsFunc: func(_ context.Context) orgv2.ApiListOrgV2EnvironmentsRequest {
 			return orgv2.ApiListOrgV2EnvironmentsRequest{}
 		},
@@ -79,6 +83,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 			return nil, nil
 		},
 	}
+	suite.V2ClientMock = &V2ClientMock{orgClientMock: orgClientMock}
 }
 
 func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
@@ -86,7 +91,7 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		Account: suite.accountClientMock,
 	}
 	orgClient := &orgv2.APIClient{
-		EnvironmentsOrgV2Api: suite.orgClientMock,
+		EnvironmentsOrgV2Api: suite.V2ClientMock.orgClientMock,
 	}
 	resolverMock := &pcmd.FlagResolverImpl{
 		Out: os.Stdout,
@@ -95,7 +100,7 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,
-		OrgClient:    orgClient,
+		V2Client:     &pcmd.V2Client{OrgClient: orgClient},
 		Config:       suite.conf,
 	}
 	prerunner.Config.Context().State = &v1.ContextState{

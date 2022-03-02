@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmk "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	org "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -11,19 +11,17 @@ import (
 
 type DynamicConfig struct {
 	*v1.Config
-	Resolver  FlagResolver
-	Client    *ccloud.Client
-	CmkClient *cmk.APIClient
-	OrgClient *org.APIClient
+	Resolver FlagResolver
+	Client   *ccloud.Client
+	V2Client *V2Client
 }
 
-func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client, cmkClient *cmk.APIClient, orgClient *org.APIClient) *DynamicConfig {
+func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *DynamicConfig {
 	return &DynamicConfig{
-		Config:    config,
-		Resolver:  resolver,
-		Client:    client,
-		CmkClient: cmkClient,
-		OrgClient: orgClient,
+		Config:   config,
+		Resolver: resolver,
+		Client:   client,
+		V2Client: &V2Client{CmkClient: cmkClient, OrgClient: orgClient},
 	}
 }
 
@@ -59,7 +57,10 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client, d.CmkClient, d.OrgClient), nil
+	if d.V2Client == nil {
+		return NewDynamicContext(ctx, d.Resolver, d.Client, nil, nil), nil
+	}
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.V2Client.CmkClient, d.V2Client.OrgClient), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -68,5 +69,8 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client, d.CmkClient, d.OrgClient)
+	if d.V2Client == nil {
+		return NewDynamicContext(ctx, d.Resolver, d.Client, nil, nil)
+	}
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.V2Client.CmkClient, d.V2Client.OrgClient)
 }

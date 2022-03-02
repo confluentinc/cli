@@ -2,13 +2,13 @@
 | ID                | lkc-describe-dedicated-with-encryption |
 | Name              | kafka-cluster                          |
 | Type              | DEDICATED                              |
-| Ingress           |                                    100 |
-| Egress            |                                    100 |
-| Storage           |                                    500 |
+| Ingress           |                                     50 |
+| Egress            |                                    150 |
+| Storage           | Infinite                               |
 | Provider          | aws                                    |
 | Availability      | single-zone                            |
 | Region            | us-west-2                              |
-| Status            | PROVISIONING                           |
+| Status            | PROVISIONED                            |
 | Endpoint          | SASL_SSL://kafka-endpoint              |
 | REST Endpoint     | http://kafka-rest-url                  |
 | Cluster Size      |                                      1 |

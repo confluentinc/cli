@@ -186,7 +186,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		setClusterConfigCku(&cluster, int32(cku))
 	}
 
-	kafkaCluster, r, err := cmk.CreateKafkaCluster(c.CmkClient, cluster, c.AuthToken())
+	kafkaCluster, r, err := cmk.CreateKafkaCluster(c.V2Client.CmkClient, cluster, c.AuthToken())
 	if err != nil {
 		return errors.CatchCkuNotValidError(err, r)
 	}
@@ -200,7 +200,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	return outputKafkaClusterDescription(cmd, &kafkaCluster)
+	return c.outputKafkaClusterDescription(cmd, &kafkaCluster)
 }
 
 func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
@@ -348,7 +348,7 @@ func setCmkClusterConfig(typeString, encryptionKeyID string) *cmkv2.CmkV2Cluster
 		}
 	case skuDedicated:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 1},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 1, EncryptionKey: &encryptionKeyID},
 		}
 	}
 	return nil

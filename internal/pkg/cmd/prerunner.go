@@ -65,13 +65,17 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
-	CmkClient         *cmkv2.APIClient
-	OrgClient         *orgv2.APIClient
+	V2Client          *V2Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *DynamicContext
 	State             *v1.ContextState
+}
+
+type V2Client struct {
+	CmkClient *cmkv2.APIClient
+	OrgClient *orgv2.APIClient
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -266,15 +270,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		if err := r.setCCloudClient(command); err != nil {
-			return err
-		}
+		r.setV2Clients(command)
 
-		if err := r.setCmkClient(command); err != nil {
-			return err
-		}
-
-		return r.setOrgClient(command)
+		return r.setCCloudClient(command)
 	}
 }
 
@@ -392,24 +390,16 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setCmkClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
 	ctx := cliCmd.Config.Context()
 
 	cmkClient := r.createCmkClient(ctx, cliCmd.Version)
-	cliCmd.CmkClient = cmkClient
-	cliCmd.Context.cmkClient = cmkClient
-	cliCmd.Config.CmkClient = cmkClient
-	return nil
-}
-
-func (r *PreRun) setOrgClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx := cliCmd.Config.Context()
-
 	orgClient := r.createOrgClient(ctx, cliCmd.Version)
-	cliCmd.OrgClient = orgClient
-	cliCmd.Context.orgClient = orgClient
-	cliCmd.Config.OrgClient = orgClient
-	return nil
+	v2Client := &V2Client{CmkClient: cmkClient, OrgClient: orgClient}
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
 }
 
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
@@ -764,12 +754,11 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			command.Config.Client = client
 
 			cmkClient := r.createCmkClient(ctx, command.Version)
-			ctx.cmkClient = cmkClient
-			command.Config.CmkClient = cmkClient
-
 			orgClient := r.createOrgClient(ctx, command.Version)
-			ctx.orgClient = orgClient
-			command.Config.OrgClient = orgClient
+
+			v2Client := &V2Client{CmkClient: cmkClient, OrgClient: orgClient}
+			ctx.v2Client = v2Client
+			command.Config.V2Client = v2Client
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

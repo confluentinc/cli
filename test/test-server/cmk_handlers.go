@@ -153,8 +153,8 @@ func (c *V2Router) HandleCmkCluster(t *testing.T) func(w http.ResponseWriter, r 
 			c.HandleKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
 			c.HandleKafkaClusterDescribeDedicatedPending(t)(w, r)
-		// case "lkc-describe-dedicated-with-encryption":
-		// 	c.HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+		case "lkc-describe-dedicated-with-encryption":
+			c.HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-update":
 			c.HandleKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
@@ -216,24 +216,16 @@ func (c *V2Router) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func
 	}
 }
 
-// encryption not in sdk yet
-// Handler for GET "/api/clusters/lkc-describe-dedicated-with-encryption"
-// func (c *V2Router) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		vars := mux.Vars(r)
-// 		id := vars["id"]
-// 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-// 		cluster.Cku = 1
-// 		cluster.EncryptionKeyId = "abc123"
-// 		cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
-// 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-// 			Cluster: cluster,
-// 		})
-// 		require.NoError(t, err)
-// 		_, err = io.WriteString(w, string(b))
-// 		require.NoError(t, err)
-// 	}
-// }
+// Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-with-encryption"
+func (c *V2Router) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
+		cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("abc123")
+		marshalCmkCluster(t, w, r, cluster)
+	}
+}
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-infinite
 func (c *V2Router) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {

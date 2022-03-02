@@ -167,16 +167,23 @@ func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	return -1
 }
 
+func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
+	if isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil {
+		return *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey
+	}
+	return ""
+}
+
 func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config.CmkV2Basic != nil
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Basic != nil
 }
 
 func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config.CmkV2Standard != nil
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Standard != nil
 }
 
 func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config.CmkV2Dedicated != nil
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Dedicated != nil
 }
 
 func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {

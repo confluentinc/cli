@@ -10,5 +10,6 @@
 | Region        | us-west-2                 |
 | Status        | PROVISIONED               |
 | Endpoint      | SASL_SSL://kafka-endpoint |
+| API Endpoint  | http://127.0.0.1:56226    |
 | REST Endpoint | http://kafka-rest-url     |
 +---------------+---------------------------+

@@ -10,5 +10,6 @@
   "availability": "single-zone",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
+  "api_endpoint": "http://127.0.0.1:12345",
   "rest_endpoint": "https://pkc-endpoint"
 }

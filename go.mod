@@ -74,7 +74,7 @@ require (
 require github.com/golang/protobuf v1.5.2
 
 require (
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 )
 
@@ -272,6 +272,7 @@ require (
 	github.com/julz/importas v0.1.0 // indirect
 	github.com/kevinburke/ssh_config v1.1.0 // indirect
 	github.com/kisielk/errcheck v1.6.0 // indirect
+	github.com/kisielk/godepgraph v0.0.0-20190626013829-57a7e4a651a9 // indirect
 	github.com/kisielk/gotool v1.0.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/kulti/thelper v0.5.0 // indirect

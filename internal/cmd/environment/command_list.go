@@ -36,7 +36,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := org.ListEnvironments(c.OrgClient, c.AuthToken())
+	resp, _, err := org.ListEnvironments(c.V2Client.OrgClient, c.AuthToken())
 	if err != nil {
 		return err
 	}

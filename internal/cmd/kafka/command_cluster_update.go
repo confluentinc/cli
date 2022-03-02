@@ -62,7 +62,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			},
 		},
 	}
-	currentCluster, _, err := cmk.DescribeKafkaCluster(c.CmkClient, clusterID, c.EnvironmentId(), c.AuthToken())
+	currentCluster, _, err := cmk.DescribeKafkaCluster(c.V2Client.CmkClient, clusterID, c.EnvironmentId(), c.AuthToken())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
@@ -88,12 +88,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, _, err := cmk.UpdateKafkaCluster(c.CmkClient, clusterID, update, c.AuthToken())
+	updatedCluster, _, err := cmk.UpdateKafkaCluster(c.V2Client.CmkClient, clusterID, update, c.AuthToken())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
-	return outputKafkaClusterDescription(cmd, &updatedCluster)
+	return c.outputKafkaClusterDescription(cmd, &updatedCluster)
 }
 
 func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {

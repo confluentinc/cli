@@ -19,19 +19,17 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	resolver  FlagResolver
-	client    *ccloud.Client
-	cmkClient *cmkv2.APIClient
-	orgClient *orgv2.APIClient
+	resolver FlagResolver
+	client   *ccloud.Client
+	v2Client *V2Client
 }
 
 func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *DynamicContext {
 	return &DynamicContext{
-		Context:   context,
-		resolver:  resolver,
-		client:    client,
-		cmkClient: cmkClient,
-		orgClient: orgClient,
+		Context:  context,
+		resolver: resolver,
+		client:   client,
+		v2Client: &V2Client{CmkClient: cmkClient, OrgClient: orgClient},
 	}
 }
 

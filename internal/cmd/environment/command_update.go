@@ -34,7 +34,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	_, _, err = org.UpdateOrgEnvironment(c.OrgClient, id, updateEnvironment, c.AuthToken())
+	_, _, err = org.UpdateOrgEnvironment(c.V2Client.OrgClient, id, updateEnvironment, c.AuthToken())
 	if err != nil {
 		return err
 	}

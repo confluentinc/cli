@@ -30,7 +30,6 @@ var (
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	client := buildCcloudMockClient()
-	// orgClient := pmock.NewOrgClientMock()
 	tests := []struct {
 		name           string
 		ctx            *pcmd.DynamicContext

@@ -54,6 +54,8 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
 		switch clusterId {
+		case "lkc-describe":
+			c.HandleKafkaClusterDescribe(t)(w, r)
 		case "lkc-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api":
 			c.HandleKafkaApiOrRestClusters(t)(w, r)
 		case "lkc-unknown":
@@ -62,6 +64,19 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		default:
 			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
+	}
+}
+
+func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.URL.Query().Get("id")
+		cluster := getBaseDescribeCluster(id, "kafka-cluster")
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: cluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
 	}
 }
 

@@ -90,7 +90,7 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.CmkClient, command.AuthToken())
+		return AutocompleteClusters(command.EnvironmentId(), command.V2Client.CmkClient, command.AuthToken())
 	})
 }
 
@@ -150,7 +150,7 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.OrgClient, command.AuthToken())
+		return AutocompleteEnvironments(command.V2Client.OrgClient, command.AuthToken())
 	})
 }
 

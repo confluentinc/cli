@@ -22,7 +22,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	_, err := org.DeleteOrgEnvironment(c.OrgClient, id, c.AuthToken())
+	_, err := org.DeleteOrgEnvironment(c.V2Client.OrgClient, id, c.AuthToken())
 	if err != nil {
 		return err
 	}
