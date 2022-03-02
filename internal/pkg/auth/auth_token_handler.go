@@ -57,7 +57,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
 	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
-		log.CliLogger.Debugf("unable to obtain user SSO info: %s", err.Error())
+		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
 	}
 	if userSSO == "" {
