@@ -73,7 +73,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		return err
 	}
 	if outputOption == output.Human.String() {
-		printConfig(&struct{ CompatibilityLevel string }{level}, []string{"Compatibility Level"})
+		printConfig(&struct{ CompatibilityLevel string }{level}, []string{"CompatibilityLevel"})
 	} else {
 		structuredOutput := &struct{ CompatibilityLevel string }{level}
 		fields := []string{"CompatibilityLevel"}
