@@ -74,7 +74,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	// attempt to fall back to the currently active Kafka cluster
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err == nil && clusterId != "" {
-		if resourceType != resource.KafkaType {
+		if resourceType != resource.Kafka {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)

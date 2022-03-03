@@ -4,24 +4,22 @@ import (
 	"strings"
 )
 
-type Type int
-
 const (
-	Unknown Type = iota
-	Cloud
-	Kafka
-	Ksql
-	SchemaRegistry
-	ServiceAccount
-	User
+	Unknown        = "unknown"
+	Cloud          = "cloud"
+	Kafka          = "kafka"
+	Ksql           = "ksql"
+	SchemaRegistry = "schema-registry"
+	ServiceAccount = "service-account"
+	User           = "user"
 )
 
-func LookupType(resourceId string) Type {
+func LookupType(resourceId string) string {
 	if resourceId == "cloud" {
 		return Cloud
 	}
 
-	prefixToType := map[string]Type{
+	prefixToType := map[string]string{
 		"lkc":    Kafka,
 		"lksqlc": Ksql,
 		"lsrc":   SchemaRegistry,

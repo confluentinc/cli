@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -104,10 +105,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 		return "", "", "", nil
 	}
 
-	resourceType, err := resource.LookupType(resourceId)
-	if err != nil {
-		return "", "", "", err
-	}
+	resourceType := resource.LookupType(resourceId)
 
 	var clusterId string
 	var apiKey string
@@ -139,7 +137,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 			apiKey = cluster.SrCredentials.Key
 		}
 	default:
-		panic("unknown resource type")
+		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resourceId)
 	}
 
 	return resourceType, clusterId, apiKey, nil
