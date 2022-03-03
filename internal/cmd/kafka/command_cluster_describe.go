@@ -9,7 +9,6 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -114,6 +113,8 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
+	c.InitializeV2ClientToken()
+
 	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
@@ -124,7 +125,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, _, err := cmk.DescribeKafkaCluster(c.V2Client.CmkClient, lkc, c.EnvironmentId(), c.AuthToken())
+	cluster, _, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc)
 	}

@@ -6,7 +6,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -26,6 +25,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	c.InitializeV2ClientToken()
 	id := args[0]
 
 	name, err := cmd.Flags().GetString("name")
@@ -34,7 +34,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	_, _, err = org.UpdateOrgEnvironment(c.V2Client.OrgClient, id, updateEnvironment, c.AuthToken())
+	_, _, err = c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
 	if err != nil {
 		return err
 	}

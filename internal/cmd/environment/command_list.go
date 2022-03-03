@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -36,7 +35,8 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := org.ListEnvironments(c.V2Client.OrgClient, c.AuthToken())
+	c.InitializeV2ClientToken()
+	resp, _, err := c.V2Client.ListEnvironments()
 	if err != nil {
 		return err
 	}

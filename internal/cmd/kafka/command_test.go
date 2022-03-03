@@ -23,6 +23,7 @@ import (
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -664,7 +665,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
-	cmd := New(conf, cliMock.NewPreRunnerMock(nil, cmkClient, nil, nil, nil, conf), "test-client")
+	cmd := New(conf, cliMock.NewPreRunnerMock(nil, ccloudv2.NewCcloudV2Client(cmkClient, nil), nil, nil, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
@@ -1206,7 +1207,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		}
 		return nil, nil
 	})
-	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, &provider, conf), "test-client")
+	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, &provider, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

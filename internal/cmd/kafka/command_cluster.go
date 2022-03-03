@@ -62,5 +62,5 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.V2Client.CmkClient, c.AuthToken())
+	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.V2Client)
 }

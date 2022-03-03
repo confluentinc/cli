@@ -6,6 +6,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
@@ -13,7 +14,7 @@ type DynamicConfig struct {
 	*v1.Config
 	Resolver FlagResolver
 	Client   *ccloud.Client
-	V2Client *V2Client
+	V2Client *ccloudv2.Client
 }
 
 func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *DynamicConfig {
@@ -21,7 +22,7 @@ func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.C
 		Config:   config,
 		Resolver: resolver,
 		Client:   client,
-		V2Client: &V2Client{CmkClient: cmkClient, OrgClient: orgClient},
+		V2Client: &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient},
 	}
 }
 

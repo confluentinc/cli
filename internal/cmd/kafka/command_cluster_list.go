@@ -7,8 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/cmk"
-	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -35,6 +33,8 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
+	c.InitializeV2ClientToken()
+
 	listAllClusters, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
@@ -42,20 +42,20 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 
 	var clusters []cmkv2.CmkV2Cluster
 	if listAllClusters {
-		environments, _, err := org.ListEnvironments(c.V2Client.OrgClient, c.AuthToken())
+		environments, _, err := c.V2Client.ListEnvironments()
 		if err != nil {
 			return err
 		}
 
 		for _, env := range environments.Data {
-			clusterList, _, err := cmk.ListKafkaClusters(c.V2Client.CmkClient, *env.Id, c.AuthToken())
+			clusterList, _, err := c.V2Client.ListKafkaClusters(*env.Id)
 			if err != nil {
 				return err
 			}
 			clusters = append(clusters, clusterList.Data...)
 		}
 	} else {
-		clusterList, _, err := cmk.ListKafkaClusters(c.V2Client.CmkClient, c.EnvironmentId(), c.AuthToken())
+		clusterList, _, err := c.V2Client.ListKafkaClusters(c.EnvironmentId())
 		if err != nil {
 			return err
 		}

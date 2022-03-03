@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -20,9 +19,10 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
+	c.InitializeV2ClientToken()
 	id := args[0]
 
-	_, err := org.DeleteOrgEnvironment(c.V2Client.OrgClient, id, c.AuthToken())
+	_, err := c.V2Client.DeleteOrgEnvironment(id)
 	if err != nil {
 		return err
 	}

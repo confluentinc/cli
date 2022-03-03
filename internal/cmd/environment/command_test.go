@@ -7,6 +7,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -100,7 +101,7 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,
-		V2Client:     &pcmd.V2Client{OrgClient: orgClient},
+		V2Client:     &ccloudv2.Client{OrgClient: orgClient},
 		Config:       suite.conf,
 	}
 	prerunner.Config.Context().State = &v1.ContextState{

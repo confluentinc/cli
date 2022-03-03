@@ -18,6 +18,7 @@ import (
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -44,7 +45,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", ""),
+		Config:       setCmkClusterConfig("dedicated", 1, "xyz"),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -59,12 +60,10 @@ var cmkShrinkCluster = cmkv2.CmkV2Cluster{
 		Environment: &cmkv2.ObjectReference{
 			Id: environmentId,
 		},
-		DisplayName: cmkv2.PtrString("gcp-shrink-test"),
-		Cloud:       cmkv2.PtrString("gcp"),
-		Region:      cmkv2.PtrString("us-central1"),
-		Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 2},
-		},
+		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
+		Cloud:        cmkv2.PtrString("gcp"),
+		Region:       cmkv2.PtrString("us-central1"),
+		Config:       setCmkClusterConfig("dedicated", 2, ""),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -79,12 +78,10 @@ var cmkExpandCluster = cmkv2.CmkV2Cluster{
 		Environment: &cmkv2.ObjectReference{
 			Id: environmentId,
 		},
-		DisplayName: cmkv2.PtrString("gcp-shrink-test"),
-		Cloud:       cmkv2.PtrString("gcp"),
-		Region:      cmkv2.PtrString("us-central1"),
-		Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 3},
-		},
+		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
+		Cloud:        cmkv2.PtrString("gcp"),
+		Region:       cmkv2.PtrString("us-central1"),
+		Config:       setCmkClusterConfig("dedicated", 3, ""),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -106,6 +103,13 @@ type KafkaClusterTestSuite struct {
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
+	suite.kafkaMock = &ccsdkmock.Kafka{
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return &schedv1.KafkaCluster{
+				ApiEndpoint: "api-endpoint",
+			}, nil
+		},
+	}
 	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
 		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
 			return cmkv2.ApiCreateCmkV2ClusterRequest{}
@@ -216,19 +220,27 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	cmkClient := &cmkv2.APIClient{
 		ClustersCmkV2Api: suite.cmkClusterApi,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, cmkClient, nil, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewCcloudV2Client(cmkClient, nil), nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
 func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
 	root := suite.newCmd(v1.AuthenticatedCloudConfigMock())
+	kafkaMock := &ccsdkmock.Kafka{
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+			return &schedv1.KafkaCluster{
+				ApiEndpoint: "api-endpoint",
+			}, nil
+		},
+	}
 	idMock := &ccsdkmock.ExternalIdentity{
 		CreateExternalIdentityFunc: func(_ context.Context, cloud, accountID string) (string, error) {
 			return "id-xyz", nil
 		},
 	}
 	client := &ccloud.Client{
+		Kafka:            kafkaMock,
 		ExternalIdentity: idMock,
 		EnvironmentMetadata: &ccsdkmock.EnvironmentMetadata{
 			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
@@ -258,7 +270,7 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 		AuthToken: "auth-token",
 	}
 	root.Client = client
-	root.V2Client.CmkClient = cmkClient
+	root.V2Client = ccloudv2.NewCcloudV2Client(cmkClient, nil)
 	var buf bytes.Buffer
 	root.SetOut(&buf)
 	cmd, args, err := root.Command.Find([]string{
@@ -290,21 +302,23 @@ Identity:
 
 
 Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
-+---------------+---------------+
-| ID            | lkc-xyz       |
-| Name          | gcp-byok-test |
-| Type          | DEDICATED     |
-| Ingress       |            50 |
-| Egress        |           150 |
-| Storage       | Infinite      |
-| Provider      | gcp           |
-| Availability  | single-zone   |
-| Region        | us-central1   |
-| Status        | PROVISIONING  |
-| Endpoint      |               |
-| REST Endpoint |               |
-| Cluster Size  |             1 |
-+---------------+---------------+
++-------------------+---------------+
+| ID                | lkc-xyz       |
+| Name              | gcp-byok-test |
+| Type              | DEDICATED     |
+| Ingress           |            50 |
+| Egress            |           150 |
+| Storage           | Infinite      |
+| Provider          | gcp           |
+| Availability      | single-zone   |
+| Region            | us-central1   |
+| Status            | PROVISIONING  |
+| Endpoint          |               |
+| API Endpoint      | api-endpoint  |
+| REST Endpoint     |               |
+| Cluster Size      |             1 |
+| Encryption Key ID | xyz           |
++-------------------+---------------+
 `)
 	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
 	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
@@ -313,8 +327,7 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 	req.Equal("abc", createdCluster.Spec.Environment.Id)
 	req.Equal("gcp", *createdCluster.Spec.Cloud)
 	req.Equal("us-central1", *createdCluster.Spec.Region)
-	// req.Equal("xyz", kafkaMock.CreateCalls()[0].Config.EncryptionKeyId)
-	req.Equal("xyz", &createdCluster.Spec.Config.CmkV2Dedicated.EncryptionKey)
+	req.Equal("xyz", *createdCluster.Spec.Config.CmkV2Dedicated.EncryptionKey)
 	req.NotEqual(nil, createdCluster.Spec.Config.CmkV2Dedicated)
 	req.Equal(int32(1), createdCluster.Spec.Config.CmkV2Dedicated.Cku)
 

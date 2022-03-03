@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -49,6 +48,8 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
+	c.InitializeV2ClientToken()
+
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
@@ -62,7 +63,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			},
 		},
 	}
-	currentCluster, _, err := cmk.DescribeKafkaCluster(c.V2Client.CmkClient, clusterID, c.EnvironmentId(), c.AuthToken())
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, c.EnvironmentId())
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
@@ -88,7 +89,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, _, err := cmk.UpdateKafkaCluster(c.V2Client.CmkClient, clusterID, update, c.AuthToken())
+	updatedCluster, _, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterUpdateFailedSuggestions)
 	}
@@ -104,6 +105,8 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv
 			return -1, err
 		}
 		// Ensure the cluster is a Dedicated Cluster
+		fmt.Println(currentCluster.GetSpec())
+		fmt.Println(currentCluster.GetSpec().Config)
 		if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
 			return -1, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
 		}

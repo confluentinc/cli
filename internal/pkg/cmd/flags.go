@@ -7,14 +7,11 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmk"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
-	"github.com/confluentinc/cli/internal/pkg/org"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -90,12 +87,12 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.V2Client.CmkClient, command.AuthToken())
+		return AutocompleteClusters(command.EnvironmentId(), command.V2Client)
 	})
 }
 
-func AutocompleteClusters(environmentId string, client *cmkv2.APIClient, authToken string) []string {
-	resp, _, err := kafka.ListCmkKafkaClusters(client, authToken, environmentId)
+func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
+	resp, _, err := kafka.ListCmkKafkaClusters(client, environmentId)
 	if err != nil {
 		return nil
 	}
@@ -108,8 +105,8 @@ func AutocompleteClusters(environmentId string, client *cmkv2.APIClient, authTok
 	return suggestions
 }
 
-func AutocompleteCmkClusters(environmentId string, client *cmkv2.APIClient, authToken string) []string {
-	resp, _, err := cmk.ListKafkaClusters(client, environmentId, authToken)
+func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
+	resp, _, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
@@ -150,12 +147,12 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.V2Client.OrgClient, command.AuthToken())
+		return AutocompleteEnvironments(command.V2Client, command.AuthToken())
 	})
 }
 
-func AutocompleteEnvironments(client *orgv2.APIClient, authToken string) []string {
-	resp, _, err := org.ListEnvironments(client, authToken)
+func AutocompleteEnvironments(client *ccloudv2.Client, authToken string) []string {
+	resp, _, err := client.ListEnvironments()
 	if err != nil {
 		return nil
 	}

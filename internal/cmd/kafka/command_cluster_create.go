@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/cmk"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -104,6 +103,8 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.Prompt) error {
+	c.InitializeV2ClientToken()
+
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -159,7 +160,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		}
 	}
 
-	cluster := cmkv2.CmkV2Cluster{
+	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			Environment: &cmkv2.ObjectReference{
 				Id: c.EnvironmentId(),
@@ -168,7 +169,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(typeString, encryptionKeyID),
+			Config:       setCmkClusterConfig(typeString, 1, encryptionKeyID),
 		},
 	}
 
@@ -183,10 +184,10 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
-		setClusterConfigCku(&cluster, int32(cku))
+		setClusterConfigCku(&createCluster, int32(cku))
 	}
 
-	kafkaCluster, r, err := cmk.CreateKafkaCluster(c.V2Client.CmkClient, cluster, c.AuthToken())
+	kafkaCluster, r, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
 		return errors.CatchCkuNotValidError(err, r)
 	}
@@ -336,7 +337,7 @@ func stringToSku(typeString string) (productv1.Sku, error) {
 	return sku, nil
 }
 
-func setCmkClusterConfig(typeString, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
@@ -348,7 +349,11 @@ func setCmkClusterConfig(typeString, encryptionKeyID string) *cmkv2.CmkV2Cluster
 		}
 	case skuDedicated:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: 1, EncryptionKey: &encryptionKeyID},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: &encryptionKeyID},
+		}
+	default:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
+			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
 		}
 	}
 	return nil

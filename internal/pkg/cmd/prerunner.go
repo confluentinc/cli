@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -65,17 +66,12 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
-	V2Client          *V2Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *DynamicContext
 	State             *v1.ContextState
-}
-
-type V2Client struct {
-	CmkClient *cmkv2.APIClient
-	OrgClient *orgv2.APIClient
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -157,6 +153,10 @@ func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 
 func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 	s.AuthenticatedCLICommand.AddCommand(command)
+}
+
+func (s *AuthenticatedStateFlagCommand) InitializeV2ClientToken() {
+	s.AuthenticatedCLICommand.V2Client.SetAuthToken(s.AuthenticatedCLICommand.AuthToken())
 }
 
 func (c *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
@@ -393,9 +393,9 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
 	ctx := cliCmd.Config.Context()
 
-	cmkClient := r.createCmkClient(ctx, cliCmd.Version)
-	orgClient := r.createOrgClient(ctx, cliCmd.Version)
-	v2Client := &V2Client{CmkClient: cmkClient, OrgClient: orgClient}
+	cmkClient := r.createCmkClient(ctx)
+	orgClient := r.createOrgClient(ctx)
+	v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient}
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client
@@ -467,56 +467,20 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 	}), nil
 }
 
-func (r *PreRun) createCmkClient(ctx *DynamicContext, ver *version.Version) *cmkv2.APIClient {
+func (r *PreRun) createCmkClient(ctx *DynamicContext) *cmkv2.APIClient {
 	var baseURL string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
-	cmkServer := getV2ServerUrl(baseURL)
-	server := cmkv2.ServerConfigurations{
-		{URL: cmkServer, Description: "Confluent Cloud"},
-	}
-	cfg := &cmkv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]cmkv2.ServerConfigurations{},
-	}
-	return cmkv2.NewAPIClient(cfg)
+	return ccloudv2.NewV2CmkClient(baseURL, r.IsTest)
 }
 
-func (r *PreRun) createOrgClient(ctx *DynamicContext, ver *version.Version) *orgv2.APIClient {
+func (r *PreRun) createOrgClient(ctx *DynamicContext) *orgv2.APIClient {
 	var baseURL string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
-	orgServer := getV2ServerUrl(baseURL)
-	server := orgv2.ServerConfigurations{
-		{URL: orgServer, Description: "Confluent Cloud"},
-	}
-	cfg := &orgv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]orgv2.ServerConfigurations{},
-	}
-	return orgv2.NewAPIClient(cfg)
-}
-
-func getV2ServerUrl(baseURL string) string {
-	// if isTest {
-	// 	return "http://127.0.0.1:2048"
-	// }
-	// // regex check for baseURL
-	if strings.Contains(baseURL, "devel") {
-		return "https://api.devel.cpdev.cloud"
-	} else if strings.Contains(baseURL, "stag") {
-		return "https://api.stag.cpdev.cloud"
-	}
-	// return "https://api.confluent.cloud"
-	return "http://127.0.0.1:2048"
+	return ccloudv2.NewV2OrgClient(baseURL, r.IsTest)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
@@ -753,10 +717,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			ctx.client = client
 			command.Config.Client = client
 
-			cmkClient := r.createCmkClient(ctx, command.Version)
-			orgClient := r.createOrgClient(ctx, command.Version)
+			cmkClient := r.createCmkClient(ctx)
+			orgClient := r.createOrgClient(ctx)
 
-			v2Client := &V2Client{CmkClient: cmkClient, OrgClient: orgClient}
+			v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient}
 			ctx.v2Client = v2Client
 			command.Config.V2Client = v2Client
 

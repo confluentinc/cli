@@ -5,9 +5,7 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 func cmkApiContext(authToken string) context.Context {
@@ -15,12 +13,7 @@ func cmkApiContext(authToken string) context.Context {
 	return auth
 }
 
-func ListCmkKafkaClusters(client *cmkv2.APIClient, environment string, authToken string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
-	req := client.ClustersCmkV2Api.ListCmkV2Clusters(cmkApiContext(authToken)).Environment(environment)
-	return client.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
-}
-
-func ListKafkaClusters(client *ccloud.Client, environmentId string) ([]*schedv1.KafkaCluster, error) {
-	req := &schedv1.KafkaCluster{AccountId: environmentId}
-	return client.Kafka.List(context.Background(), req)
+func ListCmkKafkaClusters(client *ccloudv2.Client, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
+	req := client.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(cmkApiContext(client.AuthToken)).Environment(environment)
+	return client.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }

@@ -6,8 +6,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -20,7 +19,7 @@ import (
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloud.Client
-	V2Client          *pcmd.V2Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
@@ -30,7 +29,7 @@ type Commander struct {
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -38,7 +37,7 @@ func NewPreRunnerMock(client *ccloud.Client, cmkClient *cmkv2.APIClient, orgClie
 	return &Commander{
 		FlagResolver:      flagResolverMock,
 		Client:            client,
-		V2Client:          &pcmd.V2Client{CmkClient: cmkClient, OrgClient: orgClient},
+		V2Client:          v2Client,
 		MDSClient:         mdsClient,
 		KafkaRESTProvider: kafkaRESTProvider,
 		Config:            cfg,
@@ -150,7 +149,7 @@ func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) fun
 
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
-	command.V2Client = &pcmd.V2Client{CmkClient: c.V2Client.CmkClient, OrgClient: c.V2Client.OrgClient}
+	command.V2Client = c.V2Client
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
