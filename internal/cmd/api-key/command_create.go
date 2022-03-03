@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -80,7 +79,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType != resource.CloudType {
+	if resourceType != resource.Cloud {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
@@ -103,7 +102,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType == resource.KafkaType {
+	if resourceType == resource.Kafka {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
@@ -114,8 +113,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
 	if key.UserResourceId != "" { // it has a service-account flag
-		validFormat := strings.HasPrefix(key.UserResourceId, "sa-")
-		if !validFormat {
+		if resource.LookupType(key.UserResourceId) != resource.ServiceAccount {
 			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
 		users, err := c.getAllUsers()

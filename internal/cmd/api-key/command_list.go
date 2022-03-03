@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -90,8 +89,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccount := false
 	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
 		serviceAccount = true
-		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
-		if !validFormat {
+		if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
 		userIdMap := c.mapResourceIdToUserId(allUsers)
@@ -172,12 +170,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				Description:    apiKey.Description,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
-				ResourceType:   resource.CloudType,
+				ResourceType:   resource.Cloud,
 				Created:        created,
 			})
 		}
 
-		if resourceType == resource.CloudType {
+		if resourceType == resource.Cloud {
 			continue
 		}
 

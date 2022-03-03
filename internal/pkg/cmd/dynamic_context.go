@@ -168,15 +168,7 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 // or an ErrNotLoggedIn if the user is not logged in.
 func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	resourceId, _ := cmd.Flags().GetString("resource")
-	var resourceType string
-
-	if resourceId != "" {
-		var err error
-		resourceType, err = resource.LookupType(resourceId)
-		if err != nil {
-			return nil, err
-		}
-	}
+	resourceType := resource.LookupType(resourceId)
 
 	envId, err := d.AuthenticatedEnvId()
 	if err != nil {
@@ -186,7 +178,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	ctxClient := NewContextClient(d)
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
-	if resourceType == resource.SrType {
+	if resourceType == resource.SchemaRegistry {
 		for _, srCluster := range d.SchemaRegistryClusters {
 			if srCluster.Id == resourceId {
 				cluster = srCluster

@@ -1,35 +1,39 @@
 package resource
 
 import (
-	"fmt"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+type Type int
 
 const (
-	CloudType = "cloud"
-	KafkaType = "kafka"
-	KsqlType  = "ksql"
-	SrType    = "schema-registry"
+	Unknown Type = iota
+	Cloud
+	Kafka
+	Ksql
+	SchemaRegistry
+	ServiceAccount
+	User
 )
 
-func LookupType(resourceId string) (string, error) {
-	if resourceId == CloudType {
-		return CloudType, nil
+func LookupType(resourceId string) Type {
+	if resourceId == "cloud" {
+		return Cloud
 	}
 
-	prefixToType := map[string]string{
-		"lkc":    KafkaType,
-		"lksqlc": KsqlType,
-		"lsrc":   SrType,
+	prefixToType := map[string]Type{
+		"lkc":    Kafka,
+		"lksqlc": Ksql,
+		"lsrc":   SchemaRegistry,
+		"sa":     ServiceAccount,
+		"u":      User,
 	}
 
 	for prefix, resourceType := range prefixToType {
 		if strings.HasPrefix(resourceId, prefix+"-") {
-			return resourceType, nil
+			return resourceType
 		}
 	}
 
-	return "", fmt.Errorf(errors.ResourceNotFoundErrorMsg, resourceId)
+	return Unknown
 }

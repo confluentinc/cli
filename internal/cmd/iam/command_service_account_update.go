@@ -2,7 +2,6 @@ package iam
 
 import (
 	"context"
-	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
@@ -10,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -44,11 +44,13 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	if !strings.HasPrefix(args[0], "sa-") {
+	if resource.LookupType(args[0]) != resource.ServiceAccount {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
+	serviceAccountId := args[0]
+
 	user := &orgv1.User{
-		ResourceId:         args[0],
+		ResourceId:         serviceAccountId,
 		ServiceDescription: description,
 	}
 
@@ -56,6 +58,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
+	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

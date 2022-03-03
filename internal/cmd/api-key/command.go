@@ -113,23 +113,23 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 	var apiKey string
 
 	switch resourceType {
-	case resource.CloudType:
+	case resource.Cloud:
 		break
-	case resource.KafkaType:
+	case resource.Kafka:
 		cluster, err := c.Context.FindKafkaCluster(resourceId)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
-	case resource.KsqlType:
+	case resource.Ksql:
 		cluster := &schedv1.KSQLCluster{Id: resourceId, AccountId: c.EnvironmentId()}
 		cluster, err := client.KSQL.Describe(context.Background(), cluster)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
 		clusterId = cluster.Id
-	case resource.SrType:
+	case resource.SchemaRegistry:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
