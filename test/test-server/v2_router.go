@@ -16,7 +16,6 @@ const (
 
 type V2Router struct {
 	*mux.Router
-	kafkaRPUrl string
 }
 
 func NewV2Router(t *testing.T) *V2Router {

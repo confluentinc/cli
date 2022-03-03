@@ -24,9 +24,8 @@ func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWr
 		require.NoError(t, err)
 		err = json.Unmarshal(requestBody, &req)
 		require.NoError(t, err)
-		createCluster := &cmkv2.CmkV2Cluster{}
 		if req.Spec.Config.CmkV2Dedicated != nil {
-			createCluster = &cmkv2.CmkV2Cluster{
+			createCluster := &cmkv2.CmkV2Cluster{
 				Spec: &cmkv2.CmkV2ClusterSpec{
 					DisplayName: cmkv2.PtrString(*req.Spec.DisplayName),
 					Cloud:       cmkv2.PtrString(*req.Spec.Cloud),
@@ -44,8 +43,9 @@ func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWr
 					Cku:   cmkv2.PtrInt32(1),
 				},
 			}
+			marshalCmkCluster(t, w, r, createCluster)
 		} else {
-			createCluster = &cmkv2.CmkV2Cluster{
+			createCluster := &cmkv2.CmkV2Cluster{
 				Spec: &cmkv2.CmkV2ClusterSpec{
 					DisplayName: cmkv2.PtrString(*req.Spec.DisplayName),
 					Cloud:       cmkv2.PtrString(*req.Spec.Cloud),
@@ -62,8 +62,9 @@ func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWr
 					Phase: "PROVISIONING",
 				},
 			}
+			marshalCmkCluster(t, w, r, createCluster)
 		}
-		marshalCmkCluster(t, w, r, createCluster)
+
 	}
 }
 

@@ -49,11 +49,6 @@ var (
 	}
 )
 
-var durabilityToAvaiablityNameMap = map[string]string{
-	"LOW":  singleZone,
-	"HIGH": multiZone,
-}
-
 type describeStruct struct {
 	Id                 string
 	Name               string

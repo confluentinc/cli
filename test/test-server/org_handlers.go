@@ -27,9 +27,7 @@ func (c *V2Router) HandleOrgEnvironment(t *testing.T) func(http.ResponseWriter, 
 		if valid, env := isValidOrgEnvironmentId(OrgEnvironments, envId); valid {
 			switch r.Method {
 			case http.MethodDelete:
-				b, err := json.Marshal(http.Response{})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
+				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch: // `environment update {id} --name`
 				req := orgv2.OrgV2Environment{}

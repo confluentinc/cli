@@ -132,7 +132,7 @@ func (suite *EnvironmentTestSuite) TestListEnvironments() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	got := string(buf.Bytes())
+	got := buf.String()
 	req.Contains(got, environmentID)
 	req.Contains(got, environmentName)
 	req.Contains(got, environmentNameUpdated)
