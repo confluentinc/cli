@@ -24,13 +24,9 @@ func newCompatibilityCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient 
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-	}
-
-	if cfg.IsCloudLogin() {
 		c.AddCommand(c.newValidateCommand())
 	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.AddCommand(c.newValidateCommandOnPrem())
 	}
 

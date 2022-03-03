@@ -19,7 +19,7 @@ import (
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
-		Short: "Validate a schema against a particular version of a subject for compatibility.",
+		Short: "Validate that a schema is compatible with a given subject version.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.validate),
 		Example: examples.BuildExampleString(

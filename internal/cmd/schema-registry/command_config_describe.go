@@ -77,7 +77,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 	} else {
 		structuredOutput := &struct{ CompatibilityLevel string }{level}
 		fields := []string{"CompatibilityLevel"}
-		structuredRenames := map[string]string{"CompatibilityLevel": "compatibilityLevel"}
+		structuredRenames := map[string]string{"CompatibilityLevel": "compatibility_level"}
 		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
 	}
 	return nil
