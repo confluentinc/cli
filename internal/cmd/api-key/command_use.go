@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -29,11 +30,11 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err != nil {
 		return err
 	}
-	if resourceType != pcmd.KafkaResourceType {
+	if resourceType != resource.KafkaType {
 		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 	}
 	cluster, err := c.Context.FindKafkaCluster(clusterId)

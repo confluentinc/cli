@@ -11,6 +11,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -71,9 +72,9 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err == nil && clusterId != "" {
-		if resourceType != pcmd.KafkaResourceType {
+		if resourceType != resource.KafkaType {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)
