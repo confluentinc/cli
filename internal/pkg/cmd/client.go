@@ -74,7 +74,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 	if len(existingClusters) > 0 {
 		return existingClusters[0], nil
 	}
-	return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
+	return nil, errors.NewSRNotEnabledError()
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
@@ -86,7 +86,7 @@ func (c *contextClient) FetchSchemaRegistryById(context context.Context, id stri
 		return nil, err
 	}
 	if existingCluster == nil {
-		return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
+		return nil, errors.NewSRNotEnabledError()
 	} else {
 		return existingCluster, nil
 	}

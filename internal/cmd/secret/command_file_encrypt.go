@@ -38,5 +38,8 @@ func (c *command) encrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cipherMode := c.getCipherMode()
+	c.plugin.SetCipherMode(cipherMode)
+
 	return c.plugin.EncryptConfigFileSecrets(configPath, localSecretsPath, remoteSecretsPath, configs)
 }

@@ -16,10 +16,11 @@ import (
 )
 
 var (
-	urlPlaceHolder     = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
-	loggedInAsOutput   = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
-	loggedInEnvOutput  = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	urlPlaceHolder     		= "<URL_PLACEHOLDER>"
+	savedToNetrcOutput 		= fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	loggedInAsOutput   		= fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
+	loggedInEnvOutput  		= fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
@@ -117,9 +118,11 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// TODO: add save test using stdin input
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
 		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
 		}
 
 		// check netrc file result
@@ -181,9 +184,11 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		}
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
 		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
 		}
 
 		// check netrc file result

@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -55,14 +56,17 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, err := cmd.Flags().GetString(configFileFlagName)
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
 	}
 
-	configMap, err := utils.ReadConfigsFromFile(configs)
-	if err != nil {
-		return err
+	configMap := make(map[string]string)
+	if configFile != "" {
+		configMap, err = properties.FileToMap(configFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
@@ -93,5 +97,5 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST)
+	return handleOpenApiError(httpResp, err, kafkaREST.Client)
 }

@@ -97,6 +97,16 @@ const (
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
+	// kafka client-config package
+	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
+	WriteConfigFileErrorMsg               = "failed to write config file"
+	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
+	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
+		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
+		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
+	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--sr-apikey` and --sr-apisecret`."
+
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
 	FailedToRenderKeyPolicyErrorMsg               = "BYOK error: failed to render key policy"
@@ -140,7 +150,6 @@ const (
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	FailedToParseConfigErrMsg            = `failed to parse "key=value" pattern from configuration: %s`
 	FailedToFindSchemaIDErrorMsg         = "failed to find schema ID in topic data"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
@@ -307,6 +316,7 @@ const (
 	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
 	InvalidFilePathErrorMsg            = "invalid file path \"%s\""
 	UnsupportedFileFormatErrorMsg      = "unsupported file format for file \"%s\""
+	InvalidAlgorithmErrorMsg           = "invalid algorithm \"%s\""
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"

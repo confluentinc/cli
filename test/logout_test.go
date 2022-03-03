@@ -79,7 +79,11 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		// run login to provide context, then logout command and check output
 		output := runCommand(s.T(), tt.bin, env, "login -vvvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
+		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
+		}
 
 		output = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
 		s.Contains(output, loggedOutOutput)

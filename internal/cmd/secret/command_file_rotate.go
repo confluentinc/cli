@@ -19,9 +19,9 @@ func (c *command) newRotateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.rotate),
 	}
 
+	cmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	cmd.Flags().Bool("master-key", false, "Rotate the master key. Generates a new master key and re-encrypts with the new key.")
 	cmd.Flags().Bool("data-key", false, "Rotate data key. Generates a new data key and re-encrypts the file with the new key.")
-	cmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")
 	cmd.Flags().String("passphrase", "", `Master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 	cmd.Flags().String("passphrase-new", "", `New master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 
@@ -40,6 +40,9 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
+	cipherMode := c.getCipherMode()
+	c.plugin.SetCipherMode(cipherMode)
 
 	if rotateMEK {
 		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")

@@ -20,24 +20,16 @@ import (
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	type args struct {
-		masterKeyPassphrase          string
-		localSecureConfigPath        string
-		passphraseWithoutSpecialChar string
-		validateSpecialChar          bool
-		validateDiffKey              bool
-		secureDir                    string
-		newSeed                      int64
-		seed                         int64
+		masterKeyPassphrase   string
+		localSecureConfigPath string
+		validateDiffKey       bool
+		secureDir             string
 	}
 	tests := []struct {
-		name                      string
-		args                      *args
-		wantErr                   bool
-		wantErrMsg                string
-		wantMasterKey             string
-		wantMEKNewSeed            string
-		wantMEKWithoutSpecialChar string
-		wantEqual                 bool
+		name       string
+		args       *args
+		wantErr    bool
+		wantErrMsg string
 	}{
 		{
 			name: "ValidTestCase: valid create master key",
@@ -46,59 +38,38 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "abc123",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       false,
-				validateSpecialChar:   false,
-				seed:                  99,
 			},
-			wantErr:       false,
-			wantMasterKey: "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			wantErr: false,
 		},
 		{
 			name: "ValidTestCase: valid create master key with space at the end",
 			args: &args{
-				secureDir:                    "/tmp/securePass987/create",
-				masterKeyPassphrase:          "abc123 ",
-				passphraseWithoutSpecialChar: "abc123",
-				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
-				validateDiffKey:              false,
-				validateSpecialChar:          true,
-				seed:                         99,
+				secureDir:             "/tmp/securePass987/create",
+				masterKeyPassphrase:   "abc123 ",
+				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:       false,
 			},
-			wantErr:                   false,
-			wantEqual:                 false,
-			wantMasterKey:             "1sUuSz8zdMrciX02HwbQMRsHy1WRXNXqdq/zsD4B51A=",
-			wantMEKWithoutSpecialChar: "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			wantErr: false,
 		},
 		{
 			name: "ValidTestCase: valid create master key with tab at the end",
 			args: &args{
-				secureDir:                    "/tmp/securePass987/create",
-				masterKeyPassphrase:          "abc123\t",
-				passphraseWithoutSpecialChar: "abc123",
-				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
-				validateDiffKey:              false,
-				validateSpecialChar:          true,
-				seed:                         99,
+				secureDir:             "/tmp/securePass987/create",
+				masterKeyPassphrase:   "abc123\t",
+				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:       false,
 			},
-			wantErr:                   false,
-			wantEqual:                 false,
-			wantMasterKey:             "7fkJsp1uLUZ3qrkwY/ib3yaW0uc3hQv6qk7KT/2WbUs=",
-			wantMEKWithoutSpecialChar: "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			wantErr: false,
 		},
 		{
 			name: "ValidTestCase: valid create master key with new line at the end",
 			args: &args{
-				secureDir:                    "/tmp/securePass987/create",
-				masterKeyPassphrase:          "abc123\n",
-				passphraseWithoutSpecialChar: "abc123",
-				localSecureConfigPath:        "/tmp/securePass987/create/secureConfig.properties",
-				validateDiffKey:              false,
-				validateSpecialChar:          true,
-				seed:                         99,
+				secureDir:             "/tmp/securePass987/create",
+				masterKeyPassphrase:   "abc123\n",
+				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
+				validateDiffKey:       false,
 			},
-			wantErr:                   false,
-			wantEqual:                 true,
-			wantMasterKey:             "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
-			wantMEKWithoutSpecialChar: "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			wantErr: false,
 		},
 		{
 			name: "ValidTestCase: verify for same passphrase it generates a different master key",
@@ -107,13 +78,8 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "abc123",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       true,
-				validateSpecialChar:   false,
-				seed:                  99,
-				newSeed:               10,
 			},
-			wantErr:        false,
-			wantMasterKey:  "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
-			wantMEKNewSeed: "BnSpVrNA7s7AleWoB1G96w8Bod3yLfVoTnJPfVOmDpY=",
+			wantErr: false,
 		},
 		{
 			name: "InvalidTestCase: empty passphrase",
@@ -122,8 +88,6 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 				masterKeyPassphrase:   "",
 				localSecureConfigPath: "/tmp/securePass987/create/secureConfig.properties",
 				validateDiffKey:       false,
-				validateSpecialChar:   false,
-				seed:                  99,
 			},
 			wantErr:    true,
 			wantErrMsg: errors.EmptyPassphraseErrorMsg,
@@ -136,32 +100,19 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 			req.NoError(err)
 
 			plugin := NewPasswordProtectionPlugin()
-			plugin.RandSource = rand.NewSource(tt.args.seed)
 
+			plugin.SetCipherMode(MetadataEncAlgorithm)
 			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 			if !tt.wantErr {
-				req.Equal(key, tt.wantMasterKey)
+				req.Len(key, 44)
 			}
 
 			if tt.args.validateDiffKey {
-				plugin.RandSource = rand.NewSource(tt.args.newSeed)
 				newKey, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
-				req.Equal(newKey, tt.wantMEKNewSeed)
 				checkError(err, tt.wantErr, tt.wantErrMsg, req)
+				req.Len(newKey, 44)
 				req.NotEqual(key, newKey)
-			}
-
-			if tt.args.validateSpecialChar {
-				plugin.RandSource = rand.NewSource(tt.args.seed)
-				newKey, err := plugin.CreateMasterKey(tt.args.passphraseWithoutSpecialChar, tt.args.localSecureConfigPath)
-				req.Equal(newKey, tt.wantMEKWithoutSpecialChar)
-				checkError(err, tt.wantErr, tt.wantErrMsg, req)
-				if tt.wantEqual {
-					req.Equal(key, newKey)
-				} else {
-					req.NotEqual(key, newKey)
-				}
 			}
 
 			os.RemoveAll(tt.args.secureDir)
@@ -247,15 +198,7 @@ func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt config file with last line as Comment, create new dek",
@@ -277,15 +220,7 @@ config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 # LAST LINE SHOULD NOT BE DELETED
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.properties/testPassword = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt config file with config param",
@@ -308,15 +243,7 @@ ssl.keystore.key = ssl
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/ssl.keystore.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.properties/ssl.keystore.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt properties file with jaas entry",
@@ -343,15 +270,7 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config = org.apache.kafka.common.
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/CBC/PKCS5Padding,data:N2GVpUpn515YMUIRLpidDw==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apache.kafka.common.security.scram.ScramLoginModule/password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "ValidTestCase: encrypt properties file with multiple jaas entry",
@@ -406,15 +325,7 @@ config.properties/listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/org.apac
   }
 }
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.json/credentials.ssl\.keystore\.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 		{
 			name: "InvalidTestCase: encrypt invalid configuration in a JSON file",
@@ -471,8 +382,8 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
 			req.NoError(err)
 			plugin := NewPasswordProtectionPlugin()
-			plugin.RandSource = rand.NewSource(99)
 			plugin.Clock = clockwork.NewFakeClock()
+			plugin.SetCipherMode(MetadataEncAlgorithm)
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath, plugin)
 				req.NoError(err)
@@ -497,7 +408,7 @@ config.json/credentials.ssl\.keystore\.password = ENC[AES/CBC/PKCS5Padding,data:
 					} else {
 						validateTextFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
 					}
-					validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+					validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 				}
 			}
 
@@ -542,8 +453,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:SlpCTPDO/uyWDOS59hkcS9vTKm2MQ284YQhBM2iFSUXgsDGPBIlYBs4BMeWFt1yn,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -558,27 +469,27 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 		{
 			name: "InvalidTestCase: Corrupted encrypted data",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 2019-05-30 19:34:58.190796 -0700 PDT m=+13.357260342
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:asdsdsssddsoooofsccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:asdsdsssddsoooofVXowRlNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/decrypt",
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
-				setNewMEK:              false,
-				newMasterKey:           "xyz233",
+				setNewMEK:              true,
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
@@ -597,8 +508,8 @@ _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
 _metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:svYxySZYksI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:SclgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
@@ -614,27 +525,27 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsa
 		{
 			name: "InvalidTestCase: Corrupted Data few characters interchanged",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 2019-05-30 19:34:58.190796 -0700 PDT m=+13.357260342
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:lcSgTBDDeLwccqtsaEmDlA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:lNyVXowR9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/decrypt/",
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
-				setNewMEK:              false,
-				newMasterKey:           "xyz233",
+				setNewMEK:              true,
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
@@ -642,35 +553,35 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:lcSgTBDDeLwccqtsa
 		{
 			name: "InvalidTestCase: Corrupted Data few characters removed",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
 `,
-				secretFileContent: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 2019-05-30 19:34:58.190796 -0700 PDT m=+13.357260342
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
 _metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
 _metadata.symmetric_key.0.length = 32
 _metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:SclgTBDDeLwccqtsaA==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:lNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
 `,
 				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/decrypt/",
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
 				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
-				setNewMEK:              false,
-				newMasterKey:           "xyz233",
+				setNewMEK:              true,
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:    true,
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
-			name: "ValidTestCase: Decrypt Config File",
+			name: "ValidTestCase: Decrypt Config File (AES CBC)",
 			args: &args{
-				masterKeyPassphrase: "abc123",
+				masterKeyPassphrase: "123",
 				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
 config.providers = securepass
 config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
@@ -689,6 +600,36 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIU
 				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/decrypt",
 				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
+				setNewMEK:              true,
+				newMasterKey:           "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
+			},
+			wantErr:        false,
+			wantOutputFile: "testPassword = password\n",
+		},
+		{
+			name: "ValidTestCase: Decrypt Config File (AES GCM)",
+			args: &args{
+				masterKeyPassphrase: "123",
+				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
+config.providers = securepass
+config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
+`,
+				secretFileContent: `_metadata.master_key.0.salt = a3dxASgtO0kVRyAjajx/Hqs8xDgnBXZwoZtzrfceuCc=
+_metadata.symmetric_key.0.created_at = 2022-02-14 12:00:36.756515 -0800 PST m=+0.042773556
+_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
+_metadata.symmetric_key.0.length = 32
+_metadata.symmetric_key.0.iterations = 10000
+_metadata.symmetric_key.0.salt = 7rpBEn1HaaqYu90AT/Kx2FSzYpw9fOOdfftwhy0rJrg=
+_metadata.symmetric_key.0.enc = ENC[AES/GCM/NoPadding,data:AYNIhDBhdWi0a1t6NQFUEKg2Y4GL7agPBjAmNCmY9qoedy7k0fYOqBWfOX0Rsf3Pya1+tY3vTy7HqUDR,iv:vZPrsbCbfk1iqZBT,type:str]
+config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yrye8aPi8/5TZVb,iv:reOcPTUnq73SmAFA,type:str
+`,
+				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
+				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
+				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/decrypt",
+				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
+				setNewMEK:              true,
+				newMasterKey:           "SlWcsfDAvm5amIcVc65pfYGcNkD3wZpM7DDiFByhfh8=",
 			},
 			wantErr:        false,
 			wantOutputFile: "testPassword = password\n",
@@ -701,6 +642,8 @@ config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIU
 			os.RemoveAll(tt.args.secureDir)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, "")
 			req.NoError(err)
+
+			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			// Create config file
 			err = ioutil.WriteFile(tt.args.configFilePath, []byte(tt.args.configFileContent), 0644)
@@ -782,9 +725,9 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase: "abc123",
 				contents: `test.config.jaas = com.sun.security.auth.module.Krb5LoginModule required \
-    useKeyTab=false \
-    useTicketCache=true \
-    doNotPrompt=true;`,
+   useKeyTab=false \
+   useTicketCache=true \
+   doNotPrompt=true;`,
 				configFilePath:         "/tmp/securePass987/add/embeddedjaas.properties",
 				localSecureConfigPath:  "/tmp/securePass987/add/secureConfig.properties",
 				secureDir:              "/tmp/securePass987/add",
@@ -822,15 +765,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
   }
 }
 `,
-			wantSecretsFile: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 1984-04-04 00:00:00 +0000 UTC
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
+			wantSecretsFile: `config.json/credentials.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 	}
 	for _, tt := range tests {
@@ -843,6 +778,8 @@ config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6Xgso
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
+			plugin.SetCipherMode(MetadataEncAlgorithm)
+
 			err = plugin.AddEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.newConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
@@ -853,7 +790,7 @@ config.json/credentials.password = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6Xgso
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
 				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 
 			// Clean Up
@@ -943,6 +880,8 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
+			plugin.SetCipherMode(MetadataEncAlgorithm)
+
 			err = plugin.UpdateEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.updateConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
@@ -953,7 +892,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 
 			if !tt.wantErr && !tt.args.validateUsingDecrypt {
 				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContents(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
 			}
 			// Clean Up
 			os.Unsetenv(ConfluentKeyEnvVar)
@@ -1116,6 +1055,8 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
+			plugin.SetCipherMode(MetadataEncAlgorithm)
+
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 			req.NoError(err)
 
@@ -1241,6 +1182,8 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			req := require.New(t)
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
+
+			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
@@ -1401,6 +1344,8 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
 			req.NoError(err)
 
+			plugin.SetCipherMode(MetadataEncAlgorithm)
+
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 			req.NoError(err)
 
@@ -1423,6 +1368,106 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 	}
 }
 
+func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
+	type args struct {
+		contents               string
+		masterKeyPassphrase    string
+		newMasterKeyPassphrase string
+		cipherMode             string
+		newCipherMode          string
+		configFilePath         string
+		localSecureConfigPath  string
+		remoteSecureConfigPath string
+		outputConfigPath       string
+		secureDir              string
+		invalidMEK             bool
+	}
+	tests := []struct {
+		name       string
+		args       *args
+		wantErr    bool
+		wantErrMsg string
+	}{
+		{
+			name: "Ciper Mode Transition : AES_CBC mode to AES_GCM mode",
+			args: &args{
+				masterKeyPassphrase:    "abc123",
+				newMasterKeyPassphrase: "xyz987",
+				cipherMode: AES_CBC,
+				newCipherMode: AES_GCM,
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotateMek",
+				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
+				invalidMEK:             false,
+			},
+			wantErr: false,
+		},
+		{
+			name: "Ciper Mode Transition : AES_GCM mode to AES_CBC mode",
+			args: &args{
+				masterKeyPassphrase:    "abc123",
+				newMasterKeyPassphrase: "xyz987",
+				cipherMode: AES_GCM,
+				newCipherMode: AES_CBC,
+				contents:               "testPassword = password\n",
+				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
+				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
+				secureDir:              "/tmp/securePass987/rotateMek",
+				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
+				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
+				invalidMEK:             false,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		req := require.New(t)
+		plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
+		req.NoError(err)
+
+		plugin.SetCipherMode(tt.args.cipherMode)
+
+		err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
+		req.NoError(err)
+
+		// Verify can decrypt with existing cipher
+		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+		req.NoError(err)
+
+		// Update cipher mode
+		plugin.SetCipherMode(tt.args.newCipherMode)
+
+		// Verify can decrypt with existing cipher
+		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+		req.NoError(err)
+
+       // Rotate Data Key
+		err = plugin.RotateDataKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
+		checkError(err, tt.wantErr, tt.wantErrMsg, req)
+
+		// Verify can decrypt with new cipher
+		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+		req.NoError(err)
+
+		// Verify can decrypt with new cipher after Rotate Data Key
+		newKey, err := plugin.RotateMasterKey(tt.args.masterKeyPassphrase, tt.args.newMasterKeyPassphrase, tt.args.localSecureConfigPath)
+		checkError(err, tt.wantErr, tt.wantErrMsg, req)
+
+		// Verify can decrypt with new cipher after Master Key rotation
+		os.Setenv(ConfluentKeyEnvVar, newKey)
+		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+		req.NoError(err)
+
+		// Clean Up
+		os.Unsetenv(ConfluentKeyEnvVar)
+		os.RemoveAll(tt.args.secureDir)
+	}
+}
+
 func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
@@ -1442,6 +1487,12 @@ func validateTextFileContents(path string, expectedFileContent string, req *requ
 	readContent, err := ioutil.ReadFile(path)
 	req.NoError(err)
 	req.Equal(expectedFileContent, string(readContent))
+}
+
+func validateTextFileContains(path string, expectedFileContent string, req *require.Assertions) {
+	readContent, err := ioutil.ReadFile(path)
+	req.NoError(err)
+	req.Contains(string(readContent), expectedFileContent)
 }
 
 func validateJSONFileContents(path string, expectedFileContent string, req *require.Assertions) {
@@ -1542,7 +1593,6 @@ func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, l
 		return nil, fmt.Errorf("failed to create password protection directory")
 	}
 	plugin := NewPasswordProtectionPlugin()
-	plugin.RandSource = rand.NewSource(99)
 	plugin.Clock = clockwork.NewFakeClock()
 
 	// Set master key

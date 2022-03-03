@@ -16,32 +16,30 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	if c.cfg.IsCloudLogin() {
+		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	}
+
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(kafkaREST.Context, lkc, linkName)
-	if err == nil {
-		utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
+	if httpResp, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
+		return handleOpenApiError(httpResp, err, client)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST)
+	utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
+	return nil
 }

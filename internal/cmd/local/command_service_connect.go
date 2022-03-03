@@ -388,7 +388,8 @@ func makeRequest(method, url string, body []byte) (string, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := utils.DefaultClient()
+	client.Timeout = 10 * time.Second
 	res, err := client.Do(req)
 	if err != nil {
 		return "", err

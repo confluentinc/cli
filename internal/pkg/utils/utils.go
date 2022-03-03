@@ -2,11 +2,9 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/confluentinc/properties"
@@ -125,41 +123,6 @@ func Abbreviate(s string, maxLength int) string {
 		return s
 	}
 	return s[0:maxLength] + "..."
-}
-
-func ToMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.FailedToParseConfigErrMsg, cfg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
-}
-
-func ReadConfigsFromFile(configFile string) (map[string]string, error) {
-	if configFile == "" {
-		return map[string]string{}, nil
-	}
-
-	configContents, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create config map from the argument.
-	var configs []string
-	for _, s := range strings.Split(string(configContents), "\n") {
-		// Filter out blank lines
-		spaceTrimmed := strings.TrimSpace(s)
-		if s != "" && spaceTrimmed[0] != '#' {
-			configs = append(configs, spaceTrimmed)
-		}
-	}
-
-	return ToMap(configs)
 }
 
 func CropString(s string, n int) string {

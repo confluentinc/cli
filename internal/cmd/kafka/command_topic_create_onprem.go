@@ -5,12 +5,14 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -67,7 +69,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	topicConfigsMap, err := utils.ToMap(topicConfigStrings)
+	topicConfigsMap, err := properties.ToMap(topicConfigStrings)
 	if err != nil {
 		return err
 	}
