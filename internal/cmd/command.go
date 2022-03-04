@@ -36,18 +36,14 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/metric"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-type command struct {
-	*cobra.Command
-}
-
-func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
+func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
 		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -55,18 +51,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		Version: ver.Version,
 	}
 
-	cmd.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
-		pcmd.LabelRequiredFlags(cmd)
-		_ = help.WriteHelpTemplate(cmd)
-	})
-
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
-
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -74,6 +64,16 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
+
+	help := cmd.HelpFunc()
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		pcmd.LabelRequiredFlags(cmd)
+		help(cmd, args)
+		if cfg.IsCloudLogin() {
+			u := usage.CollectForHelpFunc(cmd)
+			usage.Report(u)
+		}
+	})
 
 	prerunner := &pcmd.PreRun{
 		AuthTokenHandler:        authTokenHandler,
@@ -111,24 +111,27 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
-	hideAndErrIfMissingRunRequirement(cmd, cfg)
-	disableFlagSorting(cmd)
+	visitChildren(cmd, cfg)
 
-	return &command{Command: cmd}
+	return cmd
 }
 
-func (c *command) Execute(args []string) error {
-	c.Command.SetArgs(args)
-	err := c.Command.Execute()
+func Execute(cmd *cobra.Command, cfg *v1.Config) bool {
+	u := usage.Collect(cmd)
+
+	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	return err
+	u.Error = err != nil
+
+	if cfg.IsCloudLogin() {
+		usage.Report(u)
+	}
+
+	return err == nil
 }
 
 func LoadConfig() (*v1.Config, error) {
-	cfg := v1.New(&pconfig.Params{
-		MetricSink: metric.NewSink(),
-	})
-
+	cfg := v1.New(&pconfig.Params{MetricSink: metric.NewSink()})
 	return load.LoadAndMigrate(cfg)
 }
 
@@ -143,6 +146,16 @@ func getLongDescription(cfg *v1.Config) string {
 	}
 }
 
+// visitChildren recursively changes the default functionality for each command.
+func visitChildren(cmd *cobra.Command, cfg *v1.Config) {
+	hideAndErrIfMissingRunRequirement(cmd, cfg)
+	cmd.Flags().SortFlags = false
+
+	for _, subcommand := range cmd.Commands() {
+		visitChildren(subcommand, cfg)
+	}
+}
+
 // hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement and errs if a user attempts to use it;
 // for example, an on-prem command shouldn't be used by a cloud user.
 func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
@@ -154,19 +167,6 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 			cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
 			cmd.SilenceUsage = true
 		}
-	}
-
-	for _, subcommand := range cmd.Commands() {
-		hideAndErrIfMissingRunRequirement(subcommand, cfg)
-	}
-}
-
-// disableFlagSorting recursively disables the default option to sort flags, for all commands.
-func disableFlagSorting(cmd *cobra.Command) {
-	cmd.Flags().SortFlags = false
-
-	for _, subcommand := range cmd.Commands() {
-		disableFlagSorting(subcommand)
 	}
 }
 

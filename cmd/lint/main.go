@@ -295,7 +295,7 @@ func main() {
 	code := 0
 	for _, cfg := range configs {
 		cmd := pcmd.NewConfluentCommand(cfg, true, new(version.Version))
-		if err := l.Lint(cmd.Command); err != nil {
+		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1
 		}
