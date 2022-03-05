@@ -25,7 +25,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	c.InitializeV2ClientToken()
 	id := args[0]
 
 	name, err := cmd.Flags().GetString("name")

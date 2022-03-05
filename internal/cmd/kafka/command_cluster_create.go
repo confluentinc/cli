@@ -103,8 +103,6 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.Prompt) error {
-	c.InitializeV2ClientToken()
-
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -189,7 +187,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	kafkaCluster, r, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		return errors.CatchCkuNotValidError(err, r)
+		return errors.CatchConfigurationNotValidError(err, r)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
@@ -356,7 +354,6 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
 		}
 	}
-	return nil
 }
 
 func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {

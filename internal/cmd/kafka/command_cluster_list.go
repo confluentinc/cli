@@ -33,8 +33,6 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	c.InitializeV2ClientToken()
-
 	listAllClusters, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err

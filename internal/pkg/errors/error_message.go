@@ -371,6 +371,7 @@ const (
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
+	InvalidClusterConfigErrorMsg  = "cluster configuration is invalid"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "Internal server error"

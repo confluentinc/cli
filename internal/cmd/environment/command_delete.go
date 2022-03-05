@@ -19,7 +19,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	c.InitializeV2ClientToken()
 	id := args[0]
 
 	_, err := c.V2Client.DeleteOrgEnvironment(id)

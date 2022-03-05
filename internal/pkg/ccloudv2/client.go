@@ -18,10 +18,6 @@ func NewCcloudV2Client(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *
 	return &Client{CmkClient: cmkClient, OrgClient: orgClient}
 }
 
-func (c *Client) SetAuthToken(authToken string) {
-	c.AuthToken = authToken
-}
-
 func getV2ServerUrl(baseURL string, isTest bool) string {
 	if isTest {
 		return "http://127.0.0.1:2048"

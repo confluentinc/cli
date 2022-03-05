@@ -155,10 +155,6 @@ func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
 	s.AuthenticatedCLICommand.AddCommand(command)
 }
 
-func (s *AuthenticatedStateFlagCommand) InitializeV2ClientToken() {
-	s.AuthenticatedCLICommand.V2Client.SetAuthToken(s.AuthenticatedCLICommand.AuthToken())
-}
-
 func (c *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
 	c.Command.AddCommand(command)
 }
@@ -395,7 +391,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
 
 	cmkClient := r.createCmkClient(ctx)
 	orgClient := r.createOrgClient(ctx)
-	v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient}
+	v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: cliCmd.AuthToken()}
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client

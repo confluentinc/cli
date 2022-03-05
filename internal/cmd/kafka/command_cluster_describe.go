@@ -108,8 +108,6 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	c.InitializeV2ClientToken()
-
 	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
