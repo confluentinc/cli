@@ -16,7 +16,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -132,7 +131,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := iam.GetIamUserByEmail(*c.IamClient, principalValue, c.AuthToken())
+				user, err := c.V2Client.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
@@ -497,7 +496,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, _, err := iam.GetIamUser(*c.IamClient, userResourceId, c.AuthToken())
+	user, _, err := c.V2Client.GetIamUserById(userResourceId)
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,

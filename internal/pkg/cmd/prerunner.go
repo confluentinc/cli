@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -64,7 +65,7 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
-	IamClient         *iamv2.APIClient
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -263,9 +264,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
-		if err := r.setIamClient(command); err != nil {
-			return err
-		}
+
+		r.setV2Clients(command)
+
 		return r.setCCloudClient(command)
 	}
 }
@@ -384,14 +385,15 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setIamClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
 	ctx := cliCmd.Config.Context()
 
-	iamClient := r.createIamClient(ctx, cliCmd.Version)
-	cliCmd.IamClient = iamClient
-	cliCmd.Context.iamClient = iamClient
-	cliCmd.Config.IamClient = iamClient
-	return nil
+	iamClient := r.createIamClient(ctx)
+	v2Client := &ccloudv2.Client{IamClient: iamClient, AuthToken: cliCmd.AuthToken()}
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
 }
 
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
@@ -459,23 +461,12 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 	}), nil
 }
 
-func (r *PreRun) createIamClient(ctx *DynamicContext, ver *version.Version) *iamv2.APIClient {
+func (r *PreRun) createIamClient(ctx *DynamicContext) *iamv2.APIClient {
 	var baseURL string
 	if ctx != nil {
 		baseURL = ctx.Platform.Server
 	}
-	iamServer := baseURL[:8] + "api." + baseURL[8:]
-	server := iamv2.ServerConfigurations{
-		{URL: iamServer, Description: "Confluent Cloud"},
-	}
-	cfg := &iamv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]iamv2.ServerConfigurations{},
-	}
-	return iamv2.NewAPIClient(cfg)
+	return ccloudv2.NewV2IamClient(baseURL, r.IsTest)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
@@ -712,9 +703,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			ctx.client = client
 			command.Config.Client = client
 
-			iamClient := r.createIamClient(ctx, command.Version)
-			ctx.iamClient = iamClient
-			command.Config.IamClient = iamClient
+			iamClient := r.createIamClient(ctx)
+			v2Client := &ccloudv2.Client{IamClient: iamClient}
+			ctx.v2Client = v2Client
+			command.Config.V2Client = v2Client
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

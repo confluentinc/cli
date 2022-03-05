@@ -8,11 +8,10 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -161,7 +160,7 @@ func autocompleteRegions(client *ccloud.Client, cloud string) []string {
 	return suggestions
 }
 
-func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand, authToken string) {
+func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	cmd.Flags().String("service-account", "", "Service account ID.")
 
 	RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
@@ -169,12 +168,12 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand,
 			return nil
 		}
 
-		return AutocompleteServiceAccounts(*command.IamClient, authToken)
+		return AutocompleteServiceAccounts(command.V2Client)
 	})
 }
 
-func AutocompleteServiceAccounts(client *iamv2.APIClient, authToken string) []string {
-	resp, _, err := iam.ListIamServiceAccounts(*client, authToken)
+func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
+	resp, _, err := client.ListIamServiceAccounts()
 	if err != nil {
 		return nil
 	}

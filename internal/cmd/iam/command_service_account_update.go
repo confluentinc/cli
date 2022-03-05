@@ -9,7 +9,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -51,7 +50,7 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	update := iamv2.IamV2ServiceAccountUpdate{
 		Description: &description,
 	}
-	_, _, err = iam.UpdateIamServiceAccount(*c.IamClient, args[0], update, c.AuthToken())
+	_, _, err = c.V2Client.UpdateIamServiceAccount(args[0], update)
 	if err != nil {
 		return err
 	}

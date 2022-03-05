@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,9 +27,9 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
-	_, err := iam.DeleteIamUser(*c.IamClient, resourceId, c.AuthToken())
+	_, err := c.V2Client.DeleteIamUser(resourceId)
 	if err != nil {
-		return err
+		return errors.Errorf("error deleting user: %s", err.Error())
 	}
 
 	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))

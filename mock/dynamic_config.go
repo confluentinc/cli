@@ -15,5 +15,5 @@ func AuthenticatedDynamicConfigMock() *pcmd.DynamicConfig {
 		Prompt: &mock.Prompt{},
 		Out:    os.Stdout,
 	}
-	return pcmd.NewDynamicConfig(cfg, flagResolverMock, client, nil, nil)
+	return pcmd.NewDynamicConfig(cfg, flagResolverMock, client, nil)
 }

@@ -3,6 +3,8 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
@@ -162,6 +164,18 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
+	}
+	return err
+}
+
+func CatchServiceNameInUseError(err error, r *http.Response, serviceName string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service name is already in use") {
+		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
+		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 	return err
 }

@@ -45,7 +45,7 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 		return nil
 	}
 
-	return pcmd.AutocompleteServiceAccounts(c.IamClient, c.AuthToken())
+	return pcmd.AutocompleteServiceAccounts(c.V2Client)
 }
 
 func requireLen(val string, maxLen int, field string) error {

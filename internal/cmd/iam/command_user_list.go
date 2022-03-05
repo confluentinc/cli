@@ -8,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -31,7 +30,7 @@ func (c userCommand) newListCommand() *cobra.Command {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
+	resp, _, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return err
 	}

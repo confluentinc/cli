@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -32,9 +31,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	if !strings.HasPrefix(args[0], "sa-") {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	_, err := iam.DeleteIamServiceAccount(*c.IamClient, args[0], c.AuthToken())
+	_, err := c.V2Client.DeleteIamServiceAccount(args[0])
 	if err != nil {
-		return err
+		return errors.Errorf("error deleting service account: %s", err.Error())
 	}
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
 	return nil

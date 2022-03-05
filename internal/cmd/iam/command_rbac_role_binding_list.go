@@ -13,7 +13,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -233,7 +232,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
-	resp, _, err := iam.ListIamUsers(*c.IamClient, c.AuthToken())
+	resp, _, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return userToEmailMap, err
 	}

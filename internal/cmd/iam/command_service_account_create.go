@@ -5,8 +5,8 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/iam"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -61,11 +61,11 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 
 	serviceAccount := iamv2.IamV2ServiceAccount{
 		DisplayName: iamv2.PtrString(name),
-		Description: &description,
+		Description: iamv2.PtrString(description),
 	}
-	resp, _, err := iam.CreateIamServiceAccount(*c.IamClient, serviceAccount, c.AuthToken())
+	resp, r, err := c.V2Client.CreateIamServiceAccount(serviceAccount)
 	if err != nil {
-		return err
+		return errors.CatchServiceNameInUseError(err, r, name)
 	}
 
 	serviceAccountStruct := &serviceAccountStruct{ResourceId: *resp.Id, ServiceName: *resp.DisplayName, ServiceDescription: *resp.Description}
