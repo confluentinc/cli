@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -50,6 +51,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 
 func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
+	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
 
 	ctx := cfg.Context()
 
@@ -58,6 +60,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
+			log.CliLogger.Debug("failed to find active schema registry cluster")
 			return nil, nil, err
 		}
 		srCluster = cluster
@@ -124,7 +127,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedMsg)
+			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedErrorMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue

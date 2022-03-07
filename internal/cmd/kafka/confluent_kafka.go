@@ -18,6 +18,7 @@ import (
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -148,7 +149,7 @@ func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 }
 
 func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
-	return &ckafka.ConfigMap{
+	configMap := &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
 		"ssl.endpoint.identification.algorithm": "https",
@@ -157,6 +158,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
 	}
+	return configMap
 }
 
 func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
@@ -176,6 +178,9 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		"ssl.ca.location":                       caLocation,
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
+	}
+	if err := setProducerDebugOption(configMap); err != nil {
+		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
 }
@@ -213,6 +218,9 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		autoOffsetReset = "earliest"
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
+		return nil, err
+	}
+	if err := setConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return setProtocolConfig(cmd, configMap)
@@ -302,6 +310,9 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
 		return nil, err
 	}
+	if err := setProducerDebugOption(configMap); err != nil {
+		return nil, err
+	}
 	return configMap, nil
 }
 
@@ -315,6 +326,9 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		autoOffsetReset = "earliest"
 	}
 	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
+		return nil, err
+	}
+	if err := setConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return configMap, nil
@@ -479,4 +493,24 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 		return "", "", err
 	}
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
+}
+
+func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
+	switch log.CliLogger.GetLevel() {
+	case log.DEBUG:
+		return configMap.Set("debug=broker, topic, msg, protocol")
+	case log.TRACE:
+		return configMap.Set("debug=all")
+	}
+	return nil
+}
+
+func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
+	switch log.CliLogger.GetLevel() {
+	case log.DEBUG:
+		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
+	case log.TRACE:
+		return configMap.Set("debug=all")
+	}
+	return nil
 }

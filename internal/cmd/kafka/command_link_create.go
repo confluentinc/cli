@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -121,9 +122,12 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := utils.ReadConfigsFromFile(configFile)
-	if err != nil {
-		return err
+	configMap := make(map[string]string)
+	if configFile != "" {
+		configMap, err = properties.FileToMap(configFile)
+		if err != nil {
+			return err
+		}
 	}
 
 	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)

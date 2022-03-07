@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -50,12 +51,15 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configsMap, err := utils.ReadConfigsFromFile(configFile)
-	if err != nil {
-		return err
+	configMap := make(map[string]string)
+	if configFile != "" {
+		configMap, err = properties.FileToMap(configFile)
+		if err != nil {
+			return err
+		}
 	}
 
-	if len(configsMap) == 0 {
+	if len(configMap) == 0 {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
@@ -66,7 +70,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 
 	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
 		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
-			Data: toAlterConfigBatchRequestData(configsMap),
+			Data: toAlterConfigBatchRequestData(configMap),
 		}),
 	}
 

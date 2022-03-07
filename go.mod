@@ -16,18 +16,18 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.99
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
 	github.com/confluentinc/go-printer v0.16.0
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.1.2-0.20220216032718-75a89b3fd89b
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.1.2-0.20220218025201-8726fa846a9f
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.12
+	github.com/confluentinc/schema-registry-sdk-go v0.0.13
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.0
 	github.com/fatih/color v1.13.0
