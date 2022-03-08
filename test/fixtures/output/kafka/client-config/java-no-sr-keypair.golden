@@ -1,0 +1,27 @@
+Warning: created client configuration file but Schema Registry is not fully configured.
+
+Reason: no Schema Registry API key or secret specified
+
+Suggestions:
+    Pass the `--sr-apikey` and `--sr-apisecret` flags to specify the Schema Registry API key and secret.
+    Alternatively, you can configure Schema Registry manually in the client configuration file before using it.
+
+# Required connection configs for Kafka producer, consumer, and admin
+bootstrap.servers=kafka-endpoint
+security.protocol=SASL_SSL
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='UIAPIKEY100' password='UIAPISECRET100';
+sasl.mechanism=PLAIN
+# Required for correctness in Apache Kafka clients prior to 2.6
+client.dns.lookup=use_all_dns_ips
+
+# Best practice for higher availability in Apache Kafka clients prior to 3.0
+session.timeout.ms=45000
+
+# Best practice for Kafka producer to prevent data loss 
+acks=all
+
+# Required connection configs for Confluent Cloud Schema Registry
+#schema.registry.url=SASL_SSL://sr-endpoint
+#basic.auth.credentials.source=USER_INFO
+#basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
+

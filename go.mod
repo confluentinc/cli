@@ -24,11 +24,11 @@ require (
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
 	github.com/confluentinc/go-printer v0.16.0
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.13
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.1.2-0.20220218025201-8726fa846a9f
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.12
+	github.com/confluentinc/schema-registry-sdk-go v0.0.13
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.0
 	github.com/fatih/color v1.13.0
@@ -68,9 +68,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0
-	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 )
 
 require (
@@ -379,6 +377,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
 	google.golang.org/grpc v1.43.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -398,6 +397,7 @@ require (
 	k8s.io/api v0.18.0-alpha.2 // indirect
 	k8s.io/apiextensions-apiserver v0.17.18-rc.0 // indirect
 	k8s.io/apimachinery v0.21.3 // indirect
+	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	mvdan.cc/gofumpt v0.2.1 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect

@@ -14,6 +14,19 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
+func GetCAClient(caCertPath string) (*http.Client, error) {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	transport := DefaultTransport()
+	transport.TLSClientConfig.RootCAs = caCertPool
+	client := DefaultClientWithTransport(transport)
+	return client, nil
+}
+
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
 	return CustomCAAndClientCertClient(caCertPath, "", "")
 }
@@ -69,7 +82,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
 		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport := DefaultTransport()
 
 	var caCertPool *x509.CertPool
 	if caCertReader != nil && caCertReader != (*os.File)(nil) {
@@ -104,7 +117,6 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
 		log.CliLogger.Tracef("Successfully added client certificate to TLS config")
 	}
-
 	defaultClient := DefaultClient()
 	client := &http.Client{
 		Transport:     transport,
@@ -112,6 +124,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		Jar:           defaultClient.Jar,
 		Timeout:       defaultClient.Timeout,
 	}
+
 	log.CliLogger.Tracef("Successfully set client properties")
 
 	return client, nil
@@ -121,6 +134,23 @@ func isEmptyClientCert(cert tls.Certificate) bool {
 	return cert.Certificate == nil && cert.Leaf == nil && cert.OCSPStaple == nil && cert.PrivateKey == nil && cert.SignedCertificateTimestamps == nil && cert.SupportedSignatureAlgorithms == nil
 }
 
+func DefaultTransport() *http.Transport {
+	return &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+		ForceAttemptHTTP2: true,
+	}
+}
+
 func DefaultClient() *http.Client {
-	return http.DefaultClient
+	return &http.Client{
+		Transport: DefaultTransport(),
+	}
+}
+
+func DefaultClientWithTransport(transport *http.Transport) *http.Client {
+	return &http.Client{
+		Transport: transport,
+	}
 }

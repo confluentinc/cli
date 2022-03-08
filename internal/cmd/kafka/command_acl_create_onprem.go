@@ -23,10 +23,13 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().AddFlagSet(aclutil.AclFlags())
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().AddFlagSet(aclutil.CreateACLFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("principal")
+	_ = cmd.MarkFlagRequired("operation")
 
 	return cmd
 }
@@ -55,5 +58,5 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	aclData := aclutil.CreateAclRequestDataToAclData(acl)
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), listFieldsOnPrem, listStructuredRenamesOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
 }

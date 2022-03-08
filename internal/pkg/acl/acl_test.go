@@ -23,11 +23,11 @@ func TestParseAclRequest(t *testing.T) {
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				ResourceName: "kafka-cluster",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  "LITERAL",
 				Principal:    "User:Alice",
 				Host:         "127.0.0.1",
-				Operation:    kafkarestv3.ACLOPERATION_READ,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Operation:    "READ",
+				Permission:   "ALLOW",
 				Errors:       nil,
 			},
 		},
@@ -36,11 +36,11 @@ func TestParseAclRequest(t *testing.T) {
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_TOPIC,
 				ResourceName: "Test",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_PREFIXED,
+				PatternType:  "PREFIXED",
 				Principal:    "Group:Admin",
 				Host:         "*",
-				Operation:    kafkarestv3.ACLOPERATION_DELETE,
-				Permission:   kafkarestv3.ACLPERMISSION_DENY,
+				Operation:    "DELETE",
+				Permission:   "DENY",
 				Errors:       nil,
 			},
 		},
@@ -83,12 +83,12 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 		{
 			initialAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Permission:   "ALLOW",
 			},
 			expectedAcl: AclRequestDataWithError{
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				PatternType:  "LITERAL",
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
-				Permission:   kafkarestv3.ACLPERMISSION_ALLOW,
+				Permission:   "ALLOW",
 			},
 		},
 		{

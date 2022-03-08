@@ -1,11 +1,11 @@
-+-----------------+------------------+
-| Cluster         | cluster-1        |
-| ConsumerGroup   | consumer-group-1 |
-| TotalLag        |              110 |
-| MaxLag          |              100 |
-| MaxLagConsumer  | consumer-1       |
-| MaxLagInstance  | instance-1       |
-| MaxLagClient    | client-1         |
-| MaxLagTopic     | topic-1          |
-| MaxLagPartition |                1 |
-+-----------------+------------------+
++-------------------+------------------+
+| Cluster           | cluster-1        |
+| Consumer Group    | consumer-group-1 |
+| Total Lag         |              110 |
+| Max Lag           |              100 |
+| Max Lag Consumer  | consumer-1       |
+| Max Lag Instance  | instance-1       |
+| Max Lag Client    | client-1         |
+| Max Lag Topic     | topic-1          |
+| Max Lag Partition |                1 |
++-------------------+------------------+

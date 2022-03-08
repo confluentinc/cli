@@ -3,7 +3,7 @@ Usage:
   confluent kafka topic create <topic> [flags]
 
 Examples:
-Create a topic named `my_topic` with default options.
+Create a topic named "my_topic" with default options.
 
   $ confluent kafka topic create my_topic
 

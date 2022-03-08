@@ -77,18 +77,18 @@ func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarest
 	opts.ResourceName = optional.NewString(acl.Pattern.Name)
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		opts.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.Pattern.PatternType.String()))
+		opts.PatternType = optional.NewString(acl.Pattern.PatternType.String())
 	}
 
 	opts.Principal = optional.NewString(acl.Entry.Principal)
 	opts.Host = optional.NewString(acl.Entry.Host)
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		opts.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.Entry.Operation.String()))
+		opts.Operation = optional.NewString(acl.Entry.Operation.String())
 	}
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		opts.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.Entry.PermissionType.String()))
+		opts.Permission = optional.NewString(acl.Entry.PermissionType.String())
 	}
 
 	return opts
@@ -103,7 +103,7 @@ func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkares
 	}
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		aclRequestData.PatternType = kafkarestv3.AclPatternType(acl.Pattern.PatternType.String())
+		aclRequestData.PatternType = acl.Pattern.PatternType.String()
 	}
 
 	aclRequestData.ResourceName = acl.Pattern.Name
@@ -111,11 +111,11 @@ func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkares
 	aclRequestData.Host = acl.Entry.Host
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		aclRequestData.Operation = kafkarestv3.AclOperation(acl.Entry.Operation.String())
+		aclRequestData.Operation = acl.Entry.Operation.String()
 	}
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		aclRequestData.Permission = kafkarestv3.AclPermission(acl.Entry.PermissionType.String())
+		aclRequestData.Permission = acl.Entry.PermissionType.String()
 	}
 
 	var opts kafkarestv3.CreateKafkaAclsOpts
@@ -135,18 +135,18 @@ func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkares
 	opts.ResourceName = optional.NewString(acl.PatternFilter.Name)
 
 	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
-		opts.PatternType = optional.NewInterface(kafkarestv3.AclPatternType(acl.PatternFilter.PatternType.String()))
+		opts.PatternType = optional.NewString(acl.PatternFilter.PatternType.String())
 	}
 
 	opts.Principal = optional.NewString(acl.EntryFilter.Principal)
 	opts.Host = optional.NewString(acl.EntryFilter.Host)
 
 	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
-		opts.Operation = optional.NewInterface(kafkarestv3.AclOperation(acl.EntryFilter.Operation.String()))
+		opts.Operation = optional.NewString(acl.EntryFilter.Operation.String())
 	}
 
 	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		opts.Permission = optional.NewInterface(kafkarestv3.AclPermission(acl.EntryFilter.PermissionType.String()))
+		opts.Permission = optional.NewString(acl.EntryFilter.PermissionType.String())
 	}
 
 	return opts

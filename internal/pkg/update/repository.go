@@ -15,4 +15,5 @@ type Repository interface {
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
 	DownloadVersion(name, version, downloadDir string) (downloadPath string, downloadedBytes int64, err error)
 	DownloadReleaseNotes(name, version string) (string, error)
+	DownloadChecksums(name, version string) (string, error)
 }

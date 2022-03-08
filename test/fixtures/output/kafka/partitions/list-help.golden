@@ -4,7 +4,7 @@ Usage:
   confluent kafka partition list [flags]
 
 Examples:
-List the partitions for `my_topic`.
+List the partitions for "my_topic".
 
   $ confluent kafka partition list --topic my_topic
 

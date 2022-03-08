@@ -47,6 +47,9 @@ func (c *command) remove(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	cipherMode := c.getCipherMode()
+	c.plugin.SetCipherMode(cipherMode)
+
 	if err := c.plugin.RemoveEncryptedPasswords(configPath, localSecretsPath, removeConfigs); err != nil {
 		return err
 	}
