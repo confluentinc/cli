@@ -1,13 +1,17 @@
 package usage
 
 import (
-	"fmt"
+	"runtime"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type Usage struct {
+	OS      string   `json:"os"`
+	Arch    string   `json:"arch"`
 	Version string   `json:"version"`
 	Command string   `json:"command"`
 	Flags   []string `json:"flags"`
@@ -17,6 +21,8 @@ type Usage struct {
 // Collect collects usage data, such as the command name and flags.
 func Collect(cmd *cobra.Command) *Usage {
 	usage := &Usage{
+		OS:      runtime.GOOS,
+		Arch:    runtime.GOARCH,
 		Version: cmd.Version,
 		Flags:   []string{},
 	}
@@ -34,17 +40,10 @@ func Collect(cmd *cobra.Command) *Usage {
 	return usage
 }
 
-// CollectForHelpFunc collects usage data for commands passed with the --help flag, a special case not covered by Collect.
-func CollectForHelpFunc(cmd *cobra.Command) *Usage {
-	return &Usage{
-		Version: cmd.Version,
-		Command: cmd.CommandPath(),
-		Flags:   []string{"help"},
-	}
-}
-
-// Report sends usage data to the backend service
+// Report sends usage data to cc-cli-usage-service.
 func Report(usage *Usage) {
-	fmt.Println(usage)
-	// TODO: Log failure
+	if usage.Command != "" {
+		log.CliLogger.Debug(usage)
+		// TODO: Send data, log failure
+	}
 }

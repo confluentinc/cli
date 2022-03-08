@@ -69,10 +69,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
 		help(cmd, args)
-		if cfg.IsCloudLogin() {
-			u := usage.CollectForHelpFunc(cmd)
-			usage.Report(u)
-		}
 	})
 
 	prerunner := &pcmd.PreRun{
