@@ -1,9 +1,9 @@
-package quotas
+package servicequota
 
 import (
 	"testing"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -30,7 +30,7 @@ func int32ToPtr(i int32) *int32 {
 
 func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 	t := suite.T()
-	quota1 := quotasv2.QuotasV2AppliedQuota{
+	quota1 := quotasv2.ServiceQuotaV2AppliedQuota{
 		Id:           stringToPtr("quota_a"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota A"),
@@ -41,7 +41,7 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 		AppliedLimit: int32ToPtr(15),
 	}
 
-	quota2 := quotasv2.QuotasV2AppliedQuota{
+	quota2 := quotasv2.ServiceQuotaV2AppliedQuota{
 		Id:           stringToPtr("quota_a"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Qutoa A"),
@@ -51,7 +51,7 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 		AppliedLimit: int32ToPtr(16),
 	}
 
-	quota3 := quotasv2.QuotasV2AppliedQuota{
+	quota3 := quotasv2.ServiceQuotaV2AppliedQuota{
 		Id:           stringToPtr("quota_b"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota B"),
@@ -61,7 +61,7 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 		AppliedLimit: int32ToPtr(17),
 	}
 
-	quota4 := quotasv2.QuotasV2AppliedQuota{
+	quota4 := quotasv2.ServiceQuotaV2AppliedQuota{
 		Id:           stringToPtr("quota_b"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota B"),
@@ -71,13 +71,13 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 		AppliedLimit: int32ToPtr(18),
 	}
 
-	quotaList := []quotasv2.QuotasV2AppliedQuota{quota1, quota2, quota3, quota4}
+	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{quota1, quota2, quota3, quota4}
 
 	type test struct {
 		name            string
 		filterQuotaCode string
-		originData      []quotasv2.QuotasV2AppliedQuota
-		expectedData    []quotasv2.QuotasV2AppliedQuota
+		originData      []quotasv2.ServiceQuotaV2AppliedQuota
+		expectedData    []quotasv2.ServiceQuotaV2AppliedQuota
 	}
 
 	tests := []*test{
@@ -90,7 +90,7 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 			name:            "Filter by quota code",
 			filterQuotaCode: "quota_a",
 			originData:      quotaList,
-			expectedData:    []quotasv2.QuotasV2AppliedQuota{quota1, quota2},
+			expectedData:    []quotasv2.ServiceQuotaV2AppliedQuota{quota1, quota2},
 		},
 	}
 

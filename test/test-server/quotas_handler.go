@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	qtv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
+	qtv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +18,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 		kafkaCluster := r.URL.Query().Get("kafka_cluster")
 		network := r.URL.Query().Get("network")
 
-		quota1 := qtv2.QuotasV2AppliedQuota{
+		quota1 := qtv2.ServiceQuotaV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota A"),
@@ -28,7 +28,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(15),
 		}
 
-		quota2 := qtv2.QuotasV2AppliedQuota{
+		quota2 := qtv2.ServiceQuotaV2AppliedQuota{
 			Id:           stringToPtr("quota_a"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Qutoa A"),
@@ -38,7 +38,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(16),
 		}
 
-		quota3 := qtv2.QuotasV2AppliedQuota{
+		quota3 := qtv2.ServiceQuotaV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota B"),
@@ -48,7 +48,7 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(17),
 		}
 
-		quota4 := qtv2.QuotasV2AppliedQuota{
+		quota4 := qtv2.ServiceQuotaV2AppliedQuota{
 			Id:           stringToPtr("quota_b"),
 			Scope:        stringToPtr("kafka_cluster"),
 			DisplayName:  stringToPtr("Quota B"),
@@ -58,9 +58,9 @@ func (c *CloudRouter) HandleAppliedQuotas(t *testing.T) func(w http.ResponseWrit
 			AppliedLimit: int32ToPtr(18),
 		}
 
-		filteredData := filterQuotaResults([]qtv2.QuotasV2AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster)
-		quotaList := &qtv2.QuotasV2AppliedQuotaList{
-			ApiVersion: "quotas/v2",
+		filteredData := filterQuotaResults([]qtv2.ServiceQuotaV2AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster)
+		quotaList := &qtv2.ServiceQuotaV2AppliedQuotaList{
+			ApiVersion: "service-quota/v2",
 			Kind:       "AppliedQuotaList",
 			Data:       filteredData,
 		}
@@ -80,10 +80,10 @@ func int32ToPtr(i int32) *int32 {
 	return &i
 }
 
-func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment string, network string, kafkaCluster string) []qtv2.QuotasV2AppliedQuota {
+func filterQuotaResults(quotaList []qtv2.ServiceQuotaV2AppliedQuota, environment string, network string, kafkaCluster string) []qtv2.ServiceQuotaV2AppliedQuota {
 
 	//filter by environment id
-	filtered := []qtv2.QuotasV2AppliedQuota{}
+	filtered := []qtv2.ServiceQuotaV2AppliedQuota{}
 	if environment != "" {
 		for _, quota := range quotaList {
 			if quota.Environment != nil && quota.Environment.Id == environment {
@@ -94,7 +94,7 @@ func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment strin
 	}
 
 	//filter by cluster id
-	filtered = []qtv2.QuotasV2AppliedQuota{}
+	filtered = []qtv2.ServiceQuotaV2AppliedQuota{}
 	if kafkaCluster != "" {
 		for _, quota := range quotaList {
 			if quota.KafkaCluster != nil && quota.KafkaCluster.Id == kafkaCluster {
@@ -105,7 +105,7 @@ func filterQuotaResults(quotaList []qtv2.QuotasV2AppliedQuota, environment strin
 	}
 
 	//filter by network id
-	filtered = []qtv2.QuotasV2AppliedQuota{}
+	filtered = []qtv2.ServiceQuotaV2AppliedQuota{}
 	if network != "" {
 		for _, quota := range quotaList {
 			if quota.Network != nil && quota.Network.Id == network {

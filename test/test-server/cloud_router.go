@@ -48,7 +48,7 @@ const (
 	usageLimits         = "/api/usage_limits"
 	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
-	appliedQuotas       = "/api/quotas/v2/applied-quotas"
+	appliedQuotas       = "/api/service-quota/v2/applied-quotas"
 )
 
 type CloudRouter struct {

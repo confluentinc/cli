@@ -1,10 +1,10 @@
-package quotas
+package servicequota
 
 import (
 	"context"
 	"net/url"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/quotas/v2"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 
 	"github.com/spf13/cobra"
 
@@ -72,10 +72,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	token := ""
-	quotaList := []quotasv2.QuotasV2AppliedQuota{}
+	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{}
 	// Since we use paginated results, get all results by iterating the list.
 	for {
-		req := c.QuotasClient.AppliedQuotasQuotasV2Api.ListQuotasV2AppliedQuotas(c.createContext()).
+		req := c.QuotasClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
 			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {
@@ -132,9 +132,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-// TODO: will remove this filter func when quotas api support to filter by quota code.
-func filterQuotaResults(quotaList []quotasv2.QuotasV2AppliedQuota, quotaCode string) []quotasv2.QuotasV2AppliedQuota {
-	filteredQuotas := []quotasv2.QuotasV2AppliedQuota{}
+// TODO: will remove this filter func when service-quota api support to filter by quota code.
+func filterQuotaResults(quotaList []quotasv2.ServiceQuotaV2AppliedQuota, quotaCode string) []quotasv2.ServiceQuotaV2AppliedQuota {
+	filteredQuotas := []quotasv2.ServiceQuotaV2AppliedQuota{}
 	if quotaCode != "" {
 		for _, quota := range quotaList {
 			if *quota.Id == quotaCode {

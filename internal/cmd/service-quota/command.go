@@ -1,4 +1,4 @@
-package quotas
+package servicequota
 
 import (
 	"github.com/spf13/cobra"
