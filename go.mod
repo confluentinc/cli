@@ -17,6 +17,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.97
+	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
@@ -34,6 +35,7 @@ require (
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.2.4
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.44.0
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-github/v25 v25.1.3
@@ -69,11 +71,6 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
-)
-
-require (
-	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
-	github.com/golang/protobuf v1.5.2
 )
 
 require (
