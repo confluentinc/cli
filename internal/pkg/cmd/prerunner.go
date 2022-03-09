@@ -435,13 +435,13 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *quotasv2.APIClient {
 	var baseURL string
 	var userAgent string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-	}
 	userAgent = ver.UserAgent
 
 	cfg := quotasv2.NewConfiguration()
-	cfg.Servers[0].URL = baseURL + "/api"
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+		cfg.Servers[0].URL = baseURL + "/api"
+	}
 	cfg.UserAgent = userAgent
 
 	return quotasv2.NewAPIClient(cfg)
