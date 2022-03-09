@@ -177,5 +177,4 @@ func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
 
 func (c *CloudRouter) addQuotasRoutes(t *testing.T) {
 	c.HandleFunc(appliedQuotas, c.HandleAppliedQuotas(t))
-
 }
