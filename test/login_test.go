@@ -16,11 +16,11 @@ import (
 )
 
 var (
-	urlPlaceHolder     		= "<URL_PLACEHOLDER>"
-	savedToNetrcOutput 		= fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
-	loggedInAsOutput   		= fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	urlPlaceHolder          = "<URL_PLACEHOLDER>"
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
-	loggedInEnvOutput  		= fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {

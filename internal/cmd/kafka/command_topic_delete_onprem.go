@@ -1,11 +1,12 @@
 package kafka
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {

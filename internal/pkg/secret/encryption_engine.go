@@ -7,9 +7,11 @@ import (
 	"crypto/rand"
 	"crypto/sha512"
 	"encoding/base64"
+
+	"golang.org/x/crypto/pbkdf2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"golang.org/x/crypto/pbkdf2"
 )
 
 // Encryption Engine performs Encryption, Decryption and Hash operations.
