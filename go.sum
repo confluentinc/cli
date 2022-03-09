@@ -627,6 +627,8 @@ github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.97 h1:YqrA7D65itna0z3XVgkkDYU5XvJJzmODTHXFTJmDAX4=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.97/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100 h1:K3PA/9K3ufk0CttIys6my1Pnkf0edeXR3ecv3H5lMrI=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.102 h1:iRJggeCkABaB8ypYoOolkHhcGWsOjxn5gwqht6UPids=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.102/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
