@@ -6,13 +6,10 @@ import (
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type QuotasTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
 	QuotasClient *quotasv2.APIClient
 }
 
