@@ -132,7 +132,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	return outputWriter.Out()
 }
 
-// TODO: will remove this filter func when service-quota api support to filter by quota code.
+// TODO: remove this filter func when service-quota api supports filtering by quota code.
 func filterQuotaResults(quotaList []quotasv2.ServiceQuotaV2AppliedQuota, quotaCode string) []quotasv2.ServiceQuotaV2AppliedQuota {
 	filteredQuotas := []quotasv2.ServiceQuotaV2AppliedQuota{}
 	if quotaCode != "" {
