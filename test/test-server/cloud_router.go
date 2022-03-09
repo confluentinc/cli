@@ -48,6 +48,7 @@ const (
 	usageLimits         = "/api/usage_limits"
 	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
+	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 )
 
 type CloudRouter struct {
@@ -79,6 +80,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
+	c.HandleFunc(launchDarklyProxy, c.HandleLaunchDarkly(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)

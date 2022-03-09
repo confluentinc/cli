@@ -1,10 +1,12 @@
 //go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli launch_darkly.go LaunchDarklyManager
 
-package launch_darkly
+package launchdarkly
 
 import (
 	b64 "encoding/base64"
 	"fmt"
+	test_server "github.com/confluentinc/cli/test/test-server"
+	"net/http"
 	"os"
 	"regexp"
 
@@ -18,7 +20,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -49,12 +50,10 @@ type FeatureFlagManager struct {
 }
 
 func InitManager(version *version.Version, isTest bool) {
-	if isTest {
-		// Any flag values needed for CLI tests can be hardcoded here
-		Manager = &mock.LaunchDarklyManager{}
-	}
 	var basePath string
-	if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
+	if isTest {
+		basePath = test_server.TestCloudURL.Path + "/ldapi/sdk/eval/1234"
+	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)
 	} else {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
@@ -69,7 +68,7 @@ func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, 
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
-		log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, "bool", f.flagVals[key])
+		logUnexpectedValueTypeMsg(key, f.flagVals[key], "bool")
 		return defaultVal
 	}
 	return flagVal
@@ -79,7 +78,7 @@ func (f *FeatureFlagManager) StringVariation(key string, ctx *cmd.DynamicContext
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(string)
 	if !ok {
-		log.CliLogger.Debugf(`value for flag "%s" was expected to be type %s but was type %T`, key, "string", f.flagVals[key])
+		logUnexpectedValueTypeMsg(key, f.flagVals[key], "string")
 		return defaultVal
 	}
 	return flagVal
@@ -89,7 +88,11 @@ func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, d
 	flagValInterface := f.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(int)
 	if !ok {
-		log.CliLogger.Debugf(`value for flag "%s" was expected to be type %s but was type %T`, key, "int", f.flagVals[key])
+		flagValFloat64, ok := flagValInterface.(float64) // for test since Unmarshal uses float64
+		if ok {
+			return int(flagValFloat64)
+		}
+		logUnexpectedValueTypeMsg(key, f.flagVals[key], "int")
 		return defaultVal
 	}
 	return flagVal
@@ -117,7 +120,6 @@ func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContex
 		log.CliLogger.Debug(err.Error())
 		return defaultVal
 	}
-
 	if _, ok := f.flagVals[key]; ok {
 		return f.flagVals[key]
 	} else {
@@ -126,12 +128,17 @@ func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContex
 	}
 }
 
+func logUnexpectedValueTypeMsg(key string, value interface{}, expectedType string) {
+	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
+}
+
 func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
 		return fmt.Errorf("error encoding user: %w", err)
 	}
-	resp, err := f.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&f.flagVals, err)
+	var resp *http.Response
+	resp, err = f.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&f.flagVals, err)
 	if err != nil {
 		log.CliLogger.Debug(resp)
 		return fmt.Errorf("error fetching feature flags: %w", err)
