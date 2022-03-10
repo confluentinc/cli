@@ -31,7 +31,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a service account named `DemoServiceAccount`.",
-				Code: `confluent service-account create DemoServiceAccount --description "This is a demo service account."`,
+				Code: `confluent iam service-account create DemoServiceAccount --description "This is a demo service account."`,
 			},
 		),
 	}
