@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -226,10 +225,13 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
-		name := strings.ReplaceAll(ref.Name, "/", ":")
-		tempStorePath := filepath.Join(dir, name)
+		tempStorePath := filepath.Join(dir, ref.Name)
 		if !fileExists(tempStorePath) {
 			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
+			if err != nil {
+				return nil, err
+			}
+			err = os.MkdirAll(filepath.Dir(tempStorePath), 0755)
 			if err != nil {
 				return nil, err
 			}
