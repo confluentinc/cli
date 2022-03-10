@@ -4,7 +4,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.3.10
 	github.com/aws/aws-sdk-go v1.42.47
-	github.com/brianstrauch/cobra-shell v0.2.3
+	github.com/brianstrauch/cobra-shell v0.2.4
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
