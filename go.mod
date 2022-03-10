@@ -4,7 +4,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/armon/go-metrics v0.3.10
 	github.com/aws/aws-sdk-go v1.42.47
-	github.com/brianstrauch/cobra-shell v0.2.2
+	github.com/brianstrauch/cobra-shell v0.2.3
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
@@ -17,6 +17,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
+	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0

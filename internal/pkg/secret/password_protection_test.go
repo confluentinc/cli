@@ -1393,8 +1393,8 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				newMasterKeyPassphrase: "xyz987",
-				cipherMode: AES_CBC,
-				newCipherMode: AES_GCM,
+				cipherMode:             AES_CBC,
+				newCipherMode:          AES_GCM,
 				contents:               "testPassword = password\n",
 				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
@@ -1410,8 +1410,8 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				newMasterKeyPassphrase: "xyz987",
-				cipherMode: AES_GCM,
-				newCipherMode: AES_CBC,
+				cipherMode:             AES_GCM,
+				newCipherMode:          AES_CBC,
 				contents:               "testPassword = password\n",
 				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
@@ -1445,7 +1445,7 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 		req.NoError(err)
 
-       // Rotate Data Key
+		// Rotate Data Key
 		err = plugin.RotateDataKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
 		checkError(err, tt.wantErr, tt.wantErrMsg, req)
 

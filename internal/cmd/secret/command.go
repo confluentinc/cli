@@ -21,9 +21,9 @@ func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand:   pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
-		flagResolver: flagResolver,
-		plugin:       plugin,
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
+		flagResolver:                  flagResolver,
+		plugin:                        plugin,
 	}
 
 	c.AddCommand(c.newMasterKeyCommand())

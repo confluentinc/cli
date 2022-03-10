@@ -23,7 +23,7 @@ func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of service account "sa-123456".`,
-				Code: `confluent service-account update sa-123456 --description "Update demo service account information."`,
+				Code: `confluent iam service-account update sa-123456 --description "Update demo service account information."`,
 			},
 		),
 	}
