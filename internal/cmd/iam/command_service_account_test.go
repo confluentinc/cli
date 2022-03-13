@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -11,6 +12,9 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iamMock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -24,8 +28,15 @@ const (
 
 type ServiceAccountTestSuite struct {
 	suite.Suite
-	conf     *v1.Config
-	userMock *ccsdkmock.User
+	conf                  *v1.Config
+	userMock              *ccsdkmock.User
+	iamServiceAccountMock *iamMock.ServiceAccountsIamV2Api
+}
+
+var iamServiceAccount = iamv2.IamV2ServiceAccount{
+	Id:          iamv2.PtrString(serviceAccountId),
+	DisplayName: iamv2.PtrString(serviceName),
+	Description: iamv2.PtrString(serviceDescription),
 }
 
 func (suite *ServiceAccountTestSuite) SetupTest() {
@@ -44,13 +55,30 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 			return nil
 		},
 	}
+	suite.iamServiceAccountMock = &iamMock.ServiceAccountsIamV2Api{
+		CreateIamV2ServiceAccountFunc: func(_ context.Context) iamv2.ApiCreateIamV2ServiceAccountRequest {
+			return iamv2.ApiCreateIamV2ServiceAccountRequest{}
+		},
+		CreateIamV2ServiceAccountExecuteFunc: func(req iamv2.ApiCreateIamV2ServiceAccountRequest) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+			return iamServiceAccount, nil, nil
+		},
+		DeleteIamV2ServiceAccountFunc: func(_ context.Context, _ string) iamv2.ApiDeleteIamV2ServiceAccountRequest {
+			return iamv2.ApiDeleteIamV2ServiceAccountRequest{}
+		},
+		DeleteIamV2ServiceAccountExecuteFunc: func(req iamv2.ApiDeleteIamV2ServiceAccountRequest) (*http.Response, error) {
+			return nil, nil
+		},
+	}
 }
 
 func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCommand {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	iamClient := &iamv2.APIClient{
+		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
+	}
+	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewCcloudV2Client(iamClient, "auth-Token"), nil, nil, conf)
 	return NewServiceAccountCommand(prerunner)
 }
 
@@ -60,7 +88,6 @@ func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.userMock.CreateServiceAccountCalled())
 }
 
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
@@ -69,7 +96,6 @@ func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.userMock.DeleteServiceAccountCalled())
 }
 
 func TestServiceAccountTestSuite(t *testing.T) {

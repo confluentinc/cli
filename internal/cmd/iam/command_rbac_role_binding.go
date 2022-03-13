@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -131,11 +132,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.V2Client.GetIamUserByEmail(principalValue)
+				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue})
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + *user.Id
+				principal = "User:" + user.ResourceId
 			}
 		}
 	}
@@ -162,7 +163,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
 		if isCloud && c.ccloudRbacDataplaneEnabled {
-			parsedResourcePattern, err := c.parseAndValidateResourcePatternV2(resource, prefix)
+			parsedResourcePattern, err := parseAndValidateResourcePatternV2(resource, prefix)
 			if err != nil {
 				return nil, err
 			}
@@ -184,7 +185,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				ResourcePatterns: []mdsv2alpha1.ResourcePattern{parsedResourcePattern},
 			}
 		} else if !isCloud {
-			parsedResourcePattern, err := c.parseAndValidateResourcePattern(resource, prefix)
+			parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
 			}
@@ -327,7 +328,7 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 	return scopeV2, nil
 }
 
-func (c *roleBindingCommand) parseAndValidateResourcePatternV2(typename string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
+func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha1.ResourcePattern, error) {
 	var result mdsv2alpha1.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
@@ -335,7 +336,7 @@ func (c *roleBindingCommand) parseAndValidateResourcePatternV2(typename string, 
 		result.PatternType = "LITERAL"
 	}
 
-	parts := strings.Split(typename, ":")
+	parts := strings.SplitN(resource, ":", 2)
 	if len(parts) != 2 {
 		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 	}
@@ -412,7 +413,7 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	return nil
 }
 
-func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, prefix bool) (mds.ResourcePattern, error) {
+func parseAndValidateResourcePattern(resource string, prefix bool) (mds.ResourcePattern, error) {
 	var result mds.ResourcePattern
 	if prefix {
 		result.PatternType = "PREFIXED"
@@ -420,7 +421,7 @@ func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, pr
 		result.PatternType = "LITERAL"
 	}
 
-	parts := strings.Split(typename, ":")
+	parts := strings.SplitN(resource, ":", 2)
 	if len(parts) != 2 {
 		return result, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 	}
@@ -433,7 +434,6 @@ func (c *roleBindingCommand) parseAndValidateResourcePattern(typename string, pr
 func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, resourceType string) error {
 	ctx := c.createContext()
 	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
-	fmt.Println("role:", role)
 	if err != nil || resp.StatusCode == 204 {
 		if err == nil {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
@@ -463,7 +463,6 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, reso
 func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 	ctx := c.createContext()
 	roles, _, err := c.MDSClient.RBACRoleDefinitionsApi.Roles(ctx)
-	fmt.Println("roles,", roles)
 	if err != nil {
 		return err
 	}
@@ -496,7 +495,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, _, err := c.V2Client.GetIamUserById(userResourceId)
+	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -522,7 +521,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = *user.Email
+			displayStruct.Email = user.Email
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}
@@ -531,7 +530,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	var fieldsSelected []string
-	structuredRename := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
+
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -549,7 +548,11 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
 		displayStruct.ResourceType = "Cluster"
 	}
-	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
+
+	humanRenames := map[string]string{"ResourceType": "Resource Type", "PatternType": "Pattern Type"}
+	structuredRenames := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
+
+	return output.DescribeObject(cmd, displayStruct, fieldsSelected, humanRenames, structuredRenames)
 }
 
 func (c *roleBindingCommand) createContext() context.Context {

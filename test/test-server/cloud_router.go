@@ -116,7 +116,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
-	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
 	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }

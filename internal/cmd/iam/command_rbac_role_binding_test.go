@@ -107,7 +107,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, nil, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
@@ -199,7 +199,7 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, nil, mdsClient, suite.conf))
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{

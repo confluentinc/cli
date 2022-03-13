@@ -79,7 +79,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
+			Accounts:     environments,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -305,44 +305,6 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
-		case http.MethodPost:
-			req := &orgv1.CreateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			serviceAccount := &orgv1.User{
-				Id:                 55555,
-				ResourceId:         "sa-55555",
-				ServiceName:        req.User.ServiceName,
-				ServiceDescription: req.User.ServiceDescription,
-			}
-			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
-				Error: nil,
-				User:  serviceAccount,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(createReply))
-			require.NoError(t, err)
-		case http.MethodPut:
-			req := &orgv1.UpdateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateServiceAccountReply{
-				Error: nil,
-				User:  req.User,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(updateReply))
-			require.NoError(t, err)
-		case http.MethodDelete:
-			req := &orgv1.DeleteServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteServiceAccountReply{
-				Error: nil,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(updateReply))
-			require.NoError(t, err)
 		}
 	}
 }
@@ -354,7 +316,6 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		id, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 		userId := int32(id)
-
 		switch r.Method {
 		case http.MethodGet:
 			res := &orgv1.GetServiceAccountReply{
@@ -661,6 +622,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) func(http.ResponseWriter, *http.R
 // Handler for: "/api/users"
 func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("i'm being called. handler users.")
 		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
 				buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),
@@ -699,29 +661,6 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
-	}
-}
-
-// Handler for: "/api/users/{id}"
-func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		userId := vars["id"]
-		var res orgv1.DeleteUserReply
-		switch userId {
-		case "u-1":
-			res = orgv1.DeleteUserReply{
-				Error: &corev1.Error{Message: "user not found"},
-			}
-		default:
-			res = orgv1.DeleteUserReply{
-				Error: nil,
-			}
-		}
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
 	}
 }
 

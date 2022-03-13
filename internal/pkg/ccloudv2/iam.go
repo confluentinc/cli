@@ -82,7 +82,3 @@ func (c *Client) ListIamUsers() (iamv2.IamV2UserList, *http.Response, error) {
 	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext())
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 }
-
-// func UpdateIamUser(client iam.APIClient, id string, update iam.IamV2UserUpdate, authToken string) (iam.IamV2User, *http.Response, error) {
-// 	return client.UsersIamV2Api.UpdateIamV2User(iamApiContext(authToken), id).IamV2UserUpdate(update).Execute()
-// }

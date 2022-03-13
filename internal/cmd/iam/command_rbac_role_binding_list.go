@@ -1,7 +1,7 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"net/http"
 	"sort"
 	"strings"
@@ -132,7 +132,6 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	}
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(c.createContext(), principal, *scopeV2)
-	fmt.Println("mapping:", scopedRoleBindingMappings) // scope (organization) - rolebindings (principal : map[role][]ResourcePattern)
 	if err != nil {
 		return err
 	}
@@ -232,12 +231,12 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
-	resp, _, err := c.V2Client.ListIamUsers()
+	users, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return userToEmailMap, err
 	}
-	for _, u := range resp.Data {
-		userToEmailMap["User:"+*u.Id] = *u.Email
+	for _, u := range users {
+		userToEmailMap["User:"+u.ResourceId] = u.Email
 	}
 	return userToEmailMap, nil
 }
@@ -253,7 +252,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		if err != nil {
 			return err
 		}
-		resource, err := c.parseAndValidateResourcePatternV2(r, false)
+		resource, err := parseAndValidateResourcePatternV2(r, false)
 		if err != nil {
 			return err
 		}
@@ -275,7 +274,6 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 			c.createContext(),
 			role,
 			*scopeV2)
-		// resp, _, err := mdspkg.ListIamRoleBinding(*c.MdsV2ApiClient, "", role, "", c.AuthToken()) // can't list with scope specified
 		if err != nil {
 			return err
 		}
@@ -329,7 +327,6 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	}
 
 	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(c.createContext(), principal, *scope)
-	fmt.Println("principalsRolesResourcePatterns\n", principalsRolesResourcePatterns)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
 			return c.listPrincipalResourcesV1(scope, principal, role)
@@ -429,7 +426,7 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 			return err
 		}
 
-		resource, err := c.parseAndValidateResourcePattern(r, false)
+		resource, err := parseAndValidateResourcePattern(r, false)
 		if err != nil {
 			return err
 		}

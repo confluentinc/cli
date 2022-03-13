@@ -12,8 +12,8 @@ type Client struct {
 	AuthToken string
 }
 
-func NewCcloudV2Client(iamClient *iamv2.APIClient) *Client {
-	return &Client{IamClient: iamClient}
+func NewCcloudV2Client(iamClient *iamv2.APIClient, authToken string) *Client {
+	return &Client{IamClient: iamClient, AuthToken: authToken}
 }
 
 func getV2ServerUrl(baseURL string, isTest bool) string {

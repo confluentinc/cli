@@ -9,6 +9,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -147,6 +148,7 @@ var (
 )
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
 	return err
 }
@@ -177,6 +179,14 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 		Deactivated:    false,
 		Verified:       nil,
 		ResourceId:     resourceId,
+	}
+}
+
+func buildIamUser(email string, name string, resourceId string) iamv2.IamV2User {
+	return iamv2.IamV2User{
+		Email:    iamv2.PtrString(email),
+		FullName: iamv2.PtrString(name),
+		Id:       iamv2.PtrString(resourceId),
 	}
 }
 

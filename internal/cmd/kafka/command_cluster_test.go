@@ -150,7 +150,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
