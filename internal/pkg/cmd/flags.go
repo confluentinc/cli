@@ -92,7 +92,7 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
-	resp, _, err := kafka.ListCmkKafkaClusters(client, environmentId)
+	resp, _, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
@@ -147,11 +147,11 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.V2Client, command.AuthToken())
+		return AutocompleteEnvironments(command.V2Client)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloudv2.Client, authToken string) []string {
+func AutocompleteEnvironments(client *ccloudv2.Client) []string {
 	resp, _, err := client.ListEnvironments()
 	if err != nil {
 		return nil

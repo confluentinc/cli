@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// v2 cmk urls
+// v2 cmk/org urls
 const (
 	cmkCluster      = "/cmk/v2/clusters/{id}"
 	cmkClusters     = "/cmk/v2/clusters"

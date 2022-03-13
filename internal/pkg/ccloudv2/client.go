@@ -14,8 +14,8 @@ type Client struct {
 	AuthToken string
 }
 
-func NewCcloudV2Client(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient) *Client {
-	return &Client{CmkClient: cmkClient, OrgClient: orgClient}
+func NewCcloudV2Client(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken string) *Client {
+	return &Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: authToken}
 }
 
 func getV2ServerUrl(baseURL string, isTest bool) string {

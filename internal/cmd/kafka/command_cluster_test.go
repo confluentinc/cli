@@ -202,7 +202,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	cmkClient := &cmkv2.APIClient{
 		ClustersCmkV2Api: suite.cmkClusterApi,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewCcloudV2Client(cmkClient, nil), nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewCcloudV2Client(cmkClient, nil, "auth-token"), nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -249,10 +249,9 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 				Id: environmentId,
 			},
 		},
-		AuthToken: "auth-token",
 	}
 	root.Client = client
-	root.V2Client = ccloudv2.NewCcloudV2Client(cmkClient, nil)
+	root.V2Client = ccloudv2.NewCcloudV2Client(cmkClient, nil, "auth-token")
 	var buf bytes.Buffer
 	root.SetOut(&buf)
 	cmd, args, err := root.Command.Find([]string{
