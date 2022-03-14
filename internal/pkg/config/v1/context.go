@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -145,6 +147,27 @@ func (c *Context) IsCloud(isTest bool) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) GetUser() *orgv1.User {
+	if c.State != nil && c.State.Auth != nil {
+		return c.State.Auth.User
+	}
+	return nil
+}
+
+func (c *Context) GetOrganization() *orgv1.Organization {
+	if c.State != nil && c.State.Auth != nil {
+		return c.State.Auth.Organization
+	}
+	return nil
+}
+
+func (c *Context) GetEnvironment() *orgv1.Account {
+	if c.State != nil && c.State.Auth != nil {
+		return c.State.Auth.Account
+	}
+	return nil
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

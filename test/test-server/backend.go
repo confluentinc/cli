@@ -1,6 +1,7 @@
 package test_server
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -40,6 +41,15 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
 
+	return backend
+}
+
+func StartTestCloudServer(t *testing.T, isAuditLogEnabled bool) *TestBackend {
+	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
+	backend := &TestBackend{
+		cloud: newTestCloudServer(cloudRouter),
+	}
+	fmt.Println("starting backend server " + backend.GetCloudUrl())
 	return backend
 }
 

@@ -1055,3 +1055,14 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+// Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
+func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		jsonVal := map[string]interface{}{"key": "val"}
+		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
+		err := json.NewEncoder(w).Encode(&flags)
+		require.NoError(t, err)
+	}
+}
