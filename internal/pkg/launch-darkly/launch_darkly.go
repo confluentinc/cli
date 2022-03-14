@@ -50,13 +50,11 @@ type LaunchDarklyManager struct {
 }
 
 func InitManager(version *version.Version, isTest bool) {
-	var basePath string
+	basePath := fmt.Sprintf(baseURL, prodEnvClientId)
 	if isTest {
 		basePath = test_server.TestCloudURL.Path + "/ldapi/sdk/eval/1234"
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)
-	} else {
-		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
 	Manager = &LaunchDarklyManager{
 		client:  sling.New().Base(basePath),
