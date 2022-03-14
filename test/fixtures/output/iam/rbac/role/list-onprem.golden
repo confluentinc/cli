@@ -1,4 +1,4 @@
-       Name      |                   AccessPolicy                     
+       Name      |                   Access Policy                    
 -----------------+----------------------------------------------------
   DeveloperRead  | {                                                  
                  |   "scopeType": "Resource",                         

@@ -13,6 +13,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type (
@@ -115,6 +117,11 @@ func RequireLengthBetween(field string, minLength, maxLength int) CommandRule {
 func RequireSingular(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
+		if strings.HasSuffix(fieldValue, "quota") {
+			// flect.Singularize("xx-quota") -> xx-quotum
+			// this is a known issue with the package, create an exception for this
+			return nil
+		}
 		if flect.Singularize(fieldValue) != fieldValue {
 			return fmt.Errorf("%s should be singular for `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
@@ -186,6 +193,25 @@ func RequireNotTitleCase(field string, properNouns []string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
 		return requireNotTitleCaseHelper(fieldValue, properNouns, field, FullCommand(cmd))
+	}
+}
+
+func RequireListRequiredFlagsFirst() CommandRule {
+	return func(cmd *cobra.Command) error {
+		hasVisitedAnOptionalFlag := false
+		errs := new(multierror.Error)
+
+		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+			if pcmd.IsFlagRequired(flag) {
+				if hasVisitedAnOptionalFlag {
+					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `--%s` must be listed before optional flags", cmd.CommandPath(), flag.Name))
+				}
+			} else {
+				hasVisitedAnOptionalFlag = true
+			}
+		})
+
+		return errs
 	}
 }
 

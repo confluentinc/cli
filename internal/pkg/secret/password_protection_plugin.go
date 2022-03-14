@@ -2,7 +2,6 @@ package secret
 
 import (
 	"fmt"
-	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -24,6 +23,7 @@ import (
 // Passwords in property file are encrypted and stored in security config file.
 
 type PasswordProtection interface {
+	SetCipherMode(cipher string)
 	CreateMasterKey(passphrase string, localSecureConfigPath string) (string, error)
 	EncryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, remoteSecureConfigPath string, encryptConfigKeys string) error
 	DecryptConfigFileSecrets(configFilePath string, localSecureConfigPath string, outputFilePath string, configs string) error
@@ -36,12 +36,12 @@ type PasswordProtection interface {
 
 type PasswordProtectionSuite struct {
 	Clock       clockwork.Clock
-	RandSource  rand.Source
+	CipherMode  string
 	CipherSuite Cipher
 }
 
 func NewPasswordProtectionPlugin() *PasswordProtectionSuite {
-	return &PasswordProtectionSuite{Clock: clockwork.NewRealClock(), RandSource: &cryptoSource{}}
+	return &PasswordProtectionSuite{Clock: clockwork.NewRealClock()}
 }
 
 // This function generates a new data key for encryption/decryption of secrets. The DEK is wrapped using the master key and saved in the secrets file
@@ -70,8 +70,8 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 	}
 
 	// Generate the master key from passphrase
-	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	cipherSuite := NewCipher(c.CipherMode)
+	engine := NewEncryptionEngine(cipherSuite)
 	newMasterKey, salt, err := engine.GenerateMasterKey(passphrase, "")
 	if err != nil {
 		return "", err
@@ -99,8 +99,8 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 
 func (c *PasswordProtectionSuite) generateNewDataKey(masterKey string) (*Cipher, error) {
 	// Generate the metadata for encryption keys
-	cipherSuite := NewDefaultCipher()
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	cipherSuite := NewCipher(c.CipherMode)
+	engine := NewEncryptionEngine(cipherSuite)
 
 	// Generate a new data key. This data key will be used for encrypting the secrets.
 	dataKey, salt, err := engine.GenerateRandomDataKey(MetadataKeyDefaultLengthBytes)
@@ -186,7 +186,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite)
 	// Unwrap DEK with MEK
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
@@ -244,7 +244,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 		return err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(masterPassphrase, cipherSuite.SaltMEK)
@@ -287,7 +287,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 			if err != nil {
 				return err
 			}
-			cipher, iv, err := engine.Encrypt(plainSecret, newDataKey)
+			cipher, iv, err := engine.Encrypt(plainSecret, newDataKey, c.CipherMode)
 			if err != nil {
 				return err
 			}
@@ -351,7 +351,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 		return "", err
 	}
 
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite)
 
 	// Generate a master key from passphrase
 	userMasterKey, _, err := engine.GenerateMasterKey(oldPassphrase, cipherSuite.SaltMEK)
@@ -377,7 +377,7 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 	}
 
 	// Wrap DEK using the new MEK
-	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, newMasterKey)
+	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, newMasterKey, c.CipherMode)
 	if err != nil {
 		return "", err
 	}
@@ -540,7 +540,7 @@ func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, 
 }
 
 func (c *PasswordProtectionSuite) wrapDataKey(engine EncryptionEngine, dataKey []byte, masterKey string) (string, error) {
-	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, masterKey)
+	wrappedDataKey, iv, err := engine.WrapDataKey(dataKey, masterKey, c.CipherMode)
 	if err != nil {
 		return "", err
 	}
@@ -562,7 +562,7 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromLocalFile(localSecureConfig
 func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigProps *properties.Properties) (*Cipher, error) {
 	matchProps := secureConfigProps.FilterPrefix("_metadata")
 	matchProps.DisableExpansion = true
-	cipher := NewDefaultCipher()
+	cipher := NewCipher(c.CipherMode)
 	cipher.Iterations = matchProps.GetInt(MetadataKeyIterations, MetadataKeyDefaultIterations)
 	cipher.KeyLength = matchProps.GetInt(MetadataKeyLength, MetadataKeyDefaultLengthBytes)
 	cipher.SaltDEK = matchProps.GetString(MetadataDEKSalt, "")
@@ -576,7 +576,7 @@ func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) (bool, erro
 }
 
 func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
-	return "ENC[" + MetadataEncAlgorithm + ",data:" + cipher + ",iv:" + iv + ",type:str]"
+	return fmt.Sprintf("ENC[%s,data:%s,iv:%s,type:str]", c.CipherMode, cipher, iv)
 }
 
 func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
@@ -670,7 +670,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	// Unwrap DEK
-	engine := NewEncryptionEngine(cipherSuite, c.RandSource)
+	engine := NewEncryptionEngine(cipherSuite)
 	dataKey, err := c.unwrapDataKey(cipherSuite.EncryptedDataKey, engine)
 	if err != nil {
 		log.CliLogger.Debug(err)
@@ -693,7 +693,7 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 			if err != nil {
 				return err
 			}
-			cipher, iv, err := engine.Encrypt(value, dataKey)
+			cipher, iv, err := engine.Encrypt(value, dataKey, c.CipherMode)
 
 			if err != nil {
 				return err
@@ -718,4 +718,8 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	}
 
 	return nil
+}
+
+func (c *PasswordProtectionSuite) SetCipherMode(cipherMode string) {
+	c.CipherMode = cipherMode
 }

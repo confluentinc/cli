@@ -88,9 +88,12 @@ func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 	}
 }
 
-func printACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclBinding) error {
-	var fields = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	var structuredRenames = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
+func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclBinding) error {
+	var (
+		listFields       = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
+		humanLabels      = []string{"Kafka Cluster ID", "Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
+		structuredLabels = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
+	)
 
 	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
 	_, err := cmd.Flags().GetString(output.FlagName)
@@ -98,12 +101,12 @@ func printACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 		pcmd.AddOutputFlag(cmd)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, fields, structuredRenames)
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
 	if err != nil {
 		return err
 	}
-	for _, binding := range bindingsObj {
 
+	for _, aclBinding := range aclBindings {
 		record := &struct {
 			KafkaClusterId string
 			Principal      string
@@ -115,13 +118,13 @@ func printACLs(cmd *cobra.Command, kafkaClusterId string, bindingsObj []mds.AclB
 			PatternType    mds.PatternType
 		}{
 			kafkaClusterId,
-			binding.Entry.Principal,
-			binding.Entry.PermissionType,
-			binding.Entry.Operation,
-			binding.Entry.Host,
-			binding.Pattern.ResourceType,
-			binding.Pattern.Name,
-			binding.Pattern.PatternType,
+			aclBinding.Entry.Principal,
+			aclBinding.Entry.PermissionType,
+			aclBinding.Entry.Operation,
+			aclBinding.Entry.Host,
+			aclBinding.Pattern.ResourceType,
+			aclBinding.Pattern.Name,
+			aclBinding.Pattern.PatternType,
 		}
 		outputWriter.AddElement(record)
 	}

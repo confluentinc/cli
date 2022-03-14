@@ -26,9 +26,11 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().AddFlagSet(listACLFlags())
+	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("kafka-cluster-id")
 
 	return cmd
 }

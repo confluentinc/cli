@@ -48,6 +48,34 @@ func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
 	return suggestions
 }
 
+func AddProtocolFlag(cmd *cobra.Command) {
+	cmd.Flags().String("protocol", "SSL", "Security protocol used to communicate with brokers.")
+	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return kafka.Protocols })
+}
+
+func AddMechanismFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("sasl-mechanism", "PLAIN", "SASL_SSL mechanism used for authentication.")
+	RegisterFlagCompletionFunc(cmd, "sasl-mechanism", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		protocol, _ := cmd.Flags().GetString("protocol")
+		return autocompleteMechanisms(protocol)
+	})
+}
+
+func autocompleteMechanisms(protocol string) []string {
+	switch protocol {
+	default:
+		return nil
+	case "SSL":
+		return nil
+	case "SASL_SSL":
+		return []string{"PLAIN", "OAUTHBEARER"}
+	}
+}
+
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", strings.Join(kafka.Clouds, ", ")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })

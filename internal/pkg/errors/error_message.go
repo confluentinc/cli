@@ -21,7 +21,7 @@ const (
 	APIKeyUseFailedErrorMsg             = "unable to set active API key"
 	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
-	APIKeyNotValidForClusterSuggestions = "Provide the cluster this API key belongs to using the `--resource` flag or the `confluent kafka cluster use` command."
+	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
@@ -101,6 +101,16 @@ const (
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
 
+	// kafka client-config package
+	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
+	WriteConfigFileErrorMsg               = "failed to write config file"
+	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
+	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
+		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
+		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
+	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--sr-apikey` and --sr-apisecret`."
+
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
 	FailedToRenderKeyPolicyErrorMsg               = "BYOK error: failed to render key policy"
@@ -140,10 +150,10 @@ const (
 	FailedToCreateProducerMsg            = "failed to create producer: %v"
 	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
 	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	FailedToParseConfigErrMsg            = `failed to parse "key=value" pattern from configuration: %s`
 	FailedToFindSchemaIDErrorMsg         = "failed to find schema ID in topic data"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
@@ -213,6 +223,9 @@ const (
 	// auth package
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
+	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
+	SSLCaCertSuggestion              = "Please specify `--ca-location` to enable SSL verification.\n"
+	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -303,6 +316,7 @@ const (
 	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
 	InvalidFilePathErrorMsg            = "invalid file path \"%s\""
 	UnsupportedFileFormatErrorMsg      = "unsupported file format for file \"%s\""
+	InvalidAlgorithmErrorMsg           = "invalid algorithm \"%s\""
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"
@@ -390,12 +404,16 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutSuggestion = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
-	NotLoggedInErrorMsg    = "not logged in"
-	NotLoggedInSuggestions = "You must be logged in to run this command.\n" +
+	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg         = "not logged in"
+	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
+	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
+	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
 		avoidTimeoutSuggestion
-	SRNotAuthenticatedErrorMsg    = "not logged in, or no Schema Registry endpoint specified"
-	SRNotAuthenticatedSuggestions = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
+	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
+	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		avoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
@@ -408,11 +426,12 @@ const (
 		"If the email is correct, check that you have successfully verified your email.\n" +
 		"If the problem persists, please submit a support ticket.\n" +
 		avoidTimeoutSuggestion
-	InvalidLoginURLMsg            = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
-	InvalidLoginErrorMsg          = "incorrect email or password"
-	CCloudInvalidLoginSuggestions = avoidTimeoutSuggestion
-	NoAPIKeySelectedErrorMsg      = "no API key selected for resource \"%s\""
-	NoAPIKeySelectedSuggestions   = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
+	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
+	InvalidLoginErrorMsg             = "incorrect email or password"
+	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
+	CCloudInvalidLoginSuggestions    = avoidTimeoutSuggestion
+	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""
+	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."

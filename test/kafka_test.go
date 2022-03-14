@@ -86,12 +86,12 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/kafka-acls-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/kafka-acls-list-json.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/kafka-acls-list-yaml.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-invalid-service-account.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic 'test-topic'", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operation READ --operation DESCRIBED --topic test-topic", fixture: "kafka/kafka-acls-invalid-operation.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-create.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-invalid-service-account.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "default", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
@@ -149,6 +149,56 @@ func (s *CLITestSuite) TestKafka() {
 		tt.login = "default"
 		tt.workflow = true
 		s.runCcloudTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestClientConfig() {
+	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
+	tests := []CLITest{
+		// pass - check flags
+		{args: "kafka client-config", fixture: "kafka/client-config/cloud-help.golden"},
+		{args: "kafka client-config create", fixture: "kafka/client-config/create-help.golden"},
+
+		// pass - check a client that has sr flags
+		{args: "kafka client-config create java --help", fixture: "kafka/client-config/java-help.golden"},
+		// pass - check a client that does not have sr flags
+		{args: "kafka client-config create csharp --help", fixture: "kafka/client-config/csharp-help.golden"},
+
+		// error - missing context cluster
+		{args: "kafka client-config create java", fixture: "kafka/client-config/no-cluster.golden", wantErrCode: 1},
+		// error - missing context kafka key-secret pair
+		{args: "kafka client-config create java", useKafka: "lkc-cool1", fixture: "kafka/client-config/no-keypair.golden", wantErrCode: 1},
+
+		// set kafka key-secret pair
+		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource lkc-cool1"},
+		{args: "api-key use UIAPIKEY100 --resource lkc-cool1"},
+
+		// warning - missing sr key-secret pair
+		{args: "kafka client-config create java", useKafka: "lkc-cool1", fixture: "kafka/client-config/java-no-sr-keypair.golden"},
+
+		// pass - does not need sr key-secret pair
+		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
+	}
+
+	resetConfiguration(s.T())
+
+	for _, tt := range tests {
+		tt.login = "default"
+		tt.workflow = true
+		s.runCcloudTest(tt)
+	}
+
+	tests = []CLITest{
+		// pass - check flags
+		{args: "kafka client-config", fixture: "kafka/client-config/onprem-help.golden", wantErrCode: 1},
+		{args: "kafka client-config create", fixture: "kafka/client-config/onprem-help.golden", wantErrCode: 1},
+	}
+
+	resetConfiguration(s.T())
+
+	for _, tt := range tests {
+		tt.login = "default"
+		s.runConfluentTest(tt)
 	}
 }
 

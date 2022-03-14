@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -105,12 +106,16 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
 	if err != nil {
+		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
+		}
+
 		return err
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
 	if err != nil {
 		return err
 	}
@@ -124,7 +129,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
+	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
 	return err

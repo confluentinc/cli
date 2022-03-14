@@ -671,7 +671,7 @@ func (m *ClusterLinking) ListKafkaLinks(_ context.Context, clusterId string) (kr
 			{
 				Kind:            "",
 				Metadata:        krsdk.ResourceMetadata{},
-				SourceClusterId: clusterId,
+				SourceClusterId: stringPtr(clusterId),
 				LinkName:        "link-1",
 				LinkId:          "LinkId",
 				TopicsNames:     []string{"topic-1", "topic-2", "topic-3"},
@@ -811,7 +811,7 @@ type DeleteLinkMatcher struct {
 	LinkName string
 }
 
-func (m *ClusterLinking) DeleteKafkaLink(_ context.Context, _ string, linkName string) (*nethttp.Response, error) {
+func (m *ClusterLinking) DeleteKafkaLink(_ context.Context, _ string, linkName string, _ *krsdk.DeleteKafkaLinkOpts) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DeleteLinkMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -841,7 +841,7 @@ func (m *ClusterLinking) GetKafkaLink(_ context.Context, clusterId string, linkN
 	return krsdk.ListLinksResponseData{
 		Kind:            "",
 		Metadata:        krsdk.ResourceMetadata{},
-		SourceClusterId: clusterId,
+		SourceClusterId: stringPtr(clusterId),
 		LinkName:        linkName,
 		LinkId:          "link-1",
 		TopicsNames:     []string{"topic-1", "topic-2", "topic-3"},
@@ -1132,4 +1132,8 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 			},
 		},
 	}, httpResp, nil
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

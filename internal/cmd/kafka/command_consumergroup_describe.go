@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/confluentinc/go-printer"
@@ -85,7 +84,7 @@ func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersR
 		Coordinator:       getStringBroker(groupCmdResp.Coordinator),
 		IsSimple:          groupCmdResp.IsSimple,
 		PartitionAssignor: groupCmdResp.PartitionAssignor,
-		State:             getStringState(groupCmdResp.State),
+		State:             groupCmdResp.State,
 		Consumers:         make([]consumerData, len(groupCmdConsumersResp.Data)),
 	}
 
@@ -116,10 +115,6 @@ func getStringBroker(relationship kafkarestv3.Relationship) string {
 	}
 	// returning brokerId
 	return splitString[1]
-}
-
-func getStringState(state kafkarestv3.ConsumerGroupState) string {
-	return fmt.Sprintf("%+v", state)
 }
 
 func printGroupHumanDescribe(cmd *cobra.Command, groupData *groupData) error {

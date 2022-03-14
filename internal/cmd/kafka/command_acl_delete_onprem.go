@@ -22,10 +22,14 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().AddFlagSet(aclutil.AclFlags())
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().AddFlagSet(aclutil.DeleteACLFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("principal")
+	_ = cmd.MarkFlagRequired("operation")
+	_ = cmd.MarkFlagRequired("host")
 
 	return cmd
 }
@@ -53,5 +57,5 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, listStructuredRenamesOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
 }
