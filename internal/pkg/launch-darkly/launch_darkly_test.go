@@ -1,9 +1,11 @@
 package launchdarkly
 
 import (
-	test_server "github.com/confluentinc/cli/test/test-server"
-	"github.com/dghubble/sling"
 	"testing"
+
+	"github.com/dghubble/sling"
+
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -15,11 +17,11 @@ import (
 
 type LaunchDarklyTestSuite struct {
 	suite.Suite
-	flagManager FeatureFlagManager
+	flagManager LaunchDarklyManager
 }
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
-	suite.flagManager = FeatureFlagManager{
+	suite.flagManager = LaunchDarklyManager{
 		client:  sling.New().Base(test_server.TestCloudURL.Path + "/ldapi/sdk/eval/1234/"),
 		version: version.NewVersion("v1.2", "", "", ""),
 	}
@@ -28,7 +30,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 func (suite *LaunchDarklyTestSuite) TestFlags() {
 	server := test_server.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
-	flagManager := FeatureFlagManager{
+	flagManager := LaunchDarklyManager{
 		client:  sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version: version.NewVersion("v1.2", "", "", ""),
 	}
@@ -48,15 +50,13 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 
 	flagManager.flagValsAreForAnonUser = true
 	jsonFlag := flagManager.JsonVariation("testJson", ctx, map[string]string{})
-	req.Equal(map[string]interface{}{"key":"val"}, jsonFlag)
+	req.Equal(map[string]interface{}{"key": "val"}, jsonFlag)
 }
-
-
 
 // Flag variation tests using cached flag values
 func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 	req := require.New(suite.T())
-	flagMananger := FeatureFlagManager{
+	flagMananger := LaunchDarklyManager{
 		flagVals: map[string]interface{}{"test": true},
 	}
 	// evaluate cached flags for anon user
@@ -73,7 +73,7 @@ func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestIntVariation() {
 	req := require.New(suite.T())
-	flagMananger := FeatureFlagManager{
+	flagMananger := LaunchDarklyManager{
 		flagVals: map[string]interface{}{"test": 3},
 	}
 	// evaluate cached flags for anon user
@@ -90,7 +90,7 @@ func (suite *LaunchDarklyTestSuite) TestIntVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestStringVariation() {
 	req := require.New(suite.T())
-	flagMananger := FeatureFlagManager{
+	flagMananger := LaunchDarklyManager{
 		flagVals: map[string]interface{}{"test": "value"},
 	}
 	// evaluate cached flags for anon user
@@ -107,7 +107,7 @@ func (suite *LaunchDarklyTestSuite) TestStringVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 	req := require.New(suite.T())
-	flagMananger := FeatureFlagManager{
+	flagMananger := LaunchDarklyManager{
 		flagVals: map[string]interface{}{"test": struct {
 			key string
 			val string

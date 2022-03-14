@@ -47,7 +47,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 func StartTestCloudServer(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
 	backend := &TestBackend{
-		cloud:          newTestCloudServer(cloudRouter),
+		cloud: newTestCloudServer(cloudRouter),
 	}
 	fmt.Println("starting backend server " + backend.GetCloudUrl())
 	return backend

@@ -5,19 +5,19 @@ package launchdarkly
 import (
 	b64 "encoding/base64"
 	"fmt"
-	test_server "github.com/confluentinc/cli/test/test-server"
 	"net/http"
 	"os"
 	"regexp"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	test_server "github.com/confluentinc/cli/test/test-server"
+
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -31,18 +31,18 @@ const (
 )
 
 var (
-	Manager  LaunchDarklyManager // Global LD Manager
+	Manager    FeatureFlagManager // Global LD Manager
 	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 )
 
-type LaunchDarklyManager interface {
+type FeatureFlagManager interface {
 	BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool
 	StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string
 	IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int
 	JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{}
 }
 
-type FeatureFlagManager struct {
+type LaunchDarklyManager struct {
 	client                 *sling.Sling
 	flagVals               map[string]interface{}
 	flagValsAreForAnonUser bool
@@ -58,70 +58,61 @@ func InitManager(version *version.Version, isTest bool) {
 	} else {
 		basePath = fmt.Sprintf(baseURL, prodEnvClientId)
 	}
-	Manager = &FeatureFlagManager{
+	Manager = &LaunchDarklyManager{
 		client:  sling.New().Base(basePath),
 		version: version,
 	}
 }
 
-func (f *FeatureFlagManager) BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool {
-	flagValInterface := f.generalVariation(key, ctx, defaultVal)
+func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool {
+	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
-		logUnexpectedValueTypeMsg(key, f.flagVals[key], "bool")
+		logUnexpectedValueTypeMsg(key, ld.flagVals[key], "bool")
 		return defaultVal
 	}
 	return flagVal
 }
 
-func (f *FeatureFlagManager) StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string {
-	flagValInterface := f.generalVariation(key, ctx, defaultVal)
-	flagVal, ok := flagValInterface.(string)
-	if !ok {
-		logUnexpectedValueTypeMsg(key, f.flagVals[key], "string")
-		return defaultVal
+func (ld *LaunchDarklyManager) StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string {
+	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
+	if flagVal, ok := flagValInterface.(string); ok {
+		return flagVal
 	}
-	return flagVal
+	logUnexpectedValueTypeMsg(key, ld.flagVals[key], "int")
+	return defaultVal
 }
 
-func (f *FeatureFlagManager) IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int {
-	flagValInterface := f.generalVariation(key, ctx, defaultVal)
-	flagVal, ok := flagValInterface.(int)
-	if !ok {
-		flagValFloat64, ok := flagValInterface.(float64) // for test since Unmarshal uses float64
-		if ok {
-			return int(flagValFloat64)
-		}
-		logUnexpectedValueTypeMsg(key, f.flagVals[key], "int")
-		return defaultVal
+func (ld *LaunchDarklyManager) IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int {
+	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
+	if val, ok := flagValInterface.(int); ok {
+		return val
 	}
+	if val, ok := flagValInterface.(float64); ok { // for test since Unmarshal uses float64
+		return int(val)
+	}
+	logUnexpectedValueTypeMsg(key, ld.flagVals[key], "int")
+	return defaultVal
+}
+
+func (ld *LaunchDarklyManager) JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
+	flagVal := ld.generalVariation(key, ctx, defaultVal)
 	return flagVal
 }
 
-func (f *FeatureFlagManager) JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
-	flagVal := f.generalVariation(key, ctx, defaultVal)
-	return flagVal
-}
-
-func (f *FeatureFlagManager) generalVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
-	user, isAnonUser := f.contextToLDUser(ctx)
+func (ld *LaunchDarklyManager) generalVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
+	user, isAnonUser := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
-	if f.areCachedFlagsAvailable(isAnonUser) {
-		if _, ok := f.flagVals[key]; ok {
-			return f.flagVals[key]
-		} else {
-			log.CliLogger.Debugf("unable to find value for requested flag \"%s\"", key)
+	if !ld.areCachedFlagsAvailable(isAnonUser) {
+		err := ld.fetchFlags(user, isAnonUser)
+		if err != nil {
+			log.CliLogger.Debug(err.Error())
 			return defaultVal
 		}
 	}
-	err := f.fetchFlags(user, isAnonUser)
-	if err != nil {
-		log.CliLogger.Debug(err.Error())
-		return defaultVal
-	}
-	if _, ok := f.flagVals[key]; ok {
-		return f.flagVals[key]
+	if _, ok := ld.flagVals[key]; ok {
+		return ld.flagVals[key]
 	} else {
 		log.CliLogger.Debugf("unable to find value for requested flag \"%s\"", key)
 		return defaultVal
@@ -132,23 +123,23 @@ func logUnexpectedValueTypeMsg(key string, value interface{}, expectedType strin
 	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
 }
 
-func (f *FeatureFlagManager) fetchFlags(user lduser.User, isAnonUser bool) error {
+func (ld *LaunchDarklyManager) fetchFlags(user lduser.User, isAnonUser bool) error {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
 		return fmt.Errorf("error encoding user: %w", err)
 	}
 	var resp *http.Response
-	resp, err = f.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&f.flagVals, err)
+	resp, err = ld.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&ld.flagVals, err)
 	if err != nil {
 		log.CliLogger.Debug(resp)
 		return fmt.Errorf("error fetching feature flags: %w", err)
 	}
-	f.flagValsAreForAnonUser = isAnonUser
+	ld.flagValsAreForAnonUser = isAnonUser
 	return nil
 }
 
-func (f *FeatureFlagManager) areCachedFlagsAvailable(isAnonUser bool) bool {
-	return len(f.flagVals) > 0 && f.flagValsAreForAnonUser == isAnonUser
+func (ld *LaunchDarklyManager) areCachedFlagsAvailable(isAnonUser bool) bool {
+	return len(ld.flagVals) > 0 && ld.flagValsAreForAnonUser == isAnonUser
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {
@@ -159,7 +150,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return b64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
+func (ld *LaunchDarklyManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false
@@ -169,10 +160,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 		return userBuilder.Build(), anonUser
 	}
-	var user *orgv1.User
-	if ctx.State != nil && ctx.State.Auth != nil {
-		user = ctx.State.Auth.User
-	}
+	user := ctx.GetUser()
 	// Basic user info
 	if user != nil && user.ResourceId != "" {
 		userResourceId := ctx.State.Auth.User.ResourceId
@@ -184,31 +172,22 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
 
-	if f.version != nil && f.version.Version != "" {
-		setCustomAttribute(custom, "cli.version", ldvalue.String(f.version.Version))
+	if ld.version != nil && ld.version.Version != "" {
+		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
 	}
 
-	var organization *orgv1.Organization
-	if ctx.State != nil && ctx.State.Auth != nil {
-		organization = ctx.State.Auth.Organization
-	}
+	organization := ctx.GetOrganization()
 	// org info
 	if organization != nil && organization.ResourceId != "" {
 		setCustomAttribute(custom, "org.resource_id", ldvalue.String(organization.ResourceId))
 	}
-	var account *orgv1.Account
-	if ctx.State != nil && ctx.State.Auth != nil {
-		account = ctx.State.Auth.Account
-	}
+	environment := ctx.GetEnvironment()
 	// environment (account) info
-	if account != nil && account.Id != "" {
-		setCustomAttribute(custom, "environment.id", ldvalue.String(account.Id))
+	if environment != nil && environment.Id != "" {
+		setCustomAttribute(custom, "environment.id", ldvalue.String(environment.Id))
 	}
 	// cluster info
-	var cluster *v1.KafkaClusterConfig
-	if ctx != nil {
-		cluster, _ = ctx.GetKafkaClusterForCommand()
-	}
+	cluster, _ := ctx.GetKafkaClusterForCommand()
 	if cluster != nil {
 		if cluster.ID != "" {
 			setCustomAttribute(custom, "cluster.id", ldvalue.String(cluster.ID))
@@ -226,14 +205,7 @@ func (f *FeatureFlagManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.Us
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	found := false
-	for _, attribute := range attributes {
-		if key == attribute {
-			found = true
-			break // key is an accepted targeting attribute
-		}
-	}
-	if !found {
+	if !utils.Contains(attributes, key) {
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
