@@ -6,14 +6,16 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/spf13/cobra"
 )
 
 type Commander struct {
@@ -23,6 +25,7 @@ type Commander struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
+	QuotasClient      *quotasv2.APIClient
 	Version           *version.Version
 	Config            *v1.Config
 }
@@ -154,4 +157,5 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
+	command.QuotasClient = c.QuotasClient
 }

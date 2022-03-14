@@ -18,7 +18,9 @@ var commandRules = []linter.CommandRule{
 	// Hard Requirements
 	linter.RequireLowerCase("Use"),
 	linter.RequireRealWords("Use", '-'),
-	linter.Filter(linter.RequireSingular("Use"), linter.ExcludeCommandContains("local services")),
+	linter.Filter(linter.RequireSingular("Use"),
+		linter.ExcludeCommandContains("local services"),
+		linter.ExcludeCommand("kafka client-config create nodejs")),
 
 	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireEndWithPunctuation("Short", false),
@@ -26,8 +28,12 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
-	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns), linter.ExcludeCommand("completion")),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
+		linter.ExcludeCommand("completion"),
+		linter.ExcludeCommandContains("kafka client-config create")),
 	linter.RequireStartWithCapital("Long"),
+
+	linter.RequireListRequiredFlagsFirst(),
 
 	// Soft Requirements
 	linter.RequireLengthBetween("Short", 10, 60),
@@ -76,6 +82,8 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
+			"destination-bootstrap-server",
+			"destination-cluster-id",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
@@ -92,6 +100,8 @@ var flagRules = []linter.FlagRule{
 			"client-cert-path",
 			"client-key-path",
 			"connect-cluster-id",
+			"destination-bootstrap-server",
+			"destination-cluster-id",
 			"enable-systest-events",
 			"if-not-exists",
 			"kafka-cluster-id",
@@ -140,6 +150,21 @@ var properNouns = []string{
 	"ZooKeeper™",
 	"ksqlDB Server",
 	"ksqlDB",
+	"Clients",
+	"Clojure",
+	"C/C++",
+	"C#",
+	"Go",
+	"Groovy",
+	"Java",
+	"Kotlin",
+	"Ktor",
+	"Node.js",
+	"Python",
+	"Ruby",
+	"Rust",
+	"Scala",
+	"Spring Boot",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -156,14 +181,14 @@ var vocabWords = []string{
 	"avro",
 	"aws",
 	"backoff",
-	"csu",
+	"cku",
 	"cli",
 	"codec",
 	"config",
 	"configs",
 	"consumer.config",
 	"crn",
-	"cku",
+	"csu",
 	"decrypt",
 	"deserializer",
 	"deserializers",
@@ -210,6 +235,15 @@ var vocabWords = []string{
 	"whitelist",
 	"yaml",
 	"zstd",
+	"clojure",
+	"cpp",
+	"csharp",
+	"kotlin",
+	"ktor",
+	"nodejs",
+	"restapi",
+	"scala",
+	"springboot",
 }
 
 var (

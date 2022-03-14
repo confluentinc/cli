@@ -252,7 +252,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		if err != nil {
 			return err
 		}
-		resource, err := c.parseAndValidateResourcePatternV2(r, false)
+		resource, err := parseAndValidateResourcePatternV2(r, false)
 		if err != nil {
 			return err
 		}
@@ -426,7 +426,7 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 			return err
 		}
 
-		resource, err := c.parseAndValidateResourcePattern(r, false)
+		resource, err := parseAndValidateResourcePattern(r, false)
 		if err != nil {
 			return err
 		}

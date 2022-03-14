@@ -9,18 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	"github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	cliMock "github.com/confluentinc/cli/mock"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	kafkarestv3mock "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (

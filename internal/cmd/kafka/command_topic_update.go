@@ -8,13 +8,15 @@ import (
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
@@ -48,7 +50,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	configsMap, err := utils.ToMap(configStrings)
+	configsMap, err := properties.ToMap(configStrings)
 	if err != nil {
 		return err
 	}
@@ -122,7 +124,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	configMap, err := utils.ToMap(configs)
+	configMap, err := properties.ToMap(configs)
 	if err != nil {
 		return err
 	}

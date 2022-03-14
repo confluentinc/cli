@@ -15,13 +15,13 @@ import (
 )
 
 var (
-	listFieldsOnPrem            = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	listStructuredRenamesOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
+	listFieldsOnPrem       = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
+	humanLabelsOnPrem      = []string{"Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
+	structuredLabelsOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableFlagChildren map[string][]*cobra.Command
 }
 
 func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
@@ -30,21 +30,12 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 		Short: "Manage Kafka ACLs.",
 	}
 
-	c := &aclCommand{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &aclCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	if cfg.IsCloudLogin() {
-		createCmd := c.newCreateCommand()
-		deleteCmd := c.newDeleteCommand()
-		listCmd := c.newListCommand()
-
-		c.AddCommand(createCmd)
-		c.AddCommand(deleteCmd)
-		c.AddCommand(listCmd)
-
-		c.completableFlagChildren = map[string][]*cobra.Command{
-			"cluster":         {createCmd, deleteCmd, listCmd},
-			"service-account": {createCmd, deleteCmd, listCmd},
-		}
+		c.AddCommand(c.newCreateCommand())
+		c.AddCommand(c.newDeleteCommand())
+		c.AddCommand(c.newListCommand())
 	} else {
 		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
 

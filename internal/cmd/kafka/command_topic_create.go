@@ -7,12 +7,14 @@ import (
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
@@ -51,7 +53,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := utils.ToMap(configs)
+	topicConfigsMap, err := properties.ToMap(configs)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,7 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete service account "sa-123456".`,
-				Code: "confluent service-account delete sa-123456",
+				Code: "confluent iam service-account delete sa-123456",
 			},
 		),
 	}

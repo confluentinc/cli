@@ -6,15 +6,16 @@ import (
 	"os"
 	"path/filepath"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
@@ -33,9 +34,10 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091"`},
 		),
 	}
+
+	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
@@ -43,6 +45,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
+
 	_ = cmd.MarkFlagRequired("bootstrap")
 	_ = cmd.MarkFlagRequired("ca-location")
 
