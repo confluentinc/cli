@@ -149,6 +149,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			} else {
 				if user, ok := usersMap[apiKey.UserId]; ok {
 					email = user.Email
+				} else if c.State.Auth.User.Id == apiKey.UserId { // check if api key is owned by current user
+					email = c.State.Auth.User.Email
 				} else {
 					email = "<deactivated user>"
 				}
