@@ -168,8 +168,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 		shouldPrompt = false
 	}
 	var isValidStorageLimitErr error
-	// if !currentCluster.InfiniteStorage {
-	if false {
+	if getKafkaClusterStorage(currentCluster) != "Infinite" {
 		isValidStorageLimitErr = c.validateStorageLimit(*currentCluster.Id, requiredStorageLimit, isLatestMetric, cku)
 		if isValidStorageLimitErr != nil {
 			errorMessage = errors.Errorf("%v \n %v", errorMessage.Error(), isValidStorageLimitErr.Error())

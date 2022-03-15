@@ -157,13 +157,7 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Comman
 }
 
 func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster, kAPI string) *describeStructWithKAPI {
-	var clusterStorage string
-	if !isBasic(cluster) {
-		clusterStorage = "Infinite"
-	} else {
-		clusterStorage = "5 TB"
-	}
-
+	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
 	return &describeStructWithKAPI{
@@ -177,7 +171,7 @@ func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster, kAPI st
 		Storage:            clusterStorage,
 		ServiceProvider:    strings.ToLower(*cluster.Spec.Cloud),
 		Region:             *cluster.Spec.Region,
-		Availability:       availabilities[*cluster.Spec.Availability],
+		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
@@ -195,13 +189,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, kAPI string) *describeStruct {
-	var clusterStorage string
-	if !isBasic(cluster) {
-		clusterStorage = "Infinite"
-	} else {
-		clusterStorage = "5 TB"
-	}
-
+	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
 	return &describeStruct{
@@ -215,12 +203,20 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, kAPI string) *d
 		Storage:            clusterStorage,
 		ServiceProvider:    strings.ToLower(*cluster.Spec.Cloud),
 		Region:             *cluster.Spec.Region,
-		Availability:       availabilities[*cluster.Spec.Availability],
+		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		ApiEndpoint:        kAPI,
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
+	}
+}
+
+func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster) string {
+	if !isBasic(cluster) {
+		return "Infinite"
+	} else {
+		return "5 TB"
 	}
 }
 

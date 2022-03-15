@@ -397,7 +397,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
 
 	cmkClient := r.createCmkClient(ctx)
 	orgClient := r.createOrgClient(ctx)
-	v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: cliCmd.AuthToken()}
+	v2Client := ccloudv2.NewClient(cmkClient, orgClient, cliCmd.AuthToken())
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client
@@ -729,13 +729,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			ctx.client = client
-			command.Config.Client = client
-
 			cmkClient := r.createCmkClient(ctx)
 			orgClient := r.createOrgClient(ctx)
+			v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: command.Context.State.AuthToken}
 
-			v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient}
+			ctx.client = client
+			command.Config.Client = client
 			ctx.v2Client = v2Client
 			command.Config.V2Client = v2Client
 

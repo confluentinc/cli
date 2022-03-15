@@ -14,7 +14,7 @@ type Client struct {
 	AuthToken string
 }
 
-func NewCcloudV2Client(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken string) *Client {
+func NewClient(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken string) *Client {
 	return &Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: authToken}
 }
 

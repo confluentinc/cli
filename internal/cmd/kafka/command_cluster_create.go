@@ -314,22 +314,23 @@ func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []
 }
 
 func stringToAvailability(s string) (string, error) {
-	if s == singleZone {
-		return lowAvailability, nil
-	} else if s == multiZone {
-		return highAvailability, nil
+	switch s {
+	case singleZone, multiZone:
+		break
+	default:
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
+			fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 	}
-	return lowAvailability, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
-		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
+	return availabilitiesToModel[s], nil
 }
 
-func stringToSku(typeString string) (productv1.Sku, error) {
-	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(typeString)])
+func stringToSku(skuType string) (productv1.Sku, error) {
+	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(skuType)])
 	switch sku {
 	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, typeString),
+		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil

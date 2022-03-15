@@ -158,9 +158,6 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 }
 
 func CatchConfigurationNotValidError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)

@@ -15,7 +15,7 @@ var (
 	listStructuredLabels = []string{"id", "name"}
 )
 
-type environmentStruct struct {
+type environment struct {
 	Id   string
 	Name string
 }
@@ -45,11 +45,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, environment := range environments {
+	for _, env := range environments {
 		// Add '*' only in the case where we are printing out tables
-		envStruct := environmentStruct{
-			Id:   *environment.Id,
-			Name: *environment.DisplayName,
+		envStruct := &environment{
+			Id:   *env.Id,
+			Name: *env.DisplayName,
 		}
 		if outputWriter.GetOutputFormat() == output.Human {
 			if envStruct.Id == c.EnvironmentId() {
