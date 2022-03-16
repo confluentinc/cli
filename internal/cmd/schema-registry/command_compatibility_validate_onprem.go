@@ -29,8 +29,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

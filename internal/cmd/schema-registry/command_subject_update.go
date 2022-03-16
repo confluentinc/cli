@@ -22,7 +22,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update subject level compatibility or mode of Schema Registry:",
+				Text: `Update subject level compatibility or mode of subject "payments"`,
 				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD\n%s schema-registry subject update payments --mode=READWRITE", version.CLIName, version.CLIName),
 			},
 		),

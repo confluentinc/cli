@@ -24,7 +24,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
+				Text: "Delete one or more schemas. This command should only be used in extreme circumstances.",
 				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", pversion.CLIName),
 			},
 		),

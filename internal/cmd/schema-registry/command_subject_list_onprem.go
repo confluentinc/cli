@@ -19,7 +19,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all subjects available in a Schema Registry.",
+				Text: "List all available subjects.",
 				Code: fmt.Sprintf("%s schema-registry subject list %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
@@ -27,8 +27,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -24,7 +24,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all subjects available in a Schema Registry.",
+				Text: "List all available subjects.",
 				Code: fmt.Sprintf("%s schema-registry subject list", version.CLIName),
 			},
 		),

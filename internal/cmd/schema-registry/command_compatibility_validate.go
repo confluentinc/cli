@@ -35,6 +35,8 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

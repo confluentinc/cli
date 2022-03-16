@@ -26,8 +26,7 @@ func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

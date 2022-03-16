@@ -19,15 +19,14 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update subject level compatibility or mode of Schema Registry:",
+				Text: `Update subject level compatibility or mode of subject "payments"`,
 				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD %s\n%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg, version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	addCompatibilityFlag(cmd)
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	addModeFlag(cmd)
 
 	return cmd

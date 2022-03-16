@@ -18,21 +18,23 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe the config of a subject, or at global level.",
-		Args:  cobra.MaximumNArgs(1),
+		Args:  cobra.MaximumNArgs(0),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the config of subject `payments`.",
+				Text: "Describe the configuration of subject `payments`.",
 				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "Describe the global config.",
+				Text: "Describe the global configuration.",
 				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
 			},
 		),
 	}
 
 	cmd.Flags().String("subject", "", SubjectUsage)
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

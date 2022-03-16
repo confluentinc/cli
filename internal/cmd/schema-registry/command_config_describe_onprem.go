@@ -13,24 +13,23 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the config of a subject, or at global level.",
-		Args:        cobra.MaximumNArgs(1),
+		Args:        cobra.MaximumNArgs(0),
 		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the config of a subject `payments`.",
-				Code: fmt.Sprintf("%s schema-registry config describe <subject-name> %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Text: "Describe the configuration of a subject `payments`.",
+				Code: fmt.Sprintf("%s schema-registry config describe --subject payments %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
-				Text: "Describe the global config.",
+				Text: "Describe the global configuration.",
 				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
 	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

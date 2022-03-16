@@ -19,7 +19,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete one or more topics. This command should only be used in extreme circumstances.",
+				Text: "Delete one or more schemas. This command should only be used in extreme circumstances.",
 				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
@@ -28,8 +28,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version, 'all', or 'latest'.")
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")

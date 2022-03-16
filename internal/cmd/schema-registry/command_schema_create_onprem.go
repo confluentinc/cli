@@ -28,8 +28,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("schema")
@@ -57,6 +56,6 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	_, _, err = c.registerSchema(cmd, schemaType, schemaPath, subject, schemaType, refs)
+	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, schemaType, refs)
 	return err
 }

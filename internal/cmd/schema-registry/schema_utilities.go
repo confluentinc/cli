@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *schemaCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
 	if valueFormat != "string" && len(schemaPath) > 0 {
