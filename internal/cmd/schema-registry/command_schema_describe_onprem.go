@@ -32,6 +32,7 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

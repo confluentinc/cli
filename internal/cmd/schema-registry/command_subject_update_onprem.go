@@ -25,9 +25,10 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	addCompatibilityFlag(cmd)
 	addModeFlag(cmd)
+	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }

@@ -27,6 +27,7 @@ func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

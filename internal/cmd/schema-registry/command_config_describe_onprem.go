@@ -30,6 +30,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
