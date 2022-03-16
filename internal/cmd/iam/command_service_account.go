@@ -12,10 +12,10 @@ type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type serviceAccountStruct struct {
-	ResourceId         string
-	ServiceName        string
-	ServiceDescription string
+type serviceAccount struct {
+	ResourceId  string
+	Name        string
+	Description string
 }
 
 func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {

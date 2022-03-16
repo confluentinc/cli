@@ -10,23 +10,16 @@ import (
 )
 
 func NewV2IamClient(baseURL string, isTest bool) *iamv2.APIClient {
-	iamServer := getV2ServerUrl(baseURL, isTest)
-	server := iamv2.ServerConfigurations{
+	iamServer := getServerUrl(baseURL, isTest)
+	cfg := iamv2.NewConfiguration()
+	cfg.Servers = iamv2.ServerConfigurations{
 		{URL: iamServer, Description: "Confluent Cloud IAM"},
-	}
-	cfg := &iamv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]iamv2.ServerConfigurations{},
 	}
 	return iamv2.NewAPIClient(cfg)
 }
 
 func (c *Client) iamApiContext() context.Context {
-	auth := context.WithValue(context.Background(), iamv2.ContextAccessToken, c.AuthToken)
-	return auth
+	return context.WithValue(context.Background(), iamv2.ContextAccessToken, c.AuthToken)
 }
 
 func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
@@ -69,8 +62,7 @@ func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
 	if err != nil {
 		return iamv2.IamV2User{}, err
 	}
-	users := resp.Data
-	for _, user := range users {
+	for _, user := range resp.Data {
 		if email == *user.Email {
 			return user, nil
 		}

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	serviceAccountListFields           = []string{"ResourceId", "ServiceName", "ServiceDescription"}
+	serviceAccountListFields           = []string{"ResourceId", "Name", "Description"}
 	serviceAccountListHumanLabels      = []string{"ID", "Name", "Description"}
 	serviceAccountListStructuredLabels = []string{"id", "name", "description"}
 )
@@ -36,8 +36,8 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, u := range resp.Data {
-		element := &serviceAccountStruct{ResourceId: *u.Id, ServiceName: *u.DisplayName, ServiceDescription: *u.Description}
+	for _, sa := range resp.Data {
+		element := &serviceAccount{ResourceId: *sa.Id, Name: *sa.DisplayName, Description: *sa.Description}
 		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()

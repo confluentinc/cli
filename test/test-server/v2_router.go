@@ -1,6 +1,7 @@
 package test_server
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -13,6 +14,13 @@ const (
 	iamServiceAccount  = "/iam/v2/service-accounts/{id}"
 	iamServiceAccounts = "/iam/v2/service-accounts"
 )
+
+var iamHandlers = map[string]func(*V2Router, *testing.T) func(http.ResponseWriter, *http.Request){
+	iamUser:            (*V2Router).HandleIamUser,
+	iamUsers:           (*V2Router).HandleIamUsers,
+	iamServiceAccount:  (*V2Router).HandleIamServiceAccount,
+	iamServiceAccounts: (*V2Router).HandleIamServiceAccounts,
+}
 
 type V2Router struct {
 	*mux.Router
@@ -31,16 +39,7 @@ func NewEmptyV2Router() *V2Router {
 }
 
 func (c *V2Router) buildV2Handler(t *testing.T) {
-	c.addIamClusterRoutes(t)
-	c.addIamServiceAccountRoutes(t)
-}
-
-func (c *V2Router) addIamClusterRoutes(t *testing.T) {
-	c.HandleFunc(iamUser, c.HandleIamUser(t))
-	c.HandleFunc(iamUsers, c.HandleIamUsers(t))
-}
-
-func (c *V2Router) addIamServiceAccountRoutes(t *testing.T) {
-	c.HandleFunc(iamServiceAccount, c.HandleIamServiceAccount(t))
-	c.HandleFunc(iamServiceAccounts, c.HandleIamServiceAccounts(t))
+	for route, handler := range iamHandlers {
+		c.HandleFunc(route, handler(c, t))
+	}
 }

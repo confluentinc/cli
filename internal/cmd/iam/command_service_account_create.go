@@ -16,9 +16,9 @@ const (
 )
 
 var (
-	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "ID"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "id"}
+	describeFields            = []string{"ResourceId", "Name", "Description"}
+	describeHumanRenames      = map[string]string{"Name": "Name", "Description": "Description", "ResourceId": "ID"}
+	describeStructuredRenames = map[string]string{"Name": "name", "Description": "description", "ResourceId": "id"}
 )
 
 func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
@@ -59,16 +59,16 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	serviceAccount := iamv2.IamV2ServiceAccount{
+	createServiceAccount := iamv2.IamV2ServiceAccount{
 		DisplayName: iamv2.PtrString(name),
 		Description: iamv2.PtrString(description),
 	}
-	resp, r, err := c.V2Client.CreateIamServiceAccount(serviceAccount)
+	createResp, resp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
 	if err != nil {
-		return errors.CatchServiceNameInUseError(err, r, name)
+		return errors.CatchServiceNameInUseError(err, resp, name)
 	}
 
-	serviceAccountStruct := &serviceAccountStruct{ResourceId: *resp.Id, ServiceName: *resp.DisplayName, ServiceDescription: *resp.Description}
+	DescribeServiceAccount := &serviceAccount{ResourceId: *createResp.Id, Name: *createResp.DisplayName, Description: *createResp.Description}
 
-	return output.DescribeObject(cmd, serviceAccountStruct, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, DescribeServiceAccount, describeFields, describeHumanRenames, describeStructuredRenames)
 }

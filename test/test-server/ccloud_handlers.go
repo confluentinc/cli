@@ -633,7 +633,6 @@ func (c *CloudRouter) HandleKsql(t *testing.T) func(http.ResponseWriter, *http.R
 // Handler for: "/api/users"
 func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("i'm being called. handler users.")
 		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
 				buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),

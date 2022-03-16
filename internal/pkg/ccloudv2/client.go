@@ -12,11 +12,11 @@ type Client struct {
 	AuthToken string
 }
 
-func NewCcloudV2Client(iamClient *iamv2.APIClient, authToken string) *Client {
+func NewClient(iamClient *iamv2.APIClient, authToken string) *Client {
 	return &Client{IamClient: iamClient, AuthToken: authToken}
 }
 
-func getV2ServerUrl(baseURL string, isTest bool) string {
+func getServerUrl(baseURL string, isTest bool) string {
 	if isTest {
 		return "http://127.0.0.1:2048"
 	}

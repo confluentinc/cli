@@ -33,7 +33,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	}
 	_, err := c.V2Client.DeleteIamServiceAccount(args[0])
 	if err != nil {
-		return errors.Errorf("error deleting service account: %s", err.Error())
+		return errors.Errorf(`failed to delete service account "%s": %v`, args[0], err)
 	}
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
 	return nil

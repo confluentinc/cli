@@ -153,7 +153,7 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 	return err
 }
 
-func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
+func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
 	return &schedv1.KafkaCluster{
 		Id:              id,
 		Name:            name,
@@ -169,7 +169,7 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 	}
 }
 
-func buildUser(id int32, email string, firstName string, lastName string, resourceId string) *orgv1.User {
+func buildUser(id int32, email, firstName, lastName, resourceId string) *orgv1.User {
 	return &orgv1.User{
 		Id:             id,
 		Email:          email,
@@ -182,7 +182,7 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 	}
 }
 
-func buildIamUser(email string, name string, resourceId string) iamv2.IamV2User {
+func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
 	return iamv2.IamV2User{
 		Email:    iamv2.PtrString(email),
 		FullName: iamv2.PtrString(name),
