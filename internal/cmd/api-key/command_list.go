@@ -139,23 +139,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		var email string
-		if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
-			email = "<service account>"
-		} else {
-			auditLog, enabled := pcmd.AreAuditLogsEnabled(c.State)
-			if enabled && auditLog.ServiceAccountId == apiKey.UserId {
-				email = "<auditlog service account>"
-			} else {
-				if user, ok := usersMap[apiKey.UserId]; ok {
-					email = user.Email
-				} else if c.State.Auth.User.Id == apiKey.UserId { // check if api key is owned by current user
-					email = c.State.Auth.User.Email
-				} else {
-					email = "<deactivated user>"
-				}
-			}
-		}
+		email := c.getEmail(apiKey, serviceAccountsMap, usersMap)
 
 		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
 		userResourceId := apiKey.UserResourceId
@@ -227,4 +211,26 @@ func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 		idMap[user.ResourceId] = user.Id
 	}
 	return idMap
+}
+
+func (c *command) getEmail(apiKey *schedv1.ApiKey, serviceAccountsMap map[int32]bool, usersMap map[int32]*orgv1.User) string {
+
+	var email string
+	if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
+		email = "<service account>"
+	} else {
+		auditLog, enabled := pcmd.AreAuditLogsEnabled(c.State)
+		if enabled && auditLog.ServiceAccountId == apiKey.UserId {
+			email = "<auditlog service account>"
+		} else {
+			if user, ok := usersMap[apiKey.UserId]; ok {
+				email = user.Email
+			} else if c.State.Auth.User.Id == apiKey.UserId { // check if api key is owned by current user
+				email = c.State.Auth.User.Email
+			} else {
+				email = "<deactivated user>"
+			}
+		}
+	}
+	return email
 }
