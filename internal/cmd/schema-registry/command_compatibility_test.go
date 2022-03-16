@@ -27,6 +27,7 @@ func (suite *CompatibilityTestSuite) SetupSuite() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			TestCompatibilityBySubjectNameFunc: func(_ context.Context, subject, version string, body srsdk.RegisterSchemaRequest, opts *srsdk.TestCompatibilityBySubjectNameOpts) (srsdk.CompatibilityCheckResponse, *http.Response, error) {
+				return srsdk.CompatibilityCheckResponse{IsCompatible: true}, nil, nil
 			},
 		},
 	}
