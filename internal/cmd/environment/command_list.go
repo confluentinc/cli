@@ -58,7 +58,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 				envStruct.Id = fmt.Sprintf("  %s", envStruct.Id)
 			}
 		}
-		outputWriter.AddElement(&envStruct)
+		outputWriter.AddElement(envStruct)
 	}
 	return outputWriter.Out()
 }

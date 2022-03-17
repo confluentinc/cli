@@ -11,8 +11,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -272,7 +270,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		r.setV2Clients(command)
+		if err := r.setV2Clients(command); err != nil {
+			return err
+		}
 
 		return r.setCCloudClient(command)
 	}
@@ -392,16 +392,21 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) {
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
+	if ctx == nil {
+		return new(errors.NotLoggedInError)
+	}
+	baseURL := ctx.Platform.Server
 
-	cmkClient := r.createCmkClient(ctx)
-	orgClient := r.createOrgClient(ctx)
+	cmkClient := ccloudv2.NewV2CmkClient(baseURL, r.IsTest)
+	orgClient := ccloudv2.NewV2OrgClient(baseURL, r.IsTest)
 	v2Client := ccloudv2.NewClient(cmkClient, orgClient, cliCmd.AuthToken())
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client
 	cliCmd.Config.V2Client = v2Client
+	return nil
 }
 
 func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
@@ -480,22 +485,6 @@ func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
 		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
-}
-
-func (r *PreRun) createCmkClient(ctx *DynamicContext) *cmkv2.APIClient {
-	var baseURL string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-	}
-	return ccloudv2.NewV2CmkClient(baseURL, r.IsTest)
-}
-
-func (r *PreRun) createOrgClient(ctx *DynamicContext) *orgv2.APIClient {
-	var baseURL string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-	}
-	return ccloudv2.NewV2OrgClient(baseURL, r.IsTest)
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
@@ -729,8 +718,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			cmkClient := r.createCmkClient(ctx)
-			orgClient := r.createOrgClient(ctx)
+			cmkClient := ccloudv2.NewV2CmkClient(ctx.Platform.Server, r.IsTest)
+			orgClient := ccloudv2.NewV2OrgClient(ctx.Platform.Server, r.IsTest)
 			v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: command.Context.State.AuthToken}
 
 			ctx.client = client
