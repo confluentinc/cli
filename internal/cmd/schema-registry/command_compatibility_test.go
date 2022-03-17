@@ -34,11 +34,15 @@ func (suite *CompatibilityTestSuite) SetupSuite() {
 }
 
 func (suite *CompatibilityTestSuite) TearDownTest() {
-	os.RemoveAll("people.avsc")
+	err := os.RemoveAll("people.avsc")
+	req := require.New(suite.T())
+	req.Nil(err)
 }
 
 func (suite *CompatibilityTestSuite) newCmd() *cobra.Command {
-	os.Create("people.avsc")
+	_, err := os.Create("people.avsc")
+	req := require.New(suite.T())
+	req.Nil(err)
 	return New(suite.conf, cliMock.NewPreRunnerMock(nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
