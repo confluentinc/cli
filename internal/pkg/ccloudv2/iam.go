@@ -38,7 +38,7 @@ func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *ht
 }
 
 func (c *Client) ListIamServiceAccounts() (iamv2.IamV2ServiceAccountList, *http.Response, error) {
-	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext())
+	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(100)
 	return c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
 }
 
@@ -71,6 +71,6 @@ func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
 }
 
 func (c *Client) ListIamUsers() (iamv2.IamV2UserList, *http.Response, error) {
-	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext())
+	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(100)
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 }
