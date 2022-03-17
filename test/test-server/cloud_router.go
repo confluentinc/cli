@@ -32,7 +32,6 @@ const (
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	invitations         = "/api/invitations"
-	user                = "/api/users/{id}"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
