@@ -214,23 +214,22 @@ func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 }
 
 func (c *command) getEmail(apiKey *schedv1.ApiKey, serviceAccountsMap map[int32]bool, usersMap map[int32]*orgv1.User) string {
-
-	var email string
 	if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
-		email = "<service account>"
-	} else {
-		auditLog, enabled := pcmd.AreAuditLogsEnabled(c.State)
-		if enabled && auditLog.ServiceAccountId == apiKey.UserId {
-			email = "<auditlog service account>"
-		} else {
-			if user, ok := usersMap[apiKey.UserId]; ok {
-				email = user.Email
-			} else if c.State.Auth.User.Id == apiKey.UserId { // check if api key is owned by current user
-				email = c.State.Auth.User.Email
-			} else {
-				email = "<deactivated user>"
-			}
-		}
+		return "<service account>"
 	}
-	return email
+
+	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == apiKey.UserId {
+		return "<auditlog service account>"
+	}
+
+	if user, ok := usersMap[apiKey.UserId]; ok {
+		return user.Email
+	}
+
+	// check if api key is owned by current user
+	if c.State.Auth.User.Id == apiKey.UserId {
+		return c.State.Auth.User.Email
+	}
+
+	return "<deactivated user>"
 }
