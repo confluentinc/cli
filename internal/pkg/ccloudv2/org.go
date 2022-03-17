@@ -38,7 +38,7 @@ func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, *http.
 }
 
 func (c *Client) ListEnvironments() (orgv2.OrgV2EnvironmentList, *http.Response, error) {
-	req := c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext())
+	req := c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(100)
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }
 

@@ -38,7 +38,7 @@ func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV
 }
 
 func (c *Client) ListKafkaClusters(environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
-	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment)
+	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(100)
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }
 
