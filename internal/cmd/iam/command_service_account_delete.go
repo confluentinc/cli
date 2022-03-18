@@ -2,7 +2,6 @@ package iam
 
 import (
 	"context"
-	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
@@ -10,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -30,13 +30,15 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	if !strings.HasPrefix(args[0], "sa-") {
+	if resource.LookupType(args[0]) != resource.ServiceAccount {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
+
 	user := &orgv1.User{ResourceId: args[0]}
 	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
 		return err
 	}
+
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
 	return nil
 }

@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
@@ -12,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -105,7 +105,7 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 	for i := 0; i < len(acl); i++ {
 		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
 			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
-			if !strings.HasPrefix(serviceAccountID, "sa-") {
+			if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
 				return errors.New(errors.BadServiceAccountIDErrorMsg)
 			}
 			userId, ok := idMap[serviceAccountID]

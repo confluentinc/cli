@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -14,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -57,13 +57,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 	var apiKeys []*schedv1.ApiKey
 
-	resourceType, resourceId, currentKey, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client)
 	if err != nil {
 		return err
 	}
+
 	var logicalClusters []*schedv1.ApiKey_Cluster
-	if resourceId != "" {
-		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: resourceId, Type: resourceType}}
+	if clusterId != "" {
+		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 
 	serviceAccountID, err := cmd.Flags().GetString("service-account")
@@ -88,8 +89,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccount := false
 	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
 		serviceAccount = true
-		validFormat := strings.HasPrefix(serviceAccountID, "sa-")
-		if !validFormat {
+		if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
 		userIdMap := c.mapResourceIdToUserId(allUsers)
@@ -132,7 +132,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// Add '*' only in the case where we are printing out tables
 		outputKey := apiKey.Key
 		if outputWriter.GetOutputFormat() == output.Human {
-			if resourceId != "" && apiKey.Key == currentKey {
+			if clusterId != "" && apiKey.Key == currentKey {
 				outputKey = fmt.Sprintf("* %s", apiKey.Key)
 			} else {
 				outputKey = fmt.Sprintf("  %s", apiKey.Key)
@@ -163,19 +163,19 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		if resourceId == "" && len(apiKey.LogicalClusters) == 0 {
+		if clusterId == "" && len(apiKey.LogicalClusters) == 0 {
 			// Cloud key.
 			outputWriter.AddElement(&keyDisplay{
 				Key:            outputKey,
 				Description:    apiKey.Description,
 				UserResourceId: userResourceId,
 				UserEmail:      email,
-				ResourceType:   pcmd.CloudResourceType,
+				ResourceType:   resource.Cloud,
 				Created:        created,
 			})
 		}
 
-		if resourceType == pcmd.CloudResourceType {
+		if resourceType == resource.Cloud {
 			continue
 		}
 
