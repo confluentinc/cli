@@ -17,6 +17,8 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
@@ -161,8 +163,6 @@ require (
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.881.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 // indirect
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect

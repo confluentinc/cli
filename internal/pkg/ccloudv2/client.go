@@ -6,7 +6,7 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 )
 
-// ccloud sdk v2 API client
+// Client represents a Confluent Cloud Client as defined by ccloud-sdk-v2
 type Client struct {
 	IamClient *iamv2.APIClient
 	AuthToken string

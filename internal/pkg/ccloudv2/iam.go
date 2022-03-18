@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func NewV2IamClient(baseURL string, isTest bool) *iamv2.APIClient {
+func NewIamClient(baseURL string, isTest bool) *iamv2.APIClient {
 	iamServer := getServerUrl(baseURL, isTest)
 	cfg := iamv2.NewConfiguration()
 	cfg.Servers = iamv2.ServerConfigurations{
