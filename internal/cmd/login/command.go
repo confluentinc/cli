@@ -120,19 +120,14 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
+	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+
 	// If refresh token is available, we want to save that in the place of password
 	if refreshToken != "" {
 		credentials.Password = refreshToken
 	}
-
-	if err := c.saveLoginToNetrc(cmd, true, credentials); err != nil {
-		return err
-	}
-
-	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
-
-	return err
+	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
 // Order of precedence: env vars > netrc > prompt
