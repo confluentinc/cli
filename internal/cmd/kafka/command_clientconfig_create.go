@@ -10,14 +10,15 @@ import (
 	"time"
 	"unicode"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 type createCommand struct {

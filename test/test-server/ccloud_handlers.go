@@ -81,7 +81,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
+			Accounts:     environments,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -1053,5 +1053,16 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
 		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
+func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		jsonVal := map[string]interface{}{"key": "val"}
+		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
+		err := json.NewEncoder(w).Encode(&flags)
+		require.NoError(t, err)
 	}
 }

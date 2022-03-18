@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
+
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
@@ -27,6 +29,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
+	servicequota "github.com/confluentinc/cli/internal/cmd/service-quota"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -74,6 +77,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
+	launchdarkly.InitManager(ver, isTest)
 
 	prerunner := &pcmd.PreRun{
 		AuthTokenHandler:        authTokenHandler,
@@ -105,6 +109,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler).Command)
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
+	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))

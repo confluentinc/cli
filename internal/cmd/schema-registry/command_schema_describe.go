@@ -86,7 +86,8 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, id string, srClient *sr
 	if err != nil {
 		return err
 	}
-	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+
+	return c.printSchema(cmd, schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -102,10 +103,11 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, srClient *srsdk.AP
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, resp)
 	}
-	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return c.printSchema(cmd, int64(schemaString.Id), schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
-func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
+func (c *schemaCommand) printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
+	utils.Printf(cmd, "Schema ID: %d\n", schemaID)
 	if sType != "" {
 		utils.Println(cmd, "Type: "+sType)
 	}
