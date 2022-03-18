@@ -7,17 +7,11 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-func NewV2OrgClient(baseURL string, isTest bool) *orgv2.APIClient {
-	orgServer := getV2ServerUrl(baseURL, isTest)
-	server := orgv2.ServerConfigurations{
+func NewOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
+	orgServer := getServerUrl(baseURL, isTest)
+	cfg := orgv2.NewConfiguration()
+	cfg.Servers = orgv2.ServerConfigurations{
 		{URL: orgServer, Description: "Confluent Cloud ORG"},
-	}
-	cfg := &orgv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]orgv2.ServerConfigurations{},
 	}
 	return orgv2.NewAPIClient(cfg)
 }

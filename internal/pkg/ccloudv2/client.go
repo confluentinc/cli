@@ -18,7 +18,7 @@ func NewClient(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken
 	return &Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: authToken}
 }
 
-func getV2ServerUrl(baseURL string, isTest bool) string {
+func getServerUrl(baseURL string, isTest bool) string {
 	if isTest {
 		return "http://127.0.0.1:2048"
 	}

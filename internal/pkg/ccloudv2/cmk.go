@@ -7,24 +7,17 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
-func NewV2CmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
-	cmkServer := getV2ServerUrl(baseURL, isTest)
-	server := cmkv2.ServerConfigurations{
-		{URL: cmkServer, Description: "Confluent Cloud CMK"},
-	}
-	cfg := &cmkv2.Configuration{
-		DefaultHeader:    make(map[string]string),
-		UserAgent:        "OpenAPI-Generator/1.0.0/go",
-		Debug:            false,
-		Servers:          server,
-		OperationServers: map[string]cmkv2.ServerConfigurations{},
+func NewCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
+	cmkServer := getServerUrl(baseURL, isTest)
+	cfg := cmkv2.NewConfiguration()
+	cfg.Servers = cmkv2.ServerConfigurations{
+		{URL: cmkServer, Description: "Confluent Cloud IAM"},
 	}
 	return cmkv2.NewAPIClient(cfg)
 }
 
 func (c *Client) cmkApiContext() context.Context {
-	auth := context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.AuthToken)
-	return auth
+	return context.WithValue(context.Background(), cmkv2.ContextAccessToken, c.AuthToken)
 }
 
 func (c *Client) CreateKafkaCluster(cluster cmkv2.CmkV2Cluster) (cmkv2.CmkV2Cluster, *http.Response, error) {

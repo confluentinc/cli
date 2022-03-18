@@ -24,7 +24,7 @@ func (c *V2Router) HandleOrgEnvironment(t *testing.T) func(http.ResponseWriter, 
 		vars := mux.Vars(r)
 		envId := vars["id"]
 		w.Header().Set("Content-Type", "application/json")
-		if valid, env := isValidOrgEnvironmentId(OrgEnvironments, envId); valid {
+		if env := isValidOrgEnvironmentId(OrgEnvironments, envId); env != nil {
 			switch r.Method {
 			case http.MethodDelete:
 				_, err := io.WriteString(w, "")

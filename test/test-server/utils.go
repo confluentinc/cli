@@ -233,20 +233,20 @@ func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	}
 }
 
-func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool, *orgv1.Account) {
+func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) *orgv1.Account {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
-			return true, env
+			return env
 		}
 	}
-	return false, nil
+	return nil
 }
 
-func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) (bool, *orgv2.OrgV2Environment) {
+func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) *orgv2.OrgV2Environment {
 	for _, env := range environments {
 		if reqEnvId == *env.Id {
-			return true, env
+			return env
 		}
 	}
-	return false, nil
+	return nil
 }

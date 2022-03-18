@@ -141,7 +141,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		if valid, env := isValidEnvironmentId(environments, envId); valid {
+		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
 			case http.MethodGet: // called by `environment use`
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})

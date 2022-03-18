@@ -1,6 +1,7 @@
 package test_server
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -13,6 +14,16 @@ const (
 	orgEnvironment  = "/org/v2/environments/{id}"
 	orgEnvironments = "/org/v2/environments"
 )
+
+var cmkHandlers = map[string]func(*V2Router, *testing.T) func(http.ResponseWriter, *http.Request){
+	cmkCluster:  (*V2Router).HandleCmkCluster,
+	cmkClusters: (*V2Router).HandleCmkClusters,
+}
+
+var orgHandlers = map[string]func(*V2Router, *testing.T) func(http.ResponseWriter, *http.Request){
+	orgEnvironment:  (*V2Router).HandleOrgEnvironment,
+	orgEnvironments: (*V2Router).HandleOrgEnvironments,
+}
 
 type V2Router struct {
 	*mux.Router
@@ -31,16 +42,11 @@ func NewEmptyV2Router() *V2Router {
 }
 
 func (c *V2Router) buildV2Handler(t *testing.T) {
-	c.addCmkClusterRoutes(t)
-	c.addOrgEnvironmentRoutes(t)
-}
+	for route, handler := range cmkHandlers {
+		c.HandleFunc(route, handler(c, t))
+	}
 
-func (c *V2Router) addCmkClusterRoutes(t *testing.T) {
-	c.HandleFunc(cmkCluster, c.HandleCmkCluster(t))
-	c.HandleFunc(cmkClusters, c.HandleCmkClusters(t))
-}
-
-func (c *V2Router) addOrgEnvironmentRoutes(t *testing.T) {
-	c.HandleFunc(orgEnvironment, c.HandleOrgEnvironment(t))
-	c.HandleFunc(orgEnvironments, c.HandleOrgEnvironments(t))
+	for route, handler := range orgHandlers {
+		c.HandleFunc(route, handler(c, t))
+	}
 }

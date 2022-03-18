@@ -314,14 +314,11 @@ func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []
 }
 
 func stringToAvailability(s string) (string, error) {
-	switch s {
-	case singleZone, multiZone:
-		break
-	default:
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
-			fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
+	if modelAvailability, ok := availabilitiesToModel[s]; ok {
+		return modelAvailability, nil
 	}
-	return availabilitiesToModel[s], nil
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidAvailableFlagErrorMsg, s),
+		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
 func stringToSku(skuType string) (productv1.Sku, error) {
