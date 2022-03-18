@@ -86,7 +86,7 @@ func (c *schemaCommand) describeById(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return c.printSchema(cmd, schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
@@ -106,11 +106,10 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	return c.printSchema(cmd, int64(schemaString.Id), schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return c.printSchema(cmd, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
-func (c *schemaCommand) printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
-	utils.Printf(cmd, "Schema ID: %d\n", schemaID)
+func (c *schemaCommand) printSchema(cmd *cobra.Command, schema string, sType string, refs []srsdk.SchemaReference) error {
 	if sType != "" {
 		utils.Println(cmd, "Type: "+sType)
 	}

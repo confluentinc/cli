@@ -90,7 +90,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 			err = json.NewEncoder(w).Encode(srsdk.Schema{
 				Subject:    subject,
 				Version:    int32(version64),
-				Id:         10,
+				Id:         1,
 				SchemaType: "record",
 				References: []srsdk.SchemaReference{{
 					Name:    "ref",
