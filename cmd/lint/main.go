@@ -215,6 +215,7 @@ var vocabWords = []string{
 	"producer.config",
 	"protobuf",
 	"rbac",
+	"readonly",
 	"readwrite",
 	"recv",
 	"sasl",
