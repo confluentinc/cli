@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -56,7 +55,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	} else {
 		clusterList, _, err := c.V2Client.ListKafkaClusters(c.EnvironmentId())
 		if err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), errors.EnvNotFoundSuggestions)
+			return err
 		}
 		clusters = clusterList.Data
 	}
