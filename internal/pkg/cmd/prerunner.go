@@ -313,18 +313,22 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	if err != nil {
 		return err
 	}
+
 	if token == "" || credentials == nil {
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
+
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
 	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
 	if err != nil {
 		return err
 	}
+
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+
 	return nil
 }
 
@@ -621,7 +625,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := kafkarestv3.NewConfiguration()
-			restFlags, err := r.FlagResolver.ResolveOnPremKafkaRestFlags(cmd)
+			restFlags, err := resolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
 			}
@@ -661,6 +665,39 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		command.KafkaRESTProvider = &provider
 		return nil
 	}
+}
+
+type onPremKafkaRestFlagValues struct {
+	url            string
+	caCertPath     string
+	clientCertPath string
+	clientKeyPath  string
+	noAuth         bool
+	prompt         bool
+}
+
+func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues, error) {
+	url, _ := cmd.Flags().GetString("url")
+	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
+	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
+	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
+	noAuth, _ := cmd.Flags().GetBool("no-auth")
+	prompt, _ := cmd.Flags().GetBool("prompt")
+
+	if (clientCertPath == "") != (clientKeyPath == "") {
+		return nil, errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
+	}
+
+	values := &onPremKafkaRestFlagValues{
+		url:            url,
+		caCertPath:     caCertPath,
+		clientCertPath: clientCertPath,
+		clientKeyPath:  clientKeyPath,
+		noAuth:         noAuth,
+		prompt:         prompt,
+	}
+
+	return values, nil
 }
 
 func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {

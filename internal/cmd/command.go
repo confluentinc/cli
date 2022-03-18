@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
+
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
@@ -75,6 +77,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), getCloudClient(cfg, ccloudClientFactory))
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
+	launchdarkly.InitManager(ver, isTest)
 
 	prerunner := &pcmd.PreRun{
 		AuthTokenHandler:        authTokenHandler,

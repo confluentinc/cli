@@ -1,14 +1,13 @@
 package iam
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -43,18 +42,19 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	if !strings.HasPrefix(args[0], "sa-") {
+	if resource.LookupType(args[0]) != resource.ServiceAccount {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
+	serviceAccountId := args[0]
 
 	update := iamv2.IamV2ServiceAccountUpdate{
 		Description: &description,
 	}
-	_, _, err = c.V2Client.UpdateIamServiceAccount(args[0], update)
+	_, _, err = c.V2Client.UpdateIamServiceAccount(serviceAccountId, update)
 	if err != nil {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", args[0], description)
+	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

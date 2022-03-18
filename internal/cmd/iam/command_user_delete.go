@@ -2,12 +2,12 @@ package iam
 
 import (
 	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -22,8 +22,7 @@ func (c userCommand) newDeleteCommand() *cobra.Command {
 
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
-
-	if ok := strings.HasPrefix(resourceId, "u-"); !ok {
+	if resource.LookupType(resourceId) != resource.User {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
