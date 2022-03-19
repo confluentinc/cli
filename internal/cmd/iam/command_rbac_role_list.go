@@ -37,14 +37,11 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	roles := mdsv2alpha1.RolesOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roles.Namespace = dataplaneNamespace
-	}
+	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
 
-	// Currently we don't allow multiple namespace in roles so as a workaround we first check with dataplane
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	rolesV2, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), &roles)
+	rolesV2, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
 	if err != nil || r.StatusCode == http.StatusNoContent {
 		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
 		if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -63,8 +62,7 @@ type roleBindingOptions struct {
 
 type roleBindingCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	cfg                        *v1.Config
-	ccloudRbacDataplaneEnabled bool
+	cfg *v1.Config
 }
 
 type listDisplay struct {
@@ -89,8 +87,7 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	}
 
 	c := &roleBindingCommand{
-		cfg:                        cfg,
-		ccloudRbacDataplaneEnabled: os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "",
+		cfg: cfg,
 	}
 
 	if cfg.IsOnPremLogin() {
@@ -114,15 +111,13 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 
 	isCloud := c.cfg.IsCloudLogin()
 
-	resource := ""
-	prefix := false
-	if !isCloud || c.ccloudRbacDataplaneEnabled {
-		resource, err = cmd.Flags().GetString("resource")
-		if err != nil {
-			return nil, err
-		}
-		prefix = cmd.Flags().Changed("prefix")
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
 	}
+
+	// The err is ignored here since the --prefix flag is not defined by the list subcommand
+	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -162,7 +157,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	resourcesRequest := mds.ResourcesRequest{}
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
-		if isCloud && c.ccloudRbacDataplaneEnabled {
+		if isCloud {
 			parsedResourcePattern, err := parseAndValidateResourcePatternV2(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -184,7 +179,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				Scope:            *scopeV2,
 				ResourcePatterns: []mdsv2alpha1.ResourcePattern{parsedResourcePattern},
 			}
-		} else if !isCloud {
+		} else {
 			parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -301,7 +296,7 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
 	}
 
-	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("kafka-cluster-id") {
+	if cmd.Flags().Changed("kafka-cluster-id") {
 		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
 		if err != nil {
 			return nil, err
@@ -348,13 +343,11 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roleDetail.Namespace = dataplaneNamespace
-	}
-	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)
+	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 	if err != nil || resp.StatusCode == http.StatusNoContent {
 		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
 		if err != nil || resp.StatusCode == http.StatusNoContent {
@@ -501,7 +494,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		Role:      options.role,
 	}
 
-	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+	if options.resource != "" {
 		if len(options.resourcesRequestV2.ResourcePatterns) != 1 {
 			return errors.New("display error: number of resource pattern is not 1")
 		}
@@ -512,13 +505,13 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	if err != nil {
-		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+		if options.resource != "" {
 			fieldsSelected = resourcePatternListFields
 		} else {
 			fieldsSelected = []string{"Principal", "Role"}
 		}
 	} else {
-		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
 			displayStruct.Email = user.Email
