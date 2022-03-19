@@ -38,9 +38,7 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	roles := mdsv2alpha1.RolesOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roles.Namespace = dataplaneNamespace
-	}
+	roles.Namespace = dataplaneNamespace
 
 	// Currently we don't allow multiple namespace in roles so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
