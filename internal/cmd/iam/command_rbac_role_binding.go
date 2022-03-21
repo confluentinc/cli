@@ -111,13 +111,14 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 
 	isCloud := c.cfg.IsCloudLogin()
 
-	resource := ""
-	prefix := false
-	resource, err = cmd.Flags().GetString("resource")
+	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return nil, err
 	}
-	prefix = cmd.Flags().Changed("prefix")
+	prefix, err := cmd.Flags().GetBool("prefix")
+	if err != nil {
+		return nil, err
+	}
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -179,7 +180,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				Scope:            *scopeV2,
 				ResourcePatterns: []mdsv2alpha1.ResourcePattern{parsedResourcePattern},
 			}
-		} else if !isCloud {
+		} else {
 			parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -343,8 +344,8 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	roleDetail.Namespace = dataplaneNamespace
+	roleDetail := mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+
 	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
 	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)

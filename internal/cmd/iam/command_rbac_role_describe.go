@@ -41,8 +41,7 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	roleDetail.Namespace = dataplaneNamespace
+	roleDetail := mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
 
 	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
