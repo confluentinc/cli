@@ -115,10 +115,9 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	if err != nil {
 		return nil, err
 	}
-	prefix, err := cmd.Flags().GetBool("prefix")
-	if err != nil {
-		return nil, err
-	}
+
+	// if "prefix" exists as a command line flag, then the prefix var will be true
+	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -344,11 +343,11 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	roleDetail := mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
 
-	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)
+	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 	if err != nil || resp.StatusCode == http.StatusNoContent {
 		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
 		if err != nil || resp.StatusCode == http.StatusNoContent {
