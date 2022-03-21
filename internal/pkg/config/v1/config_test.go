@@ -564,8 +564,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	c := New()
-	got := c.GetFilename()
+	cfg := New()
+	got := cfg.GetFilename()
 	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
 	if got != want {
 		t.Errorf("Config.GetFilename() = %v, want %v", got, want)
@@ -700,12 +700,12 @@ func TestConfig_UseContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := tt.fields.Config
-			if err := c.UseContext(tt.args.name); (err != nil) != tt.wantErr {
+			cfg := tt.fields.Config
+			if err := cfg.UseContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.args.name, c.CurrentContext)
+				assert.Equal(t, tt.args.name, cfg.CurrentContext)
 			}
 		})
 	}
@@ -740,10 +740,8 @@ func TestConfig_FindContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				Contexts: tt.fields.Contexts,
-			}
-			got, err := c.FindContext(tt.args.name)
+			cfg := &Config{Contexts: tt.fields.Contexts}
+			got, err := cfg.FindContext(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindContext() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -756,13 +754,13 @@ func TestConfig_FindContext(t *testing.T) {
 }
 
 func TestConfig_DeleteContext(t *testing.T) {
-	c := &Config{
+	cfg := &Config{
 		BaseConfig:     config.NewBaseConfig(new(version.Version)),
 		Contexts:       map[string]*Context{contextName: {Name: contextName}},
 		CurrentContext: contextName,
 	}
 
-	err := c.DeleteContext(contextName)
+	err := cfg.DeleteContext(contextName)
 	require.NoError(t, err)
 }
 
@@ -798,11 +796,11 @@ func TestConfig_Context(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
+			cfg := &Config{
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
 			}
-			got := c.Context()
+			got := cfg.Context()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Context() got = %v, want %v", got, tt.want)
 			}
