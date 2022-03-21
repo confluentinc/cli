@@ -368,8 +368,8 @@ func (suite *APITestSuite) TestListEmails() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiMock.ListCalled())
-	req.Contains(buf.String(), "auditlog service account")
-	req.Contains(buf.String(), "service account")
+	req.Contains(buf.String(), "<auditlog service account>")
+	req.Contains(buf.String(), "<service account>")
 	req.Contains(buf.String(), "csreesangkom@confluent.io")
 }
 
