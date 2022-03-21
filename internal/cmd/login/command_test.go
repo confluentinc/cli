@@ -32,7 +32,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -597,7 +596,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
-			cfg := v1.New(&config.Params{})
+			cfg := v1.New()
 			var expectedCaCert string
 			if tt.setEnv {
 				expectedCaCert = tt.envCertPath
@@ -891,7 +890,7 @@ func TestValidateUrl(t *testing.T) {
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*Command, *v1.Config) {
-	cfg := v1.New(new(config.Params))
+	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
