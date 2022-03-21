@@ -116,7 +116,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		return nil, err
 	}
 
-	// if "prefix" exists as a command line flag, then the prefix var will be true
+	// The err is ignored here since the --prefix flag is not defined by the list subcommand
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
