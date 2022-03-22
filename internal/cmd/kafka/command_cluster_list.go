@@ -40,24 +40,23 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 
 	var clusters []cmkv2.CmkV2Cluster
 	if listAllClusters {
-		environments, _, err := c.V2Client.ListEnvironments()
+		environments, err := c.V2Client.ListOrgEnvironments()
 		if err != nil {
 			return err
 		}
 
-		for _, env := range environments.Data {
-			clusterList, _, err := c.V2Client.ListKafkaClusters(*env.Id)
+		for _, env := range environments {
+			clustersOfEnvironment, err := c.V2Client.ListKafkaClusters(*env.Id)
 			if err != nil {
 				return err
 			}
-			clusters = append(clusters, clusterList.Data...)
+			clusters = append(clusters, clustersOfEnvironment...)
 		}
 	} else {
-		clusterList, _, err := c.V2Client.ListKafkaClusters(c.EnvironmentId())
+		clusters, err = c.V2Client.ListKafkaClusters(c.EnvironmentId())
 		if err != nil {
 			return err
 		}
-		clusters = clusterList.Data
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)

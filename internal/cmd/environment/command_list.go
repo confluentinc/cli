@@ -35,7 +35,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := c.V2Client.ListEnvironments()
+	environments, err := c.V2Client.ListOrgEnvironments()
 	if err != nil {
 		return err
 	}
@@ -44,7 +44,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, env := range resp.Data {
+	for _, env := range environments {
 		// Add '*' only in the case where we are printing out tables
 		envRow := &environmentRow{
 			Id:   *env.Id,

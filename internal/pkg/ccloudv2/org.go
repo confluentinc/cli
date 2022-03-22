@@ -2,9 +2,15 @@ package ccloudv2
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+)
+
+const (
+	// The maximum allowable page size when listing environments using ORG V2 API
+	listEnvironmentsPageSize = 100
 )
 
 func NewOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
@@ -31,11 +37,6 @@ func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, *http.
 	return c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2EnvironmentExecute(req)
 }
 
-func (c *Client) ListEnvironments() (orgv2.OrgV2EnvironmentList, *http.Response, error) {
-	req := c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(100)
-	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
-}
-
 func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2Environment(c.orgApiContext(), envId).OrgV2Environment(updateEnvironment)
 	return c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2EnvironmentExecute(req)
@@ -44,4 +45,37 @@ func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV
 func (c *Client) DeleteOrgEnvironment(envId string) (*http.Response, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.DeleteOrgV2Environment(c.orgApiContext(), envId)
 	return c.OrgClient.EnvironmentsOrgV2Api.DeleteOrgV2EnvironmentExecute(req)
+}
+
+func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
+	environments := make([]orgv2.OrgV2Environment, 0)
+
+	collectedAllEnvironments := false
+	pageToken := ""
+	for !collectedAllEnvironments {
+		environmentList, resp, err := c.executeListEnvironments(pageToken)
+		if err != nil {
+			log.Printf("[ERROR] Environments get failed %v, %s", resp, err)
+			return nil, err
+		}
+		environments = append(environments, environmentList.GetData()...)
+
+		// nextPageUrlStringNullable is nil for the last page
+		nextPageUrlStringNullable := environmentList.GetMetadata().Next
+		pageToken, collectedAllEnvironments, err = extractOrgNextPagePageToken(nextPageUrlStringNullable)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return environments, nil
+}
+
+func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
+	var req orgv2.ApiListOrgV2EnvironmentsRequest
+	if pageToken != "" {
+		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(listEnvironmentsPageSize).PageToken(pageToken)
+	} else {
+		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(listEnvironmentsPageSize)
+	}
+	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }

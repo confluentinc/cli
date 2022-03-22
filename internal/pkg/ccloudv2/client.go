@@ -1,8 +1,6 @@
 package ccloudv2
 
 import (
-	"strings"
-
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
@@ -16,16 +14,4 @@ type Client struct {
 
 func NewClient(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken string) *Client {
 	return &Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: authToken}
-}
-
-func getServerUrl(baseURL string, isTest bool) string {
-	if isTest {
-		return "http://127.0.0.1:2048"
-	}
-	if strings.Contains(baseURL, "devel") {
-		return "https://api.devel.cpdev.cloud"
-	} else if strings.Contains(baseURL, "stag") {
-		return "https://api.stag.cpdev.cloud"
-	}
-	return "https://api.confluent.cloud"
 }

@@ -92,11 +92,10 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
-	resp, _, err := client.ListKafkaClusters(environmentId)
+	clusters, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
-	clusters := resp.Data
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
@@ -106,11 +105,11 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 }
 
 func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
-	resp, _, err := client.ListKafkaClusters(environmentId)
+	clusters, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
-	clusters := resp.Data
+
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.GetSpec().DisplayName)
@@ -152,11 +151,10 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteEnvironments(client *ccloudv2.Client) []string {
-	resp, _, err := client.ListEnvironments()
+	environments, err := client.ListOrgEnvironments()
 	if err != nil {
 		return nil
 	}
-	environments := resp.Data
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {

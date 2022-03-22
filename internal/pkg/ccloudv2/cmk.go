@@ -2,9 +2,15 @@ package ccloudv2
 
 import (
 	"context"
+	"log"
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+)
+
+const (
+	// The maximum allowable page size when listing kafka clusters using CMK V2 API
+	listClustersPageSize = 100
 )
 
 func NewCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
@@ -30,11 +36,6 @@ func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV
 	return c.CmkClient.ClustersCmkV2Api.GetCmkV2ClusterExecute(req)
 }
 
-func (c *Client) ListKafkaClusters(environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
-	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(100)
-	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
-}
-
 func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, *http.Response, error) {
 	req := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2Cluster(c.cmkApiContext(), clusterId).CmkV2ClusterUpdate(update)
 	return c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
@@ -43,4 +44,37 @@ func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterU
 func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Response, error) {
 	req := c.CmkClient.ClustersCmkV2Api.DeleteCmkV2Cluster(c.cmkApiContext(), clusterId).Environment(environment)
 	return c.CmkClient.ClustersCmkV2Api.DeleteCmkV2ClusterExecute(req)
+}
+
+func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
+	clusters := make([]cmkv2.CmkV2Cluster, 0)
+
+	collectedAllClusters := false
+	pageToken := ""
+	for !collectedAllClusters {
+		clusterList, resp, err := c.executeListClusters(pageToken, environment)
+		if err != nil {
+			log.Printf("[ERROR] Clusters get failed %v, %s", resp, err)
+			return nil, err
+		}
+		clusters = append(clusters, clusterList.GetData()...)
+
+		// nextPageUrlStringNullable is nil for the last page
+		nextPageUrlStringNullable := clusterList.GetMetadata().Next
+		pageToken, collectedAllClusters, err = extractCmkNextPagePageToken(nextPageUrlStringNullable)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return clusters, nil
+}
+
+func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
+	var req cmkv2.ApiListCmkV2ClustersRequest
+	if pageToken != "" {
+		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(listClustersPageSize).PageToken(pageToken)
+	} else {
+		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(listClustersPageSize)
+	}
+	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }

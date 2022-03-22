@@ -10,7 +10,7 @@ import (
 
 // TestCloudURL is used to hardcode a specific port (1024) so tests can identify CCloud URLs
 var TestCloudURL = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
-var TestV2CloudURL = url.URL{Scheme: "https", Host: "127.0.0.1:2048"}
+var TestV2CloudURL = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
 
 // TestBackend consists of the servers for necessary mocked backend services
 // Each server is instantiated with its router type (<type>_router.go) that has routes and handlers defined

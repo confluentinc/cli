@@ -11,11 +11,10 @@ import (
 func AuthenticatedDynamicConfigMock() *pcmd.DynamicConfig {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	client := mock.NewClientMock()
-	cmkClient := mock.NewCmkClientMock()
-	orgClient := mock.NewOrgClientMock()
+	v2Client := mock.NewV2ClientMock()
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &mock.Prompt{},
 		Out:    os.Stdout,
 	}
-	return pcmd.NewDynamicConfig(cfg, flagResolverMock, client, cmkClient, orgClient)
+	return pcmd.NewDynamicConfig(cfg, flagResolverMock, client, v2Client)
 }

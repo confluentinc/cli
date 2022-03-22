@@ -7,6 +7,7 @@ import (
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 func NewClientMock() *ccloud.Client {
@@ -23,6 +24,12 @@ func NewClientMock() *ccloud.Client {
 		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
+}
+
+func NewV2ClientMock() *ccloudv2.Client {
+	cmkMock := NewCmkClientMock()
+	orgMock := NewOrgClientMock()
+	return ccloudv2.NewClient(cmkMock, orgMock, "auth-token")
 }
 
 func NewCmkClientMock() *cmkv2.APIClient {

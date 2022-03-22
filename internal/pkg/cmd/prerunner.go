@@ -720,7 +720,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			}
 			cmkClient := ccloudv2.NewCmkClient(ctx.Platform.Server, r.IsTest)
 			orgClient := ccloudv2.NewOrgClient(ctx.Platform.Server, r.IsTest)
-			v2Client := &ccloudv2.Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: command.Context.State.AuthToken}
+			v2Client := ccloudv2.NewClient(cmkClient, orgClient, command.Context.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client
