@@ -13,3 +13,8 @@ type Client struct {
 func NewClient(iamClient *iamv2.APIClient, authToken string) *Client {
 	return &Client{IamClient: iamClient, AuthToken: authToken}
 }
+
+func NewClientWithUrl(baseUrl string, isTest bool, authToken string) *Client {
+	iamClient := newIamClient(baseUrl, isTest)
+	return &Client{IamClient: iamClient, AuthToken: authToken}
+}

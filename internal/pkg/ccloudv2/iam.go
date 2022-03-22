@@ -11,13 +11,12 @@ import (
 )
 
 const (
-	// The maximum allowable page size when listing service accounts using IAM V2 API
-	// https://docs.confluent.io/cloud/current/api.html#operation/listIamV2ServiceAccounts
+	// The maximum allowable page size when listing service accounts and users using IAM V2 API
 	listServiceAccountsPageSize = 100
 	listUsersPageSize           = 100
 )
 
-func NewIamClient(baseURL string, isTest bool) *iamv2.APIClient {
+func newIamClient(baseURL string, isTest bool) *iamv2.APIClient {
 	iamServer := getServerUrl(baseURL, isTest)
 	cfg := iamv2.NewConfiguration()
 	cfg.Servers = iamv2.ServerConfigurations{

@@ -27,10 +27,10 @@ func NewClientMock() *ccloud.Client {
 }
 
 func NewV2ClientMock() *ccloudv2.Client {
-	return ccloudv2.NewClient(NewIamClientMock(), "auth-token")
+	return ccloudv2.NewClient(newIamClientMock(), "auth-token")
 }
 
-func NewIamClientMock() *iamv2.APIClient {
+func newIamClientMock() *iamv2.APIClient {
 	return &iamv2.APIClient{
 		ServiceAccountsIamV2Api: &iammock.ServiceAccountsIamV2Api{},
 		UsersIamV2Api:           &iammock.UsersIamV2Api{},
