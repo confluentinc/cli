@@ -77,10 +77,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		if c.ccloudRbacDataplaneEnabled {
-			cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-			cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
-		}
+		cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 	} else {
 		cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
@@ -247,7 +245,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 
 	var principals []string
 	var err error
-	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("resource") {
+	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
