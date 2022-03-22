@@ -15,7 +15,6 @@ const (
 	// https://docs.confluent.io/cloud/current/api.html#operation/listIamV2ServiceAccounts
 	listServiceAccountsPageSize = 100
 	listUsersPageSize           = 100
-	pageTokenQueryParameter     = "page_token"
 )
 
 func NewIamClient(baseURL string, isTest bool) *iamv2.APIClient {
@@ -68,7 +67,7 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 
 		// nextPageUrlStringNullable is nil for the last page
 		nextPageUrlStringNullable := serviceAccountList.GetMetadata().Next
-		pageToken, collectedAllServiceAccounts, err = extractNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, collectedAllServiceAccounts, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +125,7 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 
 		// nextPageUrlStringNullable is nil for the last page
 		nextPageUrlStringNullable := userList.GetMetadata().Next
-		pageToken, collectedAllUsers, err = extractNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, collectedAllUsers, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}

@@ -4,20 +4,35 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 )
 
-func extractNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
-	var err error
-	var pageToken string
+const (
+	pageTokenQueryParameter = "page_token"
+)
+
+func getServerUrl(baseURL string, isTest bool) string {
+	if isTest {
+		return "http://127.0.0.1:2048"
+	}
+	if strings.Contains(baseURL, "devel") {
+		return "https://api.devel.cpdev.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://api.stag.cpdev.cloud"
+	}
+	return "https://api.confluent.cloud"
+}
+
+func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
 	if nextPageUrlStringNullable.IsSet() {
 		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err = extractPageToken(nextPageUrlString)
+		pageToken, err := extractPageToken(nextPageUrlString)
+		return pageToken, false, err
 	} else {
-		return pageToken, true, nil
+		return "", true, nil
 	}
-	return pageToken, false, err
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {
