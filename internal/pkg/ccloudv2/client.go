@@ -15,3 +15,9 @@ type Client struct {
 func NewClient(cmkClient *cmkv2.APIClient, orgClient *orgv2.APIClient, authToken string) *Client {
 	return &Client{CmkClient: cmkClient, OrgClient: orgClient, AuthToken: authToken}
 }
+
+func NewClientWithUrl(baseURL string, isTest bool, authToken string) *Client {
+	cmkClient := newCmkClient(baseURL, isTest)
+	orgClient := newOrgClient(baseURL, isTest)
+	return NewClient(cmkClient, orgClient, authToken)
+}

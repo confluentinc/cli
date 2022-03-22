@@ -13,7 +13,7 @@ const (
 	listEnvironmentsPageSize = 100
 )
 
-func NewOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
+func newOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
 	orgServer := getServerUrl(baseURL, isTest)
 	cfg := orgv2.NewConfiguration()
 	cfg.Servers = orgv2.ServerConfigurations{

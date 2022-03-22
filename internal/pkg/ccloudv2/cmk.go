@@ -13,7 +13,7 @@ const (
 	listClustersPageSize = 100
 )
 
-func NewCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
+func newCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
 	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
 	cfg.Servers = cmkv2.ServerConfigurations{
