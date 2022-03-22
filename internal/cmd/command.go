@@ -128,7 +128,10 @@ func Execute(cmd *cobra.Command, cfg *v1.Config) bool {
 }
 
 func LoadConfig() (*v1.Config, error) {
-	cfg := v1.New(&pconfig.Params{MetricSink: metric.NewSink()})
+	cfg := v1.New(&pconfig.Params{
+		MetricSink: metric.NewSink(),
+	})
+
 	return load.LoadAndMigrate(cfg)
 }
 
