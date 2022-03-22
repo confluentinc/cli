@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	sso2 "github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
@@ -15,8 +16,6 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
 type AuthTokenHandler interface {
@@ -63,7 +62,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	if userSSO == "" {
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
+	idToken, refreshToken, err := sso2.Login(client.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
@@ -75,7 +74,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
-	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
+	auth0ClientId := sso2.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
 	loginRealmReply, err := client.User.LoginRealm(context.Background(),
 		&flowv1.GetLoginRealmRequest{
 			Email:         email,
@@ -92,7 +91,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, or
 }
 
 func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
-	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
+	idToken, refreshToken, err := sso2.RefreshTokens(client.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}

@@ -69,7 +69,7 @@ func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken 
 	return state.SSOProviderIDToken, state.SSOProviderRefreshToken, nil
 }
 
-func RefreshTokens(authURL string, refreshToken string) (string, string, error) {
+func RefreshTokens(authURL, refreshToken string) (string, string, error) {
 	state, err := newState(authURL, false)
 	if err != nil {
 		return "", "", err

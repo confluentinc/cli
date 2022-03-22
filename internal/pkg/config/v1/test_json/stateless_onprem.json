@@ -59,7 +59,8 @@
   "context_states": {
     "my-context": {
       "auth": null,
-      "auth_token": ""
+      "auth_token": "",
+      "auth_refresh_token": ""
     }
   },
   "current_context": "my-context"

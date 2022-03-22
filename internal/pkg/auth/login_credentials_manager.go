@@ -8,12 +8,11 @@ import (
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
-	"github.com/confluentinc/cli/internal/pkg/sso"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
