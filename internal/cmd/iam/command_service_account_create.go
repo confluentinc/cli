@@ -18,7 +18,7 @@ const (
 var (
 	describeFields            = []string{"ResourceId", "Name", "Description"}
 	describeHumanRenames      = map[string]string{"ResourceId": "ID"}
-	describeStructuredRenames = map[string]string{"ResourceId": "id"}
+	describeStructuredRenames = map[string]string{"ResourceId": "id", "Name": "name", "Description": "description"}
 )
 
 func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {

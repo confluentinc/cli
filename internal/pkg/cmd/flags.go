@@ -201,11 +201,10 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand)
 }
 
 func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
-	resp, _, err := client.ListIamServiceAccounts()
+	serviceAccounts, err := client.ListIamServiceAccounts()
 	if err != nil {
 		return nil
 	}
-	serviceAccounts := resp.Data
 
 	suggestions := make([]string, len(serviceAccounts))
 	for i, serviceAccount := range serviceAccounts {

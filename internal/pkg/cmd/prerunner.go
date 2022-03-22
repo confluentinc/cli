@@ -755,7 +755,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 				return err
 			}
 			iamClient := ccloudv2.NewIamClient(ctx.Platform.Server, r.IsTest)
-			v2Client := &ccloudv2.Client{IamClient: iamClient}
+			v2Client := ccloudv2.NewClient(iamClient, command.Context.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client

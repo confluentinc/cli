@@ -7,6 +7,7 @@ import (
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mdsmock "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 func NewClientMock() *ccloud.Client {
@@ -23,6 +24,10 @@ func NewClientMock() *ccloud.Client {
 		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
+}
+
+func NewV2ClientMock() *ccloudv2.Client {
+	return ccloudv2.NewClient(NewIamClientMock(), "auth-token")
 }
 
 func NewIamClientMock() *iamv2.APIClient {

@@ -27,7 +27,7 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	resp, _, err := c.V2Client.ListIamServiceAccounts()
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, sa := range resp.Data {
+	for _, sa := range serviceAccounts {
 		element := &serviceAccount{ResourceId: *sa.Id, Name: *sa.DisplayName, Description: *sa.Description}
 		outputWriter.AddElement(element)
 	}
