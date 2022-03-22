@@ -113,14 +113,15 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 }
 
 func Execute(cmd *cobra.Command, cfg *v1.Config) bool {
-	u := usage.Collect(cmd)
+	u := usage.New()
+	cmd.PersistentPostRun = u.Collect
 
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	u.Error = err != nil
 
 	if cfg.IsCloudLogin() {
-		usage.Report(u)
+		u.Report()
 	}
 
 	return err == nil

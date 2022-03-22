@@ -1,8 +1,10 @@
 package usage
 
 import (
+	"context"
 	"runtime"
 
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cli/v1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -18,32 +20,47 @@ type Usage struct {
 	Error   bool     `json:"error"`
 }
 
-// Collect collects usage data, such as the command name and flags.
-func Collect(cmd *cobra.Command) *Usage {
-	usage := &Usage{
-		OS:      runtime.GOOS,
-		Arch:    runtime.GOARCH,
-		Version: cmd.Version,
-		Flags:   []string{},
+func New() *Usage {
+	return &Usage{
+		OS:   runtime.GOOS,
+		Arch: runtime.GOARCH,
 	}
+}
 
-	cmd.PersistentPostRun = func(cmd *cobra.Command, args []string) {
-		usage.Command = cmd.CommandPath()
+// Collect collects usage data, such as the command name and flag names. The error boolean is collected later.
+func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
+	u.Version = cmd.Version
+	u.Command = cmd.CommandPath()
 
-		cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-			if flag.Changed {
-				usage.Flags = append(usage.Flags, flag.Name)
-			}
-		})
-	}
-
-	return usage
+	u.Flags = []string{}
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+		if flag.Changed {
+			u.Flags = append(u.Flags, flag.Name)
+		}
+	})
 }
 
 // Report sends usage data to cc-cli-usage-service.
-func Report(usage *Usage) {
-	if usage.Command != "" {
-		log.CliLogger.Debug(usage)
-		// TODO: Send data, log failure
+func (u *Usage) Report() {
+	if u.Command == "" {
+		return
+	}
+
+	log.CliLogger.Tracef("Reporting CLI usage: %+v", u)
+
+	cfg := cliv1.NewConfiguration()
+	cfg.Servers = cliv1.ServerConfigurations{
+		{
+			URL:         "https://api.devel.cpdev.cloud",
+			Description: "Confluent Cloud development",
+		},
+	}
+
+	api := cliv1.NewAPIClient(cfg).UsagesCliV1Api
+	ctx := context.Background()
+	req := api.CreateCliV1Usage(ctx)
+
+	if _, err := api.CreateCliV1UsageExecute(req); err != nil {
+		log.CliLogger.Tracef("Failed to report CLI usage: %v", err)
 	}
 }
