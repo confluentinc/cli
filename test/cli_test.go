@@ -113,9 +113,6 @@ func (s *CLITestSuite) SetupSuite() {
 	err = os.Chdir("..")
 	req.NoError(err)
 
-	err = os.Setenv("XX_CCLOUD_RBAC_DATAPLANE", "yes")
-	req.NoError(err)
-
 	// Temporarily change $HOME, so the current config file isn't altered.
 	err = os.Setenv("HOME", os.TempDir())
 	req.NoError(err)
