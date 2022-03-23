@@ -17,7 +17,7 @@ func (s *CLITestSuite) TestHelp_NoContext() {
 			tt.fixture = "help/no-context.golden"
 		}
 
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -29,8 +29,8 @@ func (s *CLITestSuite) TestHelp_Cloud() {
 			tt.fixture = "help/cloud.golden"
 		}
 
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -42,7 +42,7 @@ func (s *CLITestSuite) TestHelp_OnPrem() {
 			tt.fixture = "help/onprem.golden"
 		}
 
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }

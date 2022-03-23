@@ -50,7 +50,7 @@ type CLITest struct {
 	args string
 	// The set of environment variables to be set when the CLI is run
 	env []string
-	// "default" if you need to login, or "" otherwise
+	// The login context; either "cloud" or "platform"
 	login string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
@@ -194,10 +194,11 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	})
 }
 
-func (s *CLITestSuite) runCcloudTest(tt CLITest) {
+func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
+
 	if strings.HasPrefix(tt.name, "error") {
 		tt.wantErrCode = 1
 	}
@@ -214,9 +215,19 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		if !tt.workflow {
 			resetConfiguration(t)
 		}
-		loginURL := s.getLoginURL(true, tt)
-		if tt.login == "default" {
+
+		// Executes login command if test specifies
+		switch tt.login {
+		case "cloud":
+			loginURL := s.getLoginURL(true, tt)
 			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
+			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		case "platform":
+			loginURL := s.getLoginURL(false, tt)
+			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
@@ -253,34 +264,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
-
-		s.validateTestOutput(tt, t, output)
-	})
-}
-
-func (s *CLITestSuite) runConfluentTest(tt CLITest) {
-	if tt.name == "" {
-		tt.name = tt.args
-	}
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
-	s.T().Run(tt.name, func(t *testing.T) {
-		if !tt.workflow {
-			resetConfiguration(t)
-		}
-
-		// Executes login command if test specifies
-		loginURL := s.getLoginURL(false, tt)
-		if tt.login == "default" {
-			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 
 		s.validateTestOutput(tt, t, output)
 	})

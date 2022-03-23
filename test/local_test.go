@@ -16,14 +16,14 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local destroy", fixture: "local/destroy-error.golden", login: "default", wantErrCode: 1},
+		{args: "local destroy", fixture: "local/destroy-error.golden", login: "cloud", wantErrCode: 1},
 		{args: "local current", fixture: "local/current.golden", regex: true},
 		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -39,8 +39,8 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -56,8 +56,8 @@ func (s *CLITestSuite) TestLocalVersion() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -72,8 +72,8 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -90,8 +90,8 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -110,8 +110,8 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 

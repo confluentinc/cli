@@ -30,14 +30,14 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "kafka topic create integ",
 			fixture:     "login/err-no-kafka.golden",
 			wantErrCode: 1,
-			login:       "default",
+			login:       "cloud",
 		},
 		{
 			name:        "error if topic already exists",
 			args:        "kafka topic create topic-exist",
 			fixture:     "login/topic-exists.golden",
 			wantErrCode: 1,
-			login:       "default",
+			login:       "cloud",
 			useKafka:    "lkc-create-topic",
 			authKafka:   "true",
 			env:         []string{"XX_CCLOUD_USE_KAFKA_REST=true"},
@@ -47,7 +47,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "kafka topic produce integ",
 			fixture:     "login/err-no-api-key.golden",
 			wantErrCode: 1,
-			login:       "default",
+			login:       "cloud",
 			useKafka:    "lkc-abc123",
 		},
 		{
@@ -55,7 +55,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "api-key delete UNKNOWN",
 			fixture:     "login/delete-unknown-key.golden",
 			wantErrCode: 1,
-			login:       "default",
+			login:       "cloud",
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
 		},
@@ -64,12 +64,12 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "kafka cluster use lkc-unknown",
 			fixture:     "login/err-use-unknown-kafka.golden",
 			wantErrCode: 1,
-			login:       "default",
+			login:       "cloud",
 		},
 	}
 
 	for _, tt := range tests {
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -216,7 +216,7 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 
 	for _, tt := range tests {
 		tt.loginURL = s.TestBackend.GetMdsUrl()
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
