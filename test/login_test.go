@@ -7,6 +7,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"testing"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -22,6 +26,56 @@ var (
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
+
+func (s *CLITestSuite) TestCcloudErrors() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
+	})
+
+	s.T().Run("suspended organization", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+	})
+
+	s.T().Run("expired token", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.TokenExpiredMsg)
+		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
+	})
+
+	s.T().Run("malformed token", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+	})
+
+	s.T().Run("invalid jwt", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+	})
+}
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
