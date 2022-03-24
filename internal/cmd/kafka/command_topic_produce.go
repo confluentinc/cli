@@ -216,6 +216,10 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 }
 
 func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, valueFormat string, subject string, providerName string) (string, []byte, map[string]string, error) {
+	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
+		return "", nil, nil, errors.New(errors.BothSchemaPathAndIDErrorMsg)
+	}
+
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return "", nil, nil, err
@@ -224,10 +228,6 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, val
 	schemaId, err := cmd.Flags().GetInt32("schema-id")
 	if err != nil {
 		return "", nil, nil, err
-	}
-
-	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
-		return "", nil, nil, errors.New(errors.BothSchemaPathAndIDErrorMsg)
 	}
 
 	referencePathMap := map[string]string{}
