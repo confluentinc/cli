@@ -157,7 +157,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cfg := v1.New(nil)
+			cfg := v1.New()
 			cfg, err := load.LoadAndMigrate(cfg)
 			require.NoError(t, err)
 

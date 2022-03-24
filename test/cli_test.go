@@ -21,7 +21,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -371,7 +370,7 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 func resetConfiguration(t *testing.T) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v1.New(new(config.Params))
+	cfg := v1.New()
 
 	err := cfg.Save()
 	require.NoError(t, err)
