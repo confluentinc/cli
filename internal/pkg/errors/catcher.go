@@ -180,6 +180,18 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	return err
 }
 
+func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service Account Not Found") {
+		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+	}
+	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+}
+
 /*
 Error: 1 error occurred:
 	* error describing kafka cluster: resource not found

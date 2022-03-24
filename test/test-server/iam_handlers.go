@@ -2,8 +2,6 @@ package test_server
 
 import (
 	"encoding/json"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -13,7 +11,7 @@ import (
 )
 
 // Handler for: "/iam/v2/users/{id}"
-func (c *V2Router) HandleIamUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
@@ -29,7 +27,7 @@ func (c *V2Router) HandleIamUser(t *testing.T) func(http.ResponseWriter, *http.R
 }
 
 // Handler for: "/iam/v2/users"
-func (c *V2Router) HandleIamUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleIamUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []iamv2.IamV2User{
@@ -61,30 +59,24 @@ func (c *V2Router) HandleIamUsers(t *testing.T) func(http.ResponseWriter, *http.
 				}
 			}
 			w.Header().Set("Content-Type", "application/json")
-			data, err := json.Marshal(res)
-			require.NoError(t, err)
-			_, err = w.Write(data)
+			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
 	}
 }
 
 // Handler for: "/iam/v2/service_accounts/{id}"
-func (c *V2Router) HandleIamServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodPatch:
 			var req iamv2.IamV2ServiceAccount
-			requestBody, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
-			err = json.Unmarshal(requestBody, &req)
+			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(id), Description: req.Description}
-			b, err := json.Marshal(res)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
@@ -93,7 +85,7 @@ func (c *V2Router) HandleIamServiceAccount(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/iam/v2/service_accounts"
-func (c *V2Router) HandleIamServiceAccounts(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
@@ -103,24 +95,18 @@ func (c *V2Router) HandleIamServiceAccounts(t *testing.T) func(http.ResponseWrit
 				DisplayName: iamv2.PtrString("service_account"),
 				Description: iamv2.PtrString("at your service."),
 			}
-			b, err := json.Marshal(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
-			requestBody, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
-			err = json.Unmarshal(requestBody, &req)
+			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString("sa-55555"),
 				DisplayName: req.DisplayName,
 				Description: req.Description,
 			}
-			b, err := json.Marshal(serviceAccount)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err = json.NewEncoder(w).Encode(serviceAccount)
 			require.NoError(t, err)
 		}
 	}
