@@ -3,7 +3,6 @@ package test_server
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -17,12 +16,11 @@ import (
 )
 
 // Handler for POST "/cmk/v2/clusters"
-func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		var req cmkv2.CmkV2Cluster
-		requestBody, err := ioutil.ReadAll(r.Body)
-		require.NoError(t, err)
-		err = json.Unmarshal(requestBody, &req)
+		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 		if req.Spec.Config.CmkV2Dedicated != nil {
 			createCluster := &cmkv2.CmkV2Cluster{
@@ -43,7 +41,8 @@ func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWr
 					Cku:   cmkv2.PtrInt32(1),
 				},
 			}
-			marshalCmkCluster(t, w, r, createCluster)
+			err := json.NewEncoder(w).Encode(createCluster)
+			require.NoError(t, err)
 		} else {
 			createCluster := &cmkv2.CmkV2Cluster{
 				Spec: &cmkv2.CmkV2ClusterSpec{
@@ -62,14 +61,15 @@ func (c *V2Router) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWr
 					Phase: "PROVISIONING",
 				},
 			}
-			marshalCmkCluster(t, w, r, createCluster)
+			err := json.NewEncoder(w).Encode(createCluster)
+			require.NoError(t, err)
 		}
 
 	}
 }
 
 // Handler for "/cmk/v2/clusters"
-func (c *V2Router) HandleCmkClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleCmkClusters(t *testing.T) http.HandlerFunc {
 	write := func(w http.ResponseWriter, resp proto.Message) {
 		type errorer interface {
 			GetError() *corev1.Error
@@ -131,16 +131,14 @@ func (c *V2Router) HandleCmkClusters(t *testing.T) func(w http.ResponseWriter, r
 			}
 			w.Header().Set("Content-Type", "application/json")
 			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
-			b, err := json.Marshal(clusterList)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
 		}
 	}
 }
 
 // Handler for "/cmk/v2/clusters/{id}"
-func (c *V2Router) HandleCmkCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleCmkCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
@@ -171,54 +169,63 @@ func (c *V2Router) HandleCmkCluster(t *testing.T) func(w http.ResponseWriter, r 
 }
 
 // Handler for GET "/cmk/v2/clusters/{id}"
-func (c *V2Router) HandleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
-		marshalCmkCluster(t, w, r, cluster)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 
-func (c *V2Router) HandleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
-		marshalCmkCluster(t, w, r, cluster)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-pending"
-func (c *V2Router) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 2)
 		cluster.Status.Cku = cmkv2.PtrInt32(1)
-		marshalCmkCluster(t, w, r, cluster)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-with-encryption"
-func (c *V2Router) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
 		cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("abc123")
-		marshalCmkCluster(t, w, r, cluster)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-infinite
-func (c *V2Router) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterDescribeInfinite(t *testing.T) http.HandlerFunc {
 	return c.HandleKafkaClusterDescribeDedicated(t) // dedicated cluster has infinite storage
 }
 
 // Default handler for get, list, delete, describe "/cmk/v2/clusters/{id}"
-func (c *V2Router) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		if r.Method == http.MethodDelete {
@@ -228,92 +235,81 @@ func (c *V2Router) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w 
 		// this is in the body of delete requests
 		require.NotEmpty(t, r.URL.Query().Get("environment"))
 		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
-		marshalCmkCluster(t, w, r, cluster)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update"
-func (c *V2Router) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Describe client call
-		var out []byte
+		// var out []byte
+		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			cluster := getCmkBasicDescribeCluster(id, "lkc-update")
 			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
-			marshalCmkCluster(t, w, r, cluster)
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
 		}
 		// Update client call
 		if r.Method == http.MethodPatch {
 			var req cmkv2.CmkV2Cluster
-			requestBody, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
-			err = json.Unmarshal(requestBody, &req)
+			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Dedicated.Cku > 0 {
 			} else { //update name
 				cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
-				marshalCmkCluster(t, w, r, cluster)
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
 			}
 			require.NoError(t, err)
 		}
-		_, err := io.WriteString(w, string(out))
-		require.NoError(t, err)
 	}
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-expand"
-func (c *V2Router) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var out []byte
+		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			cluster := getCmkDedicatedDescribeCluster(id, "lkc-update-dedicated-expand", 1)
-			marshalCmkCluster(t, w, r, cluster)
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
 		}
 		// Update client call
 		if r.Method == http.MethodPatch {
 			var req cmkv2.CmkV2Cluster
-			requestBody, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
-			err = json.Unmarshal(requestBody, &req)
+			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			cluster := getCmkDedicatedDescribeCluster(*req.Id, *req.Spec.DisplayName, req.Spec.Config.CmkV2Dedicated.Cku)
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
-			marshalCmkCluster(t, w, r, cluster)
+			err = json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
 		}
-		_, err := io.WriteString(w, string(out))
-		require.NoError(t, err)
 	}
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-shrink"
-func (c *V2Router) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *V2Router) HandleKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			id := r.URL.Query().Get("id")
 			cluster := getCmkDedicatedDescribeCluster(id, "lkc-update-dedicated-shrink", 2)
-			marshalCmkCluster(t, w, r, cluster)
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
 		}
 		// Update client call
 		if r.Method == http.MethodPatch {
 			var req cmkv2.CmkV2Cluster
-			requestBody, err := ioutil.ReadAll(r.Body)
-			require.NoError(t, err)
-			err = json.Unmarshal(requestBody, &req)
+			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			cluster := getCmkDedicatedDescribeCluster(*req.Id, *req.Spec.DisplayName, req.Spec.Config.CmkV2Dedicated.Cku)
 			cluster.Status.Cku = cmkv2.PtrInt32(2)
-			marshalCmkCluster(t, w, r, cluster)
+			err = json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
 		}
 	}
-}
-
-func marshalCmkCluster(t *testing.T, w http.ResponseWriter, r *http.Request, cluster *cmkv2.CmkV2Cluster) http.ResponseWriter {
-	w.Header().Set("Content-Type", "application/json")
-	b, err := json.Marshal(cluster)
-	require.NoError(t, err)
-	_, err = io.WriteString(w, string(b))
-	require.NoError(t, err)
-	return w
 }

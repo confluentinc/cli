@@ -3,7 +3,6 @@ package test_server
 import (
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -19,7 +18,7 @@ var (
 )
 
 // Handler for: "/org/v2/environments/{id}"
-func (c *V2Router) HandleOrgEnvironment(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
@@ -31,9 +30,7 @@ func (c *V2Router) HandleOrgEnvironment(t *testing.T) func(http.ResponseWriter, 
 				require.NoError(t, err)
 			case http.MethodPatch: // `environment update {id} --name`
 				req := orgv2.OrgV2Environment{}
-				requestBody, err := ioutil.ReadAll(r.Body)
-				require.NoError(t, err)
-				err = json.Unmarshal(requestBody, &req)
+				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
 				env.DisplayName = req.DisplayName
 			}
@@ -45,14 +42,12 @@ func (c *V2Router) HandleOrgEnvironment(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for: "/org/v2/environments"
-func (c *V2Router) HandleOrgEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func HandleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
-			b, err := json.Marshal(environmentList)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		}
 	}
