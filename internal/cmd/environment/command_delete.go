@@ -23,7 +23,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	_, err := c.V2Client.DeleteOrgEnvironment(id)
 	if err != nil {
-		return err
+		return errors.CatchEnvironmentNotFoundError(err, id)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)

@@ -147,6 +147,10 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
+func CatchEnvironmentNotFoundError(err error, envId string) error {
+	return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+}
+
 func CatchKafkaNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
