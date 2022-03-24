@@ -1,9 +1,33 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+func (partitionCmd *partitionCommand) newListCommand() *cobra.Command {
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(partitionCmd.list),
+		Short: "List Kafka partitions.",
+		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List the partitions for "my_topic".`,
+				Code: "confluent kafka partition list --topic my_topic",
+			},
+		),
+	}
+	listCmd.Flags().String("topic", "", "Topic name to list partitions of.")
+	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(listCmd)
+	_ = listCmd.MarkFlagRequired("topic")
+	return listCmd
+}
 
 func (partitionCmd *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(partitionCmd.AuthenticatedCLICommand, cmd)

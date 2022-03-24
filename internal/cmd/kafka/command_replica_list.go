@@ -1,13 +1,43 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"net/http"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-	"net/http"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+func (replicaCommand *replicaCommand) newListCommand() *cobra.Command {
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
+		Short: "List Kafka replica statuses.",
+		Long:  "List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List the replica statuses for partition 1 of "my_topic".`,
+				Code: "confluent kafka replica list --topic my_topic --partition 1",
+			},
+			examples.Example{
+				Text: `List the replicas statuses for topic "my_topic".`,
+				Code: "confluent kafka replica list --topic my_topic",
+			},
+		),
+	}
+	listCmd.Flags().String("topic", "", "Topic name.")
+	listCmd.Flags().Int32("partition", -1, "Partition ID.")
+	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(listCmd)
+	_ = listCmd.MarkFlagRequired("topic")
+	replicaCommand.AddCommand(listCmd)
+	return listCmd
+}
 
 func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	topic, partitionId, err := readFlagValues(cmd)

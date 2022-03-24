@@ -1,9 +1,33 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+func (partitionCmd *partitionCommand) newDescribeCommand() *cobra.Command {
+	describeCmd := &cobra.Command{
+		Use:   "describe <id>",
+		Short: "Describe a Kafka partition.",
+		Long:  "Describe a Kafka partition via Confluent Kafka REST.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  pcmd.NewCLIRunE(partitionCmd.describe),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Describe partition "1" for "my_topic".`,
+				Code: "confluent kafka partition describe 1 --topic my_topic",
+			}),
+	}
+	describeCmd.Flags().String("topic", "", "Topic name to list partitions of.")
+	describeCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(describeCmd)
+	_ = describeCmd.MarkFlagRequired("topic")
+	partitionCmd.AddCommand(describeCmd)
+	return describeCmd
+}
 
 func (partitionCmd *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 	partitionId, err := partitionIdFromArg(args)

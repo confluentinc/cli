@@ -1,12 +1,44 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	"net/http"
+
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-	"net/http"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+func (partitionCmd *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
+	reassignmentsCmd := &cobra.Command{
+		Use:   "get-reassignments [id]",
+		Short: "Get ongoing replica reassignments.",
+		Long:  "Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  pcmd.NewCLIRunE(partitionCmd.getReassignments),
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Get all replica reassignments for the Kafka cluster.",
+				Code: "confluent kafka partition get-reassignments",
+			},
+			examples.Example{
+				Text: `Get replica reassignments for "my_topic".`,
+				Code: "confluent kafka partition get-reassignments --topic my_topic",
+			},
+			examples.Example{
+				Text: `Get replica reassignments for partition "1" of "my_topic".`,
+				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
+			}),
+	}
+	reassignmentsCmd.Flags().String("topic", "", "Topic name to search by.")
+	reassignmentsCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(reassignmentsCmd)
+	partitionCmd.AddCommand(reassignmentsCmd)
+	return reassignmentsCmd
+}
 
 func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(partitionCmd.AuthenticatedCLICommand, cmd)
