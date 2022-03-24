@@ -12,7 +12,7 @@ import (
 func (s *CLITestSuite) TestAPIKey() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --resource lkc-bob", login: "default", fixture: "api-key/1.golden"}, // MYKEY3
+		{args: "api-key create --resource lkc-bob", login: "cloud", fixture: "api-key/1.golden"}, // MYKEY3
 		{args: "api-key list --resource lkc-bob", fixture: "api-key/2.golden"},
 		{args: "api-key list --resource lkc-abc", fixture: "api-key/3.golden"},
 		{args: "api-key update MYKEY1 --description first-key", fixture: "api-key/4.golden"},
@@ -138,11 +138,11 @@ func (s *CLITestSuite) TestAPIKey() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "default", fixture: "api-key/55.golden", wantErrCode: 1}
-	s.runCcloudTest(tt)
+	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", wantErrCode: 1}
+	s.runIntegrationTest(tt)
 }
