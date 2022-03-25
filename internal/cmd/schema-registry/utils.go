@@ -54,12 +54,6 @@ func printVersions(versions []int32) {
 	printer.RenderCollectionTable(entries, titleRow)
 }
 
-func printConfig(record interface{}, titleRow []string) {
-	var entry [][]string
-	entry = append(entry, printer.ToRow(record, titleRow))
-	printer.RenderCollectionTable(entry, titleRow)
-}
-
 func convertMapToString(m map[string]string) string {
 	pairs := make([]string, 0, len(m))
 	for key, value := range m {

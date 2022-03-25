@@ -16,28 +16,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
-	metaInfo := []byte{}
-	referencePathMap := map[string]string{}
-	if valueFormat != "string" && len(schemaPath) > 0 {
-		srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		metaInfo = info
-		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
-		if err != nil {
-			return metaInfo, nil, err
-		}
-	}
-	return metaInfo, referencePathMap, nil
-}
-
-func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
+func RegisterSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return nil, err
@@ -63,14 +42,11 @@ func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath 
 		}
 	}
 
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
-	metaInfo = append(metaInfo, schemaIdBuffer...)
+	metaInfo := getMetaInfoFromSchemaId(response.Id)
 	return metaInfo, nil
 }
 
-func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
+func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
 	refPath, err := cmd.Flags().GetString("refs")
 	if err != nil {
@@ -89,7 +65,7 @@ func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	return refs, nil
 }
 
-func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
+func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
@@ -101,8 +77,12 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
 		tempStorePath := filepath.Join(dir, ref.Name)
-		if !fileExists(tempStorePath) {
+		if !utils.FileExists(tempStorePath) {
 			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
+			if err != nil {
+				return nil, err
+			}
+			err = os.MkdirAll(filepath.Dir(tempStorePath), 0755)
 			if err != nil {
 				return nil, err
 			}
@@ -116,10 +96,9 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 	return referencePathMap, nil
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
+func getMetaInfoFromSchemaId(id int32) []byte {
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
+	return append(metaInfo, schemaIdBuffer...)
 }

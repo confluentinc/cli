@@ -36,7 +36,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireListRequiredFlagsFirst(),
 
 	// Soft Requirements
-	linter.Filter(linter.RequireLengthBetween("Short", 10, 60), linter.ExcludeCommandContains("compatibility")),
+	linter.RequireLengthBetween("Short", 10, 60),
 }
 
 var flagRules = []linter.FlagRule{

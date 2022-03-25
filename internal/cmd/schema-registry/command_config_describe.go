@@ -70,19 +70,11 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 			return err
 		}
 	}
-	level := config.CompatibilityLevel
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"CompatibilityLevel"}, []string{"Compatibility Level"}, []string{"compatibility_level"})
 	if err != nil {
 		return err
 	}
-	if outputOption == output.Human.String() {
-		printConfig(&struct{ CompatibilityLevel string }{level}, []string{"CompatibilityLevel"})
-	} else {
-		structuredOutput := &struct{ CompatibilityLevel string }{level}
-		fields := []string{"CompatibilityLevel"}
-		structuredRenames := map[string]string{"CompatibilityLevel": "compatibility_level"}
-		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
-	}
-	return nil
+	outputWriter.AddElement(&config)
+	return outputWriter.Out()
 }

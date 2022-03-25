@@ -23,7 +23,7 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all versions registered under subject `payments` and its compatibility level.",
+				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
 				Code: fmt.Sprintf("%s schema-registry subject describe payments", version.CLIName),
 			},
 		),

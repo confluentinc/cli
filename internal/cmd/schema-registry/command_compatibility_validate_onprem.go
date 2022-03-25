@@ -27,7 +27,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)

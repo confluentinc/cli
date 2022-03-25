@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 )
 
@@ -25,8 +27,8 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -34,8 +36,6 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("schema")
 	_ = cmd.MarkFlagRequired("subject")
-
-	pcmd.RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return []string{"AVRO", "PROTOBUF", "JSON"} })
 
 	return cmd
 }
@@ -53,10 +53,33 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	refs, err := readSchemaRefs(cmd)
+	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}
 	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, schemaType, refs)
 	return err
+}
+
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+	metaInfo := []byte{}
+	referencePathMap := map[string]string{}
+	if valueFormat != "string" && len(schemaPath) > 0 {
+		if c.State == nil { // require log-in to use oauthbearer token
+			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
+		srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		if err != nil {
+			return metaInfo, nil, err
+		}
+		metaInfo, err := RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
+		}
+		referencePathMap, err = StoreSchemaReferences(refs, srClient, ctx)
+		if err != nil {
+			return metaInfo, nil, err
+		}
+	}
+	return metaInfo, referencePathMap, nil
 }

@@ -20,9 +20,8 @@ func newConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &configCommand{
-		srClient: srClient,
-	}
+	c := &configCommand{srClient: srClient}
+
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 		c.AddCommand(c.newDescribeCommand())

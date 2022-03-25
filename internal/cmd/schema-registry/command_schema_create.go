@@ -52,8 +52,8 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -63,8 +63,6 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("schema")
 	_ = cmd.MarkFlagRequired("subject")
-
-	pcmd.RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return []string{"AVRO", "PROTOBUF", "JSON"} })
 
 	return cmd
 }
@@ -95,7 +93,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	refs, err := readSchemaRefs(cmd)
+	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}

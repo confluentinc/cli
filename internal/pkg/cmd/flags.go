@@ -212,3 +212,11 @@ func AutocompleteServiceAccounts(client *ccloud.Client) []string {
 	}
 	return suggestions
 }
+
+func AddSchemaTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
+
+	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string {
+		return []string{"AVRO", "PROTOBUF", "JSON"}
+	})
+}

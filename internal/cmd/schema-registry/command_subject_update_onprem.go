@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -34,10 +35,28 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 }
 
 func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
+	subject := args[0]
+
 	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
 
-	return c.updateSchemaSubject(cmd, args, srClient, ctx)
+	compat, err := cmd.Flags().GetString("compatibility")
+	if err != nil {
+		return err
+	}
+	if compat != "" {
+		return c.updateCompatibility(cmd, subject, compat, srClient, ctx)
+	}
+
+	mode, err := cmd.Flags().GetString("mode")
+	if err != nil {
+		return err
+	}
+	if mode != "" {
+		return c.updateMode(cmd, subject, mode, srClient, ctx)
+	}
+
+	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }

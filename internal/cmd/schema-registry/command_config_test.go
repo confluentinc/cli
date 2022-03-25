@@ -19,12 +19,12 @@ import (
 
 type ConfigTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
+	cfg          *v1.Config
 	srClientMock *srsdk.APIClient
 }
 
 func (suite *ConfigTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
+	suite.cfg = v1.AuthenticatedCloudConfigMock()
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			GetTopLevelConfigFunc: func(_ context.Context) (srsdk.Config, *http.Response, error) {
@@ -46,7 +46,7 @@ func (suite *ConfigTestSuite) SetupTest() {
 }
 
 func (suite *ConfigTestSuite) newCmd() *cobra.Command {
-	return New(suite.conf, cliMock.NewPreRunnerMock(nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.cfg, cliMock.NewPreRunnerMock(nil, nil, nil, suite.cfg), suite.srClientMock)
 }
 
 func (suite *ConfigTestSuite) TestConfigDescribeGlobal() {

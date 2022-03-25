@@ -19,7 +19,7 @@ func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all versions registered under subject `payments` and its compatibility level.",
+				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
 				Code: fmt.Sprintf("%s schema-registry subject describe payments %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),

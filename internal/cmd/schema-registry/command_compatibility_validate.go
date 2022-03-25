@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"strconv"
-	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -33,7 +31,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("type", "", `Specify the schema type as "avro", "protobuf", or "jsonschema".`)
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -72,14 +70,13 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 	if err != nil {
 		return err
 	}
-	schemaType = strings.ToUpper(schemaType)
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
 
-	refs, err := readSchemaRefs(cmd)
+	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}
@@ -90,20 +87,11 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, r)
 	}
-	compatible := strconv.FormatBool(compatibleResp.IsCompatible)
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"IsCompatible"}, []string{"Compatibility"}, []string{"compatibility"})
 	if err != nil {
 		return err
 	}
-	if outputOption == output.Human.String() {
-		printConfig(&struct{ Compatibility string }{compatible}, []string{"Compatibility"})
-	} else {
-		structuredOutput := &struct{ Compatibility string }{compatible}
-		fields := []string{"Compatibility"}
-		structuredRenames := map[string]string{"Compatibility": "compatibility"}
-		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
-	}
-	return nil
-
+	outputWriter.AddElement(&compatibleResp)
+	return outputWriter.Out()
 }
