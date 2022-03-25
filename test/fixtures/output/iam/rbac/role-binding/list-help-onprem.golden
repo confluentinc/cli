@@ -28,13 +28,13 @@ Flags:
       --principal string                    Principal whose role bindings should be listed.
       --current-user                        Show role bindings belonging to current user.
       --role string                         List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
-      --resource string                     If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
       --kafka-cluster-id string             Kafka cluster ID for scope of role binding listings.
       --schema-registry-cluster-id string   Schema Registry cluster ID for scope of role binding listings.
       --ksql-cluster-id string              ksqlDB cluster ID for scope of role binding listings.
       --connect-cluster-id string           Kafka Connect cluster ID for scope of role binding listings.
       --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
       --context string                      CLI context name.
+      --resource string                     If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
