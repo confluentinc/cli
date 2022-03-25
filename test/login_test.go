@@ -290,6 +290,7 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 	}
 
 	for _, tt := range tests {
+		tt.workflow = true
 		s.runIntegrationTest(tt)
 	}
 }
