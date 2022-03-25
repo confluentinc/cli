@@ -75,12 +75,12 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 
 func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
-	loginRealmReply, err := client.User.LoginRealm(context.Background(),
-		&flowv1.GetLoginRealmRequest{
-			Email:         email,
-			ClientId:      auth0ClientId,
-			OrgResourceId: orgResourceId,
-		})
+	req := &flowv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      auth0ClientId,
+		OrgResourceId: orgResourceId,
+	}
+	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
 	if err != nil {
 		return "", err
 	}

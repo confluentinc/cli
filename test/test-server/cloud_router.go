@@ -77,7 +77,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
-	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
+	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))

@@ -238,3 +238,20 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 		s.validateTestOutput(tt, s.T(), out)
 	}
 }
+
+func (s *CLITestSuite) TestLogin_SsoCodeWithInvalidFormat() {
+	resetConfiguration(s.T())
+
+	tt := CLITest{
+		args:        fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
+		fixture:     "login/sso.golden",
+		regex:       true,
+		wantErrCode: 1,
+	}
+	env := []string{fmt.Sprintf("%s=%s", pauth.ConfluentCloudEmail, "sso@test.com")}
+
+	// TODO: Accept text input in integration tests
+
+	out := runCommand(s.T(), testBin, env, tt.args, tt.wantErrCode)
+	s.validateTestOutput(tt, s.T(), out)
+}

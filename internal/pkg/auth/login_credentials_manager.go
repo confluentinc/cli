@@ -214,20 +214,17 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		return false
 	}
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
-	log.CliLogger.Debugf("cloudClient.BaseURL: %s", h.client.BaseURL)
-	log.CliLogger.Debugf("auth0ClientId: %s", auth0ClientId)
-	loginRealmReply, err := h.client.User.LoginRealm(context.Background(),
-		&flowv1.GetLoginRealmRequest{
-			Email:         email,
-			ClientId:      auth0ClientId,
-			OrgResourceId: orgId,
-		})
+	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
+	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
+	req := &flowv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      auth0ClientId,
+		OrgResourceId: orgId,
+	}
+	res, err := h.client.User.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	if err == nil && loginRealmReply.IsSso {
-		return true
-	}
-	return false
+	return err == nil && res.IsSso
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)

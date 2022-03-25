@@ -2,6 +2,8 @@ package sso
 
 import (
 	"strings"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var auth0ClientIds = map[string]string{
@@ -9,6 +11,7 @@ var auth0ClientIds = map[string]string{
 	"stag":  "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
 	"devel": "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
 	"cpd":   "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
+	"test":  "00000000000000000000000000000000",
 }
 
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
@@ -25,6 +28,8 @@ func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
 		env = "devel"
 	} else if baseUrl == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if baseUrl == testserver.TestCloudURL.String() {
+		env = "test"
 	} else {
 		return ""
 	}
