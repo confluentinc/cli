@@ -10,6 +10,7 @@ import (
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
@@ -154,7 +155,7 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 	return err
 }
 
-func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
+func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
 	return &schedv1.KafkaCluster{
 		Id:              id,
 		Name:            name,
@@ -211,7 +212,7 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 	}
 }
 
-func buildUser(id int32, email string, firstName string, lastName string, resourceId string) *orgv1.User {
+func buildUser(id int32, email, firstName, lastName, resourceId string) *orgv1.User {
 	return &orgv1.User{
 		Id:             id,
 		Email:          email,
@@ -221,6 +222,14 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 		Deactivated:    false,
 		Verified:       nil,
 		ResourceId:     resourceId,
+	}
+}
+
+func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
+	return iamv2.IamV2User{
+		Email:    iamv2.PtrString(email),
+		FullName: iamv2.PtrString(name),
+		Id:       iamv2.PtrString(resourceId),
 	}
 }
 

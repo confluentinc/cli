@@ -24,12 +24,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
 	}
 	if c.cfg.IsCloudLogin() {
-		if c.ccloudRbacDataplaneEnabled {
-			example.Code = "confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
-		} else {
-			example.Text = "Create a role binding for the principal giving it the CloudClusterAdmin role for the specified cluster and environment."
-			example.Code = "confluent iam rbac role-binding create --principal User:u-ab1234 --role CloudClusterAdmin --cloud-cluster lkc-ab123 --environment env-abcde"
-		}
+		example.Code = "confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
@@ -40,11 +35,9 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding create.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		if c.ccloudRbacDataplaneEnabled {
-			cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-			cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-			cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		}
+		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
+		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	} else {
 		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
@@ -94,7 +87,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) ccloudCreate(options *roleBindingOptions) (*http.Response, error) {
-	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+	if options.resource != "" {
 		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,

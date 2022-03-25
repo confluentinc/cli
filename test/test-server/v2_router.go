@@ -17,6 +17,13 @@ var orgHandlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/org/v2/environments":      HandleOrgEnvironments,
 }
 
+var iamHandlers = map[string]func(*testing.T) http.HandlerFunc{
+	"/iam/v2/users/{id}":            HandleIamUser,
+	"/iam/v2/users":                 HandleIamUsers,
+	"/iam/v2/service-accounts/{id}": HandleIamServiceAccount,
+	"/iam/v2/service-accounts":      HandleIamServiceAccounts,
+}
+
 type V2Router struct {
 	*mux.Router
 }
@@ -35,6 +42,9 @@ func (c *V2Router) buildV2Handler(t *testing.T) {
 	}
 
 	for route, handler := range orgHandlers {
+		c.HandleFunc(route, handler(t))
+	}
+	for route, handler := range iamHandlers {
 		c.HandleFunc(route, handler(t))
 	}
 }

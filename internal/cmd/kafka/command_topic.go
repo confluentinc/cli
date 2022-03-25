@@ -231,6 +231,10 @@ func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 			if err != nil {
 				return nil, err
 			}
+			err = os.MkdirAll(filepath.Dir(tempStorePath), 0755)
+			if err != nil {
+				return nil, err
+			}
 			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
 			if err != nil {
 				return nil, err

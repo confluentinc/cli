@@ -41,13 +41,11 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roleDetail.Namespace = dataplaneNamespace
-	}
-	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, &roleDetail)
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
 	if err != nil || r.StatusCode == http.StatusNoContent {
 		details, r, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
 		if err != nil {

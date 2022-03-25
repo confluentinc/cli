@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -12,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type command struct {
@@ -94,41 +96,49 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, resolver pcmd.FlagResolver, client *ccloud.Client) (resourceType string, clusterId string, currentKey string, err error) {
-	resourceType, resourceId, err := resolver.ResolveResourceId(cmd)
-	if err != nil || resourceType == "" {
+func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (string, string, string, error) {
+	resourceId, err := cmd.Flags().GetString("resource")
+	if err != nil {
 		return "", "", "", err
 	}
-	if resourceType == pcmd.SrResourceType {
+	if resourceId == "" {
+		return "", "", "", nil
+	}
+
+	resourceType := resource.LookupType(resourceId)
+
+	var clusterId string
+	var apiKey string
+
+	switch resourceType {
+	case resource.Cloud:
+		break
+	case resource.Kafka:
+		cluster, err := c.Context.FindKafkaCluster(resourceId)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+		}
+		clusterId = cluster.ID
+		apiKey = cluster.APIKey
+	case resource.Ksql:
+		cluster := &schedv1.KSQLCluster{Id: resourceId, AccountId: c.EnvironmentId()}
+		cluster, err := client.KSQL.Describe(context.Background(), cluster)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+		}
+		clusterId = cluster.Id
+	case resource.SchemaRegistry:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
-			currentKey = cluster.SrCredentials.Key
+			apiKey = cluster.SrCredentials.Key
 		}
-	} else if resourceType == pcmd.KSQLResourceType {
-		ctx := context.Background()
-		cluster, err := client.KSQL.Describe(
-			ctx, &schedv1.KSQLCluster{
-				Id:        resourceId,
-				AccountId: c.EnvironmentId(),
-			})
-		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
-		}
-		clusterId = cluster.Id
-	} else if resourceType == pcmd.CloudResourceType {
-		return resourceType, "", "", nil
-	} else {
-		// Resource is of KafkaResourceType.
-		cluster, err := c.Context.FindKafkaCluster(resourceId)
-		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
-		}
-		clusterId = cluster.ID
-		currentKey = cluster.APIKey
+	default:
+		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resourceId)
 	}
-	return resourceType, clusterId, currentKey, nil
+
+	return resourceType, clusterId, apiKey, nil
 }

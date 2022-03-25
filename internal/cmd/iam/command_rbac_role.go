@@ -23,8 +23,7 @@ var (
 
 type roleCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	cfg                        *v1.Config
-	ccloudRbacDataplaneEnabled bool
+	cfg *v1.Config
 }
 
 type prettyRole struct {
@@ -40,8 +39,7 @@ func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &roleCommand{
-		cfg:                        cfg,
-		ccloudRbacDataplaneEnabled: os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "",
+		cfg: cfg,
 	}
 
 	if cfg.IsOnPremLogin() {

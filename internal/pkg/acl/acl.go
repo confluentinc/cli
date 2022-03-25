@@ -18,6 +18,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -434,7 +435,7 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 	prefix := x[0]
 	suffix := x[1]
 
-	if strings.HasPrefix(suffix, "sa-") {
+	if resource.LookupType(suffix) == resource.ServiceAccount {
 		return prefix, suffix, nil
 	}
 

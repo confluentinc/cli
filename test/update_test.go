@@ -50,7 +50,7 @@ func (s *CLITestSuite) TestUpdate() {
 			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			s.runConfluentTest(tt)
+			s.runIntegrationTest(tt)
 			if tt.fixture == "update/1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist

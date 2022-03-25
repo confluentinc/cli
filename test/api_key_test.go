@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
@@ -13,7 +12,7 @@ import (
 func (s *CLITestSuite) TestAPIKey() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "api-key create --resource lkc-bob", login: "default", fixture: "api-key/1.golden"}, // MYKEY3
+		{args: "api-key create --resource lkc-bob", login: "cloud", fixture: "api-key/1.golden"}, // MYKEY3
 		{args: "api-key list --resource lkc-bob", fixture: "api-key/2.golden"},
 		{args: "api-key list --resource lkc-abc", fixture: "api-key/3.golden"},
 		{args: "api-key update MYKEY1 --description first-key", fixture: "api-key/4.golden"},
@@ -112,7 +111,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
-				cfg := v1.New(&config.Params{})
+				cfg := v1.New()
 				cfg, err := load.LoadAndMigrate(cfg)
 				require.NoError(t, err)
 				ctx := cfg.Context()
@@ -139,11 +138,11 @@ func (s *CLITestSuite) TestAPIKey() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "default", fixture: "api-key/55.golden", wantErrCode: 1}
-	s.runCcloudTest(tt)
+	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", wantErrCode: 1}
+	s.runIntegrationTest(tt)
 }

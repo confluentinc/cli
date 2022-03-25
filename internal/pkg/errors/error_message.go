@@ -93,6 +93,10 @@ const (
 	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
 	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
 
+	// iam service-account commands
+	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
+	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
@@ -455,4 +459,7 @@ const (
 	// Special error types
 	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
 	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
+
+	// LaunchDarkly errors
+	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported LaunchDarkly targeting values`
 )

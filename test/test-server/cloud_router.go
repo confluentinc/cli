@@ -31,7 +31,6 @@ const (
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	invitations         = "/api/invitations"
-	user                = "/api/users/{id}"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
@@ -47,6 +46,7 @@ const (
 	usageLimits         = "/api/usage_limits"
 	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
+	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	appliedQuotas       = "/api/service-quota/v2/applied-quotas"
 )
 
@@ -79,6 +79,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
+	c.HandleFunc(launchDarklyProxy, c.HandleLaunchDarkly(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
@@ -117,7 +118,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
-	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
 	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }

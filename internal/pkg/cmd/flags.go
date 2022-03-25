@@ -208,20 +208,20 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand)
 			return nil
 		}
 
-		return AutocompleteServiceAccounts(command.Client)
+		return AutocompleteServiceAccounts(command.V2Client)
 	})
 }
 
-func AutocompleteServiceAccounts(client *ccloud.Client) []string {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
+	serviceAccounts, err := client.ListIamServiceAccounts()
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(serviceAccounts))
 	for i, serviceAccount := range serviceAccounts {
-		description := fmt.Sprintf("%s: %s", serviceAccount.ServiceName, serviceAccount.ServiceDescription)
-		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.ResourceId, description)
+		description := fmt.Sprintf("%s: %s", *serviceAccount.DisplayName, *serviceAccount.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *serviceAccount.Id, description)
 	}
 	return suggestions
 }
