@@ -362,6 +362,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
+	req.True(suite.cmkClusterApi.CreateCmkV2ClusterCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
@@ -370,6 +371,7 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
+	req.True(suite.cmkClusterApi.DeleteCmkV2ClusterCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {

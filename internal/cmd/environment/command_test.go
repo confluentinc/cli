@@ -128,6 +128,7 @@ func (suite *EnvironmentTestSuite) TestListEnvironments() {
 	req.Contains(got, environmentID)
 	req.Contains(got, environmentName)
 	req.Contains(got, environmentNameUpdated)
+	req.True(suite.V2ClientMock.orgClientMock.ListOrgV2EnvironmentsCalled())
 }
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
@@ -136,6 +137,7 @@ func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
+	req.True(suite.V2ClientMock.orgClientMock.DeleteOrgV2EnvironmentCalled())
 }
 
 func (suite *EnvironmentTestSuite) TestUpdateEnvironment() {
@@ -147,4 +149,5 @@ func (suite *EnvironmentTestSuite) TestUpdateEnvironment() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.Equal([]byte("Updated the name of environment \"env-123\" to \"test-env-updated\".\n"), buf.Bytes())
+	req.True(suite.V2ClientMock.orgClientMock.UpdateOrgV2EnvironmentCalled())
 }
