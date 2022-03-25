@@ -7,8 +7,6 @@ import (
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	mdsmock "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2/mock"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -34,7 +32,7 @@ func NewV2ClientMock() *ccloudv2.Client {
 	cmkMock := newCmkClientMock()
 	iamMock := newIamClientMock()
 	orgMock := newOrgClientMock()
-	return ccloudv2.NewClient(cmkMock, iamClient, orgMock, "auth-token")
+	return ccloudv2.NewClient(cmkMock, iamMock, orgMock, "auth-token")
 }
 
 func newCmkClientMock() *cmkv2.APIClient {
@@ -50,8 +48,4 @@ func newIamClientMock() *iamv2.APIClient {
 		ServiceAccountsIamV2Api: &iammock.ServiceAccountsIamV2Api{},
 		UsersIamV2Api:           &iammock.UsersIamV2Api{},
 	}
-}
-
-func NewMdsClientMock() *mdsv2.APIClient {
-	return &mdsv2.APIClient{RoleBindingsIamV2Api: &mdsmock.RoleBindingsIamV2Api{}}
 }

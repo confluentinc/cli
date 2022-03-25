@@ -84,7 +84,7 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 	return c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
 }
 
-// // iam user api calls
+// iam user api calls
 
 func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
 	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
