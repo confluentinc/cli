@@ -9,7 +9,7 @@ import (
 )
 
 func (s *CLITestSuite) TestAuditLogDescribe() {
-	s.runCcloudTest(CLITest{args: "audit-log describe", login: "default", fixture: "audit-log/describe.golden"})
+	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
 }
 
 func (s *CLITestSuite) TestAuditLogConfig() {
@@ -32,8 +32,8 @@ func (s *CLITestSuite) TestAuditLogConfig() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -72,8 +72,8 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -102,11 +102,11 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
-	s.runCcloudTest(CLITest{args: "audit-log describe", login: "default", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, wantErrCode: 1})
+	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, wantErrCode: 1})
 }

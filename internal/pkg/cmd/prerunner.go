@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -64,6 +65,7 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -267,6 +269,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
+
+		if err := r.setV2Clients(command); err != nil {
+			return err
+		}
+
 		return r.setCCloudClient(command)
 	}
 }
@@ -383,6 +390,21 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		return nil, nil
 	})
 	cliCmd.KafkaRESTProvider = &provider
+	return nil
+}
+
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+	if ctx == nil {
+		return new(errors.NotLoggedInError)
+	}
+	baseURL := ctx.Platform.Server
+
+	v2Client := ccloudv2.NewClientWithUrl(baseURL, r.IsTest, cliCmd.AuthToken())
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
 	return nil
 }
 
@@ -728,8 +750,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
+			v2Client := ccloudv2.NewClientWithUrl(ctx.Platform.Server, r.IsTest, command.Context.State.AuthToken)
+
 			ctx.client = client
 			command.Config.Client = client
+			ctx.v2Client = v2Client
+			command.Config.V2Client = v2Client
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

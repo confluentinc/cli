@@ -8,8 +8,8 @@ func (s *CLITestSuite) TestIAMACL() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -26,8 +26,8 @@ func (s *CLITestSuite) TestIAMRBACRoleOnPrem() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -43,8 +43,8 @@ func (s *CLITestSuite) TestIAMRBACRoleCloud() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -66,8 +66,8 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDCloud() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -93,8 +93,8 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDOnPrem() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -130,8 +130,8 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListOnPrem() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -159,8 +159,8 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -179,8 +179,8 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -190,8 +190,8 @@ func (s *CLITestSuite) TestIAMUserList() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -203,8 +203,8 @@ func (s *CLITestSuite) TestIAMUserDescribe() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -216,8 +216,8 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -229,8 +229,8 @@ func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -240,7 +240,7 @@ func (s *CLITestSuite) TestIAMUserListInvitation() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }

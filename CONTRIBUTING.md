@@ -8,7 +8,7 @@ Start by following these steps to set up your computer for CLI development:
 
 #### Go Version
 
-This repo requires go1.17.5. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
+This repo requires go1.17.6. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 We recommend cloning the `goenv` repo directly to ensure that you have access to the latest version of Go. If you've

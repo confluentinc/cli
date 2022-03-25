@@ -32,7 +32,6 @@ const (
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	invitations         = "/api/invitations"
-	user                = "/api/users/{id}"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
@@ -120,7 +119,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
-	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
 	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
@@ -11,13 +12,15 @@ type DynamicConfig struct {
 	*v1.Config
 	Resolver FlagResolver
 	Client   *ccloud.Client
+	V2Client *ccloudv2.Client
 }
 
-func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client) *DynamicConfig {
+func NewDynamicConfig(config *v1.Config, resolver FlagResolver, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicConfig {
 	return &DynamicConfig{
 		Config:   config,
 		Resolver: resolver,
 		Client:   client,
+		V2Client: v2Client,
 	}
 }
 
@@ -48,7 +51,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client), nil
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.V2Client), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -57,5 +60,5 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return NewDynamicContext(ctx, d.Resolver, d.Client)
+	return NewDynamicContext(ctx, d.Resolver, d.Client, d.V2Client)
 }

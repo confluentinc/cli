@@ -1,9 +1,9 @@
 steps:
 - script: |
-    wget "https://golang.org/dl/go1.17.5.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.5.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.5.tar.gz"
+    wget "https://golang.org/dl/go1.17.6.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
   condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: Install Go 1.17.5 (Linux)
+  displayName: Install Go 1.17.6 (Linux)
 
 - script: |
     brew install gnu-tar
@@ -18,17 +18,17 @@ steps:
   displayName: Install chrome (Darwin)
 
 - script: |
-    wget "https://golang.org/dl/go1.17.5.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.5.tar.gz"
-    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.5.tar.gz"
+    wget "https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
-  displayName: Install Go 1.17.5 (Darwin)
+  displayName: Install Go 1.17.6 (Darwin)
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -Uri "https://golang.org/dl/go1.17.5.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.17.5.zip" -Verbose
-    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.17.5.zip "-o$(Agent.BuildDirectory)" -y
+    Invoke-WebRequest -Uri "https://golang.org/dl/go1.17.6.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.17.6.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.17.6.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Install Go 1.17.5 (Windows)
+  displayName: Install Go 1.17.6 (Windows)
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'

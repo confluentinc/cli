@@ -8,6 +8,6 @@ func (s *CLITestSuite) TestCompletion() {
 	}
 
 	for _, tt := range tests {
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
