@@ -1,11 +1,9 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -49,13 +47,12 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	}
 	serviceAccountId := args[0]
 
-	user := &orgv1.User{
-		ResourceId:         serviceAccountId,
-		ServiceDescription: description,
+	update := iamv2.IamV2ServiceAccountUpdate{
+		Description: &description,
 	}
-
-	if err := c.Client.User.UpdateServiceAccount(context.Background(), user); err != nil {
-		return err
+	_, httpresp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update)
+	if err != nil {
+		return errors.CatchServiceAccountNotFoundError(err, httpresp, serviceAccountId)
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)

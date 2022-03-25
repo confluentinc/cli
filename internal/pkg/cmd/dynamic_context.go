@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -20,13 +21,15 @@ type DynamicContext struct {
 	*v1.Context
 	resolver FlagResolver
 	client   *ccloud.Client
+	v2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		resolver: resolver,
 		client:   client,
+		v2Client: v2Client,
 	}
 }
 

@@ -150,7 +150,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -371,7 +371,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	conf := v1.AuthenticatedCloudConfigMock()
 	cmd := suite.newCmd(conf)
-	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil)
+	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil, nil)
 	lkc, err := cmd.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

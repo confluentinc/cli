@@ -12,6 +12,12 @@ type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
+type serviceAccount struct {
+	ResourceId  string
+	Name        string
+	Description string
+}
+
 func NewServiceAccountCommand(prerunner pcmd.PreRunner) *serviceAccountCommand {
 	cmd := &cobra.Command{
 		Use:         "service-account",
@@ -39,7 +45,7 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 		return nil
 	}
 
-	return pcmd.AutocompleteServiceAccounts(c.Client)
+	return pcmd.AutocompleteServiceAccounts(c.V2Client)
 }
 
 func requireLen(val string, maxLen int, field string) error {
