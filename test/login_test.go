@@ -278,34 +278,34 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 	resetConfiguration(s.T())
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
-		{args: "context list -o yaml", fixture: "login/1.golden", regex: true},
-	}
-
-	env := []string{
-		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformUsername, "on-prem@example.com"),
-		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformPassword, "password"),
+		{
+			env:  []string{"CONFLUENT_PLATFORM_USERNAME=on-prem@example.com", "CONFLUENT_PLATFORM_PASSWORD=password"},
+			args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl()),
+		},
+		{
+			args:    "context list -o yaml",
+			fixture: "login/1.golden",
+			regex:   true,
+		},
 	}
 
 	for _, tt := range tests {
-		out := runCommand(s.T(), testBin, env, tt.args, 0)
-		s.validateTestOutput(tt, s.T(), out)
+		s.runIntegrationTest(tt)
 	}
 }
 
-func (s *CLITestSuite) TestLogin_SsoCodeWithInvalidFormat() {
+func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 	resetConfiguration(s.T())
 
 	tt := CLITest{
+		env:         []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
 		args:        fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
 		fixture:     "login/sso.golden",
 		regex:       true,
 		wantErrCode: 1,
 	}
-	env := []string{fmt.Sprintf("%s=%s", pauth.ConfluentCloudEmail, "sso@test.com")}
 
 	// TODO: Accept text input in integration tests
 
-	out := runCommand(s.T(), testBin, env, tt.args, tt.wantErrCode)
-	s.validateTestOutput(tt, s.T(), out)
+	s.runIntegrationTest(tt)
 }
