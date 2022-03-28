@@ -2,7 +2,6 @@ module github.com/confluentinc/cli
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/armon/go-metrics v0.3.10
 	github.com/aws/aws-sdk-go v1.42.47
 	github.com/brianstrauch/cobra-shell v0.2.4
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -17,6 +16,8 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
@@ -242,9 +243,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.0 // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl2 v0.0.0-20181111172936-0467c0c38ca2 // indirect
 	github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b // indirect

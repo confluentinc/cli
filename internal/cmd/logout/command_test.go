@@ -19,7 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/login"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -158,7 +157,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*login.Command, *v1.Config) {
-	cfg := v1.New(new(config.Params))
+	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -187,13 +186,13 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*Command, *v1.Config) {
-	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

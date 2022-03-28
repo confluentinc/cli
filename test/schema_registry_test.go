@@ -21,6 +21,8 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},
+		{args: "schema-registry cluster update --help", fixture: "schema-registry/cluster-update-help.golden"},
+		{args: "schema-registry subject update --help", fixture: "schema-registry/subject-update-help.golden"},
 
 		{args: "schema-registry cluster describe", fixture: "schema-registry/describe.golden"},
 		{args: "schema-registry cluster update --environment=" + testserver.SRApiEnvId, fixture: "schema-registry/update-missing-flags.golden", wantErrCode: 1},
@@ -85,7 +87,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry subject update mode",
-			args:    "schema-registry subject update testSubject --mode READ --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
+			args:    "schema-registry subject update testSubject --mode READONLY --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/subject-update-mode.golden",
 		},
 
@@ -147,7 +149,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }

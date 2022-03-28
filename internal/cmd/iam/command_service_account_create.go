@@ -1,12 +1,11 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -17,9 +16,9 @@ const (
 )
 
 var (
-	describeFields            = []string{"ResourceId", "ServiceName", "ServiceDescription"}
-	describeHumanRenames      = map[string]string{"ServiceName": "Name", "ServiceDescription": "Description", "ResourceId": "ID"}
-	describeStructuredRenames = map[string]string{"ServiceName": "name", "ServiceDescription": "description", "ResourceId": "id"}
+	describeFields            = []string{"ResourceId", "Name", "Description"}
+	describeHumanRenames      = map[string]string{"ResourceId": "ID"}
+	describeStructuredRenames = map[string]string{"ResourceId": "id", "Name": "name", "Description": "description"}
 )
 
 func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
@@ -60,14 +59,16 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	user := &orgv1.User{
-		ServiceName:        name,
-		ServiceDescription: description,
-		ServiceAccount:     true,
+	createServiceAccount := iamv2.IamV2ServiceAccount{
+		DisplayName: iamv2.PtrString(name),
+		Description: iamv2.PtrString(description),
 	}
-	user, err = c.Client.User.CreateServiceAccount(context.Background(), user)
+	resp, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
 	if err != nil {
-		return err
+		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
-	return output.DescribeObject(cmd, user, describeFields, describeHumanRenames, describeStructuredRenames)
+
+	describeServiceAccount := &serviceAccount{ResourceId: *resp.Id, Name: *resp.DisplayName, Description: *resp.Description}
+
+	return output.DescribeObject(cmd, describeServiceAccount, describeFields, describeHumanRenames, describeStructuredRenames)
 }

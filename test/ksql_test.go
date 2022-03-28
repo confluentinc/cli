@@ -49,7 +49,7 @@ func (s *CLITestSuite) TestKSQL() {
 	tests = append(tests, appTests...)
 	tests = append(tests, clusterTests...)
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }

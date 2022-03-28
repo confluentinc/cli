@@ -3,6 +3,7 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -166,6 +167,30 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
 	}
 	return err
+}
+
+func CatchServiceNameInUseError(err error, r *http.Response, serviceName string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service name is already in use") {
+		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
+		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+	}
+	return err
+}
+
+func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service Account Not Found") {
+		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+	}
+	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 }
 
 /*

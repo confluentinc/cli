@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -64,6 +65,7 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -267,6 +269,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
+
+		if err := r.setV2Clients(command); err != nil {
+			return err
+		}
+
 		return r.setCCloudClient(command)
 	}
 }
@@ -306,18 +313,22 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	if err != nil {
 		return err
 	}
+
 	if token == "" || credentials == nil {
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
+
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
 	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
 	if err != nil {
 		return err
 	}
+
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+
 	return nil
 }
 
@@ -382,6 +393,21 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		return nil, nil
 	})
 	cliCmd.KafkaRESTProvider = &provider
+	return nil
+}
+
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+	if ctx == nil {
+		return new(errors.NotLoggedInError)
+	}
+	baseURL := ctx.Platform.Server
+
+	v2Client := ccloudv2.NewClientWithUrl(baseURL, r.IsTest, cliCmd.AuthToken())
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
 	return nil
 }
 
@@ -598,7 +624,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := kafkarestv3.NewConfiguration()
-			restFlags, err := r.FlagResolver.ResolveOnPremKafkaRestFlags(cmd)
+			restFlags, err := resolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
 			}
@@ -638,6 +664,39 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		command.KafkaRESTProvider = &provider
 		return nil
 	}
+}
+
+type onPremKafkaRestFlagValues struct {
+	url            string
+	caCertPath     string
+	clientCertPath string
+	clientKeyPath  string
+	noAuth         bool
+	prompt         bool
+}
+
+func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues, error) {
+	url, _ := cmd.Flags().GetString("url")
+	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
+	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
+	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
+	noAuth, _ := cmd.Flags().GetBool("no-auth")
+	prompt, _ := cmd.Flags().GetBool("prompt")
+
+	if (clientCertPath == "") != (clientKeyPath == "") {
+		return nil, errors.New(errors.NeedClientCertAndKeyPathsErrorMsg)
+	}
+
+	values := &onPremKafkaRestFlagValues{
+		url:            url,
+		caCertPath:     caCertPath,
+		clientCertPath: clientCertPath,
+		clientKeyPath:  clientKeyPath,
+		noAuth:         noAuth,
+		prompt:         prompt,
+	}
+
+	return values, nil
 }
 
 func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
@@ -694,8 +753,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
+			v2Client := ccloudv2.NewClientWithUrl(ctx.Platform.Server, r.IsTest, command.Context.State.AuthToken)
+
 			ctx.client = client
 			command.Config.Client = client
+			ctx.v2Client = v2Client
+			command.Config.V2Client = v2Client
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

@@ -32,7 +32,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -597,7 +596,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
-			cfg := v1.New(&config.Params{})
+			cfg := v1.New()
 			var expectedCaCert string
 			if tt.setEnv {
 				expectedCaCert = tt.envCertPath
@@ -675,7 +674,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -891,7 +890,7 @@ func TestValidateUrl(t *testing.T) {
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*Command, *v1.Config) {
-	cfg := v1.New(new(config.Params))
+	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -920,14 +919,14 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	loginCmd.loginOrganizationManager = loginOrganizationManager
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v1.Config) {
-	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

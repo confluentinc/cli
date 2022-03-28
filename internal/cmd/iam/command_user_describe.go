@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -45,13 +46,11 @@ func (c userCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c userCommand) describe(cmd *cobra.Command, args []string) error {
-	resourceId := args[0]
-
-	if ok := strings.HasPrefix(resourceId, "u-"); !ok {
+	if resource.LookupType(args[0]) != resource.User {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
-	userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: resourceId})
+	userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: args[0]})
 	if err != nil {
 		return err
 	}

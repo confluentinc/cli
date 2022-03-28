@@ -35,8 +35,8 @@ func addCompatibilityFlag(cmd *cobra.Command) {
 }
 
 func addModeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	cmd.Flags().String("mode", "", "Can be READWRITE, READONLY, OR IMPORT.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string {
-		return []string{"READWRITE", "READ", "WRITE"}
+		return []string{"READWRITE", "READONLY", "IMPORT"}
 	})
 }

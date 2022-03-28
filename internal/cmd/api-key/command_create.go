@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -12,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -54,7 +54,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType != pcmd.CloudResourceType {
+	if resourceType != resource.Cloud {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 	userKey, err := c.Client.APIKey.Create(context.Background(), key)
@@ -102,7 +102,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType == pcmd.KafkaResourceType {
+	if resourceType == resource.Kafka {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
@@ -113,8 +113,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
 	if key.UserResourceId != "" { // it has a service-account flag
-		validFormat := strings.HasPrefix(key.UserResourceId, "sa-")
-		if !validFormat {
+		if resource.LookupType(key.UserResourceId) != resource.ServiceAccount {
 			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
 		users, err := c.getAllUsers()
