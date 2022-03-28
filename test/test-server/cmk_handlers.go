@@ -16,7 +16,7 @@ import (
 )
 
 // Handler for POST "/cmk/v2/clusters"
-func HandleKafkaClusterCreate(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		var req cmkv2.CmkV2Cluster
@@ -97,7 +97,7 @@ func HandleCmkClusters(t *testing.T) http.HandlerFunc {
 			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
 		}
 		if r.Method == http.MethodPost {
-			HandleKafkaClusterCreate(t)(w, r)
+			HandleCmkKafkaClusterCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
 			cluster := cmkv2.CmkV2Cluster{
 				Id: cmkv2.PtrString("lkc-123"),
@@ -144,32 +144,32 @@ func HandleCmkCluster(t *testing.T) http.HandlerFunc {
 		clusterId := vars["id"]
 		switch clusterId {
 		case "lkc-describe":
-			HandleKafkaClusterDescribe(t)(w, r)
+			HandleCmkKafkaClusterDescribe(t)(w, r)
 		case "lkc-describe-dedicated":
-			HandleKafkaClusterDescribeDedicated(t)(w, r)
+			HandleCmkKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
-			HandleKafkaClusterDescribeDedicatedPending(t)(w, r)
+			HandleCmkKafkaClusterDescribeDedicatedPending(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
-			HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+			HandleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-update":
-			HandleKafkaClusterUpdateRequest(t)(w, r)
+			HandleCmkKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
-			HandleKafkaDedicatedClusterExpansion(t)(w, r)
+			HandleCmkKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
-			HandleKafkaDedicatedClusterShrink(t)(w, r)
+			HandleCmkKafkaDedicatedClusterShrink(t)(w, r)
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 		case "lkc-describe-infinite":
-			HandleKafkaClusterDescribeInfinite(t)(w, r)
+			HandleCmkKafkaClusterDescribeInfinite(t)(w, r)
 		default:
-			HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
+			HandleCmkKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
 	}
 }
 
 // Handler for GET "/cmk/v2/clusters/{id}"
-func HandleKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -180,7 +180,7 @@ func HandleKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 	}
 }
 
-func HandleKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -192,7 +192,7 @@ func HandleKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-pending"
-func HandleKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -205,7 +205,7 @@ func HandleKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-with-encryption"
-func HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -218,12 +218,12 @@ func HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.Handle
 }
 
 // Handler for GET "/cmk/v2/clusters/lkc-describe-infinite
-func HandleKafkaClusterDescribeInfinite(t *testing.T) http.HandlerFunc {
-	return HandleKafkaClusterDescribeDedicated(t) // dedicated cluster has infinite storage
+func HandleCmkKafkaClusterDescribeInfinite(t *testing.T) http.HandlerFunc {
+	return HandleCmkKafkaClusterDescribeDedicated(t) // dedicated cluster has infinite storage
 }
 
 // Default handler for get, list, delete, describe "/cmk/v2/clusters/{id}"
-func HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -241,7 +241,7 @@ func HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update"
-func HandleKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// var out []byte
 		w.Header().Set("Content-Type", "application/json")
@@ -269,7 +269,7 @@ func HandleKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-expand"
-func HandleKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
@@ -292,7 +292,7 @@ func HandleKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-shrink"
-func HandleKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
+func HandleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
