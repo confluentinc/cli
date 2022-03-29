@@ -33,7 +33,7 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().Int32("schema-id", -1, "The ID of the schema.")
+	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
@@ -242,7 +242,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 		return nil, nil, err
 	}
 
-	if schemaId != -1 { // request schema from schema registry
+	if schemaId != 0 { // request schema from schema registry
 		schemaIdBuffer := make([]byte, 4)
 		binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
 		metaInfo = append(metaInfo, schemaIdBuffer...)
