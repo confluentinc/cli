@@ -115,7 +115,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, refreshToken, client)
 	if err != nil {
 		return err
 	}

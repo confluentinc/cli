@@ -135,11 +135,7 @@ func (c *Config) Load() error {
 		}
 		context.KafkaClusterContext.Context = context
 	}
-	err = c.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Validate()
 }
 
 // Save writes the CLI config to disk.

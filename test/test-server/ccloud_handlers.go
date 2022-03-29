@@ -127,14 +127,16 @@ func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *h
 }
 
 // Handler for: "/api/login/realm"
-func (c *CloudRouter) HandleLoginRealm(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := require.New(t)
-		reply := &flowv1.GetLoginRealmReply{}
-		b, err := utilv1.MarshalJSONToBytes(reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
+		email := r.URL.Query().Get("email")
+
+		res := &flowv1.GetLoginRealmReply{
+			IsSso: strings.Contains(email, "sso"),
+			Realm: "realm",
+		}
+		err := json.NewEncoder(w).Encode(res)
+		require.NoError(t, err)
 	}
 }
 

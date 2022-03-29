@@ -61,11 +61,8 @@ func PersistLogoutToConfig(config *v1.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v1.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
-	state := &v1.ContextState{
-		Auth:      nil,
-		AuthToken: token,
-	}
+func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCertPath string, isLegacyContext bool) error {
+	state := &v1.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
@@ -75,19 +72,19 @@ func PersistConfluentLoginToConfig(config *v1.Config, username string, url strin
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
+func PersistCCloudLoginToConfig(config *v1.Config, email, url, token, refreshToken string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
 	ctxName := GenerateCloudContextName(email, url)
 	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, nil, err
 	}
-	state := getCCloudContextState(config, ctxName, token, user)
+	state := getCCloudContextState(config, ctxName, token, refreshToken, user)
 
 	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
 	return state.Auth.Account, user.Organization, err
 }
 
-func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
+func addOrUpdateContext(config *v1.Config, ctxName, username, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
 	credName := generateCredentialName(username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -127,19 +124,17 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName, token string, user *flowv1.GetMeReply) *v1.ContextState {
-	var state *v1.ContextState
-	ctx, err := config.FindContext(ctxName)
-	if err == nil {
+func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *flowv1.GetMeReply) *v1.ContextState {
+	state := new(v1.ContextState)
+	if ctx, err := config.FindContext(ctxName); err == nil {
 		state = ctx.State
-	} else {
-		state = new(v1.ContextState)
 	}
-	state.AuthToken = token
 
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}
 	}
+	state.AuthToken = token
+	state.AuthRefreshToken = refreshToken
 
 	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
