@@ -79,12 +79,18 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	schemaPath, metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, valueFormat, subject, serializationProvider.GetSchemaName())
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return err
+	}
+	schemaPathPtr := &schemaPath
+
+	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, schemaPathPtr, valueFormat, subject, serializationProvider.GetSchemaName())
 	if err != nil {
 		return err
 	}
 
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	err = serializationProvider.LoadSchema(*schemaPathPtr, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -184,9 +190,8 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 	if err != nil {
 		if err.Error() == errors.NotLoggedInErrorMsg {
 			return nil, nil, new(errors.SRNotAuthenticatedError)
-		} else {
-			return nil, nil, err
 		}
+		return nil, nil, err
 	}
 	return srClient, ctx, nil
 }
@@ -215,34 +220,26 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 	return metaInfo, referencePathMap, nil
 }
 
-func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, valueFormat string, subject string, providerName string) (string, []byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaPathPtr *string, valueFormat string, subject string, providerName string) ([]byte, map[string]string, error) {
 	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
-		return "", nil, nil, errors.New(errors.BothSchemaPathAndIDErrorMsg)
-	}
-
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return "", nil, nil, err
-	}
-
-	schemaId, err := cmd.Flags().GetInt32("schema-id")
-	if err != nil {
-		return "", nil, nil, err
+		return nil, nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
 
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{0x0}
 
-	if schemaPath != "" { // read schema from local file
+	if *schemaPathPtr != "" { // read schema from local file
 		refs, err := readSchemaRefs(cmd)
 		if err != nil {
-			return "", nil, nil, err
+			return nil, nil, err
 		}
 		// Meta info contains a magic byte and schema ID (4 bytes).
-		metaInfo, referencePathMap, err = c.registerSchema(cmd, valueFormat, schemaPath, subject, providerName, refs)
-		if err != nil {
-			return "", nil, nil, err
-		}
+		return c.registerSchema(cmd, valueFormat, *schemaPathPtr, subject, providerName, refs)
+	}
+
+	schemaId, err := cmd.Flags().GetInt32("schema-id")
+	if err != nil {
+		return nil, nil, err
 	}
 
 	if schemaId != -1 { // request schema from schema registry
@@ -252,7 +249,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, val
 
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
-			return "", nil, nil, err
+			return nil, nil, err
 		}
 
 		dir := filepath.Join(os.TempDir(), "ccloud-schema")
@@ -265,13 +262,13 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, val
 			Properties: ConsumerProperties{SchemaPath: dir},
 		}
 		if valueFormat != "string" {
-			schemaPath, referencePathMap, err = groupHandler.RequestSchemaWithId(schemaId)
+			*schemaPathPtr, referencePathMap, err = groupHandler.RequestSchemaWithId(schemaId)
 			if err != nil {
-				return "", nil, nil, err
+				return nil, nil, err
 			}
 		}
 	}
-	return schemaPath, metaInfo, referencePathMap, nil
+	return metaInfo, referencePathMap, nil
 }
 
 func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {

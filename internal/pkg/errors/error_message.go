@@ -194,7 +194,6 @@ const (
 	// schema-registry commands
 	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
 	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	BothSchemaPathAndIDErrorMsg  = "cannot specify both schema path and schema ID"
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
