@@ -339,11 +339,12 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		log.CliLogger.Debugf("Prerun login getting credentials failed: %v", err.Error())
+		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
 		return "", "", nil, err
 	}
 
@@ -560,7 +561,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, netrcMachineParams),
 	)
 	if err != nil {
