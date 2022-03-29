@@ -46,7 +46,7 @@ func (suite *ConfigTestSuite) SetupTest() {
 }
 
 func (suite *ConfigTestSuite) newCmd() *cobra.Command {
-	return New(suite.cfg, cliMock.NewPreRunnerMock(nil, nil, nil, suite.cfg), suite.srClientMock)
+	return New(suite.cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, suite.cfg), suite.srClientMock)
 }
 
 func (suite *ConfigTestSuite) TestConfigDescribeGlobal() {
