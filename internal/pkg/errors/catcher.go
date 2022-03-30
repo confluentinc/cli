@@ -166,9 +166,6 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
-	if strings.Contains(string(body), "Cluster configuration is invalid") {
-		return New(InvalidClusterConfigErrorMsg)
-	}
 	return err
 }
 

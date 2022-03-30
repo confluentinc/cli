@@ -73,7 +73,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster, ""))
+		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
 	}
 
 	return outputWriter.Out()

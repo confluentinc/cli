@@ -8,11 +8,6 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
-const (
-	// The maximum allowable page size when listing kafka clusters using CMK V2 API
-	listClustersPageSize = 100
-)
-
 func newCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
 	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
@@ -72,9 +67,9 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
 	var req cmkv2.ApiListCmkV2ClustersRequest
 	if pageToken != "" {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(listClustersPageSize).PageToken(pageToken)
+		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
 	} else {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(listClustersPageSize)
+		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }

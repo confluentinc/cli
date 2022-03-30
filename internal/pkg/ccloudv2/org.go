@@ -8,11 +8,6 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-const (
-	// The maximum allowable page size when listing environments using ORG V2 API
-	listEnvironmentsPageSize = 100
-)
-
 func newOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
 	orgServer := getServerUrl(baseURL, isTest)
 	cfg := orgv2.NewConfiguration()
@@ -73,9 +68,9 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
 	var req orgv2.ApiListOrgV2EnvironmentsRequest
 	if pageToken != "" {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(listEnvironmentsPageSize).PageToken(pageToken)
+		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
 	} else {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(listEnvironmentsPageSize)
+		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
 	}
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }

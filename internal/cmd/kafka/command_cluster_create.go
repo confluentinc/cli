@@ -132,12 +132,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	typeString, err := cmd.Flags().GetString("type")
+	clusterType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}
 
-	sku, err := stringToSku(typeString)
+	sku, err := stringToSku(clusterType)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(typeString, 1, encryptionKeyID),
+			Config:       setCmkClusterConfig(clusterType, 1, encryptionKeyID),
 		},
 	}
 
@@ -176,7 +176,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		if err != nil {
 			return err
 		}
-		if typeString != skuDedicated {
+		if clusterType != skuDedicated {
 			return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
 		}
 		if cku <= 0 {

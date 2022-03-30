@@ -153,10 +153,12 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Comman
 			return err
 		}
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStructWithKAPI(cluster, kAPI), getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, structureRenames)
+	describeStruct := convertClusterToDescribeStructWithKAPI(cluster)
+	describeStruct.KAPI = kAPI
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, structureRenames)
 }
 
-func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster, kAPI string) *describeStructWithKAPI {
+func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster) *describeStructWithKAPI {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
@@ -176,7 +178,6 @@ func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster, kAPI st
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
-		KAPI:               kAPI,
 	}
 }
 
@@ -185,10 +186,12 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	if err != nil {
 		return err
 	}
-	return output.DescribeObject(cmd, convertClusterToDescribeStruct(cluster, kAPI), getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint), describeHumanRenames, describeStructuredRenames)
+	describeStruct := convertClusterToDescribeStruct(cluster)
+	describeStruct.ApiEndpoint = kAPI
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint), describeHumanRenames, describeStructuredRenames)
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, kAPI string) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
@@ -206,7 +209,6 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, kAPI string) *d
 		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
-		ApiEndpoint:        kAPI,
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
@@ -234,7 +236,7 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 	return describeFields
 }
 
-func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (string, error) {
+func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (string, error) { // TODO: remove this function when KAPI is fully deprecated
 	lkc := *cluster.Id
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
 	kafkaCluster, err := c.Client.Kafka.Describe(context.Background(), req)

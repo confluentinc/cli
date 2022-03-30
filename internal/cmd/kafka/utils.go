@@ -191,7 +191,7 @@ func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {
 }
 
 func isShrinking(cluster *cmkv2.CmkV2Cluster) bool {
-	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku && cluster.Spec.Config.CmkV2Dedicated.Cku != 0
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku
 }
 
 func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {

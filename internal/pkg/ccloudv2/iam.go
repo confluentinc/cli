@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const (
-	// The maximum allowable page size when listing service accounts and users using IAM V2 API
-	listServiceAccountsPageSize = 100
-	listUsersPageSize           = 100
-)
-
 func newIamClient(baseURL string, isTest bool) *iamv2.APIClient {
 	iamServer := getServerUrl(baseURL, isTest)
 	cfg := iamv2.NewConfiguration()
@@ -77,9 +71,9 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
 	var req iamv2.ApiListIamV2ServiceAccountsRequest
 	if pageToken != "" {
-		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(listServiceAccountsPageSize).PageToken(pageToken)
+		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
 	} else {
-		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(listServiceAccountsPageSize)
+		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
 	}
 	return c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
 }
@@ -135,9 +129,9 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.Response, error) {
 	var req iamv2.ApiListIamV2UsersRequest
 	if pageToken != "" {
-		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(listUsersPageSize).PageToken(pageToken)
+		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
 	} else {
-		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(listUsersPageSize)
+		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
 	}
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 }
