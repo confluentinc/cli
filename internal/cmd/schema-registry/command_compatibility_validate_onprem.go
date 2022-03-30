@@ -13,7 +13,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "validate",
 		Short:       "Validate a schema with a subject version.",
-		Long:        "Validate that a schema is compatible with a given subject version.",
+		Long:        "Validate that a schema is compatible against a given subject version.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.onPremValidate),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},

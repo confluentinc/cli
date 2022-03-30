@@ -12,7 +12,7 @@ import (
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
-		Short:       "Describe top-level or subject-level Schema Registry configs.",
+		Short:       "Describe top-level or subject-level Schema Registry compatibility.",
 		Args:        cobra.MaximumNArgs(0),
 		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},

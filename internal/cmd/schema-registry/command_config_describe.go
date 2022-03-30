@@ -17,7 +17,7 @@ import (
 func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe top-level or subject-level Schema Registry configs.",
+		Short: "Describe top-level or subject-level Schema Registry compatibility.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(

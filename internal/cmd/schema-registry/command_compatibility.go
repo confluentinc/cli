@@ -16,7 +16,7 @@ type compatibilityCommand struct {
 func newCompatibilityCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "compatibility",
-		Short:       "Validate Schema Registry compatibility.",
+		Short:       "Validate schema compatibility.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
