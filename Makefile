@@ -177,15 +177,18 @@ endif
 
 .PHONY: lint
 lint:
+ifdef CI
 ifeq ($(shell uname),Darwin)
 	true
 else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
-	@echo "Linting..."
 	@make lint-go
 	@make lint-cli
-	@make lint-installers
+endif
+else
+	@make lint-go
+	@make lint-cli
 endif
 
 .PHONY: lint-go
@@ -203,11 +206,6 @@ cmd/lint/en_US.aff:
 
 cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-
-.PHONY: lint-installers
-lint-installers:
-	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
-	@echo "✅  installation script linter"
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses
