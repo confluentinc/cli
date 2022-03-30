@@ -62,7 +62,7 @@ func (suite *RoleBindingTestSuite) SetupSuite() {
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
-func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
@@ -184,9 +184,9 @@ var roleBindingListTests = []roleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, "")
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
@@ -492,12 +492,6 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
-		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
-		principal: "User:u-noemail",
-		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
-	},
-	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--connect-cluster-id", "lcc-456"},
 		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "ResourceOwner",
@@ -526,10 +520,16 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 				SchemaRegistryCluster: "sr-777"},
 		},
 	},
+	{
+		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
+		principal: "User:u-noemail",
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+	},
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
@@ -554,7 +554,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
