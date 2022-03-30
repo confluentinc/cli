@@ -17,7 +17,7 @@ import (
 func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe the config of a subject, or at global level.",
+		Short: "Describe top-level or subject-level Schema Registry configs.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
@@ -26,7 +26,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "Describe the global configuration.",
+				Text: "Describe the top-level configuration.",
 				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
 			},
 		),

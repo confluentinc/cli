@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -17,7 +18,8 @@ import (
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
-		Short: "Validate that a schema is compatible with a given subject version.",
+		Short: "Validate a schema with a subject version.",
+		Long:  "Validate that a schema is compatible with a given subject version.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.validate),
 		Example: examples.BuildExampleString(
@@ -70,6 +72,7 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 	if err != nil {
 		return err
 	}
+	schemaType = strings.ToUpper(schemaType)
 
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {

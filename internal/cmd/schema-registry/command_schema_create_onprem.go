@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -45,41 +46,39 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	schemaPath, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
+
 	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}
+	schemaType = strings.ToUpper(schemaType)
+
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
+
 	}
-	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, schemaType, refs)
+	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, refs)
 	return err
 }
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
-	metaInfo := []byte{}
-	referencePathMap := map[string]string{}
-	if valueFormat != "string" && len(schemaPath) > 0 {
-		if c.State == nil { // require log-in to use oauthbearer token
-			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
-		}
-		srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		metaInfo, err := RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
-		if err != nil {
-			return metaInfo, nil, err
-		}
-		referencePathMap, err = StoreSchemaReferences(refs, srClient, ctx)
-		if err != nil {
-			return metaInfo, nil, err
-		}
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, schemaPath, subject string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+	if c.State == nil { // require log-in to use oauthbearer token
+		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
-	return metaInfo, referencePathMap, nil
+	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	if err != nil {
+		return nil, nil, err
+	}
+	metaInfo, err := RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+	if err != nil {
+		return metaInfo, nil, err
+	}
+	referencePathMap, err := StoreSchemaReferences(refs, srClient, ctx)
+	return metaInfo, referencePathMap, err
 }

@@ -14,12 +14,13 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",
+		Long:        "Delete one or more schemas. This command should only be used in extreme circumstances.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.onPremDelete),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete one or more schemas. This command should only be used in extreme circumstances.",
+				Text: `Soft delete the latest version of subject "payments".`,
 				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),

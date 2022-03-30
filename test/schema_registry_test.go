@@ -40,9 +40,29 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/schema-compatibility.golden",
 		},
 		{
+			name:    "schema-registry compatibility validate json",
+			args:    "schema-registry compatibility validate --subject payments --version 1 --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o json",
+			fixture: "schema-registry/schema-compatibility-json.golden",
+		},
+		{
+			name:    "schema-registry compatibility validate yaml",
+			args:    "schema-registry compatibility validate --subject payments --version 1 --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o yaml",
+			fixture: "schema-registry/schema-compatibility-yaml.golden",
+		},
+		{
 			name:    "schema-registry config describe global",
 			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-config-global.golden",
+		},
+		{
+			name:    "schema-registry config describe global json",
+			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o json",
+			fixture: "schema-registry/schema-config-global-json.golden",
+		},
+		{
+			name:    "schema-registry config describe global yaml",
+			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o yaml",
+			fixture: "schema-registry/schema-config-global-yaml.golden",
 		},
 		{
 			name:    "schema-registry config describe --subject payments",

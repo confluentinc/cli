@@ -12,7 +12,7 @@ import (
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
-		Short:       "Describe the config of a subject, or at global level.",
+		Short:       "Describe top-level or subject-level Schema Registry configs.",
 		Args:        cobra.MaximumNArgs(0),
 		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
@@ -22,7 +22,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 				Code: fmt.Sprintf("%s schema-registry config describe --subject payments %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
-				Text: "Describe the global configuration.",
+				Text: "Describe the top-level configuration.",
 				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
