@@ -13,21 +13,21 @@ import (
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"
 )
 
 func TestPromoAdd(t *testing.T) {
 	client := &ccloud.Client{
 		Billing: &ccloudmock.Billing{
-			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) error {
-				return nil
+			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) (*billingv1.PromoCodeClaim, error) {
+				return nil, nil
 			},
 		},
 	}
 
-	cfg := v3.AuthenticatedCloudConfigMock()
-	cmd := New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
+	cfg := v1.AuthenticatedCloudConfigMock()
+	cmd := New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "add", "XXXXX")
 	require.NoError(t, err)
@@ -44,8 +44,8 @@ func TestPromoListEmpty(t *testing.T) {
 		},
 	}
 
-	cfg := v3.AuthenticatedCloudConfigMock()
-	cmd := New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
+	cfg := v1.AuthenticatedCloudConfigMock()
+	cmd := New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "list")
 	require.NoError(t, err)

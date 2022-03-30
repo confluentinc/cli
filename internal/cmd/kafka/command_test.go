@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -21,9 +21,8 @@ import (
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -33,7 +32,7 @@ const (
 	userResourceId     = "sa-55555"
 )
 
-var conf *v3.Config
+var conf *v1.Config
 
 /*************** TEST command_acl ***************/
 var resourcePatterns = []struct {
@@ -88,7 +87,7 @@ var aclEntries = []struct {
 	err     error
 }{
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "read"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -97,7 +96,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "read"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "read"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -106,7 +105,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "write"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -115,7 +114,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "write"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -124,7 +123,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "create"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -133,7 +132,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -142,7 +141,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -151,7 +150,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "delete"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "delete"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -160,7 +159,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -169,7 +168,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -178,7 +177,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -187,7 +186,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "describe"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -196,7 +195,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -205,7 +204,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "cluster-action"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "cluster-action"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -214,7 +213,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -223,7 +222,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "describe-configs"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "describe-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -232,7 +231,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "alter-configs"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -241,7 +240,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter-configs"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -250,7 +249,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--allow", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--allow", "--service-account", "sa-42", "--operation", "idempotent-write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
@@ -259,7 +258,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "idempotent-write"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "idempotent-write"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -268,7 +267,7 @@ var aclEntries = []struct {
 		},
 	},
 	{
-		args: []string{"--deny", "--service-account", "42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
+		args: []string{"--deny", "--service-account", "sa-42", "--operation", "alter-configs", "--operation", "idempotent-write", "--operation", "create"},
 		entries: []*schedv1.AccessControlEntryConfig{
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
@@ -387,7 +386,7 @@ func ListPrincipalACLTest(t *testing.T, enableREST bool) {
 		}
 		entry := aclEntry.entries[0]
 		cmd := newCmd(expect, enableREST)
-		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, strings.TrimPrefix(entry.Principal, "User:")))
+		cmd.SetArgs(append([]string{"acl", "list", "--service-account"}, "sa-"+strings.TrimPrefix(entry.Principal, "User:")))
 
 		go func() {
 			expect <- convertToFilter(&schedv1.ACLBinding{Entry: &schedv1.AccessControlEntryConfig{Principal: entry.Principal}})
@@ -417,7 +416,7 @@ func ListResourcePrincipalFilterACLTest(t *testing.T, enableREST bool) {
 			}
 			entry := aclEntry.entries[0]
 			cmd := newCmd(expect, enableREST)
-			cmd.SetArgs(append(args, "--service-account", strings.TrimPrefix(entry.Principal, "User:")))
+			cmd.SetArgs(append(args, "--service-account", "sa-"+strings.TrimPrefix(entry.Principal, "User:")))
 
 			// TODO: better testing of KafkaREST
 			if !enableREST {
@@ -442,7 +441,7 @@ func TestListResourcePrincipalFilterACL2(t *testing.T) {
 }
 
 func MultipleResourceACLTest(t *testing.T, enableREST bool) {
-	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "42",
+	args := []string{"acl", "create", "--allow", "--operation", "read", "--service-account", "sa-42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
 	cmd := newCmd(nil, enableREST)
@@ -605,7 +604,7 @@ func TestUpdateTopic2(t *testing.T) {
 func DefaultsTest(t *testing.T, enableREST bool) {
 	expect := make(chan interface{})
 	cmd := newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--allow", "--service-account", "sa-42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- []*schedv1.ACLBinding{
@@ -623,7 +622,7 @@ func DefaultsTest(t *testing.T, enableREST bool) {
 	}
 
 	cmd = newCmd(expect, enableREST)
-	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "42",
+	cmd.SetArgs([]string{"acl", "create", "--cluster-scope", "--allow", "--service-account", "sa-42",
 		"--operation", "read"})
 
 	go func() {
@@ -655,12 +654,11 @@ func TestDefaults2(t *testing.T) {
 func Test_HandleError_NotLoggedIn(t *testing.T) {
 	kafka := &mock.Kafka{
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return nil, &errors.NotLoggedInError{CLIName: "ccloud"}
+			return nil, new(errors.NotLoggedInError)
 		},
 	}
 	client := &ccloud.Client{Kafka: kafka}
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, conf),
-		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
+	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
@@ -670,7 +668,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	want := errors.NotLoggedInErrorMsg
 	require.Error(t, err)
 	require.Equal(t, want, err.Error())
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, fmt.Sprintf(errors.NotLoggedInSuggestions, "ccloud"))
+	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, errors.NotLoggedInSuggestions)
 }
 
 /*************** TEST command_links ***************/
@@ -854,6 +852,31 @@ func TestCreateMirror(t *testing.T) {
 	)
 	defer os.Remove(dir + "/" + configFileName)
 }
+
+//func TestCreateMirrorWithLinkPrefix(t *testing.T) {
+//	const configFileName, topicName, clusterLinkPrefix = "prefixed-mirror-topic-config.in", "topic-1", "src_"
+//	configs := configMapWithJsonConfigValues()
+//	dir, err := createTestConfigFile(configFileName, configs)
+//	if err != nil {
+//		logger.Fatal("Cannot create the test config file")
+//	}
+//
+//	linkTestHelper(
+//		t,
+//		func(link testLink) []string {
+//			return []string{"mirror", "create", clusterLinkPrefix + topicName, "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName, "--source-topic", topicName}
+//		},
+//		func(expect chan interface{}, link testLink) {
+//			expect <- cliMock.CreateMirrorMatcher{
+//				LinkName:        "link-1",
+//				SourceTopicName: clusterLinkPrefix + topicName,
+//				Configs:         configs,
+//				MirrorTopicName: topicName,
+//			}
+//		},
+//	)
+//	defer os.Remove(dir + "/" + configFileName)
+//}
 
 func TestListAllMirror(t *testing.T) {
 	linkTestHelper(
@@ -1130,16 +1153,21 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
-			DescribeFunc: func(arg0 context.Context, arg1 *v1.User) (user *v1.User, e error) {
-				return &v1.User{
+			DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
+				return &orgv1.User{
 					Email: "csreesangkom@confluent.io",
 				}, nil
 			},
-			GetServiceAccountsFunc: func(arg0 context.Context) (users []*v1.User, e error) {
-				return []*v1.User{
+			GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
+				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
 						ResourceId:  userResourceId,
+						ServiceName: serviceAccountName,
+					},
+					{
+						Id:          42,
+						ResourceId:  "sa-42",
 						ServiceName: serviceAccountName,
 					},
 				}, nil
@@ -1158,13 +1186,13 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
-			restMock.ACLApi = cliMock.NewACLMock()
-			restMock.TopicApi = cliMock.NewTopicMock()
-			restMock.PartitionApi = cliMock.NewPartitionMock(kafkaRestExpect)
-			restMock.ReplicaApi = cliMock.NewReplicaMock()
-			restMock.ConfigsApi = cliMock.NewConfigsMock()
-			restMock.ClusterLinkingApi = cliMock.NewClusterLinkingMock(kafkaRestExpect)
-			restMock.ConsumerGroupApi = cliMock.NewConsumerGroupMock(kafkaRestExpect)
+			restMock.ACLV3Api = cliMock.NewACLMock()
+			restMock.TopicV3Api = cliMock.NewTopicMock()
+			restMock.PartitionV3Api = cliMock.NewPartitionMock(kafkaRestExpect)
+			restMock.ReplicaV3Api = cliMock.NewReplicaMock()
+			restMock.ConfigsV3Api = cliMock.NewConfigsMock()
+			restMock.ClusterLinkingV3Api = cliMock.NewClusterLinkingMock(kafkaRestExpect)
+			restMock.ConsumerGroupV3Api = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			restMock.ReplicaStatusApi = cliMock.NewReplicaStatusMock()
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
@@ -1172,8 +1200,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		}
 		return nil, nil
 	})
-	cmd := New(false, conf.CLIName, cliMock.NewPreRunnerMock(client, nil, &provider, conf),
-		log.New(), "test-client", &cliMock.ServerSideCompleter{}, cliMock.NewDummyAnalyticsMock())
+	cmd := New(conf, cliMock.NewPreRunnerMock(client, nil, nil, &provider, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -1187,5 +1214,5 @@ func newRestCmd(restExpect chan interface{}) *cobra.Command {
 }
 
 func init() {
-	conf = v3.AuthenticatedCloudConfigMock()
+	conf = v1.AuthenticatedCloudConfigMock()
 }

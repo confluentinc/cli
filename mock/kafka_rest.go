@@ -6,11 +6,11 @@ import (
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	configv3mock "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 // Compile-time check interface adherence
-var _ krsdk.TopicApi = (*Topic)(nil)
+var _ krsdk.TopicV3Api = (*Topic)(nil)
 
 type Topic struct {
 }
@@ -19,7 +19,7 @@ func NewTopicMock() *Topic {
 	return &Topic{}
 }
 
-func (m *Topic) ClustersClusterIdTopicsGet(_ctx context.Context, _clusterId string) (krsdk.TopicDataList, *nethttp.Response, error) {
+func (m *Topic) ListKafkaTopics(_ context.Context, _clusterId string) (krsdk.TopicDataList, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 200,
 	}
@@ -42,26 +42,26 @@ func (m *Topic) ClustersClusterIdTopicsGet(_ctx context.Context, _clusterId stri
 	}, httpResp, nil
 }
 
-func (m *Topic) ClustersClusterIdTopicsPost(_ctx context.Context, _clusterId string, _localVarOptionals *krsdk.ClustersClusterIdTopicsPostOpts) (krsdk.TopicData, *nethttp.Response, error) {
+func (m *Topic) CreateKafkaTopic(_ context.Context, _ string, _ *krsdk.CreateKafkaTopicOpts) (krsdk.TopicData, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 201,
 	}
 	return krsdk.TopicData{}, httpResp, nil
 }
 
-func (m *Topic) ClustersClusterIdTopicsTopicNameDelete(_ctx context.Context, _clusterId string, _topicName string) (*nethttp.Response, error) {
+func (m *Topic) DeleteKafkaTopic(_ context.Context, _ string, _ string) (*nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 204,
 	}
 	return httpResp, nil
 }
 
-func (m *Topic) ClustersClusterIdTopicsTopicNameGet(_ctx context.Context, _clusterId string, _topicName string) (krsdk.TopicData, *nethttp.Response, error) {
+func (m *Topic) GetKafkaTopic(_ context.Context, _ string, _ string) (krsdk.TopicData, *nethttp.Response, error) {
 	return krsdk.TopicData{}, nil, nil
 }
 
 // Compile-time check interface adherence
-var _ krsdk.ACLApi = (*ACL)(nil)
+var _ krsdk.ACLV3Api = (*ACL)(nil)
 
 type ACL struct {
 }
@@ -70,7 +70,7 @@ func NewACLMock() *ACL {
 	return &ACL{}
 }
 
-func (m *ACL) ClustersClusterIdAclsDelete(_ctx context.Context, _clusterId string, _localVarOptionals *krsdk.ClustersClusterIdAclsDeleteOpts) (krsdk.InlineResponse200, *nethttp.Response, error) {
+func (m *ACL) DeleteKafkaAcls(_ context.Context, _ string, _ *krsdk.DeleteKafkaAclsOpts) (krsdk.InlineResponse200, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 200,
 	}
@@ -81,7 +81,7 @@ func (m *ACL) ClustersClusterIdAclsDelete(_ctx context.Context, _clusterId strin
 	}, httpResp, nil
 }
 
-func (m *ACL) ClustersClusterIdAclsGet(_ctx context.Context, _clusterId string, _localVarOptionals *krsdk.ClustersClusterIdAclsGetOpts) (krsdk.AclDataList, *nethttp.Response, error) {
+func (m *ACL) GetKafkaAcls(_ context.Context, _clusterId string, _ *krsdk.GetKafkaAclsOpts) (krsdk.AclDataList, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 200,
 	}
@@ -96,7 +96,7 @@ func (m *ACL) ClustersClusterIdAclsGet(_ctx context.Context, _clusterId string, 
 				ResourceType: "TYPE",
 				ResourceName: "NAME",
 				PatternType:  "PATTERN",
-				Principal:    "PRINCIPAL",
+				Principal:    "User:PRINCIPAL",
 				Host:         "HOST",
 				Operation:    "OP",
 				Permission:   "PERMISSION",
@@ -105,7 +105,7 @@ func (m *ACL) ClustersClusterIdAclsGet(_ctx context.Context, _clusterId string, 
 	}, httpResp, nil
 }
 
-func (m *ACL) ClustersClusterIdAclsPost(_ctx context.Context, _clusterId string, _localVarOptionals *krsdk.ClustersClusterIdAclsPostOpts) (*nethttp.Response, error) {
+func (m *ACL) CreateKafkaAcls(_ context.Context, _ string, _ *krsdk.CreateKafkaAclsOpts) (*nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 201,
 	}
@@ -113,7 +113,7 @@ func (m *ACL) ClustersClusterIdAclsPost(_ctx context.Context, _clusterId string,
 }
 
 // Compile-time check interface adherence
-var _ krsdk.ConsumerGroupApi = (*ConsumerGroup)(nil)
+var _ krsdk.ConsumerGroupV3Api = (*ConsumerGroup)(nil)
 
 type ConsumerGroup struct {
 	Expect chan interface{}
@@ -123,19 +123,19 @@ func NewConsumerGroupMock(expect chan interface{}) *ConsumerGroup {
 	return &ConsumerGroup{expect}
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdAssignmentsGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string) (krsdk.ConsumerAssignmentDataList, *nethttp.Response, error) {
+func (c ConsumerGroup) ListKafkaConsumerAssignment(_ context.Context, _ string, _ string, _ string) (krsdk.ConsumerAssignmentDataList, *nethttp.Response, error) {
 	panic("implement me")
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdAssignmentsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string, topicName string, partitionId int32) (krsdk.ConsumerAssignmentData, *nethttp.Response, error) {
+func (c ConsumerGroup) GetKafkaConsumerAssignment(_ context.Context, _ string, _ string, _ string, _ string, _ int32) (krsdk.ConsumerAssignmentData, *nethttp.Response, error) {
 	panic("implement me")
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersConsumerIdGet(ctx context.Context, clusterId string, consumerGroupId string, consumerId string) (krsdk.ConsumerData, *nethttp.Response, error) {
+func (c ConsumerGroup) GetKafkaConsumer(_ context.Context, _ string, _ string, _ string) (krsdk.ConsumerData, *nethttp.Response, error) {
 	panic("implement me")
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdConsumersGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerDataList, *nethttp.Response, error) {
+func (c ConsumerGroup) ListKafkaConsumers(_ context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerDataList, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: nethttp.StatusOK,
 	}
@@ -163,7 +163,7 @@ type GroupMatcher struct {
 	ConsumerGroupId string
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupData, *nethttp.Response, error) {
+func (c ConsumerGroup) GetKafkaConsumerGroup(_ context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupData, *nethttp.Response, error) {
 	expect := <-c.Expect
 	matcher := expect.(GroupMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
@@ -188,7 +188,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdGet(ctx con
 	}, httpResp, nil
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
+func (c ConsumerGroup) GetKafkaConsumerGroupLagSummary(_ context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerGroupLagSummaryData, *nethttp.Response, error) {
 	expect := <-c.Expect
 	matcher := expect.(GroupMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
@@ -219,7 +219,7 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagSummaryG
 
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
+func (c ConsumerGroup) ListKafkaConsumerLags(_ context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {
 	expect := <-c.Expect
 	matcher := expect.(GroupMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
@@ -268,9 +268,9 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsGet(ctx
 	}, httpResp, nil
 }
 
-func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
+func (c ConsumerGroup) ListKafkaConsumerGroups(_ context.Context, clusterId string) (krsdk.ConsumerGroupDataList, *nethttp.Response, error) {
 	// lkc-12345 is the id of the mock cluster set in v3/mock.go
-	if err := assertEqualValues(clusterId, configv3mock.MockKafkaClusterId()); err != nil {
+	if err := assertEqualValues(clusterId, v1.MockKafkaClusterId()); err != nil {
 		return krsdk.ConsumerGroupDataList{}, nil, err
 	}
 
@@ -299,10 +299,15 @@ func (c ConsumerGroup) ClustersClusterIdConsumerGroupsGet(ctx context.Context, c
 }
 
 // Compile-time check interface adherence
-var _ krsdk.PartitionApi = (*Partition)(nil)
+var _ krsdk.PartitionV3Api = (*Partition)(nil)
 
 type Partition struct {
 	Expect chan interface{}
+}
+
+func (m *Partition) GetKafkaPartition(ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.PartitionData, *nethttp.Response, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewPartitionMock(expect chan interface{}) *Partition {
@@ -315,7 +320,7 @@ type PartitionLagMatcher struct {
 	PartitionId     int32
 }
 
-func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNamePartitionsPartitionIdGet(ctx context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
+func (m *Partition) GetKafkaConsumerLag(_ context.Context, clusterId string, consumerGroupId string, topicName string, partitionId int32) (krsdk.ConsumerLagData, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(PartitionLagMatcher)
 	if err := assertEqualValues(consumerGroupId, matcher.ConsumerGroupId); err != nil {
@@ -350,11 +355,11 @@ func (m *Partition) ClustersClusterIdConsumerGroupsConsumerGroupIdLagsTopicNameP
 	}, httpResp, nil
 }
 
-func (m *Partition) ClustersClusterIdTopicsPartitionsReassignmentGet(_ctx context.Context, _clusterId string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {
+func (m *Partition) ClustersClusterIdTopicsPartitionsReassignmentGet(_ context.Context, _ string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {
 	return krsdk.ReassignmentDataList{}, nil, nil
 }
 
-func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsGet(_ctx context.Context, clusterId string, topicName string) (krsdk.PartitionDataList, *nethttp.Response, error) {
+func (m *Partition) ListKafkaPartitions(_ context.Context, clusterId string, topicName string) (krsdk.PartitionDataList, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 200,
 	}
@@ -376,20 +381,20 @@ func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsGet(_ctx context.C
 	}, httpResp, nil
 }
 
-func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(_ctx context.Context, _clusterId string, _topicName string, _partitionId int32) (krsdk.PartitionData, *nethttp.Response, error) {
+func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdGet(_ context.Context, _ string, _ string, _ int32) (krsdk.PartitionData, *nethttp.Response, error) {
 	return krsdk.PartitionData{}, nil, nil
 }
 
-func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(_ctx context.Context, _clusterId string, _topicName string, _partitionId int32) (krsdk.ReassignmentData, *nethttp.Response, error) {
+func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(_ context.Context, _ string, _ string, _ int32) (krsdk.ReassignmentData, *nethttp.Response, error) {
 	return krsdk.ReassignmentData{}, nil, nil
 }
 
-func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(_ctx context.Context, _clusterId string, _topicName string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {
+func (m *Partition) ClustersClusterIdTopicsTopicNamePartitionsReassignmentGet(_ context.Context, _ string, _ string) (krsdk.ReassignmentDataList, *nethttp.Response, error) {
 	return krsdk.ReassignmentDataList{}, nil, nil
 }
 
 // Compile-time check interface adherence
-var _ krsdk.ReplicaApi = (*Replica)(nil)
+var _ krsdk.ReplicaV3Api = (*Replica)(nil)
 
 type Replica struct {
 }
@@ -398,15 +403,15 @@ func NewReplicaMock() *Replica {
 	return &Replica{}
 }
 
-func (m *Replica) ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(_ctx context.Context, _clusterId string, _brokerId int32) (krsdk.ReplicaDataList, *nethttp.Response, error) {
+func (m *Replica) ClustersClusterIdBrokersBrokerIdPartitionReplicasGet(_ context.Context, _ string, _ int32) (krsdk.ReplicaDataList, *nethttp.Response, error) {
 	return krsdk.ReplicaDataList{}, nil, nil
 }
 
-func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(_ctx context.Context, _clusterId string, _topicName string, partitionId int32, brokerId int32) (krsdk.ReplicaData, *nethttp.Response, error) {
+func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasBrokerIdGet(_ context.Context, _ string, _ string, _ int32, _ int32) (krsdk.ReplicaData, *nethttp.Response, error) {
 	return krsdk.ReplicaData{}, nil, nil
 }
 
-func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(_ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.ReplicaDataList, *nethttp.Response, error) {
+func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(_ context.Context, clusterId string, topicName string, partitionId int32) (krsdk.ReplicaDataList, *nethttp.Response, error) {
 	return krsdk.ReplicaDataList{
 		Kind:     "",
 		Metadata: krsdk.ResourceCollectionMetadata{},
@@ -428,11 +433,16 @@ func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasG
 
 type ReplicaStatus struct{}
 
+func (m *ReplicaStatus) ClustersClusterIdTopicsPartitionsReplicaStatusGet(ctx context.Context, clusterId string) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func NewReplicaStatusMock() *ReplicaStatus {
 	return &ReplicaStatus{}
 }
 
-func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
+func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatusGet(_ context.Context, clusterId string, topicName string, partitionId int32) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
 	return krsdk.ReplicaStatusDataList{
 		Kind:     "",
 		Metadata: krsdk.ResourceCollectionMetadata{},
@@ -451,7 +461,7 @@ func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdRep
 	}, nil, nil
 }
 
-func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(ctx context.Context, clusterId string, topicName string) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
+func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusGet(_ context.Context, clusterId string, topicName string) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
 	return krsdk.ReplicaStatusDataList{
 		Kind:     "",
 		Metadata: krsdk.ResourceCollectionMetadata{},
@@ -471,56 +481,71 @@ func (m *ReplicaStatus) ClustersClusterIdTopicsTopicNamePartitionsReplicaStatusG
 }
 
 // Compile-time check interface adherence
-var _ krsdk.ConfigsApi = (*Configs)(nil)
+var _ krsdk.ConfigsV3Api = (*Configs)(nil)
 
 type Configs struct {
+}
+
+func (m *Configs) ClustersClusterIdBrokersConfigsGet(ctx context.Context, clusterId string) (krsdk.BrokerConfigDataList, *nethttp.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Configs) ListKafkaAllTopicConfigs(ctx context.Context, clusterId string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (m *Configs) ListKafkaDefaultTopicConfigs(ctx context.Context, clusterId string, topicName string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewConfigsMock() *Configs {
 	return &Configs{}
 }
 
-func (m *Configs) ClustersClusterIdBrokerConfigsGet(_ctx context.Context, _clusterId string) (krsdk.ClusterConfigDataList, *nethttp.Response, error) {
+func (m *Configs) ListKafkaClusterConfigs(_ context.Context, _ string) (krsdk.ClusterConfigDataList, *nethttp.Response, error) {
 	return krsdk.ClusterConfigDataList{}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokerConfigsNameDelete(_ctx context.Context, _clusterId string, name string) (*nethttp.Response, error) {
+func (m *Configs) DeleteKafkaClusterConfig(_ context.Context, _ string, _ string) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokerConfigsNameGet(_ctx context.Context, _clusterId string, name string) (krsdk.ClusterConfigData, *nethttp.Response, error) {
+func (m *Configs) GetKafkaClusterConfig(_ context.Context, _ string, _ string) (krsdk.ClusterConfigData, *nethttp.Response, error) {
 	return krsdk.ClusterConfigData{}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokerConfigsNamePut(_ctx context.Context, _clusterId string, name string, localVarOptionals *krsdk.ClustersClusterIdBrokerConfigsNamePutOpts) (*nethttp.Response, error) {
+func (m *Configs) UpdateKafkaClusterConfig(_ context.Context, _ string, _ string, _ *krsdk.UpdateKafkaClusterConfigOpts) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokerConfigsalterPost(_ctx context.Context, _clusterId string, localVarOptionals *krsdk.ClustersClusterIdBrokerConfigsalterPostOpts) (*nethttp.Response, error) {
+func (m *Configs) UpdateKafkaClusterConfigs(_ context.Context, _ string, _ *krsdk.UpdateKafkaClusterConfigsOpts) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsGet(_ctx context.Context, _clusterId string, brokerId int32) (krsdk.BrokerConfigDataList, *nethttp.Response, error) {
+func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsGet(_ context.Context, _ string, _ int32) (krsdk.BrokerConfigDataList, *nethttp.Response, error) {
 	return krsdk.BrokerConfigDataList{}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNameDelete(_ctx context.Context, _clusterId string, brokerId int32, name string) (*nethttp.Response, error) {
+func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNameDelete(_ context.Context, _ string, _ int32, _ string) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNameGet(_ctx context.Context, _clusterId string, brokerId int32, name string) (krsdk.BrokerConfigData, *nethttp.Response, error) {
+func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNameGet(_ context.Context, _ string, _ int32, _ string) (krsdk.BrokerConfigData, *nethttp.Response, error) {
 	return krsdk.BrokerConfigData{}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNamePut(_ctx context.Context, _clusterId string, brokerId int32, name string, localVarOptionals *krsdk.ClustersClusterIdBrokersBrokerIdConfigsNamePutOpts) (*nethttp.Response, error) {
+func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsNamePut(_ context.Context, _ string, _ int32, _ string, _ *krsdk.ClustersClusterIdBrokersBrokerIdConfigsNamePutOpts) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsalterPost(_ctx context.Context, _clusterId string, brokerId int32, localVarOptionals *krsdk.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts) (*nethttp.Response, error) {
+func (m *Configs) ClustersClusterIdBrokersBrokerIdConfigsalterPost(_ context.Context, _ string, _ int32, _ *krsdk.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsGet(_ctx context.Context, _clusterId string, topicName string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
+func (m *Configs) ListKafkaTopicConfigs(_ context.Context, _clusterId string, topicName string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
 	v := "configValue1"
 	return krsdk.TopicConfigDataList{
 		Kind:     "",
@@ -543,19 +568,19 @@ func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsGet(_ctx context.Contex
 	}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsNameDelete(_ctx context.Context, _clusterId string, topicName string, name string) (*nethttp.Response, error) {
+func (m *Configs) DeleteKafkaTopicConfig(_ context.Context, _ string, _ string, _ string) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsNameGet(_ctx context.Context, _clusterId string, topicName string, name string) (krsdk.TopicConfigData, *nethttp.Response, error) {
+func (m *Configs) GetKafkaTopicConfig(_ context.Context, _ string, _ string, _ string) (krsdk.TopicConfigData, *nethttp.Response, error) {
 	return krsdk.TopicConfigData{}, nil, nil
 }
 
-func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsNamePut(_ctx context.Context, _clusterId string, topicName string, name string, localVarOptionals *krsdk.ClustersClusterIdTopicsTopicNameConfigsNamePutOpts) (*nethttp.Response, error) {
+func (m *Configs) UpdateKafkaTopicConfig(_ context.Context, _ string, _ string, _ string, _ *krsdk.UpdateKafkaTopicConfigOpts) (*nethttp.Response, error) {
 	return nil, nil
 }
 
-func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsalterPost(_ctx context.Context, _clusterId string, topicName string, localVarOptionals *krsdk.ClustersClusterIdTopicsTopicNameConfigsalterPostOpts) (*nethttp.Response, error) {
+func (m *Configs) UpdateKafkaTopicConfigBatch(_ context.Context, _ string, _ string, _ *krsdk.UpdateKafkaTopicConfigBatchOpts) (*nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: 204,
 	}
@@ -563,13 +588,13 @@ func (m *Configs) ClustersClusterIdTopicsTopicNameConfigsalterPost(_ctx context.
 }
 
 // Compile-time check interface adherence
-var _ krsdk.ClusterLinkingApi = (*ClusterLinking)(nil)
+var _ krsdk.ClusterLinkingV3Api = (*ClusterLinking)(nil)
 
 type ClusterLinking struct {
 	Expect chan interface{}
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksMirrorsGet(ctx context.Context, clusterId string, localVarOptionals *krsdk.ClustersClusterIdLinksMirrorsGetOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) ListKafkaMirrorTopics(_ context.Context, _ string, localVarOptionals *krsdk.ListKafkaMirrorTopicsOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(ListMirrorMatcher)
 
@@ -635,7 +660,7 @@ func NewClusterLinkingMock(expect chan interface{}) *ClusterLinking {
 	return &ClusterLinking{expect}
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksGet(ctx context.Context, clusterId string) (krsdk.ListLinksResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) ListKafkaLinks(_ context.Context, clusterId string) (krsdk.ListLinksResponseDataList, *nethttp.Response, error) {
 	httpResp := &nethttp.Response{
 		StatusCode: nethttp.StatusOK,
 	}
@@ -646,10 +671,10 @@ func (m *ClusterLinking) ClustersClusterIdLinksGet(ctx context.Context, clusterI
 			{
 				Kind:            "",
 				Metadata:        krsdk.ResourceMetadata{},
-				SourceClusterId: clusterId,
+				SourceClusterId: stringPtr(clusterId),
 				LinkName:        "link-1",
 				LinkId:          "LinkId",
-				TopicNames:      []string{"topic-1", "topic-2", "topic-3"},
+				TopicsNames:     []string{"topic-1", "topic-2", "topic-3"},
 			},
 		},
 	}, httpResp, nil
@@ -659,7 +684,7 @@ type DeleteLinkConfigMatcher struct {
 	LinkName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsConfigNameDelete(ctx context.Context, clusterId string, linkName string, configName string) (*nethttp.Response, error) {
+func (m *ClusterLinking) DeleteKafkaLinkConfig(_ context.Context, _ string, linkName string, _ string) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DeleteLinkConfigMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -677,7 +702,7 @@ type GetLinkConfigMatcher struct {
 	ConfigName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsConfigNameGet(ctx context.Context, clusterId string, linkName string, configName string) (krsdk.ListLinkConfigsResponseData, *nethttp.Response, error) {
+func (m *ClusterLinking) GetKafkaLinkConfigs(_ context.Context, clusterId string, linkName string, configName string) (krsdk.ListLinkConfigsResponseData, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(GetLinkConfigMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -709,7 +734,7 @@ type UpdateLinkConfigMatcher struct {
 	ConfigValue string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsConfigNamePut(ctx context.Context, clusterId string, linkName string, configName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameConfigsConfigNamePutOpts) (*nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaLinkConfig(_ context.Context, _ string, linkName string, configName string, localVarOptionals *krsdk.UpdateKafkaLinkConfigOpts) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(UpdateLinkConfigMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -732,7 +757,7 @@ type ListLinkConfigMatcher struct {
 	LinkName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsGet(ctx context.Context, clusterId string, linkName string) (krsdk.ListLinkConfigsResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) ListKafkaLinkConfigs(_ context.Context, clusterId string, linkName string) (krsdk.ListLinkConfigsResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DescribeLinkMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -767,7 +792,7 @@ type BatchUpdateLinkConfigMatcher struct {
 	Configs  map[string]string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameConfigsalterPut(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameConfigsalterPutOpts) (*nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaLinkConfigBatch(_ context.Context, _ string, _ string, localVarOptionals *krsdk.UpdateKafkaLinkConfigBatchOpts) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(BatchUpdateLinkConfigMatcher)
 	for _, batchOp := range localVarOptionals.AlterConfigBatchRequestData.Value().(krsdk.AlterConfigBatchRequestData).Data {
@@ -786,7 +811,7 @@ type DeleteLinkMatcher struct {
 	LinkName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameDelete(ctx context.Context, clusterId string, linkName string) (*nethttp.Response, error) {
+func (m *ClusterLinking) DeleteKafkaLink(_ context.Context, _ string, linkName string, _ *krsdk.DeleteKafkaLinkOpts) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DeleteLinkMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -803,7 +828,7 @@ type DescribeLinkMatcher struct {
 	LinkName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameGet(ctx context.Context, clusterId string, linkName string) (krsdk.ListLinksResponseData, *nethttp.Response, error) {
+func (m *ClusterLinking) GetKafkaLink(_ context.Context, clusterId string, linkName string) (krsdk.ListLinksResponseData, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DescribeLinkMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -816,10 +841,10 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameGet(ctx context.Context, 
 	return krsdk.ListLinksResponseData{
 		Kind:            "",
 		Metadata:        krsdk.ResourceMetadata{},
-		SourceClusterId: clusterId,
+		SourceClusterId: stringPtr(clusterId),
 		LinkName:        linkName,
 		LinkId:          "link-1",
-		TopicNames:      []string{"topic-1", "topic-2", "topic-3"},
+		TopicsNames:     []string{"topic-1", "topic-2", "topic-3"},
 	}, httpResp, nil
 }
 
@@ -828,7 +853,7 @@ type DescribeMirrorMatcher struct {
 	MirrorTopicName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsMirrorTopicNameGet(ctx context.Context, clusterId string, linkName string, mirrorTopicName string) (krsdk.ListMirrorTopicsResponseData, *nethttp.Response, error) {
+func (m *ClusterLinking) ReadKafkaMirrorTopic(_ context.Context, _ string, linkName string, mirrorTopicName string) (krsdk.ListMirrorTopicsResponseData, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(DescribeMirrorMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -872,7 +897,7 @@ type AlterMirrorMatcher struct {
 	MirrorTopicNames map[string]bool
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsfailoverPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsfailoverPostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaMirrorTopicsFailover(_ context.Context, _ string, _ string, localVarOptionals *krsdk.UpdateKafkaMirrorTopicsFailoverOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).MirrorTopicNames {
@@ -889,7 +914,7 @@ type ListMirrorMatcher struct {
 	Status   string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsGetOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) ListKafkaMirrorTopicsUnderLink(_ context.Context, _ string, linkName string, localVarOptionals *krsdk.ListKafkaMirrorTopicsUnderLinkOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(ListMirrorMatcher)
 	if err := assertEqualValues(linkName, matcher.LinkName); err != nil {
@@ -953,7 +978,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsGet(ctx context.Co
 	}, httpResp, nil
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorspausePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorspausePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaMirrorTopicsPause(_ context.Context, _ string, _ string, localVarOptionals *krsdk.UpdateKafkaMirrorTopicsPauseOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).MirrorTopicNames {
@@ -969,9 +994,10 @@ type CreateMirrorMatcher struct {
 	LinkName        string
 	SourceTopicName string
 	Configs         map[string]string
+	MirrorTopicName string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsPostOpts) (*nethttp.Response, error) {
+func (m *ClusterLinking) CreateKafkaMirrorTopic(_ context.Context, _ string, linkName string, localVarOptionals *krsdk.CreateKafkaMirrorTopicOpts) (*nethttp.Response, error) {
 	data := localVarOptionals.CreateMirrorTopicRequestData.Value().(krsdk.CreateMirrorTopicRequestData)
 	expect := <-m.Expect
 	matcher := expect.(CreateMirrorMatcher)
@@ -994,7 +1020,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsPost(ctx context.C
 	return httpResp, nil
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorspromotePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorspromotePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaMirrorTopicsPromote(_ context.Context, _ string, _ string, localVarOptionals *krsdk.UpdateKafkaMirrorTopicsPromoteOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).MirrorTopicNames {
@@ -1006,7 +1032,7 @@ func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorspromotePost(ctx co
 	return m.AlterMirrorResultResponse()
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksLinkNameMirrorsresumePost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksLinkNameMirrorsresumePostOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
+func (m *ClusterLinking) UpdateKafkaMirrorTopicsResume(_ context.Context, _ string, _ string, localVarOptionals *krsdk.UpdateKafkaMirrorTopicsResumeOpts) (krsdk.AlterMirrorStatusResponseDataList, *nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(AlterMirrorMatcher)
 	for _, topic := range localVarOptionals.AlterMirrorsRequestData.Value().(krsdk.AlterMirrorsRequestData).MirrorTopicNames {
@@ -1026,7 +1052,7 @@ type CreateLinkMatcher struct {
 	Configs         map[string]string
 }
 
-func (m *ClusterLinking) ClustersClusterIdLinksPost(ctx context.Context, clusterId string, linkName string, localVarOptionals *krsdk.ClustersClusterIdLinksPostOpts) (*nethttp.Response, error) {
+func (m *ClusterLinking) CreateKafkaLink(_ context.Context, _ string, linkName string, localVarOptionals *krsdk.CreateKafkaLinkOpts) (*nethttp.Response, error) {
 	expect := <-m.Expect
 	matcher := expect.(CreateLinkMatcher)
 	data := localVarOptionals.CreateLinkRequestData.Value().(krsdk.CreateLinkRequestData)
@@ -1106,4 +1132,8 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 			},
 		},
 	}, httpResp, nil
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

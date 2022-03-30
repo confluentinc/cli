@@ -3,16 +3,15 @@ package keystore
 
 import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error)
-	StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error
+	HasAPIKey(key string, clusterId string) (bool, error)
+	StoreAPIKey(key *schedv1.ApiKey, clusterId string) error
 	DeleteAPIKey(key string) error
 }
 
@@ -20,12 +19,12 @@ type ConfigKeyStore struct {
 	Config *cmd.DynamicConfig
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Command) (bool, error) {
+func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return false, &errors.NoContextError{CLIName: c.Config.CLIName}
+		return false, new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return false, err
 	}
@@ -34,16 +33,16 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string, cmd *cobra.Comm
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd *cobra.Command) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: c.Config.CLIName}
+		return new(errors.NotLoggedInError)
 	}
-	kcc, err := ctx.FindKafkaCluster(cmd, clusterId)
+	kcc, err := ctx.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err
 	}
-	kcc.APIKeys[key.Key] = &v0.APIKeyPair{
+	kcc.APIKeys[key.Key] = &v1.APIKeyPair{
 		Key:    key.Key,
 		Secret: key.Secret,
 	}
@@ -53,7 +52,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string, cmd 
 func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
-		return &errors.NoContextError{CLIName: c.Config.CLIName}
+		return new(errors.NotLoggedInError)
 	}
 	ctx.KafkaClusterContext.DeleteAPIKey(key)
 	return c.Config.Save()

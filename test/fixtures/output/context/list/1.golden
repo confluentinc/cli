@@ -1,0 +1,8 @@
+- credential: username-cloud@example.com
+  current: "false"
+  name: login-cloud@example.com-http://127.0.0.1:1024
+  platform: http://127.0.0.1:1024
+- credential: username-on-prem@example.com
+  current: "true"
+  name: login-on-prem@example.com-http://127.0.0.1:\d+
+  platform: http://127.0.0.1:\d+

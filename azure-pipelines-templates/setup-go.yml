@@ -1,9 +1,9 @@
 steps:
 - script: |
-    wget "https://golang.org/dl/go1.16.3.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.16.3.tar.gz"
-    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.16.3.tar.gz"
+    wget "https://golang.org/dl/go1.17.6.linux-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
+    tar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
   condition: eq( variables['Agent.OS'], 'Linux' )
-  displayName: Install Go 1.16.3 (Linux)
+  displayName: Install Go 1.17.6 (Linux)
 
 - script: |
     brew install gnu-tar
@@ -18,17 +18,31 @@ steps:
   displayName: Install chrome (Darwin)
 
 - script: |
-    wget "https://golang.org/dl/go1.16.3.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.16.3.tar.gz"
-    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.16.3.tar.gz"
+    wget "https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz" --output-document "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
+    gtar -C '$(Agent.BuildDirectory)' -xzf "$(Agent.BuildDirectory)/go1.17.6.tar.gz"
   condition: eq( variables['Agent.OS'], 'Darwin' )
-  displayName: Install Go 1.16.3 (Darwin)
+  displayName: Install Go 1.17.6 (Darwin)
 
 - powershell: |
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest -Uri "https://golang.org/dl/go1.16.3.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.16.3.zip" -Verbose
-    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.16.3.zip "-o$(Agent.BuildDirectory)" -y
+    Invoke-WebRequest -Uri "https://golang.org/dl/go1.17.6.windows-amd64.zip" -OutFile "$(Agent.BuildDirectory)\go1.17.6.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/go1.17.6.zip "-o$(Agent.BuildDirectory)" -y
   condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  displayName: Install Go 1.16.3 (Windows)
+  displayName: Install Go 1.17.6 (Windows)
+
+- powershell: |
+    $ProgressPreference = 'SilentlyContinue'
+    Invoke-WebRequest -Uri "https://github.com/brechtsanders/winlibs_mingw/releases/download/11.2.0-12.0.1-9.0.0-r1/winlibs-x86_64-posix-seh-gcc-11.2.0-llvm-12.0.1-mingw-w64-9.0.0-r1.zip" -OutFile "$(Agent.BuildDirectory)\gcc11.2.zip" -Verbose
+    & ${env:ProgramFiles}\7-Zip\7z.exe x $(Agent.BuildDirectory)/gcc11.2.zip "-o$(Agent.BuildDirectory)" -y
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Install gcc 11.2 x86_64 (Windows)
+
+- script: |
+    echo '##vso[task.prependpath]$(Agent.BuildDirectory)\mingw64\bin'
+    echo '##vso[task.setvariable variable=PATH;]$(Agent.BuildDirectory)\mingw64\bin;$(PATH)'
+    echo '$(PATH)'
+  condition: eq( variables['Agent.OS'], 'Windows_NT' )
+  displayName: Set up the GCC workspace (Windows)
 
 # Linux
 - bash: |

@@ -2,11 +2,10 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
-	"strings"
+	"time"
 
 	"github.com/confluentinc/properties"
 
@@ -60,6 +59,15 @@ func Contains(haystack []string, needle string) bool {
 	return false
 }
 
+func Remove(haystack []string, needle string) []string {
+	for i, x := range haystack {
+		if x == needle {
+			return append(haystack[:i], haystack[i+1:]...)
+		}
+	}
+	return haystack
+}
+
 func DoesPathExist(path string) bool {
 	if path == "" {
 		return false
@@ -73,20 +81,23 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
 		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
 	}
+
 	loader := new(properties.Loader)
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
-	//property.DisableExpansion = true
-	bytes, err := ioutil.ReadFile(path)
+
+	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	bytes = NormalizeByteArrayNewLines(bytes)
-	property, err := loader.LoadBytes(bytes)
+	data = NormalizeByteArrayNewLines(data)
+
+	property, err := loader.LoadBytes(data)
 	if err != nil {
 		return nil, err
 	}
 	property.DisableExpansion = true
+
 	return property, nil
 }
 
@@ -107,37 +118,25 @@ func ValidateEmail(email string) bool {
 	return matched
 }
 
-func ToMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.FailedToParseConfigErrMsg, cfg)
-		}
-		configMap[pair[0]] = pair[1]
+func Abbreviate(s string, maxLength int) string {
+	if len(s) <= maxLength {
+		return s
 	}
-	return configMap, nil
+	return s[0:maxLength] + "..."
 }
 
-func ReadConfigsFromFile(configFile string) (map[string]string, error) {
-	if configFile == "" {
-		return map[string]string{}, nil
-	}
-
-	configContents, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create config map from the argument.
-	var configs []string
-	for _, s := range strings.Split(string(configContents), "\n") {
-		// Filter out blank lines
-		spaceTrimmed := strings.TrimSpace(s)
-		if s != "" && spaceTrimmed[0] != '#' {
-			configs = append(configs, spaceTrimmed)
+func CropString(s string, n int) string {
+	const suffix = "..."
+	if n-len(suffix) < len(s) {
+		cropped := s[:n-len(suffix)] + suffix
+		if len(cropped) < len(s) {
+			return cropped
 		}
 	}
+	return s
+}
 
-	return ToMap(configs)
+func FormatUnixTime(timeMs int64) string {
+	time := time.Unix(0, timeMs*int64(time.Millisecond))
+	return time.UTC().Format("2006-01-02 15:04:05 MST")
 }

@@ -1,0 +1,131 @@
+project_name: confluent
+
+dist: dist
+
+before:
+  hooks:
+    # to avoid goreleaser error due to `make deps` on CI: git is currently in a dirty state
+    # we should never see go.mod be dirty because we `go build -mod=readonly`, but we can't well control go.sum updates
+    - git checkout go.sum
+    # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
+    - rm -rf $GOPATH/pkg/mod
+
+# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
+# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
+builds:
+  - binary: confluent
+    id: confluent-linux-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+      - -tags=musl
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-musl-gcc
+      - CXX=x86_64-linux-musl-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - binary: confluent
+    id: confluent-windows-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+  - binary: confluent
+    id: signed-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: make download-licenses
+          env:
+            - LICENSE_BIN=confluent
+            - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
+        - cmd: gon gon_confluent_amd64.hcl
+  - binary: confluent
+    id: signed-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      pre:
+        - cmd: make switch-librdkafka-arm64
+      post:
+        - cmd: make restore-librdkafka-amd64
+        - cmd: gon gon_confluent_arm64.hcl
+
+archives:
+  - id: binary
+    format: binary
+  - id: archive
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+
+blobs:
+  -
+    ids:
+    - binary
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+  -
+    ids:
+    - archive
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"

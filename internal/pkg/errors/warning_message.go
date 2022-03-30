@@ -5,14 +5,22 @@ const (
 	APIKeyNotRetrievableMsg = "Save the API key and secret. The secret is not retrievable later."
 	APIKeyTime              = "It may take a couple of minutes for the API key to be ready."
 
-	// kafka commands
-	KafkaClusterTime = "It may take up to 5 minutes for the Kafka cluster to be ready."
-
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
 
 	//login command
-	UsingLoginURLDefaults = "Assuming %s.\n"
+	UsingLoginURLDefaults      = "Assuming %s.\n"
+	DeprecatedEnvVarWarningMsg = "`%s` has been deprecated and replaced by `%s`.\n"
+
+	// kafka client-config create command
+	SRInConfigFileWarning     = "created client configuration file but Schema Registry is not fully configured."
+	SRInConfigFileSuggestions = "Alternatively, you can configure Schema Registry manually in the client configuration file before using it."
+	SRKeyNotSetReason         = "no Schema Registry API key specified"
+	SRKeyNotSetSuggestions    = "Pass the `--sr-apikey` flag to specify the Schema Registry API key."
+	SRSecretNotSetReason      = "no Schema Registry API secret for key \"%s\" specified"
+	SRSecretNotSetSuggestions = "Pass the `--sr-apisecret` flag to specify the Schema Registry API secret."
+	SRCredsNotSetReason       = "no Schema Registry API key or secret specified"
+	SRCredsNotSetSuggestions  = "Pass the `--sr-apikey` and `--sr-apisecret` flags to specify the Schema Registry API key and secret."
 
 	//kafka rest
 	AssumingHttpProtocol  = "Assuming http protocol.\n"
@@ -20,6 +28,8 @@ const (
 
 	// ksql create warning
 	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
+	KSQLAppDeprecateWarning    = "In the next major release, the `confluent ksql app` commands will be removed. " +
+		"Use the equivalent `confluent ksql cluster` commands instead."
 
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +

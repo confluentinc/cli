@@ -3,37 +3,52 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/dghubble/sling"
+	"os"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/dghubble/sling"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const (
 	CCloudURL = "https://confluent.cloud"
 
-	CCloudEmailEnvVar       = "CCLOUD_EMAIL"
-	ConfluentUsernameEnvVar = "CONFLUENT_USERNAME"
-	CCloudPasswordEnvVar    = "CCLOUD_PASSWORD"
-	ConfluentPasswordEnvVar = "CONFLUENT_PASSWORD"
+	ConfluentCloudEmail          = "CONFLUENT_CLOUD_EMAIL"
+	ConfluentCloudPassword       = "CONFLUENT_CLOUD_PASSWORD"
+	ConfluentCloudOrganizationId = "CONFLUENT_CLOUD_ORGANIZATION_ID"
+	ConfluentPlatformUsername    = "CONFLUENT_PLATFORM_USERNAME"
+	ConfluentPlatformPassword    = "CONFLUENT_PLATFORM_PASSWORD"
+	ConfluentPlatformMDSURL      = "CONFLUENT_PLATFORM_MDS_URL"
+	ConfluentPlatformCACertPath  = "CONFLUENT_PLATFORM_CA_CERT_PATH"
 
-	CCloudEmailDeprecatedEnvVar       = "XX_CCLOUD_EMAIL"
-	ConfluentUsernameDeprecatedEnvVar = "XX_CONFLUENT_USERNAME"
-	CCloudPasswordDeprecatedEnvVar    = "XX_CCLOUD_PASSWORD"
-	ConfluentPasswordDeprecatedEnvVar = "XX_CONFLUENT_PASSWORD"
-
-	ConfluentURLEnvVar        = "CONFLUENT_MDS_URL"
-	ConfluentCaCertPathEnvVar = "CONFLUENT_CA_CERT_PATH"
+	DeprecatedConfluentCloudEmail         = "CCLOUD_EMAIL"
+	DeprecatedConfluentCloudPassword      = "CCLOUD_PASSWORD"
+	DeprecatedConfluentPlatformUsername   = "CONFLUENT_USERNAME"
+	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
+	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
+	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
 )
 
-func PersistLogoutToConfig(config *v3.Config) error {
+// GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
+func GetEnvWithFallback(current, deprecated string) string {
+	if val := os.Getenv(current); val != "" {
+		return val
+	}
+
+	if val := os.Getenv(deprecated); val != "" {
+		_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
+		return val
+	}
+
+	return ""
+}
+
+func PersistLogoutToConfig(config *v1.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
 		return nil
@@ -46,53 +61,50 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
-	state := &v2.ContextState{
-		Auth:      nil,
-		AuthToken: token,
-	}
+func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCertPath string, isLegacyContext bool) error {
+	state := &v1.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
+	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
+func PersistCCloudLoginToConfig(config *v1.Config, email, url, token, refreshToken string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
 	ctxName := GenerateCloudContextName(email, url)
-	state, err := getCCloudContextState(config, ctxName, email, url, token, client)
+	user, err := getCCloudUser(client)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	err = addOrUpdateContext(config, ctxName, email, url, state, "")
-	if err != nil {
-		return nil, err
-	}
-	return state.Auth.Account, nil
+	state := getCCloudContextState(config, ctxName, token, refreshToken, user)
+
+	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
+	return state.Auth.Account, user.Organization, err
 }
 
-func addOrUpdateContext(config *v3.Config, ctxName string, username string, url string, state *v2.ContextState, caCertPath string) error {
+func addOrUpdateContext(config *v1.Config, ctxName, username, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
 	credName := generateCredentialName(username)
-	platform := &v2.Platform{
+	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
-	credential := &v2.Credential{
+	credential := &v1.Credential{
 		Name:     credName,
 		Username: username,
 		// don't save password if they entered it interactively.
 	}
-	err := config.SavePlatform(platform)
-	if err != nil {
+
+	if err := config.SavePlatform(platform); err != nil {
 		return err
 	}
-	err = config.SaveCredential(credential)
-	if err != nil {
+
+	if err := config.SaveCredential(credential); err != nil {
 		return err
 	}
+
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
 		ctx.State = state
@@ -102,37 +114,27 @@ func addOrUpdateContext(config *v3.Config, ctxName string, username string, url 
 
 		ctx.Credential = credential
 		ctx.CredentialName = credential.Name
+		ctx.LastOrgId = orgResourceId
 	} else {
-		err = config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{},
-			"", nil, state)
+		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId); err != nil {
+			return err
+		}
 	}
-	if err != nil {
-		return err
-	}
-	err = config.SetContext(ctxName)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v3.Config, ctxName string, email string, url string, token string, client *ccloud.Client) (*v2.ContextState, error) {
-	user, err := getCCloudUser(token, client)
-	if err != nil {
-		return nil, err
-	}
-	var state *v2.ContextState
-	ctx, err := config.FindContext(ctxName)
-	if err == nil {
+func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *flowv1.GetMeReply) *v1.ContextState {
+	state := new(v1.ContextState)
+	if ctx, err := config.FindContext(ctxName); err == nil {
 		state = ctx.State
-	} else {
-		state = new(v2.ContextState)
 	}
-	state.AuthToken = token
 
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}
 	}
+	state.AuthToken = token
+	state.AuthRefreshToken = refreshToken
 
 	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
@@ -154,10 +156,10 @@ func getCCloudContextState(config *v3.Config, ctxName string, email string, url 
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
-	return state, nil
+	return state
 }
 
-func getCCloudUser(token string, client *ccloud.Client) (*orgv1.GetUserReply, error) {
+func getCCloudUser(client *ccloud.Client) (*flowv1.GetMeReply, error) {
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return nil, err
@@ -185,28 +187,21 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetRemoteAPIName(cliName string) string {
-	if cliName == "ccloud" {
-		return "Confluent Cloud"
-	}
-	return "Confluent Platform"
-}
-
 type response struct {
 	Error string `json:"error"`
 	Token string `json:"token"`
 }
 
-func GetBearerToken(authenticatedState *v2.ContextState, server string) (string, error) {
+func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId string) (string, error) {
 	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
+	clusterIds := map[string][]string{"clusterIds": {clusterId}}
 
 	// Configure and send post request with session token to Auth Service to get access token
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return "", err
 	}
-
 	return responses.Token, nil
 }

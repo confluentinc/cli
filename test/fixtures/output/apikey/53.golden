@@ -1,4 +1,0 @@
-Error: service account "sa-123456" not found
-
-Suggestions:
-    List service accounts with `ccloud service-account list`.

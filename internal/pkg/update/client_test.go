@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -18,9 +19,9 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	updateMock "github.com/confluentinc/cli/internal/pkg/update/mock"
+	"github.com/confluentinc/cli/test"
 )
 
 func TestNewClient(t *testing.T) {
@@ -87,7 +88,6 @@ func TestCheckForUpdates(t *testing.T) {
 			name: "should err if currentVersion isn't semver",
 			client: NewClient(&ClientParams{
 				Repository: &updateMock.Repository{},
-				Logger:     log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -103,7 +103,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, nil, errors.New("zap")
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -120,7 +119,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v3, current, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -137,7 +135,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v3, v3, nil
 					},
 				},
-				Logger:    log.New(),
 				CheckFile: tmpCheckFile1.Name(),
 			}),
 			args: args{
@@ -154,7 +151,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, nil, errors.New("whoops")
 					},
 				},
-				Logger: log.New(),
 				// This check file was created by the TmpFile process, modtime is current, so should skip check
 				CheckFile: tmpCheckFile1.Name(),
 			}),
@@ -172,7 +168,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v3, current, nil
 					},
 				},
-				Logger: log.New(),
 				// This check file was created by the TmpFile process, modtime is current, so should skip check
 				CheckFile: tmpCheckFile1.Name(),
 			}),
@@ -192,7 +187,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v2, v2, nil
 					},
 				},
-				Logger: log.New(),
 				// This file doesn't exist but you won't have permission to create it
 				CheckFile: "/sbin/cant-write-here",
 			}),
@@ -211,7 +205,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v2, v2, nil
 					},
 				},
-				Logger: log.New(),
 				// This file doesn't exist but you won't have permission to touch it
 				CheckFile: "/sbin/ping",
 			}),
@@ -230,7 +223,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, nil, errors.New("whoops")
 					},
 				},
-				Logger:       log.New(),
 				DisableCheck: true,
 			}),
 			args: args{
@@ -246,7 +238,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, nil, errors.New("whoops")
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -263,7 +254,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, v, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -280,7 +270,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v, v, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -296,7 +285,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v, v, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -312,7 +300,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return v, v, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -328,7 +315,6 @@ func TestCheckForUpdates(t *testing.T) {
 						return nil, v, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			args: args{
 				name:           "my-cli",
@@ -400,7 +386,6 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	clock := clockwork.NewFakeClockAt(time.Now())
 	client := NewClient(&ClientParams{
 		Repository: repo,
-		Logger:     log.New(),
 		CheckFile:  checkFile,
 	})
 	client.clock = clock
@@ -458,7 +443,6 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 	}
 	client := NewClient(&ClientParams{
 		Repository: repo,
-		Logger:     log.New(),
 	})
 	client.clock = clockwork.NewFakeClockAt(time.Now())
 
@@ -470,6 +454,76 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 		req.Equal("v3", latestMinorVersion)
 		req.True(repo.GetLatestMajorAndMinorVersionCalled())
 		repo.Reset()
+	}
+}
+
+func TestVerifyChecksum(t *testing.T) {
+	checksums := test.LoadFixture(t, "update/checksums.golden")
+
+	mockRepository := &updateMock.Repository{
+		DownloadChecksumsFunc: func(name, version string) (string, error) {
+			if version == "2.5.1" {
+				return checksums, nil
+			} else {
+				return "", errors.New("No checksums for given version")
+			}
+		},
+	}
+
+	mockClient := &updateMock.Client{
+		VerifyChecksumFunc: func(newBin, cliName, version string) error {
+			if strings.Contains(checksums, newBin) {
+				return nil
+			}
+			return errors.New("checksum verification failed")
+		},
+	}
+
+	tests := []struct {
+		name            string
+		checksum        string
+		version         string
+		wantDownloadErr bool
+		wantVerifyErr   bool
+	}{
+		{
+			name:            "valid checksum for valid version verifies successfully",
+			checksum:        "cc066356f5a36c532b88651e31450dffa008f2626119c94e2ef808ddbe4da48a",
+			version:         "2.5.1",
+			wantDownloadErr: false,
+			wantVerifyErr:   false,
+		},
+		{
+			name:            "invalid checksum for valid version fails",
+			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
+			version:         "2.5.1",
+			wantDownloadErr: false,
+			wantVerifyErr:   true,
+		},
+		{
+			name:            "checksum for invalid version fails",
+			checksum:        "cc066356f5a008f2626119c94e2ef808ddbe4da48a",
+			version:         "0.1234.0",
+			wantDownloadErr: true,
+			wantVerifyErr:   true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := mockRepository.DownloadChecksums("confluent", tt.version)
+			if tt.wantDownloadErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+
+			err = mockClient.VerifyChecksum(tt.checksum, "confluent", tt.version)
+			if tt.wantVerifyErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
 	}
 }
 
@@ -497,7 +551,6 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 						return releaseNotes, nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			wantVersion:      releaseNotesVersion,
 			wantReleaseNotes: []string{releaseNotes},
@@ -514,7 +567,6 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 						return "", nil
 					},
 				},
-				Logger: log.New(),
 			}),
 			wantErr: true,
 		},
@@ -530,7 +582,6 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 						return "", errors.New("whoops")
 					},
 				},
-				Logger: log.New(),
 			}),
 			wantErr: true,
 		},
@@ -593,7 +644,6 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
 				},
 				clock: clock,
 				fs:    &pio.RealFileSystem{},
@@ -613,7 +663,6 @@ func TestUpdateBinary(t *testing.T) {
 							return "", 0, errors.New("out of disk!")
 						},
 					},
-					Logger: log.New(),
 				},
 				clock: clock,
 				fs:    &pio.RealFileSystem{},
@@ -638,7 +687,6 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -670,8 +718,7 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
-					OS:     "darwin",
+					OS: "darwin",
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -703,8 +750,7 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
-					OS:     "windows",
+					OS: "windows",
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -736,7 +782,6 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -774,7 +819,6 @@ func TestUpdateBinary(t *testing.T) {
 							return downloadedBin, 16 * 1000 * 1000, nil
 						},
 					},
-					Logger: log.New(),
 				},
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
@@ -799,7 +843,7 @@ func TestUpdateBinary(t *testing.T) {
 			if tt.client.Out == nil {
 				tt.client.Out = os.Stdout
 			}
-			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path); (err != nil) != tt.wantErr {
+			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path, true); (err != nil) != tt.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -833,7 +877,6 @@ func TestPromptToDownload(t *testing.T) {
 	makeClient := func(fs pio.FileSystem) *client {
 		client := NewClient(&ClientParams{
 			Repository: &updateMock.Repository{},
-			Logger:     log.New(),
 		})
 		client.clock = clock
 		client.fs = fs

@@ -1,8 +1,52 @@
 SHELL           := /bin/bash
 ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 GIT_REMOTE_NAME ?= origin
-MASTER_BRANCH   ?= master
-RELEASE_BRANCH  ?= master
+MAIN_BRANCH     ?= main
+RELEASE_BRANCH  ?= main
+
+.PHONY: build # compile natively based on the system
+build:
+ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
+	CC=gcc CXX=g++ make cli-builder
+else ifneq (,$(findstring Linux,$(shell uname)))
+    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
+		CC=gcc CXX=g++ TAGS=musl make cli-builder
+    else # build for glibc Linux
+		CC=gcc CXX=g++ make cli-builder
+    endif
+else
+    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
+		make cli-builder
+    else # build for Darwin/arm64
+		make switch-librdkafka-arm64
+		make cli-builder || true 
+		make restore-librdkafka-amd64
+    endif
+endif
+
+.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+cross-build:
+ifeq ($(GOARCH),arm64) # build for darwin/arm64.
+	make build-darwin-arm64
+else # build for amd64 arch
+    ifeq ($(GOOS),windows)
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+    else ifeq ($(GOOS),linux) 
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+    else # build for Darwin/amd64
+		CGO_ENABLED=1 make cli-builder
+    endif
+endif
+
+.PHONY: build-darwin-arm64
+build-darwin-arm64:
+	make switch-librdkafka-arm64
+	CGO_ENABLED=1 make cli-builder || true 
+	make restore-librdkafka-amd64
+
+.PHONY: cli-builder
+cli-builder:
+	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -17,15 +61,18 @@ REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
+RDKAFKA_VERSION = 1.8.2
+RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
 S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
-
 .PHONY: clean
 clean:
-	rm -rf $(shell pwd)/dist
+	@for dir in bin dist docs legal; do \
+		[ -d $$dir ] && rm -r $$dir || true ; \
+	done
 
 .PHONY: generate
 generate:
@@ -33,73 +80,51 @@ generate:
 
 .PHONY: deps
 deps:
-	export GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc && \
-	export GOPRIVATE=github.com/confluentinc && \
-	go get github.com/goreleaser/goreleaser@v0.162.1 && \
-	go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.41.1 && \
-	go get github.com/mitchellh/golicense@v0.2.0
+	go install github.com/goreleaser/goreleaser@v1.4.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
+	go install github.com/mitchellh/golicense@v0.2.0
+
+.PHONY: jenkins-deps
+# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
+jenkins-deps:
+	go get github.com/goreleaser/goreleaser@v1.4.1
 
 ifeq ($(shell uname),Darwin)
-GORELEASER_SUFFIX ?= -mac.yml
-SHASUM ?= gsha256sum
+    SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
-GORELEASER_SUFFIX ?= -windows.yml
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-SHASUM ?= CertUtil SHA256 -hashfile
+    SHASUM ?= CertUtil SHA256 -hashfile
+else ifneq (,$(findstring Windows,$(shell systeminfo)))
+    SHASUM ?= CertUtil SHA256 -hashfile
 else
-GORELEASER_SUFFIX ?= -linux.yml
-SHASUM ?= sha256sum
+    SHASUM ?= sha256sum
 endif
 
 show-args:
 	@echo "VERSION: $(VERSION)"
+	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
 
 #
 # START DEVELOPMENT HELPERS
-# Usage: make run-ccloud -- version
-#        make run-ccloud -- --version
+# Usage: make run -- version
+#        make run -- --version
 #
 
-# If the first argument is "run-ccloud"...
-ifeq (run-ccloud,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run-ccloud"
+# If the first argument is "run"...
+ifeq (run,$(firstword $(MAKECMDGOALS)))
+  # use the rest as arguments for "run"
   RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   # ...and turn them into do-nothing targets
   $(eval $(RUN_ARGS):;@:)
 endif
 
-# If the first argument is "run-confluent"...
-ifeq (run-confluent,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run-confluent"
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(RUN_ARGS):;@:)
-endif
-
-.PHONY: run-ccloud
-run-ccloud:
-	 @go run -ldflags '-buildmode=exe -X main.cliName=ccloud' cmd/confluent/main.go $(RUN_ARGS)
-
-.PHONY: run-confluent
-run-confluent:
-	 @go run -ldflags '-buildmode=exe -X main.cliName=confluent' cmd/confluent/main.go $(RUN_ARGS)
+.PHONY: run
+run:
+	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
 
 #
 # END DEVELOPMENT HELPERS
 #
-
-.PHONY: build
-build:
-	make build-ccloud
-	make build-confluent
-
-.PHONY: build-ccloud
-build-ccloud:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-ccloud$(GORELEASER_SUFFIX)
-
-.PHONY: build-confluent
-build-confluent:
-	@GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --snapshot --rm-dist -f .goreleaser-confluent$(GORELEASER_SUFFIX)
 
 .PHONY: build-integ
 build-integ:
@@ -108,50 +133,32 @@ build-integ:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	make build-integ-ccloud-nonrace
-	make build-integ-confluent-nonrace
-
-.PHONY: build-integ-ccloud-nonrace
-build-integ-ccloud-nonrace:
-	binary="ccloud_test" ; \
+	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
-
-.PHONY: build-integ-confluent-nonrace
-build-integ-confluent-nonrace:
-	binary="confluent_test" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
-		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe}
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe}
 
 .PHONY: build-integ-race
 build-integ-race:
-	make build-integ-ccloud-race
-	make build-integ-confluent-race
-
-.PHONY: build-integ-ccloud-race
-build-integ-ccloud-race:
-	binary="ccloud_test_race" ; \
+	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=ccloud \
-	-X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-	-X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
-
-.PHONY: build-integ-confluent-race
-build-integ-confluent-race:
-	binary="confluent_test_race" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	go test ./cmd/confluent -ldflags="-buildmode=exe -s -w -X $(RESOLVED_PATH).cliName=confluent \
-		    -X $(RESOLVED_PATH).commit=$(REF) -X $(RESOLVED_PATH).host=$(HOSTNAME) -X $(RESOLVED_PATH).date=$(DATE) \
-		    -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=$(REF) \
+		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
+		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
-define caasenv-authenticate
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && caasenv prod
+define aws-authenticate
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
 endef
 
 .PHONY: fmt
@@ -183,7 +190,7 @@ endif
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m --skip-dirs internal/pkg/analytics
+	@golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
@@ -206,33 +213,39 @@ lint-installers:
 ## Scan and validate third-party dependency licenses
 lint-licenses: build
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@for binary in ccloud confluent; do \
-		echo Licenses for $${binary} binary ; \
-		[ -t 0 ] && args="" || args="-plain" ; \
-		GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/$${binary}/$(shell go env GOOS)_$(shell go env GOARCH)/$${binary} ; \
-		echo ; \
-	done
+	echo Licenses for confluent binary ; \
+	[ -t 0 ] && args="" || args="-plain" ; \
+	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
 
 .PHONY: coverage-unit
+## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 coverage-unit:
-      ifdef CI
+ifdef CI
 	@# Run unit tests with coverage.
+  ifeq "$(OS)" "Windows_NT"
+	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+  else
 	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+  endif
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-      else
+else
 	@# Run unit tests.
+  ifeq "$(OS)" "Windows_NT"
+	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+  else
 	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-      endif
+  endif
+endif
 
 .PHONY: coverage-integ
 coverage-integ:
       ifdef CI
 	@# Run integration tests with coverage.
-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
+	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
       else
 	@# Run integration tests.
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
       endif
 
 .PHONY: test-prep
@@ -242,17 +255,13 @@ test-prep: lint
       endif
 
 .PHONY: test
-test: test-prep coverage-unit coverage-integ test-installers
+test: test-prep coverage-unit coverage-integ test-installer
 
 .PHONY: unit-test
 unit-test: test-prep coverage-unit
 
 .PHONY: int-test
 int-test: test-prep coverage-integ
-
-.PHONY: doctoc
-doctoc:
-	npx doctoc README.md
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

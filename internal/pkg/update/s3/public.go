@@ -35,7 +35,6 @@ type PublicRepoParams struct {
 	S3BinRegion             string
 	S3BinPrefixFmt          string
 	S3ReleaseNotesPrefixFmt string
-	Logger                  *log.Logger
 }
 
 type ListBucketResult struct {
@@ -112,7 +111,7 @@ func (r *PublicRepo) GetAvailableBinaryVersions(name string) (version.Collection
 
 func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucketResult, error) {
 	url := fmt.Sprintf("%s?prefix=%s/", r.endpoint, s3DirPrefix)
-	r.Logger.Debugf("Getting available versions from %s", url)
+	log.CliLogger.Debugf("Getting available versions from %s", url)
 
 	var results []ListBucketResult
 	more := true
@@ -276,6 +275,25 @@ func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) 
 	return string(body), nil
 }
 
+func (r *PublicRepo) DownloadChecksums(name, version string) (string, error) {
+	cliBinDir := fmt.Sprintf(r.S3BinPrefixFmt, name)
+	checksumFileName := fmt.Sprintf("%s_%s_checksums.txt", name, version)
+	downloadURL := fmt.Sprintf("%s/%s/%s/%s", r.endpoint, cliBinDir, version, checksumFileName)
+	resp, err := r.getHttpResponse(downloadURL)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	log.CliLogger.Tracef("Downloaded the following checksums for version %s:\n%s", version, string(body))
+
+	return string(body), nil
+}
+
 // must close the response afterwards
 func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 	resp, err := http.Get(url)
@@ -287,7 +305,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 		if err == nil {
-			r.Logger.Tracef("Response from AWS: %s", string(body))
+			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
 		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
 	}

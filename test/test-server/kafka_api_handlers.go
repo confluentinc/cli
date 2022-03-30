@@ -28,7 +28,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseW
 					Operation:      schedv1.ACLOperations_READ,
 					PermissionType: schedv1.ACLPermissionTypes_ALLOW,
 					Host:           "*",
-					Principal:      "User:sa-123",
+					Principal:      "User:12345",
 				},
 			},
 		}
@@ -42,7 +42,7 @@ func (k *KafkaApiRouter) HandleKafkaACLsList(t *testing.T) func(w http.ResponseW
 // Handler for: "/2.0/kafka/{cluster}/acls"
 func (k *KafkaApiRouter) HandleKafkaACLsCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "POST" {
+		if r.Method == http.MethodPost {
 			var bindings []*schedv1.ACLBinding
 			err := json.NewDecoder(r.Body).Decode(&bindings)
 			require.NoError(t, err)
@@ -110,17 +110,17 @@ func (k *KafkaApiRouter) HandleKafkaLink(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/2.0/kafka/{cluster}/topics/{topic}/mirror:stop"
-func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topic := vars["topic"]
 		switch topic {
 		case "not-found":
-			if r.Method == "POST" {
+			if r.Method == http.MethodPost {
 				w.WriteHeader(http.StatusNotFound)
 			}
 		default:
-			if r.Method == "POST" {
+			if r.Method == http.MethodPost {
 				w.WriteHeader(http.StatusNoContent)
 			}
 		}
@@ -131,9 +131,9 @@ func (k *KafkaApiRouter) HandleKafkaTopicMirrorStop(t *testing.T) func(w http.Re
 func (k *KafkaApiRouter) HandleKafkaListCreateTopic(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET": //list call
+		case http.MethodGet: //list call
 			k.HandleKafkaListTopic(t)(w, r)
-		case "PUT": //create call
+		case http.MethodPut: //create call
 			k.HandleKafkaCreateTopic(t)(w, r)
 		}
 	}
@@ -203,9 +203,9 @@ func (k *KafkaApiRouter) HandleKafkaCreateTopic(t *testing.T) func(http.Response
 func (k *KafkaApiRouter) HandleKafkaDescribeDeleteTopic(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET": //describe call
+		case http.MethodGet: //describe call
 			k.HandleKafkaDescribeTopic(t)(w, r)
-		case "DELETE": //delete call
+		case http.MethodDelete: //delete call
 			k.HandleKafkaDeleteTopic(t)(w, r)
 		}
 	}
@@ -270,7 +270,7 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) func(http.Response
 func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var listTopicConfigReply *schedv1.ListTopicConfigReply
-		if r.Method == "GET" { //part of describe call
+		if r.Method == http.MethodGet { //part of describe call
 			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
 			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
 			require.NoError(t, err)

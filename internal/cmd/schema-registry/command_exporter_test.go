@@ -18,8 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -30,7 +29,7 @@ var (
 
 type ExporterTestSuite struct {
 	suite.Suite
-	conf             *v3.Config
+	conf             *v1.Config
 	kafkaCluster     *schedv1.KafkaCluster
 	srCluster        *schedv1.SchemaRegistryCluster
 	srClientMock     *srsdk.APIClient
@@ -38,7 +37,7 @@ type ExporterTestSuite struct {
 }
 
 func (suite *ExporterTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedCloudConfigMock()
+	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.srMothershipMock = &mock.SchemaRegistry{
 		CreateSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
@@ -49,7 +48,7 @@ func (suite *ExporterTestSuite) SetupSuite() {
 	}
 	ctx := suite.conf.Context()
 	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
-	srCluster.SrCredentials = &v0.APIKeyPair{Key: "key", Secret: "secret"}
+	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
@@ -72,7 +71,7 @@ func (suite *ExporterTestSuite) SetupTest() {
 				return []string{exporterName}, nil, nil
 			},
 			GetExporterInfoFunc: func(_ context.Context, name string) (srsdk.ExporterInfo, *http.Response, error) {
-				return srsdk.ExporterInfo{Name: exporterName, Subjects: []string{subjectName}, ContextType: "AUTO", Config: map[string]string{}}, nil, nil
+				return srsdk.ExporterInfo{Name: exporterName, Subjects: []string{subjectName}, SubjectRenameFormat: "${subject}", ContextType: "AUTO", Config: map[string]string{}}, nil, nil
 			},
 			GetExporterStatusFunc: func(_ context.Context, name string) (srsdk.ExporterStatus, *http.Response, error) {
 				return srsdk.ExporterStatus{Name: exporterName, State: "PAUSED", Offset: 0, Ts: 0, Trace: ""}, nil, nil
@@ -103,7 +102,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf.CLIName, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock, suite.conf.Logger, cliMock.NewDummyAnalyticsMock())
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
@@ -158,8 +157,9 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 
 	req.Equal("+--------------------------------+-------------+\n"+
 		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n"+
-		"| Context Type                   | AUTO        |\n| Context                        |             |\n"+
-		"| Remote Schema Registry Configs |             |\n+--------------------------------+-------------+\n", output.String())
+		"| Subject Format                 | ${subject}  |\n| Context Type                   | AUTO        |\n"+
+		"| Context                        |             |\n| Remote Schema Registry Configs |             |\n"+
+		"+--------------------------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestStatusExporter() {

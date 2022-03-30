@@ -1,17 +1,19 @@
 package errors
 
 import (
+	"encoding/json"
 	"fmt"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"io"
+	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
-
-	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 /*
@@ -26,12 +28,55 @@ func catchTypedErrors(err error) error {
 	return err
 }
 
+func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType1
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType1{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
+func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
+	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
+		var decodedError MDSV2Alpha1ErrorType2Array
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType2Array{}) {
+			return nil, fmt.Errorf("failed to parse")
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
 func catchMDSErrors(err error) error {
 	switch err2 := err.(type) {
 	case mds.GenericOpenAPIError:
 		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
 	case mdsv2alpha1.GenericOpenAPIError:
-		return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+		if strings.Contains(err.Error(), "Forbidden Access") {
+			return NewErrorWithSuggestions(UnauthorizedErrorMsg, UnauthorizedSuggestions)
+		}
+		openAPIError, parseErr := parseMDSOpenAPIErrorType1(err)
+		if parseErr == nil {
+			return openAPIError.UserFacingError()
+		} else {
+			openAPIErrorType2, parseErr2 := parseMDSOpenAPIErrorType2(err)
+			if parseErr2 == nil {
+				return openAPIErrorType2.UserFacingError()
+			} else {
+				return Errorf(GenericOpenAPIErrorMsg, err.Error(), string(err2.Body()))
+			}
+		}
 	}
 	return err
 }
@@ -40,11 +85,8 @@ func catchMDSErrors(err error) error {
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
-	e, ok := err.(*corev1.Error)
-	if ok {
-		var result error
-		result = multierror.Append(result, e)
-		return Wrap(result, CCloudBackendErrorPrefix)
+	if err, ok := err.(*corev1.Error); ok {
+		return Wrap(err, CCloudBackendErrorPrefix)
 	}
 	return err
 }
@@ -87,21 +129,6 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-/*
-Error: 1 error occurred:
-	* error checking email: User Not Found
-*/
-func CatchEmailNotFoundError(err error, email string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "error checking email: User Not Found") {
-		errorMsg := fmt.Sprintf(InvalidEmailErrorMsg, email)
-		return NewErrorWithSuggestions(errorMsg, InvalidEmailSuggestions)
-	}
-	return err
-}
-
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
@@ -136,15 +163,28 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 	return err
 }
 
-func CatchSchemaRegistryNotFoundError(err error, clusterId string) error {
+func CatchServiceNameInUseError(err error, r *http.Response, serviceName string) error {
 	if err == nil {
 		return nil
 	}
-	if isResourceNotFoundError(err) {
-		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, SRNotFoundSuggestions)
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service name is already in use") {
+		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
+		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 	return err
+}
+
+func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service Account Not Found") {
+		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+	}
+	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 }
 
 /*
@@ -210,39 +250,6 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
 		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
-	}
-	return err
-}
-
-/*
-	SARAMA ERROR CATCHING
-*/
-
-/*
-kafka server: Request was for a topic or partition that does not exist on this broker.
-*/
-func CatchTopicNotExistError(err error, topicName string, clusterId string) (bool, error) {
-	if err == nil {
-		return false, nil
-	}
-	if strings.Contains(err.Error(), "kafka server: Request was for a topic or partition that does not exist on this broker.") {
-		errorMsg := fmt.Sprintf(TopicDoesNotExistErrorMsg, topicName)
-		suggestionsMsg := fmt.Sprintf(TopicDoesNotExistSuggestions, clusterId, clusterId)
-		return true, NewErrorWithSuggestions(errorMsg, suggestionsMsg)
-	}
-	return false, err
-}
-
-/*
-Error: "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)"
-*/
-func CatchClusterUnreachableError(err error, clusterId string, apiKey string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "kafka: client has run out of available brokers to talk to (Is your cluster reachable?)") {
-		suggestionsMsg := fmt.Sprintf(UnableToConnectToKafkaSuggestions, clusterId, apiKey, apiKey, clusterId)
-		return NewErrorWithSuggestions(UnableToConnectToKafkaErrorMsg, suggestionsMsg)
 	}
 	return err
 }

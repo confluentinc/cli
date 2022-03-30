@@ -1,203 +1,42 @@
 package environment
 
 import (
-	"context"
-	"fmt"
-
-	"github.com/c-bata/go-prompt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	completableChildren []*cobra.Command
-	analyticsClient     analytics.Client
 }
 
-var (
-	listFields             = []string{"Id", "Name"}
-	listHumanLabels        = []string{"Id", "Name"}
-	listStructuredLabels   = []string{"id", "name"}
-	createFields           = []string{"Name", "Id"}
-	createHumanLabels      = map[string]string{"Name": "Environment Name"}
-	createStructuredLabels = map[string]string{"Name": "name", "Id": "id"}
-)
-
-// New returns the Cobra command for `environment`.
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client) *command {
-	cliCmd := pcmd.NewAuthenticatedStateFlagCommand(
-		&cobra.Command{
-			Use:   "environment",
-			Short: fmt.Sprintf("Manage and select %s environments.", cliName),
-		}, prerunner, SubcommandFlags)
-	cmd := &command{AuthenticatedStateFlagCommand: cliCmd, analyticsClient: analyticsClient}
-	cmd.init()
-	return cmd
-}
-
-func (c *command) init() {
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Confluent Cloud environments.",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
-	}
-	listCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	listCmd.Flags().SortFlags = false
-	c.AddCommand(listCmd)
-
-	useCmd := &cobra.Command{
-		Use:   "use <environment-id>",
-		Short: "Switch to the specified Confluent Cloud environment.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.use),
-	}
-	c.AddCommand(useCmd)
-
-	createCmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a new Confluent Cloud environment.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
-	}
-	createCmd.Flags().StringP(output.FlagName, output.ShortHandFlag, output.DefaultValue, output.Usage)
-	createCmd.Flags().SortFlags = false
-	c.AddCommand(createCmd)
-
-	updateCmd := &cobra.Command{
-		Use:   "update <environment-id>",
-		Short: "Update an existing Confluent Cloud environment.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
-	}
-	updateCmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
-	check(updateCmd.MarkFlagRequired("name"))
-	updateCmd.Flags().SortFlags = false
-	c.AddCommand(updateCmd)
-
-	deleteCmd := &cobra.Command{
-		Use:   "delete <environment-id>",
-		Short: "Delete a Confluent Cloud environment and all its resources.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
-	}
-	c.AddCommand(deleteCmd)
-	c.completableChildren = []*cobra.Command{deleteCmd, updateCmd, useCmd}
-}
-
-func (c *command) list(cmd *cobra.Command, _ []string) error {
-	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
-	if err != nil {
-		return err
+func New(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "environment",
+		Aliases:     []string{"env"},
+		Short:       "Manage and select Confluent Cloud environments.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-	for _, environment := range environments {
-		// Add '*' only in the case where we are printing out tables
-		if outputWriter.GetOutputFormat() == output.Human {
-			if environment.Id == c.EnvironmentId() {
-				environment.Id = fmt.Sprintf("* %s", environment.Id)
-			} else {
-				environment.Id = fmt.Sprintf("  %s", environment.Id)
-			}
-		}
-		outputWriter.AddElement(environment)
-	}
-	return outputWriter.Out()
-}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-func (c *command) use(cmd *cobra.Command, args []string) error {
-	id := args[0]
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newUpdateCommand())
+	c.AddCommand(c.newUseCommand())
 
-	acc, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
-	if err != nil {
-		err = errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
-		return err
-	}
-
-	c.Context.State.Auth.Account = acc
-	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
-	}
-	utils.Printf(cmd, errors.UsingEnvMsg, id)
-	return nil
-}
-
-func (c *command) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
-	environment, err := c.Client.Account.Create(context.Background(), &orgv1.Account{Name: name, OrganizationId: c.State.Auth.Account.OrganizationId})
-	if err != nil {
-		return err
-	}
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, environment.Id)
-	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
-}
-
-func (c *command) update(cmd *cobra.Command, args []string) error {
-	id := args[0]
-
-	newName, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-
-	err = c.Client.Account.Update(context.Background(), &orgv1.Account{Id: id, Name: newName, OrganizationId: c.State.Auth.Account.OrganizationId})
-
-	if err != nil {
-		return err
-	}
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, newName)
-	return nil
-}
-
-func (c *command) delete(cmd *cobra.Command, args []string) error {
-	id := args[0]
-
-	err := c.Client.Account.Delete(context.Background(), &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId})
-	if err != nil {
-		return err
-	}
-	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
-	c.analyticsClient.SetSpecialProperty(analytics.ResourceIDPropertiesKey, id)
-	return nil
-}
-
-func (c *command) Cmd() *cobra.Command {
 	return c.Command
 }
 
-func (c *command) ServerCompletableChildren() []*cobra.Command {
-	return c.completableChildren
-}
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
 
-func (c *command) ServerComplete() []prompt.Suggest {
-	var suggestions []prompt.Suggest
-	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
-	if err != nil {
-		return suggestions
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
 	}
-	for _, env := range environments {
-		suggestions = append(suggestions, prompt.Suggest{
-			Text:        env.Id,
-			Description: env.Name,
-		})
-	}
-	return suggestions
-}
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
+	return pcmd.AutocompleteEnvironments(c.Client)
 }

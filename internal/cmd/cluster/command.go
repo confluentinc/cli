@@ -8,27 +8,21 @@ import (
 
 type command struct {
 	*pcmd.StateFlagCommand
-	prerunner  pcmd.PreRunner
-	metaClient Metadata
 }
 
-// New returns the Cobra command for `cluster`.
-func New(prerunner pcmd.PreRunner, metaClient Metadata) *cobra.Command {
-	cmd := &command{
-		StateFlagCommand: pcmd.NewAnonymousStateFlagCommand(&cobra.Command{
-			Use:   "cluster",
-			Short: "Retrieve metadata about Confluent Platform clusters.",
-		}, prerunner, SubcommandFlags),
-		prerunner:  prerunner,
-		metaClient: metaClient,
+func New(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "cluster",
+		Short:       "Retrieve metadata about Confluent Platform clusters.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	cmd.init()
-	return cmd.Command
-}
 
-func (c *command) init() {
-	c.AddCommand(NewDescribeCommand(c.prerunner, c.metaClient))
-	c.AddCommand(NewListCommand(c.prerunner))
-	c.AddCommand(NewRegisterCommand(c.prerunner))
-	c.AddCommand(NewUnregisterCommand(c.prerunner))
+	c := &command{pcmd.NewAnonymousStateFlagCommand(cmd, prerunner)}
+
+	c.AddCommand(newDescribeCommand(prerunner, userAgent))
+	c.AddCommand(newListCommand(prerunner))
+	c.AddCommand(newRegisterCommand(prerunner))
+	c.AddCommand(newUnregisterCommand(prerunner))
+
+	return c.Command
 }

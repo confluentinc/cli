@@ -1,7 +1,0 @@
-Kafka REST is not enabled
-[
-  {
-    "Key": "replica.fetch.max.bytes",
-    "Value": "1048576"
-  }
-]

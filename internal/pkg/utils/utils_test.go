@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -220,6 +218,34 @@ func TestIsShorthandCountFlag(t *testing.T) {
 	}
 }
 
+func TestAbbreviate(t *testing.T) {
+	tests := []struct {
+		input    string
+		maxLen   int
+		expected string
+	}{
+		{
+			input:    "helloooooo",
+			maxLen:   3,
+			expected: "hel...",
+		},
+		{
+			input:    "helloooooo",
+			maxLen:   50,
+			expected: "helloooooo",
+		},
+		{
+			input:    "hi",
+			maxLen:   2,
+			expected: "hi",
+		},
+	}
+	for _, tt := range tests {
+		out := Abbreviate(tt.input, tt.maxLen)
+		require.Equal(t, tt.expected, out)
+	}
+}
+
 func getFlagMap() map[string]*pflag.Flag {
 	cmd := &cobra.Command{
 		Use: "cmd",
@@ -237,58 +263,16 @@ func getFlagMap() map[string]*pflag.Flag {
 	return flagMap
 }
 
-func TestReadConfigsFromFile(t *testing.T) {
-	req := require.New(t)
-	type testCase struct {
-		config   string
-		expected map[string]string
-		wantErr  bool
-	}
-	tests := []testCase{
-		{
-			config: "key=val\n key2=val2 \n key3=val password=pass",
-			expected: map[string]string{
-				"key":  "val",
-				"key2": "val2",
-				"key3": "val password=pass",
-			},
-			wantErr: false,
-		},
-		{
-			config:  "keyval\nkey2 = val2\n key3=val password=pass",
-			wantErr: true,
-		},
-	}
-	file1, err := ioutil.TempFile(os.TempDir(), "test")
-	req.NoError(err)
-	_, err = file1.Write([]byte(tests[0].config))
-	req.NoError(err)
-	defer os.Remove(file1.Name())
-	out1, err := ReadConfigsFromFile(file1.Name())
-	if tests[0].wantErr {
-		req.Error(err)
-	} else {
-		req.NoError(err)
-		validateConfigMap(req, tests[0].expected, out1)
-	}
-
-	file2, err := ioutil.TempFile(os.TempDir(), "test")
-	req.NoError(err)
-	_, err = file2.Write([]byte(tests[1].config))
-	req.NoError(err)
-	defer os.Remove(file2.Name())
-	out2, err := ReadConfigsFromFile(file2.Name())
-	if tests[1].wantErr {
-		req.Error(err)
-	} else {
-		req.NoError(err)
-		validateConfigMap(req, tests[1].expected, out2)
-	}
-}
-
-func validateConfigMap(req *require.Assertions, expected map[string]string, out map[string]string) {
-	req.Equal(len(expected), len(out))
-	for k, v := range out {
-		req.Equal(expected[k], v)
+func TestCropString(t *testing.T) {
+	for _, tt := range []struct {
+		s       string
+		n       int
+		cropped string
+	}{
+		{"ABCDE", 4, "A..."},
+		{"ABCDE", 5, "ABCDE"},
+		{"ABCDE", 8, "ABCDE"},
+	} {
+		require.Equal(t, tt.cropped, CropString(tt.s, tt.n))
 	}
 }

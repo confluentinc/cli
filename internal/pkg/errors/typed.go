@@ -6,55 +6,46 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	cliDownLoadLink = map[string]string{
-		"confluent": "https://docs.confluent.io/current/cli/installing.html",
-		"ccloud":    "https://docs.confluent.io/current/cloud/cli/install.html",
-	}
-)
-
 type CLITypedError interface {
 	error
 	UserFacingError() error
 }
 
-type NotLoggedInError struct {
-	CLIName string
-}
+type NotLoggedInError struct{}
 
 func (e *NotLoggedInError) Error() string {
-	return e.CLIName
+	return NotLoggedInErrorMsg
 }
 
 func (e *NotLoggedInError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
 }
 
-type SRNotAuthenticatedError struct {
-	CLIName string
-}
+type SRNotAuthenticatedError struct{}
 
 func (e *SRNotAuthenticatedError) Error() string {
-	return e.CLIName
+	return SRNotAuthenticatedErrorMsg
 }
 
 func (e *SRNotAuthenticatedError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(SRNotAuthenticatedSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(SRNotAuthenticatedErrorMsg, SRNotAuthenticatedSuggestions)
 }
 
-type NoContextError struct {
-	CLIName string
+type SRNotEnabledError struct {
+	ErrorMsg       string
+	SuggestionsMsg string
 }
 
-func (e *NoContextError) Error() string {
-	return e.CLIName
+func NewSRNotEnabledError() CLITypedError {
+	return &SRNotEnabledError{ErrorMsg: SRNotEnabledErrorMsg, SuggestionsMsg: SRNotEnabledSuggestions}
 }
 
-func (e *NoContextError) UserFacingError() error {
-	suggestionsMsg := fmt.Sprintf(NotLoggedInSuggestions, e.CLIName)
-	return NewErrorWithSuggestions(NotLoggedInErrorMsg, suggestionsMsg)
+func (e *SRNotEnabledError) Error() string {
+	return e.ErrorMsg
+}
+
+func (e *SRNotEnabledError) UserFacingError() error {
+	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
 }
 
 type KafkaClusterNotFoundError struct {
@@ -101,7 +92,7 @@ func (e *UnconfiguredAPISecretError) UserFacingError() error {
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 
-func NewCorruptedConfigError(format string, contextName string, cliName string, configFile string, logger *log.Logger) CLITypedError {
+func NewCorruptedConfigError(format, contextName, configFile string) CLITypedError {
 	e := &CorruptedConfigError{}
 	var errorWithStackTrace error
 	if contextName != "" {
@@ -110,9 +101,9 @@ func NewCorruptedConfigError(format string, contextName string, cliName string, 
 		errorWithStackTrace = Errorf(format)
 	}
 	// logging stack trace of the error use pkg/errors error type
-	logger.Debugf("%+v", errorWithStackTrace)
+	log.CliLogger.Debugf("%+v", errorWithStackTrace)
 	e.errorMsg = fmt.Sprintf(prefixFormat, CorruptedConfigErrorPrefix, errorWithStackTrace.Error())
-	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile, cliName, cliName)
+	e.suggestionsMsg = fmt.Sprintf(CorruptedConfigSuggestions, configFile)
 	return e
 }
 
@@ -129,13 +120,12 @@ func (e *CorruptedConfigError) UserFacingError() error {
 	return NewErrorWithSuggestions(e.errorMsg, e.suggestionsMsg)
 }
 
-func NewUpdateClientWrapError(err error, errorMsg string, cliName string) CLITypedError {
-	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error(), cliName: cliName}
+func NewUpdateClientWrapError(err error, errorMsg string) CLITypedError {
+	return &UpdateClientError{errorMsg: Wrap(err, errorMsg).Error()}
 }
 
 type UpdateClientError struct {
 	errorMsg string
-	cliName  string
 }
 
 func (e *UpdateClientError) Error() string {
@@ -144,6 +134,46 @@ func (e *UpdateClientError) Error() string {
 
 func (e *UpdateClientError) UserFacingError() error {
 	errMsg := fmt.Sprintf(prefixFormat, UpdateClientFailurePrefix, e.errorMsg)
-	suggestionsMsg := fmt.Sprintf(UpdateClientFailureSuggestions, cliDownLoadLink[e.cliName])
-	return NewErrorWithSuggestions(errMsg, suggestionsMsg)
+	return NewErrorWithSuggestions(errMsg, UpdateClientFailureSuggestions)
+}
+
+type MDSV2Alpha1ErrorType1 struct {
+	StatusCode int    `json:"status_code"`
+	Message    string `json:"message"`
+	Type       string `json:"type"`
+	Err        error
+}
+
+func (e *MDSV2Alpha1ErrorType1) Error() string { return e.Message }
+
+func (e *MDSV2Alpha1ErrorType1) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Message)
+}
+
+type MDSV2Alpha1ErrorType2 struct {
+	Id     string   `json:"id"`
+	Status string   `json:"status"`
+	Code   string   `json:"code"`
+	Detail string   `json:"detail"`
+	Source []string `json:"type"`
+	Err    error
+}
+
+func (e *MDSV2Alpha1ErrorType2) Error() string { return e.Detail }
+
+type MDSV2Alpha1ErrorType2Array struct {
+	Errors []MDSV2Alpha1ErrorType2 `json:"errors"`
+	Err    error
+}
+
+func (e *MDSV2Alpha1ErrorType2Array) Error() string {
+	errorMessage := ""
+	for _, error := range e.Errors {
+		errorMessage = fmt.Sprintf("%s ", error.Error()) + errorMessage
+	}
+	return errorMessage
+}
+
+func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
+	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
 }

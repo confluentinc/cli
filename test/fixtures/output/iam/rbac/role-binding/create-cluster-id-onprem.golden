@@ -1,0 +1,7 @@
++---------------+-----------------+
+| Principal     | User:bob        |
+| Role          | DeveloperRead   |
+| Resource Type | Topic           |
+| Name          | connect-configs |
+| Pattern Type  | LITERAL         |
++---------------+-----------------+

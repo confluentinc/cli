@@ -21,7 +21,7 @@ type MockNonInteractiveLoginHandler struct {
 	GetCCloudTokenAndCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCCloudTokenAndCredentialsFromNetrc sync.Mutex
-	GetCCloudTokenAndCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client, url string, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCCloudTokenAndCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client, url string, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCCloudTokenAndCredentialsFromPrompt sync.Mutex
 	GetCCloudTokenAndCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client, url string) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -30,7 +30,7 @@ type MockNonInteractiveLoginHandler struct {
 	GetConfluentTokenAndCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetConfluentTokenAndCredentialsFromNetrc sync.Mutex
-	GetConfluentTokenAndCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetConfluentTokenAndCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetConfluentTokenAndCredentialsFromPrompt sync.Mutex
 	GetConfluentTokenAndCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -44,7 +44,7 @@ type MockNonInteractiveLoginHandler struct {
 			Cmd          *github_com_spf13_cobra.Command
 			Client       *github_com_confluentinc_ccloud_sdk_go.Client
 			Url          string
-			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetCCloudTokenAndCredentialsFromPrompt []struct {
 			Cmd    *github_com_spf13_cobra.Command
@@ -58,7 +58,7 @@ type MockNonInteractiveLoginHandler struct {
 		GetConfluentTokenAndCredentialsFromNetrc []struct {
 			Cmd          *github_com_spf13_cobra.Command
 			Client       *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
-			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetConfluentTokenAndCredentialsFromPrompt []struct {
 			Cmd    *github_com_spf13_cobra.Command
@@ -109,7 +109,7 @@ func (m *MockNonInteractiveLoginHandler) GetCCloudTokenAndCredentialsFromEnvVarC
 }
 
 // GetCCloudTokenAndCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *MockNonInteractiveLoginHandler) GetCCloudTokenAndCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client, url string, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *MockNonInteractiveLoginHandler) GetCCloudTokenAndCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_ccloud_sdk_go.Client, url string, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCCloudTokenAndCredentialsFromNetrc.Lock()
 	defer m.lockGetCCloudTokenAndCredentialsFromNetrc.Unlock()
 
@@ -121,7 +121,7 @@ func (m *MockNonInteractiveLoginHandler) GetCCloudTokenAndCredentialsFromNetrc(c
 		Cmd          *github_com_spf13_cobra.Command
 		Client       *github_com_confluentinc_ccloud_sdk_go.Client
 		Url          string
-		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
 		Cmd:          cmd,
 		Client:       client,
@@ -147,7 +147,7 @@ func (m *MockNonInteractiveLoginHandler) GetCCloudTokenAndCredentialsFromNetrcCa
 	Cmd          *github_com_spf13_cobra.Command
 	Client       *github_com_confluentinc_ccloud_sdk_go.Client
 	Url          string
-	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetCCloudTokenAndCredentialsFromNetrc.Lock()
 	defer m.lockGetCCloudTokenAndCredentialsFromNetrc.Unlock()
@@ -241,7 +241,7 @@ func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromEnvV
 }
 
 // GetConfluentTokenAndCredentialsFromNetrc mocks base method by wrapping the associated func.
-func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, filterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromNetrc(cmd *github_com_spf13_cobra.Command, client *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) (string, *github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetConfluentTokenAndCredentialsFromNetrc.Lock()
 	defer m.lockGetConfluentTokenAndCredentialsFromNetrc.Unlock()
 
@@ -252,7 +252,7 @@ func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromNetr
 	call := struct {
 		Cmd          *github_com_spf13_cobra.Command
 		Client       *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
-		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
 		Cmd:          cmd,
 		Client:       client,
@@ -276,7 +276,7 @@ func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromNetr
 func (m *MockNonInteractiveLoginHandler) GetConfluentTokenAndCredentialsFromNetrcCalls() []struct {
 	Cmd          *github_com_spf13_cobra.Command
 	Client       *github_com_confluentinc_mds_sdk_go_mdsv1.APIClient
-	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.GetMatchingNetrcMachineParams
+	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetConfluentTokenAndCredentialsFromNetrc.Lock()
 	defer m.lockGetConfluentTokenAndCredentialsFromNetrc.Unlock()

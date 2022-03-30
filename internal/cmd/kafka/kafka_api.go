@@ -35,35 +35,33 @@ func NewACLConfig() *ACLConfiguration {
 // aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
 func aclConfigFlags() *pflag.FlagSet {
 	flgSet := aclEntryFlags()
-	flgSet.SortFlags = false
 	flgSet.AddFlagSet(resourceFlags())
 	return flgSet
 }
 
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
-	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "Confluent Cloud cluster ID.")
-	flgSet.Bool("allow", false, "Access to the resource is allowed.") // permission
-	flgSet.Bool("deny", false, "Access to the resource is denied.")
-	//flgSet.String( "host", "*", "Set Kafka principal host. Note: Not supported on CCLOUD.")
-	flgSet.String("service-account", "", "The service account ID.")
 	operationHelpOneLine := fmt.Sprintf("The ACL Operation: (%s).\nNote: This flag may be specified more than once.",
 		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"}))
 	operationHelpParts := strings.SplitAfter(operationHelpOneLine, "delete, ")
 	operationHelp := operationHelpParts[0] + "\n" + operationHelpParts[1]
+
+	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.StringArray("operation", []string{""}, operationHelp)
-	// An error is only returned if the flag name is not present.
-	// We know the flag name is present so its safe to ignore this.
-	_ = cobra.MarkFlagRequired(flgSet, "service-account")
+	flgSet.String("service-account", "", "The service account ID.")
+	flgSet.Bool("allow", false, "Access to the resource is allowed.")
+	flgSet.Bool("deny", false, "Access to the resource is denied.")
+	flgSet.SortFlags = false
+
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "service-account")
+
 	return flgSet
 }
 
 // resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
 func resourceFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	//flgSet.String("cluster", "", "The Confluent Cloud cluster ID.")
 	flgSet.Bool("cluster-scope", false, `Modify ACLs for the cluster.`)
 	flgSet.String("topic", "", `Modify ACLs for the specified topic resource.`)
 	flgSet.String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
@@ -78,7 +76,7 @@ a prefix.`)
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	var aclConfigs []*ACLConfiguration
 
-	if cmd.Name() == listCmd.Name() {
+	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))
 		aclConfigs = append(aclConfigs, aclConfig)

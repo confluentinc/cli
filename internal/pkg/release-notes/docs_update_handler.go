@@ -6,20 +6,12 @@ import (
 	"strings"
 )
 
-const (
-	ccloudDocsPageHeader = `.. _ccloud-release-notes:
-
-==========================
-|ccloud| CLI Release Notes
-==========================
-`
-	confluentDocsPageHeader = `.. _cli-release-notes:
+const docsPageHeader = `.. _cli-release-notes:
 
 =============================
 |confluent-cli| Release Notes
 =============================
 `
-)
 
 type DocsUpdateHandler interface {
 	getUpdatedDocsPage(newReleaseNotes string) (string, error)

@@ -337,7 +337,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 	}
 
 	url := fmt.Sprintf("http://localhost:%d/connector-plugins", services["connect"].port)
-	out, err := makeRequest("GET", url, []byte{})
+	out, err := makeRequest(http.MethodGet, url, []byte{})
 	if err != nil {
 		return err
 	}
@@ -353,32 +353,32 @@ func isJSON(data []byte) bool {
 
 func getConnectorConfig(connector string) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors/%s/config", services["connect"].port, connector)
-	return makeRequest("GET", url, []byte{})
+	return makeRequest(http.MethodGet, url, []byte{})
 }
 
 func getConnectorStatus(connector string) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors/%s/status", services["connect"].port, connector)
-	return makeRequest("GET", url, []byte{})
+	return makeRequest(http.MethodGet, url, []byte{})
 }
 
 func getConnectorsStatus() (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors", services["connect"].port)
-	return makeRequest("GET", url, []byte{})
+	return makeRequest(http.MethodGet, url, []byte{})
 }
 
 func postConnectorConfig(config []byte) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors", services["connect"].port)
-	return makeRequest("POST", url, config)
+	return makeRequest(http.MethodPost, url, config)
 }
 
 func putConnectorConfig(connector string, config []byte) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors/%s/config", services["connect"].port, connector)
-	return makeRequest("PUT", url, config)
+	return makeRequest(http.MethodPut, url, config)
 }
 
 func deleteConnectorConfig(connector string) (string, error) {
 	url := fmt.Sprintf("http://localhost:%d/connectors/%s", services["connect"].port, connector)
-	return makeRequest("DELETE", url, []byte{})
+	return makeRequest(http.MethodDelete, url, []byte{})
 }
 
 func makeRequest(method, url string, body []byte) (string, error) {
@@ -388,7 +388,8 @@ func makeRequest(method, url string, body []byte) (string, error) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := utils.DefaultClient()
+	client.Timeout = 10 * time.Second
 	res, err := client.Do(req)
 	if err != nil {
 		return "", err

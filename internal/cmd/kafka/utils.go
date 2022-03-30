@@ -8,8 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
@@ -36,12 +34,12 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.CreateTopicRequestDataConfigs {
-	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
+	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
 		val := v
-		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
+		topicConfigs[i] = kafkarestv3.ConfigData{
 			Name:  k,
 			Value: &val,
 		}
@@ -65,8 +63,8 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.A
 	return kafkaRestConfigs
 }
 
-func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (string, error) {
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -96,19 +94,19 @@ func createTestConfigFile(name string, configs map[string]string) (string, error
 	return dir, file.Close()
 }
 
-func handleOpenApiError(httpResp *_nethttp.Response, err error, kafkaREST *pcmd.KafkaREST) error {
+func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
 
 	if httpResp != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return err
 }
 
-func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra.Command) (*pcmd.KafkaREST, string, error) {
+func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.KafkaREST, string, error) {
 	kafkaREST, err := c.AuthenticatedCLICommand.GetKafkaREST()
 	if err != nil {
 		return nil, "", err
@@ -117,7 +115,7 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand, cmd *cobra
 		return nil, "", errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand(cmd)
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, "", err
 	}
@@ -158,4 +156,8 @@ func camelToSpaced(camels []string) []string {
 		ret = append(ret, snake)
 	}
 	return ret
+}
+
+func topicNameStrategy(topic string) string {
+	return topic + "-value"
 }

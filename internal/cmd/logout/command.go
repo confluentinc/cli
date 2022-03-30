@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -17,57 +17,51 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	cliName         string
-	analyticsClient analytics.Client
-	netrcHandler    netrc.NetrcHandler
+	cfg          *v1.Config
+	netrcHandler netrc.NetrcHandler
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler) *Command {
-	logoutCmd := &Command{
-		cliName:         cliName,
-		analyticsClient: analyticsClient,
-		netrcHandler:    netrcHandler,
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *Command {
+	cmd := &cobra.Command{
+		Use:  "logout",
+		Args: cobra.NoArgs,
 	}
-	logoutCmd.init(cliName, prerunner)
-	return logoutCmd
-}
 
-func (a *Command) init(cliName string, prerunner pcmd.PreRunner) {
-	remoteAPIName := pauth.GetRemoteAPIName(cliName)
-	logoutCmd := &cobra.Command{
-		Use:   "logout",
-		Short: fmt.Sprintf("Log out of %s.", remoteAPIName),
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(a.logout),
-		PersistentPreRunE: pcmd.NewCLIPreRunnerE(func(cmd *cobra.Command, args []string) error {
-			a.analyticsClient.SetCommandType(analytics.Logout)
-			return a.CLICommand.PersistentPreRunE(cmd, args)
-		}),
+	context := "Confluent Cloud or Confluent Platform"
+	if cfg.IsCloudLogin() {
+		context = "Confluent Cloud"
+	} else if cfg.IsOnPremLogin() {
+		context = "Confluent Platform"
 	}
-	cliLogoutCmd := pcmd.NewAnonymousCLICommand(logoutCmd, prerunner)
-	a.CLICommand = cliLogoutCmd
+
+	cmd.Short = fmt.Sprintf("Log out of %s.", context)
+
+	c := &Command{
+		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:          cfg,
+		netrcHandler: netrcHandler,
+	}
+
+	cmd.RunE = pcmd.NewCLIRunE(c.logout)
+
+	return c
 }
 
-func (a *Command) logout(cmd *cobra.Command, _ []string) error {
-	if a.Config.Config.Context() != nil {
-		var level log.Level
-		if a.Config.Logger != nil {
-			level = a.Config.Logger.GetLevel()
-		}
-		username, err := a.netrcHandler.RemoveNetrcCredentials(a.Config.CLIName, a.Config.Config.Context().Name)
+func (c *Command) logout(cmd *cobra.Command, _ []string) error {
+	if c.Config.Config.Context() != nil {
+		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().NetrcMachineName)
 		if err == nil {
-			if level >= log.WARN {
-				utils.ErrPrintf(cmd, errors.RemoveNetrcCredentialsMsg, username, a.netrcHandler.GetFileName())
-			}
+			log.CliLogger.Warnf(errors.RemoveNetrcCredentialsMsg, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
 			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
 			return err
 		}
 	}
-	err := pauth.PersistLogoutToConfig(a.Config.Config)
-	if err != nil {
+
+	if err := pauth.PersistLogoutToConfig(c.Config.Config); err != nil {
 		return err
 	}
+
 	utils.Println(cmd, errors.LoggedOutMsg)
 	return nil
 }

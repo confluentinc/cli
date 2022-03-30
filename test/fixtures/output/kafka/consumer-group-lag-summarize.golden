@@ -1,7 +1,7 @@
 Summarize consumer lag for a Kafka consumer group.
 
 Usage:
-  ccloud kafka consumer-group lag summarize <consumer-group> [flags]
+  confluent kafka consumer-group lag summarize <consumer-group> [flags]
 
 Examples:
 Summarize the lag for the `my_consumer_group` consumer-group.

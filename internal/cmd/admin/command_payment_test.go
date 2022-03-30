@@ -5,9 +5,6 @@ import (
 	"context"
 	"testing"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
-
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -16,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -53,7 +50,7 @@ func TestPaymentUpdate(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		err := c.update(cmd, test.prompt)
+		err := c.updateWithPrompt(cmd, test.prompt)
 		for _, expectedOutput := range test.expected {
 			require.Contains(t, buf.String(), expectedOutput)
 		}
@@ -123,7 +120,7 @@ func TestPaymentRegexValidation(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		err := c.update(cmd, test.prompt)
+		err := c.updateWithPrompt(cmd, test.prompt)
 		for _, expectedOutput := range test.expected {
 			require.Contains(t, buf.String(), expectedOutput)
 		}
@@ -140,7 +137,7 @@ func getCommand() (c *command) {
 				Version: nil,
 			},
 			Client: mockClient(),
-			State: &v2.ContextState{
+			State: &v1.ContextState{
 				Auth: &v1.AuthConfig{
 					User: &orgv1.User{},
 					Organization: &orgv1.Organization{
@@ -156,8 +153,8 @@ func getCommand() (c *command) {
 
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
-	cfg := v3.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(client, nil, nil, cfg), true)
+	cfg := v1.AuthenticatedCloudConfigMock()
+	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
 }
 
 func mockClient() (client *ccloud.Client) {

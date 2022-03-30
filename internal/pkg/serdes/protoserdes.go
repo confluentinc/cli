@@ -1,6 +1,9 @@
 package serdes
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	parse "github.com/jhump/protoreflect/desc/protoparse"
@@ -13,25 +16,11 @@ type ProtoSerializationProvider struct {
 	message proto.Message
 }
 
-func (protoProvider *ProtoSerializationProvider) LoadSchema(schemaPath string) error {
-	parser := parse.Parser{}
-	fileDescriptors, err := parser.ParseFiles(schemaPath)
+func (protoProvider *ProtoSerializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	message, err := parseMessage(schemaPath, referencePathMap)
 	if err != nil {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
+		return err
 	}
-	if len(fileDescriptors) == 0 {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
-	}
-	fileDescriptor := fileDescriptors[0]
-
-	messageDescriptors := fileDescriptor.GetMessageTypes()
-	if len(messageDescriptors) == 0 {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
-	}
-	// We're always using the outermost first message.
-	messageDescriptor := messageDescriptors[0]
-	messageFactory := dynamic.NewMessageFactoryWithDefaults()
-	message := messageFactory.NewMessage(messageDescriptor)
 	protoProvider.message = message
 	return nil
 }
@@ -63,25 +52,11 @@ type ProtoDeserializationProvider struct {
 	message proto.Message
 }
 
-func (protoProvider *ProtoDeserializationProvider) LoadSchema(schemaPath string) error {
-	parser := parse.Parser{}
-	fileDescriptors, err := parser.ParseFiles(schemaPath)
+func (protoProvider *ProtoDeserializationProvider) LoadSchema(schemaPath string, referencePathMap map[string]string) error {
+	message, err := parseMessage(schemaPath, referencePathMap)
 	if err != nil {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
+		return err
 	}
-	if len(fileDescriptors) == 0 {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
-	}
-	fileDescriptor := fileDescriptors[0]
-
-	messageDescriptors := fileDescriptor.GetMessageTypes()
-	if len(messageDescriptors) == 0 {
-		return errors.New(errors.ProtoSchemaInvalidErrorMsg)
-	}
-	// We're always using the outermost first message.
-	messageDescriptor := messageDescriptors[0]
-	messageFactory := dynamic.NewMessageFactoryWithDefaults()
-	message := messageFactory.NewMessage(messageDescriptor)
 	protoProvider.message = message
 	return nil
 }
@@ -109,4 +84,31 @@ func (protoProvider *ProtoDeserializationProvider) decode(data []byte) (string, 
 	}
 
 	return str, nil
+}
+
+func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.Message, error) {
+	importPaths := []string{filepath.Dir(schemaPath)}
+	for _, path := range referencePathMap {
+		importPaths = append(importPaths, strings.SplitAfter(path, "ccloud-schema")[0])
+	}
+	parser := parse.Parser{ImportPaths: importPaths}
+	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
+	if err != nil {
+		return nil, errors.Wrap(err, errors.ProtoSchemaInvalidErrorMsg)
+	}
+	if len(fileDescriptors) == 0 {
+		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)
+	}
+	fileDescriptor := fileDescriptors[0]
+
+	messageDescriptors := fileDescriptor.GetMessageTypes()
+	if len(messageDescriptors) == 0 {
+		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)
+	}
+	// We're always using the outermost first message.
+	messageDescriptor := messageDescriptors[0]
+	messageFactory := dynamic.NewMessageFactoryWithDefaults()
+	message := messageFactory.NewMessage(messageDescriptor)
+
+	return message, nil
 }

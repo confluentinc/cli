@@ -6,11 +6,13 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -19,16 +21,18 @@ import (
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloud.Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
+	QuotasClient      *quotasv2.APIClient
 	Version           *version.Version
-	Config            *v3.Config
+	Config            *v1.Config
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v3.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -36,13 +40,14 @@ func NewPreRunnerMock(client *ccloud.Client, mdsClient *mds.APIClient, kafkaREST
 	return &Commander{
 		FlagResolver:      flagResolverMock,
 		Client:            client,
+		V2Client:          v2Client,
 		MDSClient:         mdsClient,
 		KafkaRESTProvider: kafkaRESTProvider,
 		Config:            cfg,
 	}
 }
 
-func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v3.Config) *Commander {
+func NewPreRunnerMdsV2Mock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v1.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -50,12 +55,13 @@ func NewPreRunnerMdsV2Mock(client *ccloud.Client, mdsClient *mdsv2alpha1.APIClie
 	return &Commander{
 		FlagResolver: flagResolverMock,
 		Client:       client,
+		V2Client:     v2Client,
 		MDSv2Client:  mdsClient,
 		Config:       cfg,
 	}
 }
 
-func (c *Commander) Anonymous(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
@@ -68,38 +74,37 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand) func(cmd *cobra.Command,
 
 func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		c.setClient(command)
 		ctx := command.Config.Context()
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		command.State, err = ctx.AuthenticatedState(cmd)
+		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
 		}
+		command.State = state
 		return nil
 	}
 }
 
 func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		c.setClient(command)
 		ctx := command.Config.Context()
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasMDSLogin() {
-			return &errors.NotLoggedInError{CLIName: c.Config.CLIName}
+		if !ctx.HasBasicMDSLogin() {
+			return new(errors.NotLoggedInError)
 		}
 		command.State = ctx.State
 		return nil
@@ -108,13 +113,12 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 
 func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.Anonymous(command.CLICommand)(cmd, args)
-		if err != nil {
+		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 		ctx := command.Config.Context()
 		if ctx == nil {
-			return &errors.NoContextError{CLIName: c.Config.CLIName}
+			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
 		return nil
@@ -149,8 +153,10 @@ func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) fun
 
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
+	command.V2Client = c.V2Client
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
+	command.QuotasClient = c.QuotasClient
 }

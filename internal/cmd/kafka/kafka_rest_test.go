@@ -49,11 +49,11 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsGetOpts() 
 
 	r := aclBindingToClustersClusterIdAclsGetOpts(&binding)
 	req.True(r.Host == optional.NewString("myhost"))
-	req.True(r.Operation == optional.NewInterface(kafkarestv3.AclOperation("CREATE")))
+	req.True(r.Operation == optional.NewString("CREATE"))
 	req.True(r.ResourceName == optional.NewString("mygroup"))
 	req.True(r.Principal == optional.NewString("myprincipal"))
-	req.True(r.Permission == optional.NewInterface(kafkarestv3.AclPermission("ALLOW")))
-	req.True(r.PatternType == optional.NewInterface(kafkarestv3.AclPatternType("PREFIXED")))
+	req.True(r.Permission == optional.NewString("ALLOW"))
+	req.True(r.PatternType == optional.NewString("PREFIXED"))
 }
 
 func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts() {
@@ -84,11 +84,11 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts()
 
 	r := aclBindingToClustersClusterIdAclsPostOpts(&binding).CreateAclRequestData.Value().(kafkarestv3.CreateAclRequestData)
 	req.True(r.Host == "myhost")
-	req.True(r.Operation == kafkarestv3.AclOperation("READ"))
+	req.True(r.Operation == "READ")
 	req.True(r.ResourceName == "mycluster")
 	req.True(r.Principal == "myprincipal")
-	req.True(r.Permission == kafkarestv3.AclPermission("DENY"))
-	req.True(r.PatternType == kafkarestv3.AclPatternType("LITERAL"))
+	req.True(r.Permission == "DENY")
+	req.True(r.PatternType == "LITERAL")
 }
 
 func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts() {
@@ -118,11 +118,11 @@ func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts(
 
 	r := aclFilterToClustersClusterIdAclsDeleteOpts(&filter)
 	req.Equal(r.Host, optional.NewString("myhost"))
-	req.Equal(r.Operation, optional.NewInterface(kafkarestv3.AclOperation("WRITE")))
+	req.Equal(r.Operation, optional.NewString("WRITE"))
 	req.Equal(r.ResourceName, optional.NewString("mytopic"))
 	req.Equal(r.Principal, optional.NewString("myprincipal"))
-	req.Equal(r.Permission, optional.NewInterface(kafkarestv3.AclPermission("ALLOW")))
-	req.Equal(r.PatternType, optional.NewInterface(kafkarestv3.AclPatternType("LITERAL")))
+	req.Equal(r.Permission, optional.NewString("ALLOW"))
+	req.Equal(r.PatternType, optional.NewString("LITERAL"))
 }
 
 func (suite *KafkaRestTestSuite) TestKafkaRestError() {
@@ -149,7 +149,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	req.Contains(r.Error(), url)
 	e, ok := r.(errors.ErrorWithSuggestions)
 	req.True(ok)
-	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_CA_CERT_PATH")
+	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_PLATFORM_CA_CERT_PATH")
 
 	openAPIError := kafkarestv3.GenericOpenAPIError{}
 
@@ -161,7 +161,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 		Status:     "Code: 400",
 		StatusCode: 400,
 		Request: &http.Request{
-			Method: "GET",
+			Method: http.MethodGet,
 			URL: &neturl.URL{
 				Host: "myhost",
 				Path: "/my-path",
@@ -171,7 +171,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 	r = kafkaRestError(url, openAPIError, &httpResp)
 	req.NotNil(r)
 	req.Contains(r.Error(), "failed")
-	req.Contains(r.Error(), "GET")
+	req.Contains(r.Error(), http.MethodGet)
 	req.Contains(r.Error(), "myhost")
 	req.Contains(r.Error(), "my-path")
 }

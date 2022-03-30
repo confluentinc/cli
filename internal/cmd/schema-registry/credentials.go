@@ -4,12 +4,14 @@ import (
 	"context"
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v0 "github.com/confluentinc/cli/internal/pkg/config/v0"
-	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -27,7 +29,7 @@ func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, er
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
 }
 
-func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
+func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
 	auth := &srsdk.BasicAuth{}
 	didPromptUser := false
 
@@ -50,14 +52,16 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v0.APIKeyPair, sho
 
 func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
+	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
 
 	ctx := cfg.Context()
 
-	srCluster := &v2.SchemaRegistryCluster{}
+	srCluster := &v1.SchemaRegistryCluster{}
 	endpoint, _ := cmd.Flags().GetString("sr-endpoint")
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
+			log.CliLogger.Debug("failed to find active schema registry cluster")
 			return nil, nil, err
 		}
 		srCluster = cluster
@@ -69,7 +73,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	}
 	if key != "" {
 		if srCluster.SrCredentials == nil {
-			srCluster.SrCredentials = &v0.APIKeyPair{}
+			srCluster.SrCredentials = &v1.APIKeyPair{}
 		}
 		srCluster.SrCredentials.Key = key
 		if secret != "" {
@@ -78,13 +82,13 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	}
 
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
-	//incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
+	// incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
 	shouldPrompt := false
 
 	for {
 		// Get credentials as Schema Registry BasicAuth
 		if srAPIKey != "" && srAPISecret != "" {
-			srCluster.SrCredentials = &v0.APIKeyPair{
+			srCluster.SrCredentials = &v1.APIKeyPair{
 				Key:    srAPIKey,
 				Secret: srAPISecret,
 			}
@@ -100,7 +104,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 		if len(endpoint) == 0 {
-			envId, err := ctx.AuthenticatedEnvId(cmd)
+			envId, err := ctx.AuthenticatedEnvId()
 			if err != nil {
 				return nil, nil, err
 			}
@@ -119,11 +123,12 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			srConfig.BasePath = endpoint
 		}
 		srConfig.UserAgent = ver.UserAgent
+		srConfig.HTTPClient = utils.DefaultClient()
 		srClient := srsdk.NewAPIClient(srConfig)
 
 		// Test credentials
 		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedMsg)
+			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedErrorMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue
@@ -131,7 +136,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		if didPromptUser {
 			// Save credentials
-			srCluster.SrCredentials = &v0.APIKeyPair{
+			srCluster.SrCredentials = &v1.APIKeyPair{
 				Key:    srAuth.UserName,
 				Secret: srAuth.Password,
 			}
@@ -142,4 +147,38 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 
 		return srClient, srCtx, nil
 	}
+}
+
+func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	srConfig := srsdk.NewConfiguration()
+
+	caCertPath, err := cmd.Flags().GetString("ca-location")
+	if err != nil {
+		return nil, nil, err
+	}
+	if caCertPath == "" {
+		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+	}
+	endpoint, err := cmd.Flags().GetString("sr-endpoint")
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(endpoint) == 0 {
+		return nil, nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+	}
+
+	srCtx := context.WithValue(context.Background(), srsdk.ContextAccessToken, mdsToken)
+
+	srConfig.BasePath = endpoint
+	srConfig.UserAgent = ver.UserAgent
+	srConfig.HTTPClient, err = utils.GetCAClient(caCertPath)
+	if err != nil {
+		return nil, nil, err
+	}
+	srClient := srsdk.NewAPIClient(srConfig)
+
+	if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil { // validate client
+		return nil, nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+	}
+	return srClient, srCtx, nil
 }

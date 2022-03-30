@@ -14,24 +14,37 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func SelfSignedCertClientFromPath(caCertPath string, logger *log.Logger) (*http.Client, error) {
-	return CustomCAAndClientCertClient(caCertPath, "", "", logger)
+func GetCAClient(caCertPath string) (*http.Client, error) {
+	caCert, err := ioutil.ReadFile(caCertPath)
+	if err != nil {
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	transport := DefaultTransport()
+	transport.TLSClientConfig.RootCAs = caCertPool
+	client := DefaultClientWithTransport(transport)
+	return client, nil
 }
 
-func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
+func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
+	return CustomCAAndClientCertClient(caCertPath, "", "")
+}
+
+func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clientKeyPath string) (*http.Client, error) {
 	var caCertReader *os.File
 	if caCertPath != "" {
 		caCertPath, err := filepath.Abs(caCertPath)
 		if err != nil {
 			return nil, err
 		}
-		logger.Debugf("Attempting to load certificate from absolute path %s", caCertPath)
+		log.CliLogger.Debugf("Attempting to load certificate from absolute path %s", caCertPath)
 		caCertReader, err = os.Open(caCertPath)
 		if err != nil {
 			return nil, err
 		}
 		defer caCertReader.Close()
-		logger.Tracef("Successfully read CA certificate.")
+		log.CliLogger.Tracef("Successfully read CA certificate")
 	}
 	var cert tls.Certificate
 	if clientCertPath != "" {
@@ -43,44 +56,44 @@ func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clien
 		if err != nil {
 			return nil, err
 		}
-		logger.Debugf("Attempting to load client key pair from absolute client cert path %s and absolute client key path %s", clientCertPath, clientKeyPath)
+		log.CliLogger.Debugf("Attempting to load client key pair from absolute client cert path %s and absolute client key path %s", clientCertPath, clientKeyPath)
 		cert, err = tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	logger.Tracef("Attempting to initialize HTTP client using certificates")
-	client, err := SelfSignedCertClient(caCertReader, cert, logger)
+	log.CliLogger.Tracef("Attempting to initialize HTTP client using certificates")
+	client, err := SelfSignedCertClient(caCertReader, cert)
 	if err != nil {
 		return nil, err
 	}
 	if caCertPath != "" {
-		logger.Tracef("Successfully loaded certificate from %s", caCertPath)
+		log.CliLogger.Tracef("Successfully loaded certificate from %s", caCertPath)
 	}
 	if clientCertPath != "" {
-		logger.Tracef("Successfully loaded certificate from %s", clientCertPath)
+		log.CliLogger.Tracef("Successfully loaded certificate from %s", clientCertPath)
 	}
 
 	return client, nil
 }
 
-func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, logger *log.Logger) (*http.Client, error) {
+func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*http.Client, error) {
 	if caCertReader == nil && isEmptyClientCert(clientCert) {
 		return nil, errors.New(errors.NoReaderForCustomCertErrorMsg)
 	}
-	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport := DefaultTransport()
 
 	var caCertPool *x509.CertPool
 	if caCertReader != nil && caCertReader != (*os.File)(nil) {
 		var err error
 		caCertPool, err = x509.SystemCertPool() // load system certs
 		if err != nil {
-			logger.Warnf("Unable to load system certificates. Continuing with custom certificates only.")
+			log.CliLogger.Warnf("Unable to load system certificates; continuing with custom certificates only")
 		}
-		logger.Tracef("Loaded certificate pool from system")
+		log.CliLogger.Tracef("Loaded certificate pool from system")
 		if caCertPool == nil {
-			logger.Tracef("(System certificate pool was blank)")
+			log.CliLogger.Tracef("(System certificate pool was blank)")
 			caCertPool = x509.NewCertPool()
 		}
 		// read custom certs
@@ -88,23 +101,22 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, lo
 		if err != nil {
 			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 		}
-		logger.Tracef("Specified ca certificate has been read")
+		log.CliLogger.Tracef("Specified CA certificate has been read")
 
 		// Append custom certs to the system pool
 		if ok := caCertPool.AppendCertsFromPEM(caCerts); !ok {
 			return nil, errors.New(errors.NoCertsAppendedErrorMsg)
 		}
-		logger.Tracef("Successfully appended new certificate to the pool")
+		log.CliLogger.Tracef("Successfully appended new certificate to the pool")
 		// Trust the updated cert pool in our client
 		transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool}
-		logger.Tracef("Successfully created TLS config using certificate pool")
+		log.CliLogger.Tracef("Successfully created TLS config using certificate pool")
 	}
 
 	if !isEmptyClientCert(clientCert) {
 		transport.TLSClientConfig.Certificates = []tls.Certificate{clientCert}
-		logger.Tracef("Successfully added client cert to TLS config")
+		log.CliLogger.Tracef("Successfully added client certificate to TLS config")
 	}
-
 	defaultClient := DefaultClient()
 	client := &http.Client{
 		Transport:     transport,
@@ -112,7 +124,8 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate, lo
 		Jar:           defaultClient.Jar,
 		Timeout:       defaultClient.Timeout,
 	}
-	logger.Tracef("Successfully set client properties")
+
+	log.CliLogger.Tracef("Successfully set client properties")
 
 	return client, nil
 }
@@ -121,6 +134,23 @@ func isEmptyClientCert(cert tls.Certificate) bool {
 	return cert.Certificate == nil && cert.Leaf == nil && cert.OCSPStaple == nil && cert.PrivateKey == nil && cert.SignedCertificateTimestamps == nil && cert.SupportedSignatureAlgorithms == nil
 }
 
+func DefaultTransport() *http.Transport {
+	return &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		},
+		ForceAttemptHTTP2: true,
+	}
+}
+
 func DefaultClient() *http.Client {
-	return http.DefaultClient
+	return &http.Client{
+		Transport: DefaultTransport(),
+	}
+}
+
+func DefaultClientWithTransport(transport *http.Transport) *http.Client {
+	return &http.Client{
+		Transport: transport,
+	}
 }

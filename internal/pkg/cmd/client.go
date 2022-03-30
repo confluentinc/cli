@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -21,8 +20,8 @@ func NewContextClient(ctx *DynamicContext) *contextClient {
 	}
 }
 
-func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*schedv1.KafkaCluster, error) {
-	envId, err := c.context.AuthenticatedEnvId(cmd)
+func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
+	envId, err := c.context.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}
@@ -36,8 +35,8 @@ func (c *contextClient) FetchCluster(cmd *cobra.Command, clusterId string) (*sch
 	return cluster, nil
 }
 
-func (c *contextClient) FetchAPIKeyError(cmd *cobra.Command, apiKey string, clusterID string) error {
-	envId, err := c.context.AuthenticatedEnvId(cmd)
+func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {
+	envId, err := c.context.AuthenticatedEnvId()
 	if err != nil {
 		return err
 	}
@@ -75,7 +74,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 	if len(existingClusters) > 0 {
 		return existingClusters[0], nil
 	}
-	return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
+	return nil, errors.NewSRNotEnabledError()
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
@@ -87,7 +86,7 @@ func (c *contextClient) FetchSchemaRegistryById(context context.Context, id stri
 		return nil, err
 	}
 	if existingCluster == nil {
-		return nil, errors.NewErrorWithSuggestions(errors.SRNotEnabledErrorMsg, errors.SRNotEnabledSuggestions)
+		return nil, errors.NewSRNotEnabledError()
 	} else {
 		return existingCluster, nil
 	}

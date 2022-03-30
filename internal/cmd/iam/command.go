@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
@@ -11,23 +12,21 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with RBAC.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "iam",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
 	var cliCmd *pcmd.AuthenticatedCLICommand
-	if cliName == "confluent" {
-		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(
-			&cobra.Command{
-				Use:   "iam",
-				Short: "Manage RBAC, ACL and IAM permissions.",
-				Long:  "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions.",
-			}, prerunner)
+	if cfg.IsOnPremLogin() {
+		cmd.Short = "Manage RBAC, ACL and IAM permissions."
+		cmd.Long = "Manage Role-Based Access Control (RBAC), Access Control Lists (ACL), and Identity and Access Management (IAM) permissions."
+		cliCmd = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	} else {
-		cliCmd = pcmd.NewAuthenticatedCLICommand(
-			&cobra.Command{
-				Use:   "iam",
-				Short: "Manage RBAC and IAM permissions.",
-				Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions.",
-			}, prerunner)
+		cmd.Short = "Manage RBAC and IAM permissions."
+		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
+		cliCmd = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	}
 
 	c := &command{
@@ -35,11 +34,12 @@ func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
-	c.AddCommand(NewRoleCommand(cliName, c.prerunner))
-	c.AddCommand(NewRolebindingCommand(cliName, c.prerunner))
-	if cliName != "ccloud" {
-		c.AddCommand(NewACLCommand(cliName, c.prerunner))
-	}
+	serviceAccountCmd := NewServiceAccountCommand(c.prerunner)
+
+	c.AddCommand(NewACLCommand(c.prerunner))
+	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
+	c.AddCommand(serviceAccountCmd.Command)
+	c.AddCommand(NewUserCommand(c.prerunner))
 
 	return c.Command
 }

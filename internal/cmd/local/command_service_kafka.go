@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -31,14 +32,14 @@ var (
 		"consumer-property":     "A mechanism to pass user-defined properties in the form key=value to the consumer.",
 		"consumer.config":       "Consumer config properties file. Note that [consumer-property] takes precedence over this config.",
 		"enable-systest-events": "Log lifecycle events of the consumer in addition to logging consumed messages. (This is specific for system tests.)",
-		"formatter":             "The name of a class to use for formatting kafka messages for display. (default \"kafka.tools.DefaultMessageFormatter\")",
+		"formatter":             `The name of a class to use for formatting kafka messages for display. (default "kafka.tools.DefaultMessageFormatter")`,
 		"from-beginning":        "If the consumer does not already have an established offset to consume from, start with the earliest message present in the log rather than the latest message.",
 		"group":                 "The consumer group id of the consumer.",
-		"isolation-level":       "Set to read_committed in order to filter out transactional messages which are not committed. Set to read_uncommitted to read all messages. (default \"read_uncommitted\")",
+		"isolation-level":       `Set to read_committed in order to filter out transactional messages which are not committed. Set to read_uncommitted to read all messages. (default "read_uncommitted")`,
 		"key-deserializer":      "",
 		"max-messages":          "The maximum number of messages to consume before exiting. If not set, consumption is continual.",
-		"offset":                "The offset id to consume from (a non-negative number), or \"earliest\" which means from beginning, or \"latest\" which means from end (default \"latest\")",
-		"partition":             "The partition to consume from. Consumption starts from the end of the partition unless \"--offset\" is specified.",
+		"offset":                `The offset id to consume from (a non-negative number), or "earliest" which means from beginning, or "latest" which means from end. (default "latest")`,
+		"partition":             `The partition to consume from. Consumption starts from the end of the partition unless "--offset" is specified.`,
 		"property":              "The properties to initialize the message formatter. Default properties include:\n\tprint.timestamp=true|false\n\tprint.key=true|false\n\tprint.value=true|false\n\tkey.separator=<key.separator>\n\tline.separator=<line.separator>\n\tkey.deserializer=<key.deserializer>\n\tvalue.deserializer=<value.deserializer>\nUsers can also pass in customized properties for their formatter; more specifically, users can pass in properties keyed with \"key.deserializer.\" and \"value.deserializer.\" prefixes to configure their deserializers.",
 		"skip-message-on-error": "If there is an error when processing a message, skip it instead of halting.",
 		"timeout-ms":            "If specified, exit if no messages are available for consumption for the specified interval.",
@@ -68,9 +69,9 @@ var (
 	kafkaProduceFlagUsage = map[string]string{
 		"bootstrap-server":           "The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.",
 		"batch-size":                 "Number of messages to send in a single batch if they are not being sent synchronously. (default 200)",
-		"compression-codec":          "The compression codec: either \"none\", \"gzip\", \"snappy\", \"lz4\", or \"zstd\". If specified without value, the it defaults to \"gzip\".",
-		"line-reader":                "The class name of the class to use for reading lines from stdin. By default each line is read as a separate message. (default \"kafka.tools.ConsoleProducer$LineMessageReader\")",
-		"max-block-ms":               "The max time that the producer will block for during a send request (default 60000)",
+		"compression-codec":          `The compression codec: either "none", "gzip", "snappy", "lz4", or "zstd". If specified without value, then it defaults to "gzip".`,
+		"line-reader":                `The class name of the class to use for reading lines from stdin. By default each line is read as a separate message. (default "kafka.tools.ConsoleProducer$LineMessageReader")`,
+		"max-block-ms":               "The max time that the producer will block for during a send request. (default 60000)",
 		"max-memory-bytes":           "The total memory used by the producer to buffer records waiting to be sent to the server. (default 33554432)",
 		"max-partition-memory-bytes": "The buffer size allocated for a partition. When records are received which are small than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)",
 		"message-send-max-retries":   "This property specifies the number of retries before the producer gives up and drops this message. Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. (default 3)",
@@ -78,8 +79,8 @@ var (
 		"producer-property":          "A mechanism to pass user-defined properties in the form key=value to the producer.",
 		"producer.config":            "Producer config properties file. Note that [producer-property] takes precedence over this config.",
 		"property":                   "A mechanism to pass user-defined properties in the form key=value to the message reader. This allows custom configuration for a user-defined message reader. Default properties include:\n\tparse.key=true|false\n\tkey.separator=<key.separator>\n\tignore.error=true|false",
-		"request-required-acks":      "The required ACKs of the producer requests (default 1)",
-		"request-timeout-ms":         "The ACK timeout of the producer requests. Value must be positive (default 1500)",
+		"request-required-acks":      "The required ACKs of the producer requests. (default 1)",
+		"request-timeout-ms":         "The ACK timeout of the producer requests. Value must be positive. (default 1500)",
 		"retry-backoff-ms":           "Before each retry, the producer refreshes the metadata of relevant topics. Since leader election takes a bit of time, this property specifies the amount of time that the producer waits before refreshing the metadata. (default 100)",
 		"socket-buffer-size":         "The size of the TCP RECV size. (default 102400)",
 		"sync":                       "If set, message send requests to brokers arrive synchronously.",
@@ -123,26 +124,6 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Text: "Consume newly arriving non-Avro data from a topic called `mytopic2` on a development Kafka cluster on localhost.",
 					Code: "confluent local services kafka consume mytopic2",
 				},
-				examples.Example{
-					Text: "Create a Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as `/tmp/myconfig.properties`. You can specify the file location using `--config <filename>`.",
-					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
-				},
-				examples.Example{
-					Text: "Consume non-Avro data from the beginning of a topic named `mytopic3` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`.",
-					Code: "confluent local services kafka consume mytopic3 --cloud --config /tmp/myconfig.properties --from-beginning",
-				},
-				examples.Example{
-					Text: "Consume messages with keys and non-Avro values from the beginning of topic called `mytopic4` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`. See the sample Confluent Cloud configuration file above.",
-					Code: "confluent local services kafka consume mytopic4 --cloud --config /tmp/myconfig.properties --from-beginning --property print.key=true",
-				},
-				examples.Example{
-					Text: "Consume Avro data from a topic called `mytopic5` in Confluent Cloud. Assumes Confluent Schema Registry is listening at `http://localhost:8081`.",
-					Code: "confluent local services kafka consume mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=http://localhost:8081",
-				},
-				examples.Example{
-					Text: "Consume Avro data from a topic called `mytopic6` in Confluent Cloud. Assumes you are using Confluent Cloud Confluent Schema Registry.",
-					Code: "confluent local services kafka consume mytopic6 --cloud --config /tmp/myconfig.properties --value-format avro \\\n--from-beginning --property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>",
-				},
 			),
 		}, prerunner)
 
@@ -172,26 +153,6 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 					Text: "Produce non-Avro data to a topic called `mytopic2` on a development Kafka cluster on localhost:",
 					Code: "confluent local produce mytopic2",
 				},
-				examples.Example{
-					Text: "Create a customized Confluent Cloud configuration file with connection details for the Confluent Cloud cluster using the format shown in this example, and save as `/tmp/myconfig.properties`. You can specify the file location using `--config <filename>`.",
-					Code: "bootstrap.servers=<broker endpoint>\nsasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<api-key>\" password=\"<api-secret>\";\nbasic.auth.credentials.source=USER_INFO\nschema.registry.basic.auth.user.info=<username:password>\nschema.registry.url=<sr endpoint>",
-				},
-				examples.Example{
-					Text: "Produce non-Avro data to a topic called `mytopic3` in Confluent Cloud. Assumes topic has already been created.",
-					Code: "confluent local services kafka produce mytopic3 --cloud --config /tmp/myconfig.properties",
-				},
-				examples.Example{
-					Text: "Produce messages with keys and non-Avro values to a topic called `mytopic4` in Confluent Cloud, using a user-specified Confluent Cloud configuration file at `/tmp/myconfig.properties`. Assumes topic has already been created.",
-					Code: "confluent local services kafka produce mytopic4 --cloud --config /tmp/myconfig.properties --property parse.key=true --property key.separator=,",
-				},
-				examples.Example{
-					Text: "Produce Avro data to a topic called `mytopic5` in Confluent Cloud. Assumes topic has already been created, and Confluent Schema Registry is listening at `http://localhost:8081`.",
-					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=http://localhost:8081`,
-				},
-				examples.Example{
-					Text: "Produce Avro data to a topic called `mytopic6` in Confluent Cloud. Assumes topic has already been created and you are using Confluent Cloud Confluent Schema Registry.",
-					Code: `confluent local services kafka produce mytopic5 --cloud --config /tmp/myconfig.properties --value-format avro --property \\\nvalue.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' \\\n--property schema.registry.url=https://<SR ENDPOINT> \\\n--property basic.auth.credentials.source=USER_INFO \\\n--property schema.registry.basic.auth.user.info=<SR API KEY>:<SR API SECRET>`,
-				},
 			),
 		}, prerunner)
 
@@ -208,9 +169,9 @@ func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) 
 func (c *Command) initFlags(mode string) {
 	// CLI Flags
 	c.Flags().Bool("cloud", defaultBool, commonFlagUsage["cloud"])
-	defaultConfig := fmt.Sprintf("%s/.ccloud/config", os.Getenv("HOME"))
+	defaultConfig := fmt.Sprintf("%s/.confluent/config", os.Getenv("HOME"))
 	c.Flags().String("config", defaultConfig, commonFlagUsage["config"])
-	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"])
+	c.Flags().String("value-format", defaultString, commonFlagUsage["value-format"]+"\n") // "\n" separates the CLI flags from the Kafka flags
 
 	// Kafka Flags
 	defaults := kafkaConsumeDefaultValues
@@ -220,8 +181,14 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	for flag, val := range defaults {
-		switch val := val.(type) {
+	var flags []string
+	for flag := range defaults {
+		flags = append(flags, flag)
+	}
+	sort.Strings(flags)
+
+	for _, flag := range flags {
+		switch val := defaults[flag].(type) {
 		case bool:
 			c.Flags().Bool(flag, val, usage[flag])
 		case int:

@@ -7,7 +7,6 @@ import (
 )
 
 type BaseConfig struct {
-	*Params  `json:"-"`
 	Filename string  `json:"-"`
 	Ver      Version `json:"version"`
 }
@@ -33,17 +32,13 @@ func (v *Version) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-func NewBaseConfig(params *Params, ver *version.Version) *BaseConfig {
-	if params == nil {
-		params = &Params{}
-	}
+func NewBaseConfig(ver *version.Version) *BaseConfig {
 	return &BaseConfig{
-		Params:   params,
 		Filename: "",
 		Ver:      Version{ver},
 	}
 }
 
-func (c *BaseConfig) SetParams(params *Params) {
-	c.Params = params
+func (c *BaseConfig) Version() *version.Version {
+	return c.Ver.Version
 }

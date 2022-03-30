@@ -35,7 +35,15 @@ func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *
 	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
 }
 
-func PrintVersions(versions []int32) {
+func GetAPIClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
+}
+
+func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
 	var entries [][]string
 	for _, v := range versions {
@@ -54,16 +62,11 @@ func convertMapToString(m map[string]string) string {
 	return strings.Join(pairs, "\n")
 }
 
-func RequireSubjectFlag(cmd *cobra.Command) {
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	_ = cmd.MarkFlagRequired("subject")
-}
-
 func getServiceProviderFromUrl(url string) string {
 	if url == "" {
 		return ""
 	}
-	//Endpoint url is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
+	// Endpoint URL is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
 	stringSlice := strings.Split(url, ".")
 	if len(stringSlice) != 6 {
 		return ""

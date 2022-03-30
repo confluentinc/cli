@@ -2,9 +2,9 @@ package test
 
 func (s *CLITestSuite) TestEnvironment() {
 	tests := []CLITest{
-		// only login at the begginning so active env is not reset
+		// Only log in at the beginning so active env is not reset
 		// tt.workflow=true so login is not reset
-		{args: "environment list", fixture: "environment/1.golden", login: "default"},
+		{args: "environment list", fixture: "environment/1.golden", login: "cloud"},
 		{args: "environment use not-595", fixture: "environment/2.golden"},
 		{args: "environment update not-595 --name new-other-name", fixture: "environment/3.golden"},
 		{args: "environment list", fixture: "environment/4.golden"},
@@ -17,10 +17,10 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment delete not-595", fixture: "environment/11.golden"},
 	}
 
-	resetConfiguration(s.T(), "ccloud")
+	resetConfiguration(s.T())
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }

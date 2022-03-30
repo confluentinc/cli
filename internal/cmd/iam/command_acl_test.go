@@ -13,7 +13,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 
-	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	mock2 "github.com/confluentinc/cli/mock"
 )
@@ -168,13 +168,12 @@ var mdsACLEntries = []struct {
 
 type ACLTestSuite struct {
 	suite.Suite
-	conf     *v3.Config
+	conf     *v1.Config
 	kafkaApi mds.KafkaACLManagementApi
 }
 
 func (suite *ACLTestSuite) SetupSuite() {
-	suite.conf = v3.AuthenticatedConfluentConfigMock()
-	suite.conf.CLIName = "confluent"
+	suite.conf = v1.AuthenticatedOnPremConfigMock()
 }
 
 func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
@@ -194,7 +193,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New("confluent", mock2.NewPreRunnerMock(nil, mdsClient, nil, suite.conf))
+	return New(suite.conf, mock2.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -420,24 +419,4 @@ func (suite *ACLTestSuite) TestMdsDefaults() {
 
 	err = cmd.Execute()
 	assert.Nil(suite.T(), err)
-}
-
-func (suite *ACLTestSuite) TestMdsHandleErrorNotLoggedIn() {
-	expect := make(chan interface{})
-	oldContext := suite.conf.CurrentContext
-	suite.conf.CurrentContext = ""
-	cmd := suite.newMockIamCmd(expect, "")
-	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
-
-	for _, aclCmd := range []string{"list", "create", "delete"} {
-		cmd.SetArgs([]string{"acl", aclCmd, "--kafka-cluster-id", "testcluster"})
-		go func() {
-			expect <- nil
-		}()
-		err := cmd.Execute()
-		assert.NotNil(suite.T(), err)
-		expectedError := (&errors.NotLoggedInError{CLIName: suite.conf.CLIName}).UserFacingError()
-		assert.Equal(suite.T(), errors.GetErrorStringWithSuggestions(expectedError), errors.GetErrorStringWithSuggestions(err))
-	}
-	suite.conf.CurrentContext = oldContext
 }

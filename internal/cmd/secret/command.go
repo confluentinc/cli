@@ -8,26 +8,26 @@ import (
 )
 
 type command struct {
-	*cobra.Command
-	resolv pcmd.FlagResolver
-	plugin secret.PasswordProtection
+	*pcmd.AuthenticatedStateFlagCommand
+	flagResolver pcmd.FlagResolver
+	plugin       secret.PasswordProtection
 }
 
-// New returns the default command object for Password Protection
-func New(resolv pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
-	cmd := &command{
-		Command: &cobra.Command{
-			Use:   "secret",
-			Short: "Manage secrets for Confluent Platform.",
-		},
-		resolv: resolv,
-		plugin: plugin,
+func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret.PasswordProtection) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "secret",
+		Short:       "Manage secrets for Confluent Platform.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	cmd.init()
-	return cmd.Command
-}
 
-func (c *command) init() {
-	c.AddCommand(NewMasterKeyCommand(c.resolv, c.plugin))
-	c.AddCommand(NewFileCommand(c.resolv, c.plugin))
+	c := &command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
+		flagResolver:                  flagResolver,
+		plugin:                        plugin,
+	}
+
+	c.AddCommand(c.newMasterKeyCommand())
+	c.AddCommand(c.newFileCommand())
+
+	return c.Command
 }

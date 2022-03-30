@@ -4,27 +4,27 @@ package auth
 import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
-	log "github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
 type MDSClientManager interface {
-	GetMDSClient(url string, caCertPath string, logger *log.Logger) (*mds.APIClient, error)
+	GetMDSClient(url string, caCertPath string) (*mds.APIClient, error)
 }
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(url string, caCertPath string, logger *log.Logger) (*mds.APIClient, error) {
+func (m *MDSClientManagerImpl) GetMDSClient(url string, caCertPath string) (*mds.APIClient, error) {
 	mdsConfig := mds.NewConfiguration()
-	if logger.GetLevel() == log.DEBUG || logger.GetLevel() == log.TRACE {
+	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
 		mdsConfig.Debug = true
 	}
 	if caCertPath != "" {
-		logger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")
+		log.CliLogger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")
 		var err error
 
-		mdsConfig.HTTPClient, err = utils.SelfSignedCertClientFromPath(caCertPath, logger)
+		mdsConfig.HTTPClient, err = utils.SelfSignedCertClientFromPath(caCertPath)
 		if err != nil {
 			return nil, err
 		}

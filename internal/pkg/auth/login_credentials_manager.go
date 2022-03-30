@@ -3,16 +3,16 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
-	"github.com/confluentinc/cli/internal/pkg/sso"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -55,60 +55,67 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 }
 
 type LoginCredentialsManager interface {
-	GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetCCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
-	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
+	GetCloudCredentialsFromEnvVar(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
+	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
+	GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
-	GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromEnvVar(*cobra.Command) func() (*Credentials, error)
+	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
-	SetCCloudClient(client *ccloud.Client)
+	SetCloudClient(client *ccloud.Client)
 }
 
 type LoginCredentialsManagerImpl struct {
 	netrcHandler netrc.NetrcHandler
-	logger       *log.Logger
 	prompt       form.Prompt
 	client       *ccloud.Client
 }
 
-func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, logger *log.Logger, client *ccloud.Client) LoginCredentialsManager {
+func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, client *ccloud.Client) LoginCredentialsManager {
 	return &LoginCredentialsManagerImpl{
 		netrcHandler: netrcHandler,
-		logger:       logger,
 		prompt:       prompt,
 		client:       client,
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromEnvVar(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           CCloudEmailEnvVar,
-		password:           CCloudPasswordEnvVar,
-		deprecatedUsername: CCloudEmailDeprecatedEnvVar,
-		deprecatedPassword: CCloudPasswordDeprecatedEnvVar,
+		username:           ConfluentCloudEmail,
+		password:           ConfluentCloudPassword,
+		deprecatedUsername: DeprecatedConfluentCloudEmail,
+		deprecatedPassword: DeprecatedConfluentCloudPassword,
 	}
-	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars, orgResourceId)
 }
 
-func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(cmd *cobra.Command, envVars environmentVariables, orgResourceId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		email, password := h.getEnvVarCredentials(cmd, envVars.username, envVars.password)
-		if h.isSSOUser(email) {
-			h.logger.Debugf("CCLOUD_EMAIL=%s belongs to an SSO user.", email)
+		if h.isSSOUser(email, orgResourceId) {
+			log.CliLogger.Debugf("%s=%s belongs to an SSO user.", ConfluentCloudEmail, email)
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
-		if len(email) == 0 {
+
+		if email == "" {
 			email, password = h.getEnvVarCredentials(cmd, envVars.deprecatedUsername, envVars.deprecatedPassword)
+			if email != "" {
+				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
+			}
+			if password != "" {
+				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
+			}
 		}
-		if len(password) == 0 {
-			h.logger.Debug("Did not find full credential set from environment variables")
+
+		if password == "" {
+			log.CliLogger.Debug("Did not find full credential set from environment variables")
 			return nil, nil
 		}
+
 		return &Credentials{Username: email, Password: password}, nil
 	}
 }
@@ -122,54 +129,52 @@ func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(cmd *cobra.Command, u
 	if len(password) == 0 {
 		return username, ""
 	}
-	if h.logger.GetLevel() >= log.WARN {
-		utils.ErrPrintf(cmd, errors.FoundEnvCredMsg, username, userEnvVar, passwordEnvVar)
-	}
+	log.CliLogger.Warnf(errors.FoundEnvCredMsg, username, userEnvVar, passwordEnvVar)
 	return username, password
 }
 
-func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	envVars := environmentVariables{
-		username:           ConfluentUsernameEnvVar,
-		password:           ConfluentPasswordEnvVar,
-		deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
-		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+		username:           ConfluentPlatformUsername,
+		password:           ConfluentPlatformPassword,
+		deprecatedUsername: DeprecatedConfluentPlatformUsername,
+		deprecatedPassword: DeprecatedConfluentPlatformPassword,
 	}
-	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+	return h.getCredentialsFromEnvVarFunc(cmd, envVars, "")
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
-			h.logger.Debugf("Get netrc machine error: %s", err.Error())
+			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		if h.logger.GetLevel() >= log.WARN {
+		if log.CliLogger.GetLevel() >= log.WARN {
 			utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		}
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO}, nil
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
-	h.logger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
+func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMachineParams) (*netrc.Machine, error) {
+	log.CliLogger.Debugf("Searching for netrc machine with filter: %+v", filterParams)
 	netrcMachine, err := h.netrcHandler.GetMatchingNetrcMachine(filterParams)
 	if err != nil {
 		return nil, err
 	}
 	if netrcMachine == nil {
-		return nil, errors.Errorf("Found no netrc machine using the filter: %+v", filterParams)
+		return nil, errors.Errorf("found no netrc machine using the filter: %+v", filterParams)
 	}
 	return netrcMachine, err
 }
 
-func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		utils.Println(cmd, "Enter your Confluent Cloud credentials:")
 		email := h.promptForUser(cmd, "Email")
-		if h.isSSOUser(email) {
-			h.logger.Debug("Entered email belongs to an SSO user.")
+		if h.isSSOUser(email, orgResourceId) {
+			log.CliLogger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
 		password := h.promptForPassword(cmd)
@@ -177,7 +182,7 @@ func (h *LoginCredentialsManagerImpl) GetCCloudCredentialsFromPrompt(cmd *cobra.
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		utils.Println(cmd, "Enter your Confluent credentials:")
 		username := h.promptForUser(cmd, "Username")
@@ -187,13 +192,6 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromPrompt(cmd *cob
 }
 
 func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userField string) string {
-	// HACK: SSO integration test extracts email from env var
-	// TODO: remove this hack once we implement prompting for integration test
-	if testEmail := os.Getenv(CCloudEmailDeprecatedEnvVar); len(testEmail) > 0 {
-		h.logger.Debugf("Using test email \"%s\" found from env var \"%s\"", testEmail, CCloudEmailDeprecatedEnvVar)
-		return testEmail
-	}
-
 	f := form.New(form.Field{ID: userField, Prompt: userField})
 	if err := f.Prompt(cmd, h.prompt); err != nil {
 		return ""
@@ -211,50 +209,48 @@ func (h *LoginCredentialsManagerImpl) promptForPassword(cmd *cobra.Command) stri
 	return f.Responses[passwordField].(string)
 }
 
-func (h *LoginCredentialsManagerImpl) isSSOUser(email string) bool {
+func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	if h.client == nil {
 		return false
 	}
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
-	h.logger.Debugf("cloudClient.BaseURL: %s", h.client.BaseURL)
-	h.logger.Debugf("auth0ClientId: %s", auth0ClientId)
-	loginRealmReply, err := h.client.User.LoginRealm(context.Background(),
-		&flowv1.GetLoginRealmRequest{
-			Email:    email,
-			ClientId: auth0ClientId,
-		})
+	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
+	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
+	req := &flowv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      auth0ClientId,
+		OrgResourceId: orgId,
+	}
+	res, err := h.client.User.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	if err == nil && loginRealmReply.IsSso {
-		return true
-	}
-	return false
+	return err == nil && res.IsSso
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
 // Those two variables are passed as flags for login command, but for prerun logins they are required as environment variables.
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		url := os.Getenv(ConfluentURLEnvVar)
+		url := GetEnvWithFallback(ConfluentPlatformMDSURL, DeprecatedConfluentPlatformMDSURL)
 		if url == "" {
 			return nil, errors.New(errors.NoURLEnvVarErrorMsg)
 		}
+
 		envVars := environmentVariables{
-			username:           ConfluentUsernameEnvVar,
-			password:           ConfluentPasswordEnvVar,
-			deprecatedUsername: ConfluentUsernameDeprecatedEnvVar,
-			deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
+			username:           ConfluentPlatformUsername,
+			password:           ConfluentPlatformPassword,
+			deprecatedUsername: DeprecatedConfluentPlatformUsername,
+			deprecatedPassword: DeprecatedConfluentPlatformPassword,
 		}
-		creds, err := h.getCredentialsFromEnvVarFunc(cmd, envVars)()
-		if err != nil {
-			return nil, err
-		}
+
+		creds, _ := h.getCredentialsFromEnvVarFunc(cmd, envVars, "")()
 		if creds == nil {
 			return nil, errors.New(errors.NoCredentialsFoundErrorMsg)
 		}
 		creds.PrerunLoginURL = url
-		creds.PrerunLoginCaCertPath = os.Getenv(ConfluentCaCertPathEnvVar)
+		creds.PrerunLoginCaCertPath = GetEnvWithFallback(ConfluentPlatformCACertPath, DeprecatedConfluentPlatformCACertPath)
+
 		return creds, nil
 	}
 }
@@ -262,14 +258,11 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromEnvVar(cm
 // Prerun login for Confluent will extract URL and ca-cert-path (if available) from the netrc machine name
 // URL is no longer part of the filter and URL value will be of whichever URL the first context stored in netrc has
 // URL and ca-cert-path (if exists) are returned in addition to username and password
-func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd *cobra.Command) func() (*Credentials, error) {
-	filterParams := netrc.GetMatchingNetrcMachineParams{
-		CLIName: "confluent",
-	}
+func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *cobra.Command, netrcMachineParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		netrcMachine, err := h.getNetrcMachine(filterParams)
+		netrcMachine, err := h.getNetrcMachine(netrcMachineParams)
 		if err != nil {
-			h.logger.Debugf("Get netrc machine error: %s", err.Error())
+			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
 		machineContextInfo, err := netrc.ParseNetrcMachineName(netrcMachine.Name)
@@ -282,6 +275,6 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) SetCCloudClient(client *ccloud.Client) {
+func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloud.Client) {
 	h.client = client
 }

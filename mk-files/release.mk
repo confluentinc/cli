@@ -1,7 +1,7 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_386.tar.gz windows_amd64.zip windows_386.zip alpine_amd64.tar.gz
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz windows_amd64.zip
 
 .PHONY: release
-release: get-release-image commit-release tag-release
+release: check-branch commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
@@ -11,6 +11,13 @@ release: get-release-image commit-release tag-release
 	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
+
+.PHONY: check-branch
+check-branch:
+	@if [ $(shell git rev-parse --abbrev-ref HEAD) != $(RELEASE_BRANCH) ] ; then \
+		echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"$(RELEASE_BRANCH)\"!  Do you want to proceed? (y/n): " ; \
+		read line; if [ $$line != "y" ] && [ $$line != "Y" ]; then echo "Release cancelled."; exit 0; fi ; \
+	fi
 
 .PHONY: release-to-stag
 release-to-stag:
@@ -24,7 +31,7 @@ release-to-stag:
 
 .PHONY: release-to-prod
 release-to-prod:
-	@$(caasenv-authenticate) && \
+	@$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
@@ -33,34 +40,34 @@ release-to-prod:
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
 define copy-stag-content-to-prod
-	for binary in ccloud confluent; do \
-		folder_path=$${binary}-cli/$1/$2; \
-		echo "COPYING: $${folder_path}"; \
-		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1; \
-	done
+	folder_path=confluent-cli/$1/$2; \
+	echo "COPYING: $${folder_path}"; \
+	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
 endef
 
-# The Alpine container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-alpine
-gorelease-alpine:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud-alpine.yml && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent-alpine.yml
+.PHONY: switch-librdkafka-arm64
+switch-librdkafka-arm64:
+	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
+		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+	fi
 
-# This builds the Darwin, Linux (non-Alpine), and Windows binaries using goreleaser on the host computer.  goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.  However, we then have to separately build the Alpine binaries/archives in a Docker container (since we need to use an OS which has the Alpine C runtimes instead of the C runtimes on macOS).  We then also have to manually upload the Alpine build artifacts to S3 since the goreleaser inside the Docker container doesn't have the S3 credentials from the host.
+.PHONY: restore-librdkafka-amd64
+restore-librdkafka-amd64:
+	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+	fi
+
+# This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	$(caasenv-authenticate) && \
+	$(aws-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
-	./build_alpine.sh && \
-	for binary in ccloud confluent; do \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION)_alpine_amd64.tar.gz $(S3_STAG_PATH)/$${binary}-cli/archives/$(VERSION_NO_V)/$${binary}_$(VERSION)_alpine_amd64.tar.gz; \
-		aws s3 cp dist/$${binary}/$${binary}_alpine_amd64/$${binary} $(S3_STAG_PATH)/$${binary}-cli/binaries/$(VERSION_NO_V)/$${binary}_$(VERSION_NO_V)_alpine_amd64; \
-		cat dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums_alpine.txt >> dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt; \
-	done
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml || true && \
+	make restore-librdkafka-amd64
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -74,26 +81,20 @@ goreleaser-patches:
 # Dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change doesn't count)
 .PHONY: set-acls
 set-acls:
-	$(caasenv-authenticate) && \
-	for binary in ccloud confluent; do \
-		for file_type in binaries archives; do \
-			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
-			echo "SETTING ACLS: $${folder_path}"; \
-			aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
-		done; \
+	$(aws-authenticate) && \
+	for file_type in binaries archives; do \
+		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
+		echo "SETTING ACLS: $${folder_path}"; \
+		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
 	done
 
-# goreleaser uploads the checksum for archives as ccloud_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. ccloud_v1.19.0_checksums.txt
+# goreleaser uploads the checksum for archives as confluent_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. confluent_v1.19.0_checksums.txt
 # Chose not to change install script to expect no-v because older versions use the format with 'v'.
-# Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
-	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
-		aws s3 mv $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt $${folder}/$${binary}_v$(CLEAN_VERSION)_checksums.txt --acl public-read; \
-	done
+	$(aws-authenticate); \
+	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
+	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
@@ -106,13 +107,11 @@ copy-stag-archives-to-latest:
 # first argument: S3 folder of archives we want to copy from
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
-	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		archives_folder=$1/$${binary}-cli/archives/$(CLEAN_VERSION); \
-		latest_folder=$2/$${binary}-cli/archives/latest; \
-		for suffix in $(ARCHIVE_TYPES); do \
-			aws s3 cp $${archives_folder}/$${binary}_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/$${binary}_latest_$${suffix} --acl public-read; \
-		done ; \
+	$(aws-authenticate); \
+	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
+	latest_folder=$2/confluent-cli/archives/latest; \
+	for suffix in $(ARCHIVE_TYPES); do \
+		aws s3 cp $${archives_folder}/confluent_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
 	done
 endef
 
@@ -122,15 +121,13 @@ endef
 # second argument: S3 folder destination for latest archives
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
-	$(caasenv-authenticate); \
-	for binary in ccloud confluent; do \
-		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
-		latest_checksums=$${binary}_latest_checksums.txt; \
-		cd $(TEMP_DIR) ; \
-		aws s3 cp $1/$${binary}-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
-		cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
-		aws s3 cp $${latest_checksums} $2/$${binary}-cli/archives/latest/$${latest_checksums} --acl public-read ; \
-	done
+	$(aws-authenticate); \
+	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
+	latest_checksums=confluent_latest_checksums.txt; \
+	cd $(TEMP_DIR) ; \
+	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
+	cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
+	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
 	rm -rf $(TEMP_DIR)
 endef
 
@@ -143,9 +140,8 @@ download-licenses:
 	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
 	echo Successfully downloaded licenses
 
-.PHONY: publish-installers
+.PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
-publish-installers:
-	$(caasenv-authenticate) && \
-	aws s3 cp install-ccloud.sh $(S3_BUCKET_PATH)/ccloud-cli/install.sh --acl public-read && \
-	aws s3 cp install-confluent.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
+publish-installer:
+	$(aws-authenticate) && \
+	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read

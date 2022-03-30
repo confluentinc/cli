@@ -1,7 +1,0 @@
-- host: '*'
-  operation: READ
-  pattern_type: LITERAL
-  permission: ALLOW
-  principal: User:sa-123
-  resource_name: test-topic
-  resource_type: TOPIC

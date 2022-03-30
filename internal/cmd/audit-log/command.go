@@ -14,33 +14,25 @@ import (
 
 type command struct {
 	*pcmd.CLICommand
-	prerunner pcmd.PreRunner
 }
 
-// New returns the default command object for interacting with audit logs.
-func New(cliName string, prerunner pcmd.PreRunner) *cobra.Command {
-	cliCmd := pcmd.NewCLICommand(
-		&cobra.Command{
-			Use:   "audit-log",
-			Short: "Manage audit log configuration.",
-			Long:  "Manage which auditable events are logged, and where the event logs are sent.",
-		}, prerunner)
-	cmd := &command{
-		CLICommand: cliCmd,
-		prerunner:  prerunner,
+func New(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "audit-log",
+		Aliases:     []string{"al"},
+		Short:       "Manage audit log configuration.",
+		Long:        "Manage which auditable events are logged, and where the event logs are sent.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
-	cmd.init(cliName)
-	return cmd.Command
-}
 
-func (c *command) init(cliName string) {
-	if cliName == "ccloud" {
-		c.AddCommand(NewDescribeCommand(c.prerunner))
-	} else if cliName == "confluent" {
-		c.AddCommand(NewMigrateCommand(c.prerunner))
-		c.AddCommand(NewConfigCommand(c.prerunner))
-		c.AddCommand(NewRouteCommand(c.prerunner))
-	}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+
+	c.AddCommand(newDescribeCommand(prerunner))
+	c.AddCommand(newMigrateCommand(prerunner))
+	c.AddCommand(newConfigCommand(prerunner))
+	c.AddCommand(newRouteCommand(prerunner))
+
+	return c.Command
 }
 
 type errorMessage struct {

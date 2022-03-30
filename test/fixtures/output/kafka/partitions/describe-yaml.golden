@@ -1,0 +1,4 @@
+cluster_id: cluster-1
+leader_id: 2
+partition_id: 0
+topic_name: topic1

@@ -1,4 +1,0 @@
-Error: incorrect principal format specified
-
-Suggestions:
-    Principal must be specified in this format: `<Principal Type>:<Principal Name>`.

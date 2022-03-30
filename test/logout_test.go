@@ -22,7 +22,7 @@ var (
 func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	type saveTest struct {
 		input    string
-		cliName  string
+		isCloud  bool
 		wantFile string
 		loginURL string
 		bin      string
@@ -35,41 +35,41 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
-			"ccloud",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
+			true,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove"),
-			"confluent",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "netrc-remove-username-password.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove"),
+			false,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "netrc-remove-username-password.golden"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
-			"ccloud",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
+			true,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-empty"),
-			"confluent",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "empty.golden"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-empty"),
+			false,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", "logout", "empty.golden"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 	}
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
-		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+		if tt.isCloud {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)
@@ -79,7 +79,11 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		// run login to provide context, then logout command and check output
 		output := runCommand(s.T(), tt.bin, env, "login -vvvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
+		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
+		}
 
 		output = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
 		s.Contains(output, loggedOutOutput)
@@ -99,7 +103,7 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	// fail to parse the netrc file should leave it unchanged
 	type saveTest struct {
 		input    string
-		cliName  string
+		isCloud  bool
 		wantFile string
 		loginURL string
 		bin      string
@@ -112,27 +116,27 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 	}
 	tests := []saveTest{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
-			"ccloud",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-ccloud-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
+			true,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-ccloud-fail"),
 			cloudUrl,
-			ccloudTestBin,
+			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
-			"confluent",
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-remove-mds-fail"),
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
+			false,
+			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "logout", "netrc-remove-mds-fail"),
 			mdsUrl,
-			confluentTestBin,
+			testBin,
 		},
 	}
 	for _, tt := range tests {
 		// store existing credentials in a temp netrc to check that they are not corrupted
 		var env []string
-		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+		if tt.isCloud {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 		originalNetrc, err := ioutil.ReadFile(tt.input)
 		s.NoError(err)

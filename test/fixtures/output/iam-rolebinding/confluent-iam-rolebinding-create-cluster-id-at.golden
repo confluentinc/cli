@@ -1,7 +1,0 @@
-+--------------+-----------------+
-| Principal    | User:bob@Kafka  |
-| Role         | DeveloperRead   |
-| ResourceType | Topic           |
-| Name         | connect-configs |
-| PatternType  | LITERAL         |
-+--------------+-----------------+

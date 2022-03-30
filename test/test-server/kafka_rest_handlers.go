@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/gorilla/mux"
@@ -48,7 +49,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPClusters(t *testing.T) func(http.Resp
 func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			vars := mux.Vars(r)
 			err := json.NewEncoder(w).Encode(kafkarestv3.AclDataList{Data: []kafkarestv3.AclData{{
@@ -60,21 +61,21 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 				Operation:    "READ",
 				Permission:   "ALLOW",
 				Host:         "*",
-				Principal:    "User:sa-123",
-				PatternType:  kafkarestv3.ACLPATTERNTYPE_LITERAL,
+				Principal:    "User:12345",
+				PatternType:  "LITERAL",
 			}}})
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusCreated)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdAclsPostOpts
+			var req kafkarestv3.CreateKafkaAclsOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(kafkarestv3.ClustersClusterIdAclsPostOpts{})
+			err = json.NewEncoder(w).Encode(kafkarestv3.CreateKafkaAclsOpts{})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdAclsDeleteOpts
+			var req kafkarestv3.DeleteKafkaAclsOpts
 			_ = json.NewDecoder(r.Body).Decode(&req)
 			err := json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{
 				{
@@ -92,7 +93,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) func(http.Response
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			response := `{
 				"kind": "KafkaTopicList",
@@ -124,7 +125,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 			}`
 			_, err := io.WriteString(w, response)
 			require.NoError(t, err)
-		case "POST":
+		case http.MethodPost:
 			// Parse Create Args
 			reqBody, _ := ioutil.ReadAll(r.Body)
 			var requestData kafkarestv3.CreateTopicRequestData
@@ -188,79 +189,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) func(http.Respon
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions"
-func (r KafkaRestProxyRouter) HandleKafkaRPPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		topicName := vars["topic"]
-		switch r.Method {
-		case "GET":
-			if topicName == "topic-exist" {
-				w.Header().Set("Content-Type", "application/json")
-				responseString := fmt.Sprintf(`{
-					"kind": "KafkaPartitionList",
-					"metadata": {
-						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions",
-						"next": null
-					},
-					"data": [
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=0"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 0,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/0/reassignment"}
-						},
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=1"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 1,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/1/reassignment"}
-						},
-						{
-							"kind": "KafkaPartition",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2",
-								"resource_name": "crn:///kafka=cluster-1/topic=%[1]s/partition=2"
-							},
-							"cluster_id": "cluster-1",
-							"topic_name": "%[1]s",
-							"partition_id": 2,
-							"leader": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas/1001"},
-							"replicas": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/replicas"},
-							"reassignment": {"related": "http://localhost:8082/v3/clusters/cluster-1/topics/%[1]s/partitions/2/reassignment"}
-						}
-					]
-				}`, "topic-exist")
-				_, err := io.WriteString(w, responseString)
-				require.NoError(t, err)
-			} else {
-				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
-			}
-		}
-	}
-}
-
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			// if topic exists
 			if topicName == "topic-exist" {
 				responseString := `{
@@ -429,7 +364,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPPartitionReplicas(t *testing.T) func(
 		topicName := vars["topic"]
 		partitionId := vars["partition"]
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			// if topic exists
 			if topicName == "topic-exist" {
 				// Define replica & partition info
@@ -510,7 +445,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) func(http.
 		vars := mux.Vars(r)
 		topicName := vars["topic"]
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			if topicName == "topic-exist" {
 				// Parse Alter Args
 				requestBody, err := ioutil.ReadAll(r.Body)
@@ -550,7 +485,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "DELETE":
+		case http.MethodDelete:
 			if vars["topic"] == "topic-exist" {
 				// Successfully deleted
 				w.WriteHeader(http.StatusNoContent)
@@ -568,30 +503,30 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopic(t *testing.T) func(http.Respons
 func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksPostOpts
+			var req kafkarestv3.CreateKafkaLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseDataList{Data: []kafkarestv3.ListLinksResponseData{
 				{
 					Kind:            "",
 					Metadata:        kafkarestv3.ResourceMetadata{},
-					SourceClusterId: "cluster-1",
+					SourceClusterId: stringPtr("cluster-1"),
 					LinkName:        "link-1",
 					LinkId:          "LINKID1",
-					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
 				},
 				{
 					Kind:            "",
 					Metadata:        kafkarestv3.ResourceMetadata{},
-					SourceClusterId: "cluster-1",
+					SourceClusterId: stringPtr("cluster-1"),
 					LinkName:        "link-2",
 					LinkId:          "LINKID2",
-					TopicNames:      []string{"link-2-topic-1", "link-2-topic-2"},
+					TopicsNames:     []string{"link-2-topic-1", "link-2-topic-2"},
 				},
 			}})
 			require.NoError(t, err)
@@ -603,7 +538,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) func(http.Respons
 func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupDataList{
 				Kind:     "",
@@ -616,7 +551,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 						ConsumerGroupId:   "consumer-group-1",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
-						State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+						State:             "STABLE",
 						Coordinator:       kafkarestv3.Relationship{},
 						Consumer:          kafkarestv3.Relationship{},
 						LagSummary:        kafkarestv3.Relationship{},
@@ -628,7 +563,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 						ConsumerGroupId:   "consumer-group-2",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
-						State:             kafkarestv3.CONSUMERGROUPSTATE_DEAD,
+						State:             "DEAD",
 						Coordinator:       kafkarestv3.Relationship{},
 						Consumer:          kafkarestv3.Relationship{},
 						LagSummary:        kafkarestv3.Relationship{},
@@ -644,18 +579,18 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroups(t *testing.T) func(htt
 func (r KafkaRestProxyRouter) HandleKafkaRPLink(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        kafkarestv3.ResourceMetadata{},
-				SourceClusterId: "cluster-1",
+				SourceClusterId: stringPtr("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
-				TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
 			})
 			require.NoError(t, err)
-		case "DELETE":
+		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
 		}
@@ -667,7 +602,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerGroupData{
@@ -677,7 +612,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 					ConsumerGroupId:   "consumer-group-1",
 					IsSimple:          true,
 					PartitionAssignor: "RoundRobin",
-					State:             kafkarestv3.CONSUMERGROUPSTATE_STABLE,
+					State:             "STABLE",
 					Coordinator:       kafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
 					Consumer:          kafkarestv3.Relationship{},
 					LagSummary:        kafkarestv3.Relationship{},
@@ -695,13 +630,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumerGroup(t *testing.T) func(http
 func (r KafkaRestProxyRouter) HandleKafkaRPAllMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			var req kafkarestv3.ListKafkaMirrorTopicsOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
 				{
@@ -765,7 +700,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 	instance2 := "instance-2"
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ConsumerDataList{
 				Kind:     "",
@@ -802,13 +737,13 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConsumers(t *testing.T) func(http.Res
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrors(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
 			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.ClustersClusterIdLinksLinkNameMirrorsPostOpts
+			var req kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseDataList{Data: []kafkarestv3.ListMirrorTopicsResponseData{
 				{
@@ -871,7 +806,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				instance := "instance-1"
@@ -903,7 +838,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLagSummary(t *testing.T) func(http.Re
 func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "POST":
+		case http.MethodPost:
 			fmt.Print("asdfgh")
 			errorMsg := "Not authorized"
 			var errorCode int32 = 401
@@ -968,7 +903,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				w.Header().Set("Content-Type", "application/json")
 				instance1 := "instance-1"
@@ -1020,7 +955,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLags(t *testing.T) func(http.Response
 func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListLinkConfigsResponseDataList{Data: []kafkarestv3.ListLinkConfigsResponseData{
 				{
@@ -1057,7 +992,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinkConfigs(t *testing.T) func(http.R
 func (r KafkaRestProxyRouter) HandleKafkaRPMirror(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(kafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
@@ -1102,7 +1037,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseW
 		vars := mux.Vars(r)
 		fmt.Println(vars)
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
 				partitionOffsetsMap := map[string]partitionOffsets{
 					"0": {101, 101},
@@ -1142,6 +1077,523 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLag(t *testing.T) func(http.ResponseW
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitions(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		switch r.Method {
+		case http.MethodGet:
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionDataList{
+				Data: []kafkarestv3.PartitionData{
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 0,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 1,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/1"},
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						PartitionId: 2,
+						TopicName:   vars["topic_name"],
+						Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/0"},
+					},
+				},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionId(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionIdStr := vars["partition_id"]
+		partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodGet:
+			w.Header().Set("Content-Type", "application/json")
+			err := json.NewEncoder(w).Encode(kafkarestv3.PartitionData{
+				ClusterId:   vars["cluster_id"],
+				PartitionId: int32(partitionId),
+				TopicName:   vars["topic_name"],
+				Leader:      kafkarestv3.Relationship{Related: "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partition/2"},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers"
+func (r KafkaRestProxyRouter) HandleKafkaBrokers(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		host1 := "kafka1"
+		port1 := int32(1)
+		host2 := "kafka2"
+		port2 := int32(2)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerDataList{
+			Data: []kafkarestv3.BrokerData{
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId:  1,
+					Port:      &port1,
+					Host:      &host1,
+				},
+				{
+					ClusterId: vars["cluster_id"],
+					BrokerId:  2,
+					Port:      &port2,
+					Host:      &host2,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs/{name}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsName(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue := "gzip"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ClusterConfigData{
+			Name:        vars["name"],
+			Value:       &configValue,
+			IsSensitive: false,
+			IsReadOnly:  false,
+			IsDefault:   false,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		configValue2 := "SASL/PLAIN"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ClusterConfigDataList{
+			Data: []kafkarestv3.ClusterConfigData{
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "compression.type",
+					Value:       &configValue1,
+					IsDefault:   true,
+					IsReadOnly:  true,
+					IsSensitive: true,
+				},
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "sasl_mechanism",
+					Value:       &configValue2,
+					IsDefault:   false,
+					IsReadOnly:  false,
+					IsSensitive: false,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs/{name}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsName(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerConfigData{
+			ClusterId:   vars["cluster_id"],
+			Name:        vars["name"],
+			Value:       &configValue1,
+			IsDefault:   true,
+			IsReadOnly:  true,
+			IsSensitive: true,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigs(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		configValue1 := "gzip"
+		configValue2 := "SASL/PLAIN"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerConfigDataList{
+			Data: []kafkarestv3.BrokerConfigData{
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "compression.type",
+					Value:       &configValue1,
+					IsDefault:   true,
+					IsReadOnly:  true,
+					IsSensitive: true,
+				},
+				{
+					ClusterId:   vars["cluster_id"],
+					Name:        "sasl_mechanism",
+					Value:       &configValue2,
+					IsDefault:   false,
+					IsReadOnly:  false,
+					IsSensitive: false,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/broker-configs:alter"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		var req kafkarestv3.UpdateKafkaClusterConfigsOpts
+		err := json.NewDecoder(r.Body).Decode(&req)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter"
+func (r KafkaRestProxyRouter) HandleKafkaBrokerIdConfigsAlter(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		var req kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts
+		err := json.NewDecoder(r.Body).Decode(&req)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}"
+func (r KafkaRestProxyRouter) HandleKafkaBrokersBrokerId(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		switch r.Method {
+		case http.MethodDelete:
+			w.Header().Set("Content-Type", "application/json")
+			var req kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts
+			_ = json.NewDecoder(r.Body).Decode(&req)
+			err := json.NewEncoder(w).Encode(kafkarestv3.BrokerRemovalData{
+				ClusterId:  vars["cluster_id"],
+				BrokerId:   1,
+				BrokerTask: kafkarestv3.Relationship{Related: "http://localhost:9391/kafka/v3/clusters/cluster-1/brokers/1/tasks/remove-broker"},
+			})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment"
+func (r KafkaRestProxyRouter) HandleKafkaTopicPartitionIdReassignment(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionIdStr := vars["partition_id"]
+		topicName := vars["topic_name"]
+		switch r.Method {
+		case http.MethodGet:
+			if partitionIdStr != "-" && topicName != "-" {
+				partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+				require.NoError(t, err)
+				w.Header().Set("Content-Type", "application/json")
+				err = json.NewEncoder(w).Encode(kafkarestv3.ReassignmentData{
+					Kind:             "ReassignmentData",
+					ClusterId:        vars["cluster_id"],
+					PartitionId:      int32(partitionId),
+					TopicName:        vars["topic_name"],
+					AddingReplicas:   []int32{1, 2, 3},
+					RemovingReplicas: []int32{4},
+				})
+				require.NoError(t, err)
+			} else if topicName != "-" {
+				w.Header().Set("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(kafkarestv3.ReassignmentDataList{
+					Data: []kafkarestv3.ReassignmentData{
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        vars["topic_name"],
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        vars["topic_name"],
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+					},
+				})
+				require.NoError(t, err)
+			} else if partitionIdStr == "-" && topicName == "-" {
+				w.Header().Set("Content-Type", "application/json")
+				err := json.NewEncoder(w).Encode(kafkarestv3.ReassignmentDataList{
+					Data: []kafkarestv3.ReassignmentData{
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        "topic1",
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        "topic1",
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      0,
+							TopicName:        "topic2",
+							AddingReplicas:   []int32{1, 2, 3},
+							RemovingReplicas: []int32{4},
+						},
+						{
+							ClusterId:        vars["cluster_id"],
+							PartitionId:      1,
+							TopicName:        "topic2",
+							AddingReplicas:   []int32{4},
+							RemovingReplicas: []int32{1, 2, 3},
+						},
+					},
+				})
+				require.NoError(t, err)
+			}
+		}
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        1,
+					TaskType:        kafkarestv3.BrokerTaskType(vars["task_type"]),
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        2,
+					TaskType:        kafkarestv3.BrokerTaskType(vars["task_type"]),
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"broker_shutdown_status": "COMPLETED"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode:       &errorCode,
+					ErrorMessage:    &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/-/tasks"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        1,
+					TaskType:        kafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        2,
+					TaskType:        kafkarestv3.BROKERTASKTYPE_ADD_BROKER,
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode:       &errorCode,
+					ErrorMessage:    &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskData{
+			ClusterId:       vars["cluster_id"],
+			BrokerId:        1,
+			TaskType:        kafkarestv3.BrokerTaskType(vars["task_type"]),
+			TaskStatus:      "SUCCESS",
+			SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+			CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+			ErrorMessage:    &errorMessage,
+			ErrorCode:       &errorCode,
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks"
+func (r KafkaRestProxyRouter) HandleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		errorCode := int32(10014)
+		errorMessage := "error message"
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.BrokerTaskDataList{
+			Data: []kafkarestv3.BrokerTaskData{
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        1,
+					TaskType:        kafkarestv3.BROKERTASKTYPE_REMOVE_BROKER,
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+				},
+				{
+					ClusterId:       vars["cluster_id"],
+					BrokerId:        1,
+					TaskType:        kafkarestv3.BROKERTASKTYPE_ADD_BROKER,
+					TaskStatus:      "SUCCESS",
+					SubTaskStatuses: map[string]string{"partition_reassignment_status": "IN_PROGRESS"},
+					CreatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					UpdatedAt:       time.Date(2021, 7, 1, 0, 0, 0, 0, time.FixedZone("UTC-8", -8*60*60)),
+					ErrorCode:       &errorCode,
+					ErrorMessage:    &errorMessage,
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		partitionId, err := strconv.ParseInt(vars["partition"], 10, 32)
+		require.NoError(t, err)
+		w.Header().Set("Content-Type", "application/json")
+		err = json.NewEncoder(w).Encode(kafkarestv3.ReplicaStatusDataList{
+			Data: []kafkarestv3.ReplicaStatusData{
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        int32(partitionId),
+					BrokerId:           1,
+					IsLeader:           true,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       1,
+				},
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        int32(partitionId),
+					BrokerId:           2,
+					IsLeader:           false,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       0,
+					LinkName:           "link",
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
+func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		w.Header().Set("Content-Type", "application/json")
+		err := json.NewEncoder(w).Encode(kafkarestv3.ReplicaStatusDataList{
+			Data: []kafkarestv3.ReplicaStatusData{
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        1,
+					BrokerId:           1,
+					IsLeader:           true,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       1,
+				},
+				{
+					ClusterId:          vars["cluster"],
+					TopicName:          vars["topic"],
+					PartitionId:        2,
+					BrokerId:           2,
+					IsLeader:           false,
+					IsCaughtUp:         true,
+					IsInIsr:            true,
+					IsIsrEligible:      true,
+					LastFetchTimeMs:    1640040996303,
+					LastCaughtUpTimeMs: 1640040996303,
+					LogStartOffset:     0,
+					LogEndOffset:       0,
+					LinkName:           "link",
+				},
+			},
+		})
+		require.NoError(t, err)
+	}
+}
+
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
 	responseBody := fmt.Sprintf(`{
@@ -1150,4 +1602,8 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, responseBody)
 	return err
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

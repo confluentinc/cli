@@ -1,0 +1,4 @@
+      Principal     |      Role      | Resource Type |  Name  | Pattern Type  
+--------------------+----------------+---------------+--------+---------------
+  Group:hobbits     | DeveloperWrite | Topic         | shire- | PREFIXED      
+  Group:ringBearers | DeveloperWrite | Topic         | ring-  | PREFIXED      
