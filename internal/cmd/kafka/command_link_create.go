@@ -81,6 +81,12 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
+	if c.cfg.IsCloudLogin() {
+		_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
+	} else {
+		_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
+	}
+
 	return cmd
 }
 
