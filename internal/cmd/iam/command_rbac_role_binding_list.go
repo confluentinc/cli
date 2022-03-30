@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -73,7 +74,24 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
-	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	if c.cfg.IsCloudLogin() {
+		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
+		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
+			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
+			cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding listings.")
+		}
+	} else {
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of role binding listings.")
+		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
+		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for scope of role binding listings.")
+		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(cmd, c.CLICommand)
+	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 
