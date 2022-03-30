@@ -40,7 +40,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
-	example2 := examples.Example{Text: "Create a cluster link, using the command line argument helpers."}
+	example2 := examples.Example{Text: "Create a cluster link using command line flags."}
 	if c.cfg.IsCloudLogin() {
 		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt"
 		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
@@ -67,7 +67,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config. "+
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
 	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
