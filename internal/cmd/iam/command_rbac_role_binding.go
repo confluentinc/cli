@@ -223,7 +223,7 @@ Helper function to add flags for all the legal scopes/clusters for the command.
 */
 func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
 	if isCloudLogin {
-		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding create.")
+		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
