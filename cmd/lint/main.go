@@ -34,6 +34,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
+	linter.RequireValidExamples(),
 
 	// Soft Requirements
 	linter.RequireLengthBetween("Short", 10, 60),
