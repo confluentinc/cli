@@ -9,13 +9,11 @@ import (
 	"regexp"
 	"strings"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/hashicorp/go-multierror"
-
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 /*
@@ -87,11 +85,8 @@ func catchMDSErrors(err error) error {
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
-	e, ok := err.(*corev1.Error)
-	if ok {
-		var result error
-		result = multierror.Append(result, e)
-		return Wrap(result, CCloudBackendErrorPrefix)
+	if err, ok := err.(*corev1.Error); ok {
+		return Wrap(err, CCloudBackendErrorPrefix)
 	}
 	return err
 }
