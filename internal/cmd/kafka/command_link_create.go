@@ -52,11 +52,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 
 	// As of now, only CP --> CC links are supported.
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 	} else {
-		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 	}
 
 	cmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
