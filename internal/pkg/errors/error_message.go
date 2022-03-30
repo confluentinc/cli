@@ -368,7 +368,7 @@ const (
 	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
-	CCloudBackendErrorPrefix           = "CCloud backend error"
+	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
 	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
