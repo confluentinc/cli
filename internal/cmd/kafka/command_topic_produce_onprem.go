@@ -28,11 +28,11 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
-				Code: `confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret`,
+				Code: `confluent kafka topic produce my_topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret --ca-location my-cert.crt`,
 			},
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SSL protocol, and SSL verification enabled.`,
-				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ca-location ca-path`,
+				Code: `confluent kafka topic produce my_topic --protocol SSL --bootstrap "localhost:18091" --ca-location my-cert.crt`,
 			},
 		),
 	}
