@@ -1,4 +1,1 @@
-Error: CCloud backend error: 1 error occurred:
-	* error getting user profile: user not found
-
-
+Error: Confluent Cloud backend error: error getting user profile: user not found
