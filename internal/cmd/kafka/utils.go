@@ -201,6 +201,9 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 	if isShrinking(cluster) {
 		return "SHRINKING"
 	}
+	if cluster.Status.Phase == "PROVISIONED" {
+		return "UP"
+	}
 	return cluster.Status.Phase
 }
 

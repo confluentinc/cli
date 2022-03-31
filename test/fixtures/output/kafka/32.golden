@@ -8,6 +8,6 @@ name: kafka-cluster
 provider: aws
 region: us-west-2
 rest_endpoint: http://kafka-rest-url
-status: PROVISIONED
+status: UP
 storage: Infinite
 type: DEDICATED

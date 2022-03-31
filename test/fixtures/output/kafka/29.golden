@@ -8,6 +8,6 @@ name: lkc-update-name
 provider: aws
 region: us-west-2
 rest_endpoint: http://kafka-rest-url
-status: PROVISIONED
+status: UP
 storage: 5 TB
 type: BASIC

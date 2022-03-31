@@ -9,7 +9,7 @@
   "provider": "aws",
   "region": "us-west-2",
   "availability": "single-zone",
-  "status": "PROVISIONED",
+  "status": "UP",
   "endpoint": "SASL_SSL://kafka-endpoint",
   "encryption_key_id": "abc123",
   "rest_endpoint": "http://kafka-rest-url"
