@@ -18,9 +18,9 @@ func NewClient(cmkClient *cmkv2.APIClient, iamClient *iamv2.APIClient, orgClient
 	return &Client{CmkClient: cmkClient, IamClient: iamClient, OrgClient: orgClient, AuthToken: authToken}
 }
 
-func NewClientWithUrl(baseURL string, isTest bool, authToken string) *Client {
-	cmkClient := newCmkClient(baseURL, isTest)
-	iamClient := newIamClient(baseURL, isTest)
-	orgClient := newOrgClient(baseURL, isTest)
+func NewClientWithConfigs(baseURL, userAgent string, isTest bool, authToken string) *Client {
+	cmkClient := newCmkClient(baseURL, userAgent, isTest)
+	iamClient := newIamClient(baseURL, userAgent, isTest)
+	orgClient := newOrgClient(baseURL, userAgent, isTest)
 	return NewClient(cmkClient, iamClient, orgClient, authToken)
 }

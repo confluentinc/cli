@@ -8,12 +8,13 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-func newOrgClient(baseURL string, isTest bool) *orgv2.APIClient {
+func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
 	orgServer := getServerUrl(baseURL, isTest)
 	cfg := orgv2.NewConfiguration()
 	cfg.Servers = orgv2.ServerConfigurations{
 		{URL: orgServer, Description: "Confluent Cloud ORG"},
 	}
+	cfg.UserAgent = userAgent
 	return orgv2.NewAPIClient(cfg)
 }
 

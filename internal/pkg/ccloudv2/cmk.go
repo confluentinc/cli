@@ -8,12 +8,13 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
-func newCmkClient(baseURL string, isTest bool) *cmkv2.APIClient {
+func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
 	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
 	cfg.Servers = cmkv2.ServerConfigurations{
 		{URL: cmkServer, Description: "Confluent Cloud IAM"},
 	}
+	cfg.UserAgent = userAgent
 	return cmkv2.NewAPIClient(cfg)
 }
 
