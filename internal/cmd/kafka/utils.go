@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"bufio"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	logger "log"
 	_nethttp "net/http"
 	"os"
@@ -63,6 +64,21 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.A
 	return kafkaRestConfigs
 }
 
+func toCloudAlterConfigBatchRequestData(configsMap map[string]string) []cloudkafkarest.AlterConfigBatchRequestDataData {
+	kafkaRestConfigs := make([]cloudkafkarest.AlterConfigBatchRequestDataData, len(configsMap))
+	i := 0
+	for k, v := range configsMap {
+		val := vx
+		kafkaRestConfigs[i] = cloudkafkarest.AlterConfigBatchRequestDataData{
+			Name:      k,
+			Value:     *cloudkafkarest.NewNullableString(&val),
+			Operation: nil,
+		}
+		i++
+	}
+	return kafkaRestConfigs
+}
+
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
 	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -106,8 +122,8 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkares
 	return err
 }
 
-func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.KafkaREST, string, error) {
-	kafkaREST, err := c.AuthenticatedCLICommand.GetKafkaREST()
+func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.CloudKafkaREST, string, error) {
+	kafkaREST, err := c.AuthenticatedCLICommand.GetCloudKafkaREST()
 	if err != nil {
 		return nil, "", err
 	}

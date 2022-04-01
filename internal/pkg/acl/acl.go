@@ -2,6 +2,7 @@ package acl
 
 import (
 	"fmt"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"io"
 	"sort"
 	"strconv"
@@ -339,7 +340,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	return aclData
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp cloudkafkarest.AclDataList, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

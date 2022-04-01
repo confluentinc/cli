@@ -11,8 +11,9 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	kafkarest_cc "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarest_cp "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
@@ -60,7 +61,8 @@ type CLICommand struct {
 	prerunner PreRunner
 }
 
-type KafkaRESTProvider func() (*KafkaREST, error)
+type CloudKafkaRESTProvider func() (*CloudKafkaREST, error)
+type CPKafkaRESTProvider func() (*CPKafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
@@ -68,7 +70,8 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
+	CloudKafkaRESTProvider *CloudKafkaRESTProvider
+	CPKafkaRESTProvider *CPKafkaRESTProvider
 	QuotasClient      *quotasv2.APIClient
 	Context           *DynamicContext
 	State             *v1.ContextState
@@ -163,8 +166,12 @@ func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
 	s.Command.AddCommand(command)
 }
 
-func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	return (*c.KafkaRESTProvider)()
+func (c *AuthenticatedCLICommand) GetCloudKafkaREST() (*CloudKafkaREST, error) {
+	return (*c.CloudKafkaRESTProvider)()
+}
+
+func (c *AuthenticatedCLICommand) GetCPKafkaREST() (*CPKafkaREST, error) {
+	return (*c.CPKafkaRESTProvider)()
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {
@@ -366,7 +373,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
-	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
+	provider := (CloudKafkaRESTProvider)(func() (*CloudKafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
 		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
@@ -374,8 +381,8 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			return nil, err
 		}
 		if restEndpoint != "" {
-			result := &KafkaREST{}
-			result.Client, err = createKafkaRESTClient(restEndpoint)
+			result := &CloudKafkaREST{}
+			result.Client, err = createCloudKafkaRESTClient(restEndpoint)
 			if err != nil {
 				return nil, err
 			}
@@ -387,12 +394,12 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			result.Context = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken)
+			result.Context = context.WithValue(context.Background(), kafkarest_cc.ContextAccessToken, bearerToken)
 			return result, nil
 		}
 		return nil, nil
 	})
-	cliCmd.KafkaRESTProvider = &provider
+	cliCmd.CloudKafkaRESTProvider = &provider
 	return nil
 }
 
@@ -622,8 +629,8 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
 		useMdsToken := err == nil
 
-		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-			cfg := kafkarestv3.NewConfiguration()
+		provider := (CPKafkaRESTProvider)(func() (*CPKafkaREST, error) {
+			cfg := kafkarest_cp.NewConfiguration()
 			restFlags, err := resolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
@@ -632,9 +639,9 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			if err != nil {
 				return nil, err
 			}
-			client := kafkarestv3.NewAPIClient(cfg)
+			client := kafkarest_cp.NewAPIClient(cfg)
 			if restFlags.noAuth || restFlags.clientCertPath != "" { // credentials not needed for mTLS auth
-				return &KafkaREST{
+				return &CPKafkaREST{
 					Client:  client,
 					Context: context.Background(),
 				}, nil
@@ -642,7 +649,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
 				log.CliLogger.Debug("found mds token to use as bearer")
-				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
+				restContext = context.WithValue(context.Background(), kafkarest_cp.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
 					utils.Println(cmd, errors.MDSTokenNotFoundMsg)
@@ -654,14 +661,14 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
 					return nil, err
 				}
-				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
+				restContext = context.WithValue(context.Background(), kafkarest_cp.ContextBasicAuth, kafkarest_cp.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
 			}
-			return &KafkaREST{
+			return &CPKafkaREST{
 				Client:  client,
 				Context: restContext,
 			}, nil
 		})
-		command.KafkaRESTProvider = &provider
+		command.CPKafkaRESTProvider = &provider
 		return nil
 	}
 }
@@ -952,12 +959,12 @@ func (r *PreRun) createMDSv2Client(ctx *DynamicContext, ver *version.Version) *m
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
-	cfg := kafkarestv3.NewConfiguration()
+func createCloudKafkaRESTClient(kafkaRestURL string) (*kafkarest_cc.APIClient, error) {
+	cfg := kafkarest_cc.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
 		cfg.Debug = true
 	}
-	cfg.BasePath = kafkaRestURL + "/kafka/v3"
-	return kafkarestv3.NewAPIClient(cfg), nil
+	cfg.Servers[0].URL = kafkaRestURL + "/kafka/v3"
+	return kafkarest_cc.NewAPIClient(cfg), nil
 }

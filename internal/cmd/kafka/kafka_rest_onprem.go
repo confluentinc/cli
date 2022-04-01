@@ -19,7 +19,7 @@ func initKafkaRest(a *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil { // require the flag
 		return nil, nil, err
 	}
-	kafkaRest, err := a.GetKafkaREST()
+	kafkaRest, err := a.GetCPKafkaREST()
 	if err != nil {
 		return nil, nil, err
 	}

@@ -3,13 +3,13 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"net/http"
 	neturl "net/url"
 	"strings"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -66,39 +66,37 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsGetOpts
-func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarestv3.GetKafkaAclsOpts {
-	var opts kafkarestv3.GetKafkaAclsOpts
-
+func aclBindingToGetKafkaAclsRequest(acl *schedv1.ACLBinding, req cloudkafkarest.ApiGetKafkaAclsRequest) cloudkafkarest.ApiGetKafkaAclsRequest {
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
+		req = req.ResourceType(cloudkafkarest.AclResourceType(acl.Pattern.ResourceType.String()))
 	}
 
-	opts.ResourceName = optional.NewString(acl.Pattern.Name)
+	req =req.ResourceName(acl.Pattern.Name)
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		opts.PatternType = optional.NewString(acl.Pattern.PatternType.String())
+		req = req.PatternType(acl.Pattern.PatternType.String())
 	}
 
-	opts.Principal = optional.NewString(acl.Entry.Principal)
-	opts.Host = optional.NewString(acl.Entry.Host)
+	req = req.Principal(acl.Entry.Principal)
+	req = req.Host(acl.Entry.Host)
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		opts.Operation = optional.NewString(acl.Entry.Operation.String())
+		req = req.Operation(acl.Entry.Operation.String())
 	}
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		opts.Permission = optional.NewString(acl.Entry.PermissionType.String())
+		req = req.Permission(acl.Entry.PermissionType.String())
 	}
 
-	return opts
+	return req
 }
 
 // Converts ACLBinding to Kafka REST ClustersClusterIdAclsPostOpts
-func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.CreateKafkaAclsOpts {
-	var aclRequestData kafkarestv3.CreateAclRequestData
+func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) cloudkafkarest.CreateAclRequestData {
+	var aclRequestData cloudkafkarest.CreateAclRequestData
 
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		aclRequestData.ResourceType = kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String())
+		aclRequestData.ResourceType = cloudkafkarest.AclResourceType(acl.Pattern.ResourceType.String())
 	}
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
@@ -117,36 +115,31 @@ func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkares
 		aclRequestData.Permission = acl.Entry.PermissionType.String()
 	}
 
-	var opts kafkarestv3.CreateKafkaAclsOpts
-	opts.CreateAclRequestData = optional.NewInterface(aclRequestData)
-
-	return opts
+	return aclRequestData
 }
 
 // Converts ACLFilter to Kafka REST ClustersClusterIdAclsDeleteOpts
-func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.DeleteKafkaAclsOpts {
-	var opts kafkarestv3.DeleteKafkaAclsOpts
-
+func aclFilterDeleteKafkaAclsReq(acl *schedv1.ACLFilter, deleteReq cloudkafkarest.ApiDeleteKafkaAclsRequest) cloudkafkarest.ApiDeleteKafkaAclsRequest {
 	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
+		deleteReq = deleteReq.ResourceType(cloudkafkarest.AclResourceType(acl.PatternFilter.ResourceType.String()))
 	}
 
-	opts.ResourceName = optional.NewString(acl.PatternFilter.Name)
+	deleteReq = deleteReq.ResourceName(acl.PatternFilter.Name)
 
 	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
-		opts.PatternType = optional.NewString(acl.PatternFilter.PatternType.String())
+		deleteReq = deleteReq.PatternType(acl.PatternFilter.PatternType.String())
 	}
 
-	opts.Principal = optional.NewString(acl.EntryFilter.Principal)
-	opts.Host = optional.NewString(acl.EntryFilter.Host)
+	deleteReq = deleteReq.Principal(acl.EntryFilter.Principal)
+	deleteReq= deleteReq.Host(acl.EntryFilter.Host)
 
 	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
-		opts.Operation = optional.NewString(acl.EntryFilter.Operation.String())
+		deleteReq.Operation(acl.EntryFilter.Operation.String())
 	}
 
 	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		opts.Permission = optional.NewString(acl.EntryFilter.PermissionType.String())
+		deleteReq = deleteReq.Permission(acl.EntryFilter.PermissionType.String())
 	}
 
-	return opts
+	return deleteReq
 }

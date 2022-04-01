@@ -22,7 +22,7 @@ type linkCommand struct {
 	cfg *v1.Config
 }
 
-func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newLinkCommand(cfg *v1. Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "link",
 		Short:       "Manages inter-cluster links.",

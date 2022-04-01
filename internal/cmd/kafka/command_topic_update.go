@@ -3,13 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"net/http"
 	"sort"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -60,9 +59,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, _ := c.GetCloudKafkaREST()
 	if kafkaREST != nil && !dryRun {
-		kafkaRestConfigs := toAlterConfigBatchRequestData(configsMap)
+		kafkaRestConfigs := toCloudAlterConfigBatchRequestData(configsMap)
 
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
@@ -70,11 +69,8 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName,
-			&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
-			})
-
+		req := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName)
+		httpResp, err := req.AlterConfigBatchRequestData(cloudkafkarest.AlterConfigBatchRequestData{Data: kafkaRestConfigs}).Execute()
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -83,7 +79,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -101,7 +97,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					&struct {
 						Name  string
 						Value string
-					}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+					}{Name: config.Name, Value: *config.Value.Get()}, []string{"Name", "Value"})
 			}
 			sort.Slice(tableEntries, func(i int, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]

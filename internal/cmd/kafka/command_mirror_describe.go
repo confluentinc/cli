@@ -42,7 +42,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if kafkaREST == nil {
 		if err != nil {
 			return err
@@ -54,10 +54,9 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName)
+	mirror, httpResp, err  := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName).Execute()
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(kafkaREST.Client.GetConfig().Servers[0].URL, err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)
@@ -65,7 +64,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	for _, partitionLag := range mirror.MirrorLags {
+	for _, partitionLag := range mirror.MirrorLags.Items {
 		outputWriter.AddElement(&describeMirrorWrite{
 			LinkName:              mirror.LinkName,
 			MirrorTopicName:       mirror.MirrorTopicName,

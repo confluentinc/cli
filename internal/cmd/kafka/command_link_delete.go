@@ -31,15 +31,24 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if err != nil {
 		return err
 	}
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	clusterId := kafkaClusterConfig.ID
 
-	if httpResp, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
+	if httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
 	utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
 	return nil
+}
+
+func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
+
 }
