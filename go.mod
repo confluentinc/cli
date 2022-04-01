@@ -15,7 +15,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.104
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
@@ -73,7 +73,6 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
-	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 )
 
 require (
@@ -401,6 +400,7 @@ require (
 	k8s.io/api v0.18.0-alpha.2 // indirect
 	k8s.io/apiextensions-apiserver v0.17.18-rc.0 // indirect
 	k8s.io/apimachinery v0.21.3 // indirect
+	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
 	mvdan.cc/gofumpt v0.2.1 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect

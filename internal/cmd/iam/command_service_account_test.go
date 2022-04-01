@@ -10,6 +10,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iamMock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
