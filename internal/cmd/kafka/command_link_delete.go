@@ -13,13 +13,15 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		Use:   "delete <link>",
 		Short: "Delete a previously created cluster link.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		//RunE:  c.delete,
 	}
 
 	if c.cfg.IsCloudLogin() {
+		cmd.RunE = c.delete
 		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
+		cmd.RunE = c.deleteOnPrem
 		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	}
 
@@ -41,14 +43,10 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	clusterId := kafkaClusterConfig.ID
 
-	if httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
-		return handleOpenApiError(httpResp, err, client)
+	if httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.DeleteKafkaLink(kafkaREST.Context, clusterId, linkName).Execute(); err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.DeletedLinkMsg, linkName)
 	return nil
-}
-
-func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
-
 }

@@ -35,7 +35,7 @@ func fileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
+func toCPCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
 	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
@@ -47,6 +47,20 @@ func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.Confi
 		i++
 	}
 	return topicConfigs
+}
+
+func toCloudCreateTopicConfigs(topicConfigsMap map[string]string) *[]cloudkafkarest.ConfigData {
+	topicConfigs := make([]cloudkafkarest.ConfigData, len(topicConfigsMap))
+	i := 0
+	for k, v := range topicConfigsMap {
+		val := v
+		topicConfigs[i] = cloudkafkarest.ConfigData{
+			Name:  k,
+			Value: *cloudkafkarest.NewNullableString(&val),
+		}
+		i++
+	}
+	return &topicConfigs
 }
 
 func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.AlterConfigBatchRequestDataData {
@@ -68,7 +82,7 @@ func toCloudAlterConfigBatchRequestData(configsMap map[string]string) []cloudkaf
 	kafkaRestConfigs := make([]cloudkafkarest.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for k, v := range configsMap {
-		val := vx
+		val := v
 		kafkaRestConfigs[i] = cloudkafkarest.AlterConfigBatchRequestDataData{
 			Name:      k,
 			Value:     *cloudkafkarest.NewNullableString(&val),

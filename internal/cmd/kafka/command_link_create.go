@@ -2,9 +2,8 @@ package kafka
 
 import (
 	"fmt"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,15 +35,16 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <link>",
 		Short: "Create a new cluster link.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
 	}
 
 	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
 	example2 := examples.Example{Text: "Create a cluster link, using an API key and secret."}
 	if c.cfg.IsCloudLogin() {
+		cmd.RunE = c.create
 		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --config-file config.txt"
 		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
 	} else {
+		cmd.RunE = c.createOnPrem
 		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --config-file config.txt"
 		example2.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
 	}
@@ -95,49 +95,66 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	var bootstrapServer string
-	var err error
-	if c.cfg.IsCloudLogin() {
-		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
-	} else {
-		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
-	}
+	bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 	if err != nil {
 		return err
 	}
 
-	var sourceClusterId string
-	var destinationClusterId string
-	if c.cfg.IsCloudLogin() {
-		sourceClusterId, err = cmd.Flags().GetString(sourceClusterIdFlagName)
-	} else {
-		destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
-	}
+	sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
 	if err != nil {
 		return err
 	}
 
-	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	configMap, err := c.parseConfigMap(bootstrapServer)
 	if err != nil {
 		return err
 	}
 
+	kafkaREST, err := c.GetCloudKafkaREST()
+	if err != nil {
+		return err
+	}
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	clusterId := kafkaClusterConfig.ID
+
+	data := cloudkafkarest.CreateLinkRequestData{SourceClusterId: &sourceClusterId, Configs: toCloudCreateTopicConfigs(configMap)}
+	data.SourceClusterId = &sourceClusterId
+
+	req := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(kafkaREST.Context, clusterId)
+	if httpResp, err := req.CreateLinkRequestData(data).Execute(); err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
+	}
+
+	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
+	return nil
+}
+
+func (c *linkCommand) parseConfigMap(bootstrapServer string) (map[string]string, error) {
 	configMap := make(map[string]string)
+
+	configFile, err := c.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return configMap, err
+	}
+
 	if configFile != "" {
 		configMap, err = properties.FileToMap(configFile)
 		if err != nil {
-			return err
+			return configMap, err
 		}
 	}
 
-	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)
+	apiKey, err := c.Flags().GetString(apiKeyFlagName)
 	if err != nil {
-		return err
+		return configMap, err
 	}
 
-	apiSecret, err := cmd.Flags().GetString(apiSecretFlagName)
+	apiSecret, err := c.Flags().GetString(apiSecretFlagName)
 	if err != nil {
-		return err
+		return configMap, err
 	}
 
 	configMap[bootstrapServersPropertyName] = bootstrapServer
@@ -147,27 +164,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		configMap[saslMechanismPropertyName] = "PLAIN"
 		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, apiKey, apiSecret)
 	} else if apiKey != "" || apiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		return configMap, errors.New("--source-api-key and --source-api-secret must be supplied together")
 	}
-
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
-	if err != nil {
-		return err
-	}
-
-	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if c.cfg.IsCloudLogin() {
-		data.SourceClusterId = sourceClusterId
-	} else {
-		data.DestinationClusterId = destinationClusterId
-	}
-
-	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
-
-	if httpResp, err := client.ClusterLinkingV3Api.CreateKafkaLink(ctx, clusterId, linkName, opts); err != nil {
-		return handleOpenApiError(httpResp, err, client)
-	}
-
-	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
-	return nil
+	return configMap, nil
 }

@@ -33,3 +33,7 @@ func NewCPKafkaRest(client *kafkarest_cp.APIClient, context context.Context) *CP
 func GetCloudKafkaRestBaseUrl(client *kafkarest_cc.APIClient) string {
 	return client.GetConfig().Servers[0].URL
 }
+
+func GetCPKafkaRestBaseUrl(client *kafkarest_cp.APIClient) string {
+	return client.GetConfig().BasePath
+}
