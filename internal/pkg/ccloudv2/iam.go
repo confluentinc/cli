@@ -8,6 +8,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
@@ -17,6 +18,7 @@ func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
 		{URL: iamServer, Description: "Confluent Cloud IAM"},
 	}
 	cfg.UserAgent = userAgent
+	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
 	return iamv2.NewAPIClient(cfg)
 }
 

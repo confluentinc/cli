@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
@@ -15,6 +16,7 @@ func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
 		{URL: orgServer, Description: "Confluent Cloud ORG"},
 	}
 	cfg.UserAgent = userAgent
+	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
 	return orgv2.NewAPIClient(cfg)
 }
 
