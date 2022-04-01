@@ -18,9 +18,7 @@ func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
 		{URL: iamServer, Description: "Confluent Cloud IAM"},
 	}
 	cfg.UserAgent = userAgent
-	if plog.CliLogger.GetLevel() >= plog.DEBUG {
-		cfg.Debug = true
-	}
+	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
 	return iamv2.NewAPIClient(cfg)
 }
 

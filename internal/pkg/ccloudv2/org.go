@@ -16,9 +16,7 @@ func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
 		{URL: orgServer, Description: "Confluent Cloud ORG"},
 	}
 	cfg.UserAgent = userAgent
-	if plog.CliLogger.GetLevel() >= plog.DEBUG {
-		cfg.Debug = true
-	}
+	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
 	return orgv2.NewAPIClient(cfg)
 }
 
