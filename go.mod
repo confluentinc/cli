@@ -15,7 +15,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.100
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.103
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
@@ -413,6 +413,7 @@ replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
+	github.com/confluentinc/ccloud-sdk-go-v1 => /Users/mtodzo/git/go/src/github.com/confluentinc/ccloud-sdk-go-v1
 )
 
 go 1.17
