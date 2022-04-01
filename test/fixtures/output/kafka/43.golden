@@ -1,12 +1,13 @@
 availability: single-zone
-egress: 100
+cluster_size: 1
+egress: 150
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-describe-infinite
-ingress: 100
+ingress: 50
 name: kafka-cluster
 provider: aws
 region: us-west-2
 rest_endpoint: http://kafka-rest-url
-status: PROVISIONING
+status: UP
 storage: Infinite
-type: BASIC
+type: DEDICATED

@@ -40,11 +40,9 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 		mds:            httptest.NewServer(mdsRouter),
 		sr:             httptest.NewServer(srRouter),
 	}
-
 	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
-
 	return backend
 }
 

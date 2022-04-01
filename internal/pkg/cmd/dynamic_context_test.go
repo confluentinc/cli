@@ -29,7 +29,7 @@ var (
 )
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
-	client := buildMockClient()
+	client := buildCcloudMockClient()
 	tests := []struct {
 		name           string
 		ctx            *pcmd.DynamicContext
@@ -110,7 +110,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 	}
 }
 
-func buildMockClient() *ccloud.Client {
+func buildCcloudMockClient() *ccloud.Client {
 	client := pmock.NewClientMock()
 	client.Account = &mock.Account{ListFunc: func(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
 		return []*orgv1.Account{{Id: apiEnvironment}}, nil

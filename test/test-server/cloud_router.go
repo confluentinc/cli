@@ -19,7 +19,6 @@ const (
 	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
-	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
 	serviceAccount      = "/api/service_accounts/{id}"
@@ -137,7 +136,6 @@ func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addClusterRoutes(t *testing.T) {
-	c.HandleFunc(clusters, c.HandleClusters(t))
 	c.HandleFunc(cluster, c.HandleCluster(t))
 }
 

@@ -839,7 +839,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPMirrorsPromote(t *testing.T) func(htt
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
-			fmt.Print("asdfgh")
 			errorMsg := "Not authorized"
 			var errorCode int32 = 401
 			w.Header().Set("Content-Type", "application/json")

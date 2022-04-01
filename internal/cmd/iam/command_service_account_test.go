@@ -57,7 +57,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCom
 	iamClient := &iamv2.APIClient{
 		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, ccloudv2.NewClient(iamClient, "auth-token"), nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(nil, ccloudv2.NewClient(nil, iamClient, nil, "auth-token"), nil, nil, conf)
 	return NewServiceAccountCommand(prerunner)
 }
 

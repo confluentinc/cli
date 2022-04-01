@@ -2,16 +2,16 @@
 | ID                   | lkc-update-dedicated-shrink |
 | Name                 | lkc-update-dedicated-name   |
 | Type                 | DEDICATED                   |
-| Ingress              |                          50 |
-| Egress               |                         150 |
-| Storage              |                       30000 |
+| Ingress              |                         100 |
+| Egress               |                         300 |
+| Storage              | Infinite                    |
 | Provider             | aws                         |
 | Availability         | single-zone                 |
 | Region               | us-west-2                   |
 | Status               | SHRINKING                   |
 | Endpoint             | SASL_SSL://kafka-endpoint   |
 | API Endpoint         | http://kafka-api-url        |
-| REST Endpoint        |                             |
+| REST Endpoint        | http://kafka-rest-url       |
 | Cluster Size         |                           2 |
 | Pending Cluster Size |                           1 |
 +----------------------+-----------------------------+

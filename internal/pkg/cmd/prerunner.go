@@ -398,9 +398,8 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	baseURL := ctx.Platform.Server
 
-	v2Client := ccloudv2.NewClientWithUrl(baseURL, r.IsTest, cliCmd.AuthToken())
+	v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client
@@ -750,7 +749,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClientWithUrl(ctx.Platform.Server, r.IsTest, command.Context.State.AuthToken)
+			v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, command.Context.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client
