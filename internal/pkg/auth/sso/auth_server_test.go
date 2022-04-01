@@ -11,16 +11,18 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
+	req := require.New(t)
+
 	state, err := newState("https://devel.cpdev.cloud", false)
-	require.NoError(t, err)
+	req.NoError(err)
+
 	server := newServer(state)
+	req.NoError(server.startServer())
 
-	require.NoError(t, server.startServer())
-
-	err = server.awaitAuthorizationCode(1 * time.Second)
-	require.Error(t, err)
-	require.Equal(t, err.Error(), errors.BrowserAuthTimedOutErrorMsg)
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
+	err = server.awaitAuthorizationCode(time.Duration(0))
+	req.Error(err)
+	req.Equal(err.Error(), errors.BrowserAuthTimedOutErrorMsg)
+	errors.VerifyErrorAndSuggestions(req, err, errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 }
 
 func TestCallback(t *testing.T) {
