@@ -3,6 +3,7 @@ package kafka
 import (
 	"bytes"
 	"context"
+	"net/http"
 	"testing"
 	"time"
 
@@ -15,6 +16,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -23,14 +27,51 @@ import (
 )
 
 const (
-	clusterId   = "lkc-0000"
-	clusterName = "testCluster"
-	cloudId     = "aws"
-	regionId    = "us-west-2"
+	clusterId     = "lkc-0000"
+	clusterName   = "testCluster"
+	cloudId       = "aws"
+	regionId      = "us-west-2"
+	environmentId = "abc"
 )
 
 var shouldError bool
 var shouldPrompt bool
+
+var cmkByokCluster = cmkv2.CmkV2Cluster{
+	Spec: &cmkv2.CmkV2ClusterSpec{
+		Environment: &cmkv2.ObjectReference{
+			Id: environmentId,
+		},
+		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
+		Cloud:        cmkv2.PtrString("gcp"),
+		Region:       cmkv2.PtrString("us-central1"),
+		Config:       setCmkClusterConfig("dedicated", 1, "xyz"),
+		Availability: cmkv2.PtrString(lowAvailability),
+	},
+	Id: cmkv2.PtrString("lkc-xyz"),
+	Status: &cmkv2.CmkV2ClusterStatus{
+		Cku:   cmkv2.PtrInt32(1),
+		Phase: "PROVISIONING",
+	},
+}
+
+var cmkExpandCluster = cmkv2.CmkV2Cluster{
+	Spec: &cmkv2.CmkV2ClusterSpec{
+		Environment: &cmkv2.ObjectReference{
+			Id: environmentId,
+		},
+		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
+		Cloud:        cmkv2.PtrString("gcp"),
+		Region:       cmkv2.PtrString("us-central1"),
+		Config:       setCmkClusterConfig("dedicated", 3, ""),
+		Availability: cmkv2.PtrString(lowAvailability),
+	},
+	Id: cmkv2.PtrString("lkc-xyz"),
+	Status: &cmkv2.CmkV2ClusterStatus{
+		Cku:   cmkv2.PtrInt32(3),
+		Phase: "PROVISIONED",
+	},
+}
 
 type KafkaClusterTestSuite struct {
 	suite.Suite
@@ -39,28 +80,36 @@ type KafkaClusterTestSuite struct {
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
 	metricsApi      *ccsdkmock.MetricsApi
 	usageLimits     *ccsdkmock.UsageLimits
+	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.kafkaMock = &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (cluster *schedv1.KafkaCluster, e error) {
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return &schedv1.KafkaCluster{
-				Id:         clusterId,
-				Name:       clusterName,
-				Deployment: &schedv1.Deployment{Sku: corev1.Sku_BASIC},
+				ApiEndpoint: "api-endpoint",
 			}, nil
 		},
-		DeleteFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) error {
-			return nil
+	}
+	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
+		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
+			return cmkv2.ApiCreateCmkV2ClusterRequest{}
 		},
-		ListFunc: func(_ context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return []*schedv1.KafkaCluster{
-				{
-					Id:   clusterId,
-					Name: clusterName,
-				},
-			}, nil
+		CreateCmkV2ClusterExecuteFunc: func(req cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return cmkByokCluster, nil, nil
+		},
+		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+			return cmkv2.ApiGetCmkV2ClusterRequest{}
+		},
+		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return cmkByokCluster, nil, nil
+		},
+		DeleteCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiDeleteCmkV2ClusterRequest {
+			return cmkv2.ApiDeleteCmkV2ClusterRequest{}
+		},
+		DeleteCmkV2ClusterExecuteFunc: func(req cmkv2.ApiDeleteCmkV2ClusterRequest) (*http.Response, error) {
+			return nil, nil
 		},
 	}
 	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
@@ -150,7 +199,10 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
+	cmkClient := &cmkv2.APIClient{
+		ClustersCmkV2Api: suite.cmkClusterApi,
+	}
+	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewClient(cmkClient, nil, nil, "auth-token"), nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -158,15 +210,9 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 	req := require.New(suite.T())
 	root := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	kafkaMock := &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
+		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return &schedv1.KafkaCluster{
-				Id:              "lkc-xyz",
-				Name:            "gcp-byok-test",
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-				Deployment: &schedv1.Deployment{
-					Sku: corev1.Sku_DEDICATED,
-				},
+				ApiEndpoint: "api-endpoint",
 			}, nil
 		},
 	}
@@ -188,14 +234,24 @@ func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
 			},
 		},
 	}
+	cmkApiMock := &cmkmock.ClustersCmkV2Api{
+		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
+			return cmkv2.ApiCreateCmkV2ClusterRequest{}
+		},
+		CreateCmkV2ClusterExecuteFunc: func(req cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return cmkByokCluster, nil, nil
+		},
+	}
+	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
 	root.AuthenticatedCLICommand.State = &v1.ContextState{
 		Auth: &v1.AuthConfig{
 			Account: &orgv1.Account{
-				Id: "abc",
+				Id: environmentId,
 			},
 		},
 	}
 	root.Client = client
+	root.V2Client = ccloudv2.NewClient(cmkClient, nil, nil, "auth-token")
 	var buf bytes.Buffer
 	root.SetOut(&buf)
 	cmd, args, err := root.Command.Find([]string{
@@ -227,69 +283,46 @@ Identity:
 
 
 Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
-+---------------+---------------+
-| ID            | lkc-xyz       |
-| Name          | gcp-byok-test |
-| Type          | DEDICATED     |
-| Ingress       |             0 |
-| Egress        |             0 |
-| Storage       |             0 |
-| Provider      | gcp           |
-| Availability  | single-zone   |
-| Region        | us-central1   |
-| Status        | PROVISIONING  |
-| Endpoint      |               |
-| API Endpoint  |               |
-| REST Endpoint |               |
-| Cluster Size  |             0 |
-+---------------+---------------+
++-------------------+---------------+
+| ID                | lkc-xyz       |
+| Name              | gcp-byok-test |
+| Type              | DEDICATED     |
+| Ingress           |            50 |
+| Egress            |           150 |
+| Storage           | Infinite      |
+| Provider          | gcp           |
+| Availability      | single-zone   |
+| Region            | us-central1   |
+| Status            | PROVISIONING  |
+| Endpoint          |               |
+| API Endpoint      | api-endpoint  |
+| REST Endpoint     |               |
+| Cluster Size      |             1 |
+| Encryption Key ID | xyz           |
++-------------------+---------------+
 `)
 	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
 	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
 	req.Equal("gcp", idMock.CreateExternalIdentityCalls()[0].Cloud)
-	req.Equal("abc", kafkaMock.CreateCalls()[0].Config.AccountId)
-	req.Equal("gcp", kafkaMock.CreateCalls()[0].Config.ServiceProvider)
-	req.Equal("us-central1", kafkaMock.CreateCalls()[0].Config.Region)
-	req.Equal("xyz", kafkaMock.CreateCalls()[0].Config.EncryptionKeyId)
-	req.Equal(int32(1), kafkaMock.CreateCalls()[0].Config.Cku)
-	req.Equal(corev1.Sku_DEDICATED, kafkaMock.CreateCalls()[0].Config.Deployment.Sku)
+	createdCluster, _, _ := cmkApiMock.CreateCmkV2ClusterExecuteFunc(cmkv2.ApiCreateCmkV2ClusterRequest{})
+	req.Equal("abc", createdCluster.Spec.Environment.Id)
+	req.Equal("gcp", *createdCluster.Spec.Cloud)
+	req.Equal("us-central1", *createdCluster.Spec.Region)
+	req.Equal("xyz", *createdCluster.Spec.Config.CmkV2Dedicated.EncryptionKey)
+	req.NotEqual(nil, createdCluster.Spec.Config.CmkV2Dedicated)
+	req.Equal(int32(1), createdCluster.Spec.Config.CmkV2Dedicated.Cku)
+
 	req.False(suite.metricsApi.QueryV2Called())
 }
 
 func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	req := require.New(suite.T())
-	mockKafkaCluster := &schedv1.KafkaCluster{
-		Id:              "lkc-xyz",
-		Name:            "gcp-shrink-test",
-		Region:          "us-central1",
-		ServiceProvider: "gcp",
-		Deployment: &schedv1.Deployment{
-			Sku:      corev1.Sku_DEDICATED,
-			Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
+	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
+		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+			return cmkv2.ApiGetCmkV2ClusterRequest{}
 		},
-		Cku:    3,
-		Status: schedv1.ClusterStatus_UP,
-	}
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
-			return mockKafkaCluster, nil
-		},
-		UpdateFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return &schedv1.KafkaCluster{
-				Id:              "lkc-xyz",
-				Name:            "gcp-shrink-test",
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-				Deployment: &schedv1.Deployment{
-					Sku:      corev1.Sku_DEDICATED,
-					Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
-				},
-				Cku:        3,
-				PendingCku: 2,
-			}, nil
-		},
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return mockKafkaCluster, nil
+		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return cmkExpandCluster, nil, nil
 		},
 	}
 	// Set variable for Metrics API mock
@@ -304,38 +337,12 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 
 func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	req := require.New(suite.T())
-	mockKafkaCluster := &schedv1.KafkaCluster{
-		Id:              "lkc-xyz",
-		Name:            "gcp-shrink-test",
-		Region:          "us-central1",
-		ServiceProvider: "gcp",
-		Deployment: &schedv1.Deployment{
-			Sku:      corev1.Sku_DEDICATED,
-			Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
+	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
+		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+			return cmkv2.ApiGetCmkV2ClusterRequest{}
 		},
-		Cku:    3,
-		Status: schedv1.ClusterStatus_UP,
-	}
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		CreateFunc: func(ctx context.Context, config *schedv1.KafkaClusterConfig) (*schedv1.KafkaCluster, error) {
-			return mockKafkaCluster, nil
-		},
-		UpdateFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return &schedv1.KafkaCluster{
-				Id:              "lkc-xyz",
-				Name:            "gcp-shrink-test",
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-				Deployment: &schedv1.Deployment{
-					Sku:      corev1.Sku_DEDICATED,
-					Provider: &schedv1.Provider{Cloud: schedv1.Provider_GCP},
-				},
-				Cku:        3,
-				PendingCku: 2,
-			}, nil
-		},
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return mockKafkaCluster, nil
+		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return cmkExpandCluster, nil, nil
 		},
 	}
 	// Set variable for Metrics API mock
@@ -355,7 +362,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.envMetadataMock.GetCalled())
-	req.True(suite.kafkaMock.CreateCalled())
+	req.True(suite.cmkClusterApi.CreateCmkV2ClusterCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
@@ -364,7 +371,7 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.kafkaMock.DeleteCalled())
+	req.True(suite.cmkClusterApi.DeleteCmkV2ClusterCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {

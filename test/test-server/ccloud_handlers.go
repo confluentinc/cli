@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -21,7 +20,6 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
@@ -145,26 +143,19 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		if valid, env := isValidEnvironmentId(environments, envId); valid {
+		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
-			case http.MethodGet:
+			case http.MethodGet: // called by `environment use`
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
-			case http.MethodPut:
+			case http.MethodPut: // called by `environment create`
 				req := &orgv1.UpdateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
 				env.Name = req.Account.Name
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodDelete:
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
@@ -176,15 +167,10 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	}
 }
 
-// Handler for: "/api/accounts"
+// Handler for: "/api/accounts" Post
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodPost {
+		if r.Method == http.MethodPost {
 			req := &orgv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -424,66 +410,6 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 				Error:  nil,
 			}
 			b, err := utilv1.MarshalJSONToBytes(result)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/clusters"
-func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	write := func(w http.ResponseWriter, resp proto.Message) {
-		type errorer interface {
-			GetError() *corev1.Error
-		}
-
-		if r, ok := resp.(errorer); ok {
-			w.WriteHeader(int(r.GetError().Code))
-		}
-
-		b, err := utilv1.MarshalJSONToBytes(resp)
-		require.NoError(t, err)
-
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Header.Get("Authorization") {
-		case "Bearer expired":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
-		case "Bearer malformed":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
-		case "Bearer invalid":
-			// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
-		}
-
-		if r.Method == http.MethodPost {
-			c.HandleKafkaClusterCreate(t)(w, r)
-		} else if r.Method == http.MethodGet {
-			cluster := schedv1.KafkaCluster{
-				Id:              "lkc-123",
-				Name:            "abc",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      0,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-			}
-			clusterMultizone := schedv1.KafkaCluster{
-				Id:              "lkc-456",
-				Name:            "def",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      1,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-			}
-			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
-			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)

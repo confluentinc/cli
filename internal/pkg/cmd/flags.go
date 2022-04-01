@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
@@ -88,19 +87,32 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.Client)
+		return AutocompleteClusters(command.EnvironmentId(), command.V2Client)
 	})
 }
 
-func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
-	clusters, err := kafka.ListKafkaClusters(client, environmentId)
+func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
+	}
+	return suggestions
+}
+
+func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.GetSpec().DisplayName)
 	}
 	return suggestions
 }
@@ -134,19 +146,19 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client)
+		return AutocompleteEnvironments(command.V2Client)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloud.Client) []string {
-	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+func AutocompleteEnvironments(client *ccloudv2.Client) []string {
+	environments, err := client.ListOrgEnvironments()
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", environment.Id, environment.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
 	return suggestions
 }

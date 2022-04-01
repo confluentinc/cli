@@ -142,6 +142,10 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
+func CatchEnvironmentNotFoundError(err error, envId string) error {
+	return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+}
+
 func CatchKafkaNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
@@ -150,6 +154,14 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+}
+
+func CatchConfigurationNotValidError(err error, r *http.Response) error {
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "CKU must be greater") {
+		return New(InvalidCkuErrorMsg)
+	}
+	return err
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
