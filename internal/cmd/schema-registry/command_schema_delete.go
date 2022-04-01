@@ -19,7 +19,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",
-		Long:        "Delete one or more schemas. This command should only be used in extreme circumstances.",
+		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.delete),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -75,19 +75,19 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		deleteType = "hard"
 	}
 	if version == "all" {
-		deleteSubjectOpts := srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		versions, r, err := srClient.DefaultApi.DeleteSubject(ctx, subject, &deleteSubjectOpts)
+		deleteSubjectOpts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
+		versions, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, deleteSubjectOpts)
 		if err != nil {
-			return errors.CatchSchemaNotFoundError(err, r)
+			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		printVersions(versions)
 		return nil
 	} else {
-		deleteVersionOpts := srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		versionResult, r, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, &deleteVersionOpts)
+		deleteVersionOpts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
+		versionResult, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, deleteVersionOpts)
 		if err != nil {
-			return errors.CatchSchemaNotFoundError(err, r)
+			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		printVersions([]int32{versionResult})

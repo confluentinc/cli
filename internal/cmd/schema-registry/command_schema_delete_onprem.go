@@ -14,7 +14,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",
-		Long:        "Delete one or more schemas. This command should only be used in extreme circumstances.",
+		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.onPremDelete),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
@@ -39,7 +39,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *schemaCommand) onPremDelete(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

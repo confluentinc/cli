@@ -86,15 +86,15 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 
 	req := srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs}
 
-	compatibleResp, r, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
+	resp, httpResp, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, r)
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"IsCompatible"}, []string{"Compatibility"}, []string{"compatibility"})
 	if err != nil {
 		return err
 	}
-	outputWriter.AddElement(&compatibleResp)
+	outputWriter.AddElement(&resp)
 	return outputWriter.Out()
 }

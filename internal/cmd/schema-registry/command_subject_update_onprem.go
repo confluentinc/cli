@@ -20,8 +20,12 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update subject level compatibility or mode of subject "payments"`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD %s\n%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg, version.CLIName, OnPremAuthenticationMsg),
+				Text: `Update subject level compatibility of subject "payments"`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD %s", version.CLIName, OnPremAuthenticationMsg),
+			},
+			examples.Example{
+				Text: `Update subject level mode of subject "payments"`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg, version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
@@ -37,17 +41,17 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
 
-	compat, err := cmd.Flags().GetString("compatibility")
+	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
 	}
-	if compat != "" {
-		return c.updateCompatibility(cmd, subject, compat, srClient, ctx)
+	if compatibility != "" {
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	mode, err := cmd.Flags().GetString("mode")

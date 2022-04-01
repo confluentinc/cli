@@ -22,8 +22,12 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.update),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update subject level compatibility or mode of subject "payments"`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD\n%s schema-registry subject update payments --mode=READWRITE", version.CLIName, version.CLIName),
+				Text: `Update subject level compatibility of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility=BACKWARD", version.CLIName),
+			},
+			examples.Example{
+				Text: `Update subject level mode of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --mode=READWRITE", version.CLIName),
 			},
 		),
 	}
@@ -46,7 +50,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	compat, err := cmd.Flags().GetString("compatibility")
+	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
 	}
@@ -55,12 +59,12 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if compat != "" && mode != "" {
+	if compatibility != "" && mode != "" {
 		return errors.New(errors.CompatibilityOrModeErrorMsg)
 	}
 
-	if compat != "" {
-		return c.updateCompatibility(cmd, subject, compat, srClient, ctx)
+	if compatibility != "" {
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -70,20 +74,20 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, subject, compat string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compat}
-	if _, r, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
-		return errors.CatchSchemaNotFoundError(err, r)
+func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compat, subject)
+	utils.Printf(cmd, errors.UpdatedSubjectLevelCompatibilityMsg, compatibility, subject)
 	return nil
 }
 
 func (c *subjectCommand) updateMode(cmd *cobra.Command, subject, mode string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updatedMode, r, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: mode})
+	updatedMode, httpResp, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: mode})
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, r)
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.UpdatedSubjectLevelModeMsg, updatedMode, subject)

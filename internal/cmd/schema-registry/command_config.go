@@ -30,5 +30,5 @@ func newConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.
 		c.AddCommand(c.newDescribeCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }

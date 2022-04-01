@@ -30,5 +30,5 @@ func newCompatibilityCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient 
 		c.AddCommand(c.newValidateCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }

@@ -38,7 +38,7 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

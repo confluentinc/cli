@@ -54,9 +54,9 @@ func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.API
 	}
 
 	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, r, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
+	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, r)
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)

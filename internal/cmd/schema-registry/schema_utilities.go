@@ -16,6 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type registerSchemaResponse struct {
+	Id int32 `json:"id" yaml:"id"`
+}
+
 func RegisterSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
 	schema, err := ioutil.ReadFile(schemaPath)
 	if err != nil {
@@ -34,9 +38,8 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath 
 	if outputFormat == output.Human.String() {
 		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	} else {
-		err = output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
+		registerSchemaResponse := &registerSchemaResponse{Id: response.Id}
+		err = output.StructuredOutput(outputFormat, registerSchemaResponse)
 		if err != nil {
 			return nil, err
 		}

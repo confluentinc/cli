@@ -38,7 +38,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 }
 
 func (c *compatibilityCommand) onPremValidate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

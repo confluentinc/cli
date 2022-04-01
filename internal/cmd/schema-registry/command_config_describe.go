@@ -17,12 +17,12 @@ import (
 func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe top-level or subject-level Schema Registry compatibility.",
+		Short: "Describe top-level or subject-level schema compatibility.",
 		Args:  cobra.MaximumNArgs(0),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the configuration of subject `payments`.",
+				Text: `Describe the configuration of subject "payments".`,
 				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
 			},
 			examples.Example{
@@ -58,11 +58,11 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 	}
 
 	var config srsdk.Config
-	var resp *http.Response
+	var httpResp *http.Response
 	if subject != "" {
-		config, resp, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
+		config, httpResp, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 		if err != nil {
-			return errors.CatchNoSubjectLevelConfigError(err, resp, subject)
+			return errors.CatchNoSubjectLevelConfigError(err, httpResp, subject)
 		}
 	} else {
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)

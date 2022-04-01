@@ -12,13 +12,13 @@ import (
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
-		Short:       "Describe top-level or subject-level Schema Registry compatibility.",
+		Short:       "Describe top-level or subject-level schema compatibility.",
 		Args:        cobra.MaximumNArgs(0),
 		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the configuration of a subject `payments`.",
+				Text: `Describe the configuration of a subject "payments".`,
 				Code: fmt.Sprintf("%s schema-registry config describe --subject payments %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
@@ -37,7 +37,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *configCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
