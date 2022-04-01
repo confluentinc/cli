@@ -152,7 +152,6 @@ func DefaultTransport() *http.Transport {
 		},
 		ForceAttemptHTTP2: true,
 	}
-
 }
 
 func DefaultClient() *http.Client {
