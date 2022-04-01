@@ -463,7 +463,9 @@ func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *
 		cfg.Servers[0].URL = baseURL + "/api"
 	}
 	cfg.UserAgent = ver.UserAgent
-
+	if log.CliLogger.GetLevel() >= log.DEBUG {
+		cfg.Debug = true
+	}
 	return quotasv2.NewAPIClient(cfg)
 }
 
