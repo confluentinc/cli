@@ -4,9 +4,12 @@ Usage:
   confluent schema-registry subject update <subject> [flags]
 
 Examples:
-Update subject level compatibility or mode of subject "payments"
+Update subject level compatibility of subject "payments".
 
   $ confluent schema-registry subject update payments --compatibility=BACKWARD
+
+Update subject level mode of subject "payments".
+
   $ confluent schema-registry subject update payments --mode=READWRITE
 
 Flags:
