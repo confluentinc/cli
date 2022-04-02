@@ -25,7 +25,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Update subject level mode of subject "payments"`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg, version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry subject update payments --mode=READWRITE %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
