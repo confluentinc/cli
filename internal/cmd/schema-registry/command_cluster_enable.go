@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -67,6 +68,10 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 
 	// Trust the API will handle CCP/CCE
 	location := schedv1.GlobalSchemaRegistryLocation(schedv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
+	err = c.validateLocation(location)
+	if err != nil {
+		return err
+	}
 
 	// Build the SR instance
 	clusterConfig := &schedv1.SchemaRegistryClusterConfig{
@@ -96,5 +101,13 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	}
 
+	return nil
+}
+
+func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
+	if location == 0 {
+		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
+			errors.InternalServerErrorSuggestions)
+	}
 	return nil
 }
