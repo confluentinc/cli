@@ -197,7 +197,7 @@ const (
 
 	// schema-registry commands
 	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for `--geo` flag"
-	InvalidSchemaRegistryLocationSuggestions = "Either 'us', 'eu', or 'apac'."
+	InvalidSchemaRegistryLocationSuggestions = "Geo must be either 'us', 'eu', or 'apac'."
 	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
 	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
 	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"

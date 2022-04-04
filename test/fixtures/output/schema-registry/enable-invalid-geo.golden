@@ -1,0 +1,4 @@
+Error: invalid input for `--geo` flag
+
+Suggestions:
+    Geo must be either 'us', 'eu', or 'apac'.
