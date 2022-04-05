@@ -50,14 +50,19 @@ func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if compatibility != "" {
-		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
-	}
-
 	mode, err := cmd.Flags().GetString("mode")
 	if err != nil {
 		return err
 	}
+
+	if compatibility != "" && mode != "" {
+		return errors.New(errors.CompatibilityOrModeErrorMsg)
+	}
+
+	if compatibility != "" {
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
+	}
+
 	if mode != "" {
 		return c.updateMode(cmd, subject, mode, srClient, ctx)
 	}
