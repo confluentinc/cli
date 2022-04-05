@@ -74,7 +74,7 @@ var (
 	}
 	mockUser                    = &sdkMock.User{}
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -87,7 +87,7 @@ var (
 				}, nil
 			}
 		},
-		GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -98,6 +98,11 @@ var (
 					Username: promptUser,
 					Password: promptPassword,
 				}, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
 			}
 		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -167,9 +172,14 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
 			}
 		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -182,8 +192,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloud.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
@@ -392,7 +401,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			loginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -405,7 +414,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -418,13 +427,17 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
+				GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 				GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				SetCloudClientFunc: func(arg0 *ccloud.Client) {
-				},
+				SetCloudClientFunc: func(_ *ccloud.Client) {},
 			}
 			if tt.setNetrcUser {
 				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -435,7 +448,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			}
 			if tt.isCloud {
 				if tt.setEnvVar {
-					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(cmd *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(orgResourceId string) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
 						}
@@ -443,7 +456,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			} else {
 				if tt.setEnvVar {
-					loginCredentialsManager.GetOnPremCredentialsFromEnvVarFunc = func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+					loginCredentialsManager.GetOnPremCredentialsFromEnvVarFunc = func() func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
 						}
@@ -486,7 +499,7 @@ func TestPromptLoginFlag(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
+				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
 					}
@@ -499,7 +512,7 @@ func TestPromptLoginFlag(t *testing.T) {
 						}, nil
 					}
 				},
-				GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+				GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
 					}
@@ -540,7 +553,7 @@ func TestPromptLoginFlag(t *testing.T) {
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
@@ -550,13 +563,17 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, errors.New("DO NOT RETURN THIS ERR")
+			}
+		},
 		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloud.InvalidLoginError{}
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloud.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd.Command)
@@ -723,7 +740,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
 	loginCmd.loginOrganizationManager = mockLoginOrganizationManager
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -920,7 +937,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	loginCmd.loginOrganizationManager = loginOrganizationManager
 	return loginCmd, cfg
 }

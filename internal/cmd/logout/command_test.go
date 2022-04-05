@@ -36,7 +36,7 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -49,7 +49,7 @@ var (
 				}, nil
 			}
 		},
-		GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -62,13 +62,17 @@ var (
 				}, nil
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloud.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	orgManagerImpl               = pauth.NewLoginOrganizationManagerImpl()
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
@@ -187,7 +191,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
