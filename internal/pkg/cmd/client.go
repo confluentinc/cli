@@ -15,9 +15,7 @@ type contextClient struct {
 
 // NewContextClient returns a new contextClient, with the specified context and a client.
 func NewContextClient(ctx *DynamicContext) *contextClient {
-	return &contextClient{
-		context: ctx,
-	}
+	return &contextClient{context: ctx}
 }
 
 func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
