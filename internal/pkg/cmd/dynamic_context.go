@@ -109,34 +109,33 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
 		return cluster, nil
 	}
+
 	if d.client == nil {
 		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
+
 	// Resolve cluster details if not found locally.
-	ctxClient := NewContextClient(d)
-	kcc, err := ctxClient.FetchCluster(clusterId)
+	kcc, err := NewContextClient(d).FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
-	cluster := KafkaClusterToKafkaClusterConfig(kcc)
+
+	cluster := kafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
-	if err != nil {
-		return nil, err
-	}
-	return cluster, nil
+
+	return cluster, err
 }
 
-func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster) *v1.KafkaClusterConfig {
-	clusterConfig := &v1.KafkaClusterConfig{
+func kafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
+	return &v1.KafkaClusterConfig{
 		ID:           kcc.Id,
 		Name:         kcc.Name,
 		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
 		APIEndpoint:  kcc.ApiEndpoint,
-		APIKeys:      make(map[string]*v1.APIKeyPair),
+		APIKeys:      apiKeys,
 		RestEndpoint: kcc.RestEndpoint,
 	}
-	return clusterConfig
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
