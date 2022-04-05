@@ -28,7 +28,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
@@ -71,7 +71,7 @@ func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, sch
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
-	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return nil, nil, err
 	}

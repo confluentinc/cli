@@ -41,7 +41,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

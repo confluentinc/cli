@@ -26,7 +26,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
@@ -38,7 +38,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 }
 
 func (c *compatibilityCommand) onPremValidate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

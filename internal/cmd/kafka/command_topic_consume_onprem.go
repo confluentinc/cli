@@ -85,7 +85,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
-		srClient, ctx, err = sr.GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
 			return err
 		}

@@ -31,7 +31,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")

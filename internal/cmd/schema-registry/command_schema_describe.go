@@ -35,8 +35,8 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -70,7 +70,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if len(args) > 0 {
+	if len(args) == 1 {
 		return c.describeById(cmd, args[0], srClient, ctx)
 	}
 	return c.describeBySubject(cmd, srClient, ctx)
@@ -99,9 +99,9 @@ func (c *schemaCommand) describeBySubject(cmd *cobra.Command, srClient *srsdk.AP
 	if err != nil {
 		return err
 	}
-	schemaString, resp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
+	schemaString, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, resp)
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 	return c.printSchema(cmd, int64(schemaString.Id), schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }

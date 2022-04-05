@@ -29,8 +29,8 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
-	cmd.Flags().String("version", "", "Version of the schema. Can be a specific version or 'latest'.")
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -38,7 +38,7 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

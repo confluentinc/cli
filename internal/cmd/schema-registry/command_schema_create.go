@@ -53,7 +53,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

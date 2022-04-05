@@ -35,7 +35,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *subjectCommand) onPremList(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetSrAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
