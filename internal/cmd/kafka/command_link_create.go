@@ -121,10 +121,10 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	clusterId := kafkaClusterConfig.ID
 
 	data := cloudkafkarest.CreateLinkRequestData{SourceClusterId: &sourceClusterId, Configs: toCloudCreateTopicConfigs(configMap)}
-	data.SourceClusterId = &sourceClusterId
 
 	req := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaLink(kafkaREST.Context, clusterId)
-	if httpResp, err := req.CreateLinkRequestData(data).Execute(); err != nil {
+	httpResp, err := req.CreateLinkRequestData(data).Execute()
+	if err != nil {
 		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 

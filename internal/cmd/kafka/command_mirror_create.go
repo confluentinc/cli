@@ -1,8 +1,7 @@
 package kafka
 
 import (
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -69,7 +68,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if kafkaREST == nil {
 		if err != nil {
 			return err
@@ -82,20 +81,17 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
-		CreateMirrorTopicRequestData: optional.NewInterface(
-			kafkarestv3.CreateMirrorTopicRequestData{
-				SourceTopicName:   sourceTopicName,
-				ReplicationFactor: replicationFactor,
-				Configs:           toCreateTopicConfigs(configMap),
-			},
-		),
+	createMirrorOpt := cloudkafkarest.CreateMirrorTopicRequestData{
+		SourceTopicName:   sourceTopicName,
+		ReplicationFactor: &replicationFactor,
+		Configs:           toCloudCreateTopicConfigs(configMap),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt)
-	if err == nil {
-		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
+	req := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName)
+	httpResp, err := req.CreateMirrorTopicRequestData(createMirrorOpt).Execute()
+	if err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
-
-	return handleOpenApiError(httpResp, err, kafkaREST.Client)
+	utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
+	return nil
 }

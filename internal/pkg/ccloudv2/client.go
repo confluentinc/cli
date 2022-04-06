@@ -7,14 +7,14 @@ import (
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-v2
 type Client struct {
 	IamClient *iamv2.APIClient
+	KafkaRESTProvider *CloudKafkaRESTProvider
 	AuthToken string
 }
 
-func NewClient(iamClient *iamv2.APIClient, authToken string) *Client {
-	return &Client{IamClient: iamClient, AuthToken: authToken}
-}
-
-func NewClientWithUrl(baseUrl string, isTest bool, authToken string) *Client {
-	iamClient := newIamClient(baseUrl, isTest)
-	return &Client{IamClient: iamClient, AuthToken: authToken}
+func NewClient(baseUrl string, isTest bool, authToken string) *Client {
+	client := &Client{
+		IamClient:         newIamClient(baseUrl, isTest),
+		AuthToken:         authToken,
+	}
+	return client
 }

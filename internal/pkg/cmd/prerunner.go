@@ -70,7 +70,7 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
-	CloudKafkaRESTProvider *CloudKafkaRESTProvider
+	//CloudKafkaRESTProvider *CloudKafkaRESTProvider
 	CPKafkaRESTProvider *CPKafkaRESTProvider
 	QuotasClient      *quotasv2.APIClient
 	Context           *DynamicContext
@@ -166,8 +166,8 @@ func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
 	s.Command.AddCommand(command)
 }
 
-func (c *AuthenticatedCLICommand) GetCloudKafkaREST() (*CloudKafkaREST, error) {
-	return (*c.CloudKafkaRESTProvider)()
+func (c *AuthenticatedCLICommand) GetCloudKafkaREST() (*ccloudv2.CloudKafkaREST, error) {
+	return (*c.V2Client.KafkaRESTProvider)()
 }
 
 func (c *AuthenticatedCLICommand) GetCPKafkaREST() (*CPKafkaREST, error) {
@@ -373,15 +373,35 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
-	provider := (CloudKafkaRESTProvider)(func() (*CloudKafkaREST, error) {
+	return nil
+}
+
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+	if ctx == nil {
+		return new(errors.NotLoggedInError)
+	}
+	baseURL := ctx.Platform.Server
+
+	v2Client := ccloudv2.NewClient(baseURL, r.IsTest, cliCmd.AuthToken())
+	v2Client.KafkaRESTProvider = getCloudKafkaRestProvider(cliCmd)
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
+	return nil
+}
+
+func getCloudKafkaRestProvider(cliCmd *AuthenticatedCLICommand) *ccloudv2.CloudKafkaRESTProvider {
+	provider := (ccloudv2.CloudKafkaRESTProvider)(func() (*ccloudv2.CloudKafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
-		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
 		if err != nil {
 			return nil, err
 		}
 		if restEndpoint != "" {
-			result := &CloudKafkaREST{}
+			result := &ccloudv2.CloudKafkaREST{}
 			result.Client, err = createCloudKafkaRESTClient(restEndpoint)
 			if err != nil {
 				return nil, err
@@ -399,26 +419,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		}
 		return nil, nil
 	})
-	cliCmd.CloudKafkaRESTProvider = &provider
-	return nil
+	return &provider
 }
 
-func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
-	ctx := cliCmd.Config.Context()
-	if ctx == nil {
-		return new(errors.NotLoggedInError)
-	}
-	baseURL := ctx.Platform.Server
-
-	v2Client := ccloudv2.NewClientWithUrl(baseURL, r.IsTest, cliCmd.AuthToken())
-
-	cliCmd.V2Client = v2Client
-	cliCmd.Context.v2Client = v2Client
-	cliCmd.Config.V2Client = v2Client
-	return nil
-}
-
-func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
+func getKafkaRestEndpoint(ctx *DynamicContext) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", "", nil
 	}
