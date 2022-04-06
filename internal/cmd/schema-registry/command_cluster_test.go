@@ -105,14 +105,6 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
 }
 
-func (suite *ClusterTestSuite) TestCreateSRInvalidGeo() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"cluster", "enable", "--cloud", "aws", "--geo", "somethingelse"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Error(err, "invalid input for `--geo` flag")
-}
-
 func (suite *ClusterTestSuite) TestDescribeSR() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"cluster", "describe"})

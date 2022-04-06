@@ -105,7 +105,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
-	if location == 0 {
+	if location == schedv1.GlobalSchemaRegistryLocation_NONE {
 		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
 			errors.InvalidSchemaRegistryLocationSuggestions)
 	}

@@ -196,8 +196,8 @@ const (
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// schema-registry commands
-	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for `--geo` flag"
-	InvalidSchemaRegistryLocationSuggestions = "Geo must be either 'us', 'eu', or 'apac'."
+	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
+	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
 	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
 	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
 	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
