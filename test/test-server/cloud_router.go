@@ -47,7 +47,6 @@ const (
 	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
-	appliedQuotas       = "/api/service-quota/v2/applied-quotas"
 )
 
 type CloudRouter struct {
@@ -92,7 +91,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addUsageLimitRoutes(t)
 	c.addMetricsQueryRoutes(t)
 	c.addServiceAccountRoutes(t)
-	c.addQuotasRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -171,8 +169,4 @@ func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
 func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
 	c.HandleFunc(serviceAccounts, c.HandleServiceAccounts(t))
 	c.HandleFunc(serviceAccount, c.HandleServiceAccount(t))
-}
-
-func (c *CloudRouter) addQuotasRoutes(t *testing.T) {
-	c.HandleFunc(appliedQuotas, c.HandleAppliedQuotas(t))
 }

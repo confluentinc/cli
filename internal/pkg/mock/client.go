@@ -9,6 +9,8 @@ import (
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
+	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
+	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
@@ -32,7 +34,8 @@ func NewV2ClientMock() *ccloudv2.Client {
 	cmkMock := newCmkClientMock()
 	iamMock := newIamClientMock()
 	orgMock := newOrgClientMock()
-	return ccloudv2.NewClient(cmkMock, iamMock, orgMock, "auth-token")
+	quotasMock := newQuotasClientMock()
+	return ccloudv2.NewClient(cmkMock, iamMock, orgMock, quotasMock, "auth-token")
 }
 
 func newCmkClientMock() *cmkv2.APIClient {
@@ -48,4 +51,8 @@ func newIamClientMock() *iamv2.APIClient {
 		ServiceAccountsIamV2Api: &iammock.ServiceAccountsIamV2Api{},
 		UsersIamV2Api:           &iammock.UsersIamV2Api{},
 	}
+}
+
+func newQuotasClientMock() *quotasv2.APIClient {
+	return &quotasv2.APIClient{AppliedQuotasServiceQuotaV2Api: &quotasmock.AppliedQuotasServiceQuotaV2Api{}}
 }

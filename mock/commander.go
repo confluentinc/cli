@@ -158,5 +158,4 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
-	command.QuotasClient = c.QuotasClient
 }
