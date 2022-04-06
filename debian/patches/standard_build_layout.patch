@@ -1,6 +1,6 @@
---- cli/Makefile	2022-02-08 21:41:36.000000000 -0600
-+++ debian/Makefile	2022-01-24 13:34:02.000000000 -0600
-@@ -1,268 +1,130 @@
+--- cli/Makefile	2022-03-30 14:17:12.000000000 -0700
++++ debian/Makefile	2022-01-11 19:05:28.000000000 -0800
+@@ -1,266 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -174,7 +174,7 @@
 -# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 -# then assuming caas.sh lives here should be fine
 -define aws-authenticate
--	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
+-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
 -endef
 -
 -.PHONY: fmt
@@ -198,26 +198,20 @@
  
 -.PHONY: lint
 -lint:
+-ifdef CI
 -ifeq ($(shell uname),Darwin)
 -	true
 -else ifneq (,$(findstring NT,$(shell uname)))
 -	true
 -else
--	@echo "Linting..."
 -	@make lint-go
 -	@make lint-cli
--	@make lint-installers
+-endif
+-else
+-	@make lint-go
+-	@make lint-cli
+-endif
 +all: install
-+
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
-+
-+apply-patches: $(wildcard debian/patches/*)
-+ifeq ($(APPLY_PATCHES),yes)
-+	git reset --hard HEAD
-+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
- endif
  
 -.PHONY: lint-go
 -lint-go:
@@ -234,11 +228,6 @@
 -
 -cmd/lint/en_US.dic:
 -	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
--
--.PHONY: lint-installers
--lint-installers:
--	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
--	@echo "✅  installation script linter"
 -
 -.PHONY: lint-licenses
 -## Scan and validate third-party dependency licenses
@@ -259,6 +248,52 @@
 -	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+-else
+-	@# Run unit tests.
+-  ifeq "$(OS)" "Windows_NT"
+-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  else
+-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  endif
++archive: install
++	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
++	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
++
++apply-patches: $(wildcard debian/patches/*)
++ifeq ($(APPLY_PATCHES),yes)
++	git reset --hard HEAD
++	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
+ endif
+ 
+-.PHONY: coverage-integ
+-coverage-integ:
+-      ifdef CI
+-	@# Run integration tests with coverage.
+-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+-      else
+-	@# Run integration tests.
+-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+-      endif
+-
+-.PHONY: test-prep
+-test-prep: lint
+-      ifdef CI
+-    @echo "mode: atomic" > coverage.txt
+-      endif
+-
+-.PHONY: test
+-test: test-prep coverage-unit coverage-integ test-installer
+-
+-.PHONY: unit-test
+-unit-test: test-prep coverage-unit
+-
+-.PHONY: int-test
+-int-test: test-prep coverage-integ
+-
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -313,45 +348,10 @@
 +ifneq ($(RPM_RELEASE_POSTFIX),)
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
- else
--	@# Run unit tests.
--  ifeq "$(OS)" "Windows_NT"
--	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
--  else
--	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
--  endif
++else
 +	RPM_RELEASE_ID=$(REVISION)
- endif
- 
--.PHONY: coverage-integ
--coverage-integ:
--      ifdef CI
--	@# Run integration tests with coverage.
--	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
--	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
--      else
--	@# Run integration tests.
--	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
--      endif
--
--.PHONY: test-prep
--test-prep: lint
--      ifdef CI
--    @echo "mode: atomic" > coverage.txt
--      endif
--
--.PHONY: test
--test: test-prep coverage-unit coverage-integ test-installer
--
--.PHONY: unit-test
--unit-test: test-prep coverage-unit
--
--.PHONY: int-test
--int-test: test-prep coverage-integ
--
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++endif
++
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<

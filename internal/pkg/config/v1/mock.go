@@ -5,7 +5,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -27,8 +26,8 @@ var (
 	anonymousKafkaId   = "anonymous-id"
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
-	bootstrapServer    = "https://toby-cluster:9092"
-	kafkaApiEndpoint   = "https://is-the-worst:9092"
+	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
+	kafkaApiEndpoint   = "https://pkac-abc123:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 
@@ -105,14 +104,14 @@ func APICredentialConfigMock() *Config {
 		kafkaCluster.ID: kafkaCluster,
 	}
 
-	conf := New(&config.Params{})
+	cfg := New()
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, conf, "")
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, cfg, "")
 	if err != nil {
 		panic(err)
 	}
-	setUpConfig(conf, ctx, platform, credential, contextState)
-	return conf
+	setUpConfig(cfg, ctx, platform, credential, contextState)
+	return cfg
 }
 
 func UnauthenticatedCloudConfigMock() *Config {
@@ -152,15 +151,15 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 		MockEnvironmentId: srCluster,
 	}
 
-	conf := New(&config.Params{})
-	conf.IsTest = true
+	cfg := New()
+	cfg.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, conf, params.orgResourceId)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, cfg, params.orgResourceId)
 	if err != nil {
 		panic(err)
 	}
-	setUpConfig(conf, ctx, platform, credential, contextState)
-	return conf
+	setUpConfig(cfg, ctx, platform, credential, contextState)
+	return cfg
 }
 
 func createUsernameCredential(credentialName string, auth *AuthConfig) *Credential {

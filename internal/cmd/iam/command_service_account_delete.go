@@ -1,15 +1,12 @@
 package iam
 
 import (
-	"context"
-	"strings"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -23,20 +20,22 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete service account "sa-123456".`,
-				Code: "confluent service-account delete sa-123456",
+				Code: "confluent iam service-account delete sa-123456",
 			},
 		),
 	}
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	if !strings.HasPrefix(args[0], "sa-") {
+	if resource.LookupType(args[0]) != resource.ServiceAccount {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	user := &orgv1.User{ResourceId: args[0]}
-	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
-		return err
+
+	_, err := c.V2Client.DeleteIamServiceAccount(args[0])
+	if err != nil {
+		return errors.Errorf(`failed to delete service account "%s": %v`, args[0], err)
 	}
+
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])
 	return nil
 }

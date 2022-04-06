@@ -1,9 +1,7 @@
 package environment
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -34,14 +32,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	account := &orgv1.Account{
-		Id:             id,
-		Name:           name,
-		OrganizationId: c.State.Auth.Account.OrganizationId,
-	}
-
-	if err := c.Client.Account.Update(context.Background(), account); err != nil {
-		return err
+	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
+	_, _, err = c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
+	if err != nil {
+		return errors.CatchEnvironmentNotFoundError(err, id)
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, name)

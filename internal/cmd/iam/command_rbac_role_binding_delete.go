@@ -21,25 +21,10 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 
-	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding delete.")
-		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		if c.ccloudRbacDataplaneEnabled {
-			cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-			cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-			cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		}
-	} else {
-		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
-		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
-		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
-		pcmd.AddContextFlag(cmd, c.CLICommand)
-	}
+	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+
+	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -79,7 +64,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {
-	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+	if options.resource != "" {
 		return c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
 			options.principal,

@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/confluentinc/bincover"
-
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -22,6 +21,8 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},
+		{args: "schema-registry cluster update --help", fixture: "schema-registry/cluster-update-help.golden"},
+		{args: "schema-registry subject update --help", fixture: "schema-registry/subject-update-help.golden"},
 
 		{args: "schema-registry cluster describe", fixture: "schema-registry/describe.golden"},
 		{args: "schema-registry cluster update --environment=" + testserver.SRApiEnvId, fixture: "schema-registry/update-missing-flags.golden", wantErrCode: 1},
@@ -32,6 +33,41 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			name:    "schema-registry schema create",
 			args:    "schema-registry schema create --subject payments --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-create.golden",
+		},
+		{
+			name:    "schema-registry compatibility validate",
+			args:    "schema-registry compatibility validate --subject payments --version 1 --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-compatibility.golden",
+		},
+		{
+			name:    "schema-registry compatibility validate json",
+			args:    "schema-registry compatibility validate --subject payments --version 1 --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o json",
+			fixture: "schema-registry/schema-compatibility-json.golden",
+		},
+		{
+			name:    "schema-registry compatibility validate yaml",
+			args:    "schema-registry compatibility validate --subject payments --version 1 --schema=" + schemaPath + " --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o yaml",
+			fixture: "schema-registry/schema-compatibility-yaml.golden",
+		},
+		{
+			name:    "schema-registry config describe global",
+			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-config-global.golden",
+		},
+		{
+			name:    "schema-registry config describe global json",
+			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o json",
+			fixture: "schema-registry/schema-config-global-json.golden",
+		},
+		{
+			name:    "schema-registry config describe global yaml",
+			args:    "schema-registry config describe --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId + " -o yaml",
+			fixture: "schema-registry/schema-config-global-yaml.golden",
+		},
+		{
+			name:    "schema-registry config describe --subject payments",
+			args:    "schema-registry config describe --subject payments --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-config-subject.golden",
 		},
 		{
 			name:    "schema-registry schema delete latest",
@@ -71,7 +107,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry subject update mode",
-			args:    "schema-registry subject update testSubject --mode READ --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
+			args:    "schema-registry subject update testSubject --mode READONLY --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/subject-update-mode.golden",
 		},
 
@@ -133,7 +169,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }

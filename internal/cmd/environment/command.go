@@ -19,7 +19,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newListCommand())
@@ -38,5 +37,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteEnvironments(c.Client)
+	return pcmd.AutocompleteEnvironments(c.V2Client)
 }

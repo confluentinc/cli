@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -108,13 +110,13 @@ func (c *Context) DeleteUserAuth() error {
 	if c.State == nil {
 		return nil
 	}
-	c.State.AuthToken = ""
+
 	c.State.Auth = nil
+	c.State.AuthToken = ""
+	c.State.AuthRefreshToken = ""
+
 	err := c.Save()
-	if err != nil {
-		return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
-	}
-	return nil
+	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
 }
 
 func (c *Context) GetCurrentEnvironmentId() string {
@@ -145,6 +147,55 @@ func (c *Context) IsCloud(isTest bool) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) GetAuth() *AuthConfig {
+	if c.State != nil {
+		return c.State.Auth
+	}
+	return nil
+}
+
+func (c *Context) GetUser() *orgv1.User {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.User
+	}
+	return nil
+}
+
+func (c *Context) GetEmail() string {
+	if user := c.GetUser(); user != nil {
+		return user.Email
+	}
+	return ""
+}
+
+func (c *Context) GetOrganization() *orgv1.Organization {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Organization
+	}
+	return nil
+}
+
+func (c *Context) GetEnvironment() *orgv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Account
+	}
+	return nil
+}
+
+func (c *Context) GetAuthToken() string {
+	if c.State != nil {
+		return c.State.AuthToken
+	}
+	return ""
+}
+
+func (c *Context) GetAuthRefreshToken() string {
+	if c.State != nil {
+		return c.State.AuthRefreshToken
+	}
+	return ""
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

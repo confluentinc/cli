@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -56,11 +57,12 @@ type RoleBindingTestSuite struct {
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
+	os.Setenv("XX_DATAPLANE_3_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
-func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
@@ -108,7 +110,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, nil, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
@@ -155,12 +157,28 @@ var roleBindingListTests = []roleBindingTest{
 		roleName: "EnvironmentAdmin",
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
 	},
+	{
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{
+				KsqlCluster: "ksql-9999"},
+		},
+	},
+	{
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{
+				SchemaRegistryCluster: "sr-777"},
+		},
+	},
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, "")
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
@@ -200,7 +218,7 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, nil, mdsClient, suite.conf))
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{
@@ -466,6 +484,26 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+
+		scope: mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{
+				KsqlCluster: "ksql-9999"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+
+		scope: mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{
+				SchemaRegistryCluster: "sr-777"},
+		},
+	},
+	{
 		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
 		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
@@ -474,7 +512,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
@@ -499,7 +537,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))

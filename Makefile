@@ -158,7 +158,7 @@ build-integ-race:
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	source $$GOPATH/src/github.com/confluentinc/cc-dotfiles/caas.sh && eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
 endef
 
 .PHONY: fmt
@@ -177,15 +177,18 @@ endif
 
 .PHONY: lint
 lint:
+ifdef CI
 ifeq ($(shell uname),Darwin)
 	true
 else ifneq (,$(findstring NT,$(shell uname)))
 	true
 else
-	@echo "Linting..."
 	@make lint-go
 	@make lint-cli
-	@make lint-installers
+endif
+else
+	@make lint-go
+	@make lint-cli
 endif
 
 .PHONY: lint-go
@@ -203,11 +206,6 @@ cmd/lint/en_US.aff:
 
 cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-
-.PHONY: lint-installers
-lint-installers:
-	@diff install-c* | grep -v -E "^---|^[0-9c0-9]|PROJECT_NAME|BINARY" && echo "diff between install scripts" && exit 1 || exit 0
-	@echo "✅  installation script linter"
 
 .PHONY: lint-licenses
 ## Scan and validate third-party dependency licenses

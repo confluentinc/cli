@@ -12,8 +12,8 @@ func (s *CLITestSuite) TestAdminPaymentDescribe() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -31,8 +31,8 @@ func (s *CLITestSuite) TestAdminPaymentUpdate() {
 		},
 	}
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -42,8 +42,8 @@ func (s *CLITestSuite) TestAdminPromoAdd() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -54,7 +54,7 @@ func (s *CLITestSuite) TestAdminPromoList() {
 	}
 
 	for _, test := range tests {
-		test.login = "default"
-		s.runCcloudTest(test)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }

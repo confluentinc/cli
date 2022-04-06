@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	mockBaseConfig = &config.BaseConfig{Params: &config.Params{}}
+	mockBaseConfig = &config.BaseConfig{}
 	mockVersion    = new(pversion.Version)
 )
 

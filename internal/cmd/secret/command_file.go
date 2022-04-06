@@ -2,13 +2,16 @@ package secret
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/spf13/cobra"
 	"net/http"
 	"os"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/secret"
+
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 

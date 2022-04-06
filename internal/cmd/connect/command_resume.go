@@ -23,10 +23,10 @@ func (c *command) newResumeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Resume a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect resume --config config.json",
+				Code: "confluent connect resume",
 			},
 			examples.Example{
-				Code: "confluent connect resume --config config.json --cluster lkc-123456",
+				Code: "confluent connect resume --cluster lkc-123456",
 			},
 		),
 	}

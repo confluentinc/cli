@@ -44,6 +44,14 @@ const (
 	auditLogApiKeyDescription = "Mock Apis for Audit Logs"
 	auditLogServiceAccountId  = int32(748)
 	auditLogUserResourceId    = "sa-55555"
+
+	myApiKeyResourceId  = int32(1234)
+	myApiKeyVal         = "user-apikey"
+	myApiKeySecretVal   = "icreatedthis"
+	myApiKeyDescription = "Mock Apis for User"
+	myServiceAccountId  = int32(987)
+	myUserResourceId    = "u-123"
+	myAccountName       = "My Account"
 )
 
 var (
@@ -66,6 +74,16 @@ var (
 		Description:     auditLogApiKeyDescription,
 		Created:         types.TimestampNow(),
 		Id:              auditLogApiKeyResourceId,
+	}
+	myApiValue = &schedv1.ApiKey{
+		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+		UserId:          myServiceAccountId,
+		UserResourceId:  myUserResourceId,
+		Key:             myApiKeyVal,
+		Secret:          myApiKeySecretVal,
+		Description:     myApiKeyDescription,
+		Created:         types.TimestampNow(),
+		Id:              myApiKeyResourceId,
 	}
 )
 
@@ -156,7 +174,7 @@ func (suite *APITestSuite) SetupTest() {
 			return nil
 		},
 		ListFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) ([]*schedv1.ApiKey, error) {
-			return []*schedv1.ApiKey{apiValue, auditLogApiValue}, nil
+			return []*schedv1.ApiKey{apiValue, auditLogApiValue, myApiValue}, nil
 		},
 	}
 	suite.keystore = &mock.KeyStore{
@@ -198,6 +216,12 @@ func (suite *APITestSuite) SetupTest() {
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
 					ServiceName: serviceAccountName,
+				},
+				{
+					Id:          myServiceAccountId,
+					ResourceId:  myUserResourceId,
+					ServiceName: myAccountName,
+					Email:       "csreesangkom@confluent.io",
 				},
 			}, nil
 		},
@@ -332,6 +356,21 @@ func (suite *APITestSuite) TestListCloudAPIKey() {
 	req.True(suite.apiMock.ListCalled())
 	inputKey := suite.apiMock.ListCalls()[0].Arg1
 	req.Equal(0, len(inputKey.LogicalClusters))
+}
+
+func (suite *APITestSuite) TestListEmails() {
+	cmd := suite.newCmd()
+	buf := new(bytes.Buffer)
+	cmd.SetArgs([]string{"list"})
+	cmd.SetOut(buf)
+
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.apiMock.ListCalled())
+	req.Contains(buf.String(), "<auditlog service account>")
+	req.Contains(buf.String(), "<service account>")
+	req.Contains(buf.String(), "csreesangkom@confluent.io")
 }
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {

@@ -1,15 +1,12 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	pkafka "github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -41,22 +38,22 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var clusters []*schedv1.KafkaCluster
+	var clusters []cmkv2.CmkV2Cluster
 	if listAllClusters {
-		environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+		environments, err := c.V2Client.ListOrgEnvironments()
 		if err != nil {
 			return err
 		}
 
 		for _, env := range environments {
-			clustersOfEnv, err := pkafka.ListKafkaClusters(c.Client, env.Id)
+			clustersOfEnvironment, err := c.V2Client.ListKafkaClusters(*env.Id)
 			if err != nil {
 				return err
 			}
-			clusters = append(clusters, clustersOfEnv...)
+			clusters = append(clusters, clustersOfEnvironment...)
 		}
 	} else {
-		clusters, err = pkafka.ListKafkaClusters(c.Client, c.EnvironmentId())
+		clusters, err = c.V2Client.ListKafkaClusters(c.EnvironmentId())
 		if err != nil {
 			return err
 		}
@@ -70,13 +67,13 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
 		if outputWriter.GetOutputFormat() == output.Human {
-			if cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
-				cluster.Id = fmt.Sprintf("* %s", cluster.Id)
+			if *cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
+				*cluster.Id = fmt.Sprintf("* %s", *cluster.Id)
 			} else {
-				cluster.Id = fmt.Sprintf("  %s", cluster.Id)
+				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(cluster))
+		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
 	}
 
 	return outputWriter.Out()

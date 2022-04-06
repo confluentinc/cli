@@ -20,13 +20,13 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 	dynamicConfigBase := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewV2ClientMock())
 
 	config = v1.AuthenticatedCloudConfigMock()
 	dynamicConfigFlag := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
 		Prompt: &form.RealPrompt{},
 		Out:    os.Stdout,
-	}, pmock.NewClientMock())
+	}, pmock.NewClientMock(), pmock.NewV2ClientMock())
 	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
 		Name: "test-context",
 	}
