@@ -16,14 +16,15 @@ type Client struct {
 	AuthToken    string
 }
 
-func NewClient(cmkClient *cmkv2.APIClient, iamClient *iamv2.APIClient, orgClient *orgv2.APIClient, quotasClient *quotasv2.APIClient, authToken string) *Client {
-	return &Client{CmkClient: cmkClient, IamClient: iamClient, OrgClient: orgClient, QuotasClient: quotasClient, AuthToken: authToken}
-}
-
 func NewClientWithConfigs(baseURL, userAgent string, isTest bool, authToken string) *Client {
 	cmkClient := newCmkClient(baseURL, userAgent, isTest)
 	iamClient := newIamClient(baseURL, userAgent, isTest)
 	orgClient := newOrgClient(baseURL, userAgent, isTest)
 	quotasClient := newQuotasClient(baseURL, userAgent, isTest)
-	return NewClient(cmkClient, iamClient, orgClient, quotasClient, authToken)
+	return &Client{
+		CmkClient:    cmkClient,
+		IamClient:    iamClient,
+		OrgClient:    orgClient,
+		QuotasClient: quotasClient,
+		AuthToken:    authToken}
 }

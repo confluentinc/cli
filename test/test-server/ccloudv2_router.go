@@ -8,15 +8,15 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters/{id}":            HandleCmkCluster,
-	"/cmk/v2/clusters":                 HandleCmkClusters,
-	"/iam/v2/users/{id}":               HandleIamUser,
-	"/iam/v2/users":                    HandleIamUsers,
-	"/iam/v2/service-accounts/{id}":    HandleIamServiceAccount,
-	"/iam/v2/service-accounts":         HandleIamServiceAccounts,
-	"/org/v2/environments/{id}":        HandleOrgEnvironment,
-	"/org/v2/environments":             HandleOrgEnvironments,
-	"/service-quota/v2/applied-quotas": HandleAppliedQuotas,
+	"/cmk/v2/clusters/{id}":            handleCmkCluster,
+	"/cmk/v2/clusters":                 handleCmkClusters,
+	"/iam/v2/users/{id}":               handleIamUser,
+	"/iam/v2/users":                    handleIamUsers,
+	"/iam/v2/service-accounts/{id}":    handleIamServiceAccount,
+	"/iam/v2/service-accounts":         handleIamServiceAccounts,
+	"/org/v2/environments/{id}":        handleOrgEnvironment,
+	"/org/v2/environments":             handleOrgEnvironments,
+	"/service-quota/v2/applied-quotas": handleAppliedQuotas,
 }
 
 type V2Router struct {
