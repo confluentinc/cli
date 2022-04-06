@@ -6,60 +6,12 @@ import (
 	"strings"
 	"testing"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
-
-// Handler for POST "/api/clusters"
-func (c *CloudRouter) HandleKafkaClusterCreate(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := &schedv1.CreateKafkaClusterRequest{}
-		err := utilv1.UnmarshalJSON(r.Body, req)
-		require.NoError(t, err)
-		var b []byte
-		if req.Config.Deployment.Sku == productv1.Sku_DEDICATED {
-			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-				Cluster: &schedv1.KafkaCluster{
-					Id:              "lkc-def963",
-					AccountId:       req.Config.AccountId,
-					Name:            req.Config.Name,
-					Cku:             req.Config.Cku,
-					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_DEDICATED},
-					NetworkIngress:  50 * req.Config.Cku,
-					NetworkEgress:   150 * req.Config.Cku,
-					Storage:         30000 * req.Config.Cku,
-					ServiceProvider: req.Config.ServiceProvider,
-					Region:          req.Config.Region,
-					Endpoint:        "SASL_SSL://kafka-endpoint",
-					ApiEndpoint:     c.kafkaApiUrl,
-				},
-			})
-		} else {
-			b, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-				Cluster: &schedv1.KafkaCluster{
-					Id:              "lkc-def963",
-					AccountId:       req.Config.AccountId,
-					Name:            req.Config.Name,
-					Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-					NetworkIngress:  100,
-					NetworkEgress:   100,
-					Storage:         5000,
-					ServiceProvider: req.Config.ServiceProvider,
-					Region:          req.Config.Region,
-					Endpoint:        "SASL_SSL://kafka-endpoint",
-					ApiEndpoint:     c.kafkaApiUrl,
-				},
-			})
-		}
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
 
 // Handler for: "/api/usage_limits"
 func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +49,6 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter
 	}
 }
 
-// Handler for: "/api/clusters/{id}"
 func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -105,16 +56,8 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		switch clusterId {
 		case "lkc-describe":
 			c.HandleKafkaClusterDescribe(t)(w, r)
-		case "lkc-topics", "lkc-no-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api", "lkc-groups":
+		case "lkc-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api":
 			c.HandleKafkaApiOrRestClusters(t)(w, r)
-		case "lkc-describe-dedicated":
-			c.HandleKafkaClusterDescribeDedicated(t)(w, r)
-		case "lkc-describe-dedicated-pending":
-			c.HandleKafkaClusterDescribeDedicatedPending(t)(w, r)
-		case "lkc-describe-dedicated-with-encryption":
-			c.HandleKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
-		case "lkc-update":
-			c.HandleKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
 			c.HandleKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
@@ -122,15 +65,14 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
-		case "lkc-describe-infinite":
-			c.HandleKafkaClusterDescribeInfinite(t)(w, r)
+		case "lkc-update", "lkc-def963":
+			c.HandleClusterDefaultApiEndpoint(t)(w, r)
 		default:
 			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
 	}
 }
 
-// Handler for GET "api/clusters/
 func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
@@ -144,7 +86,6 @@ func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.Respo
 	}
 }
 
-// Handler for GET "api/clusters/
 func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -165,76 +106,6 @@ func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.Res
 	}
 }
 
-// Handler for GET "/api/clusters/lkc-describe-dedicated"
-func (c *CloudRouter) HandleKafkaClusterDescribeDedicated(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.Cku = 1
-		cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: cluster,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
-
-// Handler for GET "/api/clusters/lkc-describe-dedicated-pending"
-func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedPending(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.Cku = 1
-		cluster.PendingCku = 2
-		cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: cluster,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
-
-// Handler for GET "/api/clusters/lkc-describe-dedicated-with-encryption"
-func (c *CloudRouter) HandleKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.Cku = 1
-		cluster.EncryptionKeyId = "abc123"
-		cluster.Deployment = &schedv1.Deployment{Sku: productv1.Sku_DEDICATED}
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: cluster,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
-
-// Handler for GET "/api/clusters/lkc-describe-infinite
-func (c *CloudRouter) HandleKafkaClusterDescribeInfinite(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		id := vars["id"]
-		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.Storage = -1
-		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: cluster,
-		})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
-
-// Default handler for get, list, delete, describe "api/clusters/{cluster}"
 func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -257,47 +128,24 @@ func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func
 	}
 }
 
-// Handler for GET/PUT "api/clusters/lkc-update"
-func (c *CloudRouter) HandleKafkaClusterUpdateRequest(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Describe client call
-		var out []byte
-		if r.Method == http.MethodGet {
-			id := r.URL.Query().Get("id")
-			cluster := getBaseDescribeCluster(id, "lkc-update")
-			cluster.Status = schedv1.ClusterStatus_UP
-			var err error
-			out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-				Cluster: cluster,
-			})
-			require.NoError(t, err)
+		vars := mux.Vars(r)
+		id := vars["id"]
+		if r.Method == http.MethodDelete {
+			w.WriteHeader(http.StatusNoContent)
+			return
 		}
-		// Update client call
-		if r.Method == http.MethodPut {
-			req := &schedv1.UpdateKafkaClusterRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			if req.Cluster.Cku > 0 {
-				mesg := "cluster expansion is supported for dedicated clusters only"
-				if req.Cluster.Cku == 1 {
-					mesg = "cluster shrink is supported for dedicated clusters only"
-				}
-				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-					Cluster: nil,
-					Error: &corev1.Error{
-						Message: mesg,
-					},
-				})
-			} else {
-				cluster := getBaseDescribeCluster(req.Cluster.Id, req.Cluster.Name)
-				cluster.Status = schedv1.ClusterStatus_UP
-				out, err = utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-					Cluster: cluster,
-				})
-			}
-			require.NoError(t, err)
-		}
-		_, err := io.WriteString(w, string(out))
+		// this is in the body of delete requests
+		require.NotEmpty(t, r.URL.Query().Get("account_id"))
+		// Now return the KafkaCluster with updated ApiEndpoint
+		cluster := getBaseDescribeCluster(id, "kafka-cluster")
+		cluster.ApiEndpoint = "http://kafka-api-url"
+		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
+			Cluster: cluster,
+		})
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
 	}
 }

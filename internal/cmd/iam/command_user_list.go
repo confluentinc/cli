@@ -30,7 +30,7 @@ func (c userCommand) newListCommand() *cobra.Command {
 }
 
 func (c userCommand) list(cmd *cobra.Command, _ []string) error {
-	users, err := c.Client.User.List(context.Background())
+	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return err
 	}
@@ -41,7 +41,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, user := range users {
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: user.ResourceId})
+		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
 			return err
 		}

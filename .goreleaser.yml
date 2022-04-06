@@ -22,9 +22,9 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
     gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     env:
       - CGO_ENABLED=1
       - CC=x86_64-linux-musl-gcc
@@ -42,9 +42,9 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
     gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     env:
       - CGO_ENABLED=1
       - CC=x86_64-w64-mingw32-gcc
@@ -62,9 +62,9 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
     gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     goos:
       - darwin
     goarch:
@@ -86,9 +86,9 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
     gcflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     asmflags:
-      - all=-trimpath={{.Env.GOPATH}}
+      - all=-trimpath={{.Env.HOME}}/git
     goos:
       - darwin
     goarch:

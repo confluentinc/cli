@@ -23,12 +23,19 @@ func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Req
 // Handler for: "/config"
 func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ConfigUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			var req srsdk.ConfigUpdateRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := srsdk.Config{CompatibilityLevel: "FULL"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -249,11 +256,18 @@ func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWrite
 func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		var req srsdk.ConfigUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			var req srsdk.ConfigUpdateRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := srsdk.Config{CompatibilityLevel: "FORWARD"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -265,6 +279,16 @@ func (s *SRRouter) HandleSRSubjectMode(t *testing.T) func(http.ResponseWriter, *
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/compatibility"
+func (c *SRRouter) HandleSRCompatibility(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		res := srsdk.CompatibilityCheckResponse{IsCompatible: true}
+		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}
 }

@@ -32,15 +32,11 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding create.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 	} else {
-		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
 		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
@@ -48,6 +44,8 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 
 	pcmd.AddOutputFlag(cmd)
 

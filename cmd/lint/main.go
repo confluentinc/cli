@@ -34,6 +34,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
+	linter.RequireValidExamples(),
 
 	// Soft Requirements
 	linter.RequireLengthBetween("Short", 10, 60),
@@ -215,6 +216,7 @@ var vocabWords = []string{
 	"producer.config",
 	"protobuf",
 	"rbac",
+	"readonly",
 	"readwrite",
 	"recv",
 	"sasl",

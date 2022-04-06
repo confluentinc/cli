@@ -77,6 +77,14 @@ func DoesPathExist(path string) bool {
 	return !os.IsNotExist(err)
 }
 
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
 		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)

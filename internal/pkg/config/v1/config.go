@@ -24,7 +24,7 @@ const (
 )
 
 var (
-	Version, _      = version.NewVersion("1.0.0")
+	ver, _          = version.NewVersion("1.0.0")
 	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 )
 
@@ -70,10 +70,9 @@ func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
 	}
 }
 
-// NewBaseConfig initializes a new Config object
-func New(params *config.Params) *Config {
+func New() *Config {
 	return &Config{
-		BaseConfig:    config.NewBaseConfig(params, Version),
+		BaseConfig:    config.NewBaseConfig(ver),
 		Platforms:     make(map[string]*Platform),
 		Credentials:   make(map[string]*Credential),
 		Contexts:      make(map[string]*Context),
@@ -85,7 +84,7 @@ func New(params *config.Params) *Config {
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
-	currentVersion := Version
+	currentVersion := ver
 	filename := c.GetFilename()
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -101,7 +100,7 @@ func (c *Config) Load() error {
 	err = json.Unmarshal(input, c)
 	if c.Ver.Compare(currentVersion) < 0 {
 		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
-	} else if c.Ver.Compare(Version) > 0 {
+	} else if c.Ver.Compare(ver) > 0 {
 		if c.Ver.Equal(version.Must(version.NewVersion("3.0.0"))) {
 			// The user is a CP user who downloaded the v2 CLI instead of running `confluent update --major`,
 			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
@@ -136,11 +135,7 @@ func (c *Config) Load() error {
 		}
 		context.KafkaClusterContext.Context = context
 	}
-	err = c.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Validate()
 }
 
 // Save writes the CLI config to disk.

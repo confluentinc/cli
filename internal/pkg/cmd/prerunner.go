@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -64,6 +65,7 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
+	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
@@ -267,6 +269,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.ValidateToken(cmd, command.Config); err != nil {
 			return err
 		}
+
+		if err := r.setV2Clients(command); err != nil {
+			return err
+		}
+
 		return r.setCCloudClient(command)
 	}
 }
@@ -302,7 +309,7 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	token, credentials, err := r.getCCloudTokenAndCredentials(cmd, netrcMachineName, orgResourceId)
+	token, refreshToken, credentials, err := r.getCCloudTokenAndCredentials(cmd, netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -313,7 +320,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	}
 
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, refreshToken, client)
 	if err != nil {
 		return err
 	}
@@ -325,27 +332,25 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, *pauth.Credentials, error) {
+func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, string, *pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
+		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
-		log.CliLogger.Debugf("Prerun login getting credentials failed: %v", err.Error())
-		return "", nil, err
+		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
+		return "", "", nil, err
 	}
 
-	token, _, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
-	if err != nil {
-		return "", nil, err
-	}
+	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
 
-	return token, credentials, err
+	return token, refreshToken, credentials, err
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
@@ -362,7 +367,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
-		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx, cliCmd)
+		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -389,10 +394,25 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (string, string, error) {
+func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+	if ctx == nil {
+		return new(errors.NotLoggedInError)
+	}
+
+	v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
+
+	cliCmd.V2Client = v2Client
+	cliCmd.Context.v2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
+	return nil
+}
+
+func getKafkaRestEndpoint(ctx *DynamicContext) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", "", nil
 	}
+
 	clusterConfig, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
@@ -400,25 +420,26 @@ func getKafkaRestEndpoint(ctx *DynamicContext, cmd *AuthenticatedCLICommand) (st
 	if clusterConfig.RestEndpoint != "" {
 		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
 	}
+
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
 	client := NewContextClient(ctx)
 	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
-		return "", clusterConfig.ID, err
+		return "", "", err
 	}
+
 	// no need to update the config if it's still empty
 	if kafkaCluster.RestEndpoint == "" {
 		return "", clusterConfig.ID, nil
 	}
+
 	// update config to have updated cluster if rest endpoint is no longer ""
-	refreshedClusterConfig := KafkaClusterToKafkaClusterConfig(kafkaCluster)
-	ctx.KafkaClusterContext.AddKafkaClusterConfig(refreshedClusterConfig)
-	err = ctx.Save() //should we fail on this error or log and continue?
-	if err != nil {
-		return "", clusterConfig.ID, err
-	}
-	return kafkaCluster.RestEndpoint, clusterConfig.ID, nil
+	clusterConfig = kafkaClusterToKafkaClusterConfig(kafkaCluster, clusterConfig.APIKeys)
+	ctx.KafkaClusterContext.AddKafkaClusterConfig(clusterConfig)
+	err = ctx.Save()
+
+	return kafkaCluster.RestEndpoint, clusterConfig.ID, err
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
@@ -445,7 +466,7 @@ func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *
 		cfg.Servers[0].URL = baseURL + "/api"
 	}
 	cfg.UserAgent = ver.UserAgent
-
+	cfg.Debug = log.CliLogger.GetLevel() >= log.DEBUG
 	return quotasv2.NewAPIClient(cfg)
 }
 
@@ -541,7 +562,7 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(cmd),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, netrcMachineParams),
 	)
 	if err != nil {
@@ -731,8 +752,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
+			v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, command.Context.State.AuthToken)
+
 			ctx.client = client
 			command.Config.Client = client
+			ctx.v2Client = v2Client
+			command.Config.V2Client = v2Client
 
 			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err

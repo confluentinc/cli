@@ -40,23 +40,23 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
-	example2 := examples.Example{Text: "Create a cluster link, using an API key and secret."}
+	example2 := examples.Example{Text: "Create a cluster link using command line flags."}
 	if c.cfg.IsCloudLogin() {
-		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --config-file config.txt"
+		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt"
 		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
 	} else {
-		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --config-file config.txt"
+		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --config-file config.txt"
 		example2.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
 	}
 	cmd.Example = examples.BuildExampleString(example1, example2)
 
 	// As of now, only CP --> CC links are supported.
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster.")
 		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 	} else {
-		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster.")
 		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 	}
 
 	cmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
@@ -67,7 +67,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
 	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
@@ -82,10 +82,8 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	if c.cfg.IsCloudLogin() {
-		_ = cmd.MarkFlagRequired(sourceBootstrapServerFlagName)
 		_ = cmd.MarkFlagRequired(sourceClusterIdFlagName)
 	} else {
-		_ = cmd.MarkFlagRequired(destinationBootstrapServerFlagName)
 		_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
 	}
 
@@ -140,7 +138,9 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap[bootstrapServersPropertyName] = bootstrapServer
+	if bootstrapServer != "" {
+		configMap[bootstrapServersPropertyName] = bootstrapServer
+	}
 
 	if apiKey != "" && apiSecret != "" {
 		configMap[securityProtocolPropertyName] = "SASL_SSL"

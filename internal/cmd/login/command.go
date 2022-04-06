@@ -22,6 +22,7 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
+	cfg                      *v1.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
 	netrcHandler             netrc.NetrcHandler
@@ -31,13 +32,13 @@ type Command struct {
 	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
-			fmt.Sprintf("You can log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
-			fmt.Sprintf("You can log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+			fmt.Sprintf("Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
+			fmt.Sprintf("Log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
 			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args: cobra.NoArgs,
@@ -48,10 +49,11 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory.")
+	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 
 	c := &Command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
@@ -115,7 +117,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, refreshToken, client)
 	if err != nil {
 		return err
 	}
@@ -140,16 +142,17 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if err != nil {
 		return nil, err
 	}
-
 	if promptOnly {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
+
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
@@ -240,7 +243,7 @@ func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)

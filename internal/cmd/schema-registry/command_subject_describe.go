@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
@@ -8,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -16,18 +18,18 @@ import (
 func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <subject>",
-		Short: "Describe subject versions and compatibility.",
+		Short: "Describe subject versions.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.describe),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Retrieve all versions registered under a given subject and its compatibility level.",
-				Code: fmt.Sprintf("%s schema-registry subject describe <subject-name>", version.CLIName),
+				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
+				Code: fmt.Sprintf("%s schema-registry subject describe payments", version.CLIName),
 			},
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
+	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -42,16 +44,19 @@ func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	return listSubjectVersions(cmd, args[0], srClient, ctx)
+}
 
+func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.APIClient, ctx context.Context) error {
 	deleted, err := cmd.Flags().GetBool("deleted")
 	if err != nil {
 		return err
 	}
 
 	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, _, err := srClient.DefaultApi.ListVersions(ctx, args[0], &listVersionsOpts)
+	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
 	if err != nil {
-		return err
+		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)

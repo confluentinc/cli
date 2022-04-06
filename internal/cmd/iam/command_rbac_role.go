@@ -38,9 +38,7 @@ func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Long:  "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.",
 	}
 
-	c := &roleCommand{
-		cfg: cfg,
-	}
+	c := &roleCommand{cfg: cfg}
 
 	if cfg.IsOnPremLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)

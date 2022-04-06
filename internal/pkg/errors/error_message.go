@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -92,6 +92,10 @@ const (
 	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
 	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
 	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+
+	// iam service-account commands
+	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
+	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
@@ -197,6 +201,10 @@ const (
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg       = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions    = "List available subjects with `confluent schema-registry subject list`.\n" +
+		"List available versions with `confluent schema-registry subject describe`"
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -360,7 +368,7 @@ const (
 	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
-	CCloudBackendErrorPrefix           = "CCloud backend error"
+	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
 	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
@@ -380,6 +388,8 @@ const (
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
+	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
+	InvalidClusterConfigErrorMsg  = "cluster configuration is invalid"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "Internal server error"

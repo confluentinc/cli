@@ -19,7 +19,6 @@ const (
 	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
-	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
 	serviceAccount      = "/api/service_accounts/{id}"
@@ -32,7 +31,6 @@ const (
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	invitations         = "/api/invitations"
-	user                = "/api/users/{id}"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
@@ -77,7 +75,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(sessions, c.HandleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
-	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
+	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
@@ -120,7 +118,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
-	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
 	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }
@@ -139,7 +136,6 @@ func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addClusterRoutes(t *testing.T) {
-	c.HandleFunc(clusters, c.HandleClusters(t))
 	c.HandleFunc(cluster, c.HandleCluster(t))
 }
 

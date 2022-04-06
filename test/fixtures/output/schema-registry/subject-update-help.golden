@@ -1,0 +1,25 @@
+Update subject compatibility or mode.
+
+Usage:
+  confluent schema-registry subject update <subject> [flags]
+
+Examples:
+Update subject level compatibility of subject "payments".
+
+  $ confluent schema-registry subject update payments --compatibility=BACKWARD
+
+Update subject level mode of subject "payments".
+
+  $ confluent schema-registry subject update payments --mode=READWRITE
+
+Flags:
+      --compatibility string   Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.
+      --mode string            Can be READWRITE, READONLY, OR IMPORT.
+      --api-key string         API key.
+      --api-secret string      API key secret.
+      --context string         CLI context name.
+      --environment string     Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

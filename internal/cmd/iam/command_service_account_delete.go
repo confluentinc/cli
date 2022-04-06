@@ -1,9 +1,6 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -34,9 +31,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 
-	user := &orgv1.User{ResourceId: args[0]}
-	if err := c.Client.User.DeleteServiceAccount(context.Background(), user); err != nil {
-		return err
+	_, err := c.V2Client.DeleteIamServiceAccount(args[0])
+	if err != nil {
+		return errors.Errorf(`failed to delete service account "%s": %v`, args[0], err)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedServiceAccountMsg, args[0])

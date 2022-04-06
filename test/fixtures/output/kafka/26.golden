@@ -4,7 +4,7 @@
 | Type          | BASIC                     |
 | Ingress       |                       100 |
 | Egress        |                       100 |
-| Storage       |                       500 |
+| Storage       | 5 TB                      |
 | Provider      | aws                       |
 | Availability  | single-zone               |
 | Region        | us-west-2                 |

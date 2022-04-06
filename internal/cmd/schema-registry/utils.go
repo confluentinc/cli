@@ -16,7 +16,8 @@ import (
 )
 
 const (
-	SubjectUsage = "Subject of the schema."
+	SubjectUsage            = "Subject of the schema."
+	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
 )
 
 func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
@@ -35,7 +36,7 @@ func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *
 	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
 }
 
-func GetAPIClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+func GetSrApiClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil

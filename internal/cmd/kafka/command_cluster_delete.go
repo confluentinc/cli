@@ -1,9 +1,6 @@
 package kafka
 
 import (
-	"context"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,8 +28,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	err := c.Client.Kafka.Delete(context.Background(), req)
+	_, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0])
 	}

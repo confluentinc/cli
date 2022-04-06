@@ -5,12 +5,12 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Type          | BASIC                     |
 | Ingress       |                       100 |
 | Egress        |                       100 |
-| Storage       |                      5000 |
+| Storage       | 5 TB                      |
 | Provider      | aws                       |
 | Availability  | single-zone               |
 | Region        | us-east-1                 |
 | Status        | PROVISIONING              |
 | Endpoint      | SASL_SSL://kafka-endpoint |
-| API Endpoint  | http://127.0.0.1:12345    |
-| REST Endpoint |                           |
+| API Endpoint  | http://kafka-api-url      |
+| REST Endpoint | https://pkc-endpoint      |
 +---------------+---------------------------+

@@ -3,17 +3,18 @@ package errors
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
-
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/hashicorp/go-multierror"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -85,11 +86,8 @@ func catchMDSErrors(err error) error {
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
 func catchCoreV1Errors(err error) error {
-	e, ok := err.(*corev1.Error)
-	if ok {
-		var result error
-		result = multierror.Append(result, e)
-		return Wrap(result, CCloudBackendErrorPrefix)
+	if err, ok := err.(*corev1.Error); ok {
+		return Wrap(err, CCloudBackendErrorPrefix)
 	}
 	return err
 }
@@ -145,6 +143,10 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
+func CatchEnvironmentNotFoundError(err error, envId string) error {
+	return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+}
+
 func CatchKafkaNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
@@ -153,6 +155,14 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+}
+
+func CatchConfigurationNotValidError(err error, r *http.Response) error {
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "CKU must be greater") {
+		return New(InvalidCkuErrorMsg)
+	}
+	return err
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
@@ -164,6 +174,30 @@ func CatchKSQLNotFoundError(err error, clusterId string) error {
 		return NewErrorWithSuggestions(errorMsg, KSQLNotFoundSuggestions)
 	}
 	return err
+}
+
+func CatchServiceNameInUseError(err error, r *http.Response, serviceName string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service name is already in use") {
+		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
+		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+	}
+	return err
+}
+
+func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
+	if err == nil {
+		return nil
+	}
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Service Account Not Found") {
+		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+	}
+	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 }
 
 /*
@@ -229,6 +263,26 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
 		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
+	}
+	return err
+}
+
+func CatchSchemaNotFoundError(err error, resp *http.Response) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(resp.Status, "Not Found") {
+		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
+	}
+	return err
+}
+
+func CatchNoSubjectLevelConfigError(err error, resp *http.Response, subject string) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(resp.Status, "Not Found") {
+		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
 	}
 	return err
 }

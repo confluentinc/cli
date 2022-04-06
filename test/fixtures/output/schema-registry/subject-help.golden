@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry subject [command]
 
 Available Commands:
-  describe    Describe subject versions and compatibility.
+  describe    Describe subject versions.
   list        List subjects.
   update      Update subject compatibility or mode.
 

@@ -12,6 +12,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -34,6 +35,10 @@ var (
 		"prod": {
 			ssoProviderDomain:     "login.confluent.io",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+		},
+		"test": {
+			ssoProviderDomain:     "test.com",
+			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
 		},
 	}
 )
@@ -77,6 +82,8 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if authURL == testserver.TestCloudURL.String() {
+		env = "test"
 	} else {
 		return nil, fmt.Errorf("unrecognized auth url: %s", authURL)
 	}

@@ -28,10 +28,10 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ssl-verification --ca-location ca-cert --cert-location client.pem --key-location client.key`},
+				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
-				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091"`},
+				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
 		),
 	}
 
@@ -85,7 +85,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
-		srClient, ctx, err = sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
 			return err
 		}

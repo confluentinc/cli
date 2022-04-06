@@ -9,6 +9,9 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -147,11 +150,12 @@ var (
 )
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
 	return err
 }
 
-func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
+func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
 	return &schedv1.KafkaCluster{
 		Id:              id,
 		Name:            name,
@@ -167,7 +171,48 @@ func getBaseDescribeCluster(id string, name string) *schedv1.KafkaCluster {
 	}
 }
 
-func buildUser(id int32, email string, firstName string, lastName string, resourceId string) *orgv1.User {
+func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+		},
+	}
+}
+
+func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName: cmkv2.PtrString(name),
+			Cloud:       cmkv2.PtrString("aws"),
+			Region:      cmkv2.PtrString("us-west-2"),
+			Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
+				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
+			},
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+		},
+		Id: cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{
+			Phase: "PROVISIONED",
+			Cku:   cmkv2.PtrInt32(cku),
+		},
+	}
+}
+
+func buildUser(id int32, email, firstName, lastName, resourceId string) *orgv1.User {
 	return &orgv1.User{
 		Id:             id,
 		Email:          email,
@@ -180,6 +225,14 @@ func buildUser(id int32, email string, firstName string, lastName string, resour
 	}
 }
 
+func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
+	return iamv2.IamV2User{
+		Email:    iamv2.PtrString(email),
+		FullName: iamv2.PtrString(name),
+		Id:       iamv2.PtrString(resourceId),
+	}
+}
+
 func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	return &orgv1.Invitation{
 		Id:             id,
@@ -189,11 +242,20 @@ func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	}
 }
 
-func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) (bool, *orgv1.Account) {
+func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) *orgv1.Account {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
-			return true, env
+			return env
 		}
 	}
-	return false, nil
+	return nil
+}
+
+func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) *orgv2.OrgV2Environment {
+	for _, env := range environments {
+		if reqEnvId == *env.Id {
+			return env
+		}
+	}
+	return nil
 }
