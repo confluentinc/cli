@@ -5,7 +5,7 @@ Usage:
 Flags:
       --role string               REQUIRED: Role name of the existing role binding.
       --principal string          REQUIRED: Qualified principal name associated with the role binding.
-      --environment string        Environment ID for scope of role-binding delete.
+      --environment string        Environment ID for scope of role-binding operation.
       --current-env               Use current environment ID for scope.
       --cloud-cluster string      Cloud cluster ID for the role binding.
       --kafka-cluster-id string   Kafka cluster ID for the role binding.
