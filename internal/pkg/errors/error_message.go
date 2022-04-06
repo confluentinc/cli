@@ -201,6 +201,10 @@ const (
 	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
 	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg       = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions    = "List available subjects with `confluent schema-registry subject list`.\n" +
+		"List available versions with `confluent schema-registry subject describe`"
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

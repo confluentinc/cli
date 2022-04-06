@@ -14,13 +14,13 @@ import (
 
 const clusterType = "schema-registry-cluster"
 
-func (c *clusterCommand) newListCommand() *cobra.Command {
+func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List registered Schema Registry clusters.",
 		Long:        "List Schema Registry clusters that are registered with the MDS cluster registry.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.list),
+		RunE:        pcmd.NewCLIRunE(c.onPremList),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -30,7 +30,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
 	opts := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 

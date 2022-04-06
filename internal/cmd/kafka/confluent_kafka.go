@@ -20,6 +20,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -347,7 +348,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
 	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
 	var references []srsdk.SchemaReference
-	if !fileExists(tempStorePath) || !fileExists(tempRefStorePath) {
+	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
 		getSchemaOpts := srsdk.GetSchemaOpts{
 			Subject: optional.NewString(h.Subject),
@@ -382,7 +383,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := storeSchemaReferences(references, h.SrClient, h.Ctx)
+	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
 	if err != nil {
 		return "", nil, err
 	}

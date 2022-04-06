@@ -8,36 +8,27 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-type clusterCommand struct {
+type compatibilityCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	srClient *srsdk.APIClient
 }
 
-func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func newCompatibilityCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "cluster",
+		Use:         "compatibility",
+		Short:       "Validate schema compatibility.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.Short = "Manage Schema Registry cluster."
-		cmd.Long = "Manage the Schema Registry cluster for the current environment."
-	} else {
-		cmd.Short = "Manage Schema Registry clusters."
-	}
-
-	c := &clusterCommand{srClient: srClient}
+	c := &compatibilityCommand{srClient: srClient}
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AddCommand(c.newValidateCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AddCommand(c.newValidateCommandOnPrem())
 	}
 
-	c.AddCommand(c.newDescribeCommand(cfg))
-	c.AddCommand(c.newEnableCommand(cfg))
-	c.AddCommand(c.newListCommandOnPrem())
-	c.AddCommand(c.newUpdateCommand(cfg))
-
-	return c.Command
+	return cmd
 }

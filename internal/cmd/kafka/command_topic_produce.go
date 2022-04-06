@@ -79,7 +79,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	refs, err := readSchemaRefs(cmd)
+	refs, err := sr.ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}
@@ -243,12 +243,12 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			}
 		}
 
-		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		info, err := sr.RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
 		metaInfo = info
-		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
