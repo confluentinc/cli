@@ -54,6 +54,8 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
 		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
+		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID for source initiated cluster links.")
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key bootstrap.servers.")
 	} else {
 		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
 		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
@@ -93,24 +95,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	var bootstrapServer string
-	var err error
-	if c.cfg.IsCloudLogin() {
-		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
-	} else {
-		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
-	}
-	if err != nil {
-		return err
-	}
-
 	var sourceClusterId string
 	var destinationClusterId string
-	if c.cfg.IsCloudLogin() {
-		sourceClusterId, err = cmd.Flags().GetString(sourceClusterIdFlagName)
-	} else {
-		destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
-	}
+	var bootstrapServer string
+	var err error
+	sourceClusterId, destinationClusterId, bootstrapServer, err = c.getClusterIdsAndBootstrapServer(cmd)
 	if err != nil {
 		return err
 	}
@@ -156,9 +145,9 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if c.cfg.IsCloudLogin() {
+	if sourceClusterId != "" {
 		data.SourceClusterId = sourceClusterId
-	} else {
+	} else if destinationClusterId != "" {
 		data.DestinationClusterId = destinationClusterId
 	}
 
@@ -170,4 +159,43 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
 	return nil
+}
+
+func (c *linkCommand) getClusterIdsAndBootstrapServer(cmd *cobra.Command) (string, string, string, error) {
+	var sourceClusterId string
+	var destinationClusterId string
+	var bootstrapServer string
+	var err error
+	if c.cfg.IsCloudLogin() {
+		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
+		if err != nil {
+			return "", "", "", err
+		}
+		if bootstrapServer == "" {
+			bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
+			if err != nil {
+				return "", "", "", err
+			}
+		}
+		sourceClusterId, err = cmd.Flags().GetString(sourceClusterIdFlagName)
+		if err != nil {
+			return "", "", "", err
+		}
+		if sourceClusterId == "" {
+			destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+			if err != nil {
+				return "", "", "", err
+			}
+		}
+	} else {
+		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
+		if err != nil {
+			return "", "", "", err
+		}
+		destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+		if err != nil {
+			return "", "", "", err
+		}
+	}
+	return sourceClusterId, destinationClusterId, bootstrapServer, nil
 }
