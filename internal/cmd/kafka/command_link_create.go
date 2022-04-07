@@ -14,6 +14,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type remoteMetadataLocation int
+
+const (
+	Source remoteMetadataLocation = iota
+	Destination
+	Unknown
+)
+
 const (
 	sourceApiKeyFlagName               = "source-api-key"
 	sourceApiSecretFlagName            = "source-api-secret"
@@ -145,9 +153,9 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if remoteClusterMetadata.isSource && remoteClusterMetadata.remoteClusterId != "" {
+	if remoteClusterMetadata.location == Source && remoteClusterMetadata.remoteClusterId != "" {
 		data.SourceClusterId = remoteClusterMetadata.remoteClusterId
-	} else if !remoteClusterMetadata.isSource && remoteClusterMetadata.remoteClusterId != "" {
+	} else if remoteClusterMetadata.location == Destination && remoteClusterMetadata.remoteClusterId != "" {
 		data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
 	}
 
@@ -161,31 +169,15 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+type remoteClusterMetadata struct {
+	remoteClusterId string
+	bootstrapServer string
+	location        remoteMetadataLocation
+}
+
 func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command) (*remoteClusterMetadata, error) {
 	if c.cfg.IsCloudLogin() {
-		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
-		if err != nil {
-			return nil, err
-		}
-		if bootstrapServer != "" {
-			// Source
-			sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
-			if err != nil {
-				return nil, err
-			}
-			return &remoteClusterMetadata{sourceClusterId, bootstrapServer, true}, nil
-		} else {
-			// Maybe dest
-			bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
-			if err != nil {
-				return nil, err
-			}
-			destinationClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
-			if err != nil {
-				return nil, err
-			}
-			return &remoteClusterMetadata{destinationClusterId, bootstrapServer, false}, nil
-		}
+		return c.getCloudRemoteClusterMetadata(cmd)
 	} else {
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
@@ -195,14 +187,57 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command) (*remoteClust
 		if err != nil {
 			return nil, err
 		}
-		return &remoteClusterMetadata{destinationClusterId, bootstrapServer, false}, nil
+		return &remoteClusterMetadata{destinationClusterId, bootstrapServer, Destination}, nil
 	}
 }
 
-type remoteClusterMetadata struct {
-	remoteClusterId string
-	bootstrapServer string
-	isSource        bool
+func (c *linkCommand) getCloudRemoteClusterMetadata(cmd *cobra.Command) (*remoteClusterMetadata, error) {
+	location := Unknown
+	bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
+	if err != nil {
+		return nil, err
+	}
+	if bootstrapServer != "" {
+		location = Source
+	} else {
+		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if bootstrapServer != "" {
+		location = Destination
+	}
+	if location == Source {
+		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
+		if err != nil {
+			return nil, err
+		}
+		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
+	} else if location == Destination {
+		remoteClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
+		if err != nil {
+			return nil, err
+		}
+		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
+	} else {
+		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
+		if err != nil {
+			return nil, err
+		}
+		if remoteClusterId != "" {
+			location = Source
+		} else {
+			remoteClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+		}
+		if err != nil {
+			return nil, err
+		}
+		if remoteClusterId != "" {
+			location = Destination
+		}
+		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
+	}
 }
 
 func (c *linkCommand) apiKeyAndSecret(cmd *cobra.Command) (string, string, error) {
