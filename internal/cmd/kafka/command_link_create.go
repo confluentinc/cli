@@ -103,11 +103,8 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	var sourceClusterId string
-	var destinationClusterId string
-	var bootstrapServer string
 	var err error
-	sourceClusterId, destinationClusterId, bootstrapServer, err = c.clusterIdsAndBootstrapServer(cmd)
+	remoteClusterMetadata, err := c.getRemoteClusterMetadata(cmd)
 	if err != nil {
 		return err
 	}
@@ -130,8 +127,8 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if bootstrapServer != "" {
-		configMap[bootstrapServersPropertyName] = bootstrapServer
+	if remoteClusterMetadata.bootstrapServer != "" {
+		configMap[bootstrapServersPropertyName] = remoteClusterMetadata.bootstrapServer
 	}
 
 	if apiKey != "" && apiSecret != "" {
@@ -148,10 +145,10 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if sourceClusterId != "" {
-		data.SourceClusterId = sourceClusterId
-	} else if destinationClusterId != "" {
-		data.DestinationClusterId = destinationClusterId
+	if remoteClusterMetadata.isSource && remoteClusterMetadata.remoteClusterId != "" {
+		data.SourceClusterId = remoteClusterMetadata.remoteClusterId
+	} else if !remoteClusterMetadata.isSource && remoteClusterMetadata.remoteClusterId != "" {
+		data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
 	}
 
 	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
@@ -164,70 +161,80 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *linkCommand) clusterIdsAndBootstrapServer(cmd *cobra.Command) (string, string, string, error) {
-	var sourceClusterId string
-	var destinationClusterId string
-	var bootstrapServer string
-	var err error
+func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command) (*remoteClusterMetadata, error) {
 	if c.cfg.IsCloudLogin() {
-		bootstrapServer, err = cmd.Flags().GetString(sourceBootstrapServerFlagName)
+		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 		if err != nil {
-			return "", "", "", err
+			return nil, err
 		}
-		if bootstrapServer == "" {
+		if bootstrapServer != "" {
+			// Source
+			sourceClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
+			if err != nil {
+				return nil, err
+			}
+			return &remoteClusterMetadata{sourceClusterId, bootstrapServer, true}, nil
+		} else {
+			// Maybe dest
 			bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
 			if err != nil {
-				return "", "", "", err
+				return nil, err
 			}
-		}
-		sourceClusterId, err = cmd.Flags().GetString(sourceClusterIdFlagName)
-		if err != nil {
-			return "", "", "", err
-		}
-		if sourceClusterId == "" {
-			destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+			destinationClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
 			if err != nil {
-				return "", "", "", err
+				return nil, err
 			}
+			return &remoteClusterMetadata{destinationClusterId, bootstrapServer, false}, nil
 		}
 	} else {
-		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
+		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
-			return "", "", "", err
+			return nil, err
 		}
-		destinationClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
+		destinationClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
 		if err != nil {
-			return "", "", "", err
+			return nil, err
 		}
+		return &remoteClusterMetadata{destinationClusterId, bootstrapServer, false}, nil
 	}
-	return sourceClusterId, destinationClusterId, bootstrapServer, nil
+}
+
+type remoteClusterMetadata struct {
+	remoteClusterId string
+	bootstrapServer string
+	isSource        bool
 }
 
 func (c *linkCommand) apiKeyAndSecret(cmd *cobra.Command) (string, string, error) {
 	var err error
 
 	var apiKey string
+	var apiSecret string
 	apiKey, err = cmd.Flags().GetString(sourceApiKeyFlagName)
 	if err != nil {
 		return "", "", err
 	}
-	if apiKey == "" {
+	if apiKey != "" {
+		// Source
+		apiSecret, err = cmd.Flags().GetString(sourceApiSecretFlagName)
+		if err != nil {
+			return "", "", nil
+		}
+		return apiKey, apiSecret, nil
+	} else {
+		// Maybe dest
 		apiKey, err = cmd.Flags().GetString(destinationApiKeyFlagName)
-	}
-	if err != nil {
-		return "", "", err
-	}
-
-	var apiSecret string
-	apiSecret, err = cmd.Flags().GetString(sourceApiSecretFlagName)
-	if err != nil {
-		return "", "", err
-	}
-	if apiSecret == "" {
+		if err != nil {
+			return "", "", err
+		}
+		if apiKey == "" {
+			// No key provided.
+			return "", "", nil
+		}
 		apiSecret, err = cmd.Flags().GetString(destinationApiSecretFlagName)
+		if err != nil {
+			return "", "", err
+		}
+		return apiKey, apiSecret, nil
 	}
-	if err != nil {
-		return "", "", err
-	}
-	return apiKey, apiSecret, nil
 }
