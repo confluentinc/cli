@@ -71,12 +71,12 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
-	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for connecting to the destination cluster. "+
+	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. "+
 		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the destination cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
-	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for connecting to the destination cluster. "+
-		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the destination cluster authentication. "+
+	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. "+
+		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
