@@ -200,13 +200,14 @@ func (c *linkCommand) getCloudRemoteClusterMetadata(cmd *cobra.Command) (*remote
 	if bootstrapServer != "" {
 		location = Source
 	} else {
+		// Try dest arg
 		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
-	}
-	if err != nil {
-		return nil, err
-	}
-	if bootstrapServer != "" {
-		location = Destination
+		if err != nil {
+			return nil, err
+		}
+		if bootstrapServer != "" {
+			location = Destination
+		}
 	}
 	if location == Source {
 		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
@@ -228,13 +229,14 @@ func (c *linkCommand) getCloudRemoteClusterMetadata(cmd *cobra.Command) (*remote
 		if remoteClusterId != "" {
 			location = Source
 		} else {
+			// Try dest arg
 			remoteClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
-		}
-		if err != nil {
-			return nil, err
-		}
-		if remoteClusterId != "" {
-			location = Destination
+			if err != nil {
+				return nil, err
+			}
+			if remoteClusterId != "" {
+				location = Destination
+			}
 		}
 		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
 	}
