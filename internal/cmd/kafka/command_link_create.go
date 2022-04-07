@@ -15,8 +15,10 @@ import (
 )
 
 const (
-	apiKeyFlagName                     = "source-api-key"
-	apiSecretFlagName                  = "source-api-secret"
+	sourceApiKeyFlagName               = "source-api-key"
+	sourceApiSecretFlagName            = "source-api-secret"
+	destinationApiKeyFlagName          = "destination-api-key"
+	destinationApiSecretFlagName       = "destination-api-secret"
 	destinationBootstrapServerFlagName = "destination-bootstrap-server"
 	destinationClusterIdFlagName       = "destination-cluster-id"
 	noValidateFlagName                 = "no-validate"
@@ -61,12 +63,20 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 	}
 
-	cmd.Flags().String(apiKeyFlagName, "", "An API key for the source cluster. "+
+	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. "+
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
-	cmd.Flags().String(apiSecretFlagName, "", "An API secret for the source cluster. "+
+	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. "+
 		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
+		"and add the security configs in the config file.")
+	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for connecting to the destination cluster. "+
+		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the destination cluster authentication. "+
+		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
+		"and add the security configs in the config file.")
+	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for connecting to the destination cluster. "+
+		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the destination cluster authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
@@ -97,7 +107,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	var destinationClusterId string
 	var bootstrapServer string
 	var err error
-	sourceClusterId, destinationClusterId, bootstrapServer, err = c.getClusterIdsAndBootstrapServer(cmd)
+	sourceClusterId, destinationClusterId, bootstrapServer, err = c.clusterIdsAndBootstrapServer(cmd)
 	if err != nil {
 		return err
 	}
@@ -115,12 +125,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	apiKey, err := cmd.Flags().GetString(apiKeyFlagName)
-	if err != nil {
-		return err
-	}
-
-	apiSecret, err := cmd.Flags().GetString(apiSecretFlagName)
+	apiKey, apiSecret, err := c.apiKeyAndSecret(cmd)
 	if err != nil {
 		return err
 	}
@@ -159,7 +164,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *linkCommand) getClusterIdsAndBootstrapServer(cmd *cobra.Command) (string, string, string, error) {
+func (c *linkCommand) clusterIdsAndBootstrapServer(cmd *cobra.Command) (string, string, string, error) {
 	var sourceClusterId string
 	var destinationClusterId string
 	var bootstrapServer string
@@ -196,4 +201,33 @@ func (c *linkCommand) getClusterIdsAndBootstrapServer(cmd *cobra.Command) (strin
 		}
 	}
 	return sourceClusterId, destinationClusterId, bootstrapServer, nil
+}
+
+func (c *linkCommand) apiKeyAndSecret(cmd *cobra.Command) (string, string, error) {
+	var err error
+
+	var apiKey string
+	apiKey, err = cmd.Flags().GetString(sourceApiKeyFlagName)
+	if err != nil {
+		return "", "", err
+	}
+	if apiKey == "" {
+		apiKey, err = cmd.Flags().GetString(destinationApiKeyFlagName)
+	}
+	if err != nil {
+		return "", "", err
+	}
+
+	var apiSecret string
+	apiSecret, err = cmd.Flags().GetString(sourceApiSecretFlagName)
+	if err != nil {
+		return "", "", err
+	}
+	if apiSecret == "" {
+		apiSecret, err = cmd.Flags().GetString(destinationApiSecretFlagName)
+	}
+	if err != nil {
+		return "", "", err
+	}
+	return apiKey, apiSecret, nil
 }
