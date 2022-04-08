@@ -125,10 +125,12 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	configMapAndLinkMode, err := c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
+	configMap := configMapAndLinkMode.configMap
+	linkMode := configMapAndLinkMode.linkMode
 
 	if !c.cfg.IsCloudLogin() {
 		// On prem we only support source initiated links currently.
@@ -177,14 +179,14 @@ func getJaasValue(apiKey string, apiSecret string) string {
 	return fmt.Sprintf(jaasConfigPrefix+` username="%s" password="%s";`, apiKey, apiSecret)
 }
 
-func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {
+func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (*configMapAndLinkMode, error) {
 	configMap := make(map[string]string)
 	var err error
 	var linkMode linkMode
 	if configFile != "" {
 		configMap, err = properties.FileToMap(configFile)
 		if err != nil {
-			return nil, linkMode, err
+			return nil, err
 		}
 		linkModeStr, ok := configMap["link.mode"]
 		if !ok {
@@ -195,13 +197,18 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 		} else if linkModeStr == "SOURCE" {
 			linkMode = Source
 		} else {
-			return nil, linkMode, errors.Errorf("Unrecognized link.mode %s. Use DESTINATION or SOURCE.", linkModeStr)
+			return nil, errors.Errorf("Unrecognized link.mode %s. Use DESTINATION or SOURCE.", linkModeStr)
 		}
 	} else {
 		// Default is destination if no config file is provided.
 		linkMode = Destination
 	}
-	return configMap, linkMode, nil
+	return &configMapAndLinkMode{configMap, linkMode}, nil
+}
+
+type configMapAndLinkMode struct {
+	configMap map[string]string
+	linkMode  linkMode
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMode, configMap map[string]string) error {
