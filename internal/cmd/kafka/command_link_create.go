@@ -144,8 +144,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	err = c.addSecurityConfigToMap(cmd, linkMode, configMap)
-	if err != nil {
+	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
 		return err
 	}
 
