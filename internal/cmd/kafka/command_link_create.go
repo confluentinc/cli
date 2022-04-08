@@ -125,9 +125,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var configMap map[string]string
-	var linkMode linkMode
-	configMap, linkMode, err = c.getConfigMapAndLinkMode(configFile)
+	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
@@ -190,15 +188,17 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 		}
 		linkModeStr, ok := configMap["link.mode"]
 		if !ok {
+			// Default is destination if no config value is provided.
 			linkMode = Destination
 		} else if linkModeStr == "DESTINATION" {
 			linkMode = Destination
 		} else if linkModeStr == "SOURCE" {
 			linkMode = Source
 		} else {
-			return nil, linkMode, errors.Errorf("Unrecognized link.mode %s", linkModeStr)
+			return nil, linkMode, errors.Errorf("Unrecognized link.mode %s. Use DESTINATION or SOURCE.", linkModeStr)
 		}
 	} else {
+		// Default is destination if no config file is provided.
 		linkMode = Destination
 	}
 	return configMap, linkMode, nil
@@ -215,10 +215,12 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 	}
 	if sourceApiKey != "" && sourceApiSecret != "" {
 		if linkMode == Destination {
+			// For destination initiated links, the credentials are for the remote cluster.
 			configMap[securityProtocolPropertyName] = saslSsl
 			configMap[saslMechanismPropertyName] = plain
 			configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 		} else {
+			// For source initiated links, the credentials are for the local cluster.
 			configMap[localSecurityProtocolPropertyName] = saslSsl
 			configMap[localSaslMechanismPropertyName] = plain
 			configMap[localSaslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
@@ -237,6 +239,7 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 			return err
 		}
 		if destinationApiKey != "" && destinationApiSecret != "" {
+			// For source initiated links, the credentials are for the remote cluster.
 			configMap[securityProtocolPropertyName] = saslSsl
 			configMap[saslMechanismPropertyName] = plain
 			configMap[saslJaasConfigPropertyName] = getJaasValue(destinationApiKey, destinationApiSecret)
@@ -254,7 +257,7 @@ type remoteClusterMetadata struct {
 
 func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode linkMode) (*remoteClusterMetadata, error) {
 	if linkMode == Destination {
-		// Destination mode so look for source info.
+		// For destination initiated links, look for the source bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 		if err != nil {
 			return nil, err
@@ -265,6 +268,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode link
 		}
 		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
 	} else {
+		// For source initiated links, look for the destination bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
 			return nil, err
