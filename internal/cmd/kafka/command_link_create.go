@@ -2,10 +2,10 @@ package kafka
 
 import (
 	"fmt"
-
 	"github.com/antihax/optional"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -197,9 +197,9 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (*configMapAndL
 		if !ok {
 			// Default is destination if no config value is provided.
 			linkMode = Destination
-		} else if linkModeStr == "DESTINATION" {
+		} else if strings.EqualFold(linkModeStr, "DESTINATION") {
 			linkMode = Destination
-		} else if linkModeStr == "SOURCE" {
+		} else if strings.EqualFold(linkModeStr, "SOURCE") {
 			linkMode = Source
 		} else {
 			return nil, errors.Errorf("Unrecognized link.mode %s. Use DESTINATION or SOURCE.", linkModeStr)
