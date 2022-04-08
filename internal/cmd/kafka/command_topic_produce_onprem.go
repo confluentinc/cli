@@ -40,11 +40,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().String("configs", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -55,12 +56,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
-	configMap, err := getOnPremProducerConfigMap(cmd, c.clientID)
+	configPath, err := cmd.Flags().GetString("configs")
 	if err != nil {
 		return err
 	}
 
-	producer, err := ckafka.NewProducer(configMap)
+	producer, err := NewOnPremProducer(cmd, c.clientID, configPath)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}

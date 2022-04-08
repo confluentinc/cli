@@ -38,6 +38,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	cmd.Flags().String("configs", "", "The path to the configuration file.")
 	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
@@ -83,6 +84,35 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	configPath, err := cmd.Flags().GetString("configs")
+	if err != nil {
+		return err
+	}
+
+	consumer, err := NewConsumer(group, cluster, c.clientID, beginning, configPath)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+	}
+	log.CliLogger.Trace("Create consumer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = c.validateTopic(adminClient, topic, cluster)
+	if err != nil {
+		return err
+	}
+
+	err = consumer.Subscribe(topic, nil)
+	if err != nil {
+		return err
+	}
+
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
@@ -105,36 +135,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
-	}
-	log.CliLogger.Trace("Create consumer succeeded")
-
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
-	}
-	defer adminClient.Close()
-
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
-		return err
-	}
-
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
-
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
 			return err
 		}
-	}
-
-	err = consumer.Subscribe(topic, nil)
-	if err != nil {
-		return err
 	}
 
 	subject := topicNameStrategy(topic)

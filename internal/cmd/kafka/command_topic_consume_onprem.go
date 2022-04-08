@@ -40,9 +40,10 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().String("configs", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -68,30 +69,12 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	configMap, err := getOnPremConsumerConfigMap(cmd, c.clientID)
+	configPath, err := cmd.Flags().GetString("configs")
 	if err != nil {
 		return err
 	}
-	consumerGroup, err := configMap.Get("group.id", "")
-	if err != nil {
-		return err
-	}
-	log.CliLogger.Debugf("Created consumer group: %s", consumerGroup)
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
-	if valueFormat != "string" {
-		// Only initialize client and context when schema is specified.
-		if c.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
-		}
-		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
-		if err != nil {
-			return err
-		}
-	}
-
-	consumer, err := ckafka.NewConsumer(configMap)
+	consumer, err := NewOnPremConsumer(cmd, c.clientID, configPath)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
@@ -120,6 +103,19 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+		// Only initialize client and context when schema is specified.
+		if c.State == nil { // require log-in to use oauthbearer token
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
+		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		if err != nil {
+			return err
+		}
+	}
 
 	dir := filepath.Join(os.TempDir(), "confluent-schema")
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
