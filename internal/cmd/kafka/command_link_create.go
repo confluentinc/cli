@@ -2,11 +2,11 @@ package kafka
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
-	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
