@@ -14,12 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type remoteMetadataLocation int
+type linkMode int
 
 const (
-	Source remoteMetadataLocation = iota
+	Source linkMode = iota
 	Destination
-	Unknown
 )
 
 const (
@@ -112,25 +111,58 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	var err error
-	remoteClusterMetadata, err := c.getRemoteClusterMetadata(cmd)
-	if err != nil {
-		return err
-	}
-
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
 	}
 
-	configMap := make(map[string]string)
-	if configFile != "" {
-		configMap, err = properties.FileToMap(configFile)
+	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	if err != nil {
+		return err
+	}
+
+	sourceApiKey, err := cmd.Flags().GetString(sourceApiKeyFlagName)
+	if err != nil {
+		return err
+	}
+	sourceApiSecret, err := cmd.Flags().GetString(sourceApiSecretFlagName)
+	if err != nil {
+		return err
+	}
+	if linkMode == Destination {
+		if sourceApiSecret != "" && sourceApiKey != "" {
+			configMap[securityProtocolPropertyName] = "SASL_SSL"
+			configMap[saslMechanismPropertyName] = "PLAIN"
+			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
+		} else if sourceApiKey != "" || sourceApiSecret != "" {
+			return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		}
+	} else {
+		if sourceApiSecret != "" && sourceApiKey != "" {
+			configMap["local.security.protocol"] = "SASL_SSL"
+			configMap["local.sasl.mechanism"] = "PLAIN"
+			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
+		} else if sourceApiKey != "" || sourceApiSecret != "" {
+			return errors.New("--source-api-key and --source-api-secret must be supplied together")
+		}
+		destinationApiKey, err := cmd.Flags().GetString(destinationApiKeyFlagName)
 		if err != nil {
 			return err
 		}
+		destinationApiSecret, err := cmd.Flags().GetString(destinationApiSecretFlagName)
+		if err != nil {
+			return err
+		}
+		if destinationApiKey != "" && destinationApiSecret != "" {
+			configMap[securityProtocolPropertyName] = "SASL_SSL"
+			configMap[saslMechanismPropertyName] = "PLAIN"
+			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, destinationApiKey, destinationApiSecret)
+		} else if destinationApiKey != "" || destinationApiSecret != "" {
+			return errors.New("--destination-api-key and --destination-api-secret must be supplied together")
+		}
 	}
 
-	apiKey, apiSecret, err := c.apiKeyAndSecret(cmd)
+	remoteClusterMetadata, err := c.getRemoteClusterMetadata(cmd, linkMode)
 	if err != nil {
 		return err
 	}
@@ -139,27 +171,19 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		configMap[bootstrapServersPropertyName] = remoteClusterMetadata.bootstrapServer
 	}
 
-	if apiKey != "" && apiSecret != "" {
-		configMap[securityProtocolPropertyName] = "SASL_SSL"
-		configMap[saslMechanismPropertyName] = "PLAIN"
-		configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, apiKey, apiSecret)
-	} else if apiKey != "" || apiSecret != "" {
-		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
+	if linkMode == Destination && remoteClusterMetadata.remoteClusterId != "" {
+		data.SourceClusterId = remoteClusterMetadata.remoteClusterId
+	} else if remoteClusterMetadata.remoteClusterId != "" {
+		data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
 	}
+
+	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
 
 	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
 		return err
 	}
-
-	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if remoteClusterMetadata.location == Source && remoteClusterMetadata.remoteClusterId != "" {
-		data.SourceClusterId = remoteClusterMetadata.remoteClusterId
-	} else if remoteClusterMetadata.location == Destination && remoteClusterMetadata.remoteClusterId != "" {
-		data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
-	}
-
-	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
 
 	if httpResp, err := client.ClusterLinkingV3Api.CreateKafkaLink(ctx, clusterId, linkName, opts); err != nil {
 		return handleOpenApiError(httpResp, err, client)
@@ -169,109 +193,56 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {
+	configMap := make(map[string]string)
+	var linkMode linkMode
+	if configFile != "" {
+		configMap, err := properties.FileToMap(configFile)
+		if err != nil {
+			return nil, linkMode, err
+		}
+		linkModeStr, ok := configMap["link.mode"]
+		if !ok {
+			linkMode = Destination
+		} else if linkModeStr == "DESTINATION" {
+			linkMode = Destination
+		} else if linkModeStr == "SOURCE" {
+			linkMode = Source
+		} else {
+			return nil, linkMode, errors.Errorf("Unrecognized link.mode %s", linkModeStr)
+		}
+	} else {
+		linkMode = Destination
+	}
+	return configMap, linkMode, nil
+}
+
 type remoteClusterMetadata struct {
 	remoteClusterId string
 	bootstrapServer string
-	location        remoteMetadataLocation
 }
 
-func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command) (*remoteClusterMetadata, error) {
-	if c.cfg.IsCloudLogin() {
-		return c.getCloudRemoteClusterMetadata(cmd)
+func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode linkMode) (*remoteClusterMetadata, error) {
+	if linkMode == Destination {
+		// Destination mode so look for source info.
+		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
+		if err != nil {
+			return nil, err
+		}
+		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
+		if err != nil {
+			return nil, err
+		}
+		return &remoteClusterMetadata{bootstrapServer, remoteClusterId}, nil
 	} else {
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
 			return nil, err
 		}
-		destinationClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
-		if err != nil {
-			return nil, err
-		}
-		return &remoteClusterMetadata{destinationClusterId, bootstrapServer, Destination}, nil
-	}
-}
-
-func (c *linkCommand) getCloudRemoteClusterMetadata(cmd *cobra.Command) (*remoteClusterMetadata, error) {
-	location := Unknown
-	bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
-	if err != nil {
-		return nil, err
-	}
-	if bootstrapServer != "" {
-		location = Source
-	} else {
-		// Try dest arg
-		bootstrapServer, err = cmd.Flags().GetString(destinationBootstrapServerFlagName)
-		if err != nil {
-			return nil, err
-		}
-		if bootstrapServer != "" {
-			location = Destination
-		}
-	}
-	if location == Source {
-		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
-		if err != nil {
-			return nil, err
-		}
-		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
-	} else if location == Destination {
 		remoteClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
 		if err != nil {
 			return nil, err
 		}
-		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
-	} else {
-		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
-		if err != nil {
-			return nil, err
-		}
-		if remoteClusterId != "" {
-			location = Source
-		} else {
-			// Try dest arg
-			remoteClusterId, err = cmd.Flags().GetString(destinationClusterIdFlagName)
-			if err != nil {
-				return nil, err
-			}
-			if remoteClusterId != "" {
-				location = Destination
-			}
-		}
-		return &remoteClusterMetadata{remoteClusterId, bootstrapServer, location}, nil
-	}
-}
-
-func (c *linkCommand) apiKeyAndSecret(cmd *cobra.Command) (string, string, error) {
-	var err error
-
-	var apiKey string
-	var apiSecret string
-	apiKey, err = cmd.Flags().GetString(sourceApiKeyFlagName)
-	if err != nil {
-		return "", "", err
-	}
-	if apiKey != "" {
-		// Source
-		apiSecret, err = cmd.Flags().GetString(sourceApiSecretFlagName)
-		if err != nil {
-			return "", "", nil
-		}
-		return apiKey, apiSecret, nil
-	} else {
-		// Maybe dest
-		apiKey, err = cmd.Flags().GetString(destinationApiKeyFlagName)
-		if err != nil {
-			return "", "", err
-		}
-		if apiKey == "" {
-			// No key provided.
-			return "", "", nil
-		}
-		apiSecret, err = cmd.Flags().GetString(destinationApiSecretFlagName)
-		if err != nil {
-			return "", "", err
-		}
-		return apiKey, apiSecret, nil
+		return &remoteClusterMetadata{bootstrapServer, remoteClusterId}, nil
 	}
 }
