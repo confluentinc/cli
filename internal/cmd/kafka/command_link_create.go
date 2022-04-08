@@ -38,6 +38,7 @@ const (
 	saslJaasConfigPropertyName        = "sasl.jaas.config"
 	saslMechanismPropertyName         = "sasl.mechanism"
 	securityProtocolPropertyName      = "security.protocol"
+	localListenerPropertyName         = "local.listener"
 	localSecurityProtocolPropertyName = "local.security.protocol"
 	localSaslMechanismPropertyName    = "local.sasl.mechanism"
 	localSaslJaasConfigPropertyName   = "local.sasl.jaas.config"
@@ -232,6 +233,7 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 			configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 		} else {
 			// For source initiated links, the credentials are for the local cluster.
+			configMap[localListenerPropertyName] = saslSsl
 			configMap[localSecurityProtocolPropertyName] = saslSsl
 			configMap[localSaslMechanismPropertyName] = plain
 			configMap[localSaslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
