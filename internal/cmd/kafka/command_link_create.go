@@ -32,7 +32,7 @@ const (
 	sourceBootstrapServerFlagName      = "source-bootstrap-server"
 	sourceClusterIdFlagName            = "source-cluster-id"
 
-	authHelperMsg = "If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. " +
+	authHelperMsg = "If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. " +
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
 		"and add the security configs in the config file."
 )
@@ -85,16 +85,16 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. "+
-		"For destination initiated links this is used for remote cluster authentication. For source initiated links this is used for local cluster authentication. "+
+		"For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+
 		authHelperMsg)
 	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. "+
-		"For destination initiated links this is used for remote cluster authentication. For source initiated links this is used for local cluster authentication. "+
+		"For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+
 		authHelperMsg)
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. "+
-		"This is used for remote cluster authentication for source initiated links. "+
+		"This is used for remote cluster authentication links at the source cluster. "+
 		authHelperMsg)
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. "+
-		"This is used for remote cluster authentication for source initiated links. "+
+		"This is used for remote cluster authentication for links at the source cluster. "+
 		authHelperMsg)
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
@@ -136,7 +136,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if !c.cfg.IsCloudLogin() {
 		// On prem we only support source initiated links currently.
 		if linkMode != Source {
-			return errors.New("Source initiated links are only supported type for on-prem")
+			return errors.New("Confluent Platform only supports source initiated links.")
 		}
 	}
 
@@ -154,10 +154,14 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if linkMode == Destination && remoteClusterMetadata.remoteClusterId != "" {
-		data.SourceClusterId = remoteClusterMetadata.remoteClusterId
-	} else if remoteClusterMetadata.remoteClusterId != "" {
-		data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
+	if linkMode == Destination {
+		if remoteClusterMetadata.remoteClusterId != "" {
+			data.SourceClusterId = remoteClusterMetadata.remoteClusterId
+		}
+	} else {
+		if remoteClusterMetadata.remoteClusterId != "" {
+			data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
+		}
 	}
 
 	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
@@ -222,12 +226,12 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 	}
 	if sourceApiKey != "" && sourceApiSecret != "" {
 		if linkMode == Destination {
-			// For destination initiated links, the credentials are for the remote cluster.
+			// For links at destination cluster, the credentials are for the remote cluster.
 			configMap[securityProtocolPropertyName] = saslSsl
 			configMap[saslMechanismPropertyName] = plain
 			configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
 		} else {
-			// For source initiated links, the credentials are for the local cluster.
+			// For source initiated links at source cluster, the credentials are for the local cluster.
 			configMap[localListenerPropertyName] = saslSsl
 			configMap[localSecurityProtocolPropertyName] = saslSsl
 			configMap[localSaslMechanismPropertyName] = plain
@@ -247,7 +251,7 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 			return err
 		}
 		if destinationApiKey != "" && destinationApiSecret != "" {
-			// For source initiated links, the credentials are for the remote cluster.
+			// For source initiated links at source cluster, the credentials are for the remote cluster.
 			configMap[securityProtocolPropertyName] = saslSsl
 			configMap[saslMechanismPropertyName] = plain
 			configMap[saslJaasConfigPropertyName] = getJaasValue(destinationApiKey, destinationApiSecret)
@@ -265,7 +269,7 @@ type remoteClusterMetadata struct {
 
 func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode linkMode) (*remoteClusterMetadata, error) {
 	if linkMode == Destination {
-		// For destination initiated links, look for the source bootstrap servers and cluster ID.
+		// For links at destination cluster, look for the source bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 		if err != nil {
 			return nil, err
@@ -276,7 +280,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode link
 		}
 		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
 	} else {
-		// For source initiated links, look for the destination bootstrap servers and cluster ID.
+		// For links at source cluster, look for the destination bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
 			return nil, err
