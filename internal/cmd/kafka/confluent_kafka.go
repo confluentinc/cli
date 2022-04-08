@@ -436,7 +436,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 
 	if e.Headers != nil {
 		if h.Properties.PrintHeader {
-			headerStrings := getFullMessageOfHeaders(h.Out, e.Headers)
+			headerStrings := getFullMessageOfHeaders(e.Headers)
 			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headerStrings)
 		} else {
 			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
@@ -522,10 +522,10 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func getFullMessageOfHeaders(out io.Writer, headers []ckafka.Header) []string {
-	var headerStrings []string
-	for _, header := range headers {
-		headerStrings = append(headerStrings, getStringOfHeader(header))
+func getFullMessageOfHeaders(headers []ckafka.Header) []string {
+	headerStrings := make([]string, len(headers))
+	for i, header := range headers {
+		headerStrings[i] = getStringOfHeader(header)
 	}
 	return headerStrings
 }
