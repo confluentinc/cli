@@ -436,7 +436,8 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 
 	if e.Headers != nil {
 		if h.Properties.PrintHeader {
-			err = printFullMessageHeader(h.Out, e.Headers)
+			headerStrings := getFullMessageOfHeaders(h.Out, e.Headers)
+			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headerStrings)
 		} else {
 			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
 		}
@@ -521,19 +522,20 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func printFullMessageHeader(out io.Writer, headers []ckafka.Header) error {
+func getFullMessageOfHeaders(out io.Writer, headers []ckafka.Header) []string {
 	var headerStrings []string
 	for _, header := range headers {
-		var str string
-		if header.Value == nil {
-			str = fmt.Sprintf("%s=nil", header.Key)
-		} else if valueLen := len(header.Value); valueLen == 0 {
-			str = fmt.Sprintf("%s=<empty>", header.Key)
-		} else {
-			str = fmt.Sprintf("%s=%s", header.Key, string(header.Value))
-		}
-		headerStrings = append(headerStrings, str)
+		headerStrings = append(headerStrings, getStringOfHeader(header))
 	}
-	_, err := fmt.Fprintf(out, "%% Headers: %v\n", headerStrings)
-	return err
+	return headerStrings
+}
+
+func getStringOfHeader(header ckafka.Header) string {
+	if header.Value == nil {
+		return fmt.Sprintf("%s=nil", header.Key)
+	} else if len(header.Value) == 0 {
+		return fmt.Sprintf("%s=<empty>", header.Key)
+	} else {
+		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
+	}
 }
