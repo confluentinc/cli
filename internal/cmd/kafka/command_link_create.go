@@ -120,7 +120,6 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	var err error
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
@@ -182,11 +181,9 @@ func getJaasValue(apiKey, apiSecret string) string {
 }
 
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {
-	configMap := make(map[string]string)
-	var err error
-	var linkMode linkMode
 	if configFile != "" {
-		configMap, err = properties.FileToMap(configFile)
+		var linkMode linkMode
+		configMap, err := properties.FileToMap(configFile)
 		if err != nil {
 			return nil, linkMode, err
 		}
@@ -201,11 +198,11 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 		} else {
 			return nil, linkMode, errors.Errorf(`unrecognized link.mode "%s". Use DESTINATION or SOURCE.`, linkModeStr)
 		}
+		return configMap, linkMode, nil
 	} else {
 		// Default is destination if no config file is provided.
-		linkMode = Destination
+		return make(map[string]string), Destination, nil
 	}
-	return configMap, linkMode, nil
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMode, configMap map[string]string) error {
