@@ -202,7 +202,7 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (*configMapAndL
 		} else if strings.EqualFold(linkModeStr, "SOURCE") {
 			linkMode = Source
 		} else {
-			return nil, errors.Errorf("Unrecognized link.mode %s. Use DESTINATION or SOURCE.", linkModeStr)
+			return nil, errors.Errorf(`unrecognized link.mode "%s". Use DESTINATION or SOURCE.`, linkModeStr)
 		}
 	} else {
 		// Default is destination if no config file is provided.
