@@ -32,6 +32,7 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("configs", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
@@ -52,7 +53,12 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	producer, err := NewProducer(cluster, c.clientID)
+	configPath, err := cmd.Flags().GetString("configs")
+	if err != nil {
+		return err
+	}
+
+	producer, err := NewProducer(configPath, cluster, c.clientID)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}

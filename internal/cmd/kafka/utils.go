@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"bufio"
+	"encoding/json"
+	"io/ioutil"
 	logger "log"
 	_nethttp "net/http"
 	"os"
@@ -85,6 +87,23 @@ func createTestConfigFile(name string, configs map[string]string) (string, error
 	}
 
 	return dir, file.Close()
+}
+
+func parseProducerConfigFile(path string) (*producerConfigs, error) {
+	configFile, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer configFile.Close()
+
+	configs := &producerConfigs{}
+	configBytes, err := ioutil.ReadAll(configFile)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(configBytes, configs)
+
+	return configs, err
 }
 
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {

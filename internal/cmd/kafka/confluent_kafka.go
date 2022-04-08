@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"time"
 
@@ -45,6 +46,31 @@ var (
 	// Regex used to extract name=value pairs from sasl.oauthbearer.config
 	oauthbearerNameEqualsValueRegex = regexp.MustCompile(`(\w+)\s*=\s*(\w+)`)
 )
+
+type producerConfigs struct {
+	Bootstrap      string `json:"bootstrap.servers"`
+	ClientId       string `json:"client.id"`
+	Protocol       string `json:"security.protocol"`
+	SaslMechanism  string `json:"sasl.mechanism"`
+	SaslUsername   string `json:"sasl.username"`
+	SaslPassword   string `json:"sasl.password"`
+	SslAlgorithm   string `json:"ssl.endpoint.identification.algorithm"`
+	RequestTimeout string `json:"request.timeout.ms"`
+	RetryBackoff   string `json:"retry.backoff.ms"`
+	CheckCrcs      bool   `json:"check.crcs"`
+}
+
+type consumerConfigs struct {
+	Bootstrap       string `json:"bootstrap.servers"`
+	ClientId        string `json:"client.id"`
+	GroupId         string `json:"group.id"`
+	Protocol        string `json:"security.protocol"`
+	SaslMechanism   string `json:"sasl.mechanism"`
+	SaslUsername    string `json:"sasl.username"`
+	SaslPassword    string `json:"sasl.password"`
+	SslAlgorithm    string `json:"ssl.endpoint.identification.algorithm"`
+	AutoOffsetReset string `json:"auto.offset.reset"`
+}
 
 type ConsumerProperties struct {
 	PrintKey   bool
@@ -133,11 +159,25 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-func NewProducer(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
+// cloud kafka client configuration
+
+func NewProducer(configPath string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
+
+	if configPath != "" { // overwrite the default configs with values specified in the config file
+		cfg, err := parseProducerConfigFile(configPath)
+		if err != nil {
+			return nil, err
+		}
+		err = overwriteKafkaProducerConfigs(configMap, cfg)
+		if err != nil {
+			return nil, err
+		}
+	}
+	fmt.Printf("%+v\n", configMap)
 	return ckafka.NewProducer(configMap)
 }
 
@@ -162,6 +202,40 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 	}
 	return configMap
 }
+
+func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+	configMap := getCommonConfig(kafka, clientID)
+	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
+		return nil, err
+	}
+	if err := setProducerDebugOption(configMap); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
+	configMap := getCommonConfig(kafka, clientID)
+	if err := configMap.SetKey("group.id", group); err != nil {
+		return nil, err
+	}
+	autoOffsetReset := "latest"
+	if beginning {
+		autoOffsetReset = "earliest"
+	}
+	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
+		return nil, err
+	}
+	if err := setConsumerDebugOption(configMap); err != nil {
+		return nil, err
+	}
+	return configMap, nil
+}
+
+// on-prem kafka client configuration
 
 func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
 	bootstrap, err := cmd.Flags().GetString("bootstrap")
@@ -304,92 +378,7 @@ func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Con
 	return configMap, nil
 }
 
-func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
-	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
-		return nil, err
-	}
-	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
-		return nil, err
-	}
-	if err := setProducerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return configMap, nil
-}
-
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
-	if err := configMap.SetKey("group.id", group); err != nil {
-		return nil, err
-	}
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
-	}
-	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
-		return nil, err
-	}
-	if err := setConsumerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return configMap, nil
-}
-
-func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
-	if len(value) < messageOffset {
-		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
-	}
-
-	// Retrieve schema from cluster only if schema is specified.
-	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
-
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
-	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
-	var references []srsdk.SchemaReference
-	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
-		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{
-			Subject: optional.NewString(h.Subject),
-		}
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
-		if err != nil {
-			return "", nil, err
-		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		if err != nil {
-			return "", nil, err
-		}
-
-		refBytes, err := json.Marshal(schemaString.References)
-		if err != nil {
-			return "", nil, err
-		}
-		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
-		if err != nil {
-			return "", nil, err
-		}
-		references = schemaString.References
-	} else {
-		refBlob, err := ioutil.ReadFile(tempRefStorePath)
-		if err != nil {
-			return "", nil, err
-		}
-		err = json.Unmarshal(refBlob, &references)
-		if err != nil {
-			return "", nil, err
-		}
-	}
-
-	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return tempStorePath, referencePathMap, nil
-}
+// consumer utilities
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
@@ -475,6 +464,63 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	return nil
 }
 
+// utilities
+
+func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
+	if len(value) < messageOffset {
+		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
+	}
+
+	// Retrieve schema from cluster only if schema is specified.
+	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
+
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
+	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
+	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
+	var references []srsdk.SchemaReference
+	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
+		// TODO: add handler for writing schema failure
+		getSchemaOpts := srsdk.GetSchemaOpts{
+			Subject: optional.NewString(h.Subject),
+		}
+		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		if err != nil {
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		if err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
+	} else {
+		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		if err != nil {
+			return "", nil, err
+		}
+		err = json.Unmarshal(refBlob, &references)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+
+	// Store the references in temporary files
+	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return tempStorePath, referencePathMap, nil
+}
+
 func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	username, err := cmd.Flags().GetString("username")
 	if err != nil {
@@ -513,6 +559,21 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
 	case log.TRACE:
 		return configMap.Set("debug=all")
+	}
+	return nil
+}
+
+func overwriteKafkaProducerConfigs(configMap *ckafka.ConfigMap, cfg *producerConfigs) error {
+	s := reflect.ValueOf(cfg).Elem()
+	typeOfT := s.Type()
+	for i := 0; i < s.NumField(); i++ {
+		f := s.Field(i)
+		if f.Interface() != nil && !f.IsZero() {
+			key := typeOfT.Field(i).Tag.Get("json")
+			if err := configMap.SetKey(key, f.Interface()); err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }
