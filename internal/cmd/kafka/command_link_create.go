@@ -180,7 +180,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func getJaasValue(apiKey string, apiSecret string) string {
+func getJaasValue(apiKey, apiSecret string) string {
 	return fmt.Sprintf(jaasConfigPrefix+` username="%s" password="%s";`, apiKey, apiSecret)
 }
 
