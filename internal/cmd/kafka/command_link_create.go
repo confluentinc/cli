@@ -80,18 +80,22 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. "+
+		"For destination initiated links this is used for remote cluster authentication. For source initiated links this is used for local cluster authentication. "+
 		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. "+
+		"For destination initiated links this is used for remote cluster authentication. For source initiated links this is used for local cluster authentication. "+
 		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. "+
+		"This is used for remote cluster authentication for source initiated links. "+
 		"If specified, cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. "+
+		"This is used for remote cluster authentication for source initiated links. "+
 		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
