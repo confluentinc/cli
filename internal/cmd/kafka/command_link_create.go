@@ -17,8 +17,8 @@ import (
 type linkMode int
 
 const (
-	Source linkMode = iota
-	Destination
+	Destination linkMode = iota
+	Source
 )
 
 const (
