@@ -74,7 +74,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
 		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
 		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID for source initiated cluster links.")
-		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key bootstrap.servers.")
+		cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key "bootstrap.servers".`)
 	} else {
 		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
 		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
