@@ -43,6 +43,12 @@ const (
 	localSaslJaasConfigPropertyName   = "local.sasl.jaas.config"
 )
 
+const (
+	saslSsl          = "SASL_SSL"
+	plain            = "PLAIN"
+	jaasConfigPrefix = "org.apache.kafka.common.security.plain.PlainLoginModule required"
+)
+
 func (c *linkCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <link>",
@@ -74,19 +80,19 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. "+
-		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. "+
-		"If specified, the destination cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. "+
-		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the destination cluster authentication. "+
+		"If specified, cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. "+
-		"If specified, the source initiated cluster will use SASL_SSL/PLAIN as its mechanism for the source cluster authentication. "+
+		"If specified, the cluster will use SASL_SSL/PLAIN as its mechanism for authentication. "+
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, "+
 		"and add the security configs in the config file.")
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
@@ -126,45 +132,16 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	sourceApiKey, err := cmd.Flags().GetString(sourceApiKeyFlagName)
+	if !c.cfg.IsCloudLogin() {
+		// On prem we only support source initiated links currently.
+		if linkMode != Source {
+			return errors.New("Source initiated links are only supported type for on-prem")
+		}
+	}
+
+	err = c.addSecurityConfigToMap(cmd, linkMode, configMap)
 	if err != nil {
 		return err
-	}
-	sourceApiSecret, err := cmd.Flags().GetString(sourceApiSecretFlagName)
-	if err != nil {
-		return err
-	}
-	if linkMode == Destination {
-		if sourceApiSecret != "" && sourceApiKey != "" {
-			configMap[securityProtocolPropertyName] = "SASL_SSL"
-			configMap[saslMechanismPropertyName] = "PLAIN"
-			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
-		} else if sourceApiKey != "" || sourceApiSecret != "" {
-			return errors.New("--source-api-key and --source-api-secret must be supplied together")
-		}
-	} else {
-		if sourceApiSecret != "" && sourceApiKey != "" {
-			configMap[localSecurityProtocolPropertyName] = "SASL_SSL"
-			configMap[localSaslMechanismPropertyName] = "PLAIN"
-			configMap[localSaslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
-		} else if sourceApiKey != "" || sourceApiSecret != "" {
-			return errors.New("--source-api-key and --source-api-secret must be supplied together")
-		}
-		destinationApiKey, err := cmd.Flags().GetString(destinationApiKeyFlagName)
-		if err != nil {
-			return err
-		}
-		destinationApiSecret, err := cmd.Flags().GetString(destinationApiSecretFlagName)
-		if err != nil {
-			return err
-		}
-		if destinationApiKey != "" && destinationApiSecret != "" {
-			configMap[securityProtocolPropertyName] = "SASL_SSL"
-			configMap[saslMechanismPropertyName] = "PLAIN"
-			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, destinationApiKey, destinationApiSecret)
-		} else if destinationApiKey != "" || destinationApiSecret != "" {
-			return errors.New("--destination-api-key and --destination-api-secret must be supplied together")
-		}
 	}
 
 	remoteClusterMetadata, err := c.getRemoteClusterMetadata(cmd, linkMode)
@@ -198,6 +175,10 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+func getJaasValue(apiKey string, apiSecret string) string {
+	return fmt.Sprintf(jaasConfigPrefix+` username="%s" password="%s";`, apiKey, apiSecret)
+}
+
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {
 	configMap := make(map[string]string)
 	var err error
@@ -221,6 +202,49 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 		linkMode = Destination
 	}
 	return configMap, linkMode, nil
+}
+
+func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMode, configMap map[string]string) error {
+	sourceApiKey, err := cmd.Flags().GetString(sourceApiKeyFlagName)
+	if err != nil {
+		return err
+	}
+	sourceApiSecret, err := cmd.Flags().GetString(sourceApiSecretFlagName)
+	if err != nil {
+		return err
+	}
+	if sourceApiKey != "" && sourceApiSecret != "" {
+		if linkMode == Destination {
+			configMap[securityProtocolPropertyName] = saslSsl
+			configMap[saslMechanismPropertyName] = plain
+			configMap[saslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
+		} else {
+			configMap[localSecurityProtocolPropertyName] = saslSsl
+			configMap[localSaslMechanismPropertyName] = plain
+			configMap[localSaslJaasConfigPropertyName] = getJaasValue(sourceApiKey, sourceApiSecret)
+		}
+	} else if sourceApiKey != "" || sourceApiSecret != "" {
+		return errors.New("--source-api-key and --source-api-secret must be supplied together")
+	}
+
+	if linkMode == Source {
+		destinationApiKey, err := cmd.Flags().GetString(destinationApiKeyFlagName)
+		if err != nil {
+			return err
+		}
+		destinationApiSecret, err := cmd.Flags().GetString(destinationApiSecretFlagName)
+		if err != nil {
+			return err
+		}
+		if destinationApiKey != "" && destinationApiSecret != "" {
+			configMap[securityProtocolPropertyName] = saslSsl
+			configMap[saslMechanismPropertyName] = plain
+			configMap[saslJaasConfigPropertyName] = getJaasValue(destinationApiKey, destinationApiSecret)
+		} else if destinationApiKey != "" || destinationApiSecret != "" {
+			return errors.New("--destination-api-key and --destination-api-secret must be supplied together")
+		}
+	}
+	return nil
 }
 
 type remoteClusterMetadata struct {
