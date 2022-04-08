@@ -142,23 +142,23 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	remoteClusterMetadata, err := c.getRemoteClusterMetadata(cmd, linkMode)
+	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkMode)
 	if err != nil {
 		return err
 	}
 
-	if remoteClusterMetadata.bootstrapServer != "" {
-		configMap[bootstrapServersPropertyName] = remoteClusterMetadata.bootstrapServer
+	if bootstrapServer != "" {
+		configMap[bootstrapServersPropertyName] = bootstrapServer
 	}
 
 	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
 	if linkMode == Destination {
-		if remoteClusterMetadata.remoteClusterId != "" {
-			data.SourceClusterId = remoteClusterMetadata.remoteClusterId
+		if remoteClusterId != "" {
+			data.SourceClusterId = remoteClusterId
 		}
 	} else {
-		if remoteClusterMetadata.remoteClusterId != "" {
-			data.DestinationClusterId = remoteClusterMetadata.remoteClusterId
+		if remoteClusterId != "" {
+			data.DestinationClusterId = remoteClusterId
 		}
 	}
 
@@ -255,33 +255,28 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkMode linkMo
 	return nil
 }
 
-type remoteClusterMetadata struct {
-	remoteClusterId string
-	bootstrapServer string
-}
-
-func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode linkMode) (*remoteClusterMetadata, error) {
+func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode linkMode) (string, string, error) {
 	if linkMode == Destination {
 		// For links at destination cluster, look for the source bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 		if err != nil {
-			return nil, err
+			return "", "", err
 		}
 		remoteClusterId, err := cmd.Flags().GetString(sourceClusterIdFlagName)
 		if err != nil {
-			return nil, err
+			return "", "", err
 		}
-		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
+		return remoteClusterId, bootstrapServer, nil
 	} else {
 		// For links at source cluster, look for the destination bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
-			return nil, err
+			return "", "", err
 		}
 		remoteClusterId, err := cmd.Flags().GetString(destinationClusterIdFlagName)
 		if err != nil {
-			return nil, err
+			return "", "", err
 		}
-		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
+		return remoteClusterId, bootstrapServer, nil
 	}
 }
