@@ -186,7 +186,7 @@ func getJaasValue(apiKey, apiSecret string) string {
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (*configMapAndLinkMode, error) {
 	configMap := make(map[string]string)
 	var err error
-	var linkMode linkMode
+	linkMode := Destination
 	if configFile != "" {
 		configMap, err = properties.FileToMap(configFile)
 		if err != nil {
