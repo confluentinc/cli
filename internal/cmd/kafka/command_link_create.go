@@ -34,10 +34,13 @@ const (
 )
 
 const (
-	bootstrapServersPropertyName = "bootstrap.servers"
-	saslJaasConfigPropertyName   = "sasl.jaas.config"
-	saslMechanismPropertyName    = "sasl.mechanism"
-	securityProtocolPropertyName = "security.protocol"
+	bootstrapServersPropertyName      = "bootstrap.servers"
+	saslJaasConfigPropertyName        = "sasl.jaas.config"
+	saslMechanismPropertyName         = "sasl.mechanism"
+	securityProtocolPropertyName      = "security.protocol"
+	localSecurityProtocolPropertyName = "local.security.protocol"
+	localSaslMechanismPropertyName    = "local.sasl.mechanism"
+	localSaslJaasConfigPropertyName   = "local.sasl.jaas.config"
 )
 
 func (c *linkCommand) newCreateCommand() *cobra.Command {
@@ -116,7 +119,9 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	var configMap map[string]string
+	var linkMode linkMode
+	configMap, linkMode, err = c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
@@ -139,9 +144,9 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		if sourceApiSecret != "" && sourceApiKey != "" {
-			configMap["local.security.protocol"] = "SASL_SSL"
-			configMap["local.sasl.mechanism"] = "PLAIN"
-			configMap[saslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
+			configMap[localSecurityProtocolPropertyName] = "SASL_SSL"
+			configMap[localSaslMechanismPropertyName] = "PLAIN"
+			configMap[localSaslJaasConfigPropertyName] = fmt.Sprintf(`org.apache.kafka.common.security.plain.PlainLoginModule required username="%s" password="%s";`, sourceApiKey, sourceApiSecret)
 		} else if sourceApiKey != "" || sourceApiSecret != "" {
 			return errors.New("--source-api-key and --source-api-secret must be supplied together")
 		}
@@ -195,9 +200,10 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {
 	configMap := make(map[string]string)
+	var err error
 	var linkMode linkMode
 	if configFile != "" {
-		configMap, err := properties.FileToMap(configFile)
+		configMap, err = properties.FileToMap(configFile)
 		if err != nil {
 			return nil, linkMode, err
 		}
@@ -233,7 +239,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode link
 		if err != nil {
 			return nil, err
 		}
-		return &remoteClusterMetadata{bootstrapServer, remoteClusterId}, nil
+		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
 	} else {
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
@@ -243,6 +249,6 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkMode link
 		if err != nil {
 			return nil, err
 		}
-		return &remoteClusterMetadata{bootstrapServer, remoteClusterId}, nil
+		return &remoteClusterMetadata{remoteClusterId, bootstrapServer}, nil
 	}
 }
