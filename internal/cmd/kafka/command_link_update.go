@@ -1,8 +1,7 @@
 package kafka
 
 import (
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -63,19 +62,21 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
-			Data: toAlterConfigBatchRequestData(configMap),
-		}),
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
 	}
+	clusterId := kafkaClusterConfig.ID
 
-	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
-		return handleOpenApiError(httpResp, err, client)
+	req := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(kafkaREST.Context, clusterId, linkName)
+	httpResp, err := req.AlterConfigBatchRequestData(cloudkafkarest.AlterConfigBatchRequestData{Data: toCloudAlterConfigBatchRequestData(configMap)}).Execute()
+	if err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)

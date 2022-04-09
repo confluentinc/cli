@@ -39,15 +39,14 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, _ := c.GetCloudKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
-
-		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName)
+		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName).Execute()
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			restErr, parseErr := parseOpenAPIError(err)
@@ -56,7 +55,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {

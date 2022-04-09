@@ -43,9 +43,9 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc).Execute()
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)

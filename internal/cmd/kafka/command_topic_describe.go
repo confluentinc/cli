@@ -52,7 +52,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, _ := c.GetCloudKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
@@ -60,7 +60,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName).Execute()
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -70,7 +70,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -85,15 +85,15 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			topicData := &topicData{}
 			topicData.TopicName = topicName
 			// Get topic config
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName).Execute()
 			if err != nil {
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
 			topicData.Config = make(map[string]string)
 			for _, config := range configsResp.Data {
-				topicData.Config[config.Name] = *config.Value
+				topicData.Config[config.Name] = *config.Value.Get()
 			}
 			topicData.Config[partitionCount] = strconv.Itoa(len(partitionsResp.Data))
 

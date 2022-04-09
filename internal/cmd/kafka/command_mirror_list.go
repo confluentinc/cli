@@ -1,10 +1,9 @@
 package kafka
 
 import (
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"net/http"
 
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -43,12 +42,12 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	mirrorStatus, err := cmd.Flags().GetString(mirrorStatusFlagName)
+	mirrorStatusFlag, err := cmd.Flags().GetString(mirrorStatusFlagName)
 	if err != nil {
 		return err
 	}
 
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if kafkaREST == nil {
 		if err != nil {
 			return err
@@ -61,23 +60,20 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	mirrorStatusOpt := optional.EmptyInterface()
-	if mirrorStatus != "" {
-		mirrorStatusOpt = optional.NewInterface(kafkarestv3.MirrorTopicStatus(mirrorStatus))
-	}
+	mirrorStatus := cloudkafkarest.MirrorTopicStatus(mirrorStatusFlag)
 
-	var listMirrorTopicsResponseDataList kafkarestv3.ListMirrorTopicsResponseDataList
 	var httpResp *http.Response
+	var listMirrorTopicsResponse cloudkafkarest.ListMirrorTopicsResponseDataList
 
 	if linkName == "" {
-		opts := &kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, lkc, opts)
+		req := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, lkc)
+		listMirrorTopicsResponse, httpResp, err = req.MirrorStatus(mirrorStatus).Execute()
 	} else {
-		opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName, opts)
+		req := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName)
+		listMirrorTopicsResponse, httpResp, err = req.MirrorStatus(mirrorStatus).Execute()
 	}
 	if err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST.Client)
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)
@@ -85,9 +81,9 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, mirror := range listMirrorTopicsResponseDataList.Data {
+	for _, mirror := range listMirrorTopicsResponse.Data {
 		var maxLag int64 = 0
-		for _, mirrorLag := range mirror.MirrorLags {
+		for _, mirrorLag := range mirror.MirrorLags.Items {
 			if mirrorLag.Lag > maxLag {
 				maxLag = mirrorLag.Lag
 			}

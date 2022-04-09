@@ -3,11 +3,10 @@ package kafka
 import (
 	"context"
 	"fmt"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"net/http"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -68,15 +67,15 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, _ := c.GetCloudKafkaREST()
 	if kafkaREST != nil && !dryRun {
-		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+		topicConfigs := make([]cloudkafkarest.CreateTopicRequestDataConfigs, len(topicConfigsMap))
 		i := 0
 		for k, v := range topicConfigsMap {
 			val := v
-			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
+			topicConfigs[i] = cloudkafkarest.CreateTopicRequestDataConfigs{
 				Name:  k,
-				Value: &val,
+				Value: *cloudkafkarest.NewNullableString(&val),
 			}
 			i++
 		}
@@ -86,15 +85,14 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			return err
 		}
 		lkc := kafkaClusterConfig.ID
-
-		_, httpResp, err := kafkaREST.Client.TopicV3Api.CreateKafkaTopic(kafkaREST.Context, lkc, &kafkarestv3.CreateKafkaTopicOpts{
-			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
-				TopicName:         topicName,
-				PartitionsCount:   numPartitions,
-				ReplicationFactor: defaultReplicationFactor,
-				Configs:           topicConfigs,
-			}),
+		replicationFactor := int32(defaultReplicationFactor)
+		req := kafkaREST.Client.TopicV3Api.CreateKafkaTopic(kafkaREST.Context, lkc).CreateTopicRequestData(cloudkafkarest.CreateTopicRequestData{
+			TopicName:         topicName,
+			PartitionsCount:   &numPartitions,
+			ReplicationFactor: &replicationFactor,
+			Configs:           &topicConfigs,
 		})
+		topicData, httpResp, err := req.Execute()
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -110,7 +108,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					return nil
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -120,7 +118,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			utils.Printf(cmd, errors.CreatedTopicMsg, topicName)
+			utils.Printf(cmd, errors.CreatedTopicMsg, topicData.TopicName)
 			return nil
 		}
 	}

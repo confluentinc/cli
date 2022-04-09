@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -65,18 +65,18 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(kafkaREST.Context, lkc, consumerGroupId)
+	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(kafkaREST.Context, lkc, consumerGroupId).Execute()
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, convertLagSummaryToStruct(lagSummaryResp), lagSummaryFields, lagSummaryHumanRenames, lagSummaryStructuredRenames)
 }
 
-func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummaryData) *lagSummaryStruct {
+func convertLagSummaryToStruct(lagSummaryData cloudkafkarest.ConsumerGroupLagSummaryData) *lagSummaryStruct {
 	maxLagInstanceId := ""
-	if lagSummaryData.MaxLagInstanceId != nil {
-		maxLagInstanceId = *lagSummaryData.MaxLagInstanceId
+	if lagSummaryData.MaxLagInstanceId.IsSet() {
+		maxLagInstanceId = *lagSummaryData.MaxLagInstanceId.Get()
 	}
 
 	return &lagSummaryStruct{

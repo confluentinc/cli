@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -17,7 +17,7 @@ type link struct {
 	DestinationClusterId string
 }
 
-func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
+func newCloudLink(data cloudkafkarest.ListLinksResponseData, topic string) *link {
 	l := &link{
 		LinkName:  data.LinkName,
 		TopicName: topic,
@@ -25,10 +25,6 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 
 	if data.SourceClusterId != nil {
 		l.SourceClusterId = *data.SourceClusterId
-	}
-
-	if data.DestinationClusterId != nil {
-		l.DestinationClusterId = *data.DestinationClusterId
 	}
 
 	return l
@@ -63,14 +59,20 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinks(ctx, clusterId)
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return handleOpenApiError(httpResp, err, client)
+		return err
+	}
+	clusterId := kafkaClusterConfig.ID
+
+	listLinksRespDataList, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinks(kafkaREST.Context, clusterId).Execute()
+	if err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	listFields := getListFields(includeTopics, c.cfg.IsCloudLogin())
@@ -83,12 +85,12 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, data := range listLinksRespDataList.Data {
-		if includeTopics && len(data.TopicsNames) > 0 {
-			for _, topic := range data.TopicsNames {
-				w.AddElement(newLink(data, topic))
+		if includeTopics && len(*data.TopicsNames) > 0 {
+			for _, topic := range *data.TopicsNames {
+				w.AddElement(newCloudLink(data, topic))
 			}
 		} else {
-			w.AddElement(newLink(data, ""))
+			w.AddElement(newCloudLink(data, ""))
 		}
 	}
 

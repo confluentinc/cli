@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cloudkafkarest "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -129,15 +129,15 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 	return suggestions
 }
 
-func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarestv3.ConsumerGroupDataList, error) {
+func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*cloudkafkarest.ConsumerGroupDataList, error) {
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
 	if err != nil {
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc).Execute()
 	if err != nil {
-		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return nil, kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	return &groupCmdResp, nil

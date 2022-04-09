@@ -56,9 +56,9 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagGetResp, httpResp, err := kafkaREST.Client.PartitionV3Api.GetKafkaConsumerLag(kafkaREST.Context, lkc, consumerGroupId, topicName, partitionId)
+	lagGetResp, httpResp, err := kafkaREST.Client.PartitionV3Api.GetKafkaConsumerLag(kafkaREST.Context, lkc, consumerGroupId, topicName, partitionId).Execute()
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, convertLagToStruct(lagGetResp), lagFields, lagGetHumanRenames, lagGetStructuredRenames)

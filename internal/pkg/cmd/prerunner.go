@@ -66,15 +66,15 @@ type CPKafkaRESTProvider func() (*CPKafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloud.Client
-	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
+	Client      *ccloud.Client
+	V2Client    *ccloudv2.Client
+	MDSClient   *mds.APIClient
+	MDSv2Client *mdsv2alpha1.APIClient
 	//CloudKafkaRESTProvider *CloudKafkaRESTProvider
 	CPKafkaRESTProvider *CPKafkaRESTProvider
-	QuotasClient      *quotasv2.APIClient
-	Context           *DynamicContext
-	State             *v1.ContextState
+	QuotasClient        *quotasv2.APIClient
+	Context             *DynamicContext
+	State               *v1.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -764,7 +764,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClientWithUrl(ctx.Platform.Server, r.IsTest, command.Context.State.AuthToken)
+			v2Client := ccloudv2.NewClient(ctx.Platform.Server, r.IsTest, command.Context.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client

@@ -37,7 +37,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, _ := c.GetKafkaREST()
+	kafkaREST, _ := c.GetCloudKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
@@ -45,11 +45,11 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		lkc := kafkaClusterConfig.ID
 
-		topicGetResp, httpResp, err := kafkaREST.Client.TopicV3Api.ListKafkaTopics(kafkaREST.Context, lkc)
+		topicGetResp, httpResp, err := kafkaREST.Client.TopicV3Api.ListKafkaTopics(kafkaREST.Context, lkc).Execute()
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {

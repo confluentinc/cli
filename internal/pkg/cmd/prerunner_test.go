@@ -736,7 +736,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
-		kafkaRest, err := cmd.GetKafkaREST()
+		kafkaRest, err := cmd.GetCPKafkaREST()
 		require.NoError(t, err)
 		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
@@ -766,7 +766,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		r.LoginCredentialsManager = mockLoginCredentialsManager
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
-		kafkaRest, err := cmd.GetKafkaREST()
+		kafkaRest, err := cmd.GetCPKafkaREST()
 		require.Error(t, err)
 		require.Nil(t, kafkaRest)
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)

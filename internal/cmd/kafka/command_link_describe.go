@@ -46,14 +46,19 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetCloudKafkaREST()
 	if err != nil {
 		return err
 	}
-
-	listLinkConfigsRespData, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, linkName)
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return handleOpenApiError(httpResp, err, client)
+		return err
+	}
+	clusterId := kafkaClusterConfig.ID
+
+	listLinkConfigsRespData, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaLinkConfigs(kafkaREST.Context, clusterId, linkName).Execute()
+	if err != nil {
+		return kafkaRestError(pcmd.GetCloudKafkaRestBaseUrl(kafkaREST.Client), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, describeLinkConfigFields, humanDescribeLinkConfigFields, structuredDescribeLinkConfigFields)
