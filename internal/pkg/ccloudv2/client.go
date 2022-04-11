@@ -17,14 +17,10 @@ type Client struct {
 }
 
 func NewClientWithConfigs(baseURL, userAgent string, isTest bool, authToken string) *Client {
-	cmkClient := newCmkClient(baseURL, userAgent, isTest)
-	iamClient := newIamClient(baseURL, userAgent, isTest)
-	orgClient := newOrgClient(baseURL, userAgent, isTest)
-	quotasClient := newQuotasClient(baseURL, userAgent, isTest)
 	return &Client{
-		CmkClient:    cmkClient,
-		IamClient:    iamClient,
-		OrgClient:    orgClient,
-		QuotasClient: quotasClient,
+		CmkClient:    newCmkClient(baseURL, userAgent, isTest),
+		IamClient:    newIamClient(baseURL, userAgent, isTest),
+		OrgClient:    newOrgClient(baseURL, userAgent, isTest),
+		QuotasClient: newQuotasClient(baseURL, userAgent, isTest),
 		AuthToken:    authToken}
 }
