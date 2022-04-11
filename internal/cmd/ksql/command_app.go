@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func newAppCommand(prerunner pcmd.PreRunner) *ksqlCommand {
+func newAppCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "app",
 		Short:       "DEPRECATED: Manage ksqlDB apps.",
@@ -17,11 +17,11 @@ func newAppCommand(prerunner pcmd.PreRunner) *ksqlCommand {
 
 	c := &ksqlCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newConfigureAclsCommand(true))
-	c.AddCommand(c.newCreateCommand(true))
-	c.AddCommand(c.newDeleteCommand(true))
-	c.AddCommand(c.newDescribeCommand(true))
-	c.AddCommand(c.newListCommand(true))
+	cmd.AddCommand(c.newConfigureAclsCommand(true))
+	cmd.AddCommand(c.newCreateCommand(true))
+	cmd.AddCommand(c.newDeleteCommand(true))
+	cmd.AddCommand(c.newDescribeCommand(true))
+	cmd.AddCommand(c.newListCommand(true))
 
-	return c
+	return cmd
 }
