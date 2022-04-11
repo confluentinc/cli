@@ -435,12 +435,11 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if e.Headers != nil {
+		var headers interface{} = e.Headers
 		if h.Properties.PrintHeader {
-			headerStrings := getFullMessageOfHeaders(e.Headers)
-			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headerStrings)
-		} else {
-			_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+			headers = getFullMessageOfHeaders(e.Headers)
 		}
+		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
 		if err != nil {
 			return err
 		}
