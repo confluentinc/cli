@@ -46,10 +46,10 @@ var (
 )
 
 type ConsumerProperties struct {
-	Delimiter   string
-	PrintHeader bool
-	PrintKey    bool
-	SchemaPath  string
+	Delimiter  string
+	FullHeader bool
+	PrintKey   bool
+	SchemaPath string
 }
 
 // GroupHandler instances are used to handle individual topic-partition claims.
@@ -436,8 +436,8 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 
 	if e.Headers != nil {
 		var headers interface{} = e.Headers
-		if h.Properties.PrintHeader {
-			headers = getFullMessageOfHeaders(e.Headers)
+		if h.Properties.FullHeader {
+			headers = getFullHeaders(e.Headers)
 		}
 		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
 		if err != nil {
@@ -521,15 +521,15 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func getFullMessageOfHeaders(headers []ckafka.Header) []string {
+func getFullHeaders(headers []ckafka.Header) []string {
 	headerStrings := make([]string, len(headers))
 	for i, header := range headers {
-		headerStrings[i] = getStringOfHeader(header)
+		headerStrings[i] = getHeaderString(header)
 	}
 	return headerStrings
 }
 
-func getStringOfHeader(header ckafka.Header) string {
+func getHeaderString(header ckafka.Header) string {
 	if header.Value == nil {
 		return fmt.Sprintf("%s=nil", header.Key)
 	} else if len(header.Value) == 0 {

@@ -37,7 +37,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
-	cmd.Flags().Bool("print-header", false, "Print complete content of message headers.")
+	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
@@ -79,7 +79,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	printHeader, err := cmd.Flags().GetBool("print-header")
+	fullHeader, err := cmd.Flags().GetBool("full-header")
 	if err != nil {
 		return err
 	}
@@ -158,7 +158,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
 		Subject:    subject,
-		Properties: ConsumerProperties{PrintKey: printKey, PrintHeader: printHeader, Delimiter: delimiter, SchemaPath: dir},
+		Properties: ConsumerProperties{PrintKey: printKey, FullHeader: fullHeader, Delimiter: delimiter, SchemaPath: dir},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
 }
