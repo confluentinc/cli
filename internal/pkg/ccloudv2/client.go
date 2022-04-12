@@ -16,7 +16,7 @@ type Client struct {
 	AuthToken    string
 }
 
-func NewClientWithConfigs(baseURL, userAgent string, isTest bool, authToken string) *Client {
+func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client {
 	return &Client{
 		CmkClient:    newCmkClient(baseURL, userAgent, isTest),
 		IamClient:    newIamClient(baseURL, userAgent, isTest),
