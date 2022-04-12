@@ -1,6 +1,6 @@
---- cli/Makefile	2022-04-12 15:23:46.000000000 -0500
+--- cli/Makefile	2022-04-12 15:16:32.000000000 -0500
 +++ debian/Makefile	2022-01-11 21:05:28.000000000 -0600
-@@ -1,251 +1,130 @@
+@@ -1,260 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -26,7 +26,8 @@
 -		make restore-librdkafka-amd64
 -    endif
 -endif
--
++SHELL=/bin/bash
+ 
 -.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 -cross-build:
 -ifeq ($(GOARCH),arm64) # build for darwin/arm64.
@@ -39,8 +40,10 @@
 -    else # build for Darwin/amd64
 -		CGO_ENABLED=1 make cli-builder
 -    endif
--endif
--
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
 -.PHONY: build-darwin-arm64
 -build-darwin-arm64:
 -	make switch-librdkafka-arm64
@@ -70,13 +73,18 @@
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
--
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
+ 
 -.PHONY: clean
 -clean:
 -	@for dir in bin dist docs legal; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
-+SHELL=/bin/bash
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
  
 -.PHONY: generate
 -generate:
@@ -102,9 +110,8 @@
 -    SHASUM ?= CertUtil SHA256 -hashfile
 -else
 -    SHASUM ?= sha256sum
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
- endif
+-endif
++APPLY_PATCHES?=yes
  
 -show-args:
 -	@echo "VERSION: $(VERSION)"
@@ -122,8 +129,11 @@
 -  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 -  # ...and turn them into do-nothing targets
 -  $(eval $(RUN_ARGS):;@:)
--endif
--
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
+ endif
+ 
 -.PHONY: run
 -run:
 -	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
@@ -177,12 +187,14 @@
 -	true
 -else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 -	make release
--else
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -	true
--endif
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
+ endif
  
 -.PHONY: lint
 -lint:
@@ -198,16 +210,8 @@
 -else
 -	@make lint-go
 -	@make lint-cli
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
-+APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
+-endif
++all: install
  
 -.PHONY: lint-go
 -lint-go:
@@ -238,21 +242,32 @@
 -ifdef CI
 -	@echo "mode: atomic" > coverage.txt
 -endif
--
++archive: install
++	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
++	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
+ 
 -.PHONY: unit-test
+-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 -unit-test:
 -ifdef CI
 -	@# Run unit tests with coverage.
+-  ifeq "$(OS)" "Windows_NT"
+-	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  else
 -	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
+-else
 -	@# Run unit tests.
+-  ifeq "$(OS)" "Windows_NT"
+-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-  else
 -	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
+-  endif
++apply-patches: $(wildcard debian/patches/*)
++ifeq ($(APPLY_PATCHES),yes)
++	git reset --hard HEAD
++	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
  endif
  
 -.PHONY: int-test
@@ -264,20 +279,7 @@
 -else
 -	@# Run integration tests.
 -	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
-+all: install
-+
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
-+
-+apply-patches: $(wildcard debian/patches/*)
-+ifeq ($(APPLY_PATCHES),yes)
-+	git reset --hard HEAD
-+	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
- endif
- 
--.PHONY: test
--test: test-prep unit-test int-test test-installer
+-endif
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -361,7 +363,9 @@
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
-+
+ 
+-.PHONY: test
+-test: test-prep unit-test int-test test-installer
 +RPM_BUILDING/%:
 +	mkdir -p $@
  
