@@ -6,6 +6,7 @@ import (
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cli/v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -31,6 +32,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -43,7 +45,7 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *cobra.Command {
+func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
 		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -109,21 +111,29 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
-	visitChildren(cmd, cfg)
+	changeDefaults(cmd, cfg)
 
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, cfg *v1.Config) bool {
+func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest bool) bool {
+	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New()
-	cmd.PersistentPostRun = u.Collect
+
+	if cfg.IsCloudLogin() {
+		u.Version = cliv1.PtrString(ver.Version)
+		cmd.PersistentPostRun = u.Collect
+	}
 
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
-	u.Error = err != nil
 
-	if cfg.IsCloudLogin() {
-		u.Report()
+	if cfg.IsCloudLogin() && *(u.Command) != "" {
+		u.Error = cliv1.PtrBool(err != nil)
+
+		ctx := cfg.Context()
+		client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, ver.UserAgent, isTest, ctx.GetAuthToken())
+		u.Report(client)
 	}
 
 	return err == nil
@@ -145,13 +155,12 @@ func getLongDescription(cfg *v1.Config) string {
 	}
 }
 
-// visitChildren recursively changes the default functionality for each command.
-func visitChildren(cmd *cobra.Command, cfg *v1.Config) {
+func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	cmd.Flags().SortFlags = false
 
 	for _, subcommand := range cmd.Commands() {
-		visitChildren(subcommand, cfg)
+		changeDefaults(subcommand, cfg)
 	}
 }
 

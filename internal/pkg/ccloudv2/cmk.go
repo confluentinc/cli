@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -13,7 +14,7 @@ func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
 	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
 	cfg.Servers = cmkv2.ServerConfigurations{
-		{URL: cmkServer, Description: "Confluent Cloud IAM"},
+		{URL: cmkServer, Description: "Confluent Cloud CMK"},
 	}
 	cfg.UserAgent = userAgent
 	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
