@@ -3,17 +3,12 @@ package kafka
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"regexp"
 	"time"
-
-	"github.com/antihax/optional"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -342,57 +337,9 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Retrieve schema from cluster only if schema is specified.
-	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
-	return h.RequestSchemaWithId(schemaID)
+	schemaId := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
+	return sr.RequestSchemaWithId(schemaId, h.Properties.SchemaPath, h.Subject, h.SrClient, h.Ctx)
 
-}
-
-func (h *GroupHandler) RequestSchemaWithId(schemaID int32) (string, map[string]string, error) {
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
-	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
-	var references []srsdk.SchemaReference
-	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
-		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{
-			Subject: optional.NewString(h.Subject),
-		}
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
-		if err != nil {
-			return "", nil, err
-		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		if err != nil {
-			return "", nil, err
-		}
-
-		refBytes, err := json.Marshal(schemaString.References)
-		if err != nil {
-			return "", nil, err
-		}
-		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
-		if err != nil {
-			return "", nil, err
-		}
-		references = schemaString.References
-	} else {
-		refBlob, err := ioutil.ReadFile(tempRefStorePath)
-		if err != nil {
-			return "", nil, err
-		}
-		err = json.Unmarshal(refBlob, &references)
-		if err != nil {
-			return "", nil, err
-		}
-	}
-
-	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return tempStorePath, referencePathMap, nil
 }
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {

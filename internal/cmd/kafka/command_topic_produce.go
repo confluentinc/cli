@@ -253,16 +253,8 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 		}
 
 		dir := filepath.Join(os.TempDir(), "ccloud-schema")
-		groupHandler := &GroupHandler{
-			SrClient:   srClient,
-			Ctx:        ctx,
-			Format:     valueFormat,
-			Out:        cmd.OutOrStdout(),
-			Subject:    subject,
-			Properties: ConsumerProperties{SchemaPath: dir},
-		}
 		if valueFormat != "string" {
-			*schemaPath, referencePathMap, err = groupHandler.RequestSchemaWithId(schemaId)
+			*schemaPath, referencePathMap, err = sr.RequestSchemaWithId(schemaId, dir, subject, srClient, ctx)
 			if err != nil {
 				return nil, nil, err
 			}

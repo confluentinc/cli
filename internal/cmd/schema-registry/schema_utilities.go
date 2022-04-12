@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
 
+	"github.com/antihax/optional"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -97,6 +99,54 @@ func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 		referencePathMap[ref.Name] = tempStorePath
 	}
 	return referencePathMap, nil
+}
+
+func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
+	tempStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.txt", subject, schemaId))
+	tempRefStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.ref", subject, schemaId))
+	var references []srsdk.SchemaReference
+	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
+		// TODO: add handler for writing schema failure
+		getSchemaOpts := srsdk.GetSchemaOpts{
+			Subject: optional.NewString(subject),
+		}
+		schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, &getSchemaOpts)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		if err != nil {
+			return "", nil, err
+		}
+
+		refBytes, err := json.Marshal(schemaString.References)
+		if err != nil {
+			return "", nil, err
+		}
+		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		if err != nil {
+			return "", nil, err
+		}
+		references = schemaString.References
+	} else {
+		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		if err != nil {
+			return "", nil, err
+		}
+		err = json.Unmarshal(refBlob, &references)
+		if err != nil {
+			return "", nil, err
+		}
+	}
+
+	// Store the references in temporary files
+	referencePathMap, err := StoreSchemaReferences(references, srClient, ctx)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return tempStorePath, referencePathMap, nil
 }
 
 func getMetaInfoFromSchemaId(id int32) []byte {
