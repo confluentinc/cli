@@ -83,17 +83,17 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	schemaPathPtr := &schemaPath
 
-	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, schemaPathPtr, valueFormat, subject, serializationProvider.GetSchemaName())
+	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, &schemaPath, valueFormat, subject, serializationProvider.GetSchemaName())
 	if err != nil {
 		return err
 	}
 
-	err = serializationProvider.LoadSchema(*schemaPathPtr, referencePathMap)
+	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
 	}
+	fmt.Println("loadng schema from:", schemaPath)
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
@@ -220,7 +220,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 	return metaInfo, referencePathMap, nil
 }
 
-func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaPathPtr *string, valueFormat string, subject string, providerName string) ([]byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaPath *string, valueFormat string, subject string, providerName string) ([]byte, map[string]string, error) {
 	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
 		return nil, nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
@@ -228,13 +228,13 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{0x0}
 
-	if *schemaPathPtr != "" { // read schema from local file
+	if *schemaPath != "" { // read schema from local file
 		refs, err := sr.ReadSchemaRefs(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 		// Meta info contains a magic byte and schema ID (4 bytes).
-		return c.registerSchema(cmd, valueFormat, *schemaPathPtr, subject, providerName, refs)
+		return c.registerSchema(cmd, valueFormat, *schemaPath, subject, providerName, refs)
 	}
 
 	schemaId, err := cmd.Flags().GetInt32("schema-id")
@@ -262,7 +262,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 			Properties: ConsumerProperties{SchemaPath: dir},
 		}
 		if valueFormat != "string" {
-			*schemaPathPtr, referencePathMap, err = groupHandler.RequestSchemaWithId(schemaId)
+			*schemaPath, referencePathMap, err = groupHandler.RequestSchemaWithId(schemaId)
 			if err != nil {
 				return nil, nil, err
 			}
