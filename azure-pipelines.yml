@@ -53,6 +53,11 @@ steps:
     make deps
   displayName: 'make deps'
 
+- script: |
+    make lint
+  timeoutInMinutes: 15
+  displayName: 'make lint'
+
 # make test will build the CLI as part of its work
 # (for integration tests), so no need to run build
 # make targets separately
@@ -60,10 +65,6 @@ steps:
     make test
   timeoutInMinutes: 90
   displayName: 'make test'
-
-- script: |
-    make lint-licenses
-  displayName: 'make lint-licenses'
 
 - script: |
     git checkout go.*

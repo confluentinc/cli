@@ -215,9 +215,15 @@ lint-licenses: build
 	[ -t 0 ] && args="" || args="-plain" ; \
 	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
 
-.PHONY: coverage-unit
+.PHONY: test-prep
+test-prep:
+ifdef CI
+	@echo "mode: atomic" > coverage.txt
+endif
+
+.PHONY: unit-test
 ## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
-coverage-unit:
+unit-test:
 ifdef CI
 	@# Run unit tests with coverage.
   ifeq "$(OS)" "Windows_NT"
@@ -235,31 +241,19 @@ else
   endif
 endif
 
-.PHONY: coverage-integ
-coverage-integ:
-      ifdef CI
+.PHONY: int-test
+int-test:
+ifdef CI
 	@# Run integration tests with coverage.
 	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
-      else
+else
 	@# Run integration tests.
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
-      endif
-
-.PHONY: test-prep
-test-prep: lint
-      ifdef CI
-    @echo "mode: atomic" > coverage.txt
-      endif
+endif
 
 .PHONY: test
-test: test-prep coverage-unit coverage-integ test-installer
-
-.PHONY: unit-test
-unit-test: test-prep coverage-unit
-
-.PHONY: int-test
-int-test: test-prep coverage-integ
+test: test-prep unit-test int-test test-installer
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
