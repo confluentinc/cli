@@ -27,7 +27,7 @@ type command struct {
 	clientFactory pauth.CCloudClientFactory
 }
 
-func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
+func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
@@ -39,11 +39,11 @@ func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.C
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
 	}
-	c.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
+	cmd.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
 
-	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
+	cmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 
-	return c
+	return cmd
 }
 
 func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
@@ -130,7 +130,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	signupReply, err := client.Signup.Create(context.Background(), req)
 	if err != nil {
 		if strings.Contains(err.Error(), "email already exists") {
-			return errors.NewErrorWithSuggestions("failed to signup", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
+			return errors.NewErrorWithSuggestions("failed to sign up", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
 		}
 		return err
 
