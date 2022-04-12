@@ -101,7 +101,7 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,
-		V2Client:     ccloudv2.NewClient(nil, nil, orgClient, "auth-token"),
+		V2Client:     &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
 		Config:       suite.conf,
 	}
 	return New(prerunner)

@@ -18,7 +18,7 @@ var (
 )
 
 // Handler for: "/org/v2/environments/{id}"
-func HandleOrgEnvironment(t *testing.T) http.HandlerFunc {
+func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
@@ -42,7 +42,7 @@ func HandleOrgEnvironment(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/org/v2/environments"
-func HandleOrgEnvironments(t *testing.T) http.HandlerFunc {
+func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {

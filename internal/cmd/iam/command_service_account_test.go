@@ -58,7 +58,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	iamClient := &iamv2.APIClient{
 		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, ccloudv2.NewClient(nil, iamClient, nil, "auth-token"), nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(nil, &ccloudv2.Client{IamClient: iamClient, AuthToken: "auth-token"}, nil, nil, conf)
 	return newServiceAccountCommand(prerunner)
 }
 
