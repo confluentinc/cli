@@ -86,7 +86,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
-func (suite *SchemaTestSuite) TestRequestById() {
+func (suite *SchemaTestSuite) TestRequestSchemaById() {
 	tmpdir := suite.T().TempDir()
 	tempStorePath, _, err := RequestSchemaWithId(123, tmpdir, "subject", suite.srClientMock, suite.newCMD().Context())
 	req := require.New(suite.T())
