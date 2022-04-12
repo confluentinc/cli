@@ -47,8 +47,9 @@ var (
 )
 
 type ConsumerProperties struct {
-	PrintKey   bool
 	Delimiter  string
+	FullHeader bool
+	PrintKey   bool
 	SchemaPath string
 }
 
@@ -435,7 +436,11 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if e.Headers != nil {
-		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
+		var headers interface{} = e.Headers
+		if h.Properties.FullHeader {
+			headers = getFullHeaders(e.Headers)
+		}
+		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
 		if err != nil {
 			return err
 		}
@@ -515,4 +520,22 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 		return configMap.Set("debug=all")
 	}
 	return nil
+}
+
+func getFullHeaders(headers []ckafka.Header) []string {
+	headerStrings := make([]string, len(headers))
+	for i, header := range headers {
+		headerStrings[i] = getHeaderString(header)
+	}
+	return headerStrings
+}
+
+func getHeaderString(header ckafka.Header) string {
+	if header.Value == nil {
+		return fmt.Sprintf("%s=nil", header.Key)
+	} else if len(header.Value) == 0 {
+		return fmt.Sprintf("%s=<empty>", header.Key)
+	} else {
+		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
+	}
 }
