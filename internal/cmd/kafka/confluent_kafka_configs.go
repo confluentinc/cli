@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"reflect"
-	"strings"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,30 +17,7 @@ import (
 )
 
 type kafkaClientConfigs struct {
-	Bootstrap     string `json:"bootstrap.servers"`
-	ClientId      string `json:"client.id"`
-	Protocol      string `json:"security.protocol"`
-	SaslMechanism string `json:"sasl.mechanism"`
-	SaslUsername  string `json:"sasl.username"`
-	SaslPassword  string `json:"sasl.password"`
-	SslAlgorithm  string `json:"ssl.endpoint.identification.algorithm"`
-	// producer configurations
-	BatchNumMessages               string `json:"batch.num.messages"`
-	BatchSize                      string `json:"batch.size"`
-	CompressionCodec               string `json:"compression.codec"`
-	MessageSendMaxRetries          string `json:"message.send.max.retries"`
-	QueueBufferingMaxKBytes        string `json:"queue.buffering.max.kbytes"`
-	RequestRequiredAcks            string `json:"request.required.acks"`
-	RequestTimeoutMs               string `json:"request.timeout.ms"`
-	RetryBackoffMs                 string `json:"retry.backoff.ms"`
-	SocketReceiveBufferBytes       string `json:"socket.receive.buffer.bytes"`
-	TopicMetadataRefreshIntervalMs string `json:"topic.metadata.refresh.interval.ms"`
-	// consumer configurations TODO
-	AutoOffsetReset  string `json:"auto.offset.reset"`
-	CheckCrcs        string `json:"check.crcs"`
-	GroupId          string `json:"group.id"`
-	IsolationLevel   string `json:"isolation.level"`
-	SessionTimeoutMs string `json:"session.timeout.ms"`
+	configurations map[string]string
 }
 
 // cloud kafka client configuration
@@ -312,59 +287,39 @@ func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 }
 
 func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) error {
+	configurations := make(map[string]string)
+	var err error
 	if configPath != "" {
-		return overwriteKafkaClientConfigsFromFile(configMap, configPath)
+		configFile, err := os.Open(configPath)
+		if err != nil {
+			return err
+		}
+		defer configFile.Close()
+		configBytes, err := ioutil.ReadAll(configFile)
+		if err != nil {
+			return err
+		}
+		clientConfigs := &kafkaClientConfigs{}
+		if err := json.Unmarshal(configBytes, &clientConfigs.configurations); err != nil {
+			return err
+		}
+		configurations = clientConfigs.configurations
+
 	}
 
-	if configStrings != nil {
-		return overwriteKafkaClientConfigsFromFlag(configMap, configStrings)
-	}
-
-	return nil
-}
-
-func overwriteKafkaClientConfigsFromFile(configMap *ckafka.ConfigMap, configPath string) error {
-	configFile, err := os.Open(configPath)
-	if err != nil {
-		return err
-	}
-	defer configFile.Close()
-	configBytes, err := ioutil.ReadAll(configFile)
-	if err != nil {
-		return err
-	}
-	d := json.NewDecoder(strings.NewReader(string(configBytes)))
-	d.DisallowUnknownFields()
-	configs := &kafkaClientConfigs{}
-	err = d.Decode(configs)
-	if err != nil {
-		return err
-	}
-
-	s := reflect.ValueOf(configs).Elem()
-	for i := 0; i < s.NumField(); i++ {
-		f := s.Field(i)
-		if f.Interface() != nil && !f.IsZero() {
-			key := s.Type().Field(i).Tag.Get("json")
-			if err := configMap.SetKey(key, f.Interface()); err != nil {
-				return err
-			}
-			log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, f.Interface())
+	if len(configStrings) > 0 {
+		configurations, err = properties.ToMap(configStrings)
+		if err != nil {
+			return err
 		}
 	}
-	return nil
-}
 
-func overwriteKafkaClientConfigsFromFlag(configMap *ckafka.ConfigMap, configStrings []string) error {
-	configsMap, err := properties.ToMap(configStrings)
-	if err != nil {
-		return err
-	}
-	for key, value := range configsMap {
+	for key, value := range configurations {
 		if err := configMap.SetKey(key, value); err != nil {
 			return err
 		}
 		log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, value)
 	}
+
 	return nil
 }
