@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -53,12 +54,12 @@ func (suite *ServiceAccountTestSuite) SetupTest() {
 	}
 }
 
-func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *serviceAccountCommand {
+func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	iamClient := &iamv2.APIClient{
 		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, ccloudv2.NewClient(nil, iamClient, nil, "auth-token"), nil, nil, conf)
-	return NewServiceAccountCommand(prerunner)
+	prerunner := cliMock.NewPreRunnerMock(nil, &ccloudv2.Client{IamClient: iamClient, AuthToken: "auth-token"}, nil, nil, conf)
+	return newServiceAccountCommand(prerunner)
 }
 
 func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {

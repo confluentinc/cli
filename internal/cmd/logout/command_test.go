@@ -36,7 +36,7 @@ const (
 
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -49,7 +49,7 @@ var (
 				}, nil
 			}
 		},
-		GetOnPremCredentialsFromEnvVarFunc: func(_ *cobra.Command) func() (*pauth.Credentials, error) {
+		GetOnPremCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -62,13 +62,17 @@ var (
 				}, nil
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloud.Client) {
-		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	orgManagerImpl               = pauth.NewLoginOrganizationManagerImpl()
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
@@ -110,7 +114,7 @@ func TestLogout(t *testing.T) {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	logoutCmd, cfg := newLogoutCmd(cfg, mockNetrcHandler)
-	output, err := pcmd.ExecuteCommand(logoutCmd.Command)
+	output, err := pcmd.ExecuteCommand(logoutCmd)
 	req.NoError(err)
 	req.Contains(output, errors.LoggedOutMsg)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
@@ -124,7 +128,6 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().NetrcMachineName
-	logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
 	// run login command
 	auth := &sdkMock.Auth{
 		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
@@ -144,10 +147,10 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	}
 	user := &sdkMock.User{}
 	loginCmd, _ := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command)
+	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
 
-	_, err = logoutCmd.netrcHandler.RemoveNetrcCredentials(true, contextName)
+	_, err = mockNetrcHandler.RemoveNetrcCredentials(true, contextName)
 	req.NoError(err)
 	exist, err := mockNetrcHandler.CheckCredentialExistFunc(true, contextName)
 	req.NoError(err)
@@ -156,7 +159,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
-	loginOrganizationManager pauth.LoginOrganizationManager) (*login.Command, *v1.Config) {
+	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
@@ -187,11 +190,11 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*Command, *v1.Config) {
+func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
 	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }

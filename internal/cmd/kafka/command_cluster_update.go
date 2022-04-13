@@ -104,7 +104,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv
 		}
 		// Ensure the cluster is a Dedicated Cluster
 		if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-			return -1, errors.Errorf("error updating kafka cluster: %v", errors.ClusterResizeNotSupported)
+			return -1, errors.Errorf("failed to update kafka cluster: %v", errors.ClusterResizeNotSupported)
 		}
 		// Durability Checks
 		if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {

@@ -22,6 +22,7 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
+	cfg                      *v1.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
 	netrcHandler             netrc.NetrcHandler
@@ -31,7 +32,7 @@ type Command struct {
 	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -52,17 +53,18 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 
 	c := &Command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
-		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
+		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
 		isTest:                   isTest,
 	}
-
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
-	return c
+
+	return cmd
 }
 
 func (c *Command) login(cmd *cobra.Command, _ []string) error {
@@ -140,16 +142,17 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if err != nil {
 		return nil, err
 	}
-
 	if promptOnly {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
+
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
@@ -240,7 +243,7 @@ func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(cmd),
+		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)

@@ -14,6 +14,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/pkg/errors"
 )
 
 /*
@@ -262,6 +263,26 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
 		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
 		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
+	}
+	return err
+}
+
+func CatchSchemaNotFoundError(err error, resp *http.Response) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(resp.Status, "Not Found") {
+		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
+	}
+	return err
+}
+
+func CatchNoSubjectLevelConfigError(err error, resp *http.Response, subject string) error {
+	if err == nil {
+		return nil
+	}
+	if strings.Contains(resp.Status, "Not Found") {
+		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
 	}
 	return err
 }

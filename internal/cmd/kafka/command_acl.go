@@ -24,7 +24,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
+func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "acl",
 		Short: "Manage Kafka ACLs.",
@@ -33,18 +33,17 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 	c := &aclCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	if cfg.IsCloudLogin() {
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newListCommand())
 	} else {
 		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
-
-		c.AddCommand(c.newCreateCommandOnPrem())
-		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
-	return c
+	return cmd
 }
 
 // validateAddAndDelete ensures the minimum requirements for acl add and delete are met

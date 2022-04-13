@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -217,6 +218,29 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		nil
 }
 
+/*
+Helper function to add flags for all the legal scopes/clusters for the command.
+*/
+func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
+	if isCloudLogin {
+		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
+		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+		}
+	} else {
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(cmd, cliCommand)
+	}
+}
+
 func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
 	if len(strings.Split(principal, ":")) == 1 {
 		return errors.NewErrorWithSuggestions(errors.PrincipalFormatErrorMsg, errors.PrincipalFormatSuggestions)
@@ -302,6 +326,22 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		scopeV2.Clusters.KafkaCluster = kafkaCluster
+	}
+
+	if cmd.Flags().Changed("schema-registry-cluster-id") {
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+		if err != nil {
+			return nil, err
+		}
+		scopeV2.Clusters.SchemaRegistryCluster = srCluster
+	}
+
+	if cmd.Flags().Changed("ksql-cluster-id") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+		if err != nil {
+			return nil, err
+		}
+		scopeV2.Clusters.KsqlCluster = ksqlCluster
 	}
 
 	if cmd.Flags().Changed("role") {

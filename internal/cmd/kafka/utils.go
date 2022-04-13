@@ -27,14 +27,6 @@ func copyMap(inputMap map[string]string) map[string]string {
 	return newMap
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
 	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0

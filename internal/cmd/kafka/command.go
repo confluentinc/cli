@@ -19,27 +19,25 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 
 	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
 
-	aclCmd := newAclCommand(cfg, prerunner)
 	clusterCmd := newClusterCommand(cfg, prerunner)
-	groupCmd := newConsumerGroupCommand(prerunner)
+
+	cmd.AddCommand(newAclCommand(cfg, prerunner))
+	cmd.AddCommand(newBrokerCommand(prerunner))
+	cmd.AddCommand(newClientConfigCommand(prerunner, clientID))
+	cmd.AddCommand(clusterCmd.Command)
+	cmd.AddCommand(newConsumerGroupCommand(prerunner))
+	cmd.AddCommand(newLinkCommand(cfg, prerunner))
+	cmd.AddCommand(newMirrorCommand(prerunner))
+	cmd.AddCommand(newPartitionCommand(prerunner))
+	cmd.AddCommand(newRegionCommand(prerunner))
+	cmd.AddCommand(newReplicaCommand(prerunner))
+
 	topicCmd := newTopicCommand(cfg, prerunner, clientID)
-
-	c.AddCommand(newBrokerCommand(prerunner))
-	c.AddCommand(newClientConfigCommand(prerunner, clientID))
-	c.AddCommand(newLinkCommand(cfg, prerunner))
-	c.AddCommand(newMirrorCommand(prerunner))
-	c.AddCommand(newPartitionCommand(prerunner))
-	c.AddCommand(newReplicaCommand(prerunner))
-	c.AddCommand(newRegionCommand(prerunner))
-	c.AddCommand(aclCmd.Command)
-	c.AddCommand(clusterCmd.Command)
-	c.AddCommand(groupCmd.Command)
-
 	if topicCmd.hasAPIKeyTopicCommand != nil {
 		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
 	} else if topicCmd.authenticatedTopicCommand != nil {
 		c.AddCommand(topicCmd.authenticatedTopicCommand.Command)
 	}
 
-	return c.Command
+	return cmd
 }

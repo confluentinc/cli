@@ -93,7 +93,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	refs, err := readSchemaRefs(cmd)
+	refs, err := sr.ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
 	}
@@ -182,17 +182,16 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
-		srClient, ctx, err := sr.GetAPIClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 		if err != nil {
 			return nil, nil, err
 		}
 
-		info, err := registerSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
-		metaInfo = info
-		referencePathMap, err = storeSchemaReferences(refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}

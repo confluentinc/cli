@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -122,7 +122,7 @@ const (
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupported                     = "Cluster resize is support only on dedicated clusters."
+	ClusterResizeNotSupported                     = "cluster resize is only supported on dedicated clusters"
 	CloudRegionNotAvailableErrorMsg               = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
@@ -196,11 +196,17 @@ const (
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
+	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
+	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg                    = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
+		"List available versions with `confluent schema-registry subject describe`"
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

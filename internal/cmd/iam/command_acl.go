@@ -18,7 +18,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "acl",
 		Short:       "Manage Kafka ACLs (5.4+ only).",
