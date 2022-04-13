@@ -67,6 +67,10 @@ steps:
   displayName: 'make test'
 
 - script: |
+    make lint-licenses
+  displayName: 'make lint-licenses'
+
+- script: |
     git checkout go.*
   displayName: 'Reset go.* just in case'
 
