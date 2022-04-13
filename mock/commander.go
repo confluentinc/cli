@@ -7,9 +7,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -116,11 +117,9 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
-		ctx := command.Config.Context()
-		if ctx == nil {
+		if command.Config.Context() == nil {
 			return new(errors.NotLoggedInError)
 		}
-		command.Context = ctx
 		return nil
 	}
 }
