@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -261,6 +262,14 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 
 // common configuration utilities
 
+func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
+	autoOffsetReset := "latest"
+	if beginning {
+		autoOffsetReset = "earliest"
+	}
+	return configMap.SetKey("auto.offset.reset", autoOffsetReset)
+}
+
 func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
 	switch log.CliLogger.GetLevel() {
 	case log.DEBUG:
@@ -281,27 +290,47 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string) error {
-	if configPath == "" {
-		return nil
+func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) error {
+	if configPath != "" {
+		return overwriteKafkaClientConfigsFromFile(configMap, configPath)
 	}
 
+	if configStrings != nil {
+		return overwriteKafkaClientConfigsFromFlag(configMap, configStrings)
+	}
+
+	return nil
+}
+
+func overwriteKafkaClientConfigsFromFile(configMap *ckafka.ConfigMap, configPath string) error {
 	cfg, err := parseKafkaClientConfigFile(configPath)
 	if err != nil {
 		return err
 	}
-
 	s := reflect.ValueOf(cfg).Elem()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		if f.Interface() != nil && !f.IsZero() {
 			key := s.Type().Field(i).Tag.Get("json")
-			err := configMap.SetKey(key, f.Interface())
-			log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, f.Interface())
-			if err != nil {
+			if err := configMap.SetKey(key, f.Interface()); err != nil {
 				return err
 			}
+			log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, f.Interface())
 		}
+	}
+	return nil
+}
+
+func overwriteKafkaClientConfigsFromFlag(configMap *ckafka.ConfigMap, configStrings []string) error {
+	configsMap, err := properties.ToMap(configStrings)
+	if err != nil {
+		return err
+	}
+	for key, value := range configsMap {
+		if err := configMap.SetKey(key, value); err != nil {
+			return err
+		}
+		log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, value)
 	}
 	return nil
 }
@@ -321,12 +350,4 @@ func parseKafkaClientConfigFile(path string) (*kafkaClientConfigs, error) {
 	err = json.Unmarshal(configBytes, configs)
 
 	return configs, err
-}
-
-func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
-	}
-	return configMap.SetKey("auto.offset.reset", autoOffsetReset)
 }

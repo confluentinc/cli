@@ -32,7 +32,8 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	cmd.Flags().String("configs", "", "The path to the configuration file.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration ('key=value') overrides.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
@@ -53,12 +54,20 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	configPath, err := cmd.Flags().GetString("configs")
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configPath, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	configStrings, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	producer, err := NewProducer(cluster, c.clientID, configPath)
+	producer, err := NewProducer(cluster, c.clientID, configPath, configStrings)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
