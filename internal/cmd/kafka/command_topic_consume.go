@@ -38,7 +38,7 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration ('key=value') overrides.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the consumer client.")
 	cmd.Flags().String("config-file", "", "The path to the configuration file.")
 	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
@@ -98,7 +98,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	consumer, err := NewConsumer(group, cluster, c.clientID, beginning, configPath, configStrings)
+	consumer, err := newConsumer(group, cluster, c.clientID, beginning, configPath, configStrings)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}

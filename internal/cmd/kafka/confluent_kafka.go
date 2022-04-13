@@ -134,62 +134,42 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 
 // create cloud kafka client
 
-func NewProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
-		return nil, err
-	}
-
-	return ckafka.NewProducer(configMap)
+	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
 	if err != nil {
 		return nil, err
 	}
 
-	err = overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
-		return nil, err
-	}
-
-	return ckafka.NewConsumer(configMap)
+	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
 // create on-prem kafka client
 
-func NewOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
-		return nil, err
-	}
-
-	return ckafka.NewProducer(configMap)
+	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func NewOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
 	}
 
-	err = overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
-		return nil, err
-	}
-
-	return ckafka.NewConsumer(configMap)
+	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
 // consumer utilities

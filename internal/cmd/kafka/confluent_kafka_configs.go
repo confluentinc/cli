@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -37,9 +38,11 @@ type kafkaClientConfigs struct {
 	SocketReceiveBufferBytes       string `json:"socket.receive.buffer.bytes"`
 	TopicMetadataRefreshIntervalMs string `json:"topic.metadata.refresh.interval.ms"`
 	// consumer configurations TODO
-	GroupId         string `json:"group.id"`
-	AutoOffsetReset string `json:"auto.offset.reset"`
-	CheckCrcs       string `json:"check.crcs"`
+	AutoOffsetReset  string `json:"auto.offset.reset"`
+	CheckCrcs        string `json:"check.crcs"`
+	GroupId          string `json:"group.id"`
+	IsolationLevel   string `json:"isolation.level"`
+	SessionTimeoutMs string `json:"session.timeout.ms"`
 }
 
 // cloud kafka client configuration
@@ -290,6 +293,24 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
+func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Producer, error) {
+	err := overwriteKafkaClientConfigs(configMap, configPath, configStrings)
+	if err != nil {
+		return nil, err
+	}
+
+	return ckafka.NewProducer(configMap)
+}
+
+func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+	err := overwriteKafkaClientConfigs(configMap, configPath, configStrings)
+	if err != nil {
+		return nil, err
+	}
+
+	return ckafka.NewConsumer(configMap)
+}
+
 func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) error {
 	if configPath != "" {
 		return overwriteKafkaClientConfigsFromFile(configMap, configPath)
@@ -303,11 +324,24 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 }
 
 func overwriteKafkaClientConfigsFromFile(configMap *ckafka.ConfigMap, configPath string) error {
-	cfg, err := parseKafkaClientConfigFile(configPath)
+	configFile, err := os.Open(configPath)
 	if err != nil {
 		return err
 	}
-	s := reflect.ValueOf(cfg).Elem()
+	defer configFile.Close()
+	configBytes, err := ioutil.ReadAll(configFile)
+	if err != nil {
+		return err
+	}
+	d := json.NewDecoder(strings.NewReader(string(configBytes)))
+	d.DisallowUnknownFields()
+	configs := &kafkaClientConfigs{}
+	err = d.Decode(configs)
+	if err != nil {
+		return err
+	}
+
+	s := reflect.ValueOf(configs).Elem()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		if f.Interface() != nil && !f.IsZero() {
@@ -333,21 +367,4 @@ func overwriteKafkaClientConfigsFromFlag(configMap *ckafka.ConfigMap, configStri
 		log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, value)
 	}
 	return nil
-}
-
-func parseKafkaClientConfigFile(path string) (*kafkaClientConfigs, error) {
-	configFile, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer configFile.Close()
-
-	configs := &kafkaClientConfigs{}
-	configBytes, err := ioutil.ReadAll(configFile)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(configBytes, configs)
-
-	return configs, err
 }

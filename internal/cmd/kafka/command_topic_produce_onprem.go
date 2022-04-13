@@ -40,12 +40,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration ('key=value') overrides.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the producer client.")
 	cmd.Flags().String("config-file", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
@@ -70,7 +70,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	producer, err := NewOnPremProducer(cmd, c.clientID, configPath, configStrings)
+	producer, err := newOnPremProducer(cmd, c.clientID, configPath, configStrings)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
