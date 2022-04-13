@@ -117,6 +117,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err := setProducerDebugOption(configMap); err != nil {
 		return nil, err
 	}
+
 	return setProtocolConfig(cmd, configMap)
 }
 
@@ -280,22 +281,24 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func overwriteKafkaProducerConfigs(configMap *ckafka.ConfigMap, configPath string) error {
+func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string) error {
 	if configPath == "" {
 		return nil
 	}
 
-	cfg, err := parseProducerConfigFile(configPath)
+	cfg, err := parseKafkaClientConfigFile(configPath)
 	if err != nil {
 		return err
 	}
+
 	s := reflect.ValueOf(cfg).Elem()
-	typeOfT := s.Type()
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		if f.Interface() != nil && !f.IsZero() {
-			key := typeOfT.Field(i).Tag.Get("json")
-			if err := configMap.SetKey(key, f.Interface()); err != nil {
+			key := s.Type().Field(i).Tag.Get("json")
+			err := configMap.SetKey(key, f.Interface())
+			log.CliLogger.Debugf(`Overwrote the value of client configuration "%s" to "%s"`, key, f.Interface())
+			if err != nil {
 				return err
 			}
 		}
@@ -303,7 +306,7 @@ func overwriteKafkaProducerConfigs(configMap *ckafka.ConfigMap, configPath strin
 	return nil
 }
 
-func parseProducerConfigFile(path string) (*kafkaClientConfigs, error) {
+func parseKafkaClientConfigFile(path string) (*kafkaClientConfigs, error) {
 	configFile, err := os.Open(path)
 	if err != nil {
 		return nil, err

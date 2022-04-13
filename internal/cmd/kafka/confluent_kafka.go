@@ -140,11 +140,10 @@ func NewProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 		return nil, err
 	}
 
-	err = overwriteKafkaProducerConfigs(configMap, configPath)
+	err = overwriteKafkaClientConfigs(configMap, configPath)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%+v\n", configMap)
 
 	return ckafka.NewProducer(configMap)
 }
@@ -155,11 +154,10 @@ func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 		return nil, err
 	}
 
-	err = overwriteKafkaProducerConfigs(configMap, configPath)
+	err = overwriteKafkaClientConfigs(configMap, configPath)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%+v\n", configMap)
 
 	return ckafka.NewConsumer(configMap)
 }
@@ -172,11 +170,11 @@ func NewOnPremProducer(cmd *cobra.Command, clientID string, configPath string) (
 		return nil, err
 	}
 
-	err = overwriteKafkaProducerConfigs(configMap, configPath)
+	err = overwriteKafkaClientConfigs(configMap, configPath)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%+v\n", configMap)
+
 	return ckafka.NewProducer(configMap)
 }
 
@@ -186,11 +184,11 @@ func NewOnPremConsumer(cmd *cobra.Command, clientID string, configPath string) (
 		return nil, err
 	}
 
-	err = overwriteKafkaProducerConfigs(configMap, configPath)
+	err = overwriteKafkaClientConfigs(configMap, configPath)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%+v\n", configMap)
+
 	return ckafka.NewConsumer(configMap)
 }
 
