@@ -1,0 +1,56 @@
+{
+  "schemas": [
+    {
+      "id": 1001,
+      "schemaType": "record",
+      "references": [
+        {
+          "name": "ref_lvl1_1",
+          "subject": "lvl1-1",
+          "version": 1
+        },
+        {
+          "name": "ref_lvl1_2",
+          "subject": "lvl1-2",
+          "version": 1
+        }
+      ],
+      "schema": "schema0"
+    },
+    {
+      "subject": "lvl1-1",
+      "version": 1,
+      "id": 1002,
+      "schemaType": "record",
+      "references": [
+        {
+          "name": "ref_lvl2",
+          "subject": "lvl2",
+          "version": 1
+        }
+      ],
+      "schema": "schema11"
+    },
+    {
+      "subject": "lvl2",
+      "version": 1,
+      "id": 1004,
+      "schemaType": "record",
+      "schema": "schema2"
+    },
+    {
+      "subject": "lvl1-2",
+      "version": 1,
+      "id": 1003,
+      "schemaType": "record",
+      "references": [
+        {
+          "name": "ref_lvl2",
+          "subject": "lvl2",
+          "version": 1
+        }
+      ],
+      "schema": "schema12"
+    }
+  ]
+}
