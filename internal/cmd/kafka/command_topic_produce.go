@@ -93,7 +93,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	fmt.Println("loadng schema from:", schemaPath)
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
 
