@@ -17,12 +17,11 @@ import (
 	"reflect"
 	"testing"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -196,7 +195,7 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
-	output, err := pcmd.ExecuteCommand(loginCmd.Command)
+	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
 	req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, envUser))
 
@@ -253,7 +252,7 @@ func TestOrgIdOverride(t *testing.T) {
 		}
 		loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
-		output, err := pcmd.ExecuteCommand(loginCmd.Command)
+		output, err := pcmd.ExecuteCommand(loginCmd)
 		req.NoError(err)
 		req.Empty("", output)
 
@@ -328,7 +327,7 @@ func TestLoginSuccess(t *testing.T) {
 			s.args = append(s.args, "--organization-id="+s.orgId)
 		}
 		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
-		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
+		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		if s.isCloud && s.orgId == "" {
@@ -469,7 +468,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 			if !tt.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
 			}
-			output, err := pcmd.ExecuteCommand(loginCmd.Command, loginArgs...)
+			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
 			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
 		})
@@ -538,7 +537,7 @@ func TestPromptLoginFlag(t *testing.T) {
 			if !tt.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
 			}
-			output, err := pcmd.ExecuteCommand(loginCmd.Command, loginArgs...)
+			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
 
 			req.False(mockLoginCredentialsManager.GetCloudCredentialsFromEnvVarCalled())
@@ -576,7 +575,7 @@ func TestLoginFail(t *testing.T) {
 		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
-	_, err := pcmd.ExecuteCommand(loginCmd.Command)
+	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
 	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
 }
@@ -621,7 +620,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 				expectedCaCert = tt.caCertPathFlag
 			}
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
-			_, err := pcmd.ExecuteCommand(loginCmd.Command, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
+			_, err := pcmd.ExecuteCommand(loginCmd, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
 			req.NoError(err)
 
 			ctx := cfg.Context()
@@ -676,7 +675,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 			if tt.useCaCertPathFlag {
 				args = append(args, "--ca-cert-path=")
 			}
-			_, err := pcmd.ExecuteCommand(loginCmd.Command, args...)
+			_, err := pcmd.ExecuteCommand(loginCmd, args...)
 			req.NoError(err)
 
 			ctx := cfg.Context()
@@ -687,7 +686,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Config, expectedCaCertPath string) *Command {
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Config, expectedCaCertPath string) *cobra.Command {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -740,8 +739,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
-	loginCmd.loginOrganizationManager = mockLoginOrganizationManager
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockLoginOrganizationManager, mockAuthTokenHandler, true)
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
 	return loginCmd
@@ -801,7 +799,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 		// Login to the CLI control plane
-		output, err := pcmd.ExecuteCommand(loginCmd.Command, s.args...)
+		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
@@ -813,13 +811,13 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 		// Executing logout
 		logoutCmd, _ := newLogoutCmd(cfg, mockNetrcHandler)
-		output, err = pcmd.ExecuteCommand(logoutCmd.Command)
+		output, err = pcmd.ExecuteCommand(logoutCmd)
 		req.NoError(err)
 		req.Contains(output, errors.LoggedOutMsg)
 		verifyLoggedOutState(t, cfg, ctx.Name)
 
 		// logging back in the the same context
-		output, err = pcmd.ExecuteCommand(loginCmd.Command, s.args...)
+		output, err = pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
 		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
@@ -906,7 +904,7 @@ func TestValidateUrl(t *testing.T) {
 
 func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
-	loginOrganizationManager pauth.LoginOrganizationManager) (*Command, *v1.Config) {
+	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
@@ -937,12 +935,11 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
-	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
-	loginCmd.loginOrganizationManager = loginOrganizationManager
+	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, true)
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*logout.Command, *v1.Config) {
+func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
 	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
