@@ -82,7 +82,6 @@ type StateFlagCommand struct {
 
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
 }
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
@@ -712,7 +711,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
@@ -722,12 +721,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
-		command.Context = ctx
 
 		var clusterId string
-		if command.Context.Credential.CredentialType == v1.APIKey {
+		switch ctx.Credential.CredentialType {
+		case v1.APIKey:
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		} else if command.Context.Credential.CredentialType == v1.Username {
+		case v1.Username:
 			if err := r.ValidateToken(cmd, command.Config); err != nil {
 				return err
 			}
@@ -736,7 +735,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClient(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, command.Context.State.AuthToken)
+			v2Client := ccloudv2.NewClient(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, ctx.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client
@@ -767,7 +766,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}
-		} else {
+		default:
 			panic("Invalid Credential Type")
 		}
 

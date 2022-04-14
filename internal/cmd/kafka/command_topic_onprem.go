@@ -29,17 +29,6 @@ type TopicData struct {
 	Configs           map[string]string `json:"config" yaml:"config"`
 }
 
-// Register each of the verbs and expected args
-func (c *authenticatedTopicCommand) onPremInit() {
-	c.AddCommand(c.newListCommandOnPrem())
-	c.AddCommand(c.newCreateCommandOnPrem())
-	c.AddCommand(c.newDeleteCommandOnPrem())
-	c.AddCommand(c.newUpdateCommandOnPrem())
-	c.AddCommand(c.newDescribeCommandOnPrem())
-	c.AddCommand(c.newProduceCommandOnPrem())
-	c.AddCommand(c.newConsumeCommandOnPrem())
-}
-
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
 	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {
