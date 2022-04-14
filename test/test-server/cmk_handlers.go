@@ -19,52 +19,40 @@ import (
 func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		var req cmkv2.CmkV2Cluster
-		err := json.NewDecoder(r.Body).Decode(&req)
+
+		req := new(cmkv2.CmkV2Cluster)
+		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
-		if req.Spec.Config.CmkV2Dedicated != nil {
-			createCluster := &cmkv2.CmkV2Cluster{
-				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString(*req.Spec.DisplayName),
-					Cloud:       cmkv2.PtrString(*req.Spec.Cloud),
-					Region:      cmkv2.PtrString(*req.Spec.Region),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: req.Spec.Config.CmkV2Dedicated.Cku},
-					},
-					KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-					HttpEndpoint:           cmkv2.PtrString("https://pkc-endpoint"),
-					Availability:           req.Spec.Availability,
-				},
-				Id: cmkv2.PtrString("lkc-def963"),
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-					Cku:   cmkv2.PtrInt32(1),
-				},
-			}
-			err := json.NewEncoder(w).Encode(createCluster)
-			require.NoError(t, err)
-		} else {
-			createCluster := &cmkv2.CmkV2Cluster{
-				Spec: &cmkv2.CmkV2ClusterSpec{
-					DisplayName: cmkv2.PtrString(*req.Spec.DisplayName),
-					Cloud:       cmkv2.PtrString(*req.Spec.Cloud),
-					Region:      cmkv2.PtrString(*req.Spec.Region),
-					Config: &cmkv2.CmkV2ClusterSpecConfigOneOf{
-						CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
-					},
-					KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-					HttpEndpoint:           cmkv2.PtrString("https://pkc-endpoint"),
-					Availability:           req.Spec.Availability,
-				},
-				Id: cmkv2.PtrString("lkc-def963"),
-				Status: &cmkv2.CmkV2ClusterStatus{
-					Phase: "PROVISIONING",
-				},
-			}
-			err := json.NewEncoder(w).Encode(createCluster)
-			require.NoError(t, err)
+
+		cluster := &cmkv2.CmkV2Cluster{
+			Spec: &cmkv2.CmkV2ClusterSpec{
+				DisplayName:            cmkv2.PtrString(*req.Spec.DisplayName),
+				Cloud:                  cmkv2.PtrString(*req.Spec.Cloud),
+				Region:                 cmkv2.PtrString(*req.Spec.Region),
+				Config:                 new(cmkv2.CmkV2ClusterSpecConfigOneOf),
+				KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+				HttpEndpoint:           cmkv2.PtrString("https://pkc-endpoint"),
+				Availability:           req.Spec.Availability,
+			},
+			Id:     cmkv2.PtrString("lkc-def963"),
+			Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONING"},
 		}
 
+		if req.Spec.Config.CmkV2Dedicated != nil {
+			cluster.Spec.Config.CmkV2Dedicated = &cmkv2.CmkV2Dedicated{
+				Kind: "Dedicated",
+				Cku:  req.Spec.Config.CmkV2Dedicated.Cku,
+			}
+			if *req.Spec.DisplayName == "gcp-byok-test" {
+				cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("xyz")
+			}
+			cluster.Status.Cku = cmkv2.PtrInt32(1)
+		} else {
+			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
+		}
+
+		err = json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
 	}
 }
 

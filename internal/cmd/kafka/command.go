@@ -13,12 +13,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 		Short: "Manage Apache Kafka.",
 	}
 
-	clusterCmd := newClusterCommand(cfg, prerunner)
-
 	cmd.AddCommand(newAclCommand(cfg, prerunner))
 	cmd.AddCommand(newBrokerCommand(prerunner))
 	cmd.AddCommand(newClientConfigCommand(prerunner, clientID))
-	cmd.AddCommand(clusterCmd.Command)
+	cmd.AddCommand(newClusterCommand(cfg, prerunner))
 	cmd.AddCommand(newConsumerGroupCommand(prerunner))
 	cmd.AddCommand(newLinkCommand(cfg, prerunner))
 	cmd.AddCommand(newMirrorCommand(prerunner))
