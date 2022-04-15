@@ -2,10 +2,10 @@ package ccloudv2
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -51,9 +51,8 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 	collectedAllEnvironments := false
 	pageToken := ""
 	for !collectedAllEnvironments {
-		environmentList, resp, err := c.executeListEnvironments(pageToken)
+		environmentList, _, err := c.executeListEnvironments(pageToken)
 		if err != nil {
-			log.Printf("[ERROR] Environments get failed %v, %s", resp, err)
 			return nil, err
 		}
 		environments = append(environments, environmentList.GetData()...)

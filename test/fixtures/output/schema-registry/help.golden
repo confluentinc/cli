@@ -9,7 +9,7 @@ Aliases:
 Available Commands:
   cluster       Manage Schema Registry cluster.
   compatibility Validate schema compatibility.
-  config        Manage Schema Registry config.
+  config        Manage Schema Registry configuration.
   exporter      Manage Schema Registry exporters.
   schema        Manage Schema Registry schemas.
   subject       Manage Schema Registry subjects.
