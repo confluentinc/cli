@@ -16,7 +16,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a role binding.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 	}
 
 	example := examples.Example{

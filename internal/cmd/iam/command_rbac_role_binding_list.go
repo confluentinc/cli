@@ -23,7 +23,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	if c.cfg.IsCloudLogin() {

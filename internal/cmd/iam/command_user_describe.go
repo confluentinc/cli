@@ -37,7 +37,7 @@ func (c userCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <id>",
 		Short: "Describe a user.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)

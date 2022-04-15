@@ -15,7 +15,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete an existing role binding.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 	}
 
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")

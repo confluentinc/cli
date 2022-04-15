@@ -24,7 +24,7 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runDestroyCommand)
+	c.Command.RunE = c.runDestroyCommand
 	return c.Command
 }
 

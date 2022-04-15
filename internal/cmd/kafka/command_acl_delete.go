@@ -19,7 +19,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a Kafka ACL.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 	}
 
 	cmd.Flags().AddFlagSet(aclConfigFlags())

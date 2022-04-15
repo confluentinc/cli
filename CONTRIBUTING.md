@@ -185,7 +185,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
     return &cobra.Command{
         Use:  "describe",
         Args: cobra.ExactArgs(1),
-        RunE: pcmd.NewCLIRunE(c.describe),
+        RunE: c.describe,
     }
 }
 

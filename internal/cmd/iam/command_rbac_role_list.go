@@ -17,7 +17,7 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 		Short: "List the available RBAC roles.",
 		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

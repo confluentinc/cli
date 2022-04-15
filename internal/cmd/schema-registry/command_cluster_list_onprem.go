@@ -20,7 +20,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		Short:       "List registered Schema Registry clusters.",
 		Long:        "List Schema Registry clusters that are registered with the MDS cluster registry.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremList),
+		RunE:        c.onPremList,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 

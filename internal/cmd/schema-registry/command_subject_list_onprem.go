@@ -15,7 +15,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 		Use:         "list",
 		Short:       "List subjects.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremList),
+		RunE:        c.onPremList,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

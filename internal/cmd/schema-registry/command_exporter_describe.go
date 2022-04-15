@@ -20,7 +20,7 @@ func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <name>",
 		Short: "Describe the information of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

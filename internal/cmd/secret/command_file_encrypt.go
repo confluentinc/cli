@@ -2,8 +2,6 @@ package secret
 
 import (
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func (c *command) newEncryptCommand() *cobra.Command {
@@ -12,7 +10,7 @@ func (c *command) newEncryptCommand() *cobra.Command {
 		Short: "Encrypt secrets in a configuration properties file.",
 		Long:  "This command encrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set in the environment variable. Create master key using \"master-key generate\" command and save the generated master key in environment variable.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.encrypt),
+		RunE:  c.encrypt,
 	}
 
 	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")

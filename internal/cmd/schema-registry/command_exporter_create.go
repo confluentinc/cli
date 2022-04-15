@@ -16,7 +16,7 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create new schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",

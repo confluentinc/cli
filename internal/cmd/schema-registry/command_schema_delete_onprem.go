@@ -16,7 +16,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Short:       "Delete one or more schemas.",
 		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremDelete),
+		RunE:        c.onPremDelete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

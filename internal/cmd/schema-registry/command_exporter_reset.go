@@ -13,7 +13,7 @@ func (c *exporterCommand) newResetCommand() *cobra.Command {
 		Use:   "reset <name>",
 		Short: "Reset schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.reset),
+		RunE:  c.reset,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

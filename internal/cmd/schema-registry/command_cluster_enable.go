@@ -3,8 +3,9 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -27,7 +28,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.enable),
+		RunE:        c.enable,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

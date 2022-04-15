@@ -29,7 +29,7 @@ func NewFeedbackCmdWithPrompt(prerunner pcmd.PreRunner, prompt form.Prompt) *cob
 			Use:   "feedback",
 			Short: fmt.Sprintf("Submit feedback about the %s.", version.FullCLIName),
 			Args:  cobra.NoArgs,
-			RunE:  pcmd.NewCLIRunE(c.feedbackRunE),
+			RunE:  c.feedbackRunE,
 		}, prerunner)
 
 	return cmd.Command

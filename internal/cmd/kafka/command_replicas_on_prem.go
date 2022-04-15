@@ -30,7 +30,7 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 			}, prerunner),
 	}
-	replicaCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(replicaCommand.AuthenticatedCLICommand))
+	replicaCommand.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(replicaCommand.AuthenticatedCLICommand)
 	replicaCommand.init()
 	return replicaCommand.Command
 }
@@ -39,7 +39,7 @@ func (replicaCommand *replicaCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
+		RunE:  replicaCommand.list,
 		Short: "List Kafka replica statuses.",
 		Long:  "List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(

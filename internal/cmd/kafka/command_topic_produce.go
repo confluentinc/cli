@@ -32,7 +32,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		prerunner:           prerunner,
 		clientID:            clientId,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.produce)
+	cmd.RunE = c.produce
 
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")

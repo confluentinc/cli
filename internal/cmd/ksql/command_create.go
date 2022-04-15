@@ -30,7 +30,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		Short: shortText,
 		Long:  longText,
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(runCommand),
+		RunE:  runCommand,
 	}
 
 	cmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use.")

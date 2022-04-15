@@ -14,7 +14,7 @@ func (c *exporterCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List all schema exporters.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

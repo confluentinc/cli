@@ -36,7 +36,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List claimed promo codes.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

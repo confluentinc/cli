@@ -22,7 +22,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a topic named "my_topic" with default options.`,

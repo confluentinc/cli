@@ -62,7 +62,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorConfigCommand)
+	c.Command.RunE = c.runConnectConnectorConfigCommand
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -133,7 +133,7 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.MaximumNArgs(1),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorStatusCommand)
+	c.Command.RunE = c.runConnectConnectorStatusCommand
 	return c.Command
 }
 
@@ -199,7 +199,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorLoadCommand)
+	c.Command.RunE = c.runConnectConnectorLoadCommand
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -274,7 +274,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorUnloadCommand)
+	c.Command.RunE = c.runConnectConnectorUnloadCommand
 	return c.Command
 }
 
@@ -323,7 +323,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectPluginListCommand)
+	c.Command.RunE = c.runConnectPluginListCommand
 	return c.Command
 }
 

@@ -37,7 +37,7 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())

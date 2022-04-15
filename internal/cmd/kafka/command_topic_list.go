@@ -19,7 +19,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all topics.",

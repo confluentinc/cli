@@ -14,7 +14,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		Short: "Prints the audit log configuration spec object.",
 		Long:  `Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.`,
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

@@ -27,7 +27,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 			}, prerunner),
 	}
-	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
+	partitionCommand.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand)
 	partitionCommand.init()
 	return partitionCommand.Command
 }
@@ -36,7 +36,7 @@ func (partitionCmd *partitionCommand) init() {
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(partitionCmd.list),
+		RunE:  partitionCmd.list,
 		Short: "List Kafka partitions.",
 		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
@@ -57,7 +57,7 @@ func (partitionCmd *partitionCommand) init() {
 		Short: "Describe a Kafka partition.",
 		Long:  "Describe a Kafka partition via Confluent Kafka REST.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(partitionCmd.describe),
+		RunE:  partitionCmd.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe partition "1" for "my_topic".`,
@@ -75,7 +75,7 @@ func (partitionCmd *partitionCommand) init() {
 		Short: "Get ongoing replica reassignments.",
 		Long:  "Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(partitionCmd.getReassignments),
+		RunE:  partitionCmd.getReassignments,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get all replica reassignments for the Kafka cluster.",

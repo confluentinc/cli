@@ -15,7 +15,7 @@ func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 		Short: "Delete a Kafka broker.",
 	}
 

@@ -20,7 +20,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1), // <topic>
-		RunE:  pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:  c.onPremCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",

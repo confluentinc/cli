@@ -576,8 +576,8 @@ func TestLoginFail(t *testing.T) {
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
-	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
-	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
+	req.Error(err)
+	req.Equal(new(ccloud.InvalidLoginError), err)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {

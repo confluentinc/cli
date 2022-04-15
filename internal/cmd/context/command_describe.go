@@ -17,7 +17,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Short:             "Describe a context.",
 		Long:              "Describe a context or a specific context field.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.describe),
+		RunE:              c.describe,
 	}
 
 	cmd.Flags().Bool("api-key", false, "Get the API key for a context.")

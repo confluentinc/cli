@@ -19,7 +19,7 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)

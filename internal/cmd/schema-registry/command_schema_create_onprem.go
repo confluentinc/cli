@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -17,7 +18,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:         "create",
 		Short:       "Create a schema.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:        c.onPremCreate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

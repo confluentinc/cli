@@ -19,7 +19,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		Use:   "update <subject>",
 		Short: "Update subject compatibility or mode.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject level compatibility of subject "payments".`,
