@@ -43,7 +43,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the consumer client.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
@@ -74,16 +74,16 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
-	configStrings, err := cmd.Flags().GetStringSlice("config")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	consumer, err := newOnPremConsumer(cmd, c.clientID, configPath, configStrings)
+	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}

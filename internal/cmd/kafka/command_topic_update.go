@@ -34,7 +34,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics. Configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)

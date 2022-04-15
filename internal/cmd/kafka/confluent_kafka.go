@@ -59,8 +59,6 @@ type GroupHandler struct {
 	Properties ConsumerProperties
 }
 
-// on-prem authentication
-
 func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
@@ -77,25 +75,13 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 		}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
 		if retrieveErr != nil {
-			err = fmt.Errorf("token retrieval error: %v", retrieveErr)
-			if err != nil {
-				return err
-			}
-			err = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
-			if err != nil {
-				return err
-			}
+			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
+			return fmt.Errorf("token retrieval error: %w", retrieveErr)
 		} else {
 			setTokenError := client.SetOAuthBearerToken(oauthBearerToken)
 			if setTokenError != nil {
-				err = fmt.Errorf("error setting token and extensions: %v", setTokenError)
-				if err != nil {
-					return err
-				}
-				err = client.SetOAuthBearerTokenFailure(setTokenError.Error())
-				if err != nil {
-					return err
-				}
+				_ = client.SetOAuthBearerTokenFailure(setTokenError.Error())
+				return fmt.Errorf("error setting token and extensions: %w", setTokenError)
 			}
 		}
 	}
@@ -132,8 +118,6 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-// create cloud kafka client
-
 func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
@@ -152,8 +136,6 @@ func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-// create on-prem kafka client
-
 func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
@@ -171,8 +153,6 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
-
-// consumer utilities
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
@@ -257,8 +237,6 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	}
 	return nil
 }
-
-// schema utilities
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) < messageOffset {

@@ -20,8 +20,6 @@ type kafkaClientConfigs struct {
 	configurations map[string]string
 }
 
-// cloud kafka client configuration
-
 func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
 	return &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
@@ -62,8 +60,6 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	}
 	return configMap, nil
 }
-
-// on-prem kafka client configuration
 
 func getOnPremCommonConfig(clientID, bootstrap, caLocation string) *ckafka.ConfigMap {
 	return &ckafka.ConfigMap{
@@ -137,8 +133,6 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 
 	return setProtocolConfig(cmd, configMap)
 }
-
-// on-prem authentication configuration
 
 func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
 	protocol, err := cmd.Flags().GetString("protocol")
@@ -238,8 +232,6 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-// common configuration utilities
-
 func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
 	autoOffsetReset := "latest"
 	if beginning {
@@ -304,7 +296,6 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 			return err
 		}
 		configurations = clientConfigs.configurations
-
 	}
 
 	if len(configStrings) > 0 {

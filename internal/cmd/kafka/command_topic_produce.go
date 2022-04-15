@@ -32,7 +32,7 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the producer client.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
@@ -58,16 +58,16 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
-	configStrings, err := cmd.Flags().GetStringSlice("config")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	producer, err := newProducer(cluster, c.clientID, configPath, configStrings)
+	producer, err := newProducer(cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
