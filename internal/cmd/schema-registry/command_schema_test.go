@@ -149,30 +149,6 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	req.Equal(retVal.Version, versionString)
 }
 
-func (suite *SchemaTestSuite) TestDescribeByBothSubjectVersionAndId() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName, "--version", versionString, "123"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
-}
-
-func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingVersion() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
-}
-
-func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingSubject() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--version", versionString})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
-}
-
 func TestSchemaSuite(t *testing.T) {
 	suite.Run(t, new(SchemaTestSuite))
 }
