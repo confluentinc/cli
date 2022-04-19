@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
@@ -48,6 +49,10 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // validateAddAndDelete ensures the minimum requirements for acl add and delete are met
 func validateAddAndDelete(binding *ACLConfiguration) {
+	if binding.Entry.Principal == "" {
+		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal"))
+	}
+
 	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
 		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
 	}
@@ -102,14 +107,18 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 
 func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
-		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
-			if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
-				return errors.New(errors.BadServiceAccountIDErrorMsg)
+		principal := acl[i].ACLBinding.Entry.Principal
+		if acl[i].ACLBinding.Entry.Principal != "" {
+			if !strings.HasPrefix(principal, "User:") {
+				return errors.New(errors.BadPrincipalErrorMsg)
 			}
-			userId, ok := idMap[serviceAccountID]
+			resourceID := principal[5:] // extract resource id
+			if resource.LookupType(resourceID) != resource.ServiceAccount && resource.LookupType(resourceID) != resource.User {
+				return errors.New(errors.BadServiceAccountOrUserIDErrorMsg)
+			}
+			userId, ok := idMap[resourceID]
 			if !ok {
-				return fmt.Errorf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID)
+				return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceID)
 			}
 			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", userId) // translate into numeric ID
 		}
@@ -123,8 +132,15 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[int32]string)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
 	}
 	return idMap, nil
@@ -136,8 +152,15 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[string]int32)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil

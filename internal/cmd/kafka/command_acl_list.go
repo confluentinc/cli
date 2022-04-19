@@ -26,6 +26,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -44,6 +45,10 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 
 	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
 		return err
+	}
+
+	if acl[0].errors != nil {
+		return acl[0].errors
 	}
 
 	resourceIdMap, err := c.mapUserIdToResourceId()
