@@ -22,23 +22,23 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: "Grant the role `CloudClusterAdmin` to the principal `User:u-e03vqq` in the environment `env-nx5jd` for the Kafka cluster `lkc-xyxmz`:",
+				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the Kafka cluster "lkc-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-123456 --environment env-12345",
 			},
 			examples.Example{
-				Text: "Grant the role `ResourceOwner` to the principal `User:u-e03vqq`, in the environment `env-nx5jd` for the Kafka cluster `lkc-xyxmz` on the resource `Topic:connect-config`:",
-				Code: "confluent iam rbac role-binding create --principal User:u-e03vqq --role ResourceOwner --environment env-nx5jd --kafka-cluster-id lkc-xyxmz --resource Topic:connect-config",
+				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic",
 			},
 			examples.Example{
-				Text: "Grant the role `MetricsViewer` to the principal `sa-zm6vgz`, a service account:",
-				Code: "confluent iam rbac role-binding create --principal User:sa-zm6vgz --role MetricsViewer",
+				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a role binding for the principal permitting it produce to the "users" topic.`,
-				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster-id $KAFKA_CLUSTER_ID",
 			},
 		)
 	}
