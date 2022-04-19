@@ -19,23 +19,35 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		RunE:  pcmd.NewCLIRunE(c.create),
 	}
 
-	example := examples.Example{
-		Text: `Create a role binding for the principal permitting it produce to the "users" topic.`,
-		Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
-	}
 	if c.cfg.IsCloudLogin() {
-		example.Code = "confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde"
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: "Grant the role `CloudClusterAdmin` to the principal `User:u-e03vqq` in the environment `env-nx5jd` for the Kafka cluster `lkc-xyxmz`:",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-123456 --environment env-12345",
+			},
+			examples.Example{
+				Text: "Grant the role `ResourceOwner` to the principal `User:u-e03vqq`, in the environment `env-nx5jd` for the Kafka cluster `lkc-xyxmz` on the resource `Topic:connect-config`:",
+				Code: "confluent iam rbac role-binding create --principal User:u-e03vqq --role ResourceOwner --environment env-nx5jd --kafka-cluster-id lkc-xyxmz --resource Topic:connect-config",
+			},
+			examples.Example{
+				Text: "Grant the role `MetricsViewer` to the principal `sa-zm6vgz`, a service account:",
+				Code: "confluent iam rbac role-binding create --principal User:sa-zm6vgz --role MetricsViewer",
+			},
+		)
+	} else {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Create a role binding for the principal permitting it produce to the "users" topic.`,
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:users --kafka-cluster-id $KAFKA_CLUSTER_ID",
+			},
+		)
 	}
-	cmd.Example = examples.BuildExampleString(example)
 
 	cmd.Flags().String("role", "", "Role name of the new role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name for the role binding.")
-
 	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
-
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("role")
