@@ -4,9 +4,17 @@ Usage:
   confluent iam rbac role-binding create [flags]
 
 Examples:
-Create a role binding for the principal permitting it produce to the "users" topic.
+Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the Kafka cluster "lkc-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-123456 --environment env-12345
+
+Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic
+
+Grant the role "MetricsViewer" to service account "sa-123456":
+
+  $ confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer
 
 Flags:
       --role string               REQUIRED: Role name of the new role binding.

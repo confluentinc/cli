@@ -52,19 +52,19 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
+				Text: "List the role bindings for a specific principal:",
 				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
+				Text: "List the role bindings for a specific principal, filtered to a specific role:",
 				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific role:",
+				Text: "List the principals bound to a specific role:",
 				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific resource with a specific role:",
+				Text: "List the principals bound to a specific resource with a specific role:",
 				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic",
 			},
 		)

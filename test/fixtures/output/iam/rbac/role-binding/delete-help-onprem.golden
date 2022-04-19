@@ -1,4 +1,4 @@
-Delete an existing role binding.
+Delete a role binding.
 
 Usage:
   confluent iam rbac role-binding delete [flags]
