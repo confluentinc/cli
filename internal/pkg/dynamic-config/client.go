@@ -1,9 +1,8 @@
-package cmd
+package dynamic_config
 
 import (
 	"context"
 	"fmt"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -25,7 +24,7 @@ func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, e
 	}
 
 	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	cluster, err := c.context.client.Kafka.Describe(context.Background(), req)
+	cluster, err := c.context.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
 	}
@@ -39,7 +38,7 @@ func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error 
 		return err
 	}
 	// check if this is API key exists server-side
-	key, err := c.context.client.APIKey.Get(context.Background(), &schedv1.ApiKey{AccountId: envId, Key: apiKey})
+	key, err := c.context.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{AccountId: envId, Key: apiKey})
 	if err != nil {
 		return err
 	}
@@ -62,7 +61,7 @@ func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error 
 }
 
 func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.context.client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -76,7 +75,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := c.context.client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

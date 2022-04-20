@@ -5,6 +5,7 @@ package launchdarkly
 import (
 	b64 "encoding/base64"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 	"os"
 	"regexp"
@@ -17,7 +18,6 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -36,10 +36,10 @@ var (
 )
 
 type FeatureFlagManager interface {
-	BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool
-	StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string
-	IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int
-	JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{}
+	BoolVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal bool) bool
+	StringVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal string) string
+	IntVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal int) int
+	JsonVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal interface{}) interface{}
 }
 
 type LaunchDarklyManager struct {
@@ -62,7 +62,7 @@ func InitManager(version *version.Version, isTest bool) {
 	}
 }
 
-func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *cmd.DynamicContext, defaultVal bool) bool {
+func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal bool) bool {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
@@ -72,7 +72,7 @@ func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *cmd.DynamicContext
 	return flagVal
 }
 
-func (ld *LaunchDarklyManager) StringVariation(key string, ctx *cmd.DynamicContext, defaultVal string) string {
+func (ld *LaunchDarklyManager) StringVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal string) string {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
@@ -81,7 +81,7 @@ func (ld *LaunchDarklyManager) StringVariation(key string, ctx *cmd.DynamicConte
 	return defaultVal
 }
 
-func (ld *LaunchDarklyManager) IntVariation(key string, ctx *cmd.DynamicContext, defaultVal int) int {
+func (ld *LaunchDarklyManager) IntVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal int) int {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
@@ -93,12 +93,12 @@ func (ld *LaunchDarklyManager) IntVariation(key string, ctx *cmd.DynamicContext,
 	return defaultVal
 }
 
-func (ld *LaunchDarklyManager) JsonVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
+func (ld *LaunchDarklyManager) JsonVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal interface{}) interface{} {
 	flagVal := ld.generalVariation(key, ctx, defaultVal)
 	return flagVal
 }
 
-func (ld *LaunchDarklyManager) generalVariation(key string, ctx *cmd.DynamicContext, defaultVal interface{}) interface{} {
+func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamic_config.DynamicContext, defaultVal interface{}) interface{} {
 	user, isAnonUser := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
@@ -148,7 +148,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return b64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func (ld *LaunchDarklyManager) contextToLDUser(ctx *cmd.DynamicContext) (lduser.User, bool) {
+func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamic_config.DynamicContext) (lduser.User, bool) {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false

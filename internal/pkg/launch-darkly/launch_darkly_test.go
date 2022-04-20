@@ -1,6 +1,7 @@
 package launchdarkly
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"testing"
 
 	"github.com/dghubble/sling"
@@ -10,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -34,7 +34,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 		client:  sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version: version.NewVersion("v1.2", "", "", ""),
 	}
-	ctx := cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	req := require.New(suite.T())
 
 	boolFlag := flagManager.BoolVariation("testBool", ctx, false)
@@ -60,12 +60,12 @@ func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 		flagVals: map[string]interface{}{"test": true},
 	}
 	// evaluate cached flags for anon user
-	ctx := cmd.NewDynamicContext(nil, nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(nil, nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true
 	evaluatedFlag := flagMananger.BoolVariation("test", ctx, false)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
 	// evaluate cached flags for logged in user
-	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx = dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = false
 	evaluatedFlag = flagMananger.BoolVariation("test", ctx, false)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
@@ -77,12 +77,12 @@ func (suite *LaunchDarklyTestSuite) TestIntVariation() {
 		flagVals: map[string]interface{}{"test": 3},
 	}
 	// evaluate cached flags for anon user
-	ctx := cmd.NewDynamicContext(nil, nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(nil, nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true
 	evaluatedFlag := flagMananger.IntVariation("test", ctx, 0)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
 	// evaluate cached flags for logged in user
-	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx = dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = false
 	evaluatedFlag = flagMananger.IntVariation("test", ctx, 0)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
@@ -94,12 +94,12 @@ func (suite *LaunchDarklyTestSuite) TestStringVariation() {
 		flagVals: map[string]interface{}{"test": "value"},
 	}
 	// evaluate cached flags for anon user
-	ctx := cmd.NewDynamicContext(nil, nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(nil, nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true
 	evaluatedFlag := flagMananger.StringVariation("test", ctx, "")
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
 	// evaluate cached flags for logged in user
-	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx = dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = false
 	evaluatedFlag = flagMananger.StringVariation("test", ctx, "")
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
@@ -114,12 +114,12 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 		}{key: "key", val: "val"}},
 	}
 	// evaluate cached flags for anon user
-	ctx := cmd.NewDynamicContext(nil, nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(nil, nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = true
 	evaluatedFlag := flagMananger.JsonVariation("test", ctx, nil)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
 	// evaluate cached flags for logged in user
-	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx = dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	flagMananger.flagValsAreForAnonUser = false
 	evaluatedFlag = flagMananger.JsonVariation("test", ctx, nil)
 	req.Equal(flagMananger.flagVals["test"], evaluatedFlag)
@@ -127,12 +127,12 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
-	ctx := cmd.NewDynamicContext(nil, nil, nil, nil)
+	ctx := dynamic_config.NewDynamicContext(nil, nil, nil, nil)
 	user, anon := suite.flagManager.contextToLDUser(ctx)
 	req.True(user.GetAnonymous())
 	req.True(anon)
 
-	ctx = cmd.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx = dynamic_config.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	user, anon = suite.flagManager.contextToLDUser(ctx)
 	req.False(anon)
 	resourceId, _ := user.GetCustom("user.resource_id")

@@ -1,39 +1,30 @@
-package cmd_test
+package dynamic_config
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 	config := v1.AuthenticatedCloudConfigMock()
-	dynamicConfigBase := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
-		Prompt: &form.RealPrompt{},
-		Out:    os.Stdout,
-	}, pmock.NewClientMock(), pmock.NewV2ClientMock())
+	dynamicConfigBase := NewDynamicConfig(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
 
 	config = v1.AuthenticatedCloudConfigMock()
-	dynamicConfigFlag := pcmd.NewDynamicConfig(config, &pcmd.FlagResolverImpl{
-		Prompt: &form.RealPrompt{},
-		Out:    os.Stdout,
-	}, pmock.NewClientMock(), pmock.NewV2ClientMock())
+	dynamicConfigFlag := NewDynamicConfig(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
 	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
 		Name: "test-context",
 	}
 	tests := []struct {
 		name           string
 		context        string
-		dConfig        *pcmd.DynamicConfig
+		dConfig        *DynamicConfig
 		errMsg         string
 		suggestionsMsg string
 	}{

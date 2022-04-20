@@ -2,6 +2,7 @@ package context
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	"github.com/spf13/cobra"
 
@@ -63,7 +64,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	return describeContext(cmd, ctx)
 }
 
-func describeContext(cmd *cobra.Command, ctx *pcmd.DynamicContext) error {
+func describeContext(cmd *cobra.Command, ctx *dynamic_config.DynamicContext) error {
 	var (
 		listFields        = []string{"Name", "Platform", "Credential"}
 		humanRenames      = map[string]string{"Name": "Name", "Platform": "Platform", "Credential": "Credential"}

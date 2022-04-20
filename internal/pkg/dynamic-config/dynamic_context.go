@@ -1,4 +1,4 @@
-package cmd
+package dynamic_config
 
 import (
 	"context"
@@ -19,26 +19,19 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	resolver FlagResolver
-	client   *ccloud.Client
-	v2Client *ccloudv2.Client
+	Client   *ccloud.Client
+	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
-		resolver: resolver,
-		client:   client,
-		v2Client: v2Client,
+		V2Client: v2Client,
 	}
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
-	if d.resolver == nil {
-		return nil
-	}
-
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
@@ -102,7 +95,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return cluster, nil
 	}
 
-	if d.client == nil {
+	if d.Client == nil {
 		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
 
@@ -112,14 +105,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return nil, err
 	}
 
-	cluster := kafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
+	cluster := KafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 
 	return cluster, err
 }
 
-func kafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
 	return &v1.KafkaClusterConfig{
 		ID:           kcc.Id,
 		Name:         kcc.Name,

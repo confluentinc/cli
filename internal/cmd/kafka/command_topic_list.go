@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -88,7 +89,7 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamic_config.KafkaCluster(c.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}

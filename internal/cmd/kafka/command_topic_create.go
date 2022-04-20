@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 
 	"github.com/antihax/optional"
@@ -127,7 +128,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	// Kafka REST is not available, fall back to KafkaAPI
 
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamic_config.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

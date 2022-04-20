@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 	"testing"
 	"time"
@@ -269,7 +270,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = pcmd.NewDynamicConfig(cfg, nil, nil, nil)
+	c.Config = dynamic_config.NewDynamicConfig(cfg, nil, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

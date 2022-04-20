@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"os"
 	"strconv"
 
@@ -55,7 +56,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp boo
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(c.Context)
+	kafkaCluster, err := dynamic_config.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
