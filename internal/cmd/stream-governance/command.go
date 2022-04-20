@@ -1,0 +1,37 @@
+package streamgovernance
+
+import (
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+)
+
+type streamGovernanceCommand struct {
+	*pcmd.AuthenticatedStateFlagCommand
+	srClient *srsdk.APIClient
+}
+
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "stream-governance",
+		Aliases:     []string{"sg"},
+		Short:       "Manage Stream Governance",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
+	}
+
+	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+	sgCommand := &streamGovernanceCommand{srClient: srClient}
+
+	if cfg.IsCloudLogin() {
+		sgCommand.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+	} else {
+		sgCommand.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+	}
+
+	c.AddCommand(sgCommand.newDescribeCommand(cfg))
+	c.AddCommand(sgCommand.newEnableCommand(cfg))
+
+	return c.Command
+}
