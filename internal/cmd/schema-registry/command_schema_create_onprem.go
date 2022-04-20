@@ -68,10 +68,10 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
+
 	_, _, err = c.registerSchemaOnPrem(cmd, dir, schemaType, schemaPath, subject, refs)
 	return err
 }
