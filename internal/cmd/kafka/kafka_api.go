@@ -141,6 +141,7 @@ func setConfigPrincipal(conf *ACLConfiguration, isServiceAccount bool, v string)
 		conf.Entry.Principal = "User:*"
 		return
 	}
+
 	if isServiceAccount {
 		conf.Entry.Principal = "User:" + v
 	} else {

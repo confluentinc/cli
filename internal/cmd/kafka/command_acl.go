@@ -108,7 +108,7 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
 		principal := acl[i].ACLBinding.Entry.Principal
-		if acl[i].ACLBinding.Entry.Principal != "" {
+		if principal != "" {
 			if !strings.HasPrefix(principal, "User:") {
 				return errors.New(errors.BadPrincipalErrorMsg)
 			}
