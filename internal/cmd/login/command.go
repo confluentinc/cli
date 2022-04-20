@@ -111,13 +111,14 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
 		}
-
 		return err
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	credentials.AuthToken = token
+	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, refreshToken, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -125,14 +126,10 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
-	// If refresh token is available, we want to save that in the place of password
-	if refreshToken != "" {
-		credentials.Password = refreshToken
-	}
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-// Order of precedence: env vars > netrc > prompt
+// Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
@@ -194,7 +191,6 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 	}
 
 	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
-
 	if err != nil {
 		return err
 	}

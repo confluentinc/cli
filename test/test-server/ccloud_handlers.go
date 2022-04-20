@@ -89,38 +89,32 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 }
 
 // Handler for: "/api/sessions"
-func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleLogin(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := require.New(t)
-		b, err := ioutil.ReadAll(r.Body)
-		req.NoError(err)
-		auth := &struct {
-			Email    string
-			Password string
-		}{}
-		err = json.Unmarshal(b, auth)
-		req.NoError(err)
-		switch auth.Email {
+		req := new(flowv1.AuthenticateRequest)
+		err := json.NewDecoder(r.Body).Decode(req)
+		require.NoError(t, err)
+
+		res := new(flowv1.AuthenticateReply)
+
+		switch req.Email {
 		case "incorrect@user.com":
 			w.WriteHeader(http.StatusForbidden)
 		case "suspended@user.com":
 			w.WriteHeader(http.StatusForbidden)
-			e := &struct {
-				Error corev1.Error `json:"error"`
-			}{
-				Error: corev1.Error{Message: errors.SuspendedOrganizationSuggestions},
-			}
-			err := json.NewEncoder(w).Encode(e)
-			req.NoError(err)
+			res.Error = &corev1.Error{Message: errors.SuspendedOrganizationSuggestions}
 		case "expired@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"})
+			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "malformed"})
+			res.Token = "malformed"
 		case "invalid@user.com":
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "invalid"})
+			res.Token = "invalid"
 		default:
-			http.SetCookie(w, &http.Cookie{Name: "auth_token", Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"})
+			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 		}
+
+		err = json.NewEncoder(w).Encode(res)
+		require.NoError(t, err)
 	}
 }
 

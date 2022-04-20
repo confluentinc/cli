@@ -127,13 +127,10 @@ func (c *Context) GetCurrentEnvironmentId() string {
 	return c.State.Auth.Account.Id
 }
 
-func (c *Context) UpdateAuthToken(token string) error {
+func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 	c.State.AuthToken = token
-	err := c.Save()
-	if err != nil {
-		return err
-	}
-	return nil
+	c.State.AuthRefreshToken = refreshToken
+	return c.Save()
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
@@ -175,6 +172,13 @@ func (c *Context) GetOrganization() *orgv1.Organization {
 		return auth.Organization
 	}
 	return nil
+}
+
+func (c *Context) GetOrganizationResourceId() string {
+	if org := c.GetOrganization(); org != nil {
+		return org.ResourceId
+	}
+	return ""
 }
 
 func (c *Context) GetEnvironment() *orgv1.Account {

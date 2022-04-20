@@ -9,7 +9,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.1071.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
@@ -408,6 +408,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go-v1 => ../ccloud-sdk-go-v1
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0

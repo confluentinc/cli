@@ -57,6 +57,11 @@ var (
 				return nil, nil
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -111,48 +116,35 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	type fields struct {
-		Command string
-	}
 	tests := []struct {
-		name   string
-		fields fields
-		want   log.Level
+		name    string
+		command string
+		want    log.Level
 	}{
 		{
-			name: "default logging level",
-			fields: fields{
-				Command: "help",
-			},
-			want: log.ERROR,
+			name:    "default logging level",
+			command: "help",
+			want:    log.ERROR,
 		},
 		{
-			name: "warn logging level",
-			fields: fields{
-				Command: "help -v",
-			},
-			want: log.WARN,
+			name:    "warn logging level",
+			command: "help -v",
+			want:    log.WARN,
 		},
 		{
-			name: "info logging level",
-			fields: fields{
-				Command: "help -vv",
-			},
-			want: log.INFO,
+			name:    "info logging level",
+			command: "help -vv",
+			want:    log.INFO,
 		},
 		{
-			name: "debug logging level",
-			fields: fields{
-				Command: "help -vvv",
-			},
-			want: log.DEBUG,
+			name:    "debug logging level",
+			command: "help -vvv",
+			want:    log.DEBUG,
 		},
 		{
-			name: "trace logging level",
-			fields: fields{
-				Command: "help -vvvv",
-			},
-			want: log.TRACE,
+			name:    "trace logging level",
+			command: "help -vvvv",
+			want:    log.TRACE,
 		},
 	}
 	for _, tt := range tests {
@@ -169,7 +161,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 
-			args := strings.Split(tt.fields.Command, " ")
+			args := strings.Split(tt.command, " ")
 			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
 			require.NoError(t, err)
 
@@ -279,6 +271,11 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+				GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
