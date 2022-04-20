@@ -622,6 +622,8 @@ github.com/confluentinc/cc-structs/scheduler_plugins/kafka v0.445.0/go.mod h1:jB
 github.com/confluentinc/cc-utils v0.225.0/go.mod h1:uI+SKDqDL/l1j7VIaXpXxGPBrbbYlyG7n/j8ra1MNcc=
 github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354HevGtbFQkBtqG4c=
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105 h1:rJjoMIEEjChHHTAkp/bxxzFR2XnU4SCAz6bgRp3vqOw=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105/go.mod h1:gFne0gmsbgH4GlpfmwadKrAMuSEvEB+mP4DfkEJ4Zi4=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/KfZ/ZahCOoeTjxXOoRU=
