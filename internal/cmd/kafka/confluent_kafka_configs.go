@@ -280,7 +280,6 @@ func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 
 func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) error {
 	configurations := make(map[string]string)
-	var err error
 	if configPath != "" {
 		configFile, err := os.Open(configPath)
 		if err != nil {
@@ -298,6 +297,7 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 		configurations = clientConfigs.configurations
 	}
 
+	var err error
 	if len(configStrings) > 0 {
 		configurations, err = properties.ToMap(configStrings)
 		if err != nil {
