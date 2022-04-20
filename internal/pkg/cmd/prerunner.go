@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"net/http"
 	"os"
 	"strings"
@@ -237,7 +236,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
-		launchdarkly.Manager.BoolVariation("test", command.Context, false)
 
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
