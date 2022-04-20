@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -61,13 +62,21 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-
 	}
-	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, refs)
+
+	dir, err := CreateTempDir()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+	_, _, err = c.registerSchemaOnPrem(cmd, dir, schemaType, schemaPath, subject, refs)
 	return err
 }
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, schemaPath, subject string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaDir, schemaType, schemaPath, subject string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
@@ -79,6 +88,6 @@ func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, sch
 	if err != nil {
 		return metaInfo, nil, err
 	}
-	referencePathMap, err := StoreSchemaReferences(refs, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(schemaDir, refs, srClient, ctx)
 	return metaInfo, referencePathMap, err
 }

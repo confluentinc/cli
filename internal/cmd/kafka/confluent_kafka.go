@@ -290,7 +290,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
+	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient, h.Ctx)
 	if err != nil {
 		return "", nil, err
 	}

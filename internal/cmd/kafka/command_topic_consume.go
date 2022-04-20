@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -157,13 +156,13 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return err
-		}
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
 
 	subject := topicNameStrategy(topic)
 	contextName, err := cmd.Flags().GetString("context-name")
