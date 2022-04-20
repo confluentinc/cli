@@ -70,18 +70,10 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	return refs, nil
 }
 
-func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
-		tempStorePath := filepath.Join(dir, ref.Name)
+		tempStorePath := filepath.Join(schemaDir, ref.Name)
 		if !utils.FileExists(tempStorePath) {
 			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
 			if err != nil {
@@ -141,7 +133,14 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := StoreSchemaReferences(references, srClient, ctx)
+	refsDir, err := CreateTempDir()
+	if err != nil {
+		return "", nil, err
+	}
+	defer func() {
+		_ = os.RemoveAll(refsDir)
+	}()
+	referencePathMap, err := StoreSchemaReferences(refsDir, references, srClient, ctx)
 	if err != nil {
 		return "", nil, err
 	}
@@ -154,4 +153,10 @@ func getMetaInfoFromSchemaId(id int32) []byte {
 	schemaIdBuffer := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
 	return append(metaInfo, schemaIdBuffer...)
+}
+
+func CreateTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }

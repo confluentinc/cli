@@ -97,8 +97,15 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
 	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
+	metaInfo, referencePathMap, err := c.registerSchema(cmd, dir, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
@@ -173,7 +180,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	return scanErr
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaDir, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
@@ -191,7 +198,7 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, valueForm
 		if err != nil {
 			return nil, nil, err
 		}
-		referencePathMap, err = sr.StoreSchemaReferences(refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaDir, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}

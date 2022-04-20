@@ -84,7 +84,15 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, &schemaPath, valueFormat, subject, serializationProvider.GetSchemaName())
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, dir, &schemaPath, valueFormat, subject, serializationProvider.GetSchemaName())
 	if err != nil {
 		return err
 	}
@@ -195,7 +203,7 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 	return srClient, ctx, nil
 }
 
-func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaDir, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	var metaInfo []byte
@@ -211,7 +219,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			return nil, nil, err
 		}
 		metaInfo = info
-		referencePathMap, err = sr.StoreSchemaReferences(refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaDir, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}
@@ -219,7 +227,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 	return metaInfo, referencePathMap, nil
 }
 
-func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaPath *string, valueFormat string, subject string, providerName string) ([]byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaDir string, schemaPath *string, valueFormat string, subject string, providerName string) ([]byte, map[string]string, error) {
 	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
 		return nil, nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
@@ -233,7 +241,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 			return nil, nil, err
 		}
 		// Meta info contains a magic byte and schema ID (4 bytes).
-		return c.registerSchema(cmd, valueFormat, *schemaPath, subject, providerName, refs)
+		return c.registerSchema(cmd, schemaDir, valueFormat, *schemaPath, subject, providerName, refs)
 	}
 
 	schemaId, err := cmd.Flags().GetInt32("schema-id")
