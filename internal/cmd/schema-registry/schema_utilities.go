@@ -100,11 +100,6 @@ func getMetaInfoFromSchemaId(id int32) []byte {
 
 func CreateTempDir() (string, error) {
 	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return "", err
-		}
-	}
-	return dir, nil
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
 }
