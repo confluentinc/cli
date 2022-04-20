@@ -1,10 +1,10 @@
 package context
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -37,7 +37,7 @@ func New(prerunner pcmd.PreRunner, resolver pcmd.FlagResolver) *cobra.Command {
 }
 
 // context retrieves either a specific context or the current context.
-func (c *command) context(args []string) (*dynamic_config.DynamicContext, error) {
+func (c *command) context(args []string) (*dynamicconfig.DynamicContext, error) {
 	if len(args) == 1 {
 		return c.Config.FindContext(args[0])
 	}

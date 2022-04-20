@@ -1,4 +1,4 @@
-package dynamic_config
+package dynamicconfig
 
 import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -49,7 +49,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return NewDynamicContext(ctx, d.Client, d.V2Client), nil
+	return New(ctx, d.Client, d.V2Client), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -58,5 +58,5 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return NewDynamicContext(ctx, d.Client, d.V2Client)
+	return New(ctx, d.Client, d.V2Client)
 }

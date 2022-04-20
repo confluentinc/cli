@@ -1,4 +1,4 @@
-package dynamic_config
+package dynamicconfig
 
 import (
 	"fmt"

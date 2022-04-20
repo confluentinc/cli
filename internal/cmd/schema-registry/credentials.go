@@ -2,8 +2,9 @@ package schemaregistry
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"os"
+
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 
@@ -50,7 +51,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 	return auth, didPromptUser, nil
 }
 
-func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamic_config.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
 	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
 
@@ -112,7 +113,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamic_config.DynamicConf
 			if srCluster, ok := ctx.SchemaRegistryClusters[envId]; ok {
 				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 			} else {
-				ctxClient := dynamic_config.NewContextClient(ctx)
+				ctxClient := dynamicconfig.NewContextClient(ctx)
 				srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
 				if err != nil {
 					return nil, nil, err

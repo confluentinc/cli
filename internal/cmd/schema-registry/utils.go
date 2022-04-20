@@ -3,7 +3,6 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"sort"
 	"strings"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/confluentinc/go-printer"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -20,7 +20,7 @@ const (
 	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
 )
 
-func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamic_config.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
+func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil
@@ -28,7 +28,7 @@ func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamic_co
 	return getSchemaRegistryClient(cmd, cfg, ver, "", "")
 }
 
-func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamic_config.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	if srClient != nil {
 		// Tests/mocks
 		return srClient, nil, nil

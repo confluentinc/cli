@@ -1,4 +1,4 @@
-package dynamic_config
+package dynamicconfig
 
 import (
 	"context"
@@ -23,7 +23,7 @@ type DynamicContext struct {
 	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func New(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		Client:   client,

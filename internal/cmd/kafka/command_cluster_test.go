@@ -2,10 +2,11 @@ package kafka
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 	"testing"
 	"time"
+
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -270,7 +271,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = dynamic_config.NewDynamicConfig(cfg, nil, nil)
+	c.Config = dynamicconfig.NewDynamicConfig(cfg, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

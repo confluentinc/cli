@@ -3,9 +3,10 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 	"os"
+
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -119,7 +120,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamic_config.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

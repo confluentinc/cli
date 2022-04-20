@@ -3,10 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"net/http"
 	"os"
 	"strings"
+
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -55,7 +56,7 @@ type PreRun struct {
 
 type CLICommand struct {
 	*cobra.Command
-	Config    *dynamic_config.DynamicConfig
+	Config    *dynamicconfig.DynamicConfig
 	Version   *version.Version
 	prerunner PreRunner
 }
@@ -69,7 +70,7 @@ type AuthenticatedCLICommand struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
-	Context           *dynamic_config.DynamicContext
+	Context           *dynamicconfig.DynamicContext
 	State             *v1.ContextState
 }
 
@@ -143,7 +144,7 @@ func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand
 
 func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
-		Config:    &dynamic_config.DynamicConfig{},
+		Config:    &dynamicconfig.DynamicConfig{},
 		Command:   command,
 		prerunner: prerunner,
 	}
@@ -405,7 +406,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func getKafkaRestEndpoint(ctx *dynamic_config.DynamicContext) (string, string, error) {
+func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
 		return "", "", nil
 	}
@@ -420,7 +421,7 @@ func getKafkaRestEndpoint(ctx *dynamic_config.DynamicContext) (string, string, e
 
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
-	client := dynamic_config.NewContextClient(ctx)
+	client := dynamicconfig.NewContextClient(ctx)
 	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
 	if err != nil {
 		return "", "", err
@@ -432,7 +433,7 @@ func getKafkaRestEndpoint(ctx *dynamic_config.DynamicContext) (string, string, e
 	}
 
 	// update config to have updated cluster if rest endpoint is no longer ""
-	clusterConfig = dynamic_config.KafkaClusterToKafkaClusterConfig(kafkaCluster, clusterConfig.APIKeys)
+	clusterConfig = dynamicconfig.KafkaClusterToKafkaClusterConfig(kafkaCluster, clusterConfig.APIKeys)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(clusterConfig)
 	err = ctx.Save()
 
@@ -454,7 +455,7 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	return baseURL
 }
 
-func (r *PreRun) createCCloudClient(ctx *dynamic_config.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
+func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var userAgent string
@@ -570,7 +571,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
 }
 
-func (r *PreRun) createMDSClient(ctx *dynamic_config.DynamicContext, ver *version.Version) *mds.APIClient {
+func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
@@ -682,7 +683,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	return values, nil
 }
 
-func createOnPremKafkaRestClient(ctx *dynamic_config.DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
+func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	if caCertPath == "" {
 		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 		logger.Debugf("Found CA cert path: %s", caCertPath)
@@ -783,7 +784,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 	}
 }
 
-func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamic_config.DynamicConfig) error {
+func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamicconfig.DynamicConfig) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -808,7 +809,7 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamic_config.Dynami
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamic_config.DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
 	if ctx == nil {
 		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
@@ -827,7 +828,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamic_
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamic_config.DynamicContext) (string, error) {
+func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.Name,
@@ -859,7 +860,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamic_config.Dyn
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
-func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamic_config.DynamicContext) string {
+func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicContext) string {
 	return ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 }
 
@@ -909,7 +910,7 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	}
 }
 
-func (r *PreRun) createMDSv2Client(ctx *dynamic_config.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
+func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {

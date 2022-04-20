@@ -2,10 +2,10 @@ package schemaregistry
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"math"
 	"strconv"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -63,7 +63,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	ctxClient := dynamic_config.NewContextClient(c.Context)
+	ctxClient := dynamicconfig.NewContextClient(c.Context)
 	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
