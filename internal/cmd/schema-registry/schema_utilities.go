@@ -69,13 +69,6 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 }
 
 func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
-	if _, err := os.Stat(schemaDir); os.IsNotExist(err) {
-		err = os.Mkdir(schemaDir, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
 		tempStorePath := filepath.Join(schemaDir, ref.Name)
