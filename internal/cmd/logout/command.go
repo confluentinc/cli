@@ -21,7 +21,7 @@ type Command struct {
 	netrcHandler netrc.NetrcHandler
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "logout",
 		Args: cobra.NoArgs,
@@ -41,10 +41,9 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandl
 		cfg:          cfg,
 		netrcHandler: netrcHandler,
 	}
-
 	cmd.RunE = pcmd.NewCLIRunE(c.logout)
 
-	return c
+	return cmd
 }
 
 func (c *Command) logout(cmd *cobra.Command, _ []string) error {

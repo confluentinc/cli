@@ -665,7 +665,7 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 		},
 	}
 	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
-	cmd := New(conf, cliMock.NewPreRunnerMock(nil, ccloudv2.NewClient(cmkClient, nil, nil, "auth-token"), nil, nil, conf), "test-client")
+	cmd := New(conf, cliMock.NewPreRunnerMock(nil, &ccloudv2.Client{CmkClient: cmkClient, AuthToken: "auth-token"}, nil, nil, conf), "test-client")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)

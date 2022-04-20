@@ -85,6 +85,8 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"destination-bootstrap-server",
 			"destination-cluster-id",
+			"destination-api-key",
+			"destination-api-secret",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
@@ -102,6 +104,8 @@ var flagRules = []linter.FlagRule{
 			"client-key-path",
 			"connect-cluster-id",
 			"destination-bootstrap-server",
+			"destination-api-key",
+			"destination-api-secret",
 			"destination-cluster-id",
 			"enable-systest-events",
 			"if-not-exists",

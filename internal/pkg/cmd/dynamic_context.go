@@ -88,21 +88,13 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, error) {
-	clusterId, err := d.getKafkaClusterIDForCommand()
-	if err != nil {
-		return nil, err
+	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
+	if clusterId == "" {
+		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId)
-}
-
-func (d *DynamicContext) getKafkaClusterIDForCommand() (string, error) {
-	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
-	if clusterId == "" {
-		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
-	}
-	return clusterId, nil
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {

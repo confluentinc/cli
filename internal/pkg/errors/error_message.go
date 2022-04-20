@@ -122,7 +122,7 @@ const (
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupported                     = "Cluster resize is support only on dedicated clusters."
+	ClusterResizeNotSupported                     = "cluster resize is only supported on dedicated clusters"
 	CloudRegionNotAvailableErrorMsg               = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
@@ -206,7 +206,7 @@ const (
 	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
-	NoSubjectLevelConfigErrorMsg 			 = `subject "%s" does not have subject-level compatibility configured`
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -386,8 +386,8 @@ const (
 	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"

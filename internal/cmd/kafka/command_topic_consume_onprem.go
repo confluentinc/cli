@@ -42,6 +42,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file.")
@@ -56,6 +57,11 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 
 func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	fullHeader, err := cmd.Flags().GetBool("full-header")
 	if err != nil {
 		return err
 	}
@@ -138,7 +144,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		Ctx:        ctx,
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+		Properties: ConsumerProperties{PrintKey: printKey, FullHeader: fullHeader, Delimiter: delimiter, SchemaPath: dir},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
 }

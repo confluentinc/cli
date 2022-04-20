@@ -37,7 +37,7 @@ type userStruct struct {
 	AuthenticationMethod string
 }
 
-func NewUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "user",
 		Short:       "Manage users.",

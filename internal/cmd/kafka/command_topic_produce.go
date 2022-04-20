@@ -19,14 +19,21 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
+func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "produce <topic>",
 		Short:       "Produce messages to a Kafka topic.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.produce),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
+
+	c := &hasAPIKeyTopicCommand{
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
+		prerunner:           prerunner,
+		clientID:            clientId,
+	}
+	cmd.RunE = pcmd.NewCLIRunE(c.produce)
+
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("refs", "", "The path to the references file.")
@@ -49,7 +56,7 @@ func (c *hasAPIKeyTopicCommand) newProduceCommand() *cobra.Command {
 
 func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}

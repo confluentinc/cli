@@ -45,8 +45,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
 
-	c.AddCommand(newAppCommand(prerunner).Command)
-	c.AddCommand(newClusterCommand(cfg, prerunner).Command)
+	c.AddCommand(newAppCommand(prerunner))
+	c.AddCommand(newClusterCommand(cfg, prerunner))
 
 	return c.Command
 }
