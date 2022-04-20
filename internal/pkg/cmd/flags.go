@@ -13,6 +13,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	streamgovernance "github.com/confluentinc/cli/internal/pkg/stream-governance"
 )
 
 func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -231,5 +232,14 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string {
 		return []string{"AVRO", "PROTOBUF", "JSON"}
+	})
+}
+
+func AddStreamGovernancePackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
+		"Stream Governance package as (%s).", strings.Join(streamgovernance.Packages, ", ")))
+
+	RegisterFlagCompletionFunc(cmd, "package", func(_ *cobra.Command, _ []string) []string {
+		return streamgovernance.Packages
 	})
 }
