@@ -91,13 +91,16 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	dir := sr.GetCCloudSchemaDir()
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
+	}
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
 
 	// Meta info contains a magic byte and schema ID (4 bytes).
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
+	metaInfo, referencePathMap, err := c.registerSchema(cmd, dir, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {
 		return err
 	}
@@ -232,7 +235,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	return key, value, nil
 }
 
-func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaDir, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	var metaInfo []byte
@@ -261,7 +264,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, valueFormat, 
 			return nil, nil, err
 		}
 		metaInfo = info
-		referencePathMap, err = sr.StoreSchemaReferences(refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaDir, refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}

@@ -136,14 +136,10 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	dir := sr.GetCCloudSchemaDir()
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return err
-		}
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
 	}
-
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()

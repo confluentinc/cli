@@ -68,10 +68,9 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	return refs, nil
 }
 
-func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
-	dir := GetCCloudSchemaDir()
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
+func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
+	if _, err := os.Stat(schemaDir); os.IsNotExist(err) {
+		err = os.Mkdir(schemaDir, 0755)
 		if err != nil {
 			return nil, err
 		}
@@ -79,7 +78,7 @@ func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClie
 
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
-		tempStorePath := filepath.Join(dir, ref.Name)
+		tempStorePath := filepath.Join(schemaDir, ref.Name)
 		if !utils.FileExists(tempStorePath) {
 			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
 			if err != nil {
@@ -106,6 +105,13 @@ func getMetaInfoFromSchemaId(id int32) []byte {
 	return append(metaInfo, schemaIdBuffer...)
 }
 
-func GetCCloudSchemaDir() string {
-	return filepath.Join(os.TempDir(), "ccloud-schema")
+func CreateTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err = os.Mkdir(dir, 0755)
+		if err != nil {
+			return "", err
+		}
+	}
+	return dir, nil
 }
