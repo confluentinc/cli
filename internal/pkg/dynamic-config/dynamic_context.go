@@ -26,6 +26,7 @@ type DynamicContext struct {
 func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
+		Client:   client,
 		V2Client: v2Client,
 	}
 }
