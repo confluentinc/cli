@@ -358,8 +358,8 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 	cliCmd.Client = ccloudClient
-	//cliCmd.Context.client = ccloudClient
-	//cliCmd.Config.Client = ccloudClient
+	cliCmd.Context.Client = ccloudClient
+	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
@@ -400,8 +400,8 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	v2Client := ccloudv2.NewClient(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
 
 	cliCmd.V2Client = v2Client
-	//cliCmd.Context.v2Client = v2Client
-	//cliCmd.Config.V2Client = v2Client
+	cliCmd.Context.V2Client = v2Client
+	cliCmd.Config.V2Client = v2Client
 	return nil
 }
 
