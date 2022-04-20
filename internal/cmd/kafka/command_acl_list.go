@@ -26,7 +26,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("principal", "", "Principal for this operation with User: or Group: prefix.")
+	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:" or "Group:".`)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

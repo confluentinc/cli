@@ -67,8 +67,8 @@ const (
 	InvalidOperationValueErrorMsg     = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
 	UserIdNotValidErrorMsg            = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg              = `failed to parse principal: ensure principal begins with "User:"`
-	BadServiceAccountOrUserIDErrorMsg = `failed to parse principal: ensure service account id begins with "sa-", or user resource id begins with "u-"`
+	BadPrincipalErrorMsg              = `ensure principal begins with "User:"`
+	BadServiceAccountOrUserIDErrorMsg = `ensure service account id begins with "sa-", or user resource id begins with "u-"`
 	PrincipalNotFoundErrorMsg         = `user or service account "%s" not found`
 
 	// iam rbac role commands

@@ -48,7 +48,7 @@ func aclEntryFlags() *pflag.FlagSet {
 
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.StringArray("operation", []string{""}, operationHelp)
-	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
+	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:" or "Group:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
@@ -139,10 +139,7 @@ func setConfigPrincipal(conf *ACLConfiguration, isServiceAccount bool, v string)
 
 	if v == "0" {
 		conf.Entry.Principal = "User:*"
-		return
-	}
-
-	if isServiceAccount {
+	} else if isServiceAccount {
 		conf.Entry.Principal = "User:" + v
 	} else {
 		conf.Entry.Principal = v
