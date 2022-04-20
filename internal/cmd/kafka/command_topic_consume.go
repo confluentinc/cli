@@ -3,11 +3,12 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"os"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"os"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -143,7 +144,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	defer func (){
+	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
 

@@ -2,11 +2,12 @@ package serdes
 
 import (
 	"bytes"
-	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 
 	"github.com/stretchr/testify/require"
 )
