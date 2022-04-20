@@ -11,7 +11,6 @@ import (
 	"github.com/spf13/pflag"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -69,7 +68,6 @@ type AuthenticatedCLICommand struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *KafkaRESTProvider
-	QuotasClient      *quotasv2.APIClient
 	Context           *DynamicContext
 	State             *v1.ContextState
 }
@@ -84,7 +82,6 @@ type StateFlagCommand struct {
 
 type HasAPIKeyCLICommand struct {
 	*CLICommand
-	Context *DynamicContext
 }
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
@@ -355,7 +352,6 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
-	cliCmd.QuotasClient = r.createQuotasClient(ctx, cliCmd.Version)
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
@@ -400,7 +396,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return new(errors.NotLoggedInError)
 	}
 
-	v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
+	v2Client := ccloudv2.NewClient(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.v2Client = v2Client
@@ -455,19 +451,6 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	}
 	// if no matches, then use original URL
 	return baseURL
-}
-
-func (r *PreRun) createQuotasClient(ctx *DynamicContext, ver *version.Version) *quotasv2.APIClient {
-	var baseURL string
-
-	cfg := quotasv2.NewConfiguration()
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-		cfg.Servers[0].URL = baseURL + "/api"
-	}
-	cfg.UserAgent = ver.UserAgent
-	cfg.Debug = log.CliLogger.GetLevel() >= log.DEBUG
-	return quotasv2.NewAPIClient(cfg)
 }
 
 func (r *PreRun) createCCloudClient(ctx *DynamicContext, ver *version.Version) (*ccloud.Client, error) {
@@ -728,7 +711,7 @@ func createOnPremKafkaRestClient(ctx *DynamicContext, caCertPath string, clientC
 }
 
 // HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
@@ -738,12 +721,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
 		}
-		command.Context = ctx
 
 		var clusterId string
-		if command.Context.Credential.CredentialType == v1.APIKey {
+		switch ctx.Credential.CredentialType {
+		case v1.APIKey:
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		} else if command.Context.Credential.CredentialType == v1.Username {
+		case v1.Username:
 			if err := r.ValidateToken(cmd, command.Config); err != nil {
 				return err
 			}
@@ -752,7 +735,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, command.Context.State.AuthToken)
+			v2Client := ccloudv2.NewClient(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, ctx.State.AuthToken)
 
 			ctx.client = client
 			command.Config.Client = client
@@ -783,7 +766,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(cmd *cobra.Command
 						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}
-		} else {
+		default:
 			panic("Invalid Credential Type")
 		}
 

@@ -32,7 +32,7 @@ type Command struct {
 	isTest                   bool
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -58,13 +58,13 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
-		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
+		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
 		isTest:                   isTest,
 	}
-
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
-	return c
+
+	return cmd
 }
 
 func (c *Command) login(cmd *cobra.Command, _ []string) error {

@@ -18,16 +18,12 @@ const (
 	partitionCount           = "num.partitions"
 )
 
-type kafkaTopicCommand struct {
-	*hasAPIKeyTopicCommand
-	*authenticatedTopicCommand
-}
-
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
 	clientID  string
 }
+
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
@@ -44,39 +40,41 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 
-	c := &kafkaTopicCommand{}
-
-	if cfg.IsCloudLogin() {
-		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
-			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-			prerunner:           prerunner,
-			clientID:            clientID,
-		}
-		c.hasAPIKeyTopicCommand.init()
-
-		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-			prerunner:                     prerunner,
-			clientID:                      clientID,
-		}
-		c.authenticatedTopicCommand.init()
-	} else {
-		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-			prerunner:                     prerunner,
-			clientID:                      clientID,
-		}
-		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
-		c.authenticatedTopicCommand.onPremInit()
+	c := &authenticatedTopicCommand{
+		prerunner: prerunner,
+		clientID:  clientID,
 	}
 
-	return c
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+
+		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(newProduceCommand(prerunner, clientID))
+		cmd.AddCommand(c.newUpdateCommand())
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+
+		cmd.AddCommand(c.newConsumeCommandOnPrem())
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newProduceCommandOnPrem())
+		cmd.AddCommand(c.newUpdateCommandOnPrem())
+	}
+
+	return cmd
 }
 
 func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -106,23 +104,6 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
 	}
 	return suggestions
-}
-
-func (c *hasAPIKeyTopicCommand) init() {
-	c.AddCommand(c.newProduceCommand())
-	c.AddCommand(c.newConsumeCommand())
-}
-
-func (c *authenticatedTopicCommand) init() {
-	describeCmd := c.newDescribeCommand()
-	updateCmd := c.newUpdateCommand()
-	deleteCmd := c.newDeleteCommand()
-
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(describeCmd)
-	c.AddCommand(updateCmd)
-	c.AddCommand(deleteCmd)
 }
 
 // validate that a topic exists before attempting to produce/consume messages

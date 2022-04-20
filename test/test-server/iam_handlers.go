@@ -11,7 +11,7 @@ import (
 )
 
 // Handler for: "/iam/v2/users/{id}"
-func HandleIamUser(t *testing.T) http.HandlerFunc {
+func handleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
@@ -27,7 +27,7 @@ func HandleIamUser(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/iam/v2/users"
-func HandleIamUsers(t *testing.T) http.HandlerFunc {
+func handleIamUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []iamv2.IamV2User{
@@ -66,7 +66,7 @@ func HandleIamUsers(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/iam/v2/service_accounts/{id}"
-func HandleIamServiceAccount(t *testing.T) http.HandlerFunc {
+func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
@@ -85,7 +85,7 @@ func HandleIamServiceAccount(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/iam/v2/service_accounts"
-func HandleIamServiceAccounts(t *testing.T) http.HandlerFunc {
+func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {

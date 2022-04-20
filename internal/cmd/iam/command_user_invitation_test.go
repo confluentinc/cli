@@ -67,7 +67,7 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		User: suite.userMock,
 	}
 	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
-	return NewUserCommand(prerunner)
+	return newUserCommand(prerunner)
 }
 
 func (suite *InvitationTestSuite) TestInvitationList() {

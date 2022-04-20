@@ -18,12 +18,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
+func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "consume <topic>",
 		Short:       "Consume messages from a Kafka topic.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.consume),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -32,10 +31,19 @@ func (c *hasAPIKeyTopicCommand) newConsumeCommand() *cobra.Command {
 			},
 		),
 	}
+
+	c := &hasAPIKeyTopicCommand{
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
+		prerunner:           prerunner,
+		clientID:            clientId,
+	}
+	cmd.RunE = pcmd.NewCLIRunE(c.consume)
+
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
+	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
@@ -62,7 +70,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -73,6 +81,11 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
+	if err != nil {
+		return err
+	}
+
+	fullHeader, err := cmd.Flags().GetBool("full-header")
 	if err != nil {
 		return err
 	}
@@ -151,7 +164,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
 		Subject:    subject,
-		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
+		Properties: ConsumerProperties{PrintKey: printKey, FullHeader: fullHeader, Delimiter: delimiter, SchemaPath: dir},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
 }

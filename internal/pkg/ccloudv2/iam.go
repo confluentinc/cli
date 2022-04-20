@@ -3,7 +3,6 @@ package ccloudv2
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -55,9 +54,8 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 	collectedAllServiceAccounts := false
 	pageToken := ""
 	for !collectedAllServiceAccounts {
-		serviceAccountList, resp, err := c.executeListServiceAccounts(pageToken)
+		serviceAccountList, _, err := c.executeListServiceAccounts(pageToken)
 		if err != nil {
-			log.Printf("[ERROR] Service accounts get failed %v, %s", resp, err)
 			return nil, err
 		}
 		serviceAccounts = append(serviceAccounts, serviceAccountList.GetData()...)
@@ -113,9 +111,8 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 	collectedAllUsers := false
 	pageToken := ""
 	for !collectedAllUsers {
-		userList, resp, err := c.executeListUsers(pageToken)
+		userList, _, err := c.executeListUsers(pageToken)
 		if err != nil {
-			log.Printf("[ERROR] Users get failed %v, %s", resp, err)
 			return nil, err
 		}
 		users = append(users, userList.GetData()...)
