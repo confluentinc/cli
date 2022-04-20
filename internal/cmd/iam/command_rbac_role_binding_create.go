@@ -22,12 +22,12 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the Kafka cluster "lkc-123456":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-123456 --environment env-12345",
+				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":`,
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --resource Topic:users --environment env-12345 --cloud-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-12345 --kafka-cluster-id lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
