@@ -31,9 +31,11 @@ import (
 )
 
 const (
-	serviceAccountId   = int32(123)
-	serviceAccountName = "service-account"
-	userResourceId     = "sa-55555"
+	serviceAccountId         = int32(123)
+	serviceAccountResourceId = "sa-123"
+	serviceAccountName       = "service-account"
+	userId                   = int32(456)
+	userResourceId           = "sa-456"
 )
 
 var conf *v1.Config
@@ -284,6 +286,96 @@ var aclEntries = []struct {
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
 				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "read"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_READ, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "read"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_READ, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "write"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "write"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "create"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "create"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "delete"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "delete"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "alter"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "alter"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
@@ -1169,13 +1261,21 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
-						ResourceId:  userResourceId,
+						ResourceId:  serviceAccountResourceId,
 						ServiceName: serviceAccountName,
 					},
 					{
 						Id:          42,
 						ResourceId:  "sa-42",
 						ServiceName: serviceAccountName,
+					},
+				}, nil
+			},
+			ListFunc: func(_ context.Context) (users []*orgv1.User, e error) {
+				return []*orgv1.User{
+					{
+						Id:         userId,
+						ResourceId: userResourceId,
 					},
 				}, nil
 			},
