@@ -31,8 +31,8 @@ func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Comman
 		),
 	}
 
-	pcmd.AddCloudFlag(cmd)
 	pcmd.AddStreamGovernancePackageFlag(cmd)
+	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("region", "", "Region ID")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

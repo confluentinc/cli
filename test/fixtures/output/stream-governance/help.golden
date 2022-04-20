@@ -1,0 +1,16 @@
+Manage Stream Governance.
+
+Usage:
+  confluent stream-governance [command]
+
+Aliases:
+  stream-governance, sg
+
+Available Commands:
+  enable       Enable stream governance for an environment
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent stream-governance [command] --help" for more information about a command.
