@@ -5,9 +5,7 @@ import (
 	"os"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	"github.com/confluentinc/cli/internal/pkg/log"
-
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 

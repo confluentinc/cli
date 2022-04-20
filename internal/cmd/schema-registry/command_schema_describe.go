@@ -7,12 +7,11 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/output"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
