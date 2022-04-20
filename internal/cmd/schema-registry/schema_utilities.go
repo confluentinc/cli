@@ -69,7 +69,7 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 }
 
 func StoreSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	dir := GetCCloudSchemaDir()
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
@@ -104,4 +104,8 @@ func getMetaInfoFromSchemaId(id int32) []byte {
 	schemaIdBuffer := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
 	return append(metaInfo, schemaIdBuffer...)
+}
+
+func GetCCloudSchemaDir() string {
+	return filepath.Join(os.TempDir(), "ccloud-schema")
 }

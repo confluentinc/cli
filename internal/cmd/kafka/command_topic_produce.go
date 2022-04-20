@@ -90,6 +90,12 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+
+	dir := sr.GetCCloudSchemaDir()
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
 	// Meta info contains a magic byte and schema ID (4 bytes).
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
 	if err != nil {

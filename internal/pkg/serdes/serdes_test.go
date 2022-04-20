@@ -2,6 +2,7 @@ package serdes
 
 import (
 	"bytes"
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -425,7 +426,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 }
 
 func createTempDir() (string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	dir := sr.GetCCloudSchemaDir()
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.Mkdir(dir, 0755)
 		if err != nil {
