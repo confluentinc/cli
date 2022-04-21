@@ -59,7 +59,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 				dataplaneRolenames, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
 				rolenames := append(publicRolenames, dataplaneRolenames...)
 
-				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(rolenames, ","))
+				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(rolenames, ", "))
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 			}
 
