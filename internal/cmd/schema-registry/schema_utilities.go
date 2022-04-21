@@ -133,14 +133,7 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 	}
 
 	// Store the references in temporary files
-	refsDir, err := CreateTempDir()
-	if err != nil {
-		return "", nil, err
-	}
-	defer func() {
-		_ = os.RemoveAll(refsDir)
-	}()
-	referencePathMap, err := StoreSchemaReferences(refsDir, references, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(schemaPath, references, srClient, ctx)
 	if err != nil {
 		return "", nil, err
 	}

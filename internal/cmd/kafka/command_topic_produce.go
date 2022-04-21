@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"strings"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -266,9 +265,8 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 			return nil, nil, err
 		}
 
-		dir := filepath.Join(os.TempDir(), "ccloud-schema")
 		if valueFormat != "string" {
-			*schemaPath, referencePathMap, err = sr.RequestSchemaWithId(schemaId, dir, subject, srClient, ctx)
+			*schemaPath, referencePathMap, err = sr.RequestSchemaWithId(schemaId, schemaDir, subject, srClient, ctx)
 			if err != nil {
 				return nil, nil, err
 			}
