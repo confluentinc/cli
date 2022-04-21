@@ -3,8 +3,9 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"

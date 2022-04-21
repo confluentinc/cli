@@ -4,13 +4,12 @@ import (
 	"context"
 	"os"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/log"
-
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -50,7 +49,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 	return auth, didPromptUser, nil
 }
 
-func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
 	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
 
@@ -112,7 +111,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			if srCluster, ok := ctx.SchemaRegistryClusters[envId]; ok {
 				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 			} else {
-				ctxClient := pcmd.NewContextClient(ctx)
+				ctxClient := dynamicconfig.NewContextClient(ctx)
 				srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
 				if err != nil {
 					return nil, nil, err
