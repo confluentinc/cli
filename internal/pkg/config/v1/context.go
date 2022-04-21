@@ -181,6 +181,20 @@ func (c *Context) GetOrganizationResourceId() string {
 	return ""
 }
 
+func (c *Context) GetSso() *orgv1.Sso {
+	if org := c.GetOrganization(); org != nil {
+		return org.Sso
+	}
+	return nil
+}
+
+func (c *Context) IsSsoEnabled() bool {
+	if sso := c.GetSso(); sso != nil {
+		return sso.Enabled
+	}
+	return false
+}
+
 func (c *Context) GetEnvironment() *orgv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account

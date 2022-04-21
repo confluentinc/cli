@@ -7,13 +7,11 @@ import (
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
-	"github.com/confluentinc/cli/internal/pkg/log"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
@@ -91,7 +89,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
 
-	idToken, _, err := sso.Login(client.BaseURL, noBrowser, userSSO)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
@@ -103,7 +101,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 		return "", "", err
 	}
 
-	return res.Token, res.RefreshToken, err
+	return res.Token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
@@ -139,7 +137,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 		return "", "", err
 	}
 
-	return res.Token, res.RefreshToken, err
+	return res.Token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {

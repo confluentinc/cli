@@ -987,7 +987,7 @@ func TestIsCCloudURL_True(t *testing.T) {
 		"stag.cpdev.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	} {
-		c := new(Command)
+		c := new(command)
 		isCCloud := c.isCCloudURL(url)
 		require.True(t, isCCloud, url+" should return true")
 	}
@@ -999,7 +999,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"example.com:8090",
 		"https://example.com",
 	} {
-		c := new(Command)
+		c := new(command)
 		isCCloud := c.isCCloudURL(url)
 		require.False(t, isCCloud, url+" should return false")
 	}
