@@ -3,10 +3,11 @@ package schemaregistry
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/spf13/cobra"
 )
 
 func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {

@@ -66,7 +66,6 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
-			command.Config.Resolver = c.FlagResolver
 			command.Config.Config = c.Config
 		}
 		return nil

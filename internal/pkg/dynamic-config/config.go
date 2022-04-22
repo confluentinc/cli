@@ -1,4 +1,4 @@
-package cmd
+package dynamicconfig
 
 import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
