@@ -22,13 +22,22 @@ type registerSchemaResponse struct {
 	Id int32 `json:"id" yaml:"id"`
 }
 
-func RegisterSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
+type RegisterSchemaConfigs struct {
+	SchemaDir   string
+	Subject     string
+	ValueFormat string
+	SchemaType  string
+	SchemaPath  *string
+	Refs        []srsdk.SchemaReference
+}
+
+func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
+	schema, err := ioutil.ReadFile(*schemaCfg.SchemaPath)
 	if err != nil {
 		return nil, err
 	}
 
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
+	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaCfg.SchemaType, References: schemaCfg.Refs})
 	if err != nil {
 		return nil, err
 	}
