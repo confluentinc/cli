@@ -648,7 +648,7 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: new(version.Version)}},
+		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*Credential),
