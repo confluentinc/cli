@@ -62,7 +62,6 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-
 	}
 
 	dir, err := CreateTempDir()
