@@ -34,11 +34,13 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	}
 	cmd.RunE = pcmd.NewCLIRunE(c.produce)
 
-	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
@@ -59,7 +61,20 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	producer, err := NewProducer(cluster, c.clientID)
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	producer, err := newProducer(cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}

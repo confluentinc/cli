@@ -63,7 +63,6 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-
 	}
 
 	dir, err := CreateTempDir()
@@ -73,6 +72,7 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
+
 	_, _, err = c.registerSchemaOnPrem(cmd, dir, schemaType, schemaPath, subject, refs)
 	return err
 }
