@@ -7,7 +7,6 @@ import (
 	"os/signal"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -107,7 +106,6 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return err
@@ -117,7 +115,15 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	}()
 
 	// Meta info contains magic byte and schema ID (4 bytes).
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, dir, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
+	schemaCfg := &sr.RegisterSchemaConfigs{
+		Subject:     subject,
+		SchemaDir:   dir,
+		SchemaType:  serializationProvider.GetSchemaName(),
+		ValueFormat: valueFormat,
+		SchemaPath:  &schemaPath,
+		Refs:        refs,
+	}
+	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
@@ -192,12 +198,12 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	return scanErr
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaDir, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
-	if valueFormat != "string" && len(schemaPath) > 0 {
+	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
@@ -206,11 +212,11 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaDir
 			return nil, nil, err
 		}
 
-		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
-		referencePathMap, err = sr.StoreSchemaReferences(schemaDir, refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
 			return metaInfo, nil, err
 		}

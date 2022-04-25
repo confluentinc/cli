@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -132,12 +131,13 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		}
 	}
 
-	dir := filepath.Join(os.TempDir(), "confluent-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.Mkdir(dir, 0755); err != nil {
-			return err
-		}
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
 	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
 
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,

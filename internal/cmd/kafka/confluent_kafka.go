@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
