@@ -113,7 +113,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))
-	cmd.AddCommand(streamgovernance.New(cfg, prerunner, nil))
+	cmd.AddCommand(streamgovernance.New(cfg, prerunner))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 

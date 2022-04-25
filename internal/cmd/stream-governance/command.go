@@ -1,7 +1,6 @@
 package streamgovernance
 
 import (
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -10,10 +9,9 @@ import (
 
 type streamGovernanceCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	srClient *srsdk.APIClient
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-governance",
 		Aliases:     []string{"sg"},
@@ -22,7 +20,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 	}
 
 	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
-	sgCommand := &streamGovernanceCommand{srClient: srClient}
+	sgCommand := &streamGovernanceCommand{}
 
 	if cfg.IsCloudLogin() {
 		sgCommand.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
