@@ -48,7 +48,7 @@ func aclEntryFlags() *pflag.FlagSet {
 
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.StringArray("operation", []string{""}, operationHelp)
-	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:" or "Group:".`)
+	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
