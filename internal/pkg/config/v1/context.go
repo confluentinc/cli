@@ -24,6 +24,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
+	LDConfig               *LDConfig                         `json:"-" hcl:"-"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -196,6 +197,14 @@ func (c *Context) GetAuthRefreshToken() string {
 		return c.State.AuthRefreshToken
 	}
 	return ""
+}
+
+func (c *Context) GetLDFlags(isAnonUser bool) map[string]interface{} {
+	if isAnonUser {
+		return c.LDConfig.AnonFlagValues
+	} else {
+		return c.LDConfig.AuthFlagValues
+	}
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

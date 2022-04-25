@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"time"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
@@ -32,11 +33,11 @@ const (
 )
 
 var (
-	Manager    FeatureFlagManager // Global LD Manager
+	Manager    featureFlagManager // Global LD Manager
 	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 )
 
-type FeatureFlagManager interface {
+type featureFlagManager interface {
 	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool
 	StringVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal string) string
 	IntVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal int) int
@@ -44,10 +45,8 @@ type FeatureFlagManager interface {
 }
 
 type LaunchDarklyManager struct {
-	client                 *sling.Sling
-	flagVals               map[string]interface{}
-	flagValsAreForAnonUser bool
-	version                *version.Version
+	client  *sling.Sling
+	version *version.Version
 }
 
 func InitManager(version *version.Version, isTest bool) {
@@ -67,7 +66,7 @@ func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
-		logUnexpectedValueTypeMsg(key, ld.flagVals[key], "bool")
+		logUnexpectedValueTypeMsg(key, flagValInterface, "bool")
 		return defaultVal
 	}
 	return flagVal
@@ -78,7 +77,7 @@ func (ld *LaunchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
 	}
-	logUnexpectedValueTypeMsg(key, ld.flagVals[key], "int")
+	logUnexpectedValueTypeMsg(key, flagValInterface, "int")
 	return defaultVal
 }
 
@@ -90,7 +89,7 @@ func (ld *LaunchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	if val, ok := flagValInterface.(float64); ok { // for test since Unmarshal uses float64
 		return int(val)
 	}
-	logUnexpectedValueTypeMsg(key, ld.flagVals[key], "int")
+	logUnexpectedValueTypeMsg(key, flagValInterface, "int")
 	return defaultVal
 }
 
@@ -103,15 +102,20 @@ func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	user, isAnonUser := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
-	if !ld.areCachedFlagsAvailable(isAnonUser) {
-		err := ld.fetchFlags(user, isAnonUser)
+	var flagVals map[string]interface{}
+	var err error
+	if !areCachedFlagsAvailable(ctx, isAnonUser) {
+		flagVals, err = ld.fetchFlags(user)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
 			return defaultVal
 		}
+		writeFlagsToConfig(ctx, flagVals, isAnonUser)
+	} else {
+		flagVals = ctx.GetLDFlags(isAnonUser)
 	}
-	if _, ok := ld.flagVals[key]; ok {
-		return ld.flagVals[key]
+	if _, ok := flagVals[key]; ok {
+		return flagVals[key]
 	} else {
 		log.CliLogger.Debugf("unable to find value for requested flag \"%s\"", key)
 		return defaultVal
@@ -122,23 +126,32 @@ func logUnexpectedValueTypeMsg(key string, value interface{}, expectedType strin
 	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
 }
 
-func (ld *LaunchDarklyManager) fetchFlags(user lduser.User, isAnonUser bool) error {
+func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interface{}, error) {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
-		return fmt.Errorf("error encoding user: %w", err)
+		return nil, fmt.Errorf("error encoding user: %w", err)
 	}
 	var resp *http.Response
-	resp, err = ld.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&ld.flagVals, err)
+	var flagVals map[string]interface{}
+	resp, err = ld.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
 	if err != nil {
 		log.CliLogger.Debug(resp)
-		return fmt.Errorf("error fetching feature flags: %w", err)
+		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
 	}
-	ld.flagValsAreForAnonUser = isAnonUser
-	return nil
+	return flagVals, nil
 }
 
-func (ld *LaunchDarklyManager) areCachedFlagsAvailable(isAnonUser bool) bool {
-	return len(ld.flagVals) > 0 && ld.flagValsAreForAnonUser == isAnonUser
+func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, isAnonUser bool) bool {
+	if ctx.LDConfig == nil {
+		return false
+	}
+	if isAnonUser {
+		isNotExpired := ctx.LDConfig.AnonFlagsUpdateTime < time.Now().Unix()+int64(24*time.Hour.Seconds())
+		return isNotExpired && len(ctx.LDConfig.AnonFlagValues) > 0
+	} else {
+		isNotExpired := ctx.LDConfig.AuthFlagsUpdateTime < time.Now().Unix()+int64(24*time.Hour.Seconds())
+		return isNotExpired && len(ctx.LDConfig.AuthFlagValues) > 0
+	}
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {
@@ -153,10 +166,20 @@ func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 	anonUser := false
+
+	if ld.version != nil && ld.version.Version != "" {
+		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
+	}
+
 	if ctx == nil || ctx.Context == nil {
 		anonUser = true
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
+		customValueMap := custom.Build()
+		if customValueMap.Count() > 0 {
+			userBuilder.CustomAll(customValueMap)
+		}
+		userBuilder.Key(key).Anonymous(true)
 		return userBuilder.Build(), anonUser
 	}
 	user := ctx.GetUser()
@@ -169,10 +192,6 @@ func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		anonUser = true
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
-	}
-
-	if ld.version != nil && ld.version.Version != "" {
-		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
 	}
 
 	organization := ctx.GetOrganization()
@@ -213,4 +232,15 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 func parsePkcFromBootstrap(bootstrap string) string {
 	r := regexp.MustCompile("pkc-([a-z0-9]+)")
 	return r.FindString(bootstrap)
+}
+
+func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, isAnonuser bool) {
+	if isAnonuser {
+		ctx.LDConfig.AnonFlagValues = vals
+		ctx.LDConfig.AnonFlagsUpdateTime = time.Now().Unix()
+	} else {
+		ctx.LDConfig.AuthFlagValues = vals
+		ctx.LDConfig.AuthFlagsUpdateTime = time.Now().Unix()
+	}
+	_ = ctx.Save()
 }
