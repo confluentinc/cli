@@ -28,7 +28,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		sgCommand.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(sgCommand.newDescribeCommand(cfg))
 	c.AddCommand(sgCommand.newEnableCommand(cfg))
 
 	return c.Command
