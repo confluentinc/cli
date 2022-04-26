@@ -10,6 +10,7 @@ import (
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -80,7 +81,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

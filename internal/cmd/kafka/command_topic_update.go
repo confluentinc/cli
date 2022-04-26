@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
@@ -34,7 +35,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics. Configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics. Configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -112,7 +113,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

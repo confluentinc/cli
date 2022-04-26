@@ -8,7 +8,7 @@ func (c *command) newEncryptCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encrypt",
 		Short: "Encrypt secrets in a configuration properties file.",
-		Long:  "This command encrypts the passwords in file specified in --config-file. This command returns a failure if a master key has not already been set in the environment variable. Create master key using \"master-key generate\" command and save the generated master key in environment variable.",
+		Long:  "This command encrypts the passwords in the file specified by `--config-file`. " + masterKeyNotSetWarning,
 		Args:  cobra.NoArgs,
 		RunE:  c.encrypt,
 	}

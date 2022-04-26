@@ -70,7 +70,7 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	@for dir in bin dist docs legal; do \
+	@for dir in bin dist docs legal release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
 

@@ -6,7 +6,7 @@ The CLI codebase stores the strings of all messages in the `errors` package. Thi
 - `""` surrounding names and ID’s
     - e.g. `Check that the resource "lkc-abc" exists.`, `Error: topic "bob" does not exist`
 - ```` `` ```` surrounding commands or flags
-    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka in your context with `confluent kafka cluster use`.``
+    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`.``
 
 ## Creating an Error
 ### Message Format

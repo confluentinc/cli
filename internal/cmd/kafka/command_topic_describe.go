@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -105,7 +106,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 	}
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

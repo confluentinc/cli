@@ -32,7 +32,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type AVRO", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "Where schemafilepath may include these contents.",
+				Text: "Where `schemafilepath` may include these contents:",
 				Code: `{
 	"type" : "record",
 	"namespace" : "Example",
