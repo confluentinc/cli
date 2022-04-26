@@ -14,11 +14,13 @@ import (
 
 var (
 	enableLabels = []string{"APIVersion", "Id", "Kind", "Resource Name", "SchemaRegistryEndpoint",
-		"Package", "Environment", "Status"}
+		"Package", "Environment", "Cloud", "Region", "Status"}
 	enableHumanRenames = map[string]string{"APIVersion": "API Version", "ID": "Cluster ID", "Kind": "Kind",
-		"SchemaRegistryEndpoint": "Endpoint URL", "Environment": "Environment", "Package": "Package", "Status": "Status"}
+		"SchemaRegistryEndpoint": "Endpoint URL", "Environment": "Environment", "Package": "Package",
+		"Cloud": "Cloud", "Region": "Region", "Status": "Status"}
 	enableStructuredRenames = map[string]string{"APIVersion": "api_Version", "ID": "id", "Kind": "kind",
-		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package", "Status": "status"}
+		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package",
+		"Cloud": "cloud", "Region": "region", "Status": "status"}
 )
 
 func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
@@ -74,7 +76,7 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 
 	newClusterRequest := c.createNewStreamGovernanceClusterRequest(cloud, region, packageType)
 
-	//printOutput(cmd, *newClusterRequest)
+	printOutput(cmd, *newClusterRequest)
 	newClusterResponse, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.
 		CreateStreamGovernanceV1Cluster(ctx).StreamGovernanceV1Cluster(*newClusterRequest).Execute()
 
@@ -103,7 +105,6 @@ func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(cloud,
 }
 
 func printOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV1Cluster) {
-	//describe Human output
 	metadata := newCluster.GetMetadata()
 	spec := newCluster.GetSpec()
 	environment := spec.GetEnvironment()
@@ -115,8 +116,10 @@ func printOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV1Cluster)
 		Kind:                   newCluster.GetKind(),
 		ResourceName:           metadata.GetResourceName(),
 		SchemaRegistryEndpoint: spec.GetHttpEndpoint(),
-		Package:                spec.GetPackage(),
 		Environment:            environment.GetId(),
+		Package:                spec.GetPackage(),
+		Cloud:                  spec.GetCloud(),
+		Region:                 spec.GetRegion(),
 		Status:                 status.GetPhase(),
 	}
 
