@@ -8,27 +8,22 @@ import (
 )
 
 var (
-	clusterResponseLabels = []string{"APIVersion", "Id", "Kind", "Resource Name", "SchemaRegistryEndpoint",
-		"Package", "Environment", "Cloud", "Region", "Status"}
-	clusterResponseHumanNames = map[string]string{"APIVersion": "API Version", "ID": "Cluster ID", "Kind": "Kind",
-		"SchemaRegistryEndpoint": "Endpoint URL", "Environment": "Environment", "Package": "Package",
-		"Cloud": "Cloud", "Region": "Region", "Status": "Status"}
-	clusterResponseStructuredRenames = map[string]string{"APIVersion": "api_Version", "ID": "id", "Kind": "kind",
-		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package",
-		"Cloud": "cloud", "Region": "region", "Status": "status"}
+	clusterResponseLabels = []string{"Name", "SchemaRegistryEndpoint", "Package", "Environment", "Cloud",
+		"Region", "Status"}
+	clusterResponseHumanNames = map[string]string{"Name": "Display Name", "SchemaRegistryEndpoint": "Endpoint URL",
+		"Environment": "Environment", "Package": "Package", "Cloud": "Cloud", "Region": "Region", "Status": "Status"}
+	clusterResponseStructuredRenames = map[string]string{"Name": "display_name",
+		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package", "Cloud": "cloud",
+		"Region": "region", "Status": "status"}
 )
 
 func PrintStreamGovernanceClusterOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV1Cluster) {
-	metadata := newCluster.GetMetadata()
 	spec := newCluster.GetSpec()
 	environment := spec.GetEnvironment()
 	status := newCluster.GetStatus()
 
 	clusterResponse := &v1.StreamGovernanceV1Cluster{
-		APIVersion:             newCluster.GetApiVersion(),
-		Id:                     newCluster.GetId(),
-		Kind:                   newCluster.GetKind(),
-		ResourceName:           metadata.GetResourceName(),
+		Name:                   spec.GetDisplayName(),
 		SchemaRegistryEndpoint: spec.GetHttpEndpoint(),
 		Environment:            environment.GetId(),
 		Package:                spec.GetPackage(),

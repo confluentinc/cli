@@ -20,8 +20,10 @@ func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Comman
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Enable Stream Governance, using Google Cloud Platform in a region of choice with ADVANCED package",
-				Code: fmt.Sprintf("%s stream-governance enable --cloud gcp --region <region_id> --package advanced", version.CLIName),
+				Text: "Enable Stream Governance, using Google Cloud Platform in a region of choice with 'advanced' " +
+					"package for environment 'env-00000'",
+				Code: fmt.Sprintf("%s stream-governance enable --cloud gcp --region <region_id> "+
+					"--package advanced --environment env-00000", version.CLIName),
 			},
 		),
 	}
