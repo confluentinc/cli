@@ -1,4 +1,4 @@
-package cmd
+package dynamicconfig
 
 import (
 	"context"
@@ -19,26 +19,20 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	resolver FlagResolver
-	client   *ccloud.Client
-	v2Client *ccloudv2.Client
+	Client   *ccloud.Client
+	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func New(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
-		resolver: resolver,
-		client:   client,
-		v2Client: v2Client,
+		Client:   client,
+		V2Client: v2Client,
 	}
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
-	if d.resolver == nil {
-		return nil
-	}
-
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
@@ -88,21 +82,13 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, error) {
-	clusterId, err := d.getKafkaClusterIDForCommand()
-	if err != nil {
-		return nil, err
+	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
+	if clusterId == "" {
+		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId)
-}
-
-func (d *DynamicContext) getKafkaClusterIDForCommand() (string, error) {
-	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
-	if clusterId == "" {
-		return "", errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
-	}
-	return clusterId, nil
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
@@ -110,7 +96,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return cluster, nil
 	}
 
-	if d.client == nil {
+	if d.Client == nil {
 		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
 
@@ -120,14 +106,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return nil, err
 	}
 
-	cluster := kafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
+	cluster := KafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 
 	return cluster, err
 }
 
-func kafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
 	return &v1.KafkaClusterConfig{
 		ID:           kcc.Id,
 		Name:         kcc.Name,

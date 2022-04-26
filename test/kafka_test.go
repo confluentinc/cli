@@ -152,6 +152,17 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
+	test := CLITest{
+		login:       "cloud",
+		args:        "kafka cluster create gcp-byok-test --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key xyz",
+		preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+		fixture:     "kafka/cluster/gcp-byok.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
 func (s *CLITestSuite) TestClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{

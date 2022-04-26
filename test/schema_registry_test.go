@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/bincover"
+
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -80,8 +81,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    "schema-registry schema delete --subject payments --version all --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-delete-all.golden",
 		},
+		{args: "schema-registry schema describe --subject payments", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --subject payments", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --version 1", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --version 1", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --subject payments --version 1 123", wantErrCode: 1, fixture: "schema-registry/schema-describe-both-id-and-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --subject payments --version 1 123", wantErrCode: 1, fixture: "schema-registry/schema-describe-both-id-and-subject.golden"},
 		{
-			name:    "schema-registry schema describe --subject payments --version all",
+			name:    "schema-registry schema describe --subject payments --version 2",
 			args:    "schema-registry schema describe --subject payments --version 2 --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-describe.golden",
 		},
@@ -90,7 +99,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    "schema-registry schema describe 10 --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-describe.golden",
 		},
-
+		{
+			name:    "schema-registry schema describe 1001 --show-refs",
+			args:    "schema-registry schema describe 1001 --show-refs --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-describe-refs-id.golden",
+		},
+		{
+			name:    "schema-registry schema describe --subject lvl0 --version 1 --show-refs",
+			args:    "schema-registry schema describe --subject lvl0 --version 1 --show-refs --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-describe-refs-subject.golden",
+		},
 		{
 			name:    "schema-registry subject list",
 			args:    "schema-registry subject list --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,

@@ -84,7 +84,6 @@ func New() *Config {
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
-	currentVersion := ver
 	filename := c.GetFilename()
 	input, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -98,8 +97,8 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
-	if c.Ver.Compare(currentVersion) < 0 {
-		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
+	if c.Ver.Compare(ver) < 0 {
+		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, ver)
 	} else if c.Ver.Compare(ver) > 0 {
 		if c.Ver.Equal(version.Must(version.NewVersion("3.0.0"))) {
 			// The user is a CP user who downloaded the v2 CLI instead of running `confluent update --major`,

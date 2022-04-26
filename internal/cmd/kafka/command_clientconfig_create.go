@@ -188,7 +188,7 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 
 func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -197,7 +197,7 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 	// this is because currently "api-key store" does not check if the secret is valid. therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
 	// TODO: always validate key pair after feature enhancement: https://confluentinc.atlassian.net/browse/CLI-1575
-	flagKey, flagSecret, err := c.Context.KeyAndSecretFlags(cmd)
+	flagKey, flagSecret, err := c.Config.Context().KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -279,7 +279,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	// get SR cluster from context
-	srCluster, err := c.Context.SchemaRegistryCluster(cmd)
+	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
 		return nil, err
 	}

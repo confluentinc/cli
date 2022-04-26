@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"net/http"
+	"os"
 	"testing"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -85,6 +86,20 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
+func (suite *SchemaTestSuite) TestRequestSchemaById() {
+	tmpdir := suite.T().TempDir()
+	tempStorePath, _, err := RequestSchemaWithId(123, tmpdir, "subject", suite.srClientMock, suite.newCMD().Context())
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.GetSchemaCalled())
+	content, err := os.ReadFile(tempStorePath)
+	req.Nil(err)
+	req.Equal(string(content), "Potatoes")
+	err = os.Remove(tempStorePath)
+	req.Nil(err)
+}
+
 func (suite *SchemaTestSuite) TestDescribeById() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"schema", "describe", "123"})
@@ -147,30 +162,6 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	retVal := apiMock.GetSchemaByVersionCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
 	req.Equal(retVal.Version, versionString)
-}
-
-func (suite *SchemaTestSuite) TestDescribeByBothSubjectVersionAndId() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName, "--version", versionString, "123"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
-}
-
-func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingVersion() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--subject", subjectName})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
-}
-
-func (suite *SchemaTestSuite) TestDescribeBySubjectVersionMissingSubject() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "--version", versionString})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.NotNil(err)
 }
 
 func TestSchemaSuite(t *testing.T) {

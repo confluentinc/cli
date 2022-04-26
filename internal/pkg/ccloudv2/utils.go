@@ -2,13 +2,14 @@ package ccloudv2
 
 import (
 	"fmt"
-	"log"
 	"net/url"
 	"strings"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+
+	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 const (
@@ -61,12 +62,12 @@ func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString)
 func extractPageToken(nextPageUrlString string) (string, error) {
 	nextPageUrl, err := url.Parse(nextPageUrlString)
 	if err != nil {
-		log.Printf("[ERROR] Could not parse %s into URL, %s", nextPageUrlString, err)
+		plog.CliLogger.Errorf("Could not parse %s into URL, %v", nextPageUrlString, err)
 		return "", err
 	}
 	pageToken := nextPageUrl.Query().Get(pageTokenQueryParameter)
 	if pageToken == "" {
-		return "", fmt.Errorf("[ERROR] Could not parse the value for %s query parameter from %s", pageTokenQueryParameter, nextPageUrlString)
+		return "", fmt.Errorf(`could not parse the value for query parameter "%s" from %s`, pageTokenQueryParameter, nextPageUrlString)
 	}
 	return pageToken, nil
 }

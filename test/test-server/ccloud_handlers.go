@@ -23,6 +23,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -923,6 +924,15 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 		jsonVal := map[string]interface{}{"key": "val"}
 		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
 		err := json.NewEncoder(w).Encode(&flags)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/api/external_identities"
+func handleExternalIdentities(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := &bucketv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
+		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}
 }

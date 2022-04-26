@@ -4,7 +4,8 @@ package keystore
 import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -16,7 +17,7 @@ type KeyStore interface {
 }
 
 type ConfigKeyStore struct {
-	Config *cmd.DynamicConfig
+	Config *dynamicconfig.DynamicConfig
 }
 
 func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
