@@ -208,6 +208,11 @@ const (
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
+	// stream-governance commands
+	SGNotEnabledErrorMsg    = "Stream Governance not enabled"
+	SGNotEnabledSuggestions = "Stream Governance must be enabled for the environment in order to run the command.\n" +
+		"You can enable Stream Governance for this environment with `confluent stream-governance enable`."
+
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
 	PipeInputTypeErrorMsg     = "pipe %s over stdin"
