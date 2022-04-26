@@ -1,7 +1,9 @@
 package streamgovernance
 
 import (
+	"context"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2-internal/stream-governance/v1"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
@@ -33,4 +35,15 @@ func PrintStreamGovernanceClusterOutput(cmd *cobra.Command, newCluster sgsdk.Str
 	}
 
 	_ = output.DescribeObject(cmd, clusterResponse, clusterResponseLabels, clusterResponseHumanNames, clusterResponseStructuredRenames)
+}
+
+func (c *streamGovernanceCommand) getClusterIdFromEnvironment(context context.Context) (string, error) {
+	ctxClient := pcmd.NewContextClient(c.Context)
+	clusterInfo, err := ctxClient.FetchSchemaRegistryByAccountId(context, c.EnvironmentId())
+	if err != nil {
+		return "", err
+	}
+
+	clusterId := clusterInfo.GetId()
+	return clusterId, nil
 }

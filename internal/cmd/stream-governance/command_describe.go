@@ -3,6 +3,7 @@ package streamgovernance
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -38,17 +39,13 @@ func (c *streamGovernanceCommand) newDescribeCommand(cfg *v1.Config) *cobra.Comm
 func (c *streamGovernanceCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
-	ctxClient := pcmd.NewContextClient(c.Context)
-	clusterInfo, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	clusterId, err := c.getClusterIdFromEnvironment(ctx)
 	if err != nil {
-		return err
+		return errors.NewStreamGovernanceNotEnabledError()
 	}
 
-	clusterId := clusterInfo.GetId()
-	fmt.Println(clusterInfo)
-	fmt.Println(clusterId)
-
-	clusterDescription, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.GetStreamGovernanceV1Cluster(ctx, clusterId).Execute()
+	clusterDescription, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.
+		GetStreamGovernanceV1Cluster(ctx, clusterId).Execute()
 	if err != nil {
 		return err
 	}
