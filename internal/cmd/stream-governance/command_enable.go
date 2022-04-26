@@ -7,20 +7,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
-)
-
-var (
-	enableLabels = []string{"APIVersion", "Id", "Kind", "Resource Name", "SchemaRegistryEndpoint",
-		"Package", "Environment", "Cloud", "Region", "Status"}
-	enableHumanRenames = map[string]string{"APIVersion": "API Version", "ID": "Cluster ID", "Kind": "Kind",
-		"SchemaRegistryEndpoint": "Endpoint URL", "Environment": "Environment", "Package": "Package",
-		"Cloud": "Cloud", "Region": "Region", "Status": "Status"}
-	enableStructuredRenames = map[string]string{"APIVersion": "api_Version", "ID": "id", "Kind": "kind",
-		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package",
-		"Cloud": "cloud", "Region": "region", "Status": "status"}
 )
 
 func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
@@ -76,7 +64,8 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 
 	newClusterRequest := c.createNewStreamGovernanceClusterRequest(cloud, region, packageType)
 
-	printOutput(cmd, *newClusterRequest)
+	//TODO: remove this line
+	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest)
 	newClusterResponse, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.
 		CreateStreamGovernanceV1Cluster(ctx).StreamGovernanceV1Cluster(*newClusterRequest).Execute()
 
@@ -84,7 +73,7 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	printOutput(cmd, newClusterResponse)
+	PrintStreamGovernanceClusterOutput(cmd, newClusterResponse)
 	return nil
 }
 
@@ -102,26 +91,4 @@ func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(cloud,
 	newClusterRequest.SetSpec(*spec)
 
 	return newClusterRequest
-}
-
-func printOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV1Cluster) {
-	metadata := newCluster.GetMetadata()
-	spec := newCluster.GetSpec()
-	environment := spec.GetEnvironment()
-	status := newCluster.GetStatus()
-
-	cluster := &v1.StreamGovernanceV1Cluster{
-		APIVersion:             newCluster.GetApiVersion(),
-		Id:                     newCluster.GetId(),
-		Kind:                   newCluster.GetKind(),
-		ResourceName:           metadata.GetResourceName(),
-		SchemaRegistryEndpoint: spec.GetHttpEndpoint(),
-		Environment:            environment.GetId(),
-		Package:                spec.GetPackage(),
-		Cloud:                  spec.GetCloud(),
-		Region:                 spec.GetRegion(),
-		Status:                 status.GetPhase(),
-	}
-
-	_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 }
