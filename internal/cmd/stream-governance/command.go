@@ -30,5 +30,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AddCommand(sgCommand.newEnableCommand(cfg))
 	c.AddCommand(sgCommand.newDescribeCommand(cfg))
+	c.AddCommand(sgCommand.newUpgradeCommand(cfg))
+
 	return c.Command
 }
