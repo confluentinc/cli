@@ -8,6 +8,7 @@ Aliases:
 
 Available Commands:
   enable       Enable stream governance for an environment
+  describe     Describe the Stream Governance cluster for this environment
 
 Global Flags:
   -h, --help            Show help for this command.
