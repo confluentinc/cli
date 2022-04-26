@@ -7,9 +7,10 @@ Aliases:
   stream-governance, sg
 
 Available Commands:
-  enable       Enable stream governance for an environment
-  describe     Describe the Stream Governance cluster for this environment
+  enable       Enable stream governance for an environment.
+  describe     Describe the Stream Governance cluster for an environment.
   upgrade      Upgrade Stream Governance Package for an environment.
+  delete       Delete the Stream Governance cluster for an environment.
 
 Global Flags:
   -h, --help            Show help for this command.

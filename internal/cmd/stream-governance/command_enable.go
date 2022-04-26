@@ -14,7 +14,7 @@ import (
 func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "enable",
-		Short:       "Enable Stream Governance for this environment.",
+		Short:       "Enable Stream Governance for an environment.",
 		Args:        cobra.NoArgs,
 		RunE:        pcmd.NewCLIRunE(c.enable),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},

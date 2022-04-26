@@ -15,7 +15,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-governance",
 		Aliases:     []string{"sg"},
-		Short:       "Manage Stream Governance",
+		Short:       "Manage Stream Governance.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
@@ -31,6 +31,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(sgCommand.newEnableCommand(cfg))
 	c.AddCommand(sgCommand.newDescribeCommand(cfg))
 	c.AddCommand(sgCommand.newUpgradeCommand(cfg))
+	c.AddCommand(sgCommand.newDeleteCommand(cfg))
 
 	return c.Command
 }
