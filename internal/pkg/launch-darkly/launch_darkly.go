@@ -5,6 +5,7 @@ package launchdarkly
 import (
 	b64 "encoding/base64"
 	"fmt"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"net/http"
 	"os"
 	"regexp"
@@ -112,6 +113,7 @@ func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 		}
 		writeFlagsToConfig(ctx, flagVals, isAnonUser)
 	} else {
+		fmt.Println("using cached flags")
 		flagVals = ctx.GetLDFlags(isAnonUser)
 	}
 	if _, ok := flagVals[key]; ok {
@@ -142,14 +144,19 @@ func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interfac
 }
 
 func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, isAnonUser bool) bool {
-	if ctx.LDConfig == nil {
+	if ctx == nil || ctx.LDConfig == nil {
 		return false
 	}
+
+	flagExpirationTime := int64(time.Hour.Seconds())
+
 	if isAnonUser {
-		isNotExpired := ctx.LDConfig.AnonFlagsUpdateTime < time.Now().Unix()+int64(24*time.Hour.Seconds())
+		isNotExpired := ctx.LDConfig.AnonFlagsUpdateTime + +flagExpirationTime >= time.Now().Unix()
 		return isNotExpired && len(ctx.LDConfig.AnonFlagValues) > 0
 	} else {
-		isNotExpired := ctx.LDConfig.AuthFlagsUpdateTime < time.Now().Unix()+int64(24*time.Hour.Seconds())
+		fmt.Println(ctx.LDConfig.AuthFlagsUpdateTime + flagExpirationTime)
+		fmt.Println(time.Now().Unix())
+		isNotExpired := ctx.LDConfig.AuthFlagsUpdateTime+flagExpirationTime >= time.Now().Unix()
 		return isNotExpired && len(ctx.LDConfig.AuthFlagValues) > 0
 	}
 }
@@ -235,6 +242,11 @@ func parsePkcFromBootstrap(bootstrap string) string {
 }
 
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, isAnonuser bool) {
+	if ctx == nil {
+		return
+	} else if ctx.LDConfig == nil {
+		ctx.LDConfig = &v1.LDConfig{}
+	}
 	if isAnonuser {
 		ctx.LDConfig.AnonFlagValues = vals
 		ctx.LDConfig.AnonFlagsUpdateTime = time.Now().Unix()
@@ -242,5 +254,10 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]inter
 		ctx.LDConfig.AuthFlagValues = vals
 		ctx.LDConfig.AuthFlagsUpdateTime = time.Now().Unix()
 	}
-	_ = ctx.Save()
+	err := ctx.Save()
+	fmt.Println(err)
+	fmt.Println("WROTE FLAGS TO CONFIG")
+	fmt.Print("anon ")
+	fmt.Println(isAnonuser)
+	fmt.Println(vals)
 }

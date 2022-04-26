@@ -183,12 +183,6 @@ func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if r.Config.IsCloudLogin() {
-			if ldDisable := launchdarkly.Manager.StringVariation("cli.disable", nil, ""); ldDisable != "" {
-				return errors.New(ldDisable)
-			}
-		}
-
 		// Wait for a potential auto-login in the Authenticated PreRun function before checking run requirements.
 		if !willAuthenticate {
 			if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
@@ -199,6 +193,13 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
 			return err
 		}
+
+		if r.Config.IsCloudLogin() {
+			if ldDisable := launchdarkly.Manager.StringVariation("cli.disable", command.Config.Context(), ""); ldDisable != "" {
+				return errors.New(ldDisable)
+			}
+		}
+
 		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
 			return err
 		}
