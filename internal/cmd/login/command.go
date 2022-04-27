@@ -292,7 +292,7 @@ func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range v1.CCloudHostnames {
+		for _, hostname := range utils.CCloudHostnames {
 			if strings.Contains(url, hostname) {
 				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)

@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"strings"
 
@@ -142,7 +143,7 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range CCloudHostnames {
+	for _, hostname := range utils.CCloudHostnames {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}

@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"strings"
 
@@ -289,7 +290,7 @@ func main() {
 			CurrentContext: "no context",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: v1.CCloudHostnames[0]}},
+			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: utils.CCloudHostnames[0]}},
 			CurrentContext: "cloud",
 		},
 		{

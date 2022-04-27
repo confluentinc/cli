@@ -2,7 +2,6 @@ package utils
 
 import (
 	"bytes"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
@@ -14,6 +13,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+var CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
 
 func Max(x, y int64) int64 {
 	if x > y {
@@ -153,7 +154,7 @@ func FormatUnixTime(timeMs int64) string {
 }
 
 func IsCCloudURL(url string, isTest bool) bool {
-	for _, hostname := range v1.CCloudHostnames {
+	for _, hostname := range CCloudHostnames {
 		if strings.Contains(url, hostname) {
 			return true
 		}
