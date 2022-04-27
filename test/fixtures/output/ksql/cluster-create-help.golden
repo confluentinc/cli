@@ -4,7 +4,7 @@ Usage:
   confluent ksql cluster create <name> [flags]
 
 Flags:
-      --api-key string       REQUIRED: Kafka API key for the ksqlDB cluster to use.
+      --api-key string       REQUIRED: Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource cloud" to create one if none exist).
       --api-secret string    REQUIRED: Secret for the Kafka API key.
       --csu int32            Number of CSUs to use in the cluster. (default 4)
       --cluster string       Kafka cluster ID.
