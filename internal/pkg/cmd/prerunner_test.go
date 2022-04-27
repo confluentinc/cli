@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"os"
 	"reflect"
 	"strings"
@@ -111,6 +112,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+	launchdarkly.InitManager(nil, true)
+
 	type fields struct {
 		Command string
 	}
@@ -182,6 +185,8 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
+	launchdarkly.InitManager(nil, true)
+
 	calledAnonymous := false
 
 	r := getPreRunBase()
@@ -205,6 +210,8 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
+	launchdarkly.InitManager(nil, true)
+
 	cfg := v1.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 

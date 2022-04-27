@@ -106,6 +106,7 @@ func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	var flagVals map[string]interface{}
 	var err error
 	if !areCachedFlagsAvailable(ctx, isAnonUser) {
+		fmt.Println("not using cached flags")
 		flagVals, err = ld.fetchFlags(user)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
@@ -144,20 +145,18 @@ func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interfac
 }
 
 func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, isAnonUser bool) bool {
-	if ctx == nil || ctx.LDConfig == nil {
+	if ctx == nil || ctx.Context == nil || ctx.LDConfig == nil {
 		return false
 	}
 
 	flagExpirationTime := int64(time.Hour.Seconds())
 
 	if isAnonUser {
-		isNotExpired := ctx.LDConfig.AnonFlagsUpdateTime + +flagExpirationTime >= time.Now().Unix()
-		return isNotExpired && len(ctx.LDConfig.AnonFlagValues) > 0
+		isExpired := ctx.LDConfig.AnonFlagsUpdateTime < time.Now().Unix()-flagExpirationTime
+		return !isExpired && len(ctx.LDConfig.AnonFlagValues) > 0
 	} else {
-		fmt.Println(ctx.LDConfig.AuthFlagsUpdateTime + flagExpirationTime)
-		fmt.Println(time.Now().Unix())
-		isNotExpired := ctx.LDConfig.AuthFlagsUpdateTime+flagExpirationTime >= time.Now().Unix()
-		return isNotExpired && len(ctx.LDConfig.AuthFlagValues) > 0
+		isExpired := ctx.LDConfig.AuthFlagsUpdateTime < time.Now().Unix()-flagExpirationTime
+		return !isExpired && len(ctx.LDConfig.AuthFlagValues) > 0
 	}
 }
 
@@ -254,10 +253,5 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]inter
 		ctx.LDConfig.AuthFlagValues = vals
 		ctx.LDConfig.AuthFlagsUpdateTime = time.Now().Unix()
 	}
-	err := ctx.Save()
-	fmt.Println(err)
-	fmt.Println("WROTE FLAGS TO CONFIG")
-	fmt.Print("anon ")
-	fmt.Println(isAnonuser)
-	fmt.Println(vals)
+	_ = ctx.Save()
 }

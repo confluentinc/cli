@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"bytes"
-
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"github.com/spf13/cobra"
 )
 
@@ -22,6 +22,8 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	root.SetArgs(args)
 
 	c, err = root.ExecuteC()
+
+	launchdarkly.InitManager(nil, true)
 
 	return c, buf.String(), err
 }
