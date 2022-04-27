@@ -326,6 +326,11 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		scopeV2.Clusters.KafkaCluster = kafkaCluster
+
+		// Users should not have to pass both --kafka-cluster-id and --cloud-cluster.
+		if !cmd.Flags().Changed("cloud-cluster") {
+			scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+kafkaCluster)
+		}
 	}
 
 	if cmd.Flags().Changed("schema-registry-cluster-id") {

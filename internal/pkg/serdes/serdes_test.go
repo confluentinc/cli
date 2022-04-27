@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -62,7 +64,7 @@ func TestStringSerdes(t *testing.T) {
 func TestAvroSerdesValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
@@ -96,7 +98,7 @@ func TestAvroSerdesValid(t *testing.T) {
 func TestAvroSerdesInvalid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
@@ -130,7 +132,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 func TestJsonSerdesValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
@@ -163,7 +165,7 @@ func TestJsonSerdesValid(t *testing.T) {
 func TestJsonSerdesReference(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	referenceString := `{"type": "string"}`
@@ -200,7 +202,7 @@ func TestJsonSerdesReference(t *testing.T) {
 func TestJsonSerdesInvalid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
@@ -240,7 +242,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 func TestProtobufSerdesValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `
@@ -279,7 +281,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 func TestProtobufSerdesReference(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	referenceString := `
@@ -331,7 +333,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 func TestProtobufSerdesInvalid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `
@@ -377,7 +379,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 func TestProtobufSerdesNestedValid(t *testing.T) {
 	req := require.New(t)
 
-	dir, err := createTempDir()
+	dir, err := sr.CreateTempDir()
 	req.Nil(err)
 
 	schemaString := `
@@ -422,15 +424,4 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.Equal(str, expectedString)
 
 	req.NoError(os.RemoveAll(dir))
-}
-
-func createTempDir() (string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return "", err
-		}
-	}
-	return dir, nil
 }

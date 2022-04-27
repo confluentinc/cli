@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/bincover"
+
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 

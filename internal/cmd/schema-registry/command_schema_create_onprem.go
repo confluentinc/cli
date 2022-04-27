@@ -2,14 +2,15 @@ package schemaregistry
 
 import (
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -61,13 +62,28 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-
 	}
-	_, _, err = c.registerSchemaOnPrem(cmd, schemaType, schemaPath, subject, refs)
+
+	dir, err := CreateTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	schemaCfg := &RegisterSchemaConfigs{
+		SchemaDir:  dir,
+		SchemaType: schemaType,
+		SchemaPath: &schemaPath,
+		Subject:    subject,
+		Refs:       refs,
+	}
+	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
 	return err
 }
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, schemaPath, subject string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
@@ -75,10 +91,10 @@ func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaType, sch
 	if err != nil {
 		return nil, nil, err
 	}
-	metaInfo, err := RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+	metaInfo, err := RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 	if err != nil {
 		return metaInfo, nil, err
 	}
-	referencePathMap, err := StoreSchemaReferences(refs, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 	return metaInfo, referencePathMap, err
 }
