@@ -9,6 +9,7 @@ import (
 
 	"github.com/antihax/optional"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -593,5 +594,51 @@ func (c *roleBindingCommand) createContext() context.Context {
 		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+	}
+}
+
+func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) {
+	// include org, environment, cloud-cluster, and resource name and id
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+
+	prefix, _ := cmd.Flags().GetBool("prefix")
+
+	principal, err := cmd.Flags().GetString("principal")
+	if err != nil {
+		return nil, err
+	}
+
+	if strings.HasPrefix(principal, "User:") {
+		principalValue := strings.TrimLeft(principal, "User:")
+		if strings.Contains(principalValue, "@") {
+			user, err := c.V2Client.GetIamUserByEmail(principalValue)
+			if err != nil {
+				return nil, err
+			}
+			principal = "User:" + *user.Id
+		}
+	}
+
+	if cmd.Flags().Changed("principal") {
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// crnPattern := "crn://confluent.cloud"
+	crnPattern := parseCrnPattern()
+	return &mdsv2.IamV2RoleBinding{
+		Principal:  mdsv2.PtrString(principal),
+		RoleName:   mdsv2.PtrString(role),
+		CrnPattern: crnPattern,
 	}
 }

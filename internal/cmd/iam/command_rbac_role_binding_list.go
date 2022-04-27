@@ -2,11 +2,13 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
 
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
@@ -73,6 +75,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("principal", "", "Principal whose role bindings should be listed.")
 	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
+	cmd.Flags().String("crn-pattern", "", "Kafka cluster ID for scope of role binding listings.")
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
@@ -113,6 +116,16 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) ccloudList(cmd *cobra.Command, options *roleBindingOptions) error {
+	principal := options.principal
+	roleName := options.role
+	crnPattern, err := cmd.Flags().GetString("crn-pattern")
+	if err != nil {
+		return err
+	}
+	fmt.Println(principal, roleName, crnPattern)
+	lists, _, _ := c.V2Client.ListIamRoleBindingsNaive(crnPattern, principal, roleName)
+	c.printOutRoleBindings(cmd, lists.Data)
+
 	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
 		return c.listMyRoleBindings(cmd, options)
 	} else if cmd.Flags().Changed("role") {
@@ -464,5 +477,32 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 		}
 		outputWriter.AddElement(displayStruct)
 	}
+	return outputWriter.Out()
+}
+
+func (c *roleBindingCommand) printOutRoleBindings(cmd *cobra.Command, data []mdsv2.IamV2RoleBinding) error {
+	userToEmailMap, err := c.userIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	outputWriter, err := output.NewListOutputWriter(cmd, ccloudResourcePatternListFields, ccloudResourcePatternHumanListLabels, ccloudResourcePatternStructuredListLabels)
+	if err != nil {
+		return err
+	}
+
+	for i := 0; i < len(data); i++ {
+		principalName := *data[i].Principal
+		principalEmail := userToEmailMap[principalName]
+		roleName := *data[i].RoleName
+		fmt.Println(*data[i].CrnPattern)
+		outputWriter.AddElement(&listDisplay{
+			Principal: principalName,
+			Email:     principalEmail,
+			Role:      roleName,
+		})
+	}
+	outputWriter.StableSort()
+
 	return outputWriter.Out()
 }

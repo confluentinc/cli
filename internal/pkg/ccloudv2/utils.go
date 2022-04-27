@@ -7,6 +7,7 @@ import (
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
@@ -40,6 +41,16 @@ func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString)
 }
 
 func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
+	if nextPageUrlStringNullable.IsSet() {
+		nextPageUrlString := *nextPageUrlStringNullable.Get()
+		pageToken, err := extractPageToken(nextPageUrlString)
+		return pageToken, false, err
+	} else {
+		return "", true, nil
+	}
+}
+
+func extractMdsNextPagePageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
 	if nextPageUrlStringNullable.IsSet() {
 		nextPageUrlString := *nextPageUrlStringNullable.Get()
 		pageToken, err := extractPageToken(nextPageUrlString)
