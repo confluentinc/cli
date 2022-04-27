@@ -66,14 +66,14 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloud.Client
-	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
+	Client                 *ccloud.Client
+	V2Client               *ccloudv2.Client
+	MDSClient              *mds.APIClient
+	MDSv2Client            *mdsv2alpha1.APIClient
 	StreamGovernanceClient *streamgovernance.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
-	Context           *dynamicconfig.DynamicContext
-	State             *v1.ContextState
+	KafkaRESTProvider      *KafkaRESTProvider
+	Context                *dynamicconfig.DynamicContext
+	State                  *v1.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -600,7 +600,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 	return mds.NewAPIClient(mdsConfig)
 }
 
-func (r *PreRun) createStreamGovernanceClient(ctx *DynamicContext, ver *version.Version) *streamgovernance.APIClient {
+func (r *PreRun) createStreamGovernanceClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *streamgovernance.APIClient {
 	streamGovernanceConfig := streamgovernance.NewConfiguration()
 	streamGovernanceConfig.HTTPClient = utils.DefaultClient()
 	if log.CliLogger.GetLevel() >= log.DEBUG {
