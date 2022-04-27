@@ -107,7 +107,6 @@ func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	var flagVals map[string]interface{}
 	var err error
 	if !areCachedFlagsAvailable(ctx, isAnonUser) {
-		fmt.Println("not using cached flags")
 		flagVals, err = ld.fetchFlags(user)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
@@ -115,7 +114,6 @@ func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 		}
 		writeFlagsToConfig(ctx, flagVals, isAnonUser)
 	} else {
-		fmt.Println("using cached flags")
 		flagVals = ctx.GetLDFlags(isAnonUser)
 	}
 	if _, ok := flagVals[key]; ok {
