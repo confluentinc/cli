@@ -1,11 +1,13 @@
 package launchdarkly
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/version"
-	test_server "github.com/confluentinc/cli/test/test-server"
-	"github.com/dghubble/sling"
 	"testing"
 	"time"
+
+	"github.com/dghubble/sling"
+
+	"github.com/confluentinc/cli/internal/pkg/version"
+	test_server "github.com/confluentinc/cli/test/test-server"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 

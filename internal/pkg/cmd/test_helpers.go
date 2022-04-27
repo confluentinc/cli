@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"bytes"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
+
 	"github.com/spf13/cobra"
+
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 )
 
 // ExecuteCommand runs the root command with the given args, and returns the output string or an error.

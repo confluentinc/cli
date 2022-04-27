@@ -5,11 +5,12 @@ package launchdarkly
 import (
 	b64 "encoding/base64"
 	"fmt"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"net/http"
 	"os"
 	"regexp"
 	"time"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 

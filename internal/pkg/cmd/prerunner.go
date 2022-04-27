@@ -3,10 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"net/http"
 	"os"
 	"strings"
+
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
