@@ -194,10 +194,12 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
 			return err
 		}
-
-		if r.Config.IsCloudLogin() {
-			if ldDisable := launchdarkly.Manager.StringVariation("cli.disable", command.Config.Context(), ""); ldDisable != "" {
-				return errors.New(ldDisable)
+		// check cli.disable for cloud commands
+		// don't check for on-prem login from a cloud context
+		// check for cloud login from non-cloud context
+		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || isCloudLoginCmd(command, r.IsTest) {
+			if err := checkCliDisable(command, r.Config); err != nil {
+				return err
 			}
 		}
 
@@ -225,6 +227,41 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		return nil
 	}
+}
+
+func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
+	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), map[string]interface{}{})
+	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	errMsg, errMsgOk := ldDisable["error_msg"].(string)
+	if ok && errMsgOk && errMsg != "" {
+		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
+		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
+			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
+			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
+				return err
+			}
+			return errors.New(errMsg)
+		}
+	}
+	return nil
+}
+
+func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl != "") || !utils.IsCCloudURL(urlFlag, isTest)
+}
+
+func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl == "") || utils.IsCCloudURL(urlFlag, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {

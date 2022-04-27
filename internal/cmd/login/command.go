@@ -17,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type Command struct {
@@ -73,7 +72,7 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := c.isCCloudURL(url)
+	isCCloud := utils.IsCCloudURL(url, c.isTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -336,18 +335,6 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 
 	return url, strings.Join(msg, " and "), nil
-}
-
-func (c *Command) isCCloudURL(url string) bool {
-	for _, hostname := range v1.CCloudHostnames {
-		if strings.Contains(url, hostname) {
-			return true
-		}
-	}
-	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
-	}
-	return false
 }
 
 func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {

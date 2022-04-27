@@ -2,9 +2,12 @@ package utils
 
 import (
 	"bytes"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/properties"
@@ -147,4 +150,16 @@ func CropString(s string, n int) string {
 func FormatUnixTime(timeMs int64) string {
 	time := time.Unix(0, timeMs*int64(time.Millisecond))
 	return time.UTC().Format("2006-01-02 15:04:05 MST")
+}
+
+func IsCCloudURL(url string, isTest bool) bool {
+	for _, hostname := range v1.CCloudHostnames {
+		if strings.Contains(url, hostname) {
+			return true
+		}
+	}
+	if isTest {
+		return strings.Contains(url, testserver.TestCloudURL.Host)
+	}
+	return false
 }

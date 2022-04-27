@@ -978,30 +978,3 @@ func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string)
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
 }
-
-func TestIsCCloudURL_True(t *testing.T) {
-	for _, url := range []string{
-		"confluent.cloud",
-		"https://confluent.cloud",
-		"https://devel.cpdev.cloud/",
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
-	} {
-		c := new(Command)
-		isCCloud := c.isCCloudURL(url)
-		require.True(t, isCCloud, url+" should return true")
-	}
-}
-
-func TestIsCCloudURL_False(t *testing.T) {
-	for _, url := range []string{
-		"example.com",
-		"example.com:8090",
-		"https://example.com",
-	} {
-		c := new(Command)
-		isCCloud := c.isCCloudURL(url)
-		require.False(t, isCCloud, url+" should return false")
-	}
-}
