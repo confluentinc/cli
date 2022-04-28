@@ -147,7 +147,8 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 	if ctx == nil || ctx.Context == nil || ctx.LDConfig == nil {
 		return false
 	}
-	if !ctx.LDConfig.User.Equal(user) { //!isEqual(ctx.LDConfig.User, user) {
+	// only use cached flags if they were fetched for the same LD User
+	if !ctx.LDConfig.User.Equal(user) {
 		return false
 	}
 
