@@ -2,10 +2,9 @@ package v1
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -26,7 +25,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
-	LDConfig               *LDConfig                         `json:"ld_config,omitempty" hcl:"ld_config,omitempty"`
+	LDConfig               *LaunchDarkly                     `json:"ld_config,omitempty" hcl:"ld_config,omitempty"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -144,7 +143,7 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range utils.CCloudHostnames {
+	for _, hostname := range ccloudv2.Hostnames {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}

@@ -3,10 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/client9/gospell"
 
@@ -291,7 +290,7 @@ func main() {
 			CurrentContext: "no context",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: utils.CCloudHostnames[0]}},
+			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: ccloudv2.Hostnames[0]}},
 			CurrentContext: "cloud",
 		},
 		{

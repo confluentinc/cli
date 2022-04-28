@@ -24,12 +24,14 @@ type LaunchDarklyTestSuite struct {
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
 	suite.authContext = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	ld := LaunchDarklyManager{}
 	suite.authContext.LDConfig = &v1.LDConfig{
 		FlagValues: map[string]interface{}{"testJson": struct {
 			key string
 			val string
 		}{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
 		FlagUpdateTime: time.Now().Unix(),
+		User:           ld.contextToLDUser(suite.authContext),
 	}
 }
 

@@ -238,7 +238,7 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]inter
 	if ctx == nil {
 		return
 	} else if ctx.LDConfig == nil {
-		ctx.LDConfig = &v1.LDConfig{}
+		ctx.LDConfig = &v1.LaunchDarkly{}
 	}
 	ctx.LDConfig.FlagValues = vals
 	ctx.LDConfig.FlagUpdateTime = time.Now().Unix()

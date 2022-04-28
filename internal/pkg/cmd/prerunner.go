@@ -231,7 +231,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 }
 
 func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
-	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), map[string]interface{}{})
+	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
 	if !ok {
 		return nil
@@ -257,7 +257,7 @@ func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
 	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl != "") || !utils.IsCCloudURL(urlFlag, isTest)
+	return (urlFlag == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(urlFlag, isTest)
 }
 
 func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
@@ -266,7 +266,7 @@ func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
 	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl == "") || utils.IsCCloudURL(urlFlag, isTest)
+	return (urlFlag == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(urlFlag, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {

@@ -73,9 +73,8 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
+	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 )
-
-require github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect

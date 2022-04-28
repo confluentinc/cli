@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -72,7 +73,7 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := utils.IsCCloudURL(url, c.isTest)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -292,7 +293,7 @@ func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range utils.CCloudHostnames {
+		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
 				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)

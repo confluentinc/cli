@@ -11,10 +11,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
