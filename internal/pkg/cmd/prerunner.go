@@ -194,10 +194,11 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
 			return err
 		}
-		// check cli.disable for cloud commands
-		// don't check for on-prem login from a cloud context
-		// check for cloud login from non-cloud context
-		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || isCloudLoginCmd(command, r.IsTest) {
+
+		// check cli.disable for commands run from cloud context (except for on-prem login)
+		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
+		// check for cloud login (since it is not executed from cloud context)
+		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || CommandRequiresCloudAuth(command.Command, command.Config.Config) || isCloudLoginCmd(command, r.IsTest) {
 			if err := checkCliDisable(command, r.Config); err != nil {
 				return err
 			}
@@ -232,15 +233,19 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
 	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), map[string]interface{}{})
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	if !ok {
+		return nil
+	}
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
-	if ok && errMsgOk && errMsg != "" {
+	if errMsgOk && errMsg != "" {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
 			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
 				return err
 			}
-			return errors.New(errMsg)
+			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
+			return errors.NewErrorWithSuggestions(errMsg, suggestionsMsg)
 		}
 	}
 	return nil

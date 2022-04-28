@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/client9/gospell"
 

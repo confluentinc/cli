@@ -101,20 +101,20 @@ func (ld *LaunchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.Dyna
 }
 
 func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
-	user, isAnonUser := ld.contextToLDUser(ctx)
+	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	var flagVals map[string]interface{}
 	var err error
-	if !areCachedFlagsAvailable(ctx, isAnonUser) {
+	if !areCachedFlagsAvailable(ctx, user) {
 		flagVals, err = ld.fetchFlags(user)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
 			return defaultVal
 		}
-		writeFlagsToConfig(ctx, flagVals, isAnonUser)
+		writeFlagsToConfig(ctx, flagVals, user)
 	} else {
-		flagVals = ctx.GetLDFlags(isAnonUser)
+		flagVals = ctx.GetLDFlags()
 	}
 	if _, ok := flagVals[key]; ok {
 		return flagVals[key]
@@ -143,20 +143,18 @@ func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interfac
 	return flagVals, nil
 }
 
-func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, isAnonUser bool) bool {
+func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User) bool {
 	if ctx == nil || ctx.Context == nil || ctx.LDConfig == nil {
+		return false
+	}
+	if !ctx.LDConfig.User.Equal(user) { //!isEqual(ctx.LDConfig.User, user) {
 		return false
 	}
 
 	flagExpirationTime := int64(time.Hour.Seconds())
 
-	if isAnonUser {
-		isExpired := ctx.LDConfig.AnonFlagsUpdateTime < time.Now().Unix()-flagExpirationTime
-		return !isExpired && len(ctx.LDConfig.AnonFlagValues) > 0
-	} else {
-		isExpired := ctx.LDConfig.AuthFlagsUpdateTime < time.Now().Unix()-flagExpirationTime
-		return !isExpired && len(ctx.LDConfig.AuthFlagValues) > 0
-	}
+	isExpired := ctx.LDConfig.FlagUpdateTime < time.Now().Unix()-flagExpirationTime
+	return !isExpired && len(ctx.LDConfig.FlagValues) > 0
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {
@@ -167,17 +165,15 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return b64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) (lduser.User, bool) {
+func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
-	anonUser := false
 
 	if ld.version != nil && ld.version.Version != "" {
 		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
 	}
 
 	if ctx == nil || ctx.Context == nil {
-		anonUser = true
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 		customValueMap := custom.Build()
@@ -185,7 +181,7 @@ func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 			userBuilder.CustomAll(customValueMap)
 		}
 		userBuilder.Key(key).Anonymous(true)
-		return userBuilder.Build(), anonUser
+		return userBuilder.Build()
 	}
 	user := ctx.GetUser()
 	// Basic user info
@@ -194,7 +190,6 @@ func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		userBuilder = lduser.NewUserBuilder(userResourceId)
 		setCustomAttribute(custom, "user.resource_id", ldvalue.String(userResourceId))
 	} else {
-		anonUser = true
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
@@ -224,7 +219,7 @@ func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	if customValueMap.Count() > 0 {
 		userBuilder.CustomAll(customValueMap)
 	}
-	return userBuilder.Build(), anonUser
+	return userBuilder.Build()
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
@@ -239,18 +234,14 @@ func parsePkcFromBootstrap(bootstrap string) string {
 	return r.FindString(bootstrap)
 }
 
-func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, isAnonuser bool) {
+func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, user lduser.User) {
 	if ctx == nil {
 		return
 	} else if ctx.LDConfig == nil {
 		ctx.LDConfig = &v1.LDConfig{}
 	}
-	if isAnonuser {
-		ctx.LDConfig.AnonFlagValues = vals
-		ctx.LDConfig.AnonFlagsUpdateTime = time.Now().Unix()
-	} else {
-		ctx.LDConfig.AuthFlagValues = vals
-		ctx.LDConfig.AuthFlagsUpdateTime = time.Now().Unix()
-	}
+	ctx.LDConfig.FlagValues = vals
+	ctx.LDConfig.FlagUpdateTime = time.Now().Unix()
+	ctx.LDConfig.User = user
 	_ = ctx.Save()
 }

@@ -2,9 +2,10 @@ package v1
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -200,12 +201,11 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(isAnonUser bool) map[string]interface{} {
-	if isAnonUser {
-		return c.LDConfig.AnonFlagValues
-	} else {
-		return c.LDConfig.AuthFlagValues
+func (c *Context) GetLDFlags() map[string]interface{} {
+	if c.LDConfig == nil {
+		return map[string]interface{}{}
 	}
+	return c.LDConfig.FlagValues
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

@@ -2,12 +2,13 @@ package utils
 
 import (
 	"bytes"
-	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
 	"time"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/confluentinc/properties"
 

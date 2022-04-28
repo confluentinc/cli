@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"

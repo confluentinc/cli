@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -111,6 +113,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+	launchdarkly.InitManager(nil, true)
+
 	type fields struct {
 		Command string
 	}
