@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	streamgovernance "github.com/confluentinc/ccloud-sdk-go-v2-internal/stream-governance/v1"
 	"net/http"
 	"os"
 	"strings"
@@ -66,14 +65,13 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client                 *ccloud.Client
-	V2Client               *ccloudv2.Client
-	MDSClient              *mds.APIClient
-	MDSv2Client            *mdsv2alpha1.APIClient
-	StreamGovernanceClient *streamgovernance.APIClient
-	KafkaRESTProvider      *KafkaRESTProvider
-	Context                *dynamicconfig.DynamicContext
-	State                  *v1.ContextState
+	Client            *ccloud.Client
+	V2Client          *ccloudv2.Client
+	MDSClient         *mds.APIClient
+	MDSv2Client       *mdsv2alpha1.APIClient
+	KafkaRESTProvider *KafkaRESTProvider
+	Context           *dynamicconfig.DynamicContext
+	State             *v1.ContextState
 }
 
 type AuthenticatedStateFlagCommand struct {
@@ -364,7 +362,6 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.Client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
-	cliCmd.StreamGovernanceClient = r.createStreamGovernanceClient(ctx, cliCmd.Version)
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
@@ -598,31 +595,6 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 		mdsConfig.HTTPClient = client
 	}
 	return mds.NewAPIClient(mdsConfig)
-}
-
-func (r *PreRun) createStreamGovernanceClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *streamgovernance.APIClient {
-	streamGovernanceConfig := streamgovernance.NewConfiguration()
-	streamGovernanceConfig.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		streamGovernanceConfig.Debug = true
-	}
-	if ctx == nil {
-		return streamgovernance.NewAPIClient(streamGovernanceConfig)
-	}
-	streamGovernanceConfig.UserAgent = ver.UserAgent
-	if ctx.Platform.CaCertPath == "" {
-		return streamgovernance.NewAPIClient(streamGovernanceConfig)
-	}
-	caCertPath := ctx.Platform.CaCertPath
-	// Try to load certs. On failure, warn, but don't error out because this may be an auth command, so there may
-	// be a --ca-cert-path flag on the cmd line that'll fix whatever issue there is with the cert file in the config
-	client, err := utils.SelfSignedCertClientFromPath(caCertPath)
-	if err != nil {
-		log.CliLogger.Warnf("Unable to load certificate from %s. %s. Resulting SSL errors will be fixed by logging in with the --ca-cert-path flag.", caCertPath, err.Error())
-	} else {
-		streamGovernanceConfig.HTTPClient = client
-	}
-	return streamgovernance.NewAPIClient(streamGovernanceConfig)
 }
 
 // InitializeOnPremKafkaRest provides PreRun operations for on-prem commands that require a Kafka REST Proxy client. (ccloud RP commands use Authenticated prerun)
