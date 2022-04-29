@@ -2,8 +2,7 @@ package streamgovernance
 
 import (
 	"context"
-	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2-internal/stream-governance/v1"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
@@ -19,18 +18,20 @@ var (
 		"Region": "region", "Status": "status"}
 )
 
-func PrintStreamGovernanceClusterOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV1Cluster) {
+func PrintStreamGovernanceClusterOutput(cmd *cobra.Command, newCluster sgsdk.StreamGovernanceV2Cluster) {
 	spec := newCluster.GetSpec()
 	environment := spec.GetEnvironment()
+	region := spec.GetRegion()
 	status := newCluster.GetStatus()
 
-	clusterResponse := &v1.StreamGovernanceV1Cluster{
+	//TODO: get correct cloud and region_name from RegionObj
+	clusterResponse := &streamGovernanceV2Cluster{
 		Name:                   spec.GetDisplayName(),
 		SchemaRegistryEndpoint: spec.GetHttpEndpoint(),
 		Environment:            environment.GetId(),
 		Package:                spec.GetPackage(),
-		Cloud:                  spec.GetCloud(),
-		Region:                 spec.GetRegion(),
+		Cloud:                  region.GetId(),
+		Region:                 region.GetId(),
 		Status:                 status.GetPhase(),
 	}
 

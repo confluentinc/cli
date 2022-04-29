@@ -11,6 +11,16 @@ type streamGovernanceCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
+type streamGovernanceV2Cluster struct {
+	Name                   string `json:"display_name" hcl:"display_name"`
+	SchemaRegistryEndpoint string `json:"schema_registry_endpoint" hcl:"schema_registry_endpoint"`
+	Environment            string `json:"environment" hcl:"environment"`
+	Package                string `json:"package" hcl:"package"`
+	Cloud                  string `json:"cloud" hcl:"cloud"`
+	Region                 string `json:"region" hcl:"region"`
+	Status                 string `json:"status" hcl:"status"`
+}
+
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-governance",

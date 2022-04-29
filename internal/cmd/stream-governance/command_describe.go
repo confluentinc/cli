@@ -44,8 +44,8 @@ func (c *streamGovernanceCommand) describe(cmd *cobra.Command, _ []string) error
 		return errors.NewStreamGovernanceNotEnabledError()
 	}
 
-	clusterDescription, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.
-		GetStreamGovernanceV1Cluster(ctx, clusterId).Execute()
+	clusterDescription, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
+		GetStreamGovernanceV2Cluster(ctx, clusterId).Execute()
 	if err != nil {
 		return err
 	}

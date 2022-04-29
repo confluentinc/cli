@@ -3,7 +3,7 @@ package streamgovernance
 import (
 	"context"
 	"fmt"
-	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2-internal/stream-governance/v1"
+	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -55,8 +55,8 @@ func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error 
 	}
 
 	newClusterUpdateRequest := c.createNewStreamGovernanceClusterUpdateRequest(packageType)
-	updatedClusterResponse, _, err := c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.
-		UpdateStreamGovernanceV1Cluster(ctx, clusterId).StreamGovernanceV1ClusterUpdate(*newClusterUpdateRequest).Execute()
+	updatedClusterResponse, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
+		UpdateStreamGovernanceV2Cluster(ctx, clusterId).StreamGovernanceV2ClusterUpdate(*newClusterUpdateRequest).Execute()
 
 	if err != nil {
 		return err
@@ -66,9 +66,9 @@ func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error 
 	return nil
 }
 
-func (c *streamGovernanceCommand) createNewStreamGovernanceClusterUpdateRequest(packageType string) *sgsdk.StreamGovernanceV1ClusterUpdate {
-	newClusterUpdateRequest := sgsdk.NewStreamGovernanceV1ClusterUpdateWithDefaults()
-	spec := sgsdk.NewStreamGovernanceV1ClusterSpecUpdateWithDefaults()
+func (c *streamGovernanceCommand) createNewStreamGovernanceClusterUpdateRequest(packageType string) *sgsdk.StreamGovernanceV2ClusterUpdate {
+	newClusterUpdateRequest := sgsdk.NewStreamGovernanceV2ClusterUpdateWithDefaults()
+	spec := sgsdk.NewStreamGovernanceV2ClusterSpecUpdateWithDefaults()
 	envObjectReference := sgsdk.NewObjectReferenceWithDefaults()
 	envObjectReference.SetId(c.EnvironmentId())
 

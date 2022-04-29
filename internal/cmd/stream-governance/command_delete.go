@@ -44,7 +44,7 @@ func (c *streamGovernanceCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewStreamGovernanceNotEnabledError()
 	}
 
-	_, err = c.StreamGovernanceClient.ClustersStreamGovernanceV1Api.DeleteStreamGovernanceV1Cluster(ctx, clusterId).Execute()
+	_, err = c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.DeleteStreamGovernanceV2Cluster(ctx, clusterId).Execute()
 	if err != nil {
 		return err
 	}
