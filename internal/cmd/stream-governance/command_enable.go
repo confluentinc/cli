@@ -64,10 +64,18 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	newClusterRequest := c.createNewStreamGovernanceClusterRequest(cloud, region, packageType)
+	streamGovernanceV2Region, err := c.getRegionObject(cloud, region, packageType)
+	if err != nil {
+		return nil
+	}
+
+	newClusterRequest, err := c.createNewStreamGovernanceClusterRequest(streamGovernanceV2Region, packageType)
+	if err != nil {
+		return err
+	}
 
 	//TODO: remove this line
-	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest)
+	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
 	newClusterResponse, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
 		CreateStreamGovernanceV2Cluster(ctx).StreamGovernanceV2Cluster(*newClusterRequest).Execute()
 
@@ -75,11 +83,13 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	PrintStreamGovernanceClusterOutput(cmd, newClusterResponse)
+	PrintStreamGovernanceClusterOutput(cmd, newClusterResponse, *streamGovernanceV2Region)
 	return nil
 }
 
-func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(cloud, region, packageType string) *sgsdk.StreamGovernanceV2Cluster {
+func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(
+	streamGovernanceV2Region *sgsdk.StreamGovernanceV2Region, packageType string) (*sgsdk.StreamGovernanceV2Cluster, error) {
+
 	newClusterRequest := sgsdk.NewStreamGovernanceV2ClusterWithDefaults()
 	spec := sgsdk.NewStreamGovernanceV2ClusterSpecWithDefaults()
 
@@ -87,14 +97,12 @@ func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(cloud,
 	envObjectReference.SetId(c.EnvironmentId())
 
 	regionObjectReference := sgsdk.NewObjectReferenceWithDefaults()
-
-	//TODO: Getting the region ID from input region_name & cloud
-	regionObjectReference.SetId(region)
+	regionObjectReference.SetId(streamGovernanceV2Region.GetId())
 
 	spec.SetPackage(packageType)
 	spec.SetEnvironment(*envObjectReference)
 	spec.SetRegion(*regionObjectReference)
 	newClusterRequest.SetSpec(*spec)
 
-	return newClusterRequest
+	return newClusterRequest, nil
 }

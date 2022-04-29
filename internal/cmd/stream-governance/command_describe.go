@@ -50,6 +50,13 @@ func (c *streamGovernanceCommand) describe(cmd *cobra.Command, _ []string) error
 		return err
 	}
 
-	PrintStreamGovernanceClusterOutput(cmd, clusterDescription)
+	spec := clusterDescription.GetSpec()
+	regionSpec := spec.GetRegion()
+	streamGovernanceV2Region, err := c.getRegionObjectFromId(regionSpec.GetId())
+	if err != nil {
+		return err
+	}
+
+	PrintStreamGovernanceClusterOutput(cmd, clusterDescription, *streamGovernanceV2Region)
 	return nil
 }
