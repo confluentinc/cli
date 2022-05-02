@@ -7,9 +7,11 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 func (c *streamGovernanceCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
@@ -44,6 +46,16 @@ func (c *streamGovernanceCommand) delete(cmd *cobra.Command, _ []string) error {
 		return errors.NewStreamGovernanceNotEnabledError()
 	}
 
+	isDeleteConfirmed, err := deleteConfirmation(cmd, c.EnvironmentId())
+	if err != nil {
+		return err
+	}
+
+	if !isDeleteConfirmed {
+		utils.Println(cmd, "Terminating operation ...")
+		return nil
+	}
+
 	_, err = c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.DeleteStreamGovernanceV2Cluster(ctx, clusterId).Execute()
 	if err != nil {
 		return err
@@ -51,4 +63,16 @@ func (c *streamGovernanceCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	utils.Printf(cmd, errors.StreamGovernanceClusterDeletedMsg, c.EnvironmentId())
 	return nil
+}
+
+func deleteConfirmation(cmd *cobra.Command, environmentId string) (bool, error) {
+	prompt := form.NewPrompt(os.Stdin)
+	f := form.New(
+		form.Field{ID: "confirmation", Prompt: fmt.Sprintf("Are you sure you want to delete the Stream Governance "+
+			"cluster for environment %s?", environmentId), IsYesOrNo: true},
+	)
+	if err := f.Prompt(cmd, prompt); err != nil {
+		return false, err
+	}
+	return f.Responses["confirmation"].(bool), nil
 }
