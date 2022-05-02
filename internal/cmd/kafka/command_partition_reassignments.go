@@ -25,19 +25,20 @@ func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
 				Code: "confluent kafka partition get-reassignments",
 			},
 			examples.Example{
-				Text: `Get replica reassignments for "my_topic".`,
+				Text: `Get replica reassignments for topic "my_topic".`,
 				Code: "confluent kafka partition get-reassignments --topic my_topic",
 			},
 			examples.Example{
-				Text: `Get replica reassignments for partition "1" of "my_topic".`,
+				Text: `Get replica reassignments for partition "1" of topic "my_topic".`,
 				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
-			}),
+			},
+		),
 	}
 
 	cmd.Flags().String("topic", "", "Topic name to search by.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
-	
+
 	return cmd
 }
 

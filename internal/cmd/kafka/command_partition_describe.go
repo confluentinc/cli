@@ -19,7 +19,8 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 			examples.Example{
 				Text: `Describe partition "1" for topic "my_topic".`,
 				Code: "confluent kafka partition describe 1 --topic my_topic",
-			}),
+			},
+		),
 	}
 
 	cmd.Flags().String("topic", "", "Topic name to list partitions of.")
