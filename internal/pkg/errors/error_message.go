@@ -38,7 +38,7 @@ const (
 	UnneccessaryUrlFlagForCloudLoginErrorMsg    = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
-	SSOCrdentialsDoNotMatchSuggestions          = "Please re-login and use the same email at the prompt and in the SSO portal."
+	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -93,6 +93,10 @@ const (
 	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
 	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
 
+	// iam service-account commands
+	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
+	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
 	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
@@ -118,7 +122,7 @@ const (
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupported                     = "Cluster resize is support only on dedicated clusters."
+	ClusterResizeNotSupported                     = "cluster resize is only supported on dedicated clusters"
 	CloudRegionNotAvailableErrorMsg               = "\"%s\" is not an available region for \"%s\""
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = "\"%s\" is not an available cloud provider"
@@ -192,11 +196,17 @@ const (
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
+	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
+	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg                    = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
+		"List available versions with `confluent schema-registry subject describe`"
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -360,7 +370,7 @@ const (
 	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
-	CCloudBackendErrorPrefix           = "CCloud backend error"
+	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
 	UnexpectedBackendOutputSuggestions = "Please submit a support ticket."
 	BackendUnmarshallingErrorMsg       = "protobuf unmarshalling error"
@@ -376,10 +386,12 @@ const (
 	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active kafka in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active kafka in your context with `ccloud kafka cluster use`."
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
+	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
+	InvalidClusterConfigErrorMsg  = "cluster configuration is invalid"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "Internal server error"

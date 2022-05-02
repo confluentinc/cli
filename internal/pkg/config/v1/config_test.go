@@ -168,9 +168,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -190,9 +189,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -212,9 +210,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -278,9 +275,8 @@ func TestConfig_Load(t *testing.T) {
 			name: "should load disable update checks and disable updates",
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params:   &config.Params{},
 					Filename: "test_json/load_disable_update.json",
-					Ver:      config.Version{Version: Version},
+					Ver:      config.Version{Version: ver},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -294,21 +290,21 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{})
-			c.Filename = tt.file
+			cfg := New()
+			cfg.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
 			}
-			if err := c.Load(); (err != nil) != tt.wantErr {
+			if err := cfg.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 
 			// Get around automatically assigned anonymous id and IsTest check
-			tt.want.AnonymousId = c.AnonymousId
-			tt.want.IsTest = c.IsTest
+			tt.want.AnonymousId = cfg.AnonymousId
+			tt.want.IsTest = cfg.IsTest
 
-			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
-				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
+			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
+				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
 			}
 		})
 	}
@@ -568,8 +564,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	c := New(&config.Params{})
-	got := c.GetFilename()
+	cfg := New()
+	got := cfg.GetFilename()
 	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
 	if got != want {
 		t.Errorf("Config.GetFilename() = %v, want %v", got, want)
@@ -652,7 +648,7 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Params: new(config.Params), Ver: config.Version{Version: new(version.Version)}},
+		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*Credential),
@@ -704,12 +700,12 @@ func TestConfig_UseContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := tt.fields.Config
-			if err := c.UseContext(tt.args.name); (err != nil) != tt.wantErr {
+			cfg := tt.fields.Config
+			if err := cfg.UseContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.args.name, c.CurrentContext)
+				assert.Equal(t, tt.args.name, cfg.CurrentContext)
 			}
 		})
 	}
@@ -744,10 +740,8 @@ func TestConfig_FindContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				Contexts: tt.fields.Contexts,
-			}
-			got, err := c.FindContext(tt.args.name)
+			cfg := &Config{Contexts: tt.fields.Contexts}
+			got, err := cfg.FindContext(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindContext() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -760,13 +754,13 @@ func TestConfig_FindContext(t *testing.T) {
 }
 
 func TestConfig_DeleteContext(t *testing.T) {
-	c := &Config{
-		BaseConfig:     config.NewBaseConfig(nil, new(version.Version)),
+	cfg := &Config{
+		BaseConfig:     config.NewBaseConfig(new(version.Version)),
 		Contexts:       map[string]*Context{contextName: {Name: contextName}},
 		CurrentContext: contextName,
 	}
 
-	err := c.DeleteContext(contextName)
+	err := cfg.DeleteContext(contextName)
 	require.NoError(t, err)
 }
 
@@ -802,11 +796,11 @@ func TestConfig_Context(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
+			cfg := &Config{
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
 			}
-			got := c.Context()
+			got := cfg.Context()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Context() got = %v, want %v", got, tt.want)
 			}

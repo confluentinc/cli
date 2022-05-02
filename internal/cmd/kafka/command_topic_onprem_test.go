@@ -237,8 +237,8 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
-	return newTopicCommand(conf, testPrerunner, "").authenticatedTopicCommand.Command
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
+	return newTopicCommand(conf, testPrerunner, "")
 }
 
 // Executes the given command with the given args, returns the command executed, stdout and error.

@@ -34,12 +34,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
-	serviceAccountCmd := NewServiceAccountCommand(c.prerunner)
-
-	c.AddCommand(NewACLCommand(c.prerunner))
-	c.AddCommand(NewRBACCommand(cfg, c.prerunner))
-	c.AddCommand(serviceAccountCmd.Command)
-	c.AddCommand(NewUserCommand(c.prerunner))
+	c.AddCommand(newACLCommand(c.prerunner))
+	c.AddCommand(newRBACCommand(cfg, c.prerunner))
+	c.AddCommand(newServiceAccountCommand(c.prerunner))
+	c.AddCommand(newUserCommand(c.prerunner))
 
 	return c.Command
 }

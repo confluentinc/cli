@@ -1,10 +1,8 @@
 package environment
 
 import (
-	"context"
 	"fmt"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,6 +14,11 @@ var (
 	listHumanLabels      = []string{"ID", "Name"}
 	listStructuredLabels = []string{"id", "name"}
 )
+
+type environmentRow struct {
+	Id   string
+	Name string
+}
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -32,7 +35,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	environments, err := c.Client.Account.List(context.Background(), &orgv1.Account{})
+	environments, err := c.V2Client.ListOrgEnvironments()
 	if err != nil {
 		return err
 	}
@@ -41,16 +44,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, environment := range environments {
+	for _, env := range environments {
 		// Add '*' only in the case where we are printing out tables
+		envRow := &environmentRow{
+			Id:   *env.Id,
+			Name: *env.DisplayName,
+		}
 		if outputWriter.GetOutputFormat() == output.Human {
-			if environment.Id == c.EnvironmentId() {
-				environment.Id = fmt.Sprintf("* %s", environment.Id)
+			if envRow.Id == c.EnvironmentId() {
+				envRow.Id = fmt.Sprintf("* %s", envRow.Id)
 			} else {
-				environment.Id = fmt.Sprintf("  %s", environment.Id)
+				envRow.Id = fmt.Sprintf("  %s", envRow.Id)
 			}
 		}
-		outputWriter.AddElement(environment)
+		outputWriter.AddElement(envRow)
 	}
 	return outputWriter.Out()
 }

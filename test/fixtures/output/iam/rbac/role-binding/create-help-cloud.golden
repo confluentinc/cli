@@ -4,19 +4,27 @@ Usage:
   confluent iam rbac role-binding create [flags]
 
 Examples:
-Create a role binding for the principal permitting it produce to the "users" topic.
+Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":
 
-  $ confluent iam rbac role-binding create --principal User:u-ab1234 --role DeveloperWrite --resource Topic:users --cloud-cluster lkc-ab123 --environment env-abcde
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456
+
+Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-12345 --kafka-cluster-id lkc-123456
+
+Grant the role "MetricsViewer" to service account "sa-123456":
+
+  $ confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer
 
 Flags:
       --role string               REQUIRED: Role name of the new role binding.
       --principal string          REQUIRED: Qualified principal name for the role binding.
-      --cloud-cluster string      Cloud cluster ID for the role binding.
-      --environment string        Environment ID for scope of role-binding create.
+      --environment string        Environment ID for scope of role-binding operation.
       --current-env               Use current environment ID for scope.
-      --prefix                    Whether the provided resource name is treated as a prefix pattern.
-      --resource string           Qualified resource name for the role binding.
+      --cloud-cluster string      Cloud cluster ID for the role binding.
       --kafka-cluster-id string   Kafka cluster ID for the role binding.
+      --resource string           Qualified resource name for the role binding.
+      --prefix                    Whether the provided resource name is treated as a prefix pattern.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

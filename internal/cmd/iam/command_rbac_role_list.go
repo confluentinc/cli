@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"net/http"
-
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -37,17 +35,14 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
-
-	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	rolesV2, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
-	if err != nil || r.StatusCode == http.StatusNoContent {
-		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
-		if err != nil {
-			return err
-		}
+	publicRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+	if err != nil {
+		return err
 	}
+
+	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
+	dataplaneRoles, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
+	roles := append(publicRoles, dataplaneRoles...)
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -56,7 +51,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 
 	if format == output.Human.String() {
 		var data [][]string
-		for _, role := range rolesV2 {
+		for _, role := range roles {
 			roleDisplay, err := createPrettyRoleV2(role)
 			if err != nil {
 				return err
@@ -65,7 +60,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		}
 		outputTable(data)
 	} else {
-		return output.StructuredOutput(format, rolesV2)
+		return output.StructuredOutput(format, roles)
 	}
 
 	return nil

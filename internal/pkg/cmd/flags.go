@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -87,19 +87,32 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.Client)
+		return AutocompleteClusters(command.EnvironmentId(), command.V2Client)
 	})
 }
 
-func AutocompleteClusters(environmentId string, client *ccloud.Client) []string {
-	clusters, err := kafka.ListKafkaClusters(client, environmentId)
+func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
+	}
+	return suggestions
+}
+
+func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.GetSpec().DisplayName)
 	}
 	return suggestions
 }
@@ -133,19 +146,19 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client)
+		return AutocompleteEnvironments(command.V2Client)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloud.Client) []string {
-	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+func AutocompleteEnvironments(client *ccloudv2.Client) []string {
+	environments, err := client.ListOrgEnvironments()
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", environment.Id, environment.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
 	return suggestions
 }
@@ -195,20 +208,36 @@ func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand)
 			return nil
 		}
 
-		return AutocompleteServiceAccounts(command.Client)
+		return AutocompleteServiceAccounts(command.V2Client)
 	})
 }
 
-func AutocompleteServiceAccounts(client *ccloud.Client) []string {
-	serviceAccounts, err := client.User.GetServiceAccounts(context.Background())
+func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
+	serviceAccounts, err := client.ListIamServiceAccounts()
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(serviceAccounts))
 	for i, serviceAccount := range serviceAccounts {
-		description := fmt.Sprintf("%s: %s", serviceAccount.ServiceName, serviceAccount.ServiceDescription)
-		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.ResourceId, description)
+		description := fmt.Sprintf("%s: %s", *serviceAccount.DisplayName, *serviceAccount.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *serviceAccount.Id, description)
 	}
 	return suggestions
+}
+
+func AddSchemaTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
+
+	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string {
+		return []string{"AVRO", "PROTOBUF", "JSON"}
+	})
+}
+
+func AddValueFormatFlag(cmd *cobra.Command) {
+	cmd.Flags().String("value-format", "string", `Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.`)
+
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
+		return []string{"string", "avro", "protobuf", "jsonschema"}
+	})
 }

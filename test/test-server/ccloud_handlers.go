@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gogo/protobuf/proto"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -21,10 +20,10 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	opv1 "github.com/confluentinc/cc-structs/operator/v1"
+	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -127,14 +126,16 @@ func (c *CloudRouter) HandleLogin(t *testing.T) func(w http.ResponseWriter, r *h
 }
 
 // Handler for: "/api/login/realm"
-func (c *CloudRouter) HandleLoginRealm(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := require.New(t)
-		reply := &flowv1.GetLoginRealmReply{}
-		b, err := utilv1.MarshalJSONToBytes(reply)
-		req.NoError(err)
-		_, err = io.WriteString(w, string(b))
-		req.NoError(err)
+		email := r.URL.Query().Get("email")
+
+		res := &flowv1.GetLoginRealmReply{
+			IsSso: strings.Contains(email, "sso"),
+			Realm: "realm",
+		}
+		err := json.NewEncoder(w).Encode(res)
+		require.NoError(t, err)
 	}
 }
 
@@ -143,26 +144,19 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		if valid, env := isValidEnvironmentId(environments, envId); valid {
+		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
-			case http.MethodGet:
+			case http.MethodGet: // called by `environment use`
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
-			case http.MethodPut:
+			case http.MethodPut: // called by `environment create`
 				req := &orgv1.UpdateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
 				env.Name = req.Account.Name
 				b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodDelete:
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteAccountReply{})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
@@ -174,15 +168,10 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 	}
 }
 
-// Handler for: "/api/accounts"
+// Handler for: "/api/accounts" Post
 func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.ListAccountsReply{Accounts: environments})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodPost {
+		if r.Method == http.MethodPost {
 			req := &orgv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -316,44 +305,6 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
-		case http.MethodPost:
-			req := &orgv1.CreateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			serviceAccount := &orgv1.User{
-				Id:                 55555,
-				ResourceId:         "sa-55555",
-				ServiceName:        req.User.ServiceName,
-				ServiceDescription: req.User.ServiceDescription,
-			}
-			createReply, err := utilv1.MarshalJSONToBytes(&orgv1.CreateServiceAccountReply{
-				Error: nil,
-				User:  serviceAccount,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(createReply))
-			require.NoError(t, err)
-		case http.MethodPut:
-			req := &orgv1.UpdateServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateServiceAccountReply{
-				Error: nil,
-				User:  req.User,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(updateReply))
-			require.NoError(t, err)
-		case http.MethodDelete:
-			req := &orgv1.DeleteServiceAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			updateReply, err := utilv1.MarshalJSONToBytes(&orgv1.DeleteServiceAccountReply{
-				Error: nil,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(updateReply))
-			require.NoError(t, err)
 		}
 	}
 }
@@ -365,7 +316,6 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 		id, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 		userId := int32(id)
-
 		switch r.Method {
 		case http.MethodGet:
 			res := &orgv1.GetServiceAccountReply{
@@ -461,66 +411,6 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 				Error:  nil,
 			}
 			b, err := utilv1.MarshalJSONToBytes(result)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/clusters"
-func (c *CloudRouter) HandleClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	write := func(w http.ResponseWriter, resp proto.Message) {
-		type errorer interface {
-			GetError() *corev1.Error
-		}
-
-		if r, ok := resp.(errorer); ok {
-			w.WriteHeader(int(r.GetError().Code))
-		}
-
-		b, err := utilv1.MarshalJSONToBytes(resp)
-		require.NoError(t, err)
-
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Header.Get("Authorization") {
-		case "Bearer expired":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
-		case "Bearer malformed":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
-		case "Bearer invalid":
-			// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
-		}
-
-		if r.Method == http.MethodPost {
-			c.HandleKafkaClusterCreate(t)(w, r)
-		} else if r.Method == http.MethodGet {
-			cluster := schedv1.KafkaCluster{
-				Id:              "lkc-123",
-				Name:            "abc",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      0,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-			}
-			clusterMultizone := schedv1.KafkaCluster{
-				Id:              "lkc-456",
-				Name:            "def",
-				Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-				Durability:      1,
-				Status:          0,
-				Region:          "us-central1",
-				ServiceProvider: "gcp",
-			}
-			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClustersReply{
-				Clusters: []*schedv1.KafkaCluster{&cluster, &clusterMultizone},
-			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -710,29 +600,6 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
-	}
-}
-
-// Handler for: "/api/users/{id}"
-func (c *CloudRouter) HandleUser(t *testing.T) func(http.ResponseWriter, *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		userId := vars["id"]
-		var res orgv1.DeleteUserReply
-		switch userId {
-		case "u-1":
-			res = orgv1.DeleteUserReply{
-				Error: &corev1.Error{Message: "user not found"},
-			}
-		default:
-			res = orgv1.DeleteUserReply{
-				Error: nil,
-			}
-		}
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
 	}
 }
 
@@ -1063,6 +930,15 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 		jsonVal := map[string]interface{}{"key": "val"}
 		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
 		err := json.NewEncoder(w).Encode(&flags)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/api/external_identities"
+func handleExternalIdentities(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		res := &bucketv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
+		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}
 }

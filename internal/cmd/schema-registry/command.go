@@ -19,10 +19,11 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 	c.AddCommand(newClusterCommand(cfg, prerunner, srClient))
+	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
+	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
 	c.AddCommand(newExporterCommand(prerunner, srClient))
-	c.AddCommand(newSchemaCommand(prerunner, srClient))
-	c.AddCommand(newSubjectCommand(prerunner, srClient))
-
+	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
+	c.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
 	return c.Command
 }
 
@@ -34,8 +35,8 @@ func addCompatibilityFlag(cmd *cobra.Command) {
 }
 
 func addModeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("mode", "", "Can be READWRITE, READ, OR WRITE.")
+	cmd.Flags().String("mode", "", "Can be READWRITE, READONLY, OR IMPORT.")
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string {
-		return []string{"READWRITE", "READ", "WRITE"}
+		return []string{"READWRITE", "READONLY", "IMPORT"}
 	})
 }

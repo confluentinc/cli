@@ -9,5 +9,5 @@ provider: aws
 region: us-west-2
 rest_endpoint: http://kafka-rest-url
 status: UP
-storage: "500"
+storage: 5 TB
 type: BASIC

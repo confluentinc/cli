@@ -8,37 +8,31 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete an existing role binding.",
+		Short: "Delete a role binding.",
 		Args:  cobra.NoArgs,
 		RunE:  pcmd.NewCLIRunE(c.delete),
 	}
 
-	cmd.Flags().String("role", "", "Role name of the existing role binding.")
-	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding delete.")
-		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-	} else {
-		cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-		cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
-		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
-		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
-		pcmd.AddContextFlag(cmd, c.CLICommand)
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":`,
+				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic",
+			},
+		)
 	}
 
+	cmd.Flags().String("role", "", "Role name of the existing role binding.")
+	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
+	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
+	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
+	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("principal")

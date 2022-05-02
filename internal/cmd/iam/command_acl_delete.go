@@ -17,7 +17,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.`,
-				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic test",
+				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *",
 			},
 		),
 	}

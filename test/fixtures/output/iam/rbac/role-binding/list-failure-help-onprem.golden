@@ -5,35 +5,35 @@ Usage:
 Examples:
 Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:
 
-  $ confluent iam rbac role-binding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic
+  $ confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic
 
-To list the role bindings for a specific principal:
+List the role bindings for a specific principal:
 
-  $ confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo
+  $ confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user
 
-To list the role bindings for a specific principal, filtered to a specific role:
+List the role bindings for a specific principal, filtered to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead
+  $ confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead
 
-To list the principals bound to a specific role:
+List the principals bound to a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite
+  $ confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite
 
-To list the principals bound to a specific resource with a specific role:
+List the principals bound to a specific resource with a specific role:
 
-  $ confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties
+  $ confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic
 
 Flags:
       --principal string                    Principal whose role bindings should be listed.
       --current-user                        Show role bindings belonging to current user.
       --role string                         List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
-      --resource string                     If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
       --kafka-cluster-id string             Kafka cluster ID for scope of role binding listings.
       --schema-registry-cluster-id string   Schema Registry cluster ID for scope of role binding listings.
       --ksql-cluster-id string              ksqlDB cluster ID for scope of role binding listings.
       --connect-cluster-id string           Kafka Connect cluster ID for scope of role binding listings.
       --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
       --context string                      CLI context name.
+      --resource string                     If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

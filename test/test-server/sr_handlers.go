@@ -23,12 +23,19 @@ func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Req
 // Handler for: "/config"
 func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ConfigUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
 		w.Header().Set("Content-Type", "application/json")
-		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			var req srsdk.ConfigUpdateRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := srsdk.Config{CompatibilityLevel: "FULL"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -87,18 +94,57 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 			version64, err := strconv.ParseInt(versionStr, 10, 32)
 			require.NoError(t, err)
 			subject := vars["subject"]
-			err = json.NewEncoder(w).Encode(srsdk.Schema{
-				Subject:    subject,
-				Version:    int32(version64),
-				Id:         10,
-				SchemaType: "record",
-				References: []srsdk.SchemaReference{{
+			schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "record"}
+			switch subject {
+			case "lvl0":
+				schema.Id = 1001
+				schema.Schema = "schema0"
+				schema.References = []srsdk.SchemaReference{
+					{
+						Name:    "ref_lvl1_1",
+						Subject: "lvl1-1",
+						Version: 1,
+					},
+					{
+						Name:    "ref_lvl1_2",
+						Subject: "lvl1-2",
+						Version: 1,
+					},
+				}
+			case "lvl1-1":
+				schema.Id = 1002
+				schema.Schema = "schema11"
+				schema.References = []srsdk.SchemaReference{
+					{
+						Name:    "ref_lvl2",
+						Subject: "lvl2",
+						Version: 1,
+					},
+				}
+			case "lvl1-2":
+				schema.Id = 1003
+				schema.Schema = "schema12"
+				schema.References = []srsdk.SchemaReference{
+					{
+						Name:    "ref_lvl2",
+						Subject: "lvl2",
+						Version: 1,
+					},
+				}
+			case "lvl2":
+				schema.Id = 1004
+				schema.Schema = "schema2"
+				schema.References = []srsdk.SchemaReference{}
+			default:
+				schema.Id = 10
+				schema.Schema = "schema"
+				schema.References = []srsdk.SchemaReference{{
 					Name:    "ref",
 					Subject: "payment",
 					Version: 1,
-				}},
-				Schema: "schema",
-			})
+				}}
+			}
+			err = json.NewEncoder(w).Encode(schema)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(int32(1))
@@ -115,18 +161,53 @@ func (s *SRRouter) HandleSRById(t *testing.T) func(w http.ResponseWriter, r *htt
 		idStr := vars["id"]
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
-		err = json.NewEncoder(w).Encode(srsdk.Schema{
-			Subject:    subject,
-			Version:    1,
-			Id:         int32(id64),
-			SchemaType: "record",
-			References: []srsdk.SchemaReference{{
+
+		schema := srsdk.Schema{Subject: subject, Version: 1, SchemaType: "record", Id: int32(id64)}
+		switch id64 {
+		case 1001:
+			schema.Schema = "schema0"
+			schema.References = []srsdk.SchemaReference{
+				{
+					Name:    "ref_lvl1_1",
+					Subject: "lvl1-1",
+					Version: 1,
+				},
+				{
+					Name:    "ref_lvl1_2",
+					Subject: "lvl1-2",
+					Version: 1,
+				},
+			}
+		case 1002:
+			schema.Schema = "schema11"
+			schema.References = []srsdk.SchemaReference{
+				{
+					Name:    "ref_lvl2",
+					Subject: "lvl2",
+					Version: 1,
+				},
+			}
+		case 1003:
+			schema.Schema = "schema12"
+			schema.References = []srsdk.SchemaReference{
+				{
+					Name:    "ref_lvl2",
+					Subject: "lvl2",
+					Version: 1,
+				},
+			}
+		case 1004:
+			schema.Schema = "schema2"
+			schema.References = []srsdk.SchemaReference{}
+		default:
+			schema.Schema = "schema"
+			schema.References = []srsdk.SchemaReference{{
 				Name:    "ref",
 				Subject: "payment",
 				Version: 1,
-			}},
-			Schema: "schema",
-		})
+			}}
+		}
+		err = json.NewEncoder(w).Encode(schema)
 		require.NoError(t, err)
 	}
 }
@@ -249,11 +330,18 @@ func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWrite
 func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		var req srsdk.ConfigUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			var req srsdk.ConfigUpdateRequest
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := srsdk.Config{CompatibilityLevel: "FORWARD"}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -265,6 +353,16 @@ func (s *SRRouter) HandleSRSubjectMode(t *testing.T) func(http.ResponseWriter, *
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
 		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/compatibility"
+func (c *SRRouter) HandleSRCompatibility(t *testing.T) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		res := srsdk.CompatibilityCheckResponse{IsCompatible: true}
+		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}
 }

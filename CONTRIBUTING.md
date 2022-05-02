@@ -8,7 +8,7 @@ Start by following these steps to set up your computer for CLI development:
 
 #### Go Version
 
-This repo requires go1.17.5. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
+This repo requires go1.17.6. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 We recommend cloning the `goenv` repo directly to ensure that you have access to the latest version of Go. If you've
@@ -263,7 +263,7 @@ Note: If there is a JIRA ticket associated with your PR, please format the PR de
 
 Please familiarize yourself with the following resources before writing your first CLI command:
 
-* [Cloud and On-Prem Annotations](pkg/cmd/ANNOTATIONS.md)
-* [CLI Error Handling](pkg/errors/README.md)
-* [Autocompletion](pkg/cmd/AUTOCOMPLETION.md)
+* [Cloud and On-Prem Annotations](internal/pkg/cmd/ANNOTATIONS.md)
+* [CLI Error Handling](internal/pkg/errors/README.md)
+* [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md)
 * TODO: REST Proxy Commands

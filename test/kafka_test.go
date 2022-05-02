@@ -93,31 +93,31 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operation READ --operation DESCRIBE --topic test-topic", fixture: "kafka/kafka-acls-delete.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "default", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "cloud", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic-list.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic list", login: "default", useKafka: "lkc-kafka-api-no-topics", fixture: "kafka/topic-list-empty.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic list", login: "default", useKafka: "lkc-not-ready", fixture: "kafka/cluster-not-ready.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic list", login: "cloud", useKafka: "lkc-kafka-api-no-topics", fixture: "kafka/topic-list-empty.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic list", login: "cloud", useKafka: "lkc-not-ready", fixture: "kafka/cluster-not-ready.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 
-		{args: "kafka topic create", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic create topic1", login: "default", useKafka: "lkc-create-topic-kafka-api", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-create.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic create topic1", login: "cloud", useKafka: "lkc-create-topic-kafka-api", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic create topic-exist", login: "default", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-dup-topic.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-dup-topic.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic describe", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic describe topic-exist", login: "default", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic describe topic-exist", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic describe topic-exist --output json", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-json-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic describe topic1 --cluster lkc-create-topic-kafka-api", login: "default", fixture: "kafka/topic-describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic describe topic2", login: "default", useKafka: "lkc-describe-topic", fixture: "kafka/topic2-describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic describe topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe-json-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic describe topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic-describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic describe topic2", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic2-describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic delete", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic delete", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic-kafka-api", fixture: "kafka/topic-delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic", fixture: "kafka/topic-delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api", login: "default", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic delete topic2", login: "default", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic delete topic2", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "default", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		// Cluster linking
@@ -146,10 +146,21 @@ func (s *CLITestSuite) TestKafka() {
 	resetConfiguration(s.T())
 
 	for _, tt := range tests {
-		tt.login = "default"
+		tt.login = "cloud"
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
+	test := CLITest{
+		login:       "cloud",
+		args:        "kafka cluster create gcp-byok-test --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key xyz",
+		preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+		fixture:     "kafka/cluster/gcp-byok.golden",
+	}
+
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestClientConfig() {
@@ -183,9 +194,9 @@ func (s *CLITestSuite) TestClientConfig() {
 	resetConfiguration(s.T())
 
 	for _, tt := range tests {
-		tt.login = "default"
+		tt.login = "cloud"
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 
 	tests = []CLITest{
@@ -197,8 +208,8 @@ func (s *CLITestSuite) TestClientConfig() {
 	resetConfiguration(s.T())
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -244,9 +255,9 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
+		tt.login = "platform"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -290,9 +301,9 @@ func (s *CLITestSuite) TestKafkaBroker() {
 //	}
 //	resetConfiguration(s.T(), "ccloud")
 //	for _, tt := range tests {
-//		tt.login = "default"
+//		tt.login = "cloud"
 //		tt.workflow = true
-//		s.runCcloudTest(tt)
+//		s.runIntegrationTest(tt)
 //	}
 //}
 
@@ -316,9 +327,9 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition get-reassignments 0 --topic topic1 -o yaml", fixture: "kafka/partitions/reassignments-by-partition-yaml.golden"},
 	}
 	for _, tt := range tests {
-		tt.login = "default"
+		tt.login = "platform"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -334,9 +345,9 @@ func (s *CLITestSuite) TestKafkaReplica() {
 		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", wantErrCode: 1},
 	}
 	for _, tt := range tests {
-		tt.login = "default"
+		tt.login = "platform"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -347,8 +358,8 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/topic/list-with-auth.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "default", fixture: "kafka/topic/list-with-auth-from-login.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "default", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/topic/list-with-auth-prompt.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "platform", fixture: "kafka/topic/list-with-auth-from-login.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "platform", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("Miles\nTod\n"))}, fixture: "kafka/topic/list-with-auth-prompt.golden"},
 		// Test with CONFLUENT_REST_URL env var
 		{args: "kafka topic list --no-auth", fixture: "kafka/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Test failure when only one of client-cert-path or client-key-path are provided
@@ -363,7 +374,7 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }
 
@@ -393,7 +404,7 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }
 
@@ -406,7 +417,7 @@ func (s *CLITestSuite) TestKafkaTopicDelete() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }
 
@@ -430,7 +441,7 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }
 
@@ -450,7 +461,7 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }
 
@@ -480,6 +491,6 @@ func (s *CLITestSuite) TestKafkaACL() {
 	}
 
 	for _, clitest := range tests {
-		s.runConfluentTest(clitest)
+		s.runIntegrationTest(clitest)
 	}
 }

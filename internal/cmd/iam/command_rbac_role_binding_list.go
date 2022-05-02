@@ -3,6 +3,7 @@ package iam
 import (
 	"context"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -28,43 +29,43 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: "To list the role bindings for current user:",
+				Text: "List the role bindings for current user:",
 				Code: "confluent iam rbac role-binding list --current-user",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --principal User:frodo",
+				Text: `List the role bindings for user "u-123456":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
+				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
 			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo",
+				Text: "List the role bindings for a specific principal:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
+				Text: "List the role bindings for a specific principal, filtered to a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite",
+				Text: "List the principals bound to a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
+				Text: "List the principals bound to a specific resource with a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic",
 			},
 		)
 	}
@@ -74,13 +75,15 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
+			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
+		}
 	} else {
-		cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of role binding listings.")
 		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
@@ -88,6 +91,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+
+	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 
 	pcmd.AddOutputFlag(cmd)
 

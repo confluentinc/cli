@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -24,7 +26,10 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `cluster`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1\nconfluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
+				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+			},
+			examples.Example{
+				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
 			},
 		),
 	}
@@ -115,7 +120,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

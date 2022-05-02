@@ -66,8 +66,8 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, conf)
-	return NewUserCommand(prerunner)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
+	return newUserCommand(prerunner)
 }
 
 func (suite *InvitationTestSuite) TestInvitationList() {

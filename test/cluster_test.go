@@ -35,8 +35,8 @@ func (s *CLITestSuite) TestCluster() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
@@ -55,8 +55,8 @@ func (s *CLITestSuite) TestClusterRegistry() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -113,8 +113,8 @@ func (s *CLITestSuite) TestClusterScopedId() {
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "cluster/scoped-id4.golden", wantErrCode: 1},
 	}
 	for _, tt := range tests {
-		tt.login = "default"
-		s.runConfluentTest(tt)
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
 	}
 }
 

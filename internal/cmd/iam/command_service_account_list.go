@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -10,7 +8,7 @@ import (
 )
 
 var (
-	serviceAccountListFields           = []string{"ResourceId", "ServiceName", "ServiceDescription"}
+	serviceAccountListFields           = []string{"ResourceId", "Name", "Description"}
 	serviceAccountListHumanLabels      = []string{"ID", "Name", "Description"}
 	serviceAccountListStructuredLabels = []string{"id", "name", "description"}
 )
@@ -29,7 +27,7 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return err
 	}
@@ -38,8 +36,9 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, u := range users {
-		outputWriter.AddElement(u)
+	for _, sa := range serviceAccounts {
+		element := &serviceAccount{ResourceId: *sa.Id, Name: *sa.DisplayName, Description: *sa.Description}
+		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()
 }
