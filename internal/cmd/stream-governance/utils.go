@@ -30,7 +30,7 @@ func (c *streamGovernanceCommand) getClusterIdFromEnvironment(context context.Co
 	return clusterId, nil
 }
 
-func (c *streamGovernanceCommand) getRegionObject(cloud, region, packageType string) (*sgsdk.StreamGovernanceV2Region, error) {
+func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, packageType string) (*sgsdk.StreamGovernanceV2Region, error) {
 	ctx := context.Background()
 
 	packageSpec := sgsdk.NewMultipleSearchFilter()
@@ -39,19 +39,18 @@ func (c *streamGovernanceCommand) getRegionObject(cloud, region, packageType str
 		SpecCloud(cloud).SpecRegionName(region).SpecPackages(*packageSpec).Execute()
 
 	if err != nil {
-		return nil, err
+		return nil, errors.NewStreamGovernanceInvalidRegionError()
 	}
 	regionArr := regionList.GetData()
 
-	//TODO: use correct error
 	if len(regionArr) == 0 {
-		return nil, errors.NewStreamGovernanceNotEnabledError()
+		return nil, errors.NewStreamGovernanceInvalidRegionError()
 	}
 
 	return &regionArr[0], nil
 }
 
-func (c *streamGovernanceCommand) getRegionObjectFromId(regionId string) (*sgsdk.StreamGovernanceV2Region, error) {
+func (c *streamGovernanceCommand) getStreamGovernanceV2RegionFromId(regionId string) (*sgsdk.StreamGovernanceV2Region, error) {
 	ctx := context.Background()
 
 	regionObject, _, err := c.V2Client.StreamGovernanceClient.

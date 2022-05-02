@@ -20,9 +20,9 @@ func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Comman
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Enable Stream Governance, using Google Cloud Platform in a region of choice with 'advanced' " +
+				Text: "Enable Stream Governance, using AWS in us-east-2 region with 'advanced' " +
 					"package for environment 'env-00000'",
-				Code: fmt.Sprintf("%s stream-governance enable --cloud gcp --region <region_id> "+
+				Code: fmt.Sprintf("%s stream-governance enable --cloud aws --region us-east-2 "+
 					"--package advanced --environment env-00000", version.CLIName),
 			},
 		),
@@ -31,7 +31,7 @@ func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Comman
 	pcmd.AddStreamGovernancePackageFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("region", "",
-		`Cloud region ID for cluster (use "confluent stream-governance region list" to see all).`)
+		`Cloud region name (use "confluent stream-governance region list" to see all).`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -64,18 +64,15 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	streamGovernanceV2Region, err := c.getRegionObject(cloud, region, packageType)
-	if err != nil {
-		return nil
-	}
-
-	newClusterRequest, err := c.createNewStreamGovernanceClusterRequest(streamGovernanceV2Region, packageType)
+	streamGovernanceV2Region, err := c.getStreamGovernanceV2Region(cloud, region, packageType)
 	if err != nil {
 		return err
 	}
 
+	newClusterRequest := c.createNewStreamGovernanceClusterRequest(streamGovernanceV2Region, packageType)
+
 	//TODO: remove this line
-	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
+	PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
 	newClusterResponse, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
 		CreateStreamGovernanceV2Cluster(ctx).StreamGovernanceV2Cluster(*newClusterRequest).Execute()
 
@@ -88,7 +85,7 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(
-	streamGovernanceV2Region *sgsdk.StreamGovernanceV2Region, packageType string) (*sgsdk.StreamGovernanceV2Cluster, error) {
+	streamGovernanceV2Region *sgsdk.StreamGovernanceV2Region, packageType string) *sgsdk.StreamGovernanceV2Cluster {
 
 	newClusterRequest := sgsdk.NewStreamGovernanceV2ClusterWithDefaults()
 	spec := sgsdk.NewStreamGovernanceV2ClusterSpecWithDefaults()
@@ -104,5 +101,5 @@ func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(
 	spec.SetRegion(*regionObjectReference)
 	newClusterRequest.SetSpec(*spec)
 
-	return newClusterRequest, nil
+	return newClusterRequest
 }

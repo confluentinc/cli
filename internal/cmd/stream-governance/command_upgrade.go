@@ -64,7 +64,7 @@ func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error 
 
 	spec := updatedClusterResponse.GetSpec()
 	regionSpec := spec.GetRegion()
-	streamGovernanceV2Region, err := c.getRegionObjectFromId(regionSpec.GetId())
+	streamGovernanceV2Region, err := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId())
 	if err != nil {
 		return err
 	}
