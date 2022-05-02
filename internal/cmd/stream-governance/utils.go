@@ -39,10 +39,10 @@ func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, pac
 		SpecCloud(cloud).SpecRegionName(region).SpecPackages(*packageSpec).Execute()
 
 	if err != nil {
-		return nil, errors.NewStreamGovernanceInvalidRegionError()
+		return nil, err
 	}
-	regionArr := regionList.GetData()
 
+	regionArr := regionList.GetData()
 	if len(regionArr) == 0 {
 		return nil, errors.NewStreamGovernanceInvalidRegionError()
 	}
