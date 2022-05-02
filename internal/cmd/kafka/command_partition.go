@@ -15,19 +15,20 @@ type partitionCommand struct {
 }
 
 func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	partitionCommand := &partitionCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
-			&cobra.Command{
-				Use:         "partition",
-				Short:       "Manage Kafka partitions.",
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner),
+	cmd := &cobra.Command{
+		Use:         "partition",
+		Short:       "Manage Kafka partitions.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	partitionCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(partitionCommand.AuthenticatedCLICommand))
-	partitionCommand.AddCommand(partitionCommand.newListCommand())
-	partitionCommand.AddCommand(partitionCommand.newDescribeCommand())
-	partitionCommand.AddCommand(partitionCommand.newGetReassignmentsCommand())
-	return partitionCommand.Command
+
+	c := &partitionCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newGetReassignmentsCommand())
+	cmd.AddCommand(c.newListCommand())
+
+	return cmd
 }
 
 func parseLeaderId(leader kafkarestv3.Relationship) int32 {
@@ -38,7 +39,6 @@ func parseLeaderId(leader kafkarestv3.Relationship) int32 {
 }
 
 func partitionIdFromArg(args []string) (int32, error) {
-	partitionIdStr := args[0]
-	partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
+	partitionId, err := strconv.ParseInt(args[0], 10, 32)
 	return int32(partitionId), err
 }

@@ -4,11 +4,11 @@ Usage:
   confluent kafka replica list [flags]
 
 Examples:
-List the replica statuses for partition 1 of "my_topic".
+List the replica statuses for partition 1 of topic "my_topic".
 
   $ confluent kafka replica list --topic my_topic --partition 1
 
-List the replicas statuses for topic "my_topic".
+List the replica statuses for topic "my_topic".
 
   $ confluent kafka replica list --topic my_topic
 

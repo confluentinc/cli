@@ -16,15 +16,16 @@ var (
 )
 
 func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	replicaCommand := &replicaCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
-			&cobra.Command{
-				Use:         "replica",
-				Short:       "Manage Kafka replicas.",
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner),
+	cmd := &cobra.Command{
+		Use:         "replica",
+		Short:       "Manage Kafka replicas.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
-	replicaCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(replicaCommand.AuthenticatedCLICommand))
-	replicaCommand.AddCommand(replicaCommand.newListCommand())
-	return replicaCommand.Command
+
+	c := &replicaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+
+	cmd.AddCommand(c.newListCommand())
+
+	return cmd
 }

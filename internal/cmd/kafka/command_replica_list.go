@@ -13,30 +13,32 @@ import (
 )
 
 func (replicaCommand *replicaCommand) newListCommand() *cobra.Command {
-	listCmd := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
 		Short: "List Kafka replica statuses.",
 		Long:  "List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.",
+		Args:  cobra.NoArgs,
+		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List the replica statuses for partition 1 of "my_topic".`,
+				Text: `List the replica statuses for partition 1 of topic "my_topic".`,
 				Code: "confluent kafka replica list --topic my_topic --partition 1",
 			},
 			examples.Example{
-				Text: `List the replicas statuses for topic "my_topic".`,
+				Text: `List the replica statuses for topic "my_topic".`,
 				Code: "confluent kafka replica list --topic my_topic",
 			},
 		),
 	}
-	listCmd.Flags().String("topic", "", "Topic name.")
-	listCmd.Flags().Int32("partition", -1, "Partition ID.")
-	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	pcmd.AddOutputFlag(listCmd)
-	_ = listCmd.MarkFlagRequired("topic")
-	replicaCommand.AddCommand(listCmd)
-	return listCmd
+
+	cmd.Flags().String("topic", "", "Topic name.")
+	cmd.Flags().Int32("partition", -1, "Partition ID.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("topic")
+
+	return cmd
 }
 
 func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {

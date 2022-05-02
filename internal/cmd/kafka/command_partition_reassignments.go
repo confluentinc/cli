@@ -12,13 +12,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (partitionCmd *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
-	reassignmentsCmd := &cobra.Command{
+func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "get-reassignments [id]",
 		Short: "Get ongoing replica reassignments.",
 		Long:  "Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(partitionCmd.getReassignments),
+		RunE:  pcmd.NewCLIRunE(c.getReassignments),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get all replica reassignments for the Kafka cluster.",
@@ -33,15 +33,16 @@ func (partitionCmd *partitionCommand) newGetReassignmentsCommand() *cobra.Comman
 				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
 			}),
 	}
-	reassignmentsCmd.Flags().String("topic", "", "Topic name to search by.")
-	reassignmentsCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	pcmd.AddOutputFlag(reassignmentsCmd)
-	partitionCmd.AddCommand(reassignmentsCmd)
-	return reassignmentsCmd
+
+	cmd.Flags().String("topic", "", "Topic name to search by.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(cmd)
+	
+	return cmd
 }
 
-func (partitionCmd *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
-	restClient, restContext, err := initKafkaRest(partitionCmd.AuthenticatedCLICommand, cmd)
+func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
