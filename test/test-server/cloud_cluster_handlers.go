@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -14,7 +14,7 @@ import (
 )
 
 // Handler for: "/api/usage_limits"
-func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleUsageLimits(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		usageLimitsReply := &schedv1.GetUsageLimitsReply{UsageLimits: &productv1.UsageLimits{
 			TierLimits: map[string]*productv1.TierFixedLimits{
@@ -49,7 +49,7 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) func(w http.ResponseWriter
 	}
 }
 
-func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
@@ -73,7 +73,7 @@ func (c *CloudRouter) HandleCluster(t *testing.T) func(w http.ResponseWriter, r 
 	}
 }
 
-func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := r.URL.Query().Get("id")
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
@@ -86,7 +86,7 @@ func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) func(w http.Respo
 	}
 }
 
-func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
@@ -106,7 +106,7 @@ func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) func(w http.Res
 	}
 }
 
-func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -128,7 +128,7 @@ func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) func
 	}
 }
 
-func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -151,7 +151,7 @@ func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) func(w http.
 }
 
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated-expand"
-func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == http.MethodGet {
@@ -205,7 +205,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) func(w 
 }
 
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated-shrink"
-func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == http.MethodGet {
