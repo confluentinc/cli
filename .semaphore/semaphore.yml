@@ -1,0 +1,61 @@
+version: v1.0
+name: Confluent CLI CI
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+execution_time_limit:
+  hours: 2
+
+blocks:
+  - name: Linux
+    dependencies: []
+    task:
+      prologue:
+        commands:
+          - checkout
+          - sem-version go 1.17.6
+      jobs:
+        - name: Install dependencies
+          commands:
+            - make deps
+        - name: Lint
+          commands:
+            - make lint
+        - name: Build
+          commands:
+            - make build
+        - name: Test
+          commands:
+            - make test
+
+  - name: MacOS
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: al-standard-4
+          os_image: macos-xcode13
+      prologue:
+        commands:
+          - checkout
+          - sem-version go 1.17.6
+      jobs:
+        - name: Install dependencies
+          commands:
+            - make deps
+        - name: Build
+          commands:
+            - make build
+        - name: Test
+          commands:
+            - make test
+  
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
