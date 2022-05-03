@@ -18,12 +18,14 @@ blocks:
           - checkout
           - sem-version go 1.17.6
       jobs:
+        - name: Install dependencies
+          commands:
+            - make deps
         - name: Lint
           commands:
             - make lint
         - name: Build
           commands:
-            - make deps
             - make build
         - name: Test
           commands:
@@ -41,9 +43,11 @@ blocks:
           - checkout
           - sem-version go 1.17.6
       jobs:
-        - name: Build
+        - name: Install dependencies
           commands:
             - make deps
+        - name: Build
+          commands:
             - make build
         - name: Test
           commands:
