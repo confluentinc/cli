@@ -12,7 +12,7 @@ import (
 )
 
 // Handler for: "/"
-func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(map[string]interface{}{})
@@ -21,7 +21,7 @@ func (s *SRRouter) HandleSRGet(t *testing.T) func(http.ResponseWriter, *http.Req
 }
 
 // Handler for: "/config"
-func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
@@ -40,7 +40,7 @@ func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) func(http.Response
 }
 
 // Handler for: "/mode"
-func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req srsdk.ModeUpdateRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
@@ -52,7 +52,7 @@ func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) func(http.ResponseWr
 }
 
 // Handler for: "/subjects/{subject}/versions"
-func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
@@ -75,7 +75,7 @@ func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/subjects/{subject}"
-func (s *SRRouter) HandleSRSubject(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubject(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode([]int32{int32(1), int32(2)})
@@ -84,7 +84,7 @@ func (s *SRRouter) HandleSRSubject(t *testing.T) func(http.ResponseWriter, *http
 }
 
 // Handler for: "/subjects/{subject}/versions/{version}"
-func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -154,7 +154,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) func(http.ResponseWriter
 }
 
 // Handler for: "/schemas/ids/{id}"
-func (s *SRRouter) HandleSRById(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
@@ -213,7 +213,7 @@ func (s *SRRouter) HandleSRById(t *testing.T) func(w http.ResponseWriter, r *htt
 }
 
 // Handler for: "/subjects"
-func (s *SRRouter) HandleSRSubjects(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubjects(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		subjects := []string{"subject1", "subject2", "subject3"}
@@ -327,7 +327,7 @@ func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/config/{subject}"
-func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
@@ -346,7 +346,7 @@ func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) func(http.ResponseWriter,
 }
 
 // Handler for: "/mode/{subject}"
-func (s *SRRouter) HandleSRSubjectMode(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (s *SRRouter) HandleSRSubjectMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		var req srsdk.ModeUpdateRequest
@@ -358,7 +358,7 @@ func (s *SRRouter) HandleSRSubjectMode(t *testing.T) func(http.ResponseWriter, *
 }
 
 // Handler for: "/compatibility"
-func (c *SRRouter) HandleSRCompatibility(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *SRRouter) HandleSRCompatibility(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		res := srsdk.CompatibilityCheckResponse{IsCompatible: true}
