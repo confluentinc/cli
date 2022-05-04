@@ -1,28 +1,28 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
 	"net/http"
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	"github.com/google/go-cmp/cmp"
+	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/mock"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -192,7 +192,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 	}
 }
 
-func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
+func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
@@ -202,117 +202,8 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *clusterCommand {
 	cmkClient := &cmkv2.APIClient{
 		ClustersCmkV2Api: suite.cmkClusterApi,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, ccloudv2.NewClient(cmkClient, nil, nil, "auth-token"), nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, &ccloudv2.Client{CmkClient: cmkClient, AuthToken: "auth-token"}, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
-}
-
-func (suite *KafkaClusterTestSuite) TestCreateGCPBYOK() {
-	req := require.New(suite.T())
-	root := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	kafkaMock := &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return &schedv1.KafkaCluster{
-				ApiEndpoint: "api-endpoint",
-			}, nil
-		},
-	}
-	idMock := &ccsdkmock.ExternalIdentity{
-		CreateExternalIdentityFunc: func(_ context.Context, cloud, accountID string) (string, error) {
-			return "id-xyz", nil
-		},
-	}
-	client := &ccloud.Client{
-		Kafka:            kafkaMock,
-		ExternalIdentity: idMock,
-		EnvironmentMetadata: &ccsdkmock.EnvironmentMetadata{
-			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
-				return []*schedv1.CloudMetadata{{
-					Id:       "gcp",
-					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
-					Regions:  []*schedv1.Region{{IsSchedulable: true, Id: "us-central1"}},
-				}}, nil
-			},
-		},
-	}
-	cmkApiMock := &cmkmock.ClustersCmkV2Api{
-		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
-			return cmkv2.ApiCreateCmkV2ClusterRequest{}
-		},
-		CreateCmkV2ClusterExecuteFunc: func(req cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-			return cmkByokCluster, nil, nil
-		},
-	}
-	cmkClient := &cmkv2.APIClient{ClustersCmkV2Api: cmkApiMock}
-	root.AuthenticatedCLICommand.State = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Account: &orgv1.Account{
-				Id: environmentId,
-			},
-		},
-	}
-	root.Client = client
-	root.V2Client = ccloudv2.NewClient(cmkClient, nil, nil, "auth-token")
-	var buf bytes.Buffer
-	root.SetOut(&buf)
-	cmd, args, err := root.Command.Find([]string{
-		"create",
-		"gcp-byok-test",
-	})
-	req.NoError(err)
-	err = cmd.ParseFlags([]string{
-		"--cloud=gcp",
-		"--region=us-central1",
-		"--type=dedicated",
-		"--cku=1",
-		"--encryption-key=xyz",
-	})
-	req.NoError(err)
-	err = root.create(cmd, args, mock.NewPromptMock(
-		"y", // yes customer has granted key access
-	))
-	req.NoError(err)
-	got, want := buf.Bytes(), []byte(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
-
-Permissions:
-  - cloudkms.cryptoKeyVersions.useToDecrypt
-  - cloudkms.cryptoKeyVersions.useToEncrypt
-  - cloudkms.cryptoKeys.get
-
-Identity:
-  id-xyz
-
-
-Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
-+-------------------+---------------+
-| ID                | lkc-xyz       |
-| Name              | gcp-byok-test |
-| Type              | DEDICATED     |
-| Ingress           |            50 |
-| Egress            |           150 |
-| Storage           | Infinite      |
-| Provider          | gcp           |
-| Availability      | single-zone   |
-| Region            | us-central1   |
-| Status            | PROVISIONING  |
-| Endpoint          |               |
-| API Endpoint      | api-endpoint  |
-| REST Endpoint     |               |
-| Cluster Size      |             1 |
-| Encryption Key ID | xyz           |
-+-------------------+---------------+
-`)
-	req.True(cmp.Equal(got, want), cmp.Diff(got, want))
-	req.Equal("abc", idMock.CreateExternalIdentityCalls()[0].AccountID)
-	req.Equal("gcp", idMock.CreateExternalIdentityCalls()[0].Cloud)
-	createdCluster, _, _ := cmkApiMock.CreateCmkV2ClusterExecuteFunc(cmkv2.ApiCreateCmkV2ClusterRequest{})
-	req.Equal("abc", createdCluster.Spec.Environment.Id)
-	req.Equal("gcp", *createdCluster.Spec.Cloud)
-	req.Equal("us-central1", *createdCluster.Spec.Region)
-	req.Equal("xyz", *createdCluster.Spec.Config.CmkV2Dedicated.EncryptionKey)
-	req.NotEqual(nil, createdCluster.Spec.Config.CmkV2Dedicated)
-	req.Equal(int32(1), createdCluster.Spec.Config.CmkV2Dedicated.Cku)
-
-	req.False(suite.metricsApi.QueryV2Called())
 }
 
 func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
@@ -376,17 +267,19 @@ func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
-	conf := v1.AuthenticatedCloudConfigMock()
-	cmd := suite.newCmd(conf)
-	cmd.Config = pcmd.NewDynamicConfig(conf, nil, nil, nil)
-	lkc, err := cmd.getLkcForDescribe([]string{"lkc-123"})
+	cmd := new(cobra.Command)
+	cfg := v1.AuthenticatedCloudConfigMock()
+	prerunner := &pcmd.PreRun{Config: cfg}
+	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c.Config = dynamicconfig.NewDynamicConfig(cfg, nil, nil)
+	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)
-	lkc, err = cmd.getLkcForDescribe([]string{})
-	req.Equal(cmd.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId(), lkc)
+	lkc, err = c.getLkcForDescribe([]string{})
+	req.Equal(c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId(), lkc)
 	req.NoError(err)
-	cmd.Config.Context().KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = ""
-	lkc, err = cmd.getLkcForDescribe([]string{})
+	c.Config.Context().KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster = ""
+	lkc, err = c.getLkcForDescribe([]string{})
 	req.Equal("", lkc)
 	req.Equal(errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaForDescribeSuggestions).Error(), err.Error())
 }

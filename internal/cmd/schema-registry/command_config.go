@@ -16,7 +16,7 @@ type configCommand struct {
 func newConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "config",
-		Short:       "Manage Schema Registry config.",
+		Short:       "Manage Schema Registry configuration.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 

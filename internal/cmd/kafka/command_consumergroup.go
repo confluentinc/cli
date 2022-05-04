@@ -87,7 +87,7 @@ type lagDataStruct struct {
 	PartitionId     int32
 }
 
-func newConsumerGroupCommand(prerunner pcmd.PreRunner) *consumerGroupCommand {
+func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "consumer-group",
 		Aliases: []string{"cg"},
@@ -97,11 +97,11 @@ func newConsumerGroupCommand(prerunner pcmd.PreRunner) *consumerGroupCommand {
 
 	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(newLagCommand(prerunner))
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(newLagCommand(prerunner))
+	cmd.AddCommand(c.newListCommand())
 
-	return c
+	return cmd
 }
 
 func (c *consumerGroupCommand) validArgs(cmd *cobra.Command, args []string) []string {

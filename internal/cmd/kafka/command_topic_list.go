@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -28,6 +29,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -87,7 +89,7 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}

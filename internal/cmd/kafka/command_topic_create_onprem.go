@@ -34,7 +34,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
 	return cmd

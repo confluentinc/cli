@@ -7,9 +7,10 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -65,7 +66,6 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
-			command.Config.Resolver = c.FlagResolver
 			command.Config.Config = c.Config
 		}
 		return nil
@@ -116,11 +116,9 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
-		ctx := command.Config.Context()
-		if ctx == nil {
+		if command.Config.Context() == nil {
 			return new(errors.NotLoggedInError)
 		}
-		command.Context = ctx
 		return nil
 	}
 }
@@ -158,5 +156,4 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.MDSv2Client = c.MDSv2Client
 	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
-	command.QuotasClient = c.QuotasClient
 }

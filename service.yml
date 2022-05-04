@@ -1,0 +1,8 @@
+name: cli
+lang: go
+lang_version: 1.17.6
+github:
+  enable: true
+  repo_name: confluentinc/cli
+semaphore:
+  enable: true

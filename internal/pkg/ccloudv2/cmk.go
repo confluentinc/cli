@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -51,9 +50,8 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 	collectedAllClusters := false
 	pageToken := ""
 	for !collectedAllClusters {
-		clusterList, resp, err := c.executeListClusters(pageToken, environment)
+		clusterList, _, err := c.executeListClusters(pageToken, environment)
 		if err != nil {
-			log.Printf("[ERROR] Clusters get failed %v, %s", resp, err)
 			return nil, err
 		}
 		clusters = append(clusters, clusterList.GetData()...)

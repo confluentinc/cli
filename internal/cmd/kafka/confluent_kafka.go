@@ -14,17 +14,13 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/google/uuid"
 	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -47,8 +43,9 @@ var (
 )
 
 type ConsumerProperties struct {
-	PrintKey   bool
 	Delimiter  string
+	FullHeader bool
+	PrintKey   bool
 	SchemaPath string
 }
 
@@ -78,25 +75,13 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 		}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
 		if retrieveErr != nil {
-			err = fmt.Errorf("Token retrieval error: %v\n", retrieveErr)
-			if err != nil {
-				return err
-			}
-			err = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
-			if err != nil {
-				return err
-			}
+			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
+			return fmt.Errorf("token retrieval error: %w", retrieveErr)
 		} else {
 			setTokenError := client.SetOAuthBearerToken(oauthBearerToken)
 			if setTokenError != nil {
-				err = fmt.Errorf("Error setting token and extensions: %v\n", setTokenError)
-				if err != nil {
-					return err
-				}
-				err = client.SetOAuthBearerTokenFailure(setTokenError.Error())
-				if err != nil {
-					return err
-				}
+				_ = client.SetOAuthBearerTokenFailure(setTokenError.Error())
+				return fmt.Errorf("error setting token and extensions: %w", setTokenError)
 			}
 		}
 	}
@@ -133,207 +118,128 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-func NewProducer(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.Producer, error) {
+func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
-	return ckafka.NewProducer(configMap)
+
+	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-// NewConsumer returns a ConsumerGroup configured for the CLI config
-func NewConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
 	if err != nil {
 		return nil, err
 	}
-	return ckafka.NewConsumer(configMap)
+
+	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
-	configMap := &ckafka.ConfigMap{
-		"security.protocol":                     "SASL_SSL",
-		"sasl.mechanism":                        "PLAIN",
-		"ssl.endpoint.identification.algorithm": "https",
-		"client.id":                             clientID,
-		"bootstrap.servers":                     kafka.Bootstrap,
-		"sasl.username":                         kafka.APIKey,
-		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
+func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
+	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
+	if err != nil {
+		return nil, err
 	}
-	return configMap
+
+	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
-	bootstrap, err := cmd.Flags().GetString("bootstrap")
+func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
 	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return nil, err
-	}
-	configMap := &ckafka.ConfigMap{
-		"ssl.endpoint.identification.algorithm": "https",
-		"client.id":                             clientID,
-		"bootstrap.servers":                     bootstrap,
-		"enable.ssl.certificate.verification":   true,
-		"ssl.ca.location":                       caLocation,
-		"retry.backoff.ms":                      "250",
-		"request.timeout.ms":                    "10000",
-	}
-	if err := setProducerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return setProtocolConfig(cmd, configMap)
+
+	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.ConfigMap, error) {
-	group, err := cmd.Flags().GetString("group")
-	if err != nil {
-		return nil, err
-	}
-	if group == "" {
-		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
-	}
-	beginning, err := cmd.Flags().GetBool("from-beginning")
-	if err != nil {
-		return nil, err
-	}
-	bootstrap, err := cmd.Flags().GetString("bootstrap")
-	if err != nil {
-		return nil, err
-	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
-	if err != nil {
-		return nil, err
-	}
-	configMap := &ckafka.ConfigMap{
-		"ssl.endpoint.identification.algorithm": "https",
-		"client.id":                             clientID,
-		"group.id":                              group,
-		"bootstrap.servers":                     bootstrap,
-		"enable.ssl.certificate.verification":   true,
-		"ssl.ca.location":                       caLocation,
-	}
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
-	}
-	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
-		return nil, err
-	}
-	if err := setConsumerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return setProtocolConfig(cmd, configMap)
-}
-
-func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
-	protocol, err := cmd.Flags().GetString("protocol")
-	if err != nil {
-		return nil, err
-	}
-	switch protocol {
-	case "SSL":
-		configMap, err = setSSLConfig(cmd, configMap)
+func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
+	value := e.Value
+	if h.Properties.PrintKey {
+		key := e.Key
+		var keyString string
+		if len(key) == 0 {
+			keyString = "null"
+		} else {
+			keyString = string(key)
+		}
+		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
 		if err != nil {
-			return nil, err
+			return err
 		}
-	case "SASL_SSL":
-		configMap, err = setSASLConfig(cmd, configMap)
+	}
+
+	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	if err != nil {
+		return err
+	}
+
+	if h.Format != "string" {
+		schemaPath, referencePathMap, err := h.RequestSchema(value)
 		if err != nil {
-			return nil, err
+			return err
 		}
-	default:
-		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestion)
-	}
-	return configMap, nil
-}
-
-func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
-	certLocation, err := cmd.Flags().GetString("cert-location")
-	if err != nil {
-		return nil, err
-	}
-	keyLocation, err := cmd.Flags().GetString("key-location")
-	if err != nil {
-		return nil, err
-	}
-	keyPassword, err := cmd.Flags().GetString("key-password")
-	if err != nil {
-		return nil, err
-	}
-	sslMap := map[string]string{
-		"security.protocol":        "SSL",
-		"ssl.certificate.location": certLocation,
-		"ssl.key.location":         keyLocation,
-		"ssl.key.password":         keyPassword,
-	}
-	for key, value := range sslMap {
-		if err := configMap.SetKey(key, value); err != nil {
-			return nil, err
-		}
-	}
-	return configMap, nil
-}
-
-func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
-	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
-	if err != nil {
-		return nil, err
-	}
-	saslMap := map[string]string{
-		"security.protocol": "SASL_SSL",
-		"sasl.mechanism":    mechanism,
-	}
-	if mechanism == "PLAIN" {
-		username, password, err := promptForSASLAuth(cmd)
+		// Message body is encoded after 5 bytes of meta information.
+		value = value[messageOffset:]
+		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
 		if err != nil {
-			return nil, err
-		}
-		saslMap["sasl.username"] = username
-		saslMap["sasl.password"] = password
-	} else {
-		saslMap["sasl.oauthbearer.config"] = oauthConfig
-	}
-	for key, value := range saslMap {
-		if err := configMap.SetKey(key, value); err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return configMap, nil
+	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(h.Out, jsonMessage)
+	if err != nil {
+		return err
+	}
+
+	if e.Headers != nil {
+		var headers interface{} = e.Headers
+		if h.Properties.FullHeader {
+			headers = getFullHeaders(e.Headers)
+		}
+		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
-	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
-		return nil, err
+func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+	run := true
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	for run {
+		select {
+		case <-signals: // Trap SIGINT to trigger a shutdown.
+			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			consumer.Close()
+			run = false
+		default:
+			event := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
+			if event == nil {
+				continue
+			}
+			switch e := event.(type) {
+			case *ckafka.Message:
+				err := consumeMessage(e, groupHandler)
+				if err != nil {
+					return err
+				}
+			case ckafka.Error:
+				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
+				if e.Code() == ckafka.ErrAllBrokersDown {
+					run = false
+				}
+			}
+		}
 	}
-	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
-		return nil, err
-	}
-	if err := setProducerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return configMap, nil
-}
-
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
-	if err := configMap.SetKey("group.id", group); err != nil {
-		return nil, err
-	}
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
-	}
-	if err := configMap.SetKey("auto.offset.reset", autoOffsetReset); err != nil {
-		return nil, err
-	}
-	if err := setConsumerDebugOption(configMap); err != nil {
-		return nil, err
-	}
-	return configMap, nil
+	return nil
 }
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
@@ -383,7 +289,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(references, h.SrClient, h.Ctx)
+	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient, h.Ctx)
 	if err != nil {
 		return "", nil, err
 	}
@@ -391,128 +297,20 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	return tempStorePath, referencePathMap, nil
 }
 
-func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
-	value := e.Value
-	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
-		}
-		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
-		if err != nil {
-			return err
-		}
+func getFullHeaders(headers []ckafka.Header) []string {
+	headerStrings := make([]string, len(headers))
+	for i, header := range headers {
+		headerStrings[i] = getHeaderString(header)
 	}
-
-	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
-	if err != nil {
-		return err
-	}
-
-	if h.Format != "string" {
-		schemaPath, referencePathMap, err := h.RequestSchema(value)
-		if err != nil {
-			return err
-		}
-		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
-		if err != nil {
-			return err
-		}
-	}
-	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintln(h.Out, jsonMessage)
-	if err != nil {
-		return err
-	}
-
-	if e.Headers != nil {
-		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", e.Headers)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return headerStrings
 }
 
-func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
-	run := true
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-	for run {
-		select {
-		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumer)
-			consumer.Close()
-			run = false
-		default:
-			event := consumer.Poll(100) // polling event from consumer with a timeout of 100ms
-			if event == nil {
-				continue
-			}
-			switch e := event.(type) {
-			case *ckafka.Message:
-				err := consumeMessage(e, groupHandler)
-				if err != nil {
-					return err
-				}
-			case ckafka.Error:
-				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
-				if e.Code() == ckafka.ErrAllBrokersDown {
-					run = false
-				}
-			}
-		}
+func getHeaderString(header ckafka.Header) string {
+	if header.Value == nil {
+		return fmt.Sprintf("%s=nil", header.Key)
+	} else if len(header.Value) == 0 {
+		return fmt.Sprintf("%s=<empty>", header.Key)
+	} else {
+		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
 	}
-	return nil
-}
-
-func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
-	username, err := cmd.Flags().GetString("username")
-	if err != nil {
-		return "", "", err
-	}
-	password, err := cmd.Flags().GetString("password")
-	if err != nil {
-		return "", "", err
-	}
-	if username != "" && password != "" {
-		return username, password, nil
-	}
-	f := form.New(
-		form.Field{ID: "username", Prompt: "Enter your SASL username"},
-		form.Field{ID: "password", Prompt: "Enter your SASL password", IsHidden: true},
-	)
-	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
-		return "", "", err
-	}
-	return f.Responses["username"].(string), f.Responses["password"].(string), nil
-}
-
-func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
-	case log.DEBUG:
-		return configMap.Set("debug=broker, topic, msg, protocol")
-	case log.TRACE:
-		return configMap.Set("debug=all")
-	}
-	return nil
-}
-
-func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
-	case log.DEBUG:
-		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
-	case log.TRACE:
-		return configMap.Set("debug=all")
-	}
-	return nil
 }
