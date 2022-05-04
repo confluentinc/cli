@@ -55,6 +55,11 @@ var (
 				return nil, nil
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -229,6 +234,11 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+				GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
@@ -707,12 +717,17 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cmd.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
 		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
 			GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}
 			},
-			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+			GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}

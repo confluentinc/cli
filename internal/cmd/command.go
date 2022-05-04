@@ -6,7 +6,7 @@ import (
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cli/v1"
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -130,10 +130,10 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
-		u.Error = cliv1.PtrBool(err != nil)
-
 		ctx := cfg.Context()
-		client := ccloudv2.NewClientWithConfigs(ctx.Platform.Server, ver.UserAgent, isTest, ctx.GetAuthToken())
+		client := ccloudv2.NewClient(ctx.Platform.Server, ver.UserAgent, isTest, ctx.GetAuthToken())
+	
+		u.Error = cliv1.PtrBool(err != nil)
 		u.Report(client)
 	}
 
