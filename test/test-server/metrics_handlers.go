@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ import (
 )
 
 // Handler for "/v2/metrics/cloud/query"
-func (c *CloudRouter) HandleMetricsQuery(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleMetricsQuery(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := &ccloud.MetricsApiQueryReply{
 			Result: []ccloud.ApiData{
@@ -29,7 +29,7 @@ func (c *CloudRouter) HandleMetricsQuery(t *testing.T) func(w http.ResponseWrite
 	}
 }
 
-func (c *CloudRouter) HandleJwtToken(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleJwtToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		type CreateOAuthTokenReply struct {
 			Token string `json:"token"`
