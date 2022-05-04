@@ -130,8 +130,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	contextName := cfg.Context().NetrcMachineName
 	// run login command
 	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken, nil
+		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
+			return &flowv1.AuthenticateReply{Token: testToken}, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{

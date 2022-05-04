@@ -27,6 +27,7 @@ type Credentials struct {
 
 	AuthToken        string
 	AuthRefreshToken string
+	OrgResourceId    string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -159,9 +160,11 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config) f
 		}
 
 		credentials := &Credentials{
+			IsSSO:            ctx.IsUserSsoEnabled(),
 			Username:         ctx.GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
+			OrgResourceId:    ctx.GetOrganizationResourceId(),
 		}
 
 		return credentials, nil

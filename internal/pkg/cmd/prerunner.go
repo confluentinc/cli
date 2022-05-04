@@ -308,18 +308,18 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	token, refreshToken, credentials, err := r.getCCloudTokenAndCredentials(cmd, netrcMachineName, orgResourceId)
+	credentials, err := r.getCCloudCredentials(cmd, netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
 
-	if token == "" || credentials == nil {
+	if credentials == nil || credentials.AuthToken == "" {
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
 
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, refreshToken, client)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
 	if err != nil {
 		return err
 	}
@@ -331,12 +331,11 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, string, *pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 	}
-
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config),
@@ -344,12 +343,17 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
-		return "", "", nil, err
+		return nil, err
 	}
 
 	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
+	if err != nil {
+		return nil, err
+	}
+	credentials.AuthToken = token
+	credentials.AuthRefreshToken = refreshToken
 
-	return token, refreshToken, credentials, err
+	return credentials, nil
 }
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
@@ -814,49 +818,44 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicc
 		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
-	log.CliLogger.Debug("Updating auth token")
-	token, err := r.getUpdatedAuthToken(cmd, ctx)
+	log.CliLogger.Debug("Updating auth tokens")
+	token, refreshToken, err := r.getUpdatedAuthToken(cmd, ctx)
 	if err != nil || token == "" {
-		log.CliLogger.Debug("Failed to update auth token")
+		log.CliLogger.Debug("Failed to update auth tokens")
 		return tokenError
 	}
-	log.CliLogger.Debug("Successfully update auth token")
-	err = ctx.UpdateAuthToken(token)
-	if err != nil {
+	log.CliLogger.Debug("Successfully updated auth tokens")
+	if err := ctx.UpdateAuthTokens(token, refreshToken); err != nil {
 		return tokenError
 	}
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, error) {
+func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.Name,
+		Name:    ctx.NetrcMachineName,
 	}
-	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
+	credentials, err := pauth.GetLoginCredentials(
+		r.LoginCredentialsManager.GetCredentialsFromConfig(ctx.Config),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params),
+	)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	var token string
 	if r.Config.IsCloudLogin() {
 		orgResourceId := r.Config.GetLastUsedOrgId()
-		token, _, err = r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
-		if err != nil {
-			return "", err
-		}
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
-		token, err = r.AuthTokenHandler.GetConfluentToken(client, credentials)
-		if err != nil {
-			return "", err
-		}
+		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
+		return token, "", err
 	}
-	return token, nil
 }
 
 // if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
