@@ -300,7 +300,7 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, true, new(version.Version))
+		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version), true)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1
