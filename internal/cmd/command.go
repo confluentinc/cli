@@ -128,7 +128,7 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 
-	if cfg.IsCloudLogin() && *(u.Command) != "" {
+	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		u.Error = cliv1.PtrBool(err != nil)
 
 		ctx := cfg.Context()

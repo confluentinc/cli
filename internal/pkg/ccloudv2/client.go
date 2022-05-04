@@ -1,7 +1,7 @@
 package ccloudv2
 
 import (
-	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cli/v1"
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
