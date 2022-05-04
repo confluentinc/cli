@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	StripeTestKey = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
-	StripeLiveKey = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
+	stripeTestKey = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
+	stripeLiveKey = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -50,9 +50,9 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 
 	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	if c.isTest {
-		stripe.Key = StripeTestKey
+		stripe.Key = stripeTestKey
 	} else {
-		stripe.Key = StripeLiveKey
+		stripe.Key = stripeLiveKey
 	}
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
