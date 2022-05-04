@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -20,7 +19,6 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -116,60 +114,25 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	tests := []struct {
-		name    string
-		command string
-		want    log.Level
-	}{
-		{
-			name:    "default logging level",
-			command: "help",
-			want:    log.ERROR,
-		},
-		{
-			name:    "warn logging level",
-			command: "help -v",
-			want:    log.WARN,
-		},
-		{
-			name:    "info logging level",
-			command: "help -vv",
-			want:    log.INFO,
-		},
-		{
-			name:    "debug logging level",
-			command: "help -vvv",
-			want:    log.DEBUG,
-		},
-		{
-			name:    "trace logging level",
-			command: "help -vvvv",
-			want:    log.TRACE,
-		},
+	tests := map[string]log.Level{
+		"":      log.ERROR,
+		"-v":    log.WARN,
+		"-vv":   log.INFO,
+		"-vvv":  log.DEBUG,
+		"-vvvv": log.TRACE,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := v1.New()
-			cfg, err := load.LoadAndMigrate(cfg)
-			require.NoError(t, err)
 
-			r := getPreRunBase()
-			r.JWTValidator = pcmd.NewJWTValidator()
-			r.Config = cfg
+	for flags, level := range tests {
+		r := getPreRunBase()
 
-			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
-			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
+		c := pcmd.NewAnonymousCLICommand(cmd, r)
 
-			args := strings.Split(tt.command, " ")
-			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
-			require.NoError(t, err)
+		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
+		require.NoError(t, err)
 
-			got := log.CliLogger.GetLevel()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PreRun.HasAPIKey() = %v, want %v", got, tt.want)
-			}
-		})
+		require.Equal(t, level, log.CliLogger.GetLevel())
 	}
 }
 

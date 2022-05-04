@@ -23,7 +23,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  pcmd.NewCLIRunE(c.onPremProduce),
 		Short: "Produce messages to a Kafka topic.",
-		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.",
+		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Produce message to topic "my_topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
