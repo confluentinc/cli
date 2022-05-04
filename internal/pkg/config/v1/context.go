@@ -167,6 +167,13 @@ func (c *Context) GetEmail() string {
 	return ""
 }
 
+func (c *Context) GetUserSso() *orgv1.Sso {
+	if user := c.GetUser(); user != nil {
+		return user.Sso
+	}
+	return nil
+}
+
 func (c *Context) GetOrganization() *orgv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
@@ -181,15 +188,8 @@ func (c *Context) GetOrganizationResourceId() string {
 	return ""
 }
 
-func (c *Context) GetSso() *orgv1.Sso {
-	if org := c.GetOrganization(); org != nil {
-		return org.Sso
-	}
-	return nil
-}
-
-func (c *Context) IsSsoEnabled() bool {
-	if sso := c.GetSso(); sso != nil {
+func (c *Context) IsUserSsoEnabled() bool {
+	if sso := c.GetUserSso(); sso != nil {
 		return sso.Enabled
 	}
 	return false

@@ -160,7 +160,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config) f
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.IsSsoEnabled(),
+			IsSSO:            ctx.IsUserSsoEnabled(),
 			Username:         ctx.GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),

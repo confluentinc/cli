@@ -149,6 +149,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	}
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
