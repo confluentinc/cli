@@ -20,7 +20,7 @@ import (
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-type Command struct {
+type command struct {
 	*pcmd.CLICommand
 	cfg                      *v1.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
@@ -51,7 +51,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
 	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 
-	c := &Command{
+	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
@@ -67,7 +67,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	return cmd
 }
 
-func (c *Command) login(cmd *cobra.Command, _ []string) error {
+func (c *command) login(cmd *cobra.Command, _ []string) error {
 	url, err := c.getURL(cmd)
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (c *Command) login(cmd *cobra.Command, _ []string) error {
 	}
 }
 
-func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
+func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	orgResourceId, err := c.getOrgResourceId(cmd)
 	if err != nil {
 		return err
@@ -111,13 +111,14 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
 		}
-
 		return err
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	credentials.AuthToken = token
+	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials.Username, url, token, refreshToken, client)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -125,16 +126,12 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
-	// If refresh token is available, we want to save that in the place of password
-	if refreshToken != "" {
-		credentials.Password = refreshToken
-	}
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-// Order of precedence: env vars > netrc > prompt
+// Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
+func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
@@ -158,7 +155,7 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	)
 }
 
-func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
+func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	credentials, err := c.getConfluentCredentials(cmd, url)
 	if err != nil {
 		return err
@@ -194,7 +191,6 @@ func (c *Command) loginMDS(cmd *cobra.Command, url string) error {
 	}
 
 	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
-
 	if err != nil {
 		return err
 	}
@@ -228,7 +224,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
-func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
@@ -249,7 +245,7 @@ func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	)
 }
 
-func (c *Command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) (string, error) {
+func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) (string, error) {
 	changed := cmd.Flags().Changed("ca-cert-path")
 	// if flag used but empty string is passed then user intends to reset the ca-cert-path
 	if changed {
@@ -262,7 +258,7 @@ func (c *Command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName s
 	return ctx.Platform.CaCertPath, nil
 }
 
-func (c *Command) getURL(cmd *cobra.Command) (string, error) {
+func (c *command) getURL(cmd *cobra.Command) (string, error) {
 	if url, err := cmd.Flags().GetString("url"); url != "" || err != nil {
 		return url, err
 	}
@@ -274,7 +270,7 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *Command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
+func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
 	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
@@ -338,7 +334,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	return url, strings.Join(msg, " and "), nil
 }
 
-func (c *Command) isCCloudURL(url string) bool {
+func (c *command) isCCloudURL(url string) bool {
 	for _, hostname := range v1.CCloudHostnames {
 		if strings.Contains(url, hostname) {
 			return true
@@ -350,7 +346,7 @@ func (c *Command) isCCloudURL(url string) bool {
 	return false
 }
 
-func (c *Command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {
 	return pauth.GetLoginOrganization(
 		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
 		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),

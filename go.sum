@@ -549,9 +549,8 @@ github.com/confluentinc/cc-structs/kafka/core v0.1006.0/go.mod h1:dxshfymLj+GtjZ
 github.com/confluentinc/cc-structs/kafka/core v0.1071.0 h1:ayDBbqKN6Ch0rr6eJ3zWz1p1v6/7WsyD/e82nJ+7L+s=
 github.com/confluentinc/cc-structs/kafka/core v0.1071.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/flow v0.399.0/go.mod h1:C30tHJRwqMQBJdnc6brEu+jEm0Wl8Rey8QsYpIXZ+ew=
-github.com/confluentinc/cc-structs/kafka/flow v0.945.0/go.mod h1:bLc4vLrmIhLkUSgAwJRFgyMzOiiayVef+SrHhGzes2Q=
-github.com/confluentinc/cc-structs/kafka/flow v0.1071.0 h1:ri1Uu47/8rLLBwhn+dTwyOOVZhNjL8kjuSRMu9q6Hl4=
-github.com/confluentinc/cc-structs/kafka/flow v0.1071.0/go.mod h1:qTqdFPxPPfMNm2KsvGyfOtDFAmlgNe0gwH0sOinIJTA=
+github.com/confluentinc/cc-structs/kafka/flow v0.1161.0 h1:gpWwyf1L2h+inJ45lbEsa29cU7PGZq6JuEaCH3PAV+k=
+github.com/confluentinc/cc-structs/kafka/flow v0.1161.0/go.mod h1:qTqdFPxPPfMNm2KsvGyfOtDFAmlgNe0gwH0sOinIJTA=
 github.com/confluentinc/cc-structs/kafka/marketplace v0.399.0/go.mod h1:vrdaD5dBZ3PdzTi1eqphMfOKD4yXHuBqpJb+QGZRen8=
 github.com/confluentinc/cc-structs/kafka/marketplace v0.833.0/go.mod h1:ZxBisRHlxdQzqhx6IeImLYmwqCP9jRgAq6VMMcm/CQU=
 github.com/confluentinc/cc-structs/kafka/marketplace v0.881.0 h1:kj25MBv9ho6XZphRj/5xnynYsbxEOwAP17sOd63TQ50=
@@ -565,7 +564,6 @@ github.com/confluentinc/cc-structs/kafka/org v0.680.0/go.mod h1:HNTERe8xmqOw4dIn
 github.com/confluentinc/cc-structs/kafka/org v0.719.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.774.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.779.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
-github.com/confluentinc/cc-structs/kafka/org v0.887.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.1049.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.1056.0/go.mod h1:HNTERe8xmqOw4dIn1RM2tHzqHz9mNdv1/2dc/sjvYqQ=
 github.com/confluentinc/cc-structs/kafka/org v0.1071.0 h1:MwLBvQm++39Wifpl8ULEaGBqe0D2WoAjDGuBmepd20o=
@@ -624,10 +622,8 @@ github.com/confluentinc/cc-structs/scheduler_plugins/kafka v0.445.0/go.mod h1:jB
 github.com/confluentinc/cc-utils v0.225.0/go.mod h1:uI+SKDqDL/l1j7VIaXpXxGPBrbbYlyG7n/j8ra1MNcc=
 github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354HevGtbFQkBtqG4c=
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.103 h1:5YCVyordCvIv8HorlSXdfkPt6Gp+oa/IRMRqnpBkYtc=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.103/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.104 h1:FB06Had1Lb6fXfpwjDL1tuCIxMi0Y1k+nQd91PFpuf4=
-github.com/confluentinc/ccloud-sdk-go-v1 v0.0.104/go.mod h1:5pA883HWkymMrWwlCvgr2Tn49qN36jdjOWo+QCBhrDE=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105 h1:rJjoMIEEjChHHTAkp/bxxzFR2XnU4SCAz6bgRp3vqOw=
+github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105/go.mod h1:gFne0gmsbgH4GlpfmwadKrAMuSEvEB+mP4DfkEJ4Zi4=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/KfZ/ZahCOoeTjxXOoRU=
