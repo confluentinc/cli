@@ -1,4 +1,4 @@
-package release_notes
+package releasenotes
 
 import (
 	"fmt"
