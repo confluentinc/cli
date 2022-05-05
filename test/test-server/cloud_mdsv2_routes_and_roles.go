@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 var v2RbacRoles = map[string]string{
 	"CCloudRoleBindingAdmin": `{

@@ -138,7 +138,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, pversion.CLIName)
 	return nil
 }
 

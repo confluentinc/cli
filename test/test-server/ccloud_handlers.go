@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"encoding/json"
@@ -62,7 +62,7 @@ func init() {
 }
 
 // Handler for: "/api/me"
-func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 	org := &orgv1.Organization{Id: 42, ResourceId: "abc-123", Name: "Confluent"}
 	if !isAuditLogEnabled {
 		org.AuditLog = &orgv1.AuditLog{
@@ -134,7 +134,7 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/accounts/{id}"
-func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
@@ -163,7 +163,7 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for: "/api/accounts" Post
-func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			req := &orgv1.CreateAccountRequest{}
@@ -185,7 +185,7 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) func(http.ResponseWriter,
 }
 
 // Handler for: "/api/organizations/{id}/payment_info"
-func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost: //admin payment update
@@ -220,7 +220,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for "/api/organizations/"
-func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prices := map[string]float64{
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
@@ -242,7 +242,7 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) func(http.ResponseWriter, *
 }
 
 // Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -283,7 +283,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) func(http.ResponseWrit
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -304,7 +304,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) func(http.ResponseWrit
 }
 
 // Handler for: "/api/service_accounts/{id}"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, err := strconv.ParseInt(idStr, 10, 32)
@@ -328,7 +328,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/api/api_keys"
-func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			req := &schedv1.CreateApiKeyRequest{}
@@ -374,7 +374,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) func(w http.ResponseWriter, r 
 }
 
 // Handler for: "/api/api_keys/{key}"
-func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		keyStr := vars["key"]
@@ -413,7 +413,7 @@ func (c *CloudRouter) HandleApiKey(t *testing.T) func(w http.ResponseWriter, r *
 }
 
 // Handler for: "api/env_metadata"
-func (c *CloudRouter) HandleEnvMetadata(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clouds := []*schedv1.CloudMetadata{
 			{
@@ -470,7 +470,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) func(w http.ResponseWriter
 }
 
 // Handler for: "/api/ksqls"
-func (c *CloudRouter) HandleKsqls(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",
@@ -509,7 +509,7 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) func(http.ResponseWriter, *http.
 }
 
 // Handler for: "/api/ksqls/{id}"
-func (c *CloudRouter) HandleKsql(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ksqlId := vars["id"]
@@ -554,7 +554,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) func(http.ResponseWriter, *http.R
 }
 
 // Handler for: "/api/users"
-func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
@@ -598,7 +598,7 @@ func (c *CloudRouter) HandleUsers(t *testing.T) func(http.ResponseWriter, *http.
 }
 
 // Handler for: "/api/user_profiles/{id}"
-func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
@@ -662,7 +662,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) func(http.ResponseWriter,
 }
 
 // Handler for: "/api/organizations/{id}/invites"
-func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		body, _ := ioutil.ReadAll(r.Body)
 		bs := string(body)
@@ -687,7 +687,7 @@ func (c *CloudRouter) HandleInvite(t *testing.T) func(http.ResponseWriter, *http
 }
 
 // Handler for: "/api/invitations"
-func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
@@ -722,28 +722,28 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) func(http.ResponseWriter, 
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-func (c *CloudRouter) HandleConnector() func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnector() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-func (c *CloudRouter) HandleConnectorPause() func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorPause() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 //Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-func (c *CloudRouter) HandleConnectorResume() func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectorResume() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors"
-func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["env"]
@@ -783,7 +783,7 @@ func (c *CloudRouter) HandleConnectors(t *testing.T) func(http.ResponseWriter, *
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors-plugins"
-func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandlePlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			connectorPlugin1 := &opv1.ConnectorPluginInfo{
@@ -803,7 +803,7 @@ func (c *CloudRouter) HandlePlugins(t *testing.T) func(http.ResponseWriter, *htt
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
-func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectCatalog(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		configInfos := &opv1.ConfigInfos{
 			Name:       "",
@@ -868,14 +868,14 @@ func (c *CloudRouter) HandleConnectCatalog(t *testing.T) func(http.ResponseWrite
 }
 
 // Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-func (c *CloudRouter) HandleConnectUpdate() func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleConnectUpdate() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
-func (c CloudRouter) HandleV2Authenticate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
