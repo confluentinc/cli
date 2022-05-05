@@ -20,7 +20,7 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <subject>",
 		Short: "Describe subject versions.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,

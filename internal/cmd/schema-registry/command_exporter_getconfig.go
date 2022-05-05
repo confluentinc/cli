@@ -12,7 +12,7 @@ func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
 		Use:   "get-config <name>",
 		Short: "Get the configurations of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.getConfig),
+		RunE:  c.getConfig,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

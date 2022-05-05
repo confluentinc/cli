@@ -25,7 +25,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",

@@ -672,10 +672,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := errors.NotLoggedInErrorMsg
 	require.Error(t, err)
-	require.Equal(t, want, err.Error())
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, errors.NotLoggedInSuggestions)
+	require.Equal(t, errors.NotLoggedInErrorMsg, err.Error())
 }
 
 /*************** TEST command_links ***************/

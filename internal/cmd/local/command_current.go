@@ -27,7 +27,7 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runCurrentCommand)
+	c.Command.RunE = c.runCurrentCommand
 	return c.Command
 }
 

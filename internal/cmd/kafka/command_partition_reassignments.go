@@ -18,7 +18,7 @@ func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
 		Short: "Get ongoing replica reassignments.",
 		Long:  "Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.getReassignments),
+		RunE:  c.getReassignments,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Get all replica reassignments for the Kafka cluster.",

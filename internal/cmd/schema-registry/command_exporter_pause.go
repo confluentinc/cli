@@ -13,7 +13,7 @@ func (c *exporterCommand) newPauseCommand() *cobra.Command {
 		Use:   "pause <name>",
 		Short: "Pause schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.pause),
+		RunE:  c.pause,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

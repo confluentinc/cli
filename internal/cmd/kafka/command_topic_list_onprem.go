@@ -12,7 +12,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremList),
+		RunE:  c.onPremList,
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{

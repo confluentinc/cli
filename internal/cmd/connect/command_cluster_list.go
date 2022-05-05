@@ -12,7 +12,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 		Short: "List registered Connect clusters.",
 		Long:  "List Connect clusters that are registered with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

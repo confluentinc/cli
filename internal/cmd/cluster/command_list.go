@@ -22,9 +22,8 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Long:  "List clusters that are registered with the MDS cluster registry.",
 	}
 
-	c := &listCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-
-	c.RunE = pcmd.NewCLIRunE(c.list)
+	c := &listCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
+	c.RunE = c.list
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(c.Command)

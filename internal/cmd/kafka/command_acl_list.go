@@ -19,7 +19,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka ACLs for a resource.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	cmd.Flags().AddFlagSet(resourceFlags())

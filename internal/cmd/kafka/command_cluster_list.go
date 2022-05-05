@@ -19,9 +19,9 @@ var (
 func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Args:  cobra.NoArgs,
 		Short: "List Kafka clusters.",
-		RunE:  pcmd.NewCLIRunE(c.list),
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 	}
 
 	cmd.Flags().Bool("all", false, "List clusters across all environments.")

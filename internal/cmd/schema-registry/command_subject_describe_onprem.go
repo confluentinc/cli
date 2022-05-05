@@ -15,7 +15,7 @@ func (c *subjectCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Use:         "describe <subject>",
 		Short:       "Describe subject versions.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		RunE:        c.onPremDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

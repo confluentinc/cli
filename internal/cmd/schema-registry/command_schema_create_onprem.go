@@ -18,7 +18,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:         "create",
 		Short:       "Create a schema.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:        c.onPremCreate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

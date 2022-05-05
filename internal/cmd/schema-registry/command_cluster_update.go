@@ -18,7 +18,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Use:         "update",
 		Short:       "Update global mode or compatibility of Schema Registry.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.update),
+		RunE:        c.update,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

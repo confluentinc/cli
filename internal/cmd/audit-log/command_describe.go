@@ -46,7 +46,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.RunE = pcmd.NewCLIRunE(c.describe)
+	c.RunE = c.describe
 
 	pcmd.AddOutputFlag(c.Command)
 

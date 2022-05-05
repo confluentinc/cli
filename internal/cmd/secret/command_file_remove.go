@@ -3,7 +3,6 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -12,7 +11,7 @@ func (c *command) newRemoveCommand() *cobra.Command {
 		Use:   "remove",
 		Short: "Remove values from a configuration properties file.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.remove),
+		RunE:  c.remove,
 	}
 
 	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")
