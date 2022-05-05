@@ -73,15 +73,15 @@ func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCe
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudLoginToConfig(config *v1.Config, email, url, token, refreshToken string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
-	ctxName := GenerateCloudContextName(email, url)
+func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
+	ctxName := GenerateCloudContextName(credentials.Username, url)
 	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, nil, err
 	}
-	state := getCCloudContextState(config, ctxName, token, refreshToken, user)
+	state := getCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
+	err = addOrUpdateContext(config, ctxName, credentials.Username, url, state, "", user.Organization.ResourceId)
 	return state.Auth.Account, user.Organization, err
 }
 

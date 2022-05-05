@@ -9,13 +9,13 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.1071.0
+	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.104
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
@@ -153,9 +154,15 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			utils.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", fEmailName.Responses["email"].(string))
 			continue
 		}
-		var token string
-		var err error
-		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string), org.ResourceId); err != nil {
+
+		req := &flowv1.AuthenticateRequest{
+			Email:         fEmailName.Responses["email"].(string),
+			Password:      fOrgPswdTosPri.Responses["password"].(string),
+			OrgResourceId: org.ResourceId,
+		}
+
+		res, err := client.Auth.Login(context.Background(), req)
+		if err != nil {
 			if err.Error() == "username or password is invalid" {
 				utils.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
@@ -165,8 +172,13 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
 
-		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), token, client.BaseURL)
-		_, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, "", authorizedClient)
+		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
+		credentials := &pauth.Credentials{
+			Username:         fEmailName.Responses["email"].(string),
+			AuthToken:        res.Token,
+			AuthRefreshToken: res.RefreshToken,
+		}
+		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
