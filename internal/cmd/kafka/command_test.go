@@ -1252,7 +1252,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
-			DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
+			DescribeFunc: func(_ context.Context, _ *orgv1.User) (*orgv1.User, error) {
 				return &orgv1.User{
 					Email: "csreesangkom@confluent.io",
 				}, nil
