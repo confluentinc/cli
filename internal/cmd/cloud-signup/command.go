@@ -40,7 +40,7 @@ func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.C
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
+	cmd.RunE = c.cloudSignupRunE
 
 	cmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 

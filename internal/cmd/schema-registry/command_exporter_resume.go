@@ -13,7 +13,7 @@ func (c *exporterCommand) newResumeCommand() *cobra.Command {
 		Use:   "resume <name>",
 		Short: "Resume schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.resume),
+		RunE:  c.resume,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

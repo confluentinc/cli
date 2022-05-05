@@ -14,7 +14,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 		Short: "List Kafka partitions.",
 		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the partitions of topic "my_topic".`,

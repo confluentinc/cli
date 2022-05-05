@@ -10,7 +10,6 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -26,7 +25,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Use:   "update",
 		Short: "Update the active payment method.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 	}
 }
 

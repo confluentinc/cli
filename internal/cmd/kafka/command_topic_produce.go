@@ -35,7 +35,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		prerunner:           prerunner,
 		clientID:            clientId,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.produce)
+	cmd.RunE = c.produce
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")

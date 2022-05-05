@@ -32,18 +32,19 @@ var (
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list <quota-scope>",
-		Short:   "List Confluent Cloud service quota limits by a scope.",
-		Long:    "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
-		Example: "list environment",
-		Args:    cobra.ExactArgs(1),
-		RunE:    pcmd.NewCLIRunE(c.list),
+		Use:   "list <quota-scope>",
+		Short: "List Confluent Cloud service quota limits by a scope.",
+		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.list,
 	}
+
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("quota-code", "", "Filter the result by quota code.")
 	cmd.Flags().String("network", "", "Filter the result by network id.")
 	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 

@@ -13,7 +13,7 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 		Use:   "delete <name>",
 		Short: "Delete schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

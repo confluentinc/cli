@@ -16,7 +16,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Use:         "update <id>",
 		Short:       "Update a connector configuration.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.update),
+		RunE:        c.update,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

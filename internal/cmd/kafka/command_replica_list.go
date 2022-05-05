@@ -12,13 +12,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (replicaCommand *replicaCommand) newListCommand() *cobra.Command {
+func (c *replicaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka replica statuses.",
 		Long:  "List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the replica statuses for partition 1 of topic "my_topic".`,
@@ -41,12 +41,12 @@ func (replicaCommand *replicaCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	topic, partitionId, err := readFlagValues(cmd)
 	if err != nil {
 		return err
 	}
-	restClient, restContext, err := initKafkaRest(replicaCommand.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}

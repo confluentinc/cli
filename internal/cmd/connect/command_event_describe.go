@@ -38,7 +38,7 @@ func (c *eventCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe the Connect log events configuration.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)

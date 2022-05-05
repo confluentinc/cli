@@ -20,7 +20,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe top-level or subject-level schema compatibility.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of subject "payments".`,

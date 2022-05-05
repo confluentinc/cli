@@ -32,7 +32,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
-		RunE:  pcmd.NewCLIRunE(c.store),
+		RunE:  c.store,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pass the API key and secret as arguments",

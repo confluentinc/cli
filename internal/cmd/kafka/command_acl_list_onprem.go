@@ -13,7 +13,7 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listOnPrem),
+		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",

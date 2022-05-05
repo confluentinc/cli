@@ -18,7 +18,7 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 		Short: "Submits audit-log config spec object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 	}
 
 	cmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")

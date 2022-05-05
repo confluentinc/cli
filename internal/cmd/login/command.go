@@ -62,7 +62,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		authTokenHandler:         authTokenHandler,
 		isTest:                   isTest,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.login)
+	cmd.RunE = c.login
 
 	return cmd
 }

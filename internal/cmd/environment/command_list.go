@@ -25,7 +25,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Confluent Cloud environments.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

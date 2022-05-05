@@ -16,7 +16,7 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		Use:   "update <name>",
 		Short: "Update configs or information of schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",

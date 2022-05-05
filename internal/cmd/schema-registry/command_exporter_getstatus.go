@@ -20,7 +20,7 @@ func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
 		Use:   "get-status <name>",
 		Short: "Get the status of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.getStatus),
+		RunE:  c.getStatus,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)

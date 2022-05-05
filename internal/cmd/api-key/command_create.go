@@ -27,7 +27,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Short: "Create API keys for a given resource.",
 		Long:  `Create API keys for a given resource. A resource is some Confluent product or service for which an API key can be created, for example ksqlDB application ID, or "cloud" to create a Cloud API key.`,
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an API key with full access to cluster "lkc-123456":`,

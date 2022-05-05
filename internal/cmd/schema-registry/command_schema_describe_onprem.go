@@ -15,8 +15,8 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
-		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
-		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		PreRunE:     c.preDescribe,
+		RunE:        c.onPremDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

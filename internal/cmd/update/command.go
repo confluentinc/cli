@@ -51,7 +51,7 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 		client:     client,
 	}
 
-	c.RunE = pcmd.NewCLIRunE(c.update)
+	c.RunE = c.update
 
 	return c.Command
 }

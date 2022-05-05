@@ -67,7 +67,7 @@ func NewServiceLogCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceLogCommand)
+	c.Command.RunE = c.runServiceLogCommand
 	c.Command.Flags().BoolP("follow", "f", false, "Log additional output until the command is interrupted.")
 
 	return c.Command
@@ -112,7 +112,7 @@ func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Comm
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStartCommand)
+	c.Command.RunE = c.runServiceStartCommand
 	c.Command.Flags().StringP("config", "c", "", fmt.Sprintf("Configure %s with a specific properties file.", writeOfficialServiceName(service)))
 
 	return c.Command
@@ -147,7 +147,7 @@ func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Com
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStatusCommand)
+	c.Command.RunE = c.runServiceStatusCommand
 	return c.Command
 }
 
@@ -169,7 +169,7 @@ func NewServiceStopCommand(service string, prerunner cmd.PreRunner) *cobra.Comma
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceStopCommand)
+	c.Command.RunE = c.runServiceStopCommand
 	return c.Command
 }
 
@@ -197,7 +197,7 @@ func NewServiceTopCommand(service string, prerunner cmd.PreRunner) *cobra.Comman
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceTopCommand)
+	c.Command.RunE = c.runServiceTopCommand
 	return c.Command
 }
 
@@ -228,7 +228,7 @@ func NewServiceVersionCommand(service string, prerunner cmd.PreRunner) *cobra.Co
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServiceVersionCommand)
+	c.Command.RunE = c.runServiceVersionCommand
 
 	return c.Command
 }

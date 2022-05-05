@@ -34,7 +34,7 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 		Long:              longText,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(runCommand),
+		RunE:              runCommand,
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")

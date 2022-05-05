@@ -14,7 +14,7 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 		Short: "Describe a Kafka partition.",
 		Long:  "Describe a Kafka partition via Confluent Kafka REST.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe partition "1" for topic "my_topic".`,
