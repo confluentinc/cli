@@ -1,0 +1,21 @@
+Error: required flag(s) "cloud" not set
+Usage:
+  confluent stream-governance enable [flags]
+
+Examples:
+Enable Stream Governance, using AWS in us-east-2 region with 'advanced' package for environment 'env-00000'
+
+  $ confluent stream-governance enable --cloud aws --region us-east-2 --package advanced --environment env-00000
+
+Flags:
+      --package string       REQUIRED: Specify the type of Stream Governance package as (essentials, advanced).
+      --cloud string         REQUIRED: Cloud provider (aws, azure, gcp).
+      --region string        REQUIRED: Cloud region name (use "confluent stream-governance region list" to see all).
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

@@ -1,0 +1,9 @@
+{
+  "display_name": "lsrc-1234",
+  "endpoint_url": "https://sr-endpoint",
+  "environment": "env-srUpdate",
+  "package": "advanced",
+  "cloud": "aws",
+  "region": "Ohio (us-east-2)",
+  "status": "PROVISIONED"
+}

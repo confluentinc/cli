@@ -1,0 +1,5 @@
+Error: "invalid-cloud" is not an available cloud provider.
+
+Suggestions:
+    Please provide a supported cloud provider.
+    You can use "confluent stream-governance region list" to see all the supported cloud providers and regions.
