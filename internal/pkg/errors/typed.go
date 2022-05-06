@@ -194,20 +194,3 @@ func (e *StreamGovernanceNotEnabledError) Error() string {
 func (e *StreamGovernanceNotEnabledError) UserFacingError() error {
 	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
 }
-
-type StreamGovernanceInvalidRegionError struct {
-	ErrorMsg       string
-	SuggestionsMsg string
-}
-
-func NewStreamGovernanceInvalidRegionError() CLITypedError {
-	return &StreamGovernanceInvalidRegionError{ErrorMsg: SGInvalidRegionErrorMsg, SuggestionsMsg: SGInvalidRegionSuggestions}
-}
-
-func (e *StreamGovernanceInvalidRegionError) Error() string {
-	return e.ErrorMsg
-}
-
-func (e *StreamGovernanceInvalidRegionError) UserFacingError() error {
-	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
-}

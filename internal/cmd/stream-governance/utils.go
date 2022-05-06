@@ -44,7 +44,8 @@ func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, pac
 
 	regionArr := regionList.GetData()
 	if len(regionArr) == 0 {
-		return nil, errors.NewStreamGovernanceInvalidRegionError()
+		return nil, errors.NewErrorWithSuggestions(errors.SGInvalidRegionErrorMsg,
+			errors.SGInvalidRegionSuggestions)
 	}
 
 	return &regionArr[0], nil

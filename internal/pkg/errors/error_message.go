@@ -215,6 +215,9 @@ const (
 	SGInvalidRegionErrorMsg    = "No supported cloud region found for the provided inputs"
 	SGInvalidRegionSuggestions = "Please provide a valid and supported cloud region.\n" +
 		"You can use \"confluent stream-governance region list\" to see all the supported regions."
+	SGCloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider."
+	SGCloudProviderNotAvailableSuggestions = "Please provide a supported cloud provider.\n" +
+		"You can use \"confluent stream-governance region list\" to see all the supported cloud providers and regions."
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

@@ -3,9 +3,11 @@ package streamgovernance
 import (
 	"context"
 	"fmt"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -54,6 +56,15 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	clouds, err := c.Client.EnvironmentMetadata.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := checkCloudProvider(cloud, clouds); err != nil {
+		return err
+	}
+
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
@@ -72,7 +83,7 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 	newClusterRequest := c.createNewStreamGovernanceClusterRequest(streamGovernanceV2Region, packageType)
 
 	//TODO: remove this line
-	PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
+	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
 	newClusterResponse, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
 		CreateStreamGovernanceV2Cluster(ctx).StreamGovernanceV2Cluster(*newClusterRequest).Execute()
 
@@ -102,4 +113,14 @@ func (c *streamGovernanceCommand) createNewStreamGovernanceClusterRequest(
 	newClusterRequest.SetSpec(*spec)
 
 	return newClusterRequest
+}
+
+func checkCloudProvider(cloudId string, clouds []*schedv1.CloudMetadata) error {
+	for _, cloud := range clouds {
+		if cloudId == cloud.Id {
+			return nil
+		}
+	}
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SGCloudProviderNotAvailableErrorMsg, cloudId),
+		errors.SGCloudProviderNotAvailableSuggestions)
 }
