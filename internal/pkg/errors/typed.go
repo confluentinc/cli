@@ -177,3 +177,20 @@ func (e *MDSV2Alpha1ErrorType2Array) Error() string {
 func (e *MDSV2Alpha1ErrorType2Array) UserFacingError() error {
 	return Errorf(ParsedGenericOpenAPIErrorMsg, e.Error())
 }
+
+type StreamGovernanceNotEnabledError struct {
+	ErrorMsg       string
+	SuggestionsMsg string
+}
+
+func NewStreamGovernanceNotEnabledError() CLITypedError {
+	return &StreamGovernanceNotEnabledError{ErrorMsg: SGNotEnabledErrorMsg, SuggestionsMsg: SGNotEnabledSuggestions}
+}
+
+func (e *StreamGovernanceNotEnabledError) Error() string {
+	return e.ErrorMsg
+}
+
+func (e *StreamGovernanceNotEnabledError) UserFacingError() error {
+	return NewErrorWithSuggestions(e.ErrorMsg, e.SuggestionsMsg)
+}

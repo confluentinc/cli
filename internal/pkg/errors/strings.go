@@ -98,6 +98,9 @@ const (
 	NoSubjectsMsg                       = "No subjects."
 	NoExporterMsg                       = "No exporters."
 
+	// stream-governance commands
+	StreamGovernanceClusterDeletedMsg = "Deleted Stream Governance cluster for environment \"%s\".\n"
+
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
 

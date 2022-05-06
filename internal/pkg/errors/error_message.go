@@ -211,6 +211,17 @@ const (
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
+	// stream-governance commands
+	SGNotEnabledErrorMsg    = "Stream Governance not enabled"
+	SGNotEnabledSuggestions = "Stream Governance must be enabled for the environment in order to run the command.\n" +
+		"You can enable Stream Governance for this environment with `confluent stream-governance enable`."
+	SGInvalidRegionErrorMsg    = "No supported cloud region found for the provided inputs"
+	SGInvalidRegionSuggestions = "Please provide a valid and supported cloud region.\n" +
+		"You can use \"confluent stream-governance region list\" to see all the supported regions."
+	SGCloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider."
+	SGCloudProviderNotAvailableSuggestions = "Please provide a supported cloud provider.\n" +
+		"You can use \"confluent stream-governance region list\" to see all the supported cloud providers and regions."
+
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
 	PipeInputTypeErrorMsg     = "pipe %s over stdin"
