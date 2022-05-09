@@ -1,0 +1,5 @@
+Error: No supported cloud region found for the provided inputs
+
+Suggestions:
+    Please provide a valid and supported cloud region.
+    You can use "confluent stream-governance region list" to see all the supported regions.
