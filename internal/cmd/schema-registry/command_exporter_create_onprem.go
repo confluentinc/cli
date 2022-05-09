@@ -1,8 +1,11 @@
 package schemaregistry
 
 import (
+	"fmt"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +19,7 @@ func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
-				Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}

@@ -2,7 +2,9 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
 
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -22,7 +24,7 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
-				Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
