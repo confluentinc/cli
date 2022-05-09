@@ -55,7 +55,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -234,7 +234,7 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -411,7 +411,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -506,7 +506,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				return ccloudCreds, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -720,7 +720,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 					return nil, nil
 				}
 			},
-			GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+			GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}
