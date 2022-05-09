@@ -1,6 +1,9 @@
 package schemaregistry
 
 import (
+	"context"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -26,14 +29,16 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	if _, err = srClient.DefaultApi.DeleteExporter(ctx, name); err != nil {
+	return deleteExporter(cmd, args[0], srClient, ctx)
+}
+
+func deleteExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+	if _, err := srClient.DefaultApi.DeleteExporter(ctx, name); err != nil {
 		return err
 	}
 
