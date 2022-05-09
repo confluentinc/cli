@@ -1,0 +1,9 @@
++--------------+---------------------+
+| Display Name | lsrc-1234           |
+| Endpoint URL | https://sr-endpoint |
+| Package      | advanced            |
+| Environment  | env-srUpdate        |
+| Cloud        | aws                 |
+| Region       | Ohio (us-east-2)    |
+| Status       | PROVISIONED         |
++--------------+---------------------+

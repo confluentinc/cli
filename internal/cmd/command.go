@@ -30,6 +30,7 @@ import (
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	"github.com/confluentinc/cli/internal/cmd/secret"
 	servicequota "github.com/confluentinc/cli/internal/cmd/service-quota"
+	streamgovernance "github.com/confluentinc/cli/internal/cmd/stream-governance"
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -112,6 +113,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd))
+	cmd.AddCommand(streamgovernance.New(cfg, prerunner))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
