@@ -9,21 +9,33 @@ import (
 	"testing"
 )
 
+const (
+	id                = "lsrc-1234"
+	httpEndpoint      = "https://sr-endpoint"
+	status            = "PROVISIONED"
+	packageType       = "advanced"
+	regionId          = "sgreg=1"
+	cloud             = "aws"
+	regionName        = "us-east-2"
+	regionDisplayName = "Ohio (us-east-2)"
+)
+
 func handleStreamGovernanceClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		req := new(sgsdk.StreamGovernanceV2Cluster)
-		err := json.NewDecoder(r.Body).Decode(req)
-		require.NoError(t, err)
+		if r.Method == http.MethodPost {
+			req := new(sgsdk.StreamGovernanceV2Cluster)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
 
-		id := "lsrc-1234"
-		regionId := "sgreg-1"
-		httpEndpoint := "https://sr-endpoint"
-		status := "PROVISIONED"
-		sgCluster := getStreamGovernanceCluster(id, *req.Spec.Package, httpEndpoint, SRApiEnvId, regionId, status)
-
-		err = json.NewEncoder(w).Encode(sgCluster)
-		require.NoError(t, err)
+			sgCluster := getStreamGovernanceCluster(id, *req.Spec.Package, httpEndpoint, SRApiEnvId, regionId, status)
+			err = json.NewEncoder(w).Encode(sgCluster)
+			require.NoError(t, err)
+		} else if r.Method == http.MethodGet {
+			sgClusterList := getStreamGovernanceClusterList()
+			err := json.NewEncoder(w).Encode(sgClusterList)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -31,11 +43,6 @@ func handleStreamGovernanceCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
-
-		regionId := "sgreg-1"
-		packageType := "advanced"
-		httpEndpoint := "https://sr-endpoint"
-		status := "PROVISIONED"
 
 		sgCluster := getStreamGovernanceCluster(id, packageType, httpEndpoint, SRApiEnvId, regionId, status)
 		err := json.NewEncoder(w).Encode(sgCluster)
@@ -62,9 +69,9 @@ func handleStreamGovernanceRegion(t *testing.T) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 
 		switch id {
-		case "sgreg-1":
+		case regionId:
 			sgRegion := getStreamGovernanceRegion(
-				id, "us-east-2", "aws", "advanced", "Ohio (us-east-2)")
+				id, regionName, cloud, packageType, regionDisplayName)
 			err := json.NewEncoder(w).Encode(sgRegion)
 			require.NoError(t, err)
 		default:
@@ -93,12 +100,21 @@ func getStreamGovernanceCluster(id, packageType, endpoint, envId, regionId, stat
 	}
 }
 
-func getStreamGovernanceRegionList(cloud, region string) sgsdk.StreamGovernanceV2RegionList {
+func getStreamGovernanceClusterList() sgsdk.StreamGovernanceV2ClusterList {
+	sgClusterList := sgsdk.StreamGovernanceV2ClusterList{
+		Data: []sgsdk.StreamGovernanceV2Cluster{
+			getStreamGovernanceCluster(id, packageType, httpEndpoint, SRApiEnvId, regionId, status)},
+	}
+
+	return sgClusterList
+}
+
+func getStreamGovernanceRegionList(filterCloud, filterRegion string) sgsdk.StreamGovernanceV2RegionList {
 	sgRegionList := sgsdk.StreamGovernanceV2RegionList{
 		Data: []sgsdk.StreamGovernanceV2Region{
-			getStreamGovernanceRegion("sgreg-1", "us-east-2", "aws", "advanced", "Ohio (us-east-2)")},
+			getStreamGovernanceRegion(regionId, regionName, cloud, packageType, regionDisplayName)},
 	}
-	sgRegionList.Data = filterRegionList(sgRegionList.Data, cloud, region)
+	sgRegionList.Data = filterRegionList(sgRegionList.Data, filterCloud, filterRegion)
 
 	return sgRegionList
 }

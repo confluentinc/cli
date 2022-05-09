@@ -40,19 +40,28 @@ func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, pac
 }
 
 func (c *streamGovernanceCommand) getStreamGovernanceV2ClusterIdForEnvironment(context context.Context) (string, error) {
-	clusterList, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
-		ListStreamGovernanceV2Clusters(context).Environment(c.EnvironmentId()).Execute()
-
+	cluster, err := c.getStreamGovernanceV2ClusterForEnvironment(context)
 	if err != nil {
 		return "", err
 	}
 
-	clusterArr := clusterList.GetData()
-	if len(clusterArr) == 0 {
-		return "", errors.NewStreamGovernanceNotEnabledError()
+	return cluster.GetId(), nil
+}
+
+func (c *streamGovernanceCommand) getStreamGovernanceV2ClusterForEnvironment(context context.Context) (*sgsdk.StreamGovernanceV2Cluster, error) {
+	clusterList, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
+		ListStreamGovernanceV2Clusters(context).Environment(c.EnvironmentId()).Execute()
+
+	if err != nil {
+		return nil, err
 	}
 
-	return clusterArr[0].GetId(), nil
+	clusterArr := clusterList.GetData()
+	if len(clusterArr) == 0 {
+		return nil, errors.NewStreamGovernanceNotEnabledError()
+	}
+
+	return &clusterArr[0], nil
 }
 
 func (c *streamGovernanceCommand) getStreamGovernanceV2RegionFromId(regionId string) (*sgsdk.StreamGovernanceV2Region, error) {

@@ -82,16 +82,27 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 
 	newClusterRequest := c.createNewStreamGovernanceClusterRequest(streamGovernanceV2Region, packageType)
 
-	//TODO: remove this line
-	//PrintStreamGovernanceClusterOutput(cmd, *newClusterRequest, *streamGovernanceV2Region)
 	newClusterResponse, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
 		CreateStreamGovernanceV2Cluster(ctx).StreamGovernanceV2Cluster(*newClusterRequest).Execute()
 
 	if err != nil {
-		return err
+		existingCluster, getExistingErr := c.getStreamGovernanceV2ClusterForEnvironment(ctx)
+		if getExistingErr != nil {
+			return err
+		}
+
+		spec := existingCluster.GetSpec()
+		regionSpec := spec.GetRegion()
+		existingRegion, getRegionErr := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId())
+		if getRegionErr != nil {
+			return getRegionErr
+		}
+
+		PrintStreamGovernanceClusterOutput(cmd, *existingCluster, *existingRegion)
+	} else {
+		PrintStreamGovernanceClusterOutput(cmd, newClusterResponse, *streamGovernanceV2Region)
 	}
 
-	PrintStreamGovernanceClusterOutput(cmd, newClusterResponse, *streamGovernanceV2Region)
 	return nil
 }
 

@@ -10,10 +10,12 @@ func (s *CLITestSuite) TestStreamGovernance() {
 	tests := []CLITest{
 		{
 			args:    "stream-governance --help",
-			fixture: "stream-governance/help.golden"},
+			fixture: "stream-governance/help.golden",
+		},
 		{
 			args:    "stream-governance describe  --environment=" + testserver.SRApiEnvId,
-			fixture: "stream-governance/describe.golden"},
+			fixture: "stream-governance/describe.golden",
+		},
 		{
 			args:    "stream-governance enable --cloud aws --region us-east-2 --package advanced --environment=" + testserver.SRApiEnvId,
 			fixture: "stream-governance/enable-human.golden",
