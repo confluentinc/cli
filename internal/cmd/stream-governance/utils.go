@@ -3,7 +3,6 @@ package streamgovernance
 import (
 	"context"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
@@ -18,17 +17,6 @@ var (
 		"SchemaRegistryEndpoint": "endpoint_url", "Environment": "environment", "Package": "package", "Cloud": "cloud",
 		"Region": "region", "Status": "status"}
 )
-
-func (c *streamGovernanceCommand) getClusterIdFromEnvironment(context context.Context) (string, error) {
-	ctxClient := dynamicconfig.NewContextClient(c.Context)
-	clusterInfo, err := ctxClient.FetchSchemaRegistryByAccountId(context, c.EnvironmentId())
-	if err != nil {
-		return "", err
-	}
-
-	clusterId := clusterInfo.GetId()
-	return clusterId, nil
-}
 
 func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, packageType string) (*sgsdk.StreamGovernanceV2Region, error) {
 	ctx := context.Background()
@@ -49,6 +37,22 @@ func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, pac
 	}
 
 	return &regionArr[0], nil
+}
+
+func (c *streamGovernanceCommand) getStreamGovernanceV2ClusterIdForEnvironment(context context.Context) (string, error) {
+	clusterList, _, err := c.V2Client.StreamGovernanceClient.ClustersStreamGovernanceV2Api.
+		ListStreamGovernanceV2Clusters(context).Environment(c.EnvironmentId()).Execute()
+
+	if err != nil {
+		return "", err
+	}
+
+	clusterArr := clusterList.GetData()
+	if len(clusterArr) == 0 {
+		return "", errors.NewStreamGovernanceNotEnabledError()
+	}
+
+	return clusterArr[0].GetId(), nil
 }
 
 func (c *streamGovernanceCommand) getStreamGovernanceV2RegionFromId(regionId string) (*sgsdk.StreamGovernanceV2Region, error) {

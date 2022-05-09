@@ -6,7 +6,6 @@ import (
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/spf13/cobra"
@@ -43,9 +42,9 @@ func (c *streamGovernanceCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Comma
 func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
-	clusterId, err := c.getClusterIdFromEnvironment(ctx)
+	clusterId, err := c.getStreamGovernanceV2ClusterIdForEnvironment(ctx)
 	if err != nil {
-		return errors.NewStreamGovernanceNotEnabledError()
+		return err
 	}
 
 	// Collect the parameter

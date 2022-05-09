@@ -41,9 +41,9 @@ func (c *streamGovernanceCommand) newDeleteCommand(cfg *v1.Config) *cobra.Comman
 func (c *streamGovernanceCommand) delete(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
-	clusterId, err := c.getClusterIdFromEnvironment(ctx)
+	clusterId, err := c.getStreamGovernanceV2ClusterIdForEnvironment(ctx)
 	if err != nil {
-		return errors.NewStreamGovernanceNotEnabledError()
+		return err
 	}
 
 	isDeleteConfirmed, err := deleteConfirmation(cmd, c.EnvironmentId())
