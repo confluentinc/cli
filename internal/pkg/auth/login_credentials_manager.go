@@ -70,7 +70,7 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
-	// Only for Confluent Prerun login
+	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
@@ -153,6 +153,19 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*
 }
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
+
+		// For `confluent login`, only retrieve credentials from the config file if SSO (prevents a breaking change)
+		if credentials.IsSSO {
+			return credentials, nil
+		}
+
+		return nil, nil
+	}
+}
+
+func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		ctx := cfg.Context()
 		if ctx == nil {
