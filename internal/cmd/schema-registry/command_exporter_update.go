@@ -1,6 +1,8 @@
 package schemaregistry
 
 import (
+	"context"
+
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -44,13 +46,15 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
 	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
+	return updateExporter(cmd, args[0], srClient, ctx)
+}
+
+func updateExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
 		return err
@@ -70,12 +74,12 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		updateRequest.ContextType = contextType
 	}
 
-	context, err := cmd.Flags().GetString("context-name")
+	contextName, err := cmd.Flags().GetString("context-name")
 	if err != nil {
 		return err
 	}
-	if context != "" {
-		updateRequest.Context = context
+	if contextName != "" {
+		updateRequest.Context = contextName
 	}
 
 	subjects, err := cmd.Flags().GetStringSlice("subjects")
