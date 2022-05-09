@@ -1,6 +1,8 @@
 package schemaregistry
 
 import (
+	"context"
+
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -14,7 +16,7 @@ import (
 func (c *exporterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create new schema exporter.",
+		Short: "Create a new schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -42,8 +44,15 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return err
+	}
 
+	return createExporter(cmd, args[0], srClient, ctx)
+}
+
+func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	subjects, err := cmd.Flags().GetStringSlice("subjects")
 	if err != nil {
 		return err
@@ -54,14 +63,9 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-
-	context := "."
+	contextName := "."
 	if contextType == "CUSTOM" {
-		context, err = cmd.Flags().GetString("context-name")
+		contextName, err = cmd.Flags().GetString("context-name")
 		if err != nil {
 			return err
 		}
@@ -92,7 +96,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		Subjects:            subjects,
 		SubjectRenameFormat: subjectFormat,
 		ContextType:         contextType,
-		Context:             context,
+		Context:             contextName,
 		Config:              configMap,
 	}
 
