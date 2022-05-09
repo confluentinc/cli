@@ -24,8 +24,8 @@ func (c *Client) mdsApiContext() context.Context {
 	return context.WithValue(context.Background(), mdsv2.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateIamRoleBinding(iamV2RoleBinding mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBinding, *http.Response, error) {
-	req := c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBinding(c.mdsApiContext()).IamV2RoleBinding(iamV2RoleBinding)
+func (c *Client) CreateIamRoleBinding(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBinding, *http.Response, error) {
+	req := c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBinding(c.mdsApiContext()).IamV2RoleBinding(*iamV2RoleBinding)
 	return c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBindingExecute(req)
 }
 
@@ -66,7 +66,10 @@ func (c *Client) executeListRoleBindings(pageToken, crnPattern, principal, roleN
 	return c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
 }
 
-func (c *Client) ListIamRoleBindingsNaive(crnPattern, principal, roleName string) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
+func (c *Client) ListIamRoleBindingsNaive(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
+	crnPattern := *iamV2RoleBinding.CrnPattern
+	principal := *iamV2RoleBinding.Principal
+	roleName := *iamV2RoleBinding.RoleName
 	req := c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern)
 	if principal != "" {
 		req = req.Principal(principal)

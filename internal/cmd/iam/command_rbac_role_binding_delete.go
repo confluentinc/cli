@@ -2,8 +2,10 @@ package iam
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -40,20 +42,29 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	deleteRoleBinding, err := c.parseRoleBinding(cmd)
+	if err != nil {
+		return err
+	}
+
 	isCloud := c.cfg.IsCloudLogin()
 
-	var resp *http.Response
+	var httpResp *http.Response
 	if isCloud {
-		resp, err = c.ccloudDelete(options)
+		httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
+		b, _ := io.ReadAll(httpResp.Body)
+		fmt.Println(string(b))
+		// resp, err = c.ccloudDelete(options)
 	} else {
-		resp, err = c.confluentDelete(options)
+		httpResp, err = c.confluentDelete(options)
 	}
 	if err != nil {
 		return err
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
+	// might be able to add catchers here, to print out more useful msgs. like 403: Either unauthorized to access role binding or role binding does not exist
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	if isCloud {
@@ -61,6 +72,24 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
+}
+
+func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) (*http.Response, error) {
+	// do we distinguish resource nil or not nil? // probably not. It's all in the crn
+	// maybe should not add the *? This is not listing everything but just one specific entry
+	fmt.Println(*deleteRoleBinding.CrnPattern)
+	resp, httpResp, err := c.V2Client.ListIamRoleBindingsNaive(deleteRoleBinding)
+	if err != nil {
+		return httpResp, err
+	}
+	if len(resp.Data) == 0 {
+		return httpResp, errors.New("No matching role-bindings found.")
+		// probably won't need this, the err code of resp will be caught anyway
+	}
+	id := *resp.Data[0].Id
+	// are you supposed to delete more than one at a time?
+	_, httpResp, err = c.V2Client.DeleteIamRoleBinding(id)
+	return httpResp, err
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {

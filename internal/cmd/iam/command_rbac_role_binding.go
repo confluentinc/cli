@@ -49,6 +49,9 @@ var (
 	}
 
 	dataplaneNamespace = optional.NewString("dataplane")
+
+	literalPatternType  = "LITERAL"
+	prefixedPatternType = "PREFIXED"
 )
 
 type roleBindingOptions struct {
@@ -604,11 +607,6 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 		return nil, err
 	}
 
-	resource, err := cmd.Flags().GetString("resource")
-	if err != nil {
-		return nil, err
-	}
-
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
@@ -634,11 +632,110 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 		}
 	}
 
-	// crnPattern := "crn://confluent.cloud"
-	crnPattern := parseCrnPattern()
+	crnPattern, err := c.parseCrnPattern(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+	if resource != "" { // add resource to the very end of crn
+		parts := strings.SplitN(resource, ":", 2)
+		if len(parts) != 2 {
+			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+		}
+		resourceType := parts[0]
+		resourceName := parts[1]
+
+		if role != "" {
+			if err := c.validateRoleAndResourceTypeV2(role, resourceType); err != nil {
+				fmt.Println("failed to validate role and resource")
+				return nil, err
+			}
+		} else {
+			if err := c.validateResourceTypeV2(resourceType); err != nil {
+				fmt.Println("failed to validate resource type")
+				return nil, err
+			}
+		}
+
+		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
+
+		if prefix {
+			crnPattern += "*"
+		}
+	}
+
 	return &mdsv2.IamV2RoleBinding{
 		Principal:  mdsv2.PtrString(principal),
 		RoleName:   mdsv2.PtrString(role),
-		CrnPattern: crnPattern,
+		CrnPattern: mdsv2.PtrString(crnPattern),
+	}, err
+}
+
+func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error) {
+	orgResourceId := c.State.Auth.Organization.GetResourceId()
+	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
+
+	if cmd.Flags().Changed("current-env") {
+		crnPattern += "/environment=" + c.EnvironmentId()
+	} else if cmd.Flags().Changed("environment") {
+		env, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/environment=" + env
 	}
+
+	if cmd.Flags().Changed("cloud-cluster") {
+		cluster, err := cmd.Flags().GetString("cloud-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/cloud-cluster=" + cluster
+	}
+
+	if cmd.Flags().Changed("kafka-cluster-id") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/kafka=" + kafkaCluster
+	}
+
+	if cmd.Flags().Changed("schema-registry-cluster-id") {
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/schema-registry=" + srCluster
+	}
+
+	if cmd.Flags().Changed("ksql-cluster-id") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/ksql=" + ksqlCluster
+	}
+
+	if cmd.Flags().Changed("role") {
+		role, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return "", err
+		}
+		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
+		}
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+			return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+		}
+	}
+
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+		return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+	}
+	return crnPattern, nil
 }

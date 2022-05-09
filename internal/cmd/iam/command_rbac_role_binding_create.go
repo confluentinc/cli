@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -49,17 +50,22 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	createRolebinding, err := c.parseRoleBinding(cmd)
+	createRoleBinding, err := c.parseRoleBinding(cmd)
 	if err != nil {
 		return err
 	}
+	fmt.Println(*createRoleBinding.Principal)
+	fmt.Println(*createRoleBinding.RoleName)
+	fmt.Println(*createRoleBinding.CrnPattern)
 
 	isCloud := c.cfg.IsCloudLogin()
 
 	var httpResp *http.Response
 	if isCloud {
 		// resp, err = c.ccloudCreate(options)
-		_, httpResp, err = c.V2Client.CreateIamRoleBinding(*createRolebinding)
+		_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
+		b, _ := io.ReadAll(httpResp.Body)
+		fmt.Println(string(b))
 	} else {
 		httpResp, err = c.confluentCreate(options)
 	}
@@ -67,7 +73,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 

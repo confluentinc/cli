@@ -108,24 +108,29 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	listRoleBinding, err := c.parseRoleBinding(cmd)
+	if err != nil {
+		return err
+	}
+
 	if c.cfg.IsCloudLogin() {
+		c.ccloudListV2(cmd, listRoleBinding)
 		return c.ccloudList(cmd, options)
 	} else {
 		return c.confluentList(cmd, options)
 	}
 }
 
-func (c *roleBindingCommand) ccloudList(cmd *cobra.Command, options *roleBindingOptions) error {
-	principal := options.principal
-	roleName := options.role
-	crnPattern, err := cmd.Flags().GetString("crn-pattern")
-	if err != nil {
-		return err
+func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
+		return c.listMyRoleBindingsV2(cmd, listRoleBinding)
+	} else if cmd.Flags().Changed("role") {
+		return c.ccloudListRolePrincipalsV2(cmd, listRoleBinding)
 	}
-	fmt.Println(principal, roleName, crnPattern)
-	lists, _, _ := c.V2Client.ListIamRoleBindingsNaive(crnPattern, principal, roleName)
-	c.printOutRoleBindings(cmd, lists.Data)
+	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
+}
 
+func (c *roleBindingCommand) ccloudList(cmd *cobra.Command, options *roleBindingOptions) error {
 	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
 		return c.listMyRoleBindings(cmd, options)
 	} else if cmd.Flags().Changed("role") {
@@ -480,7 +485,24 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) printOutRoleBindings(cmd *cobra.Command, data []mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	currentUser, err := cmd.Flags().GetBool("current-user")
+	if err != nil {
+		return err
+	}
+
+	if currentUser {
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.State.Auth.User.ResourceId)
+	}
+
+	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+
+	resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
+	if err != nil {
+		return err
+	}
+	roleBindings := resp.Data
+
 	userToEmailMap, err := c.userIdToEmailMap()
 	if err != nil {
 		return err
@@ -491,18 +513,119 @@ func (c *roleBindingCommand) printOutRoleBindings(cmd *cobra.Command, data []mds
 		return err
 	}
 
-	for i := 0; i < len(data); i++ {
-		principalName := *data[i].Principal
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return err
+	}
+
+	for _, rolebinding := range roleBindings {
+		roleName := *rolebinding.RoleName
+		if role != "" && role != roleName {
+			continue
+		}
+
+		principalName := *rolebinding.Principal
 		principalEmail := userToEmailMap[principalName]
-		roleName := *data[i].RoleName
-		fmt.Println(*data[i].CrnPattern)
+
+		crnPattern := *rolebinding.CrnPattern
+		fmt.Println(crnPattern)
+
+		var envName, cloudClusterName, clusterType, logicalCluster, resourceType, resourceName, patternType string
+		for _, elem := range strings.Split(crnPattern, "/") {
+			elemParts := strings.Split(elem, "=")
+			if len(elemParts) < 2 { // not a resource entry
+				continue
+			}
+
+			prefix := elemParts[0]
+			content := elemParts[1]
+
+			switch prefix {
+			case "organization":
+				continue
+			case "environment":
+				envName = content
+			case "cloud-cluster":
+				cloudClusterName = content
+			case "connector":
+				clusterType = "Connect"
+				logicalCluster = content
+			case "ksql":
+				clusterType = "ksqlDB"
+				logicalCluster = content
+			case "schema-registry":
+				clusterType = "Schema Registry"
+				logicalCluster = content
+			case "kafka":
+				clusterType = "Kafka"
+				logicalCluster = content
+			default:
+				resourceType = prefix
+				resourceName = content
+				if strings.HasSuffix(content, "*") {
+					patternType = prefixedPatternType
+					resourceName = strings.TrimSuffix(resourceName, "*")
+				} else {
+					patternType = literalPatternType
+				}
+			}
+		}
+
 		outputWriter.AddElement(&listDisplay{
-			Principal: principalName,
-			Email:     principalEmail,
-			Role:      roleName,
+			Principal:      principalName,
+			Email:          principalEmail,
+			Role:           roleName,
+			Environment:    envName,
+			CloudCluster:   cloudClusterName,
+			ClusterType:    clusterType,
+			LogicalCluster: logicalCluster,
+			ResourceType:   resourceType,
+			Name:           resourceName,
+			PatternType:    patternType,
 		})
 	}
 	outputWriter.StableSort()
 
+	return outputWriter.Out()
+}
+
+func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+
+	resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
+	if err != nil {
+		return err
+	}
+	roleBindings := resp.Data
+
+	principals := make([]string, len(roleBindings))
+
+	for i := 0; i < len(roleBindings); i++ {
+		principals[i] = *roleBindings[i].Principal
+	}
+
+	userToEmailMap, err := c.userIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	// only print out principals, and get email in map by principal
+	sort.Strings(principals)
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	if err != nil {
+		return err
+	}
+	for _, principal := range principals {
+		if email, ok := userToEmailMap[principal]; ok {
+			displayStruct := &struct {
+				Principal string
+				Email     string
+			}{
+				Principal: principal,
+				Email:     email,
+			}
+			outputWriter.AddElement(displayStruct)
+		}
+	}
 	return outputWriter.Out()
 }
