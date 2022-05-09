@@ -34,7 +34,7 @@ func newExporterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsd
 	cmd := &cobra.Command{
 		Use:         "exporter",
 		Short:       "Manage Schema Registry exporters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
 	c := &exporterCommand{srClient: srClient}
