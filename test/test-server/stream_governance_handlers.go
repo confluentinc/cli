@@ -2,7 +2,6 @@ package test_server
 
 import (
 	"encoding/json"
-	"fmt"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -47,12 +46,11 @@ func handleStreamGovernanceCluster(t *testing.T) http.HandlerFunc {
 func handleStreamGovernanceRegions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Println("Inside region method")
+		q := r.URL.Query()
+		cloud := q.Get("spec.cloud")
+		region := q.Get("spec.region_name")
 
-		sgRegionList := &sgsdk.StreamGovernanceV2RegionList{
-			Data: []sgsdk.StreamGovernanceV2Region{
-				getStreamGovernanceRegion("sgreg-1", "us-east-2", "aws", "advanced", "Ohio (us-east-2)")},
-		}
+		sgRegionList := getStreamGovernanceRegionList(cloud, region)
 		err := json.NewEncoder(w).Encode(sgRegionList)
 		require.NoError(t, err)
 	}
@@ -95,6 +93,16 @@ func getStreamGovernanceCluster(id, packageType, endpoint, envId, regionId, stat
 	}
 }
 
+func getStreamGovernanceRegionList(cloud, region string) sgsdk.StreamGovernanceV2RegionList {
+	sgRegionList := sgsdk.StreamGovernanceV2RegionList{
+		Data: []sgsdk.StreamGovernanceV2Region{
+			getStreamGovernanceRegion("sgreg-1", "us-east-2", "aws", "advanced", "Ohio (us-east-2)")},
+	}
+	sgRegionList.Data = filterRegionList(sgRegionList.Data, cloud, region)
+
+	return sgRegionList
+}
+
 func getStreamGovernanceRegion(id, region, cloud, packageType, displayName string) sgsdk.StreamGovernanceV2Region {
 	return sgsdk.StreamGovernanceV2Region{
 		Id: &id,
@@ -105,4 +113,13 @@ func getStreamGovernanceRegion(id, region, cloud, packageType, displayName strin
 			DisplayName: &displayName,
 		},
 	}
+}
+
+func filterRegionList(regionList []sgsdk.StreamGovernanceV2Region, cloud, region string) (filteredRegionList []sgsdk.StreamGovernanceV2Region) {
+	for _, regionSpec := range regionList {
+		if (regionSpec.Spec.GetCloud() == cloud || cloud == "") && (regionSpec.Spec.GetRegionName() == region || region == "") {
+			filteredRegionList = append(filteredRegionList, regionSpec)
+		}
+	}
+	return
 }
