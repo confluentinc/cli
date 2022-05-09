@@ -9,7 +9,7 @@ import (
 func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
-		Short:       "Create new schema exporter.",
+		Short:       "Create a new schema exporter.",
 		Args:        cobra.ExactArgs(1),
 		RunE:        c.onPremCreate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
@@ -26,7 +26,6 @@ func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
-
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

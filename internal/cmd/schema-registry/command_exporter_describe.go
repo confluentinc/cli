@@ -20,7 +20,7 @@ var (
 func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe the information of the schema exporter.",
+		Short: "Describe the schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 	}

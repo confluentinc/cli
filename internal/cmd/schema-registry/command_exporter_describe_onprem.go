@@ -8,7 +8,7 @@ import (
 func (c *exporterCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe <name>",
-		Short:       "Describe the information of the schema exporter.",
+		Short:       "Describe the schema exporter.",
 		Args:        cobra.ExactArgs(1),
 		RunE:        c.onPremDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
