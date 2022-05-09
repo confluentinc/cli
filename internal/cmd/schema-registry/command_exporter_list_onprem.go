@@ -21,7 +21,7 @@ func (c *exporterCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremList(cmd *cobra.Command, args []string) error {
+func (c *exporterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
 	if err != nil {
 		return err
