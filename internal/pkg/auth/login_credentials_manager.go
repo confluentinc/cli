@@ -157,7 +157,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config) f
 		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
 
 		// For `confluent login`, only retrieve credentials from the config file if SSO (prevents a breaking change)
-		if credentials.IsSSO {
+		if credentials != nil && credentials.IsSSO {
 			return credentials, nil
 		}
 
