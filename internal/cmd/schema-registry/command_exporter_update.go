@@ -24,11 +24,11 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context", pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --config-file ~/config.txt %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --config-file ~/config.txt", pversion.CLIName),
 			},
 		),
 	}
