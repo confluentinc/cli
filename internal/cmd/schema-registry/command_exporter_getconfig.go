@@ -1,6 +1,9 @@
 package schemaregistry
 
 import (
+	"context"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -25,12 +28,16 @@ func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) getConfig(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	configs, _, err := srClient.DefaultApi.GetExporterConfig(ctx, args[0])
+	return getExporterConfig(cmd, args[0], srClient, ctx)
+}
+
+func getExporterConfig(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+	configs, _, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
 	if err != nil {
 		return err
 	}

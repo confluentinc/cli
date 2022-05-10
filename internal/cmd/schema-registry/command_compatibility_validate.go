@@ -46,7 +46,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 }
 
 func (c *compatibilityCommand) validate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
