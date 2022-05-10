@@ -17,42 +17,15 @@ blocks:
         commands:
           - checkout
           - sem-version go 1.17.6
+          - make deps
       jobs:
-        - name: Install dependencies
-          commands:
-            - make deps
         - name: Lint
           commands:
             - make lint
-        - name: Build
-          commands:
-            - make build
         - name: Test
           commands:
             - make test
 
-  - name: MacOS
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: al-standard-4
-          os_image: macos-xcode13
-      prologue:
-        commands:
-          - checkout
-          - sem-version go 1.17.6
-      jobs:
-        - name: Install dependencies
-          commands:
-            - make deps
-        - name: Build
-          commands:
-            - make build
-        - name: Test
-          commands:
-            - make test
-  
 after_pipeline:
   task:
     jobs:
