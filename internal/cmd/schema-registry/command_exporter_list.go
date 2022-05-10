@@ -30,7 +30,7 @@ func (c *exporterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

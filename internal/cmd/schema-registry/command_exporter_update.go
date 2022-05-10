@@ -24,11 +24,11 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context", pversion.CLIName),
+				Code: fmt.Sprintf(`%s schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`, pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter update my-exporter --config-file ~/config.txt", pversion.CLIName),
+				Code: fmt.Sprintf(`%s schema-registry exporter update my-exporter --config-file ~/config.txt`, pversion.CLIName),
 			},
 		),
 	}
@@ -48,7 +48,7 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

@@ -24,7 +24,7 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
-				Code: fmt.Sprintf("%s schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\\${subject} --context-type CUSTOM --context-name my-context", pversion.CLIName),
+				Code: fmt.Sprintf(`%s schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`, pversion.CLIName),
 			},
 		),
 	}
@@ -46,7 +46,7 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
