@@ -83,6 +83,7 @@ func printTableOfContents(tabs []Tab) []string {
 		".. toctree::",
 		"   :hidden:",
 		"",
+		"   Overview <../command-reference-index>",
 	}
 
 	for _, name := range names {
