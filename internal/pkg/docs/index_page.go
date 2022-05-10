@@ -85,7 +85,7 @@ func printTableOfContents(tabs []Tab) []string {
 		"",
 	}
 	
-		if tabs[0].Command.CommandPath() == "confluent" {
+	if tabs[0].Command.CommandPath() == "confluent" {
 		rows = append(rows, "   Overview <../command-reference-index>")
 	}
 
