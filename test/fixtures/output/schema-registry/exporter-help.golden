@@ -4,9 +4,9 @@ Usage:
   confluent schema-registry exporter [command]
 
 Available Commands:
-  create      Create new schema exporter.
+  create      Create a new schema exporter.
   delete      Delete schema exporter.
-  describe    Describe the information of the schema exporter.
+  describe    Describe the schema exporter.
   get-config  Get the configurations of the schema exporter.
   get-status  Get the status of the schema exporter.
   list        List all schema exporters.
