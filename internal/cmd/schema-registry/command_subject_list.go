@@ -42,7 +42,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 }
 
 func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

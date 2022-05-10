@@ -46,7 +46,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

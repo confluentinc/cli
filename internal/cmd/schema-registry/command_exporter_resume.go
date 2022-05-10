@@ -1,6 +1,9 @@
 package schemaregistry
 
 import (
+	"context"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -26,14 +29,16 @@ func (c *exporterCommand) newResumeCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) resume(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	if _, _, err = srClient.DefaultApi.ResumeExporter(ctx, name); err != nil {
+	return resumeExporter(cmd, args[0], srClient, ctx)
+}
+
+func resumeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+	if _, _, err := srClient.DefaultApi.ResumeExporter(ctx, name); err != nil {
 		return err
 	}
 
