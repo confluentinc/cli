@@ -1,0 +1,34 @@
+version: v1.0
+name: Confluent CLI CI
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+execution_time_limit:
+  hours: 2
+
+blocks:
+  - name: Linux
+    dependencies: []
+    task:
+      prologue:
+        commands:
+          - checkout
+          - sem-version go 1.17.6
+          - make deps
+      jobs:
+        - name: Lint
+          commands:
+            - make lint
+        - name: Test
+          commands:
+            - make test
+
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
