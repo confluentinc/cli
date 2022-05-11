@@ -13,10 +13,11 @@ import (
 
 type Usage cliv1.CliV1Usage
 
-func New() *Usage {
+func New(version string) *Usage {
 	return &Usage{
-		Os:   cliv1.PtrString(runtime.GOOS),
-		Arch: cliv1.PtrString(runtime.GOARCH),
+		Os:      cliv1.PtrString(runtime.GOOS),
+		Arch:    cliv1.PtrString(runtime.GOARCH),
+		Version: cliv1.PtrString(version),
 	}
 }
 

@@ -119,18 +119,16 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 
 func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
-	var u *usage.Usage
+	u := usage.New(ver.Version)
 
 	if !isTest && cfg.IsCloudLogin() {
-		u = usage.New()
-		u.Version = cliv1.PtrString(ver.Version)
 		cmd.PersistentPostRun = u.Collect
 	}
 
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 
-	if !isTest && cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
+	if u.Command != nil && *(u.Command) != "" {
 		ctx := cfg.Context()
 		client := ccloudv2.NewClient(ctx.Platform.Server, ver.UserAgent, isTest, ctx.GetAuthToken())
 
