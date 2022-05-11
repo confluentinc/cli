@@ -162,6 +162,9 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
+	if strings.Contains(string(body), "limited to") {
+		return NewWrapErrorWithSuggestions(err, QuotaExceededErrorMsg, QuotaExceededSuggestions)
+	}
 	return err
 }
 
@@ -184,6 +187,9 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	if strings.Contains(string(body), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+	}
+	if strings.Contains(string(body), "limited to") {
+		return NewWrapErrorWithSuggestions(err, QuotaExceededErrorMsg, QuotaExceededSuggestions)
 	}
 	return err
 }
