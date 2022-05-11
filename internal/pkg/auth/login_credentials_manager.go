@@ -173,11 +173,11 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.IsUserSsoEnabled(),
-			Username:         ctx.GetEmail(),
+			IsSSO:            ctx.GetUser().GetSso().GetEnabled() || ctx.GetUser().GetSocialConnection() != "",
+			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
-			OrgResourceId:    ctx.GetOrganizationResourceId(),
+			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
 		}
 
 		return credentials, nil
@@ -271,7 +271,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	res, err := h.client.User.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	return err == nil && res.IsSso
+	return err == nil && res.GetIsSso()
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)
