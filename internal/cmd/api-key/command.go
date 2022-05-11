@@ -8,6 +8,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -141,4 +142,12 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 	}
 
 	return resourceType, clusterId, apiKey, nil
+}
+
+func isSchemaRegistryOrKsqlApiKey(key apikeysv2.IamV2ApiKey) bool {
+	var kind string
+	if key.Spec.HasResource() && key.Spec.Resource.HasKind() {
+		kind = *key.Spec.Resource.Kind
+	}
+	return kind == "SchemaRegistry" || kind == "ksqlDB"
 }

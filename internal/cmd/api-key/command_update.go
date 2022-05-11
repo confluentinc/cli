@@ -3,9 +3,10 @@ package apikey
 import (
 	"context"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -28,26 +29,42 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	key, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
-	if err != nil {
-		return err
-	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
 
-	if cmd.Flags().Changed("description") {
-		key.Description = description
+	key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+	if err != nil {
+		return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
 	}
 
-	err = c.Client.APIKey.Update(context.Background(), key)
+	if cmd.Flags().Changed("description") {
+		if isSchemaRegistryOrKsqlApiKey(key) {
+			err = c.v1Update(apiKey, description)
+		} else {
+			apiKeyUpdate := apikeysv2.IamV2ApiKeyUpdate{
+				Spec: &apikeysv2.IamV2ApiKeySpecUpdate{Description: apikeysv2.PtrString(description)},
+			}
+			_, httpResp, err = c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
+		}
+		if err != nil {
+			return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+		}
+
+		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+	}
+
+	return nil
+}
+
+func (c *command) v1Update(apiKey, description string) error {
+	key, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return err
 	}
-	if cmd.Flags().Changed("description") {
-		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
-	}
-	return nil
+
+	key.Description = description
+	return c.Client.APIKey.Update(context.Background(), key)
 }

@@ -71,11 +71,9 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 }
 
 func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
-	var req iamv2.ApiListIamV2ServiceAccountsRequest
+	req := c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccounts(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
 }
@@ -128,11 +126,9 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 }
 
 func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.Response, error) {
-	var req iamv2.ApiListIamV2UsersRequest
+	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 }

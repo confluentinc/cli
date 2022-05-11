@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -27,6 +28,16 @@ func getServerUrl(baseURL string, isTest bool) string {
 		return "https://api.stag.cpdev.cloud"
 	}
 	return "https://api.confluent.cloud"
+}
+
+func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
+	if nextPageUrlStringNullable.IsSet() {
+		nextPageUrlString := *nextPageUrlStringNullable.Get()
+		pageToken, err := extractPageToken(nextPageUrlString)
+		return pageToken, false, err
+	} else {
+		return "", true, nil
+	}
 }
 
 func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {

@@ -165,6 +165,13 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	return err
 }
 
+func CatchApiKeyForbiddenAccessError(err error, r *http.Response) error {
+	if strings.Contains(r.Status, "Forbidden") {
+		return NewWrapErrorWithSuggestions(err, "Failed to perform the operation on API key", APIKeyNotFoundSuggestions)
+	}
+	return err
+}
+
 func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
