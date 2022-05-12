@@ -415,7 +415,6 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	QuotaExceededErrorMsg       = "service quota limit exceeded"
 	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
 	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg         = "not logged in"
