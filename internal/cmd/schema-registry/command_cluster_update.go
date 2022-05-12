@@ -64,7 +64,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -85,7 +85,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 }
 
 func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

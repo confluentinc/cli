@@ -1,8 +1,10 @@
 package schemaregistry
 
 import (
+	"context"
 	"strconv"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -33,12 +35,16 @@ func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) getStatus(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	status, _, err := srClient.DefaultApi.GetExporterStatus(ctx, args[0])
+	return getExporterStatus(cmd, args[0], srClient, ctx)
+}
+
+func getExporterStatus(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+	status, _, err := srClient.DefaultApi.GetExporterStatus(ctx, name)
 	if err != nil {
 		return err
 	}
