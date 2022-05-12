@@ -160,39 +160,11 @@ func (c *Context) GetUser() *orgv1.User {
 	return nil
 }
 
-func (c *Context) GetEmail() string {
-	if user := c.GetUser(); user != nil {
-		return user.Email
-	}
-	return ""
-}
-
-func (c *Context) GetUserSso() *orgv1.Sso {
-	if user := c.GetUser(); user != nil {
-		return user.Sso
-	}
-	return nil
-}
-
 func (c *Context) GetOrganization() *orgv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
 	}
 	return nil
-}
-
-func (c *Context) GetOrganizationResourceId() string {
-	if org := c.GetOrganization(); org != nil {
-		return org.ResourceId
-	}
-	return ""
-}
-
-func (c *Context) IsUserSsoEnabled() bool {
-	if sso := c.GetUserSso(); sso != nil {
-		return sso.Enabled
-	}
-	return false
 }
 
 func (c *Context) GetEnvironment() *orgv1.Account {

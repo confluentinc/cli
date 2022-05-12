@@ -205,8 +205,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = c.saveLoginToNetrc(cmd, false, credentials)
-	if err != nil {
+	if err := c.saveLoginToNetrc(cmd, false, credentials); err != nil {
 		return err
 	}
 
@@ -277,6 +276,11 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 	}
 
 	if save {
+		if credentials.IsSSO {
+			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
+			return nil
+		}
+
 		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
