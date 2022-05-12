@@ -6,14 +6,14 @@ import (
 	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/spf13/cobra"
-
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -55,24 +55,21 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		ResourceId     string
 		Created        string
 	}
-	var apiKeys []*schedv1.ApiKey
 
 	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client)
 	if err != nil {
 		return err
 	}
-
-	var logicalClusters []*schedv1.ApiKey_Cluster
-	if clusterId != "" {
-		logicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
+	if resourceType == resource.Cloud {
+		clusterId = resource.Cloud
 	}
 
-	serviceAccountID, err := cmd.Flags().GetString("service-account")
+	ownerResourceId, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
 
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return err
 	}
@@ -84,19 +81,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	resourceIdToUserIdMap := c.mapResourceIdToUserId(allUsers)
 
-	userId := int32(0)
-	serviceAccount := false
-	if serviceAccountID != "" { // if user inputs resource ID, get corresponding numeric ID
-		serviceAccount = true
-		if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
+	if ownerResourceId != "" {
+		if resource.LookupType(ownerResourceId) != resource.ServiceAccount {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
-		userIdMap := c.mapResourceIdToUserId(allUsers)
-		var ok bool
-		userId, ok = userIdMap[serviceAccountID]
+		_, ok := resourceIdToUserIdMap[ownerResourceId]
 		if !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, ownerResourceId), errors.ServiceAccountNotFoundSuggestions)
 		}
 	}
 
@@ -105,86 +98,67 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if userId != 0 {
+		if ownerResourceId != "" {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		userId = c.State.Auth.User.Id
-	}
-	apiKeys, err = c.Client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: c.EnvironmentId(), LogicalClusters: logicalClusters, UserId: userId, ServiceAccount: serviceAccount})
-	if err != nil {
-		return err
+		ownerResourceId, err = c.getApiKeyOwnerId(ownerResourceId)
+		if err != nil {
+			return err
+		}
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	apiKeys, err := c.V2Client.ListApiKeys(ownerResourceId, clusterId)
 	if err != nil {
 		return err
 	}
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(users)
-	resourceIdMap := c.mapUserIdToResourceId(allUsers)
+
+	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	if err != nil {
+		return err
+	}
 
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
-		if apiKey.UserId == 0 {
+		if !apiKey.Spec.HasOwner() {
 			continue
 		}
+
 		// Add '*' only in the case where we are printing out tables
-		outputKey := apiKey.Key
+		outputKey := *apiKey.Id
 		if outputWriter.GetOutputFormat() == output.Human {
-			if clusterId != "" && apiKey.Key == currentKey {
-				outputKey = fmt.Sprintf("* %s", apiKey.Key)
+			if clusterId != "" && *apiKey.Id == currentKey {
+				outputKey = fmt.Sprintf("* %s", *apiKey.Id)
 			} else {
-				outputKey = fmt.Sprintf("  %s", apiKey.Key)
+				outputKey = fmt.Sprintf("  %s", *apiKey.Id)
 			}
 		}
 
-		email := c.getEmail(apiKey, serviceAccountsMap, usersMap)
+		ownerId := apiKey.GetSpec().Owner.GetId()
+		email := c.getEmail(ownerId, resourceIdToUserIdMap, serviceAccountsMap, usersMap)
 
-		created := time.Unix(apiKey.Created.Seconds, 0).In(time.UTC).Format(time.RFC3339)
-		userResourceId := apiKey.UserResourceId
-		if userResourceId == "" {
-			userResourceId = resourceIdMap[apiKey.UserId]
-		}
-		// If resource id is empty then the resource was not specified, or Cloud was specified.
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		if clusterId == "" && len(apiKey.LogicalClusters) == 0 {
-			// Cloud key.
-			outputWriter.AddElement(&keyDisplay{
-				Key:            outputKey,
-				Description:    apiKey.Description,
-				UserResourceId: userResourceId,
-				UserEmail:      email,
-				ResourceType:   resource.Cloud,
-				Created:        created,
-			})
-		}
-
-		if resourceType == resource.Cloud {
-			continue
-		}
-
-		for _, lc := range apiKey.LogicalClusters {
-			outputWriter.AddElement(&keyDisplay{
-				Key:            outputKey,
-				Description:    apiKey.Description,
-				UserResourceId: userResourceId,
-				UserEmail:      email,
-				ResourceType:   lc.Type,
-				ResourceId:     lc.Id,
-				Created:        created,
-			})
-		}
+		outputWriter.AddElement(&keyDisplay{
+			Key:            outputKey,
+			Description:    *apiKey.GetSpec().Description,
+			UserResourceId: ownerId,
+			UserEmail:      email,
+			ResourceType:   resourceKindToType[apiKey.GetSpec().Resource.GetKind()],
+			ResourceId:     getApiKeyResourceId(apiKey),
+			Created:        apiKey.GetMetadata().CreatedAt.Format(time.RFC3339),
+		})
 	}
 
 	return outputWriter.Out()
 }
 
-func getServiceAccountsMap(serviceAccounts []*orgv1.User) map[int32]bool {
-	saMap := make(map[int32]bool)
+func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {
+	saMap := make(map[string]bool)
 	for _, sa := range serviceAccounts {
-		saMap[sa.Id] = true
+		saMap[*sa.Id] = true
 	}
 	return saMap
 }
@@ -197,14 +171,6 @@ func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
 	return userMap
 }
 
-func (c *command) mapUserIdToResourceId(users []*orgv1.User) map[int32]string {
-	idMap := make(map[int32]string)
-	for _, user := range users {
-		idMap[user.Id] = user.ResourceId
-	}
-	return idMap
-}
-
 func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
@@ -213,23 +179,28 @@ func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	return idMap
 }
 
-func (c *command) getEmail(apiKey *schedv1.ApiKey, serviceAccountsMap map[int32]bool, usersMap map[int32]*orgv1.User) string {
-	if _, ok := serviceAccountsMap[apiKey.UserId]; ok {
+func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, serviceAccountsMap map[string]bool, usersMap map[int32]*orgv1.User) string {
+	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
 	}
 
-	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == apiKey.UserId {
+	userId := resourceIdToUserIdMap[resourceId]
+
+	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == userId {
 		return "<auditlog service account>"
 	}
 
-	if user, ok := usersMap[apiKey.UserId]; ok {
+	if user, ok := usersMap[userId]; ok {
 		return user.Email
 	}
 
-	// check if api key is owned by current user
-	if c.State.Auth.User.Id == apiKey.UserId {
-		return c.State.Auth.User.Email
-	}
-
 	return "<deactivated user>"
+}
+
+func getApiKeyResourceId(apiKey apikeysv2.IamV2ApiKey) string {
+	id := apiKey.GetSpec().Resource.GetId()
+	if id == "cloud" {
+		return ""
+	}
+	return id
 }

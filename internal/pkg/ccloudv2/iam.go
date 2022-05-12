@@ -2,12 +2,10 @@ package ccloudv2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -83,24 +81,6 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
 	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
 	return c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
-}
-
-func (c *Client) GetIamUserById(id string) (iamv2.IamV2User, *http.Response, error) {
-	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
-	return c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
-}
-
-func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	resp, _, err := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).Execute()
-	if err != nil {
-		return iamv2.IamV2User{}, err
-	}
-	for _, user := range resp.Data {
-		if email == *user.Email {
-			return user, nil
-		}
-	}
-	return iamv2.IamV2User{}, fmt.Errorf(errors.InvalidEmailErrorMsg, email)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

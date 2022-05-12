@@ -25,6 +25,9 @@ type command struct {
 
 const resourceFlagName = "resource"
 
+var resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+var resourceKindToType = map[string]string{"Cluster": resource.Kafka, "ksqlDB": resource.Ksql, "SchemaRegistry": resource.SchemaRegistry, "Cloud": resource.Cloud}
+
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",

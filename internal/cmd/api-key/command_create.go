@@ -22,8 +22,6 @@ var (
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
 )
 
-var resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -76,7 +74,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if resourceType == resource.Ksql || resourceType == resource.SchemaRegistry {
 		schedv1ApiKey, err = c.v1Create(ownerResourceId, clusterId, resourceType, description)
 	} else {
-		err := c.getApiKeyOwnerId(&ownerResourceId)
+		ownerResourceId, err = c.getApiKeyOwnerId(ownerResourceId)
 		if err != nil {
 			return err
 		}
@@ -176,20 +174,20 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 	return key, nil
 }
 
-func (c *command) getApiKeyOwnerId(ownerResourceId *string) error {
-	if *ownerResourceId == "" {
+func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
+	if ownerResourceId == "" {
 		userId := c.State.Auth.User.Id
 		users, err := c.getAllUsers()
 		if err != nil {
-			return err
+			return "", err
 		}
 		for _, user := range users {
 			if userId == user.Id {
-				*ownerResourceId = user.ResourceId
+				return user.ResourceId, nil
 			}
 		}
 	}
-	return nil
+	return ownerResourceId, nil
 }
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the

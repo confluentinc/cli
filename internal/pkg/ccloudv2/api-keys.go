@@ -43,13 +43,13 @@ func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKey
 	return c.ApiKeysClient.APIKeysIamV2Api.UpdateIamV2ApiKeyExecute(req)
 }
 
-func (c *Client) ListApiKeys() ([]apikeysv2.IamV2ApiKey, error) {
+func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, error) {
 	keys := make([]apikeysv2.IamV2ApiKey, 0)
 
 	collectedAllKeys := false
 	pageToken := ""
 	for !collectedAllKeys {
-		keyList, _, err := c.executeListApiKeys(pageToken)
+		keyList, _, err := c.executeListApiKeys(owner, resource, pageToken)
 		if err != nil {
 			return nil, err
 		}
@@ -65,8 +65,8 @@ func (c *Client) ListApiKeys() ([]apikeysv2.IamV2ApiKey, error) {
 	return keys, nil
 }
 
-func (c *Client) executeListApiKeys(pageToken string) (apikeysv2.IamV2ApiKeyList, *http.Response, error) {
-	req := c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeys(c.apiKeysApiContext()).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv2.IamV2ApiKeyList, *http.Response, error) {
+	req := c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeys(c.apiKeysApiContext()).PageSize(ccloudV2ListPageSize).SpecOwner(owner).SpecResource(resource)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
