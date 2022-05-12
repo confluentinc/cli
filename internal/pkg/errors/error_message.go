@@ -415,6 +415,7 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
+	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
 	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg         = "not logged in"
 	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
