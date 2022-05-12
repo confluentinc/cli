@@ -22,7 +22,7 @@ import (
 	see: https://github.com/confluentinc/cli/blob/master/errors.md
 */
 
-const QuotaExceededRegex = ".* is currently limited to .*"
+const quotaExceededRegex = ".* is currently limited to .*"
 
 type responseBody struct {
 	Error []errorDetail `json:"errors"`
@@ -175,9 +175,11 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
-	detail := resBody.Error[0].Detail
-	if match, _ := regexp.MatchString(QuotaExceededRegex, detail); match {
-		return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
 	}
 	return err
 }
@@ -205,9 +207,11 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
-	detail := resBody.Error[0].Detail
-	if match, _ := regexp.MatchString(QuotaExceededRegex, detail); match {
-		return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
 	}
 	return err
 }
