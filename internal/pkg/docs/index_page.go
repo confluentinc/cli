@@ -84,6 +84,11 @@ func printTableOfContents(tabs []Tab) []string {
 		"   :hidden:",
 		"",
 	}
+	
+	if tabs[0].Command.CommandPath() == "confluent" {
+		rows = append(rows, "   Overview <../command-reference-index>")
+	}
+
 
 	for _, name := range names {
 		rows = append(rows, fmt.Sprintf("   %s", linksByName[name]))
