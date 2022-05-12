@@ -1,7 +1,6 @@
 package streamgovernance
 
 import (
-	"context"
 	"fmt"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
@@ -48,7 +47,7 @@ func (c *streamGovernanceCommand) newEnableCommand(cfg *v1.Config) *cobra.Comman
 }
 
 func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
+	ctx := c.V2Client.StreamGovernanceApiContext()
 
 	// Collect the parameters
 	cloud, err := cmd.Flags().GetString("cloud")
@@ -75,7 +74,7 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	streamGovernanceV2Region, err := c.getStreamGovernanceV2Region(cloud, region, packageType)
+	streamGovernanceV2Region, err := c.getStreamGovernanceV2Region(cloud, region, packageType, ctx)
 	if err != nil {
 		return err
 	}
@@ -93,11 +92,10 @@ func (c *streamGovernanceCommand) enable(cmd *cobra.Command, _ []string) error {
 
 		spec := existingCluster.GetSpec()
 		regionSpec := spec.GetRegion()
-		existingRegion, getRegionErr := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId())
+		existingRegion, getRegionErr := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId(), ctx)
 		if getRegionErr != nil {
 			return getRegionErr
 		}
-
 		PrintStreamGovernanceClusterOutput(cmd, *existingCluster, *existingRegion)
 	} else {
 		PrintStreamGovernanceClusterOutput(cmd, newClusterResponse, *streamGovernanceV2Region)

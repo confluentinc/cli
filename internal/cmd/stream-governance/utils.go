@@ -18,9 +18,7 @@ var (
 		"Region": "region", "Status": "status"}
 )
 
-func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, packageType string) (*sgsdk.StreamGovernanceV2Region, error) {
-	ctx := context.Background()
-
+func (c *streamGovernanceCommand) getStreamGovernanceV2Region(cloud, region, packageType string, ctx context.Context) (*sgsdk.StreamGovernanceV2Region, error) {
 	packageSpec := sgsdk.NewMultipleSearchFilter()
 	packageSpec.Items = append(packageSpec.Items, packageType)
 	regionList, _, err := c.V2Client.StreamGovernanceClient.RegionsStreamGovernanceV2Api.ListStreamGovernanceV2Regions(ctx).
@@ -64,9 +62,7 @@ func (c *streamGovernanceCommand) getStreamGovernanceV2ClusterForEnvironment(con
 	return &clusterArr[0], nil
 }
 
-func (c *streamGovernanceCommand) getStreamGovernanceV2RegionFromId(regionId string) (*sgsdk.StreamGovernanceV2Region, error) {
-	ctx := context.Background()
-
+func (c *streamGovernanceCommand) getStreamGovernanceV2RegionFromId(regionId string, ctx context.Context) (*sgsdk.StreamGovernanceV2Region, error) {
 	regionObject, _, err := c.V2Client.StreamGovernanceClient.
 		RegionsStreamGovernanceV2Api.GetStreamGovernanceV2Region(ctx, regionId).Execute()
 	if err != nil {

@@ -1,7 +1,6 @@
 package streamgovernance
 
 import (
-	"context"
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -36,7 +35,7 @@ func (c *streamGovernanceCommand) newDescribeCommand(cfg *v1.Config) *cobra.Comm
 }
 
 func (c *streamGovernanceCommand) describe(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
+	ctx := c.V2Client.StreamGovernanceApiContext()
 
 	clusterId, err := c.getStreamGovernanceV2ClusterIdForEnvironment(ctx)
 	if err != nil {
@@ -51,7 +50,7 @@ func (c *streamGovernanceCommand) describe(cmd *cobra.Command, _ []string) error
 
 	spec := clusterDescription.GetSpec()
 	regionSpec := spec.GetRegion()
-	streamGovernanceV2Region, err := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId())
+	streamGovernanceV2Region, err := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId(), ctx)
 	if err != nil {
 		return err
 	}

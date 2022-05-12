@@ -1,7 +1,6 @@
 package streamgovernance
 
 import (
-	"context"
 	"fmt"
 	sgsdk "github.com/confluentinc/ccloud-sdk-go-v2/stream-governance/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -40,7 +39,7 @@ func (c *streamGovernanceCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Comma
 }
 
 func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
+	ctx := c.V2Client.StreamGovernanceApiContext()
 
 	clusterId, err := c.getStreamGovernanceV2ClusterIdForEnvironment(ctx)
 	if err != nil {
@@ -63,7 +62,7 @@ func (c *streamGovernanceCommand) upgrade(cmd *cobra.Command, _ []string) error 
 
 	spec := updatedClusterResponse.GetSpec()
 	regionSpec := spec.GetRegion()
-	streamGovernanceV2Region, err := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId())
+	streamGovernanceV2Region, err := c.getStreamGovernanceV2RegionFromId(regionSpec.GetId(), ctx)
 	if err != nil {
 		return err
 	}
