@@ -185,9 +185,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		setClusterConfigCku(&createCluster, int32(cku))
 	}
 
-	kafkaCluster, r, err := c.V2Client.CreateKafkaCluster(createCluster)
+	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		return errors.CatchConfigurationNotValidError(err, r)
+		return errors.CatchConfigurationNotValidError(err, httpResp)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
