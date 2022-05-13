@@ -72,7 +72,7 @@ func deleteConfirmation(cmd *cobra.Command, environmentId string, prompt form.Pr
 			"cluster for environment %s?", environmentId), IsYesOrNo: true},
 	)
 	if err := f.Prompt(cmd, prompt); err != nil {
-		return false, err
+		return false, errors.New(errors.SGFailedToReadDeletionConfirmationErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }

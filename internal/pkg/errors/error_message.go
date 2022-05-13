@@ -218,6 +218,7 @@ const (
 	SGCloudProviderNotAvailableErrorMsg    = "\"%s\" is not an available cloud provider."
 	SGCloudProviderNotAvailableSuggestions = "Please provide a supported cloud provider.\n" +
 		"You can use \"confluent stream-governance region list\" to see all the supported cloud providers and regions."
+	SGFailedToReadDeletionConfirmationErrorMsg = "Failed to read your deletion confirmation"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
