@@ -63,6 +63,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             - make deps
+            - export GOPRIVATE=github.com/confluentinc
             - make build
             - make lint
             - make test
