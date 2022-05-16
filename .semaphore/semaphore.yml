@@ -11,13 +11,11 @@ execution_time_limit:
 
 # TODO: Give access to private repos
 
-global_job_config:
-  secrets:
-    - name: vault_sem2_approle
-
 blocks:
   - name: Linux
     task:
+      secrets:
+        - name: vault_sem2_approle
       jobs:
         - name: Lint & Test
           commands:
