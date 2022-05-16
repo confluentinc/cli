@@ -23,7 +23,7 @@ blocks:
           commands:
             - checkout
             
-            - wget --timeout=20 --tries=15 --retry-connrefused -q -O /tmp/vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_v1.4.0_linux_amd64.zip
+            - wget --timeout=20 --tries=15 --retry-connrefused -O /tmp/vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_v1.4.0_linux_amd64.zip
             - cd /tmp && unzip vault.zip
             - export SEMAPHORE_CACHE_DIR=/home/semaphore
             - mv -f /tmp/vault $(SEMAPHORE_CACHE_DIR)/bin/vault
