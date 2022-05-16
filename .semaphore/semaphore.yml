@@ -21,7 +21,10 @@ blocks:
           commands:
             - checkout
             
-            - echo $PATH
+            - ls /home/semaphore/
+            - export PATH=${PATH}:/home/semaphore/bin
+            - mkdir -p /home/semaphore/bin/
+            - echo $HOME
             
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
