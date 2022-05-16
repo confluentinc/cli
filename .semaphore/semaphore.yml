@@ -34,6 +34,11 @@ blocks:
             - vault login -no-print token="${VAULT_TOKEN}"
             
             # Execute script from Vault
+            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - cat script.sh
             - source script.sh
@@ -43,26 +48,17 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
-            
+
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_config" > script.sh
             - cat script.sh
             - source script.sh
             - rm script.sh
-            
+
             - vault kv get -field=script "v1/ci/kv/semaphore2/gitconfig" > script.sh
             - cat script.sh
             - source script.sh
             - rm script.sh
           
-#            - . mk-include/bin/vault-setup
-#            - . vault-sem-get-secret semaphore-secrets-global
-#            - . vault-sem-get-secret artifactory-docker-helm
-#            - . vault-sem-get-secret testbreak-reporting
-#            - . vault-sem-get-secret ssh_id_rsa
-#            - . vault-sem-get-secret netrc
-#            - . vault-sem-get-secret ssh_config
-#            - . vault-sem-get-secret gitconfig
-            
             - sem-version go 1.17.6
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
