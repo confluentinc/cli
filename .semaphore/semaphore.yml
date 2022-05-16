@@ -63,6 +63,10 @@ blocks:
             - rm script.sh
           
             - chmod 400 ~/.ssh/id_rsa
+            - echo $GOPATH
+            - export "GOPATH=$(go env GOPATH)"
+            - echo $GOPATH
+            - export "PATH=${GOPATH}/bin:${PATH}"
             
             - make deps
             - export GOPRIVATE=github.com/confluentinc
