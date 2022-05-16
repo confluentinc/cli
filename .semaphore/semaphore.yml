@@ -35,6 +35,22 @@ blocks:
             
             # Execute script from Vault
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+            
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_config" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+            
+            - vault kv get -field=script "v1/ci/kv/semaphore2/gitconfig" > script.sh
+            - cat script.sh
             - source script.sh
             - rm script.sh
           
