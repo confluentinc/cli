@@ -62,6 +62,7 @@ blocks:
             - sem-version go 1.17.6
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
+            - chmod 400 ~/.ssh/id_rsa
             - make deps
             - export GOPRIVATE=github.com/confluentinc
             - make build
