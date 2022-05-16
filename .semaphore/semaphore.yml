@@ -20,25 +20,20 @@ blocks:
         - name: Lint & Test
           commands:
             - checkout
-            
-            - ls /home/semaphore/
-            - export PATH=${PATH}:/home/semaphore/bin
-            - mkdir -p /home/semaphore/bin/
-            - echo $HOME
+
+            - mkdir -p ${HOME}/bin/
+            - export PATH=${PATH}:${HOME}/bin/
             
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
-            - chmod +x vault
-            - mv vault /home/semaphore/bin/vault
-            - which vault
+            - mv vault ${HOME}/bin/vault
+            - chmod +x ${HOME}/bin/vault
 
-            - echo "$VAULT_ADDR"
-            - echo "$VAULT_ROLE_ID"
-            - echo "$VAULT_SECRET_ID"
-            - cat ~/.vault-token
-#            - token="$(vault write -field=token auth/app/prod/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})" || exit
-#            - vault login -no-print token="${token}"
-#            - unset token
+#            - cat ~/.vault-token
+            - token="$(vault write -field=token auth/app/prod/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})" || exit
+            - echo $token
+            - vault login -no-print token="${token}"
+            - unset token
             
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
