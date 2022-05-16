@@ -21,8 +21,7 @@ blocks:
           commands:
             - checkout
             
-            - wget -h | grep retry
-            - wget --timeout=20 --tries=15 --retry-connrefused -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_v1.4.0_linux_amd64.zip
+            - wget --timeout=20 --tries=15 --retry-connrefused -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
             - chmod +x vault
             - mv vault /home/semaphore/bin/vault
