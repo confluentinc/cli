@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -73,7 +73,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 
 // Add handlers for cloud endpoints
 func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
-	c.HandleFunc(sessions, c.HandleLogin(t))
+	c.HandleFunc(sessions, handleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))

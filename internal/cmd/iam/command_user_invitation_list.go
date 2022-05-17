@@ -31,7 +31,7 @@ func (c invitationCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List the organization's invitations.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listInvitations),
+		RunE:  c.listInvitations,
 	}
 
 	pcmd.AddOutputFlag(cmd)

@@ -22,6 +22,16 @@ import (
 	see: https://github.com/confluentinc/cli/blob/master/errors.md
 */
 
+const quotaExceededRegex = ".* is currently limited to .*"
+
+type responseBody struct {
+	Error []errorDetail `json:"errors"`
+}
+
+type errorDetail struct {
+	Detail string `json:"detail"`
+}
+
 func catchTypedErrors(err error) error {
 	if typedErr, ok := err.(CLITypedError); ok {
 		return typedErr.UserFacingError()
@@ -162,6 +172,15 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
+
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
+	}
 	return err
 }
 
@@ -184,6 +203,15 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	if strings.Contains(string(body), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
+	}
+
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
 	}
 	return err
 }

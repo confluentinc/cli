@@ -27,6 +27,7 @@ type Credentials struct {
 
 	AuthToken        string
 	AuthRefreshToken string
+	OrgResourceId    string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -69,7 +70,7 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
-	// Only for Confluent Prerun login
+	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
@@ -153,15 +154,30 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
+		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
+
+		// For `confluent login`, only retrieve credentials from the config file if SSO (prevents a breaking change)
+		if credentials != nil && credentials.IsSSO {
+			return credentials, nil
+		}
+
+		return nil, nil
+	}
+}
+
+func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
 		ctx := cfg.Context()
 		if ctx == nil {
 			return nil, nil
 		}
 
 		credentials := &Credentials{
-			Username:         ctx.GetEmail(),
+			IsSSO:            ctx.GetUser().GetSso().GetEnabled() || ctx.GetUser().GetSocialConnection() != "",
+			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
+			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
 		}
 
 		return credentials, nil
@@ -255,7 +271,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	res, err := h.client.User.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	return err == nil && res.IsSso
+	return err == nil && res.GetIsSso()
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)

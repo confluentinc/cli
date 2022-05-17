@@ -16,7 +16,7 @@ func (c *routeCommand) newLookupCommand() *cobra.Command {
 		Short: "Return the matching audit-log route rule.",
 		Long:  "Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.lookup),
+		RunE:  c.lookup,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

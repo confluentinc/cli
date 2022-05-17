@@ -6,7 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -15,7 +14,7 @@ func (c *command) newAddCommand() *cobra.Command {
 		Use:   "add <code>",
 		Short: "Add a new promo code.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.add),
+		RunE:  c.add,
 	}
 }
 

@@ -27,7 +27,7 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a service account.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a service account named `DemoServiceAccount`.",

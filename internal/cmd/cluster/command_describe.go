@@ -53,7 +53,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 		client:     newScopedIdService(userAgent),
 	}
 
-	c.RunE = pcmd.NewCLIRunE(c.describe)
+	c.RunE = c.describe
 
 	c.Flags().String("url", "", "URL to a Confluent cluster.")
 	c.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")

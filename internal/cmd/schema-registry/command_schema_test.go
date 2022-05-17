@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"net/http"
+	"os"
 	"testing"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -83,6 +84,20 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	}
 	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
+}
+
+func (suite *SchemaTestSuite) TestRequestSchemaById() {
+	tmpdir := suite.T().TempDir()
+	tempStorePath, _, err := RequestSchemaWithId(123, tmpdir, "subject", suite.srClientMock, suite.newCMD().Context())
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.GetSchemaCalled())
+	content, err := os.ReadFile(tempStorePath)
+	req.Nil(err)
+	req.Equal(string(content), "Potatoes")
+	err = os.Remove(tempStorePath)
+	req.Nil(err)
 }
 
 func (suite *SchemaTestSuite) TestDescribeById() {

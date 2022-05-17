@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,9 +54,8 @@ func TestHandleError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cmd := &cobra.Command{}
 			var err error
-			if err = HandleCommon(tt.err, cmd); (err != nil) != tt.wantErr {
+			if err = HandleCommon(tt.err); (err != nil) != tt.wantErr {
 				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, tt.wantErr)
 			}
 			if err.Error() != tt.want {

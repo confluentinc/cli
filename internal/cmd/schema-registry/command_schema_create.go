@@ -25,7 +25,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
@@ -69,7 +69,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

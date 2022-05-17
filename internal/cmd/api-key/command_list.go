@@ -27,7 +27,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List the API keys.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the API keys that belong to service account "sa-123456" on cluster "lkc-123456".`,

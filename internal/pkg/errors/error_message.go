@@ -59,14 +59,17 @@ const (
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
 
 	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
-	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
-	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
-	InvalidOperationValueErrorMsg = "invalid operation value: %s"
-	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
-	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
+	UnableToPerformAclErrorMsg        = "unable to %s ACLs: %s"
+	UnableToPerformAclSuggestions     = "Ensure that you're running against MDS with CP 5.4+."
+	MustSetAllowOrDenyErrorMsg        = "--allow or --deny must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg        = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetResourceTypeErrorMsg       = "exactly one resource type (%v) must be set"
+	InvalidOperationValueErrorMsg     = "invalid operation value: %s"
+	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg            = "can't map user id to a valid service account"
+	BadPrincipalErrorMsg              = `ensure principal begins with "User:"`
+	BadServiceAccountOrUserIDErrorMsg = `ensure service account id begins with "sa-", or user resource id begins with "u-"`
+	PrincipalNotFoundErrorMsg         = `user or service account "%s" not found`
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -412,6 +415,7 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
+	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
 	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg         = "not logged in"
 	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"

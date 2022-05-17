@@ -114,8 +114,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
-	hideAndErrIfMissingRunRequirement(cmd, cfg)
-	disableFlagSorting(cmd)
+	changeDefaults(cmd, cfg)
 
 	return &command{Command: cmd}
 }
@@ -143,6 +142,16 @@ func getLongDescription(cfg *v1.Config) string {
 	}
 }
 
+func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
+	hideAndErrIfMissingRunRequirement(cmd, cfg)
+	catchErrors(cmd)
+	cmd.Flags().SortFlags = false
+
+	for _, subcommand := range cmd.Commands() {
+		changeDefaults(subcommand, cfg)
+	}
+}
+
 // hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement and errs if a user attempts to use it;
 // for example, an on-prem command shouldn't be used by a cloud user.
 func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
@@ -152,21 +161,20 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 		// Show err for internal commands. Leaf commands will err in the PreRun function.
 		if cmd.HasSubCommands() {
 			cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
-			cmd.SilenceUsage = true
 		}
-	}
-
-	for _, subcommand := range cmd.Commands() {
-		hideAndErrIfMissingRunRequirement(subcommand, cfg)
 	}
 }
 
-// disableFlagSorting recursively disables the default option to sort flags, for all commands.
-func disableFlagSorting(cmd *cobra.Command) {
-	cmd.Flags().SortFlags = false
-
-	for _, subcommand := range cmd.Commands() {
-		disableFlagSorting(subcommand)
+// catchErrors catches (and modifies) errors from any of the built-in error-producing functions.
+func catchErrors(cmd *cobra.Command) {
+	if cmd.PersistentPreRunE != nil {
+		cmd.PersistentPreRunE = pcmd.CatchErrors(cmd.PersistentPreRunE)
+	}
+	if cmd.PreRunE != nil {
+		cmd.PreRunE = pcmd.CatchErrors(cmd.PreRunE)
+	}
+	if cmd.RunE != nil {
+		cmd.RunE = pcmd.CatchErrors(cmd.RunE)
 	}
 }
 

@@ -3,7 +3,6 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -14,7 +13,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Short: "Update secrets in a configuration properties file.",
 		Long:  "This command updates the encrypted secrets from the configuration properties file.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 	}
 
 	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")

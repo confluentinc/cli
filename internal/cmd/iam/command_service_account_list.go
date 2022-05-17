@@ -18,7 +18,7 @@ func (c *serviceAccountCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List service accounts.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

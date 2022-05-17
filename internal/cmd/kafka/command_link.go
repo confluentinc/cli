@@ -33,7 +33,7 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	if cfg.IsOnPremLogin() {
-		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 	}
 
 	c.AddCommand(c.newCreateCommand())

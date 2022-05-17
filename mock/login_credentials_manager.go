@@ -8,11 +8,10 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
-	github_com_spf13_cobra "github.com/spf13/cobra"
-
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_cli_internal_pkg_config_v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
+	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
 // MockLoginCredentialsManager is a mock of LoginCredentialsManager interface
@@ -34,6 +33,9 @@ type MockLoginCredentialsManager struct {
 
 	lockGetOnPremCredentialsFromPrompt sync.Mutex
 	GetOnPremCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+
+	lockGetPrerunCredentialsFromConfig sync.Mutex
+	GetPrerunCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetOnPremPrerunCredentialsFromEnvVar sync.Mutex
 	GetOnPremPrerunCredentialsFromEnvVarFunc func() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -63,6 +65,9 @@ type MockLoginCredentialsManager struct {
 		}
 		GetOnPremCredentialsFromPrompt []struct {
 			Cmd *github_com_spf13_cobra.Command
+		}
+		GetPrerunCredentialsFromConfig []struct {
+			Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
 		}
 		GetOnPremPrerunCredentialsFromEnvVar []struct {
 		}
@@ -306,6 +311,44 @@ func (m *MockLoginCredentialsManager) GetOnPremCredentialsFromPromptCalls() []st
 	return m.calls.GetOnPremCredentialsFromPrompt
 }
 
+// GetPrerunCredentialsFromConfig mocks base method by wrapping the associated func.
+func (m *MockLoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+	m.lockGetPrerunCredentialsFromConfig.Lock()
+	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
+
+	if m.GetPrerunCredentialsFromConfigFunc == nil {
+		panic("mocker: MockLoginCredentialsManager.GetPrerunCredentialsFromConfigFunc is nil but MockLoginCredentialsManager.GetPrerunCredentialsFromConfig was called.")
+	}
+
+	call := struct {
+		Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	}{
+		Cfg: cfg,
+	}
+
+	m.calls.GetPrerunCredentialsFromConfig = append(m.calls.GetPrerunCredentialsFromConfig, call)
+
+	return m.GetPrerunCredentialsFromConfigFunc(cfg)
+}
+
+// GetPrerunCredentialsFromConfigCalled returns true if GetPrerunCredentialsFromConfig was called at least once.
+func (m *MockLoginCredentialsManager) GetPrerunCredentialsFromConfigCalled() bool {
+	m.lockGetPrerunCredentialsFromConfig.Lock()
+	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
+
+	return len(m.calls.GetPrerunCredentialsFromConfig) > 0
+}
+
+// GetPrerunCredentialsFromConfigCalls returns the calls made to GetPrerunCredentialsFromConfig.
+func (m *MockLoginCredentialsManager) GetPrerunCredentialsFromConfigCalls() []struct {
+	Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+} {
+	m.lockGetPrerunCredentialsFromConfig.Lock()
+	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
+
+	return m.calls.GetPrerunCredentialsFromConfig
+}
+
 // GetOnPremPrerunCredentialsFromEnvVar mocks base method by wrapping the associated func.
 func (m *MockLoginCredentialsManager) GetOnPremPrerunCredentialsFromEnvVar() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Lock()
@@ -439,6 +482,9 @@ func (m *MockLoginCredentialsManager) Reset() {
 	m.lockGetOnPremCredentialsFromPrompt.Lock()
 	m.calls.GetOnPremCredentialsFromPrompt = nil
 	m.lockGetOnPremCredentialsFromPrompt.Unlock()
+	m.lockGetPrerunCredentialsFromConfig.Lock()
+	m.calls.GetPrerunCredentialsFromConfig = nil
+	m.lockGetPrerunCredentialsFromConfig.Unlock()
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Lock()
 	m.calls.GetOnPremPrerunCredentialsFromEnvVar = nil
 	m.lockGetOnPremPrerunCredentialsFromEnvVar.Unlock()

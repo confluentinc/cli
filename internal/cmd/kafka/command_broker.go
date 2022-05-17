@@ -21,7 +21,7 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &brokerCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newDescribeCommand())

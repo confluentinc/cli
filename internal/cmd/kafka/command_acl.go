@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
@@ -37,7 +38,7 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
@@ -48,8 +49,14 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // validateAddAndDelete ensures the minimum requirements for acl add and delete are met
 func validateAddAndDelete(binding *ACLConfiguration) {
+	if binding.Entry.Principal == "" {
+		err := fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal")
+		binding.errors = multierror.Append(binding.errors, err)
+	}
+
 	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		err := fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg)
+		binding.errors = multierror.Append(binding.errors, err)
 	}
 
 	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
@@ -57,8 +64,9 @@ func validateAddAndDelete(binding *ACLConfiguration) {
 	}
 
 	if binding.Pattern == nil || binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
-			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+		err := fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
+			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"}))
+		binding.errors = multierror.Append(binding.errors, err)
 	}
 }
 
@@ -102,19 +110,32 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 
 func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
-		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
-			if resource.LookupType(serviceAccountID) != resource.ServiceAccount {
-				return errors.New(errors.BadServiceAccountIDErrorMsg)
+		principal := acl[i].ACLBinding.Entry.Principal
+		if principal != "" {
+			resourceId, err := parsePrincipal(principal)
+			if err != nil {
+				return errors.Wrap(err, "failed to parse principal")
 			}
-			userId, ok := idMap[serviceAccountID]
+			userId, ok := idMap[resourceId]
 			if !ok {
-				return fmt.Errorf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID)
+				return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
 			}
 			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", userId) // translate into numeric ID
 		}
 	}
 	return nil
+}
+
+func parsePrincipal(principal string) (string, error) {
+	if !strings.HasPrefix(principal, "User:") {
+		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
+	}
+	resourceId := strings.SplitN(principal, ":", 2)[1]
+	resourceType := resource.LookupType(resourceId)
+	if resourceType != resource.ServiceAccount && resourceType != resource.User {
+		return "", fmt.Errorf(errors.BadServiceAccountOrUserIDErrorMsg)
+	}
+	return resourceId, nil
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
@@ -123,8 +144,15 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[int32]string)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
 	}
 	return idMap, nil
@@ -136,8 +164,15 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[string]int32)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil

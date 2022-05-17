@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"bufio"
+	"context"
+	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -23,6 +25,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd := &cobra.Command{
 		Use:         "produce <topic>",
 		Short:       "Produce messages to a Kafka topic.",
+		Long:  "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
@@ -32,13 +35,16 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		prerunner:           prerunner,
 		clientID:            clientId,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.produce)
+	cmd.RunE = c.produce
 
-	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
 	cmd.Flags().String("schema", "", "The path to the schema file.")
+	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
+	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
@@ -59,7 +65,20 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	producer, err := NewProducer(cluster, c.clientID)
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	producer, err := newProducer(cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
 	}
@@ -86,10 +105,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	refs, err := sr.ReadSchemaRefs(cmd)
-	if err != nil {
-		return err
-	}
 
 	dir, err := sr.CreateTempDir()
 	if err != nil {
@@ -99,12 +114,18 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		_ = os.RemoveAll(dir)
 	}()
 
-	// Meta info contains a magic byte and schema ID (4 bytes).
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, dir, valueFormat, schemaPath, subject, serializationProvider.GetSchemaName(), refs)
+	schemaCfg := &sr.RegisterSchemaConfigs{
+		SchemaDir:   dir,
+		SchemaPath:  &schemaPath,
+		Subject:     subject,
+		ValueFormat: valueFormat,
+		SchemaType:  serializationProvider.GetSchemaName(),
+	}
+
+	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
-
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return err
@@ -191,6 +212,90 @@ func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, se
 	return valueFormat, subject, serializationProvider, nil
 }
 
+func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
+	srAPIKey, err := cmd.Flags().GetString("sr-api-key")
+	if err != nil {
+		return nil, nil, err
+	}
+	srAPISecret, err := cmd.Flags().GetString("sr-api-secret")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
+	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
+		err = new(errors.SRNotAuthenticatedError)
+	}
+	return srClient, ctx, err
+}
+
+func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+	// For plain string encoding, meta info is empty.
+	// Registering schema when specified, and fill metaInfo array.
+	var metaInfo []byte
+	referencePathMap := map[string]string{}
+	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
+		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		info, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+		metaInfo = info
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	return metaInfo, referencePathMap, nil
+}
+
+func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
+		return nil, nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
+	}
+
+	referencePathMap := map[string]string{}
+	metaInfo := []byte{0x0}
+
+	if *schemaCfg.SchemaPath != "" { // read schema from local file
+		refs, err := sr.ReadSchemaRefs(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+		schemaCfg.Refs = refs
+		// Meta info contains a magic byte and schema ID (4 bytes).
+		return c.registerSchema(cmd, schemaCfg)
+	}
+
+	schemaId, err := cmd.Flags().GetInt32("schema-id")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if schemaId != 0 { // request schema from schema registry
+		schemaIdBuffer := make([]byte, 4)
+		binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
+		metaInfo = append(metaInfo, schemaIdBuffer...)
+
+		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if schemaCfg.ValueFormat != "string" {
+			*schemaCfg.SchemaPath, referencePathMap, err = sr.RequestSchemaWithId(schemaId, schemaCfg.SchemaDir, schemaCfg.Subject, srClient, ctx)
+			if err != nil {
+				return nil, nil, err
+			}
+		}
+	}
+	return metaInfo, referencePathMap, nil
+}
+
 func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
@@ -233,41 +338,4 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	encoded := append(metaInfo, encodedMessage...)
 	value := string(encoded)
 	return key, value, nil
-}
-
-func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaDir, valueFormat, schemaPath, subject, schemaType string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
-	// For plain string encoding, meta info is empty.
-	// Registering schema when specified, and fill metaInfo array.
-	var metaInfo []byte
-	referencePathMap := map[string]string{}
-	if valueFormat != "string" && len(schemaPath) > 0 {
-		srAPIKey, err := cmd.Flags().GetString("sr-api-key")
-		if err != nil {
-			return nil, nil, err
-		}
-		srAPISecret, err := cmd.Flags().GetString("sr-api-secret")
-		if err != nil {
-			return nil, nil, err
-		}
-
-		srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
-		if err != nil {
-			if err.Error() == errors.NotLoggedInErrorMsg {
-				return nil, nil, new(errors.SRNotAuthenticatedError)
-			} else {
-				return nil, nil, err
-			}
-		}
-
-		info, err := sr.RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
-		if err != nil {
-			return nil, nil, err
-		}
-		metaInfo = info
-		referencePathMap, err = sr.StoreSchemaReferences(schemaDir, refs, srClient, ctx)
-		if err != nil {
-			return metaInfo, nil, err
-		}
-	}
-	return metaInfo, referencePathMap, nil
 }

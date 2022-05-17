@@ -22,6 +22,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd := &cobra.Command{
 		Use:         "consume <topic>",
 		Short:       "Consume messages from a Kafka topic.",
+		Long:        "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
@@ -37,14 +38,16 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		prerunner:           prerunner,
 		clientID:            clientId,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.consume)
+	cmd.RunE = c.consume
 
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.")
+	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
 	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
 	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
@@ -95,6 +98,43 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	consumer, err := newConsumer(group, cluster, c.clientID, beginning, configFile, config)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
+	}
+	log.CliLogger.Trace("Create consumer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = c.validateTopic(adminClient, topic, cluster)
+	if err != nil {
+		return err
+	}
+
+	err = consumer.Subscribe(topic, nil)
+	if err != nil {
+		return err
+	}
+
+	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
@@ -117,25 +157,6 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	consumer, err := NewConsumer(group, cluster, c.clientID, beginning)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
-	}
-	log.CliLogger.Trace("Create consumer succeeded")
-
-	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
-	}
-	defer adminClient.Close()
-
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
-		return err
-	}
-
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
-
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return err
@@ -143,11 +164,6 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
-
-	err = consumer.Subscribe(topic, nil)
-	if err != nil {
-		return err
-	}
 
 	subject := topicNameStrategy(topic)
 	contextName, err := cmd.Flags().GetString("context-name")

@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -19,7 +18,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:         "create",
 		Short:       "Create a schema.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:        c.onPremCreate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -63,7 +62,6 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-
 	}
 
 	dir, err := CreateTempDir()
@@ -73,11 +71,19 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
-	_, _, err = c.registerSchemaOnPrem(cmd, dir, schemaType, schemaPath, subject, refs)
+
+	schemaCfg := &RegisterSchemaConfigs{
+		SchemaDir:  dir,
+		SchemaType: schemaType,
+		SchemaPath: &schemaPath,
+		Subject:    subject,
+		Refs:       refs,
+	}
+	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
 	return err
 }
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaDir, schemaType, schemaPath, subject string, refs []srsdk.SchemaReference) ([]byte, map[string]string, error) {
+func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
@@ -85,10 +91,10 @@ func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaDir, sche
 	if err != nil {
 		return nil, nil, err
 	}
-	metaInfo, err := RegisterSchemaWithAuth(cmd, subject, schemaType, schemaPath, refs, srClient, ctx)
+	metaInfo, err := RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 	if err != nil {
 		return metaInfo, nil, err
 	}
-	referencePathMap, err := StoreSchemaReferences(schemaDir, refs, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 	return metaInfo, referencePathMap, err
 }

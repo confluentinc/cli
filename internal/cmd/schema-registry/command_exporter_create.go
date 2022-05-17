@@ -1,6 +1,10 @@
 package schemaregistry
 
 import (
+	"context"
+	"fmt"
+
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -14,13 +18,13 @@ import (
 func (c *exporterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: "Create new schema exporter.",
+		Short: "Create a new schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
-				Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+				Code: fmt.Sprintf(`%s schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`, pversion.CLIName),
 			},
 		),
 	}
@@ -42,8 +46,15 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return err
+	}
 
+	return createExporter(cmd, args[0], srClient, ctx)
+}
+
+func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	subjects, err := cmd.Flags().GetStringSlice("subjects")
 	if err != nil {
 		return err
@@ -54,14 +65,9 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-
-	context := "."
+	contextName := "."
 	if contextType == "CUSTOM" {
-		context, err = cmd.Flags().GetString("context-name")
+		contextName, err = cmd.Flags().GetString("context-name")
 		if err != nil {
 			return err
 		}
@@ -92,7 +98,7 @@ func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
 		Subjects:            subjects,
 		SubjectRenameFormat: subjectFormat,
 		ContextType:         contextType,
-		Context:             context,
+		Context:             contextName,
 		Config:              configMap,
 	}
 

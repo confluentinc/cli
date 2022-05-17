@@ -23,7 +23,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a topic named "my_topic" with default options.`,
@@ -33,7 +33,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)

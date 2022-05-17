@@ -28,7 +28,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.enable),
+		RunE:        c.enable,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

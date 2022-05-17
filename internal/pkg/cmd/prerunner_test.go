@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"testing"
 
@@ -22,7 +21,6 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -55,6 +53,11 @@ const (
 var (
 	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -115,73 +118,25 @@ func getPreRunBase() *pcmd.PreRun {
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 	launchdarkly.Init(nil, true)
 
-	type fields struct {
-		Command string
+	tests := map[string]log.Level{
+		"":      log.ERROR,
+		"-v":    log.WARN,
+		"-vv":   log.INFO,
+		"-vvv":  log.DEBUG,
+		"-vvvv": log.TRACE,
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   log.Level
-	}{
-		{
-			name: "default logging level",
-			fields: fields{
-				Command: "help",
-			},
-			want: log.ERROR,
-		},
-		{
-			name: "warn logging level",
-			fields: fields{
-				Command: "help -v",
-			},
-			want: log.WARN,
-		},
-		{
-			name: "info logging level",
-			fields: fields{
-				Command: "help -vv",
-			},
-			want: log.INFO,
-		},
-		{
-			name: "debug logging level",
-			fields: fields{
-				Command: "help -vvv",
-			},
-			want: log.DEBUG,
-		},
-		{
-			name: "trace logging level",
-			fields: fields{
-				Command: "help -vvvv",
-			},
-			want: log.TRACE,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := v1.New()
-			cfg, err := load.LoadAndMigrate(cfg)
-			require.NoError(t, err)
 
-			r := getPreRunBase()
-			r.JWTValidator = pcmd.NewJWTValidator()
-			r.Config = cfg
+	for flags, level := range tests {
+		r := getPreRunBase()
 
-			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
-			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
+		c := pcmd.NewAnonymousCLICommand(cmd, r)
 
-			args := strings.Split(tt.fields.Command, " ")
-			_, err = pcmd.ExecuteCommand(rootCmd.Command, args...)
-			require.NoError(t, err)
+		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
+		require.NoError(t, err)
 
-			got := log.CliLogger.GetLevel()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PreRun.HasAPIKey() = %v, want %v", got, tt.want)
-			}
-		})
+		require.Equal(t, level, log.CliLogger.GetLevel())
 	}
 }
 
@@ -283,6 +238,11 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+				GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
@@ -455,7 +415,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -550,7 +510,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				return ccloudCreds, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -670,16 +630,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			config: userNameConfigLoggedIn,
 		},
 		{
-			name:           "not logged in user",
-			config:         userNotLoggedIn,
-			errMsg:         errors.NotLoggedInErrorMsg,
-			suggestionsMsg: errors.NotLoggedInSuggestions,
-		},
-		{
-			name:           "username context corrupted auth token",
-			config:         userNameCfgCorruptedAuthToken,
-			errMsg:         errors.CorruptedTokenErrorMsg,
-			suggestionsMsg: errors.CorruptedTokenSuggestions,
+			name:   "not logged in user",
+			config: userNotLoggedIn,
+			errMsg: errors.NotLoggedInErrorMsg,
 		},
 		{
 			name:   "api credential context",
@@ -761,12 +714,17 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cmd.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
 		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
 			GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}
 			},
-			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+			GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}

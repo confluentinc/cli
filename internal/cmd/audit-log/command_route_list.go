@@ -16,7 +16,7 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 		Short: "List routes matching a resource & sub-resources.",
 		Long:  "List the routes that match either the queried resource or its sub-resources.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	cmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")

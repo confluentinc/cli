@@ -51,7 +51,7 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 		client:     client,
 	}
 
-	c.RunE = pcmd.NewCLIRunE(c.update)
+	c.RunE = c.update
 
 	return c.Command
 }
@@ -138,7 +138,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateAutocompleteMsg, pversion.CLIName)
 	return nil
 }
 

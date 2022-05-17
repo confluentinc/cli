@@ -16,7 +16,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Use:         "update <subject>",
 		Short:       "Update subject compatibility or mode.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.onPremUpdate),
+		RunE:        c.onPremUpdate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

@@ -20,7 +20,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe top-level or subject-level schema compatibility.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of subject "payments".`,
@@ -44,7 +44,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

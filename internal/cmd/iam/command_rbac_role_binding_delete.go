@@ -16,7 +16,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete a role binding.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 	}
 
 	if c.cfg.IsCloudLogin() {

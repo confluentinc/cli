@@ -129,13 +129,10 @@ func (c *Context) GetCurrentEnvironmentId() string {
 	return c.State.Auth.Account.Id
 }
 
-func (c *Context) UpdateAuthToken(token string) error {
+func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 	c.State.AuthToken = token
-	err := c.Save()
-	if err != nil {
-		return err
-	}
-	return nil
+	c.State.AuthRefreshToken = refreshToken
+	return c.Save()
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
@@ -163,13 +160,6 @@ func (c *Context) GetUser() *orgv1.User {
 		return auth.User
 	}
 	return nil
-}
-
-func (c *Context) GetEmail() string {
-	if user := c.GetUser(); user != nil {
-		return user.Email
-	}
-	return ""
 }
 
 func (c *Context) GetOrganization() *orgv1.Organization {
