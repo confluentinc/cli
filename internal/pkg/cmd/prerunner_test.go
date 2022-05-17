@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -114,6 +116,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+	launchdarkly.Init(nil, true)
+
 	tests := map[string]log.Level{
 		"":      log.ERROR,
 		"-v":    log.WARN,

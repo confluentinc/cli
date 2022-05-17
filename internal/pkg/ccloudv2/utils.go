@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"fmt"
+	testserver "github.com/confluentinc/cli/test/test-server"
 	"net/url"
 	"strings"
 
@@ -16,6 +17,20 @@ const (
 	pageTokenQueryParameter = "page_token"
 	ccloudV2ListPageSize    = 100
 )
+
+var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
+
+func IsCCloudURL(url string, isTest bool) bool {
+	for _, hostname := range Hostnames {
+		if strings.Contains(url, hostname) {
+			return true
+		}
+	}
+	if isTest {
+		return strings.Contains(url, testserver.TestCloudURL.Host)
+	}
+	return false
+}
 
 func getServerUrl(baseURL string, isTest bool) string {
 	if isTest {
