@@ -2,12 +2,12 @@ package v1
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -25,7 +25,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
-	LDConfig               *LaunchDarkly                     `json:"ld_config,omitempty" hcl:"ld_config,omitempty"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -201,10 +201,10 @@ func (c *Context) GetAuthRefreshToken() string {
 }
 
 func (c *Context) GetLDFlags() map[string]interface{} {
-	if c.LDConfig == nil {
+	if c.FeatureFlags == nil {
 		return map[string]interface{}{}
 	}
-	return c.LDConfig.FlagValues
+	return c.FeatureFlags.Values
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

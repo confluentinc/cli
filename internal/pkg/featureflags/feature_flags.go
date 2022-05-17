@@ -1,6 +1,6 @@
 //go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/launch_darkly.go --pkg mock --selfpkg github.com/confluentinc/cli launch_darkly.go LaunchDarklyManager
 
-package launchdarkly
+package featureflags
 
 import (
 	b64 "encoding/base64"
@@ -10,21 +10,18 @@ import (
 	"regexp"
 	"time"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	test_server "github.com/confluentinc/cli/test/test-server"
-
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
+	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -34,10 +31,10 @@ const (
 	testEnvClientId = "61af57740127630ce47de5bd"
 )
 
-var (
-	Manager    featureFlagManager // Global LD Manager
-	attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
-)
+// Manager is a global feature flag manager
+var Manager featureFlagManager
+
+var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 
 type featureFlagManager interface {
 	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool
@@ -46,25 +43,26 @@ type featureFlagManager interface {
 	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{}
 }
 
-type LaunchDarklyManager struct {
+type launchDarklyManager struct {
 	client  *sling.Sling
 	version *version.Version
 }
 
-func InitManager(version *version.Version, isTest bool) {
+func Init(version *version.Version, isTest bool) {
 	basePath := fmt.Sprintf(baseURL, prodEnvClientId)
 	if isTest {
-		basePath = test_server.TestCloudURL.Path + "/ldapi/sdk/eval/1234"
+		basePath = testserver.TestCloudURL.Path + "/ldapi/sdk/eval/1234"
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)
 	}
-	Manager = &LaunchDarklyManager{
+
+	Manager = &launchDarklyManager{
 		client:  sling.New().Base(basePath),
 		version: version,
 	}
 }
 
-func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool {
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
@@ -74,7 +72,7 @@ func (ld *LaunchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	return flagVal
 }
 
-func (ld *LaunchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal string) string {
+func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal string) string {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
@@ -83,7 +81,7 @@ func (ld *LaunchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	return defaultVal
 }
 
-func (ld *LaunchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal int) int {
+func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal int) int {
 	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
@@ -95,12 +93,12 @@ func (ld *LaunchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	return defaultVal
 }
 
-func (ld *LaunchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
+func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
 	flagVal := ld.generalVariation(key, ctx, defaultVal)
 	return flagVal
 }
 
-func (ld *LaunchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
+func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
 	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
@@ -128,7 +126,7 @@ func logUnexpectedValueTypeMsg(key string, value interface{}, expectedType strin
 	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
 }
 
-func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interface{}, error) {
+func (ld *launchDarklyManager) fetchFlags(user lduser.User) (map[string]interface{}, error) {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding user: %w", err)
@@ -144,18 +142,22 @@ func (ld *LaunchDarklyManager) fetchFlags(user lduser.User) (map[string]interfac
 }
 
 func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User) bool {
-	if ctx == nil || ctx.Context == nil || ctx.LDConfig == nil {
+	if ctx == nil || ctx.Context == nil || ctx.FeatureFlags == nil {
 		return false
 	}
+
+	flags := ctx.FeatureFlags
+
 	// only use cached flags if they were fetched for the same LD User
-	if !ctx.LDConfig.User.Equal(user) {
+	if !flags.User.Equal(user) {
 		return false
 	}
 
-	flagExpirationTime := int64(time.Hour.Seconds())
+	if len(flags.Values) == 0 {
+		return false
+	}
 
-	isExpired := ctx.LDConfig.FlagUpdateTime < time.Now().Unix()-flagExpirationTime
-	return !isExpired && len(ctx.LDConfig.FlagValues) > 0
+	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {
@@ -166,7 +168,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	return b64.URLEncoding.EncodeToString(userBytes), nil
 }
 
-func (ld *LaunchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
+func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {
 	var userBuilder lduser.UserBuilder
 	custom := ldvalue.ValueMapBuild()
 
@@ -238,11 +240,14 @@ func parsePkcFromBootstrap(bootstrap string) string {
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, user lduser.User) {
 	if ctx == nil {
 		return
-	} else if ctx.LDConfig == nil {
-		ctx.LDConfig = &v1.LaunchDarkly{}
 	}
-	ctx.LDConfig.FlagValues = vals
-	ctx.LDConfig.FlagUpdateTime = time.Now().Unix()
-	ctx.LDConfig.User = user
+
+	if ctx.FeatureFlags == nil {
+		ctx.FeatureFlags = new(v1.FeatureFlags)
+	}
+	ctx.FeatureFlags.Values = vals
+	ctx.FeatureFlags.LastUpdateTime = time.Now().Unix()
+	ctx.FeatureFlags.User = user
+
 	_ = ctx.Save()
 }

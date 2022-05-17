@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
