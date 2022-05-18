@@ -35,9 +35,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+	key, _, err := c.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
 
 	if cmd.Flags().Changed("description") {
@@ -47,10 +47,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			apiKeyUpdate := apikeysv2.IamV2ApiKeyUpdate{
 				Spec: &apikeysv2.IamV2ApiKeySpecUpdate{Description: apikeysv2.PtrString(description)},
 			}
-			_, httpResp, err = c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
+			_, _, err = c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
 		}
 		if err != nil {
-			return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+			return errors.CatchApiKeyForbiddenAccessError(err, updateOperation)
 		}
 
 		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)

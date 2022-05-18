@@ -95,6 +95,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 		userKey, _, err := c.V2Client.CreateApiKey(key)
 		if err != nil {
+			fmt.Println(err.Error())
 			return c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
 		}
 
@@ -190,14 +191,15 @@ func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
 	return ownerResourceId, nil
 }
 
+// ------------ maybe this can be deleted? -------------
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
 func (c *command) catchServiceAccountNotValidError(err error, clusterId, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
-
-	if err.Error() == "error creating api key: service account is not valid" && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
+	invalidError := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
+	if invalidError && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
 		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), c.State.Auth.Organization.AuditLog.ServiceAccountId)
 		if err2 != nil {
 			return err

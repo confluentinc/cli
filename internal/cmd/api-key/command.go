@@ -25,6 +25,13 @@ type command struct {
 
 const resourceFlagName = "resource"
 
+const (
+	createOperation = "creating"
+	deleteOperation = "deleting"
+	getOperation    = "getting"
+	updateOperation = "updating"
+)
+
 var resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
 var resourceKindToType = map[string]string{"Cluster": resource.Kafka, "ksqlDB": resource.Ksql, "SchemaRegistry": resource.SchemaRegistry, "Cloud": resource.Cloud}
 

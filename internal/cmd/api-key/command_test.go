@@ -5,11 +5,13 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -55,15 +57,29 @@ const (
 )
 
 var (
-	apiValue = &schedv1.ApiKey{
-		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
-		UserId:          serviceAccountId,
-		UserResourceId:  userResourceId,
-		Key:             apiKeyVal,
-		Secret:          apiSecretVal,
-		Description:     apiKeyDescription,
-		Created:         types.TimestampNow(),
-		Id:              apiKeyResourceId,
+	// apiValue = &schedv1.ApiKey{
+	// 	LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
+	// 	UserId:          serviceAccountId,
+	// 	UserResourceId:  userResourceId,
+	// 	Key:             apiKeyVal,
+	// 	Secret:          apiSecretVal,
+	// 	Description:     apiKeyDescription,
+	// 	Created:         types.TimestampNow(),
+	// 	Id:              apiKeyResourceId,
+	// }
+	apiValue = &apikeysv2.IamV2ApiKey{
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Description: apikeysv2.PtrString(apiKeyDescription),
+			Resource:    &apikeysv2.ObjectReference{},
+			Owner: &apikeysv2.ObjectReference{
+				Id: *apikeysv2.PtrString(apiValue.UserResourceId),
+			},
+			Secret: apikeysv2.PtrString(apiSecretVal),
+		},
+		Id: apikeysv2.PtrString(apiKeyVal),
+		Metadata: &apikeysv2.ObjectMeta{
+			CreatedAt: &time.Time{},
+		},
 	}
 	auditLogApiValue = &schedv1.ApiKey{
 		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},

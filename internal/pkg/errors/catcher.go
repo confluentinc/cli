@@ -165,9 +165,9 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	return err
 }
 
-func CatchApiKeyForbiddenAccessError(err error, r *http.Response) error {
-	if strings.Contains(r.Status, "Forbidden") {
-		return NewWrapErrorWithSuggestions(err, "Failed to perform the operation on API key", APIKeyNotFoundSuggestions)
+func CatchApiKeyForbiddenAccessError(err error, operation string) error {
+	if err.Error() == "403 Forbidden" {
+		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
 	}
 	return err
 }

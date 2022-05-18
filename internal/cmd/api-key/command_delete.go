@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -25,18 +26,19 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
 
-	key, httpResp, err := c.V2Client.GetApiKey(apiKey)
+	key, _, err := c.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+		fmt.Println(err.Error())
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {
 		err = c.v1Delete(apiKey)
 	} else {
-		httpResp, err = c.V2Client.DeleteApiKey(apiKey)
+		_, err = c.V2Client.DeleteApiKey(apiKey)
 	}
 	if err != nil {
-		errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+		errors.CatchApiKeyForbiddenAccessError(err, deleteOperation)
 	}
 
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)

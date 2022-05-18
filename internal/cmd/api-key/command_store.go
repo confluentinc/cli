@@ -115,11 +115,11 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	apiKey, httpResp, err := c.V2Client.GetApiKey(key)
+	apiKey, _, err := c.V2Client.GetApiKey(key)
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, httpResp)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
-
+	fmt.Println(cluster.ID, apiKey.Spec, apiKey.Spec.Resource, apiKey.Spec.Resource.Id)
 	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
 
 	if !apiKeyIsValidForTargetCluster {

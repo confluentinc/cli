@@ -27,14 +27,16 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
-	environments    = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
-	keyStore        = map[int32]*schedv1.ApiKey{}
-	keyIndex        = int32(1)
-	keyTimestamp, _ = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
-	resourceIdMap   = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	environments       = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	keyStore           = map[int32]*schedv1.ApiKey{}
+	keyIndex           = int32(1)
+	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
 )
 
 const (
@@ -330,7 +332,8 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/api_keys"
 func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
+		fmt.Println("im in v1 apikeysss,", r.Method)
+		if r.Method == http.MethodPost { // create
 			req := &schedv1.CreateApiKeyRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
@@ -356,6 +359,8 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 			}
 			keyIndex++
 			keyStore[apiKey.Id] = apiKey
+			v2ApiKey := getV2ApiKey(apiKey)
+			keyStoreV2[*v2ApiKey.Id] = v2ApiKey
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
@@ -376,13 +381,14 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/api_keys/{key}"
 func (c *CloudRouter) HandleApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("im in v1 apikey,", r.Method)
 		vars := mux.Vars(r)
 		keyStr := vars["key"]
 		keyId, err := strconv.Atoi(keyStr)
 		require.NoError(t, err)
 		index := int32(keyId)
 		apiKey := keyStore[index]
-		if r.Method == http.MethodPut {
+		if r.Method == http.MethodPut { // update?
 			req := &schedv1.UpdateApiKeyRequest{}
 			err = utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
