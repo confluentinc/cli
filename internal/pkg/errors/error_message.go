@@ -416,32 +416,27 @@ const (
 
 	// Special error handling
 	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
-	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	AvoidTimeoutSuggestion      = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg         = "not logged in"
 	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
 	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
 	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
 	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
-		avoidTimeoutSuggestion
-	InvalidEmailErrorMsg    = "user \"%s\" not found"
-	InvalidEmailSuggestions = "Check the email credential.\n" +
-		"If the email is correct, check that you have successfully verified your email.\n" +
-		"If the problem persists, please submit a support ticket.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
+	InvalidEmailErrorMsg             = "user \"%s\" not found"
 	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg             = "incorrect email or password"
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
-	CCloudInvalidLoginSuggestions    = avoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""
 	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
