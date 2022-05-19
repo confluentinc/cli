@@ -179,6 +179,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
 			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
 		}
+		log.CliLogger.Tracef("credentials: %#v", credentials)
 
 		return credentials, nil
 	}
