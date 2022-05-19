@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -17,7 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
@@ -73,7 +74,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := c.isCCloudURL(url)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -293,7 +294,7 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range v1.CCloudHostnames {
+		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
 				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
@@ -336,18 +337,6 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 
 	return url, strings.Join(msg, " and "), nil
-}
-
-func (c *command) isCCloudURL(url string) bool {
-	for _, hostname := range v1.CCloudHostnames {
-		if strings.Contains(url, hostname) {
-			return true
-		}
-	}
-	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
-	}
-	return false
 }
 
 func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {

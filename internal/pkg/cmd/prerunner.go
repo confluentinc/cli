@@ -7,6 +7,8 @@ import (
 	"os"
 	"strings"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	"github.com/spf13/cobra"
@@ -188,6 +190,16 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
 			return err
 		}
+
+		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
+		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
+		// check for cloud login (since it is not executed from cloud context)
+		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || CommandRequiresCloudAuth(command.Command, command.Config.Config) || isCloudLoginCmd(command, r.IsTest) {
+			if err := checkCliDisable(command, r.Config); err != nil {
+				return err
+			}
+		}
+
 		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
 			return err
 		}
@@ -212,6 +224,45 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		return nil
 	}
+}
+
+func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
+	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
+	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	errMsg, errMsgOk := ldDisable["error_msg"].(string)
+	if errMsgOk && errMsg != "" {
+		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
+		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
+			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
+			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
+				return err
+			}
+			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
+			return errors.NewErrorWithSuggestions(errMsg, suggestionsMsg)
+		}
+	}
+	return nil
+}
+
+func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(urlFlag, isTest)
+}
+
+func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(urlFlag, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
