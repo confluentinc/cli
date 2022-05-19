@@ -95,7 +95,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 		userKey, _, err := c.V2Client.CreateApiKey(key)
 		if err != nil {
-			fmt.Println(err.Error())
 			return c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
 		}
 

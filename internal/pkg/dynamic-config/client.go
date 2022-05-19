@@ -34,25 +34,15 @@ func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, e
 }
 
 func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {
-	envId, err := c.context.AuthenticatedEnvId()
-	if err != nil {
-		return err
-	}
 	// check if this is API key exists server-side
-	key, err := c.context.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{AccountId: envId, Key: apiKey})
+	key, _, err := c.context.V2Client.GetApiKey(apiKey)
 	if err != nil {
 		return err
 	}
 	// check if the key is for the right cluster
-	found := false
-	for _, c := range key.LogicalClusters {
-		if c.Id == clusterID {
-			found = true
-			break
-		}
-	}
+	ok := key.Spec.Resource.Id == clusterID
 	// this means the requested api-key belongs to a different cluster
-	if !found {
+	if !ok {
 		errorMsg := fmt.Sprintf(errors.InvalidAPIKeyErrorMsg, apiKey, clusterID)
 		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)

@@ -141,7 +141,6 @@ func (c *CloudRouter) addClusterRoutes(t *testing.T) {
 
 func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 	c.HandleFunc(apiKeys, c.HandleApiKeys(t))
-	c.HandleFunc(apiKey, c.HandleApiKey(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {

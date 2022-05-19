@@ -1,5 +1,13 @@
 package test
 
+import (
+	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/stretchr/testify/require"
+)
+
 func (s *CLITestSuite) TestAPIKey() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -86,43 +94,43 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --service-account sa-12345", fixture: "api-key/38.golden"},
 		{name: "error listing api keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "api-key/39.golden"},
 
-		// // create api-key for audit log
-		// {args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/40.golden"}, // MYKEY11
-		// {args: "api-key list", fixture: "api-key/41.golden"},
-		// {args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/42.golden", disableAuditLog: true}, // MYKEY11
-		// {args: "api-key list", fixture: "api-key/43.golden", disableAuditLog: true},
+		// create api-key for audit log
+		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/40.golden"}, // MYKEY11
+		{args: "api-key list", fixture: "api-key/41.golden"},
+		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/42.golden", disableAuditLog: true}, // MYKEY11
+		{args: "api-key list", fixture: "api-key/43.golden", disableAuditLog: true},
 
-		// // create json yaml output
-		// {args: "api-key create --description human-output --resource lkc-other1", fixture: "api-key/44.golden"},
-		// {args: "api-key create --description json-output --resource lkc-other1 -o json", fixture: "api-key/45.golden"},
-		// {args: "api-key create --description yaml-output --resource lkc-other1 -o yaml", fixture: "api-key/46.golden"},
+		// create json yaml output
+		{args: "api-key create --description human-output --resource lkc-other1", fixture: "api-key/44.golden"},
+		{args: "api-key create --description json-output --resource lkc-other1 -o json", fixture: "api-key/45.golden"},
+		{args: "api-key create --description yaml-output --resource lkc-other1 -o yaml", fixture: "api-key/46.golden"},
 
-		// // store: error handling
-		// {name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden"},
-		// {name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
-		// {name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
-		// 	wantFunc: func(t *testing.T) {
-		// 		cfg := v1.New()
-		// 		cfg, err := load.LoadAndMigrate(cfg)
-		// 		require.NoError(t, err)
-		// 		ctx := cfg.Context()
-		// 		require.NotNil(t, ctx)
-		// 		kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
-		// 		pair := kcc.APIKeys["UIAPIKEY100"]
-		// 		require.NotNil(t, pair)
-		// 		require.Equal(t, "NEWSECRET", pair.Secret)
-		// 	}},
+		// store: error handling
+		{name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden"},
+		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
+		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
+			wantFunc: func(t *testing.T) {
+				cfg := v1.New()
+				cfg, err := load.LoadAndMigrate(cfg)
+				require.NoError(t, err)
+				ctx := cfg.Context()
+				require.NotNil(t, ctx)
+				kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
+				pair := kcc.APIKeys["UIAPIKEY100"]
+				require.NotNil(t, pair)
+				require.Equal(t, "NEWSECRET", pair.Secret)
+			}},
 
-		// // use: error handling
-		// {name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden"},
-		// {name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "api-key/51.golden"},
-		// {name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "api-key/52.golden"},
+		// use: error handling
+		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden"},
+		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "api-key/51.golden"},
+		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "api-key/52.golden"},
 
-		// // more errors
-		// {args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", wantErrCode: 1},
-		// {args: "api-key create", fixture: "api-key/54.golden", wantErrCode: 1},
-		// {args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
-		// {args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
+		// more errors
+		{args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", wantErrCode: 1},
+		{args: "api-key create", fixture: "api-key/54.golden", wantErrCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
+		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
 	}
 
 	resetConfiguration(s.T())

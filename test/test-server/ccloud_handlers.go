@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -338,14 +337,6 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
-
-			if req.ApiKey.UserResourceId == "sa-123456" {
-				b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{Error: &corev1.Error{Message: "service account is not valid"}})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			}
-
 			apiKey := req.ApiKey
 			apiKey.Id = keyIndex
 			apiKey.Key = fmt.Sprintf("MYKEY%d", keyIndex)
@@ -362,55 +353,6 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 			v2ApiKey := getV2ApiKey(apiKey)
 			keyStoreV2[*v2ApiKey.Id] = v2ApiKey
 			b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodGet {
-			require.NotEmpty(t, r.URL.Query().Get("account_id"))
-			apiKeys := apiKeysFilter(r.URL)
-			// Return sorted data or the test output will not be stable
-			sort.Sort(ApiKeyList(apiKeys))
-			b, err := utilv1.MarshalJSONToBytes(&schedv1.GetApiKeysReply{ApiKeys: apiKeys})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/api_keys/{key}"
-func (c *CloudRouter) HandleApiKey(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("im in v1 apikey,", r.Method)
-		vars := mux.Vars(r)
-		keyStr := vars["key"]
-		keyId, err := strconv.Atoi(keyStr)
-		require.NoError(t, err)
-		index := int32(keyId)
-		apiKey := keyStore[index]
-		if r.Method == http.MethodPut { // update?
-			req := &schedv1.UpdateApiKeyRequest{}
-			err = utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			apiKey.Description = req.ApiKey.Description
-			result := &schedv1.UpdateApiKeyReply{
-				ApiKey: apiKey,
-				Error:  nil,
-			}
-			b, err := utilv1.MarshalJSONToBytes(result)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodDelete {
-			req := &schedv1.DeleteApiKeyRequest{}
-			err = utilv1.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			delete(keyStore, index)
-			result := &schedv1.DeleteApiKeyReply{
-				ApiKey: apiKey,
-				Error:  nil,
-			}
-			b, err := utilv1.MarshalJSONToBytes(result)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)

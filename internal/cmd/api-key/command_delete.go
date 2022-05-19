@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +27,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	key, _, err := c.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		fmt.Println(err.Error())
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
 

@@ -15,8 +15,7 @@ import (
 
 var (
 	keyStoreV2 = map[string]*apikeysv2.IamV2ApiKey{}
-	// keyIndex   = int32(1) // what does this do?
-	keyTime = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	keyTime    = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 )
 
 func init() {
@@ -26,11 +25,10 @@ func init() {
 // Handler for: "/iam/v2/api-keys/{id}"
 func handleIamApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("im in v2 apikey,", r.Method)
 		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		keyStr := vars["id"]
-		if r.Method == http.MethodPatch { // update
+		if r.Method == http.MethodPatch {
 			req := new(apikeysv2.IamV2ApiKey)
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
@@ -41,7 +39,15 @@ func handleIamApiKey(t *testing.T) http.HandlerFunc {
 		} else if r.Method == http.MethodDelete {
 			delete(keyStoreV2, keyStr)
 			w.WriteHeader(http.StatusNoContent)
-			return
+		} else if r.Method == http.MethodGet {
+			if keyStr == "UNKNOWN" {
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+				return
+			}
+			apiKey := keyStoreV2[keyStr]
+			err := json.NewEncoder(w).Encode(apiKey)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -49,7 +55,6 @@ func handleIamApiKey(t *testing.T) http.HandlerFunc {
 // Hanlder for: "/iam/v2/api-keys"
 func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("im in v2 apikeysss,", r.Method)
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			req := new(apikeysv2.IamV2ApiKey)

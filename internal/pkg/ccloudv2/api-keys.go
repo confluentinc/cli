@@ -2,9 +2,11 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -35,7 +37,24 @@ func (c *Client) DeleteApiKey(id string) (*http.Response, error) {
 
 func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, error) {
 	req := c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKey(c.apiKeysApiContext(), id)
-	return c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKeyExecute(req)
+	apiKey, httpResp, err := c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKeyExecute(req)
+	if err == nil {
+		return apiKey, httpResp, nil
+	}
+
+	apiKeys, err := c.ListApiKeys("", "")
+	if err != nil {
+		return apiKey, httpResp, err
+	}
+
+	for _, key := range apiKeys {
+		if *key.Id == id {
+			return apiKey, httpResp, err
+		}
+	}
+
+	return apiKey, httpResp, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.APIKeyNotFoundErrorMsg, id), errors.APIKeyNotFoundSuggestions)
+
 }
 
 func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKeyUpdate) (apikeysv2.IamV2ApiKey, *http.Response, error) {

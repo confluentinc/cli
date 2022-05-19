@@ -119,7 +119,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
-	fmt.Println(cluster.ID, apiKey.Spec, apiKey.Spec.Resource, apiKey.Spec.Resource.Id)
+
 	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
 
 	if !apiKeyIsValidForTargetCluster {
