@@ -4,10 +4,11 @@ import (
 	"context"
 	"os"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
