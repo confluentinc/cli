@@ -157,7 +157,8 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 		return false
 	}
 
-	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
+	timeout := int64(time.Hour.Seconds())
+	return flags.LastUpdateTime+timeout > time.Now().Unix()
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {
