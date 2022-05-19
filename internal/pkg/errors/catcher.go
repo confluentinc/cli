@@ -105,7 +105,7 @@ func catchCoreV1Errors(err error) error {
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, CCloudInvalidLoginSuggestions)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestion)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
