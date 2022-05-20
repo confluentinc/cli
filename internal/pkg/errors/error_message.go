@@ -465,6 +465,9 @@ const (
 	ValidReplicaFlagsSuggestions         = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
 	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
 
+	// Kafka quota errors
+	OnlySpecifyIngressOrEgress = `only specify one of "--ingress" or "--egress"`
+
 	// Special error types
 	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
 	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
