@@ -81,7 +81,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.Client)
+	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
 }
 
 func (c *command) getAllUsers() ([]*orgv1.User, error) {
