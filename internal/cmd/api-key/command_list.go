@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -73,10 +72,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	users, err := c.Client.User.List(context.Background())
-	if err != nil {
-		return err
-	}
 	allUsers, err := c.getAllUsers()
 	if err != nil {
 		return err
@@ -113,7 +108,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
-	usersMap := getUsersMap(users)
+	usersMap := getUsersMap(allUsers)
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -137,7 +132,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		ownerId := apiKey.GetSpec().Owner.GetId()
-		email := c.getEmail(ownerId, resourceIdToUserIdMap, serviceAccountsMap, usersMap)
+		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
@@ -179,7 +174,7 @@ func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	return idMap
 }
 
-func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, serviceAccountsMap map[string]bool, usersMap map[int32]*orgv1.User) string {
+func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*orgv1.User, serviceAccountsMap map[string]bool) string {
 	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
 	}

@@ -84,7 +84,7 @@ var (
 		},
 		Id: apikeysv2.PtrString(apiKeyVal),
 		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{}, // not getting called...?
+			CreatedAt: &time.Time{},
 		},
 	}
 	auditLogApiValue = apikeysv2.IamV2ApiKey{
@@ -101,7 +101,7 @@ var (
 		},
 		Id: apikeysv2.PtrString(auditLogApiKeyVal),
 		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{}, // not getting called...?
+			CreatedAt: &time.Time{},
 		},
 	}
 	myApiValue = apikeysv2.IamV2ApiKey{
@@ -118,17 +118,8 @@ var (
 		},
 		Id: apikeysv2.PtrString(myApiKeyVal),
 		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{}, // not getting called...?
+			CreatedAt: &time.Time{},
 		},
-	}
-)
-
-var (
-	serviceAccountUser1 = iamv2.IamV2ServiceAccount{
-		Id: iamv2.PtrString(userResourceId),
-	}
-	serviceAccountUser2 = iamv2.IamV2ServiceAccount{
-		Id: iamv2.PtrString(auditLogUserResourceId),
 	}
 )
 
@@ -253,7 +244,9 @@ func (suite *APITestSuite) SetupTest() {
 		},
 		ListIamV2ServiceAccountsExecuteFunc: func(_ iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
 			list := iamv2.IamV2ServiceAccountList{
-				Data: []iamv2.IamV2ServiceAccount{serviceAccountUser1, serviceAccountUser2},
+				Data: []iamv2.IamV2ServiceAccount{iamv2.IamV2ServiceAccount{
+					Id: iamv2.PtrString(userResourceId),
+				}},
 			}
 			return list, nil, nil
 		},
