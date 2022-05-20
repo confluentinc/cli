@@ -190,7 +190,6 @@ func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
 	return ownerResourceId, nil
 }
 
-// ------------ maybe this can be deleted? -------------
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
 func (c *command) catchServiceAccountNotValidError(err error, clusterId, serviceAccountId string) error {

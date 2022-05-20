@@ -81,7 +81,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	resourceIdToUserIdMap := c.mapResourceIdToUserId(allUsers)
+	resourceIdToUserIdMap := mapResourceIdToUserId(allUsers)
 
 	if ownerResourceId != "" {
 		if resource.LookupType(ownerResourceId) != resource.ServiceAccount {
@@ -171,7 +171,7 @@ func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
 	return userMap
 }
 
-func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
+func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
@@ -180,14 +180,13 @@ func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 }
 
 func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, serviceAccountsMap map[string]bool, usersMap map[int32]*orgv1.User) string {
-	userId := resourceIdToUserIdMap[resourceId]
-
-	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == userId {
-		return "<auditlog service account>"
-	}
-
 	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
+	}
+
+	userId := resourceIdToUserIdMap[resourceId]
+	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == userId {
+		return "<auditlog service account>"
 	}
 
 	if user, ok := usersMap[userId]; ok {

@@ -331,7 +331,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/api_keys"
 func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost { // create
+		if r.Method == http.MethodPost {
 			req := &schedv1.CreateApiKeyRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)

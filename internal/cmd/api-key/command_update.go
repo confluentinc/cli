@@ -29,15 +29,14 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
+	key, _, err := c.V2Client.GetApiKey(apiKey)
+	if err != nil {
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
+	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
-	}
-
-	key, _, err := c.V2Client.GetApiKey(apiKey)
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
 
 	if cmd.Flags().Changed("description") {

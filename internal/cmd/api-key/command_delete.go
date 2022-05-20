@@ -48,7 +48,6 @@ func (c *command) v1Delete(apiKey string) error {
 	if err != nil {
 		return err
 	}
-
 	key := &schedv1.ApiKey{
 		Id:             userKey.Id,
 		Key:            apiKey,

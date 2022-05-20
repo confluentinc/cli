@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
-	"strconv"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
@@ -142,7 +141,6 @@ func fillKeyStore() {
 func fillKeyStoreV2() {
 	keyStoreV2["MYKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("MYKEY1"),
-		// Spec.Secret: apikeysv2.PtrString("MYSECRET1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
@@ -161,7 +159,6 @@ func fillKeyStoreV2() {
 
 	keyStoreV2["UIAPIKEY100"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY100"),
-		// Secret: "UIAPISECRET100",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
@@ -170,7 +167,6 @@ func fillKeyStoreV2() {
 	}
 	keyStoreV2["UIAPIKEY101"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY101"),
-		// Secret: "UIAPISECRET101",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-other1", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
@@ -179,7 +175,6 @@ func fillKeyStoreV2() {
 	}
 	keyStoreV2["UIAPIKEY102"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY102"),
-		// Secret: "UIAPISECRET102",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lksqlc-ksql1", Kind: apikeysv2.PtrString("ksqlDB")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
@@ -188,7 +183,6 @@ func fillKeyStoreV2() {
 	}
 	keyStoreV2["UIAPIKEY103"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY103"),
-		// Secret: "UIAPISECRET103",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
@@ -197,7 +191,6 @@ func fillKeyStoreV2() {
 	}
 	keyStoreV2["SERVICEACCOUNTKEY1"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
-		// Secret: "SERVICEACCOUNTSECRET1",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceID},
@@ -206,7 +199,6 @@ func fillKeyStoreV2() {
 	}
 	keyStoreV2["DEACTIVATEDUSERKEY"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
-		// Secret: "DEACTIVATEDUSERSECRET",
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceID},
@@ -216,32 +208,6 @@ func fillKeyStoreV2() {
 	for _, k := range keyStoreV2 {
 		k.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
 	}
-}
-
-func apiKeysFilter(url *url.URL) []*schedv1.ApiKey {
-	var apiKeys []*schedv1.ApiKey
-	q := url.Query()
-	uid := q.Get("user_id")
-	clusterIds := q["cluster_id"]
-
-	for _, a := range keyStore {
-		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
-		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
-			for _, c := range a.LogicalClusters {
-				for _, clusterId := range clusterIds {
-					if c.Id == clusterId {
-						return true
-					}
-				}
-			}
-			return false
-		}(clusterIds)
-
-		if uidFilter && clusterFilter {
-			apiKeys = append(apiKeys, a)
-		}
-	}
-	return apiKeys
 }
 
 func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {

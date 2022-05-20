@@ -26,7 +26,6 @@ type command struct {
 const resourceFlagName = "resource"
 
 const (
-	createOperation = "creating"
 	deleteOperation = "deleting"
 	getOperation    = "getting"
 	updateOperation = "updating"
