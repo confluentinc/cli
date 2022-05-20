@@ -180,14 +180,14 @@ func (c *command) mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 }
 
 func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, serviceAccountsMap map[string]bool, usersMap map[int32]*orgv1.User) string {
-	if _, ok := serviceAccountsMap[resourceId]; ok {
-		return "<service account>"
-	}
-
 	userId := resourceIdToUserIdMap[resourceId]
 
 	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == userId {
 		return "<auditlog service account>"
+	}
+
+	if _, ok := serviceAccountsMap[resourceId]; ok {
+		return "<service account>"
 	}
 
 	if user, ok := usersMap[userId]; ok {
