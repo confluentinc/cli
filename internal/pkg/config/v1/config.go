@@ -24,8 +24,7 @@ const (
 )
 
 var (
-	ver, _          = version.NewVersion("1.0.0")
-	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
+	ver, _ = version.NewVersion("1.0.0")
 )
 
 // Config represents the CLI configuration.

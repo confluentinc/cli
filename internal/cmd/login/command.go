@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -17,7 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
@@ -49,7 +50,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
+	cmd.Flags().Bool("save", false, "Save username/password (non-SSO) credentials to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 
 	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
@@ -73,7 +74,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := c.isCCloudURL(url)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -205,8 +206,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = c.saveLoginToNetrc(cmd, false, credentials)
-	if err != nil {
+	if err := c.saveLoginToNetrc(cmd, false, credentials); err != nil {
 		return err
 	}
 
@@ -277,6 +277,11 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 	}
 
 	if save {
+		if credentials.IsSSO {
+			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
+			return nil
+		}
+
 		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
@@ -289,7 +294,7 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range v1.CCloudHostnames {
+		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
 				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
@@ -332,18 +337,6 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 
 	return url, strings.Join(msg, " and "), nil
-}
-
-func (c *command) isCCloudURL(url string) bool {
-	for _, hostname := range v1.CCloudHostnames {
-		if strings.Contains(url, hostname) {
-			return true
-		}
-	}
-	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
-	}
-	return false
 }
 
 func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {

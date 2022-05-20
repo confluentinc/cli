@@ -11,6 +11,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -18,9 +19,23 @@ const (
 	ccloudV2ListPageSize    = 100
 )
 
+var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
+
+func IsCCloudURL(url string, isTest bool) bool {
+	for _, hostname := range Hostnames {
+		if strings.Contains(url, hostname) {
+			return true
+		}
+	}
+	if isTest {
+		return strings.Contains(url, testserver.TestCloudURL.Host) || strings.Contains(url, testserver.TestV2CloudURL.Host)
+	}
+	return false
+}
+
 func getServerUrl(baseURL string, isTest bool) string {
 	if isTest {
-		return "http://127.0.0.1:2048"
+		return testserver.TestV2CloudURL.String()
 	}
 	if strings.Contains(baseURL, "devel") {
 		return "https://api.devel.cpdev.cloud"
