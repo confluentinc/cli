@@ -45,14 +45,12 @@ const (
 	userResourceId     = "sa-12345"
 	serviceAccountName = "service-account"
 
-	auditLogApiKeyResourceId  = int32(7753)
 	auditLogApiKeyVal         = "auditlog-apikey"
 	auditLogApiKeySecretVal   = "opensesameforauditlogs"
 	auditLogApiKeyDescription = "Mock Apis for Audit Logs"
 	auditLogServiceAccountId  = int32(748)
 	auditLogUserResourceId    = "sa-55555"
 
-	myApiKeyResourceId  = int32(1234)
 	myApiKeyVal         = "user-apikey"
 	myApiKeySecretVal   = "icreatedthis"
 	myApiKeyDescription = "Mock Apis for User"

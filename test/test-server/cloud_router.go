@@ -16,7 +16,6 @@ const (
 	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
-	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
 	envMetadata         = "/api/env_metadata"
