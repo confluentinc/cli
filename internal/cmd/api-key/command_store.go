@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -116,18 +115,13 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	apiKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
+	apiKey, _, err := c.V2Client.GetApiKey(key)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
 	}
 
-	apiKeyIsValidForTargetCluster := false
-	for _, lkc := range apiKey.LogicalClusters {
-		if lkc.Id == cluster.ID {
-			apiKeyIsValidForTargetCluster = true
-			break
-		}
-	}
+	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
+
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
 	}
