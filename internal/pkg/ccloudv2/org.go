@@ -68,11 +68,9 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 }
 
 func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
-	var req orgv2.ApiListOrgV2EnvironmentsRequest
+	req := c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }

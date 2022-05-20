@@ -1,14 +1,16 @@
 package testserver
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
-	"strconv"
+	"sort"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -29,6 +31,23 @@ func (d ApiKeyList) Swap(i, j int) {
 // Less is part of sort.Interface. We use Key as the value to sort by
 func (d ApiKeyList) Less(i, j int) bool {
 	return d[i].Key < d[j].Key
+}
+
+type ApiKeyListV2 []apikeysv2.IamV2ApiKey
+
+// Len is part of sort.Interface.
+func (d ApiKeyListV2) Len() int {
+	return len(d)
+}
+
+// Swap is part of sort.Interface.
+func (d ApiKeyListV2) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+// Less is part of sort.Interface. We use Key as the value to sort by
+func (d ApiKeyListV2) Less(i, j int) bool {
+	return *d[i].Id < *d[j].Id
 }
 
 func fillKeyStore() {
@@ -119,35 +138,118 @@ func fillKeyStore() {
 	}
 }
 
-func apiKeysFilter(url *url.URL) []*schedv1.ApiKey {
-	var apiKeys []*schedv1.ApiKey
+func fillKeyStoreV2() {
+	keyStoreV2["MYKEY1"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MYKEY1"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+
+	keyStoreV2["MYKEY2"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MYKEY2"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-17"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+
+	keyStoreV2["UIAPIKEY100"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("UIAPIKEY100"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	keyStoreV2["UIAPIKEY101"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("UIAPIKEY101"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-other1", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	keyStoreV2["UIAPIKEY102"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("UIAPIKEY102"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lksqlc-ksql1", Kind: apikeysv2.PtrString("ksqlDB")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	keyStoreV2["UIAPIKEY103"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("UIAPIKEY103"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-cool1", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-22bbb"},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	keyStoreV2["SERVICEACCOUNTKEY1"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceID},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	keyStoreV2["DEACTIVATEDUSERKEY"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceID},
+			Description: apikeysv2.PtrString(""),
+		},
+	}
+	for _, k := range keyStoreV2 {
+		k.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
+	}
+}
+
+func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
+	var apiKeys []apikeysv2.IamV2ApiKey
 	q := url.Query()
-	uid := q.Get("user_id")
-	clusterIds := q["cluster_id"]
+	uid := q.Get("spec.owner")
+	resourceId := q.Get("spec.resource")
 
-	for _, a := range keyStore {
-		uidFilter := (uid == "0") || (uid == strconv.Itoa(int(a.UserId)))
-		clusterFilter := (len(clusterIds) == 0) || func(clusterIds []string) bool {
-			for _, c := range a.LogicalClusters {
-				for _, clusterId := range clusterIds {
-					if c.Id == clusterId {
-						return true
-					}
-				}
-			}
-			return false
-		}(clusterIds)
-
+	for _, key := range keyStoreV2 {
+		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
+		clusterFilter := (resourceId == "") || (resourceId == key.Spec.Resource.Id)
 		if uidFilter && clusterFilter {
-			apiKeys = append(apiKeys, a)
+			apiKeys = append(apiKeys, *key)
 		}
 	}
-	return apiKeys
+	sort.Sort(ApiKeyListV2(apiKeys))
+	return &apikeysv2.IamV2ApiKeyList{Data: apiKeys}
+}
+
+func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
+	return &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString(apiKey.Key),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Owner:       &apikeysv2.ObjectReference{Id: apiKey.UserResourceId},
+			Secret:      apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
+			Resource:    &apikeysv2.ObjectReference{Id: apiKey.LogicalClusters[0].Id, Kind: apikeysv2.PtrString(resourceTypeToKind[apiKey.LogicalClusters[0].Type])},
+			Description: apikeysv2.PtrString(apiKey.Description),
+		},
+		Metadata: &apikeysv2.ObjectMeta{CreatedAt: keyTime},
+	}
 }
 
 var (
-	resourceNotFoundErrMsg = `{"error":{"code":404,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
 )
+
+func writeServiceAccountInvalidError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusForbidden)
+	_, err := io.WriteString(w, serviceAccountInvalidErrMsg)
+	return err
+}
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
