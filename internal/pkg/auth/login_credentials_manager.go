@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -173,7 +173,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.GetUser().GetSso().GetEnabled() || ctx.GetUser().GetSocialConnection() != "",
+			IsSSO:            ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
