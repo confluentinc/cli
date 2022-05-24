@@ -42,6 +42,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Int64("offset", 0, "offset from the beginning to consume from.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -66,6 +67,15 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	beginning, err := cmd.Flags().GetBool("from-beginning")
 	if err != nil {
 		return err
+	}
+
+	offsetInt, err := cmd.Flags().GetInt64("offset")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("beginning") && cmd.Flags().Changed("offset") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "beginning", "offset")
 	}
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
@@ -128,7 +138,8 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	err = consumer.Subscribe(topic, nil)
+	rebalanceCallback := getRebalanceCallback(offsetInt)
+	err = consumer.Subscribe(topic, rebalanceCallback)
 	if err != nil {
 		return err
 	}

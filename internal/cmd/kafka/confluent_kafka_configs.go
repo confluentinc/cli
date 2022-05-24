@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -53,6 +54,9 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 	if err := setAutoOffsetReset(configMap, beginning); err != nil {
+		return nil, err
+	}
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 	if err := setConsumerDebugOption(configMap); err != nil {
@@ -237,6 +241,7 @@ func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
 	if beginning {
 		autoOffsetReset = "earliest"
 	}
+	fmt.Println("setting auto offset reset to:", autoOffsetReset)
 	return configMap.SetKey("auto.offset.reset", autoOffsetReset)
 }
 
@@ -313,4 +318,55 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 	}
 
 	return nil
+}
+
+func getRebalanceCallback(offsetInt int64) func(c *ckafka.Consumer, event ckafka.Event) error {
+	offset, err := ckafka.NewOffset(offsetInt)
+	if err != nil {
+		return nil
+	}
+	return func(c *ckafka.Consumer, event ckafka.Event) error {
+		switch ev := event.(type) {
+		case kafka.AssignedPartitions:
+			fmt.Println("-------------- in callback --------------")
+			fmt.Fprintf(os.Stderr,
+				"%% %s rebalance: %d new partition(s) getting: %v\n",
+				c.GetRebalanceProtocol(), len(ev.Partitions),
+				ev.Partitions)
+
+			parts := make([]ckafka.TopicPartition,
+				len(ev.Partitions))
+			for i, tp := range ev.Partitions {
+				tp.Offset = offset
+				parts[i] = tp
+			}
+			fmt.Printf("Assigning %v\n", parts)
+			err = c.IncrementalAssign(parts) // add partitions to current set for consume.
+			if err != nil {
+				panic(err)
+			}
+
+			// double check
+			// why it doesn't change??
+			// it'll change in next call?
+			fmt.Fprintf(os.Stderr,
+				"%% %s rebalance: %d new partition(s) assigned: %v\n",
+				c.GetRebalanceProtocol(), len(ev.Partitions),
+				ev.Partitions)
+			fmt.Println("-------------- exiting callback --------------")
+		case kafka.RevokedPartitions:
+			fmt.Fprintf(os.Stderr,
+				"%% %s rebalance: %d partition(s) revoked: %v\n",
+				c.GetRebalanceProtocol(), len(ev.Partitions),
+				ev.Partitions)
+			if c.AssignmentLost() {
+				fmt.Fprintf(os.Stderr, "%% Current assignment lost!\n")
+			}
+			// err = c.IncrementalUnassign(ev.Partitions)
+			// if err != nil {
+			// 	panic(err)
+			// }
+		}
+		return nil
+	}
 }

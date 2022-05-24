@@ -214,6 +214,14 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
+	// offsetInt, err := cmd.Flags().GetInt64("offset")
+	// if err != nil {
+	// 	return err
+	// }
+	// offset, err := ckafka.NewOffset(offsetInt)
+	// if err != nil {
+	// 	return nil
+	// }
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
@@ -226,6 +234,16 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 				continue
 			}
 			switch e := event.(type) {
+			// case ckafka.AssignedPartitions:
+			// 	parts := make([]ckafka.TopicPartition,
+			// 		1)
+			// 	for i, tp := range e.Partitions {
+			// 		tp.Offset = offset // Set start offset to 5 messages from end of partition
+			// 		parts[i] = tp
+			// 		break
+			// 	}
+			// 	fmt.Printf("Assign %v\n", parts)
+			// 	consumer.Assign(parts) // Assign an atomic set of partitions to consume.
 			case *ckafka.Message:
 				err := consumeMessage(e, groupHandler)
 				if err != nil {
@@ -236,6 +254,8 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 				if e.Code() == ckafka.ErrAllBrokersDown {
 					run = false
 				}
+			default:
+				fmt.Printf("Ignored %v\n", e) // to be deleted!
 			}
 		}
 	}
