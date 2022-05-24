@@ -231,7 +231,7 @@ func (suite *APITestSuite) SetupTest() {
 		HasAPIKeyFunc: func(key, clusterId string) (b bool, e error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *schedv1.ApiKey, clusterId string) error {
+		StoreAPIKeyFunc: func(key *v1.APIKeyPair, clusterId string) error {
 			return nil
 		},
 		DeleteAPIKeyFunc: func(key string) error {

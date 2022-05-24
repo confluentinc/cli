@@ -87,15 +87,15 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			Spec: &apikeysv2.IamV2ApiKeySpec{
 				Description: apikeysv2.PtrString(description),
 				Owner:       &apikeysv2.ObjectReference{Id: ownerResourceId},
+				Resource: &apikeysv2.ObjectReference{
+					Id:   clusterId,
+					Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
+				},
 			},
 		}
-
 		if resourceType == resource.Cloud {
-			key.Spec.Resource = &apikeysv2.ObjectReference{Id: "cloud"}
-		} else {
-			key.Spec.Resource = &apikeysv2.ObjectReference{Id: clusterId}
+			key.Spec.Resource.Id = "cloud"
 		}
-		key.Spec.Resource.Kind = apikeysv2.PtrString(resourceTypeToKind[resourceType])
 
 		v2Key, _, err := c.V2Client.CreateApiKey(key)
 		if err != nil {
@@ -200,8 +200,8 @@ func (c *command) catchServiceAccountNotValidError(err error, clusterId, service
 	if err == nil {
 		return nil
 	}
-	invalidError := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
-	if invalidError && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
+	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
+	if isInvalid && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
 		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), c.State.Auth.Organization.AuditLog.ServiceAccountId)
 		if err2 != nil {
 			return err

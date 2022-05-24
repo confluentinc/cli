@@ -45,15 +45,6 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	type keyDisplay struct {
-		Key            string
-		Description    string
-		UserResourceId string
-		UserEmail      string
-		ResourceType   string
-		ResourceId     string
-		Created        string
-	}
 
 	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client)
 	if err != nil {
