@@ -168,6 +168,14 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 }
 
 func CatchConfigurationNotValidError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
@@ -181,6 +189,7 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		}
 	}
+
 	return err
 }
 
@@ -199,6 +208,11 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	if err == nil {
 		return nil
 	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
@@ -213,6 +227,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		}
 	}
+
 	return err
 }
 
@@ -220,11 +235,17 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 	if err == nil {
 		return nil
 	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "Service Account Not Found") {
 		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 	}
+
 	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 }
 
@@ -295,22 +316,34 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	return err
 }
 
-func CatchSchemaNotFoundError(err error, resp *http.Response) error {
+func CatchSchemaNotFoundError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(resp.Status, "Not Found") {
+
+	if r == nil {
+		return err
+	}
+
+	if strings.Contains(r.Status, "Not Found") {
 		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
 	}
+
 	return err
 }
 
-func CatchNoSubjectLevelConfigError(err error, resp *http.Response, subject string) error {
+func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string) error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(resp.Status, "Not Found") {
+
+	if r == nil {
+		return err
+	}
+
+	if strings.Contains(r.Status, "Not Found") {
 		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
 	}
+
 	return err
 }
