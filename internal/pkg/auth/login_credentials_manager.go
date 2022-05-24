@@ -192,7 +192,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		if log.CliLogger.GetLevel() >= log.WARN {
+		if log.CliLogger.Level >= log.WARN {
 			utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		}
 
