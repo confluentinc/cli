@@ -10,6 +10,8 @@ import (
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/cmk/v2/clusters/{id}":            handleCmkCluster,
 	"/cmk/v2/clusters":                 handleCmkClusters,
+	"/iam/v2/api-keys/{id}":            handleIamApiKey,
+	"/iam/v2/api-keys":                 handleIamApiKeys,
 	"/iam/v2/users/{id}":               handleIamUser,
 	"/iam/v2/users":                    handleIamUsers,
 	"/iam/v2/service-accounts/{id}":    handleIamServiceAccount,
