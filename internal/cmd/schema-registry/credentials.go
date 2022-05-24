@@ -52,7 +52,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 
 func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
-	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
+	srConfig.Debug = log.CliLogger.Level >= log.DEBUG
 
 	ctx := cfg.Context()
 
