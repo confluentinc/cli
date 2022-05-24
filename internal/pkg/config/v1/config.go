@@ -237,7 +237,7 @@ func (c *Config) Validate() error {
 	// Validate that current context exists.
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
-			log.CliLogger.Tracef("current context does not exist")
+			log.CliLogger.Trace("current context does not exist")
 			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
 		}
 	}
@@ -247,29 +247,29 @@ func (c *Config) Validate() error {
 	for _, context := range c.Contexts {
 		err := context.validate()
 		if err != nil {
-			log.CliLogger.Tracef("context validation error")
+			log.CliLogger.Trace("context validation error")
 			return err
 		}
 		if _, ok := c.Credentials[context.CredentialName]; !ok {
-			log.CliLogger.Tracef("unspecified credential error")
+			log.CliLogger.Trace("unspecified credential error")
 			return errors.NewCorruptedConfigError(errors.UnspecifiedCredentialErrorMsg, context.Name, c.Filename)
 		}
 		if _, ok := c.Platforms[context.PlatformName]; !ok {
-			log.CliLogger.Tracef("unspecified platform error")
+			log.CliLogger.Trace("unspecified platform error")
 			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
 		}
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
+			log.CliLogger.Trace("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {
-			log.CliLogger.Tracef("context state mapped to nonexistent context")
+			log.CliLogger.Trace("context state mapped to nonexistent context")
 			return errors.NewCorruptedConfigError(errors.ContextStateNotMappedErrorMsg, contextName, c.Filename)
 		}
 	}
