@@ -16,6 +16,11 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
+var (
+	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+)
+
 type ApiKeyList []*schedv1.ApiKey
 
 // Len is part of sort.Interface.
@@ -239,11 +244,6 @@ func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
 		Metadata: &apikeysv2.ObjectMeta{CreatedAt: keyTime},
 	}
 }
-
-var (
-	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
-	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
-)
 
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)

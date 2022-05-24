@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/confluentinc/go-printer"
@@ -87,6 +88,33 @@ func DescribeObject(cmd *cobra.Command, obj interface{}, fields []string, humanR
 		return NewInvalidOutputFormatFlagError(format)
 	}
 	return printer.RenderOut(obj, fields, humanRenames, structuredRenames, format, cmd.OutOrStdout())
+}
+
+func DescribePointerObject(cmd *cobra.Command, obj interface{}, fields []string, humanRenames, structuredRenames map[string]string) error {
+	format, err := cmd.Flags().GetString(FlagName)
+	if err != nil {
+		return err
+	}
+	if !(format == Human.String() || format == JSON.String() || format == YAML.String()) {
+		return NewInvalidOutputFormatFlagError(format)
+	}
+
+	val := reflect.ValueOf(obj).Elem()
+	t := reflect.TypeOf(obj).Elem()
+	num := t.NumField()
+
+	stringMap := obj
+	// stringVal := reflect.ValueOf(stringMap).Elem()
+	for i := 0; i < num; i++ {
+		fmt.Println(i)
+		valueField := val.Field(i)
+		if valueField.Kind() == reflect.Ptr {
+			valueField = valueField.Elem()
+		}
+		// fieldName := t.Field(i).Name
+	}
+	fmt.Println(stringMap)
+	return printer.RenderOut(&stringMap, fields, humanRenames, structuredRenames, format, cmd.OutOrStdout())
 }
 
 // StructuredOutput - pretty prints an object in specified format (JSON or YAML) using tags specified in struct definition

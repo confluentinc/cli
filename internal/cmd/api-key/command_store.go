@@ -3,7 +3,6 @@ package apikey
 import (
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -134,7 +133,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
 	}
 
-	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID); err != nil {
+	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
 	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)

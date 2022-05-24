@@ -31,7 +31,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {
-		err = c.v1Delete(apiKey)
+		err = c.deleteV1(apiKey)
 	} else {
 		_, err = c.V2Client.DeleteApiKey(apiKey)
 	}
@@ -43,7 +43,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 
-func (c *command) v1Delete(apiKey string) error {
+func (c *command) deleteV1(apiKey string) error {
 	userKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return err

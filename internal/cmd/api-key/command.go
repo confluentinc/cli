@@ -23,6 +23,16 @@ type command struct {
 	flagResolver pcmd.FlagResolver
 }
 
+type keyDisplay struct {
+	Key            string
+	Description    string
+	UserResourceId string
+	UserEmail      string
+	ResourceType   string
+	ResourceId     string
+	Created        string
+}
+
 const resourceFlagName = "resource"
 
 const (

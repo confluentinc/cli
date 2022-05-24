@@ -29,8 +29,8 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 	cmd.Flags().String("api-secret", "", "API key secret.")
 }
 
-func AutocompleteApiKeys(environment string, v2Client *ccloudv2.Client) []string {
-	apiKeys, err := v2Client.ListApiKeys("", "")
+func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
+	apiKeys, err := client.ListApiKeys("", "")
 	if err != nil {
 		return nil
 	}

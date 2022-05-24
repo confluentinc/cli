@@ -41,7 +41,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	if cmd.Flags().Changed("description") {
 		if isSchemaRegistryOrKsqlApiKey(key) {
-			err = c.v1Update(apiKey, description)
+			err = c.updateV1(apiKey, description)
 		} else {
 			apiKeyUpdate := apikeysv2.IamV2ApiKeyUpdate{
 				Spec: &apikeysv2.IamV2ApiKeySpecUpdate{Description: apikeysv2.PtrString(description)},
@@ -58,7 +58,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) v1Update(apiKey, description string) error {
+func (c *command) updateV1(apiKey, description string) error {
 	key, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return err

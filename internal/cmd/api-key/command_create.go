@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -70,9 +71,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var schedv1ApiKey *schedv1.ApiKey
+	var userKey *v1.APIKeyPair
 	if resourceType == resource.Ksql || resourceType == resource.SchemaRegistry {
-		schedv1ApiKey, err = c.v1Create(ownerResourceId, clusterId, resourceType, description)
+		userKey, err = c.createV1(ownerResourceId, clusterId, resourceType, description)
+		if err != nil {
+			return err
+		}
 	} else {
 		ownerResourceId, err = c.getApiKeyOwnerId(ownerResourceId)
 		if err != nil {
@@ -86,25 +90,22 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			},
 		}
 
-		if resourceType != resource.Cloud {
-			key.Spec.Resource = &apikeysv2.ObjectReference{Id: clusterId}
-		} else {
+		if resourceType == resource.Cloud {
 			key.Spec.Resource = &apikeysv2.ObjectReference{Id: "cloud"}
+		} else {
+			key.Spec.Resource = &apikeysv2.ObjectReference{Id: clusterId}
 		}
 		key.Spec.Resource.Kind = apikeysv2.PtrString(resourceTypeToKind[resourceType])
 
-		userKey, _, err := c.V2Client.CreateApiKey(key)
+		v2Key, _, err := c.V2Client.CreateApiKey(key)
 		if err != nil {
 			return c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
 		}
 
-		schedv1ApiKey = &schedv1.ApiKey{
-			Key:    *userKey.Id,
-			Secret: *userKey.Spec.Secret,
+		userKey = &v1.APIKeyPair{
+			Key:    *v2Key.Id,
+			Secret: *v2Key.Spec.Secret,
 		}
-	}
-	if err != nil {
-		return err
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)
@@ -117,13 +118,13 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
 	}
 
-	err = output.DescribeObject(cmd, schedv1ApiKey, createFields, createHumanRenames, createStructuredRenames)
+	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
 	if err != nil {
 		return err
 	}
 
 	if resourceType == resource.Kafka {
-		if err := c.keystore.StoreAPIKey(schedv1ApiKey, clusterId); err != nil {
+		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
 	}
@@ -131,7 +132,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func (c *command) v1Create(ownerResourceId, clusterId, resourceType, description string) (*schedv1.ApiKey, error) {
+func (c *command) createV1(ownerResourceId, clusterId, resourceType, description string) (*v1.APIKeyPair, error) {
 	key := &schedv1.ApiKey{
 		UserResourceId: ownerResourceId,
 		Description:    description,
@@ -146,11 +147,13 @@ func (c *command) v1Create(ownerResourceId, clusterId, resourceType, description
 	if resourceType != resource.Cloud {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
-	userKey, err := c.Client.APIKey.Create(context.Background(), key)
-	if err != nil {
-		return nil, c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
+	schedv1ApiKey, err := c.Client.APIKey.Create(context.Background(), key)
+	displayKey := &v1.APIKeyPair{
+		Key:    schedv1ApiKey.Key,
+		Secret: schedv1ApiKey.Secret,
 	}
-	return userKey, nil
+	return displayKey, c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
+
 }
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
@@ -175,16 +178,17 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 }
 
 func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
-	if ownerResourceId == "" {
-		userId := c.State.Auth.User.Id
-		users, err := c.getAllUsers()
-		if err != nil {
-			return "", err
-		}
-		for _, user := range users {
-			if userId == user.Id {
-				return user.ResourceId, nil
-			}
+	if ownerResourceId != "" {
+		return ownerResourceId, nil
+	}
+
+	users, err := c.getAllUsers()
+	if err != nil {
+		return "", err
+	}
+	for _, user := range users {
+		if user.Id == c.State.Auth.User.Id {
+			return user.ResourceId, nil
 		}
 	}
 	return ownerResourceId, nil

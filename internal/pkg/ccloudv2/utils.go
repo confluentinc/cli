@@ -46,43 +46,39 @@ func getServerUrl(baseURL string, isTest bool) string {
 }
 
 func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {
