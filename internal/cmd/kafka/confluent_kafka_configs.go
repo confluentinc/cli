@@ -264,6 +264,7 @@ func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter pa
 				return []ckafka.TopicPartition{partition}
 			}
 		}
+		return []ckafka.TopicPartition{}
 	}
 	return partitions
 }
