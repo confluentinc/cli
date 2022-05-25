@@ -157,6 +157,29 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
+		case "lkc-asyncapi":
+			listTopicReply = schedv1.ListTopicReply{
+				Topics: []*schedv1.TopicDescription{
+					{
+						Name: "topic1",
+						Config: []*schedv1.TopicConfigEntry{
+							{
+								Name:  "cleanup.policy",
+								Value: "delete",
+							},
+							{
+								Name:  "delete.retention.ms",
+								Value: "86400000",
+							},
+						},
+						Partitions: []*schedv1.TopicPartitionInfo{
+							{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
+							{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
+							{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
+						},
+					},
+				},
+			}
 		case "lkc-kafka-api-no-topics":
 			listTopicReply = schedv1.ListTopicReply{Topics: []*schedv1.TopicDescription{}}
 		default: //cluster not ready
