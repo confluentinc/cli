@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -127,8 +128,8 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
-	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +153,36 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 	}
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
+}
+
+func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(c *ckafka.Consumer, event ckafka.Event) error {
+	return func(c *ckafka.Consumer, event ckafka.Event) error {
+		switch ev := event.(type) {
+		case kafka.AssignedPartitions:
+			parts := make([]ckafka.TopicPartition,
+				len(ev.Partitions))
+			for i, tp := range ev.Partitions {
+				tp.Offset = offset
+				parts[i] = tp
+			}
+			parts = getPartitionsByIndex(parts, partitionFilter)
+
+			err := c.IncrementalAssign(parts)
+			if err != nil {
+				return err
+			}
+		case kafka.RevokedPartitions:
+			if c.AssignmentLost() {
+				fmt.Fprintf(os.Stderr, "%% Current assignment lost.\n")
+			}
+			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
+			err := c.IncrementalUnassign(parts)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
