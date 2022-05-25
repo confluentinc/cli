@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/properties"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
@@ -19,6 +18,11 @@ import (
 
 type kafkaClientConfigs struct {
 	configurations map[string]string
+}
+
+type partitionFilter struct {
+	changed bool
+	index   int32
 }
 
 func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
@@ -47,15 +51,12 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap := getCommonConfig(kafka, clientID)
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
-	if err := setAutoOffsetReset(configMap, beginning); err != nil {
-		return nil, err
-	}
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
@@ -123,11 +124,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	beginning, err := cmd.Flags().GetBool("from-beginning")
-	if err != nil {
-		return nil, err
-	}
-	if err := setAutoOffsetReset(configMap, beginning); err != nil {
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 
@@ -236,13 +233,39 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
+func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
+	if cmd.Flags().Changed("offset") {
+		offsetInt, err := cmd.Flags().GetInt64("offset")
+		if err != nil {
+			return ckafka.OffsetInvalid, err
+		}
+		if offsetInt < 0 {
+			return ckafka.OffsetInvalid, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidOffsetErrorMsg, offsetInt), errors.InvalidOffsetSuggestions)
+		}
+		return ckafka.NewOffset(offsetInt)
+	} else {
+		beginning, err := cmd.Flags().GetBool("from-beginning")
+		if err != nil {
+			return ckafka.OffsetInvalid, err
+		}
+		autoOffsetReset := "latest"
+		if beginning {
+			autoOffsetReset = "earliest"
+		}
+		return ckafka.NewOffset(autoOffsetReset)
 	}
-	fmt.Println("setting auto offset reset to:", autoOffsetReset)
-	return configMap.SetKey("auto.offset.reset", autoOffsetReset)
+}
+
+func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter partitionFilter) []ckafka.TopicPartition {
+	if partitionFilter.changed {
+		for _, partition := range partitions {
+			if partition.Partition == int32(partitionFilter.index) {
+				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.index)
+				return []ckafka.TopicPartition{partition}
+			}
+		}
+	}
+	return partitions
 }
 
 func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
@@ -318,55 +341,4 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 	}
 
 	return nil
-}
-
-func getRebalanceCallback(offsetInt int64) func(c *ckafka.Consumer, event ckafka.Event) error {
-	offset, err := ckafka.NewOffset(offsetInt)
-	if err != nil {
-		return nil
-	}
-	return func(c *ckafka.Consumer, event ckafka.Event) error {
-		switch ev := event.(type) {
-		case kafka.AssignedPartitions:
-			fmt.Println("-------------- in callback --------------")
-			fmt.Fprintf(os.Stderr,
-				"%% %s rebalance: %d new partition(s) getting: %v\n",
-				c.GetRebalanceProtocol(), len(ev.Partitions),
-				ev.Partitions)
-
-			parts := make([]ckafka.TopicPartition,
-				len(ev.Partitions))
-			for i, tp := range ev.Partitions {
-				tp.Offset = offset
-				parts[i] = tp
-			}
-			fmt.Printf("Assigning %v\n", parts)
-			err = c.IncrementalAssign(parts) // add partitions to current set for consume.
-			if err != nil {
-				panic(err)
-			}
-
-			// double check
-			// why it doesn't change??
-			// it'll change in next call?
-			fmt.Fprintf(os.Stderr,
-				"%% %s rebalance: %d new partition(s) assigned: %v\n",
-				c.GetRebalanceProtocol(), len(ev.Partitions),
-				ev.Partitions)
-			fmt.Println("-------------- exiting callback --------------")
-		case kafka.RevokedPartitions:
-			fmt.Fprintf(os.Stderr,
-				"%% %s rebalance: %d partition(s) revoked: %v\n",
-				c.GetRebalanceProtocol(), len(ev.Partitions),
-				ev.Partitions)
-			if c.AssignmentLost() {
-				fmt.Fprintf(os.Stderr, "%% Current assignment lost!\n")
-			}
-			// err = c.IncrementalUnassign(ev.Partitions)
-			// if err != nil {
-			// 	panic(err)
-			// }
-		}
-		return nil
-	}
 }

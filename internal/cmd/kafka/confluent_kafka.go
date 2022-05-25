@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -127,8 +128,8 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
-	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +153,36 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 	}
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
+}
+
+func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(c *ckafka.Consumer, event ckafka.Event) error {
+	return func(c *ckafka.Consumer, event ckafka.Event) error {
+		switch ev := event.(type) {
+		case kafka.AssignedPartitions:
+			parts := make([]ckafka.TopicPartition,
+				len(ev.Partitions))
+			for i, tp := range ev.Partitions {
+				tp.Offset = offset
+				parts[i] = tp
+			}
+			parts = getPartitionsByIndex(parts, partitionFilter)
+
+			err := c.IncrementalAssign(parts)
+			if err != nil {
+				return err
+			}
+		case kafka.RevokedPartitions:
+			if c.AssignmentLost() {
+				fmt.Fprintf(os.Stderr, "%% Current assignment lost.\n")
+			}
+			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
+			err := c.IncrementalUnassign(parts)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
@@ -214,14 +245,6 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
-	// offsetInt, err := cmd.Flags().GetInt64("offset")
-	// if err != nil {
-	// 	return err
-	// }
-	// offset, err := ckafka.NewOffset(offsetInt)
-	// if err != nil {
-	// 	return nil
-	// }
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
@@ -234,16 +257,6 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 				continue
 			}
 			switch e := event.(type) {
-			// case ckafka.AssignedPartitions:
-			// 	parts := make([]ckafka.TopicPartition,
-			// 		1)
-			// 	for i, tp := range e.Partitions {
-			// 		tp.Offset = offset // Set start offset to 5 messages from end of partition
-			// 		parts[i] = tp
-			// 		break
-			// 	}
-			// 	fmt.Printf("Assign %v\n", parts)
-			// 	consumer.Assign(parts) // Assign an atomic set of partitions to consume.
 			case *ckafka.Message:
 				err := consumeMessage(e, groupHandler)
 				if err != nil {
@@ -254,8 +267,6 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 				if e.Code() == ckafka.ErrAllBrokersDown {
 					run = false
 				}
-			default:
-				fmt.Printf("Ignored %v\n", e) // to be deleted!
 			}
 		}
 	}
