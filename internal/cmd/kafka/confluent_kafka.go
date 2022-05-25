@@ -155,28 +155,28 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(c *ckafka.Consumer, event ckafka.Event) error {
-	return func(c *ckafka.Consumer, event ckafka.Event) error {
+func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
+	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) {
 		case kafka.AssignedPartitions:
-			parts := make([]ckafka.TopicPartition,
+			partitions := make([]ckafka.TopicPartition,
 				len(ev.Partitions))
-			for i, tp := range ev.Partitions {
-				tp.Offset = offset
-				parts[i] = tp
+			for i, part := range ev.Partitions {
+				part.Offset = offset
+				partitions[i] = part
 			}
-			parts = getPartitionsByIndex(parts, partitionFilter)
+			partitions = getPartitionsByIndex(partitions, partitionFilter)
 
-			err := c.IncrementalAssign(parts)
+			err := consumer.IncrementalAssign(partitions)
 			if err != nil {
 				return err
 			}
 		case kafka.RevokedPartitions:
-			if c.AssignmentLost() {
+			if consumer.AssignmentLost() {
 				fmt.Fprintf(os.Stderr, "%% Current assignment lost.\n")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
-			err := c.IncrementalUnassign(parts)
+			err := consumer.IncrementalUnassign(parts)
 			if err != nil {
 				return err
 			}

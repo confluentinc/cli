@@ -235,14 +235,14 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 
 func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 	if cmd.Flags().Changed("offset") {
-		offsetInt, err := cmd.Flags().GetInt64("offset")
+		offset, err := cmd.Flags().GetInt64("offset")
 		if err != nil {
 			return ckafka.OffsetInvalid, err
 		}
-		if offsetInt < 0 {
-			return ckafka.OffsetInvalid, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidOffsetErrorMsg, offsetInt), errors.InvalidOffsetSuggestions)
+		if offset < 0 {
+			return ckafka.OffsetInvalid, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidOffsetErrorMsg, offset), errors.InvalidOffsetSuggestions)
 		}
-		return ckafka.NewOffset(offsetInt)
+		return ckafka.NewOffset(offset)
 	} else {
 		beginning, err := cmd.Flags().GetBool("from-beginning")
 		if err != nil {
