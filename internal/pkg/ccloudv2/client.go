@@ -10,20 +10,21 @@ import (
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-v2
 type Client struct {
+	AuthToken     string
 	ApiKeysClient *apikeysv2.APIClient
 	CmkClient     *cmkv2.APIClient
 	IamClient     *iamv2.APIClient
 	OrgClient     *orgv2.APIClient
 	QuotasClient  *quotasv2.APIClient
-	AuthToken     string
 }
 
 func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client {
 	return &Client{
+		AuthToken:     authToken,
 		ApiKeysClient: newApiKeysClient(baseURL, userAgent, isTest),
 		CmkClient:     newCmkClient(baseURL, userAgent, isTest),
 		IamClient:     newIamClient(baseURL, userAgent, isTest),
 		OrgClient:     newOrgClient(baseURL, userAgent, isTest),
 		QuotasClient:  newQuotasClient(baseURL, userAgent, isTest),
-		AuthToken:     authToken}
+	}
 }
