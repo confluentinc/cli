@@ -39,6 +39,8 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
+	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -111,7 +113,26 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	err = consumer.Subscribe(topicName, nil)
+	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
+	}
+
+	offset, err := getOffsetWithFallback(cmd)
+	if err != nil {
+		return err
+	}
+
+	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+	partitionFilter := partitionFilter{
+		changed: cmd.Flags().Changed("partition"),
+		index:   partition,
+	}
+
+	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	err = consumer.Subscribe(topicName, rebalanceCallback)
 	if err != nil {
 		return err
 	}
