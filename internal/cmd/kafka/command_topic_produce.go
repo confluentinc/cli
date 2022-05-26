@@ -3,7 +3,6 @@ package kafka
 import (
 	"bufio"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -222,7 +221,7 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 		return nil, nil, err
 	}
 
-	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
 	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
 		err = new(errors.SRNotAuthenticatedError)
 	}
@@ -277,9 +276,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 	}
 
 	if schemaId != 0 { // request schema from schema registry
-		schemaIdBuffer := make([]byte, 4)
-		binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
-		metaInfo = append([]byte{0x0}, schemaIdBuffer...)
+		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
 
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {

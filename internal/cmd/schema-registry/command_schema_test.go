@@ -94,6 +94,12 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
+func (suite *SchemaTestSuite) TestGetSchemaMetaInfo() {
+	req := require.New(suite.T())
+	metaInfo := GetMetaInfoFromSchemaId(id)
+	req.Equal([]byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
+}
+
 func (suite *SchemaTestSuite) TestRegisterSchema() {
 	cmd := suite.newCMD()
 	cmd.Flags().String(output.FlagName, "human", `Specify the output format as "human", "json", or "yaml".`)
@@ -109,7 +115,7 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 	}
 	metaInfo, err := RegisterSchemaWithAuth(cmd, schemaCfg, suite.srClientMock, cmd.Context())
 	req.Nil(err)
-	expectedMetaInfo := getMetaInfoFromSchemaId(id)
+	expectedMetaInfo := GetMetaInfoFromSchemaId(id)
 	req.Equal(expectedMetaInfo, metaInfo)
 }
 
