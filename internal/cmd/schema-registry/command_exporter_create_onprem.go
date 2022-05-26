@@ -39,7 +39,7 @@ func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
 }
 
 func (c *exporterCommand) onPremCreate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

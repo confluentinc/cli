@@ -57,7 +57,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		}
 	}
 
-	metaInfo := getMetaInfoFromSchemaId(response.Id)
+	metaInfo := GetMetaInfoFromSchemaId(response.Id)
 	return metaInfo, nil
 }
 
@@ -151,7 +151,7 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 	return tempStorePath, referencePathMap, nil
 }
 
-func getMetaInfoFromSchemaId(id int32) []byte {
+func GetMetaInfoFromSchemaId(id int32) []byte {
 	metaInfo := []byte{0x0}
 	schemaIdBuffer := make([]byte, 4)
 	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
