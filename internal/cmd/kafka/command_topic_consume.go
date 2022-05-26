@@ -144,7 +144,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
 	err = consumer.Subscribe(topic, rebalanceCallback)
 	if err != nil {
 		return err

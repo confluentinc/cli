@@ -131,7 +131,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
 	err = consumer.Subscribe(topicName, rebalanceCallback)
 	if err != nil {
 		return err
