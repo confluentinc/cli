@@ -155,15 +155,16 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
+// example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
 func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
-		switch ev := event.(type) {
+		switch ev := event.(type) { // ev is of type ckafka.Event
 		case kafka.AssignedPartitions:
 			partitions := make([]ckafka.TopicPartition,
 				len(ev.Partitions))
-			for i, part := range ev.Partitions {
-				part.Offset = offset
-				partitions[i] = part
+			for i, partition := range ev.Partitions {
+				partition.Offset = offset
+				partitions[i] = partition
 			}
 			partitions = getPartitionsByIndex(partitions, partitionFilter)
 

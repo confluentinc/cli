@@ -57,7 +57,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
-	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil { // see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 		return nil, err
 	}
 	if err := setConsumerDebugOption(configMap); err != nil {
@@ -124,7 +124,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil { // see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 		return nil, err
 	}
 
@@ -240,7 +240,7 @@ func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 			return ckafka.OffsetInvalid, err
 		}
 		if offset < 0 {
-			return ckafka.OffsetInvalid, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidOffsetErrorMsg, offset), errors.InvalidOffsetSuggestions)
+			return ckafka.OffsetInvalid, errors.New(errors.InvalidOffsetErrorMsg)
 		}
 		return ckafka.NewOffset(offset)
 	} else {
