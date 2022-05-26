@@ -87,7 +87,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		if ownerResourceId != "" {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		ownerResourceId, err = c.getApiKeyOwnerId(ownerResourceId)
+		ownerResourceId, err = c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
@@ -127,7 +127,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		outputWriter.AddElement(&keyDisplay{
+		outputWriter.AddElement(&apiKeyRow{
 			Key:            outputKey,
 			Description:    *apiKey.GetSpec().Description,
 			UserResourceId: ownerId,

@@ -23,7 +23,7 @@ type command struct {
 	flagResolver pcmd.FlagResolver
 }
 
-type keyDisplay struct {
+type apiKeyRow struct {
 	Key            string
 	Description    string
 	UserResourceId string
@@ -166,7 +166,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 func isSchemaRegistryOrKsqlApiKey(key apikeysv2.IamV2ApiKey) bool {
 	var kind string
 	if key.Spec.HasResource() && key.Spec.Resource.HasKind() {
-		kind = *key.Spec.Resource.Kind
+		kind = key.Spec.Resource.GetKind()
 	}
 	return kind == "SchemaRegistry" || kind == "ksqlDB"
 }

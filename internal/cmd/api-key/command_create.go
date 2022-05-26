@@ -78,9 +78,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 	} else {
-		ownerResourceId, err = c.getApiKeyOwnerId(ownerResourceId)
-		if err != nil {
-			return err
+		if ownerResourceId == "" {
+			ownerResourceId, err = c.getCurrentUserId()
 		}
 
 		key := apikeysv2.IamV2ApiKey{
@@ -153,7 +152,6 @@ func (c *command) createV1(ownerResourceId, clusterId, resourceType, description
 		Secret: schedv1ApiKey.Secret,
 	}
 	return displayKey, c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
-
 }
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
@@ -177,11 +175,7 @@ func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error
 	return key, nil
 }
 
-func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
-	if ownerResourceId != "" {
-		return ownerResourceId, nil
-	}
-
+func (c *command) getCurrentUserId() (string, error) {
 	users, err := c.getAllUsers()
 	if err != nil {
 		return "", err
@@ -191,7 +185,7 @@ func (c *command) getApiKeyOwnerId(ownerResourceId string) (string, error) {
 			return user.ResourceId, nil
 		}
 	}
-	return ownerResourceId, nil
+	return "", fmt.Errorf("Unable to find authenticated user")
 }
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
