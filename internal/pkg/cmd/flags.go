@@ -146,11 +146,11 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.V2Client)
+		return AutocompleteEnvironments(command.V2Client, command.State)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloudv2.Client) []string {
+func AutocompleteEnvironments(client *ccloudv2.Client, state *v1.ContextState) []string {
 	environments, err := client.ListOrgEnvironments()
 	if err != nil {
 		return nil
@@ -160,6 +160,11 @@ func AutocompleteEnvironments(client *ccloudv2.Client) []string {
 	for i, environment := range environments {
 		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
+
+	if auditLog, ok := AreAuditLogsEnabled(state); ok {
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.AccountId, "_confluent_audit_account"))
+	}
+
 	return suggestions
 }
 
