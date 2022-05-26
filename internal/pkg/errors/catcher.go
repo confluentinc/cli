@@ -193,6 +193,13 @@ func CatchConfigurationNotValidError(err error, r *http.Response) error {
 	return err
 }
 
+func CatchApiKeyForbiddenAccessError(err error, operation string) error {
+	if err.Error() == "403 Forbidden" {
+		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
+	}
+	return err
+}
+
 func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
