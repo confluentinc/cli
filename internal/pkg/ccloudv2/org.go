@@ -10,13 +10,12 @@ import (
 )
 
 func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
-	orgServer := getServerUrl(baseURL, isTest)
 	cfg := orgv2.NewConfiguration()
-	cfg.Servers = orgv2.ServerConfigurations{
-		{URL: orgServer, Description: "Confluent Cloud ORG"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = orgv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Org"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return orgv2.NewAPIClient(cfg)
 }
 

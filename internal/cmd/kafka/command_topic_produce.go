@@ -3,7 +3,6 @@ package kafka
 import (
 	"bufio"
 	"context"
-	"encoding/binary"
 	"fmt"
 	"os"
 	"os/signal"
@@ -25,7 +24,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd := &cobra.Command{
 		Use:         "produce <topic>",
 		Short:       "Produce messages to a Kafka topic.",
-		Long:  "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
+		Long:        "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Args:        cobra.ExactArgs(1),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
@@ -222,7 +221,7 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 		return nil, nil, err
 	}
 
-	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
 	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
 		err = new(errors.SRNotAuthenticatedError)
 	}
@@ -259,7 +258,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 	}
 
 	referencePathMap := map[string]string{}
-	metaInfo := []byte{0x0}
+	metaInfo := []byte{}
 
 	if *schemaCfg.SchemaPath != "" { // read schema from local file
 		refs, err := sr.ReadSchemaRefs(cmd)
@@ -277,9 +276,7 @@ func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, sch
 	}
 
 	if schemaId != 0 { // request schema from schema registry
-		schemaIdBuffer := make([]byte, 4)
-		binary.BigEndian.PutUint32(schemaIdBuffer, uint32(schemaId))
-		metaInfo = append(metaInfo, schemaIdBuffer...)
+		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
 
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {

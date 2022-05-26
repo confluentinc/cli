@@ -1,48 +1,17 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/go-printer"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
 	SubjectUsage            = "Subject of the schema."
 	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
 )
-
-func getApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClient(cmd, cfg, ver, "", "")
-}
-
-func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
-}
-
-func GetSrApiClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
-}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
