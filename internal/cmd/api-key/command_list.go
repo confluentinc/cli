@@ -219,7 +219,7 @@ func (c *command) getEmail(apiKey *schedv1.ApiKey, serviceAccountsMap map[int32]
 		return "<service account>"
 	}
 
-	if auditLog := v1.GetAuditLogs(c.State); auditLog != nil && auditLog.ServiceAccountId == apiKey.UserId {
+	if auditLog := v1.GetAuditLog(c.State); auditLog != nil && auditLog.ServiceAccountId == apiKey.UserId {
 		return "<auditlog service account>"
 	}
 
