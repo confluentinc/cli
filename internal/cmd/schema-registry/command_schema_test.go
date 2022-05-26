@@ -107,6 +107,8 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 	storePath := suite.T().TempDir()
 	file, err := ioutil.TempFile(storePath, "schema-file")
 	req.Nil(err)
+	err = file.Close()
+	req.Nil(err)
 	fileName := file.Name()
 	defer os.Remove(fileName)
 	schemaCfg := &RegisterSchemaConfigs{
