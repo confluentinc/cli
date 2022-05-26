@@ -66,11 +66,9 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 }
 
 func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
-	var req cmkv2.ApiListCmkV2ClustersRequest
+	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }
