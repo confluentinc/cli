@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -79,7 +80,7 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 		return nil, err
 	}
 
-	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok {
+	if auditLog := v1.GetAuditLogs(c.State); auditLog != nil {
 		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
 		if err != nil {
 			return nil, err

@@ -162,7 +162,7 @@ func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client
 		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
 
-	if auditLog, ok := AreAuditLogsEnabled(state); ok {
+	if auditLog := v1.GetAuditLogs(state); auditLog != nil {
 		auditLogAccountId := auditLog.AccountId
 		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
 		if err != nil {
