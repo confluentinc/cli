@@ -57,7 +57,9 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
-	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil { // see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+
+	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 	if err := setConsumerDebugOption(configMap); err != nil {
@@ -124,7 +126,8 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil { // see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 
