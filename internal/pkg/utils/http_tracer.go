@@ -12,7 +12,7 @@ import (
 
 func GetContext() context.Context {
 	ctx := context.Background()
-	if log.CliLogger.GetLevel() == log.TRACE {
+	if log.CliLogger.Level == log.TRACE {
 		ctx = httpTracedContext(ctx)
 	}
 	return ctx

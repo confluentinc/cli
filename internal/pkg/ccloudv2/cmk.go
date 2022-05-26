@@ -10,13 +10,12 @@ import (
 )
 
 func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
-	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
-	cfg.Servers = cmkv2.ServerConfigurations{
-		{URL: cmkServer, Description: "Confluent Cloud IAM"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = cmkv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CMK"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return cmkv2.NewAPIClient(cfg)
 }
 

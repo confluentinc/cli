@@ -6,14 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
+
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/properties"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
 )
 
 type kafkaClientConfigs struct {
@@ -241,7 +242,7 @@ func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
 }
 
 func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
+	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
 	case log.TRACE:
@@ -251,7 +252,7 @@ func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
 }
 
 func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
+	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
 	case log.TRACE:

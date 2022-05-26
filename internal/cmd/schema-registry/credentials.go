@@ -50,9 +50,21 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 	return auth, didPromptUser, nil
 }
 
-func getSchemaRegistryClient(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func getApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return GetSchemaRegistryClientWithApiKey(cmd, cfg, ver, "", "")
+}
+
+func GetSrApiClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
+}
+
+func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
-	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
+	srConfig.Debug = log.CliLogger.Level >= log.DEBUG
 
 	ctx := cfg.Context()
 
