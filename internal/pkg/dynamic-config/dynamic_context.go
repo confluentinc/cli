@@ -73,7 +73,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 func (d *DynamicContext) getAvailableEnvironments(client *ccloud.Client) ([]*orgv1.Account, error) {
 	accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
 	if err != nil {
-		return accounts, nil
+		return accounts, err
 	}
 	if d.State.Auth == nil || d.State.Auth.Organization == nil || d.State.Auth.Organization.AuditLog == nil || d.State.Auth.Organization.AuditLog.ServiceAccountId == 0 {
 		return accounts, nil
