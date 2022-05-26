@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
@@ -144,12 +146,12 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.V2Client)
+		return AutocompleteEnvironments(command.Client, command.V2Client, command.State)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloudv2.Client) []string {
-	environments, err := client.ListOrgEnvironments()
+func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, state *v1.ContextState) []string {
+	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
 	}
@@ -158,6 +160,16 @@ func AutocompleteEnvironments(client *ccloudv2.Client) []string {
 	for i, environment := range environments {
 		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
+
+	if auditLog := v1.GetAuditLog(state); auditLog != nil {
+		auditLogAccountId := auditLog.AccountId
+		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+		if err != nil {
+			return nil
+		}
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLogAccountId, auditLogAccount.Name))
+	}
+
 	return suggestions
 }
 

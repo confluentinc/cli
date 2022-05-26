@@ -8,6 +8,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -171,7 +172,7 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 	}
 
 	userId := resourceIdToUserIdMap[resourceId]
-	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == userId {
+	if auditLog := v1.GetAuditLog(c.State); auditLog != nil && auditLog.ServiceAccountId == userId {
 		return "<auditlog service account>"
 	}
 
