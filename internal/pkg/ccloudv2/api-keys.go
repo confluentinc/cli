@@ -11,13 +11,12 @@ import (
 )
 
 func newApiKeysClient(baseURL, userAgent string, isTest bool) *apikeysv2.APIClient {
-	apiKeysServer := getServerUrl(baseURL, isTest)
 	cfg := apikeysv2.NewConfiguration()
-	cfg.Servers = apikeysv2.ServerConfigurations{
-		{URL: apiKeysServer, Description: "Confluent Cloud IAM"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = apikeysv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud IAM"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return apikeysv2.NewAPIClient(cfg)
 }
 
