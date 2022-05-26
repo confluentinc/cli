@@ -75,15 +75,13 @@ func (d *DynamicContext) getAvailableEnvironments(client *ccloud.Client) ([]*org
 	if err != nil {
 		return accounts, err
 	}
+
 	if d.State.Auth == nil || d.State.Auth.Organization == nil || d.State.Auth.Organization.AuditLog == nil || d.State.Auth.Organization.AuditLog.ServiceAccountId == 0 {
 		return accounts, nil
 	}
 	auditLogAccountId := d.State.Auth.Organization.AuditLog.AccountId
 	auditLogAccount, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
-	if err != nil {
-		return accounts, err
-	}
-	return append(accounts, auditLogAccount), nil
+	return append(accounts, auditLogAccount), err
 }
 
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
