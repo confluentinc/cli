@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -218,7 +219,7 @@ func (c *command) getEmail(apiKey *schedv1.ApiKey, serviceAccountsMap map[int32]
 		return "<service account>"
 	}
 
-	if auditLog, ok := pcmd.AreAuditLogsEnabled(c.State); ok && auditLog.ServiceAccountId == apiKey.UserId {
+	if auditLog := v1.GetAuditLogs(c.State); auditLog != nil && auditLog.ServiceAccountId == apiKey.UserId {
 		return "<auditlog service account>"
 	}
 
