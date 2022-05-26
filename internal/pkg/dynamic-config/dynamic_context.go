@@ -49,6 +49,14 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 				return err
 			}
 
+			auditLogAccountId := d.State.Auth.Organization.AuditLog.AccountId
+			auditLogAccount, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+			if err != nil {
+				return err
+			}
+
+			accounts = append(accounts, auditLogAccount)
+
 			if d.verifyEnvironmentId(environment, accounts) {
 				d.State.Auth.Accounts = accounts
 				_ = d.Save()
