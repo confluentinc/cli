@@ -64,7 +64,7 @@ func GetSrApiClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken 
 
 func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
-	srConfig.Debug = log.CliLogger.GetLevel() >= log.DEBUG
+	srConfig.Debug = log.CliLogger.Level >= log.DEBUG
 
 	ctx := cfg.Context()
 

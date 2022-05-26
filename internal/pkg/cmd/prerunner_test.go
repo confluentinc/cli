@@ -136,7 +136,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
 		require.NoError(t, err)
 
-		require.Equal(t, level, log.CliLogger.GetLevel())
+		require.Equal(t, level, log.CliLogger.Level)
 	}
 }
 
