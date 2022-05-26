@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -16,18 +17,21 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
 	versionString = "12345"
 	versionInt32  = int32(12345)
-	id            = int32(123)
+	id            = int32(100004)
 )
 
 type SchemaTestSuite struct {
 	suite.Suite
 	conf             *v1.Config
+	dynamicContext   *dynamicconfig.DynamicConfig
 	kafkaCluster     *schedv1.KafkaCluster
 	srCluster        *schedv1.SchemaRegistryCluster
 	srClientMock     *srsdk.APIClient
@@ -62,20 +66,24 @@ func (suite *SchemaTestSuite) SetupSuite() {
 func (suite *SchemaTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetSchemaFunc: func(ctx context.Context, id int32, opts *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
+			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest) (srsdk.RegisterSchemaResponse, *http.Response, error) {
+				return srsdk.RegisterSchemaResponse{Id: id}, nil, nil
+			},
+			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
 				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.GetSchemaByVersionOpts) (schema srsdk.Schema, response *http.Response, e error) {
+			GetSchemaByVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
 				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
 			},
-			DeleteSchemaVersionFunc: func(ctx context.Context, subject, version string, opts *srsdk.DeleteSchemaVersionOpts) (i int32, response *http.Response, e error) {
+			DeleteSchemaVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.DeleteSchemaVersionOpts) (int32, *http.Response, error) {
 				return id, nil, nil
 			},
-			DeleteSubjectFunc: func(ctx context.Context, subject string, opts *srsdk.DeleteSubjectOpts) (int32s []int32, response *http.Response, e error) {
+			DeleteSubjectFunc: func(_ context.Context, _ string, _ *srsdk.DeleteSubjectOpts) ([]int32, *http.Response, error) {
 				return []int32{id}, nil, nil
 			},
 		},
 	}
+	suite.dynamicContext = cliMock.AuthenticatedDynamicConfigMock()
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
@@ -84,6 +92,31 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	}
 	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
+}
+
+func (suite *SchemaTestSuite) TestGetSchemaMetaInfo() {
+	req := require.New(suite.T())
+	metaInfo := GetMetaInfoFromSchemaId(id)
+	req.Equal([]byte{0x0, 0x0, 0x1, 0x86, 0xa4}, metaInfo)
+}
+
+func (suite *SchemaTestSuite) TestRegisterSchema() {
+	cmd := suite.newCMD()
+	cmd.Flags().String(output.FlagName, "human", `Specify the output format as "human", "json", or "yaml".`)
+	req := require.New(suite.T())
+	storePath := suite.T().TempDir()
+	file, err := ioutil.TempFile(storePath, "schema-file")
+	req.Nil(err)
+	fileName := file.Name()
+	defer os.Remove(fileName)
+	schemaCfg := &RegisterSchemaConfigs{
+		SchemaPath: &fileName,
+		Subject:    subjectName,
+	}
+	metaInfo, err := RegisterSchemaWithAuth(cmd, schemaCfg, suite.srClientMock, cmd.Context())
+	req.Nil(err)
+	expectedMetaInfo := GetMetaInfoFromSchemaId(id)
+	req.Equal(expectedMetaInfo, metaInfo)
 }
 
 func (suite *SchemaTestSuite) TestRequestSchemaById() {
@@ -102,7 +135,7 @@ func (suite *SchemaTestSuite) TestRequestSchemaById() {
 
 func (suite *SchemaTestSuite) TestDescribeById() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "describe", "123"})
+	cmd.SetArgs([]string{"schema", "describe", "100004"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
