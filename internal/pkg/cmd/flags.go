@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -24,7 +23,7 @@ func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteApiKeys(command.EnvironmentId(), command.Client)
+		return AutocompleteApiKeys(command.EnvironmentId(), command.V2Client)
 	})
 }
 
@@ -32,18 +31,18 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 	cmd.Flags().String("api-secret", "", "API key secret.")
 }
 
-func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
-	apiKeys, err := client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: environment})
+func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
+	apiKeys, err := client.ListApiKeys("", "")
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(apiKeys))
 	for i, apiKey := range apiKeys {
-		if apiKey.UserId == 0 {
+		if !apiKey.Spec.HasOwner() {
 			continue
 		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.Key, apiKey.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *apiKey.Id, *apiKey.GetSpec().Description)
 	}
 	return suggestions
 }
