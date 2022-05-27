@@ -16,7 +16,6 @@ const (
 	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
-	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
 	envMetadata         = "/api/env_metadata"
@@ -141,7 +140,6 @@ func (c *CloudRouter) addClusterRoutes(t *testing.T) {
 
 func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 	c.HandleFunc(apiKeys, c.HandleApiKeys(t))
-	c.HandleFunc(apiKey, c.HandleApiKey(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
