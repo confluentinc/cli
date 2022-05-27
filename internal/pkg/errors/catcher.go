@@ -354,3 +354,15 @@ func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string)
 
 	return err
 }
+
+func CatchNoSchemaPassedError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "no such file or directory") {
+		return NewErrorWithSuggestions(err.Error(), SchemaNotSpecifiedSuggestions)
+	}
+
+	return err
+}

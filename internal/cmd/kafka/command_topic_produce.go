@@ -127,7 +127,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
-		return err
+		return errors.CatchNoSchemaPassedError(err)
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
