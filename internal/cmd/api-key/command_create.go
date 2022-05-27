@@ -80,6 +80,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	} else {
 		if ownerResourceId == "" {
 			ownerResourceId, err = c.getCurrentUserId()
+			if err != nil {
+				return err
+			}
 		}
 
 		key := apikeysv2.IamV2ApiKey{
