@@ -127,7 +127,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
-		return err
+		return errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
