@@ -1,0 +1,76 @@
+asyncapi: 2.1.0
+info:
+  title: API Document for Confluent Cluster
+  version: 1.0.0
+servers:
+  prod-broker:
+    url: kafka-endpoint
+    description: Confluent Kafka instance.
+    protocol: kafka
+    protocolVersion: 2.6.0
+    security:
+    - confluentBroker: []
+  prod-schemaRegistry:
+    url: http://127.0.0.1:58997
+    description: Confluent Kafka Schema Registry Server
+    protocol: kafka
+    protocolVersion: 2.6.0
+    security:
+    - confluentSchemaRegistry: []
+channels:
+  topic1:
+    subscribe:
+      operationId: Topic1Subscribe
+      bindings:
+        kafka:
+          groupId: consumerApplication
+          clientId: client1
+      message:
+        $ref: '#/components/messages/Topic1Message'
+    bindings:
+      kafka:
+        x-partitions: 3
+        x-replicas: 3
+        x-configs:
+          cleanup.policy: delete
+          delete.retention.ms: 8.64e+07
+          confluent.value.schema.validation: "true"
+    x-messageCompatibility: FORWARD
+components:
+  messages:
+    Topic1Message:
+      contentType: avro
+      payload:
+        doc: Sample schema to help you get started.
+        fields:
+        - doc: The int type is a 32-bit signed integer.
+          name: my_field1
+          type: int
+        - doc: The double type is a double precision(64-bit) IEEE754 floating-point
+            number.
+          name: my_field2
+          type: double
+        - doc: The string is a unicode character sequence.
+          name: my_field3
+          type: string
+        name: sampleRecord
+        namespace: com.mycorp.mynamespace
+        type: record
+      name: Topic1Message
+      bindings:
+        kafka:
+          key:
+            type: string
+          bindingVersion: 0.1.0
+  securitySchemes:
+    confluentBroker:
+      type: userPassword
+      x-configs:
+        sasl.mechanisms: PLAIN
+        sasl.password: '{{CLUSTER_API_SECRET}}'
+        sasl.username: '{{CLUSTER_API_KEY}}'
+        security.protocol: sasl_ssl
+    confluentSchemaRegistry:
+      type: userPassword
+      x-configs:
+        basic.auth.user.info: '{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}'
