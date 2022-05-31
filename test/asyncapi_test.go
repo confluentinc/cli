@@ -4,7 +4,6 @@ import (
 	"fmt"
 	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
-	"os"
 	str "strings"
 )
 
@@ -28,19 +27,20 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		//time.Sleep(60 * time.Second)
 	}
 	s.FileExistsf("./asyncapi-spec.yaml", "Spec file not generated.")
-	file, err := os.ReadFile("asyncapi-spec.yaml")
+	file, err := ioutil.ReadFile("asyncapi-spec.yaml")
 	if err != nil {
 		s.Errorf(err, "Cannot read file asyncapi-spec.yaml")
 	}
 	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
-	//fmt.Println(string(testfile))
+	//fmt.Println(string(testfile[:]))
 	index1 := str.Index(string(file), "prod-schemaRegistry:")
 	index2 := str.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
 	//fmt.Println(file1)
 
-	if str.Compare(string(testfile), file1) != 0 {
+	if str.Compare(str.TrimSpace(string(testfile)), str.TrimSpace(file1)) != 0 {
 		var err2 error
+		fmt.Println(string(testfile[:]))
 		fmt.Println(file1)
 		s.Errorf(err2, "Spec generated does not match the template output file.")
 	}
