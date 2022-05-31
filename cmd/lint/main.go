@@ -183,6 +183,7 @@ var vocabWords = []string{
 	"api",
 	"apikey",
 	"apisecret",
+	"asyncapi",
 	"auth",
 	"avro",
 	"aws",
