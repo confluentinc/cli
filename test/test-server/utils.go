@@ -138,6 +138,15 @@ func fillKeyStore() {
 		UserId:         deactivatedUserID,
 		UserResourceId: deactivatedResourceID,
 	}
+	/*keyIndex+=1
+	keyStore[202] = &schedv1.ApiKey{
+		Id: keyIndex,
+		Key: "ASYNCAPIKEY",
+		Secret: "ASYNCAPISECRET",
+		LogicalClusters: []*schedv1.ApiKey_Cluster{
+			{Id: "lkc-asyncapi",Type: "kafka"},
+		},
+	}*/
 	for _, k := range keyStore {
 		k.Created = keyTimestamp
 	}

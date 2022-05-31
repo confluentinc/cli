@@ -4,6 +4,7 @@ Usage:
   confluent [command]
 
 Available Commands:
+  asyncapi        Manages async API document tooling.
   audit-log       Manage audit log configuration.
   cloud-signup    Sign up for Confluent Cloud.
   cluster         Retrieve metadata about Confluent Platform clusters.
