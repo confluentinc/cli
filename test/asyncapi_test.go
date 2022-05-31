@@ -40,8 +40,8 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 
 	if str.Compare(str.TrimSpace(string(testfile)), str.TrimSpace(file1)) != 0 {
 		var err2 error
-		fmt.Println(string(testfile[:]))
-		fmt.Println(file1)
+		fmt.Println(testfile)
+		fmt.Println([]byte(file1))
 		s.Errorf(err2, "Spec generated does not match the template output file.")
 	}
 	resetConfiguration(s.T())
