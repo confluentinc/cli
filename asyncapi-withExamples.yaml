@@ -11,7 +11,7 @@ servers:
     security:
     - confluentBroker: []
   prod-schemaRegistry:
-    url: http://127.0.0.1:58576
+    url: http://127.0.0.1:58997
     description: Confluent Kafka Schema Registry Server
     protocol: kafka
     protocolVersion: 2.6.0

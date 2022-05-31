@@ -32,15 +32,16 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		s.Errorf(err, "Cannot read file asyncapi-spec.yaml")
 	}
 	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
+	testfile1 := str.ReplaceAll(string(testfile), "\r", "")
 	//fmt.Println(string(testfile[:]))
 	index1 := str.Index(string(file), "prod-schemaRegistry:")
 	index2 := str.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
+	file1 = str.ReplaceAll(file1, "\r", "")
 	//fmt.Println(file1)
-
-	if str.Compare(str.TrimSpace(string(testfile)), str.TrimSpace(file1)) != 0 {
+	if str.Compare(str.TrimSpace(testfile1), str.TrimSpace(file1)) != 0 {
 		var err2 error
-		fmt.Println(testfile)
+		fmt.Println([]byte(testfile1))
 		fmt.Println([]byte(file1))
 		s.Errorf(err2, "Spec generated does not match the template output file.")
 	}
