@@ -8,8 +8,9 @@ import (
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "asyncapi",
-		Short: "Manages async API document tooling.",
+		Use:         "asyncapi",
+		Short:       "Manages async API document tooling.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := pcmd.NewAnonymousCLICommand(cmd, prerunner)
