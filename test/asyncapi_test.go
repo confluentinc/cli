@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	"os"
@@ -40,6 +41,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 
 	if str.Compare(string(testfile), file1) != 0 {
 		var err2 error
+		fmt.Println(file1)
 		s.Errorf(err2, "Spec generated does not match the template output file.")
 	}
 	resetConfiguration(s.T())
