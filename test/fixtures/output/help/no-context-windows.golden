@@ -4,7 +4,6 @@ Usage:
   confluent [command]
 
 Available Commands:
-  asyncapi        Manages async API document tooling.
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
   context         Manage CLI configuration contexts.
