@@ -1,14 +1,12 @@
 package connect
 
 import (
-	"context"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -64,13 +62,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector := &schedv1.Connector{
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-		Id:             args[0],
-	}
-
-	connectorExpansion, err := c.Client.Connect.GetExpansionById(context.Background(), connector)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -88,20 +80,20 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	return printStructuredDescribe(connectorExpansion, outputOption)
 }
 
-func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) {
+func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) {
 	utils.Println(cmd, "Connector Details")
 	data := &connectorDescribeDisplay{
-		Name:   connector.Status.Name,
-		ID:     connector.Id.Id,
-		Status: connector.Status.Connector.State,
-		Type:   connector.Info.Type,
-		Trace:  connector.Status.Connector.Trace,
+		Name:   connector.Status.GetName(),
+		ID:     connector.Id.GetId(),
+		Status: connector.Status.GetConnector().State,
+		Type:   connector.Status.GetType(),
+		Trace:  *connector.Status.GetConnector().Trace,
 	}
 	_ = printer.RenderTableOut(data, listFields, map[string]string{}, os.Stdout)
 
 	utils.Println(cmd, "\n\nTask Level Details")
 	var tasks [][]string
-	for _, task := range connector.Status.Tasks {
+	for _, task := range connector.Status.GetTasks() {
 		row := printer.ToRow(&taskDescribeDisplay{task.Id, task.State}, []string{"TaskId", "State"})
 		tasks = append(tasks, row)
 	}
@@ -110,32 +102,32 @@ func printHumanDescribe(cmd *cobra.Command, connector *opv1.ConnectorExpansion) 
 	utils.Println(cmd, "\n\nConfiguration Details")
 	var configs [][]string
 	titleRow := []string{"Config", "Value"}
-	for name, value := range connector.Info.Config {
+	for name, value := range connector.Info.GetConfig() {
 		row := printer.ToRow(&configDescribeDisplay{name, value}, titleRow)
 		configs = append(configs, row)
 	}
 	printer.RenderCollectionTable(configs, titleRow)
 }
 
-func printStructuredDescribe(connector *opv1.ConnectorExpansion, format string) error {
+func printStructuredDescribe(connector *connectv1.ConnectV1ConnectorExpansion, format string) error {
 	structuredDisplay := &structuredDescribeDisplay{
 		Connector: &connectorDescribeDisplay{
-			Name:   connector.Status.Name,
-			ID:     connector.Id.Id,
-			Status: connector.Status.Connector.State,
-			Type:   connector.Info.Type,
-			Trace:  connector.Status.Connector.Trace,
+			Name:   connector.Status.GetName(),
+			ID:     connector.Id.GetId(),
+			Status: connector.Status.GetConnector().State,
+			Type:   connector.Status.GetType(),
+			Trace:  *connector.Status.GetConnector().Trace,
 		},
 		Tasks:   []taskDescribeDisplay{},
 		Configs: []configDescribeDisplay{},
 	}
-	for _, task := range connector.Status.Tasks {
+	for _, task := range connector.Status.GetTasks() {
 		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{
 			TaskId: task.Id,
 			State:  task.State,
 		})
 	}
-	for name, value := range connector.Info.Config {
+	for name, value := range connector.Info.GetConfig() {
 		structuredDisplay.Configs = append(structuredDisplay.Configs, configDescribeDisplay{
 			Config: name,
 			Value:  value,

@@ -187,7 +187,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		return errors.CatchConfigurationNotValidError(err, httpResp)
+		return errors.CatchClusterConfigurationNotValidError(err, httpResp)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)

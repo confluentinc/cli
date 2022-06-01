@@ -166,6 +166,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.881.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.2.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
@@ -222,7 +223,6 @@ require (
 	github.com/golangci/misspell v0.3.5 // indirect
 	github.com/golangci/revgrep v0.0.0-20210930125155-c22e5001d4f2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v18 v18.2.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect

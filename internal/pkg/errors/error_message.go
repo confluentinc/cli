@@ -51,10 +51,14 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
+	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
+	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
+	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"

@@ -1,17 +1,21 @@
 package connect
 
 import (
-	"context"
+	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/spf13/cobra"
 
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
+}
+
+type pluginListDisplay struct {
+	pluginName string
+	pluginType string
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -42,7 +46,7 @@ func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *pluginCommand) autocompleteConnectorPlugins() []string {
-	plugins, err := c.getPlugins()
+	plugins, _, err := c.getPlugins()
 	if err != nil {
 		return nil
 	}
@@ -54,16 +58,12 @@ func (c *pluginCommand) autocompleteConnectorPlugins() []string {
 	return suggestions
 }
 
-func (c *pluginCommand) getPlugins() ([]*opv1.ConnectorPluginInfo, error) {
+func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, *http.Response, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	connector := &schedv1.Connector{
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-	}
+	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
 
-	return c.Client.Connect.GetPlugins(context.Background(), connector, "")
 }
