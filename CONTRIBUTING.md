@@ -183,7 +183,7 @@ import (
 
 func (c *command) newDescribeCommand() *cobra.Command {
     return &cobra.Command{
-        Use:  "describe",
+        Use:  "show",
         Args: cobra.ExactArgs(1),
         RunE: c.describe,
     }
