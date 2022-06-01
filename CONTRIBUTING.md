@@ -43,7 +43,7 @@ Please run the following three commands *and then restart* for these changes to 
 
 #### Security
 
-We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed to this repo. Please install `pre-commit` hooks:
+We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed to this repo. Please install `pre-commit` hooks (Note that the second command should be run inside the root directory of the repository):
 
     brew install pre-commit
     pre-commit install
