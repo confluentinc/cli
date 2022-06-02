@@ -79,7 +79,7 @@ func (suite *ConnectTestSuite) SetupSuite() {
 }
 
 func (suite *ConnectTestSuite) SetupTest() {
-	suite.kafkaMock = &ccsdkmock.Kafka{ // do i need these?
+	suite.kafkaMock = &ccsdkmock.Kafka{
 		DescribeFunc: func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},

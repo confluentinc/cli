@@ -2,9 +2,11 @@ package connect
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/spf13/cobra"
 
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -67,12 +69,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *command) autocompleteConnectors() []string {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil
-	}
-
-	connectors, _, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
+	connectors, _, err := c.fetchConnectors()
 	if err != nil {
 		return nil
 	}
@@ -84,4 +81,13 @@ func (c *command) autocompleteConnectors() []string {
 		i++
 	}
 	return suggestions
+}
+
+func (c *command) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
 }

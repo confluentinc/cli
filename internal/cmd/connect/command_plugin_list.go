@@ -50,7 +50,6 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// might need a non-ptr object
 	for _, plugin := range plugins {
 		pluginListDisplay := &pluginListDisplay{
 			pluginName: plugin.Class,
