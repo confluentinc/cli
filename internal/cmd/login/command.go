@@ -3,15 +3,18 @@ package login
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -108,7 +111,13 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
-	if err != nil {
+
+	endOfFreeTrialErr, isEndOfFreeTrialErr := err.(*errors.EndOfFreeTrialError)
+
+	// for orgs that are suspended because it reached end of free trial due to paywall removal, they should still be
+	// able to log in.
+	if err != nil && !isEndOfFreeTrialErr {
+		// for orgs that are suspended due to other reason, they shouldn't be able to log in and should return error immediately.
 		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
 		}
@@ -127,7 +136,47 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
+	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.
+	// otherwise, print remaining free credit upon each login.
+	if isEndOfFreeTrialErr {
+		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
+		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
+		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
+	} else {
+		if err := c.printRemainingFreeCredit(cmd, c.isTest); err != nil {
+			return err
+		}
+	}
+
 	return c.saveLoginToNetrc(cmd, true, credentials)
+}
+
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, isTest bool) error {
+	if isTest {
+		return nil
+	}
+
+	client, err := pcmd.CreateCCloudClient(c.Config.Context(), c.Version)
+	if err != nil {
+		return err
+	}
+
+	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
+	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	if err != nil {
+		return err
+	}
+
+	// only print remaining free credit if there is any unexpired promo code
+	if len(promoCodes) != 0 {
+		var remainingFreeCredit float64
+		for _, promoCode := range promoCodes {
+			remainingFreeCredit += admin.ConvertToUSD(promoCode.Balance)
+		}
+		utils.Println(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, remainingFreeCredit))
+	}
+
+	return nil
 }
 
 // Order of precedence: env vars > config file > netrc file > prompt
