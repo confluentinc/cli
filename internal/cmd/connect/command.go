@@ -1,18 +1,23 @@
 package connect
 
 import (
-	"context"
 	"fmt"
+	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/spf13/cobra"
 
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
+}
+
+type connectCreateDisplay struct {
+	ConnectorName string `json:"name" yaml:"name"`
+	Id            string `json:"id" yaml:"id"`
+	Trace         string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
 }
 
 type connectorDescribeDisplay struct {
@@ -64,7 +69,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *command) autocompleteConnectors() []string {
-	connectors, err := c.fetchConnectors()
+	connectors, _, err := c.fetchConnectors()
 	if err != nil {
 		return nil
 	}
@@ -72,22 +77,17 @@ func (c *command) autocompleteConnectors() []string {
 	suggestions := make([]string, len(connectors))
 	i := 0
 	for _, connector := range connectors {
-		suggestions[i] = fmt.Sprintf("%s\t%s", connector.Id.Id, connector.Info.Name)
+		suggestions[i] = fmt.Sprintf("%s\t%s", connector.Id.GetId(), connector.Info.GetName())
 		i++
 	}
 	return suggestions
 }
 
-func (c *command) fetchConnectors() (map[string]*opv1.ConnectorExpansion, error) {
+func (c *command) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	connector := &schedv1.Connector{
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-	}
-
-	return c.Client.Connect.ListWithExpansions(context.Background(), connector, "status,info,id")
+	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
 }
