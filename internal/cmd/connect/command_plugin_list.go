@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	pluginFields          = []string{"pluginName", "pluginType"}
+	pluginFields          = []string{"Class", "Type"}
 	pluginHumanFields     = []string{"Plugin Name", "Type"}
 	pluginStructureLabels = []string{"plugin_name", "type"}
 )
@@ -52,8 +52,8 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 
 	for _, plugin := range plugins {
 		pluginListDisplay := &pluginListDisplay{
-			pluginName: plugin.Class,
-			pluginType: plugin.Type,
+			Class: plugin.Class,
+			Type:  plugin.Type,
 		}
 		outputWriter.AddElement(pluginListDisplay)
 	}

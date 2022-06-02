@@ -49,9 +49,9 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)
-	if flagErr != nil {
-		return flagErr
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
 	}
 
 	if outputFormat == output.Human.String() {

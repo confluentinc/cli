@@ -14,8 +14,8 @@ type pluginCommand struct {
 }
 
 type pluginListDisplay struct {
-	pluginName string
-	pluginType string
+	Class string `json:"class"`
+	Type  string `json:"type"`
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {

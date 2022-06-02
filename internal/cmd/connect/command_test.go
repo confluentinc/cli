@@ -150,7 +150,8 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 	connectClient := &connectv1.APIClient{
 		ConnectorsV1Api: suite.connectorsMock,
 		LifecycleV1Api:  suite.lifecycleMock,
-		PluginsV1Api:    suite.pluginMock}
+		PluginsV1Api:    suite.pluginMock,
+	}
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock},
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(prerunner)

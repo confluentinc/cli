@@ -15,9 +15,9 @@ type command struct {
 }
 
 type connectCreateDisplay struct {
-	ConnectorName string `json:"name" yaml:"name"`
 	Id            string `json:"id" yaml:"id"`
-	Trace         string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
+	ConnectorName string `json:"name" yaml:"name"`
+	ErrorTrace    string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
 }
 
 type connectorDescribeDisplay struct {
