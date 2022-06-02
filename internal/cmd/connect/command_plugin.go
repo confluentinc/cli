@@ -65,5 +65,4 @@ func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, *http.Resp
 	}
 
 	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
-
 }

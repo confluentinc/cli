@@ -71,7 +71,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	trace := *connectorExpansion.Status.GetConnector().Trace
+	trace := connectorExpansion.Status.Connector.GetTrace()
 
 	if outputFormat == output.Human.String() {
 		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorInfo.GetName(), connectorExpansion.Id.GetId())

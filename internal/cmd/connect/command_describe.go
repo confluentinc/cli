@@ -85,9 +85,9 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	data := &connectorDescribeDisplay{
 		Name:   connector.Status.GetName(),
 		ID:     connector.Id.GetId(),
-		Status: connector.Status.GetConnector().State,
+		Status: connector.Status.Connector.GetState(),
 		Type:   connector.Status.GetType(),
-		Trace:  *connector.Status.GetConnector().Trace,
+		Trace:  connector.Status.Connector.GetTrace(),
 	}
 	_ = printer.RenderTableOut(data, listFields, map[string]string{}, os.Stdout)
 
@@ -114,9 +114,9 @@ func printStructuredDescribe(connector *connectv1.ConnectV1ConnectorExpansion, f
 		Connector: &connectorDescribeDisplay{
 			Name:   connector.Status.GetName(),
 			ID:     connector.Id.GetId(),
-			Status: connector.Status.GetConnector().State,
+			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
-			Trace:  *connector.Status.GetConnector().Trace,
+			Trace:  connector.Status.Connector.GetTrace(),
 		},
 		Tasks:   []taskDescribeDisplay{},
 		Configs: []configDescribeDisplay{},

@@ -54,9 +54,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		connector := &connectorDescribeDisplay{
 			Name:   name,
 			ID:     connector.Id.GetId(),
-			Status: connector.Status.GetConnector().State,
+			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
-			Trace:  *connector.GetStatus().Connector.Trace,
+			Trace:  connector.Status.Connector.GetTrace(),
 		}
 		outputWriter.AddElement(connector)
 	}
