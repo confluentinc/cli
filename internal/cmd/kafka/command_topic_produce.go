@@ -64,37 +64,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
-	}
-
-	configFile, err := cmd.Flags().GetString("config-file")
-	if err != nil {
-		return err
-	}
-	config, err := cmd.Flags().GetStringSlice("config")
-	if err != nil {
-		return err
-	}
-
-	producer, err := newProducer(cluster, c.clientID, configFile, config)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
-	}
-	defer producer.Close()
-	log.CliLogger.Tracef("Create producer succeeded")
-
-	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
-	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
-	}
-	defer adminClient.Close()
-
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
-		return err
-	}
-
 	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topic)
 	if err != nil {
 		return err
@@ -128,6 +97,37 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
+	}
+
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	producer, err := newProducer(cluster, c.clientID, configFile, config)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
+	}
+	defer producer.Close()
+	log.CliLogger.Tracef("Create producer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+	}
+	defer adminClient.Close()
+
+	err = c.validateTopic(adminClient, topic, cluster)
+	if err != nil {
+		return err
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
