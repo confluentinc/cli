@@ -213,7 +213,8 @@ const (
 	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
-	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
+	NoSubjectLevelConfigErrorMsg               = `subject "%s" does not have subject-level compatibility configured`
+	SRFailedToReadDeletionConfirmationErrorMsg = "Failed to read your deletion confirmation"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
