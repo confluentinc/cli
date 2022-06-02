@@ -31,6 +31,7 @@ var (
 type TestInputs struct {
 	kafkaClusters        map[string]*KafkaClusterConfig
 	activeKafka          string
+	state                *ContextState
 	statefulConfig       *Config
 	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
@@ -89,6 +90,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		},
 		AuthToken: "abc123",
 	}
+	testInputs.state = state
 	twoEnvState := &ContextState{
 		Auth: &AuthConfig{
 			User: &orgv1.User{
@@ -998,9 +1000,13 @@ func TestConfig_IsCloud_True(t *testing.T) {
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	}
 
+	testInputs := SetupTestInputs(true)
 	for _, platform := range platforms {
 		cfg := &Config{
-			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
+			Contexts: map[string]*Context{"context": {
+				State:        testInputs.state,
+				PlatformName: platform,
+			}},
 			CurrentContext: "context",
 		}
 		require.True(t, cfg.IsCloudLogin(), platform+" should be true")
@@ -1030,6 +1036,7 @@ func TestConfig_IsOnPrem_True(t *testing.T) {
 }
 
 func TestConfig_IsOnPrem_False(t *testing.T) {
+	testInputs := SetupTestInputs(true)
 	configs := []*Config{
 		nil,
 		{
@@ -1037,7 +1044,10 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 			CurrentContext: "context",
 		},
 		{
-			Contexts:       map[string]*Context{"context": {PlatformName: "confluent.cloud"}},
+			Contexts: map[string]*Context{"context": {
+				State:        testInputs.state,
+				PlatformName: "confluent.cloud",
+			}},
 			CurrentContext: "context",
 		},
 	}
