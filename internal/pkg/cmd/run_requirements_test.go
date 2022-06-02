@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -13,8 +14,20 @@ import (
 var (
 	noContextCfg = new(v1.Config)
 
+	state = &v1.ContextState{
+		Auth: &v1.AuthConfig{
+			Organization: &orgv1.Organization{
+				Id:   321,
+				Name: "test-org",
+			},
+		},
+	}
+
 	cloudCfg = &v1.Config{
-		Contexts:       map[string]*v1.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+		Contexts: map[string]*v1.Context{"cloud": {
+			PlatformName: testserver.TestCloudURL.String(),
+			State:        state,
+		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
@@ -23,6 +36,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.APIKey},
+			State:        state,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -32,6 +46,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.Username},
+			State:        state,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -57,6 +72,7 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 		cfg *v1.Config
 	}{
 		{RequireCloudLogin, cloudCfg},
+		{RequireLenientCloudLogin, cloudCfg},
 		{RequireCloudLoginOrOnPremLogin, cloudCfg},
 		{RequireCloudLoginOrOnPremLogin, onPremCfg},
 		{RequireNonAPIKeyCloudLogin, nonAPIKeyCloudCfg},
@@ -78,6 +94,7 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		err error
 	}{
 		{RequireCloudLogin, onPremCfg, requireCloudLoginErr},
+		{RequireLenientCloudLogin, onPremCfg, requireLenientCloudLoginErr},
 		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
 		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
 		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, requireNonAPIKeyCloudLoginErr},

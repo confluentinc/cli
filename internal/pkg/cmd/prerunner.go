@@ -508,6 +508,10 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 }
 
 func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
+	return CreateCCloudClient(ctx, ver)
+}
+
+func CreateCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var userAgent string
