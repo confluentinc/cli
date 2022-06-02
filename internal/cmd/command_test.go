@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -16,6 +17,15 @@ import (
 var (
 	mockBaseConfig = &config.BaseConfig{}
 	mockVersion    = new(pversion.Version)
+
+	state = &v1.ContextState{
+		Auth: &v1.AuthConfig{
+			Organization: &orgv1.Organization{
+				Id:   321,
+				Name: "test-org",
+			},
+		},
+	}
 )
 
 func TestHelp_NoContext(t *testing.T) {
@@ -38,8 +48,11 @@ func TestHelp_NoContext(t *testing.T) {
 
 func TestHelp_Cloud(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig:     mockBaseConfig,
-		Contexts:       map[string]*v1.Context{"cloud": {PlatformName: "confluent.cloud"}},
+		BaseConfig: mockBaseConfig,
+		Contexts: map[string]*v1.Context{"cloud": {
+			PlatformName: "confluent.cloud",
+			State:        state,
+		}},
 		CurrentContext: "cloud",
 	}
 
@@ -63,6 +76,7 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 			"cloud-with-api-key": {
 				PlatformName: "confluent.cloud",
 				Credential:   &v1.Credential{CredentialType: v1.APIKey},
+				State:        state,
 			},
 		},
 		CurrentContext: "cloud-with-api-key",
