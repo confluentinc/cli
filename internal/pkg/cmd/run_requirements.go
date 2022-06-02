@@ -13,6 +13,7 @@ const (
 	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireCloudLogin                       = "cloud-login"
+	RequireLenientCloudLogin                = "lenient-cloud-login"
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
 	RequireOnPremLogin                      = "on-prem-login"
 	RequireUpdatesEnabled                   = "updates-enabled"
@@ -22,6 +23,10 @@ const signupSuggestion = `If you need a Confluent Cloud account, sign up with "c
 
 var (
 	requireCloudLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	requireLenientCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
 		"Log in with \"confluent login\".\n"+signupSuggestion,
 	)
@@ -60,6 +65,10 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 			if !cfg.IsCloudLogin() {
 				return requireCloudLoginErr
 			}
+		case RequireLenientCloudLogin:
+			if !cfg.IsLenientCloudLogin() {
+				return requireLenientCloudLoginErr
+			}
 		case RequireCloudLoginOrOnPremLogin:
 			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
 				return requireCloudLoginOrOnPremErr
@@ -90,6 +99,8 @@ func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
+			return true
+		case RequireLenientCloudLogin:
 			return true
 		case RequireNonAPIKeyCloudLogin:
 			return true
