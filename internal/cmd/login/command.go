@@ -157,6 +157,9 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, isTest bool) erro
 	}
 
 	client, err := pcmd.CreateCCloudClient(c.Config.Context(), c.Version)
+	if err != nil {
+		return err
+	}
 
 	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
