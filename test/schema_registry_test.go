@@ -20,6 +20,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry cluster enable --cloud gcp --geo us -o yaml", fixture: "schema-registry/enable-yaml.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo us", fixture: "schema-registry/enable.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo somethingwrong", fixture: "schema-registry/enable-invalid-geo.golden", wantErrCode: 1},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-terminated.golden",
+		},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},
