@@ -482,7 +482,7 @@ func (c *Config) IsLenientCloudLogin() bool {
 
 func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
-	return ctx != nil && ctx.PlatformName != "" && !c.IsLenientCloudLogin()
+	return ctx != nil && ctx.PlatformName != "" && !ctx.IsCloud(c.IsTest)
 }
 
 func (c *Config) isLoginBlockedByOrgSuspension(lenient bool) bool {

@@ -46,6 +46,79 @@ func TestHelp_NoContext(t *testing.T) {
 	}
 }
 
+func TestHelp_CloudSuspendedOrg(t *testing.T) {
+	cfg := &v1.Config{
+		BaseConfig: mockBaseConfig,
+		Contexts: map[string]*v1.Context{"cloud": {
+			PlatformName: "confluent.cloud",
+			State: &v1.ContextState{
+				Auth: &v1.AuthConfig{
+					Organization: &orgv1.Organization{
+						Id:   321,
+						Name: "test-org",
+						SuspensionStatus: &orgv1.SuspensionStatus{
+							Status: orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+						},
+					},
+				},
+			},
+		}},
+		CurrentContext: "cloud",
+	}
+
+	out, err := runWithConfig(cfg)
+	require.NoError(t, err)
+
+	commands := []string{
+		"cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
+	}
+	if runtime.GOOS == "windows" {
+		commands = utils.Remove(commands, "local")
+	}
+
+	for _, command := range commands {
+		require.Contains(t, out, command)
+	}
+}
+
+func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
+	cfg := &v1.Config{
+		BaseConfig: mockBaseConfig,
+		Contexts: map[string]*v1.Context{"cloud": {
+			PlatformName: "confluent.cloud",
+			State: &v1.ContextState{
+				Auth: &v1.AuthConfig{
+					Organization: &orgv1.Organization{
+						Id:   321,
+						Name: "test-org",
+						SuspensionStatus: &orgv1.SuspensionStatus{
+							Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+							EventType: orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL,
+						},
+					},
+				},
+			},
+		}},
+		CurrentContext: "cloud",
+	}
+
+	out, err := runWithConfig(cfg)
+	require.NoError(t, err)
+
+	// note users can still run "confluent admin payment update" or "confluent admin promo add" if the org is suspended
+	// but only due to end of free trial
+	commands := []string{
+		"admin", "cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "prompt", "shell", "update", "version",
+	}
+	if runtime.GOOS == "windows" {
+		commands = utils.Remove(commands, "local")
+	}
+
+	for _, command := range commands {
+		require.Contains(t, out, command)
+	}
+}
+
 func TestHelp_Cloud(t *testing.T) {
 	cfg := &v1.Config{
 		BaseConfig: mockBaseConfig,
