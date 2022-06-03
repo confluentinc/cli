@@ -149,8 +149,9 @@ func (s *CLITestSuite) TestKafka() {
 	}
 
 	if runtime.GOOS != "windows" {
-		noSchemaTest := CLITest{{args: "kafka topic produce topic-exist --value-format avro --api-key=key --api-secret=secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-produce-no-schema.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}}}
-		tests = append(tests,noSchemaTest)
+		noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format avro --api-key=key --api-secret=secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-produce-no-schema.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}}
+		tests = append(tests, noSchemaTest)
+	}
 
 	resetConfiguration(s.T())
 
