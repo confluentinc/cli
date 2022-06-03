@@ -48,6 +48,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/hashicorp/go-version v1.4.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
@@ -75,8 +76,6 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
-
-require github.com/hashicorp/go-retryablehttp v0.7.1
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
