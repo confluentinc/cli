@@ -213,8 +213,7 @@ const (
 	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
-	NoSubjectLevelConfigErrorMsg               = `subject "%s" does not have subject-level compatibility configured`
-	SRFailedToReadDeletionConfirmationErrorMsg = "Failed to read your deletion confirmation"
+	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -447,6 +446,7 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
+	FailedToReadDeletionConfirmationErrorMsg = "Failed to read your deletion confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"

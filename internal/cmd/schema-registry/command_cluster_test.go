@@ -124,7 +124,7 @@ func (suite *ClusterTestSuite) TestDeleteSchemaRegistryClusterShouldPrompt() {
 	cmd.SetArgs([]string{"cluster", "delete"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
-	req.Contains(err.Error(), errors.SRFailedToReadDeletionConfirmationErrorMsg)
+	req.Contains(err.Error(), errors.FailedToReadDeletionConfirmationErrorMsg)
 }
 
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {

@@ -3,6 +3,10 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+	"os"
+
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -11,14 +15,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/spf13/cobra"
-	"os"
 )
 
 func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete Schema Registry cluster for this environment.",
+		Short: "Delete the Schema Registry cluster for this environment.",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.delete(cmd, args, form.NewPrompt(os.Stdin))
@@ -26,8 +28,8 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete Schema Registry cluster for environment 'env-0000'",
-				Code: fmt.Sprintf("%s schema-registry cluster delete --environment env-00000", version.CLIName),
+				Text: `Delete the Schema Registry cluster for environment "env-12345"`,
+				Code: fmt.Sprintf("%s schema-registry cluster delete --environment env-12345", version.CLIName),
 			},
 		),
 	}
@@ -50,13 +52,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	isDeleteConfirmed, err := deleteConfirmation(cmd, c.EnvironmentId(), prompt)
+	isDeleteConfirmed, err := confirmDeletion(cmd, c.EnvironmentId(), prompt)
 	if err != nil {
 		return err
 	}
 
 	if !isDeleteConfirmed {
-		utils.Println(cmd, "Terminating operation ...")
+		utils.Println(cmd, "Operation terminated.")
 		return nil
 	}
 
@@ -69,13 +71,16 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 	return nil
 }
 
-func deleteConfirmation(cmd *cobra.Command, environmentId string, prompt form.Prompt) (bool, error) {
+func confirmDeletion(cmd *cobra.Command, environmentId string, prompt form.Prompt) (bool, error) {
 	f := form.New(
-		form.Field{ID: "confirmation", Prompt: fmt.Sprintf("Are you sure you want to delete the Schema Registry "+
-			"cluster for environment %s?", environmentId), IsYesOrNo: true},
+		form.Field{
+			ID:        "confirmation",
+			Prompt:    fmt.Sprintf(`Are you sure you want to delete the Schema Registry cluster for environment "%s"?`, environmentId),
+			IsYesOrNo: true,
+		},
 	)
 	if err := f.Prompt(cmd, prompt); err != nil {
-		return false, errors.New(errors.SRFailedToReadDeletionConfirmationErrorMsg)
+		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }
