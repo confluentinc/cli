@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/confluentinc/bincover"
@@ -145,6 +146,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/cluster-linking/promote-mirror.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/cluster-linking/promote-mirror-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
+	}
+
+	if runtime.GOOS != "windows" {
+		noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format avro --api-key=key --api-secret=secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-produce-no-schema.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}}
+		tests = append(tests, noSchemaTest)
 	}
 
 	resetConfiguration(s.T())
