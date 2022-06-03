@@ -45,7 +45,6 @@ func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClien
 		MDSClient:         mdsClient,
 		KafkaRESTProvider: kafkaRESTProvider,
 		Config:            cfg,
-		Version:           pmock.NewVersionMock(),
 	}
 }
 

@@ -124,7 +124,6 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 			res.Token = "invalid"
 		default:
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
-			res.Organization = &orgv1.Organization{Id: 42, ResourceId: "abc-123", Name: "Confluent"}
 		}
 
 		err = json.NewEncoder(w).Encode(res)
