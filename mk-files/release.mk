@@ -60,12 +60,23 @@ restore-librdkafka-amd64:
 		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
 	fi
 
+# The Ubuntu container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
+.PHONY: gorelease-ubuntu
+gorelease-ubuntu:
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-ubuntu.yml
+
+
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	./build_ubuntu.sh && \
+	aws s3 cp dist/confluent_$(VERSION)_ubuntu_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_ubuntu_amd64.tar.gz; \
+	aws s3 cp dist/confluent_ubuntu_amd64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_ubuntu_amd64; \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_ubuntu.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt
 	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml || true && \
 	make restore-librdkafka-amd64
 
