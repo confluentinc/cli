@@ -37,14 +37,23 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
-			fmt.Sprintf("Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
-			fmt.Sprintf("Log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`. ", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
 		Args: cobra.NoArgs,
 	}
 
+	if cfg.IsCloudLogin() {
+		cmd.Long = fmt.Sprintf("Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\n") +
+				fmt.Sprintf("Email and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
+				fmt.Sprintf("Email and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\n") +
+				fmt.Sprintf("SSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to login again.\n\n") +
+				fmt.Sprintf("Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
+				fmt.Sprintf("Even with the environment variables set, you can force an interactive login using the `--prompt` flag.")
+	} else if cfg.IsOnPremLogin() {
+		cmd.Long = fmt.Sprintf("Log in to Confluent Platform with your username and password, the ``--url` flag to identify the location of your Metadata Service (MDS), and the ``--ca-cert-path` flag to identify your self-signed certificate chain.\n\n") +
+				fmt.Sprintf("Login can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\n", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+				fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
+				fmt.Sprintf("Even with the environment variables set, you can force an interactive login using the `--prompt` flag.")
+	}
+	
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
 	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-prem deployments.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
