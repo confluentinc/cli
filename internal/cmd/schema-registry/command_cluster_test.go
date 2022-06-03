@@ -16,6 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -72,6 +73,9 @@ func (suite *ClusterTestSuite) SetupTest() {
 		GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) ([]*schedv1.SchemaRegistryCluster, error) {
 			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
+		DeleteSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) error {
+			return nil
+		},
 	}
 	suite.metricsApi = &ccsdkmock.MetricsApi{
 		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
@@ -113,6 +117,14 @@ func (suite *ClusterTestSuite) TestDescribeSR() {
 	req.Nil(err)
 	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
 	req.True(suite.metricsApi.QueryV2Called())
+}
+
+func (suite *ClusterTestSuite) TestDeleteSchemaRegistryClusterShouldPrompt() {
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{"cluster", "delete"})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Contains(err.Error(), errors.FailedToReadDeletionConfirmationErrorMsg)
 }
 
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {
