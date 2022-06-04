@@ -1,10 +1,4 @@
-Log in to Confluent Cloud using your email and password, or non-interactively using the `CONFLUENT_CLOUD_EMAIL` and `CONFLUENT_CLOUD_PASSWORD` environment variables.
-
-Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `CONFLUENT_CLOUD_ORGANIZATION_ID`.
-
-Log in to Confluent Platform with your username and password, or non-interactively using `CONFLUENT_PLATFORM_USERNAME`, `CONFLUENT_PLATFORM_PASSWORD`, `CONFLUENT_PLATFORM_MDS_URL`, and `CONFLUENT_PLATFORM_CA_CERT_PATH`. In a non-interactive login, `CONFLUENT_PLATFORM_MDS_URL` replaces the `--url` flag, and `CONFLUENT_PLATFORM_CA_CERT_PATH` replaces the `--ca-cert-path` flag.
-
-Even with the environment variables set, you can force an interactive login using the `--prompt` flag.
+Log in to Confluent Cloud or Confluent Platform.
 
 Usage:
   confluent login [flags]
