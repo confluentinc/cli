@@ -462,7 +462,7 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
-func (c *Config) IsCloudLogin() bool {
+func (c *Config) isCloud() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
@@ -471,9 +471,37 @@ func (c *Config) IsCloudLogin() bool {
 	return ctx.IsCloud(c.IsTest)
 }
 
+func (c *Config) IsCloudLogin() bool {
+	return c.isCloud() && !c.isLoginBlockedByOrgSuspension(false)
+}
+
+func (c *Config) IsLenientCloudLogin() bool {
+	return c.isCloud() && !c.isLoginBlockedByOrgSuspension(true)
+}
+
 func (c *Config) IsOnPremLogin() bool {
 	ctx := c.Context()
-	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+	return ctx != nil && ctx.PlatformName != "" && !c.isCloud()
+}
+
+func (c *Config) isLoginBlockedByOrgSuspension(allowEndOfFreeTrialSuspension bool) bool {
+	ctx := c.Context()
+	if ctx.State == nil || ctx.State.Auth == nil || ctx.State.Auth.Organization == nil {
+		log.CliLogger.Trace("current context state is not setup properly for checking org suspension status")
+		return true
+	}
+
+	suspensionStatus := c.Context().State.Auth.Organization.SuspensionStatus
+
+	// is org suspended
+	if suspensionStatus != nil && (suspensionStatus.Status == orgv1.SuspensionStatusType_SUSPENSION_IN_PROGRESS || suspensionStatus.Status == orgv1.SuspensionStatusType_SUSPENSION_COMPLETED) {
+		if allowEndOfFreeTrialSuspension {
+			// is org suspended due to end of free trial
+			return suspensionStatus.EventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
+		}
+		return true
+	}
+	return false
 }
 
 func (c *Config) GetLastUsedOrgId() string {

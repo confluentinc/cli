@@ -13,8 +13,17 @@ import (
 var (
 	noContextCfg = new(v1.Config)
 
+	regularOrgContextState = &v1.ContextState{
+		Auth: &v1.AuthConfig{
+			Organization: testserver.RegularOrg,
+		},
+	}
+
 	cloudCfg = &v1.Config{
-		Contexts:       map[string]*v1.Context{"cloud": {PlatformName: testserver.TestCloudURL.String()}},
+		Contexts: map[string]*v1.Context{"cloud": {
+			PlatformName: testserver.TestCloudURL.String(),
+			State:        regularOrgContextState,
+		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
@@ -23,6 +32,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.APIKey},
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -32,6 +42,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.Username},
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -57,6 +68,7 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 		cfg *v1.Config
 	}{
 		{RequireCloudLogin, cloudCfg},
+		{RequireLenientCloudLogin, cloudCfg},
 		{RequireCloudLoginOrOnPremLogin, cloudCfg},
 		{RequireCloudLoginOrOnPremLogin, onPremCfg},
 		{RequireNonAPIKeyCloudLogin, nonAPIKeyCloudCfg},
@@ -78,6 +90,7 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		err error
 	}{
 		{RequireCloudLogin, onPremCfg, requireCloudLoginErr},
+		{RequireLenientCloudLogin, onPremCfg, requireLenientCloudLoginErr},
 		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
 		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
 		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, requireNonAPIKeyCloudLoginErr},

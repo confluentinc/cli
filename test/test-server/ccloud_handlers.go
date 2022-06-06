@@ -36,6 +36,21 @@ var (
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+
+	RegularOrg = &orgv1.Organization{
+		Id:   321,
+		Name: "test-org",
+	}
+	SuspendedOrg = func(eventType orgv1.SuspensionEventType) *orgv1.Organization {
+		return &orgv1.Organization{
+			Id:   321,
+			Name: "test-org",
+			SuspensionStatus: &orgv1.SuspensionStatus{
+				Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+				EventType: eventType,
+			},
+		}
+	}
 )
 
 const (
@@ -105,14 +120,21 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 		case "suspended@user.com":
 			w.WriteHeader(http.StatusForbidden)
 			res.Error = &corev1.Error{Message: errors.SuspendedOrganizationSuggestions}
+		case "end-of-free-trial-suspended@user.com":
+			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+			res.Organization = SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
+			res.Organization = &orgv1.Organization{}
 		case "malformed@user.com":
 			res.Token = "malformed"
+			res.Organization = &orgv1.Organization{}
 		case "invalid@user.com":
 			res.Token = "invalid"
+			res.Organization = &orgv1.Organization{}
 		default:
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+			res.Organization = RegularOrg
 		}
 
 		err = json.NewEncoder(w).Encode(res)
