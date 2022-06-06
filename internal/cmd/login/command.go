@@ -143,7 +143,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		if err := c.printRemainingFreeCredit(cmd, c.isTest); err != nil {
+		if err := c.printRemainingFreeCredit(cmd); err != nil {
 			return err
 		}
 	}
@@ -151,8 +151,8 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, isTest bool) error {
-	if isTest {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command) error {
+	if c.isTest {
 		return nil
 	}
 
@@ -169,11 +169,11 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, isTest bool) erro
 
 	// only print remaining free credit if there is any unexpired promo code
 	if len(promoCodes) != 0 {
-		var remainingFreeCredit float64
+		var remainingFreeCredit int64
 		for _, promoCode := range promoCodes {
-			remainingFreeCredit += admin.ConvertToUSD(promoCode.Balance)
+			remainingFreeCredit += promoCode.Balance
 		}
-		utils.Println(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, remainingFreeCredit))
+		utils.Println(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit)))
 	}
 
 	return nil

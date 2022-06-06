@@ -53,7 +53,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {

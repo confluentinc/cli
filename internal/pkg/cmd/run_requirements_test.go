@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -14,19 +13,16 @@ import (
 var (
 	noContextCfg = new(v1.Config)
 
-	state = &v1.ContextState{
+	regularOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-			},
+			Organization: testserver.RegularOrg,
 		},
 	}
 
 	cloudCfg = &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
-			State:        state,
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -36,7 +32,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.APIKey},
-			State:        state,
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
@@ -46,7 +42,7 @@ var (
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: testserver.TestCloudURL.String(),
 			Credential:   &v1.Credential{CredentialType: v1.Username},
-			State:        state,
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,

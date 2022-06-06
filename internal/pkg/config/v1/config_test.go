@@ -36,7 +36,7 @@ var (
 		Id:   accountID,
 		Name: "test-env",
 	}
-	notSuspendedState = &ContextState{
+	regularOrgContextState = &ContextState{
 		Auth: &AuthConfig{
 			User: &orgv1.User{
 				Id:    123,
@@ -46,36 +46,16 @@ var (
 			Accounts: []*orgv1.Account{
 				account,
 			},
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-			},
+			Organization: testserver.RegularOrg,
 		},
 		AuthToken: "abc123",
 	}
-	suspendedState = &ContextState{
-		Auth: &AuthConfig{
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-				SuspensionStatus: &orgv1.SuspensionStatus{
-					Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
-					EventType: orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION,
-				},
+	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *ContextState {
+		return &ContextState{
+			Auth: &AuthConfig{
+				Organization: testserver.SuspendedOrg(eventType),
 			},
-		},
-	}
-	endOfFreeTrialSuspendedState = &ContextState{
-		Auth: &AuthConfig{
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-				SuspensionStatus: &orgv1.SuspensionStatus{
-					Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
-					EventType: orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL,
-				},
-			},
-		},
+		}
 	}
 )
 
@@ -166,7 +146,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				SrCredentials:          nil,
 			},
 		},
-		State: notSuspendedState,
+		State: regularOrgContextState,
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -212,7 +192,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			contextName: statefulContext,
 		},
 		ContextStates: map[string]*ContextState{
-			contextName: notSuspendedState,
+			contextName: regularOrgContextState,
 		},
 		CurrentContext: contextName,
 		IsTest:         true,
@@ -1025,7 +1005,7 @@ func TestConfig_IsCloud_True(t *testing.T) {
 		// test case: org not suspended
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        notSuspendedState,
+				State:        regularOrgContextState,
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1052,7 +1032,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		// test case: org suspended due to normal reason
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1062,7 +1042,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        endOfFreeTrialSuspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1076,7 +1056,7 @@ func TestConfig_IsLenientCloud_True(t *testing.T) {
 		// test case: org not suspended
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        notSuspendedState,
+				State:        regularOrgContextState,
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1086,7 +1066,7 @@ func TestConfig_IsLenientCloud_True(t *testing.T) {
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        endOfFreeTrialSuspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1113,7 +1093,7 @@ func TestConfig_IsLenientCloud_False(t *testing.T) {
 		// test case: org suspended due to normal reason
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1139,21 +1119,21 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 		},
 		{
 			Contexts: map[string]*Context{"context": {
-				State:        notSuspendedState,
+				State:        regularOrgContextState,
 				PlatformName: "confluent.cloud",
 			}},
 			CurrentContext: "context",
 		},
 		{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: "confluent.cloud",
 			}},
 			CurrentContext: "context",
 		},
 		{
 			Contexts: map[string]*Context{"context": {
-				State:        endOfFreeTrialSuspendedState,
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: "confluent.cloud",
 			}},
 			CurrentContext: "context",

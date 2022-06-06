@@ -12,19 +12,24 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
 	mockBaseConfig = &config.BaseConfig{}
 	mockVersion    = new(pversion.Version)
 
-	state = &v1.ContextState{
+	regularOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-			},
+			Organization: testserver.RegularOrg,
 		},
+	}
+	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *v1.ContextState {
+		return &v1.ContextState{
+			Auth: &v1.AuthConfig{
+				Organization: testserver.SuspendedOrg(eventType),
+			},
+		}
 	}
 )
 
@@ -51,17 +56,7 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
-			State: &v1.ContextState{
-				Auth: &v1.AuthConfig{
-					Organization: &orgv1.Organization{
-						Id:   321,
-						Name: "test-org",
-						SuspensionStatus: &orgv1.SuspensionStatus{
-							Status: orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
-						},
-					},
-				},
-			},
+			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 		}},
 		CurrentContext: "cloud",
 	}
@@ -86,23 +81,13 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
-			State: &v1.ContextState{
-				Auth: &v1.AuthConfig{
-					Organization: &orgv1.Organization{
-						Id:   321,
-						Name: "test-org",
-						SuspensionStatus: &orgv1.SuspensionStatus{
-							Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
-							EventType: orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL,
-						},
-					},
-				},
-			},
+			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 		}},
 		CurrentContext: "cloud",
 	}
 
-	out, err := runWithConfig(cfg)
+	cli := NewConfluentCommand(cfg, true, mockVersion)
+	out, err := pcmd.ExecuteCommand(cli.Command, "help")
 	require.NoError(t, err)
 
 	// note users can still run "confluent admin payment update" or "confluent admin promo add" if the org is suspended
@@ -117,6 +102,24 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	for _, command := range commands {
 		require.Contains(t, out, command)
 	}
+
+	// check that some top level cloud commands are not included
+	cloudCommands := []string{"api-key", "iam", "schema-registry", "price"}
+	for _, command := range cloudCommands {
+		require.NotContains(t, out, command)
+	}
+
+	// check "admin payment" command
+	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "payment", "--help")
+	require.NoError(t, err)
+	require.Contains(t, out, "update")
+	require.NotContains(t, out, "describe")
+
+	// check "admin promo" command
+	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "promo", "--help")
+	require.NoError(t, err)
+	require.Contains(t, out, "add")
+	require.NotContains(t, out, "list")
 }
 
 func TestHelp_Cloud(t *testing.T) {
@@ -124,7 +127,7 @@ func TestHelp_Cloud(t *testing.T) {
 		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
-			State:        state,
+			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 	}
@@ -149,7 +152,7 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 			"cloud-with-api-key": {
 				PlatformName: "confluent.cloud",
 				Credential:   &v1.Credential{CredentialType: v1.APIKey},
-				State:        state,
+				State:        regularOrgContextState,
 			},
 		},
 		CurrentContext: "cloud-with-api-key",
