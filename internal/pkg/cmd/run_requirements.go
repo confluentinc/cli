@@ -13,7 +13,7 @@ const (
 	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireCloudLogin                       = "cloud-login"
-	RequireLenientCloudLogin                = "lenient-cloud-login"
+	RequireCloudLoginAllowFreeTrialEnded    = "cloud-login-allow-free-trial-ended"
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
 	RequireOnPremLogin                      = "on-prem-login"
 	RequireUpdatesEnabled                   = "updates-enabled"
@@ -26,9 +26,13 @@ var (
 		"you must log in to Confluent Cloud to use this command",
 		"Log in with \"confluent login\".\n"+signupSuggestion,
 	)
-	requireLenientCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+	requireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.SuspendedOrganizationSuggestions,
+	)
+	requireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.EndOfFreeTrialSuggestions,
 	)
 	requireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
@@ -63,11 +67,24 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 		switch requirement {
 		case RequireCloudLogin:
 			if !cfg.IsCloudLogin() {
-				return requireCloudLoginErr
+				if !cfg.IsCloud() {
+					return requireCloudLoginErr
+				} else if !cfg.IsLoginBlockedByOrgSuspension() {
+					// user was able to log in but their org is suspended due to end of free trial
+					return requireCloudLoginFreeTrialEndedOrgUnsuspendedErr
+				} else if cfg.IsOrgSuspended() {
+					// user was not able to log in because their org is suspended
+					return requireCloudLoginOrgUnsuspendedErr
+				}
 			}
-		case RequireLenientCloudLogin:
-			if !cfg.IsLenientCloudLogin() {
-				return requireLenientCloudLoginErr
+		case RequireCloudLoginAllowFreeTrialEnded:
+			if !cfg.IsCloudLoginAllowFreeTrialEnded() {
+				if !cfg.IsCloud() {
+					return requireCloudLoginErr
+				} else if cfg.IsLoginBlockedByOrgSuspension() {
+					// user was not able to even log in because their org is suspended
+					return requireCloudLoginOrgUnsuspendedErr
+				}
 			}
 		case RequireCloudLoginOrOnPremLogin:
 			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
@@ -100,7 +117,7 @@ func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
 		switch requirement {
 		case RequireCloudLogin:
 			return true
-		case RequireLenientCloudLogin:
+		case RequireCloudLoginAllowFreeTrialEnded:
 			return true
 		case RequireNonAPIKeyCloudLogin:
 			return true

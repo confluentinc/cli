@@ -1051,7 +1051,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 	}
 }
 
-func TestConfig_IsLenientCloud_True(t *testing.T) {
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
 	for _, platform := range cloudPlatforms {
 		// test case: org not suspended
 		cfg := &Config{
@@ -1061,7 +1061,7 @@ func TestConfig_IsLenientCloud_True(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		require.True(t, cfg.IsLenientCloudLogin(), platform+" should be true")
+		require.True(t, cfg.IsCloudLoginAllowFreeTrialEnded(), platform+" should be true")
 
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
@@ -1071,11 +1071,11 @@ func TestConfig_IsLenientCloud_True(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		require.True(t, cfg.IsLenientCloudLogin(), platform+" should be true")
+		require.True(t, cfg.IsCloudLoginAllowFreeTrialEnded(), platform+" should be true")
 	}
 }
 
-func TestConfig_IsLenientCloud_False(t *testing.T) {
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
 	// test case: platform name not cloud
 	configs := []*Config{
 		nil,
@@ -1086,7 +1086,7 @@ func TestConfig_IsLenientCloud_False(t *testing.T) {
 	}
 
 	for _, cfg := range configs {
-		require.False(t, cfg.IsLenientCloudLogin())
+		require.False(t, cfg.IsCloudLoginAllowFreeTrialEnded())
 	}
 
 	for _, platform := range cloudPlatforms {
@@ -1098,7 +1098,7 @@ func TestConfig_IsLenientCloud_False(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		require.False(t, cfg.IsLenientCloudLogin(), platform+" should be false")
+		require.False(t, cfg.IsCloudLoginAllowFreeTrialEnded(), platform+" should be false")
 	}
 }
 
