@@ -236,6 +236,20 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
+func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
+	identityProviders, err := client.ListIdentityProviders()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(identityProviders))
+	for i, identityProvider := range identityProviders {
+		description := fmt.Sprintf("%s: %s", *identityProvider.DisplayName, *identityProvider.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *identityProvider.Id, description)
+	}
+	return suggestions
+}
+
 func AddSchemaTypeFlag(cmd *cobra.Command) {
 	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
 

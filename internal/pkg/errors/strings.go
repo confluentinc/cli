@@ -42,6 +42,10 @@ const (
 	// feedback commands
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
+	// iam commands
+	DeletedServiceAccountMsg   = "Deleted service account \"%s\".\n"
+	DeletedIdentityProviderMsg = "Deleted identity provider \"%s\".\n"
+
 	// kafka cluster commands
 	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
@@ -67,10 +71,9 @@ const (
 	CreatedMirrorMsg         = "Created mirror topic \"%s\".\n"
 
 	// kafka acl commands
-	DeletedServiceAccountMsg = "Deleted service account \"%s\".\n"
-	DeletedACLsMsg           = "Deleted ACLs.\n"
-	DeletedACLsCountMsg      = "Deleted %d ACLs.\n"
-	ACLsNotFoundMsg          = "ACL not found; ACL may have been misspelled or already deleted.\n"
+	DeletedACLsMsg      = "Deleted ACLs.\n"
+	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
+	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
