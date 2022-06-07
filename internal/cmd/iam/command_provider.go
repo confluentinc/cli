@@ -17,8 +17,6 @@ type identityProvider struct {
 	Description string
 	Issuer      string
 	JwksUri     string
-	//Keys        	[]v2.IamV2Jwks
-	//Deactivated 	bool
 }
 
 func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
