@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -79,6 +80,24 @@ func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString)
 	pageToken, err := extractPageToken(nextPageUrlString)
 	return pageToken, false, err
 }
+
+func extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
+// func extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+// 	if !nextPageUrlStringNullable.IsSet() {
+// 		return "", true, nil
+// 	}
+// 	nextPageUrlString := *nextPageUrlStringNullable.Get()
+// 	pageToken, err := extractPageToken(nextPageUrlString)
+// 	return pageToken, false, err
+// }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
