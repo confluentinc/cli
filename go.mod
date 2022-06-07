@@ -20,6 +20,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
