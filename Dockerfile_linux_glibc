@@ -1,0 +1,14 @@
+FROM 037803949979.dkr.ecr.us-west-1.amazonaws.com/centos-base:latest
+
+COPY . /go/src/github.com/confluentinc/cli/
+
+COPY .netrc /root/.netrc
+RUN chmod 600 /root/.netrc
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    make gorelease-linux-glibc
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    for file in dist/*linux*; do mv -v "$file" "${file/linux/linux_glibc}"; done ; \
+    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux_glibc}"; done; \
+    for file in dist/*.txt; do sed -i 's/linux/linux_glibc/g' $file ; done
