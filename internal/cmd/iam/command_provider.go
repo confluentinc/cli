@@ -31,8 +31,8 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }
@@ -46,5 +46,5 @@ func (c *identityProviderCommand) validArgs(cmd *cobra.Command, args []string) [
 		return nil
 	}
 
-	return pcmd.AutocompleteServiceAccounts(c.V2Client)
+	return pcmd.AutocompleteIdentityProviders(c.V2Client)
 }

@@ -48,9 +48,8 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	serviceAccountID         = int32(12345)
-	serviceAccountResourceID = "sa-12345"
-	//identityProviderID         = int32(12345)
+	serviceAccountID           = int32(12345)
+	serviceAccountResourceID   = "sa-12345"
 	identityProviderResourceID = "op-12345"
 	deactivatedUserID          = int32(6666)
 	deactivatedResourceID      = "sa-6666"
