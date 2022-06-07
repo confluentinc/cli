@@ -1,4 +1,4 @@
-**Confluent Cloud:**
+Confluent Cloud:
 
 Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.
 
@@ -6,11 +6,11 @@ Email and password login can be accomplished non-interactively using the `CONFLU
 
 Email and password can also be stored locally for non-interactive re-authentication with the `--save` flag.
 
-SSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to login again.
+SSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.
 
 Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `CONFLUENT_CLOUD_ORGANIZATION_ID`.
 
-**Confluent Platform:**
+Confluent Platform:
 
 Log in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.
 
