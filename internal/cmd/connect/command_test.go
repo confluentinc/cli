@@ -28,14 +28,22 @@ const (
 	pluginType    = "DummyPlugin"
 )
 
+var (
+	plugin = connectv1.InlineResponse2002{
+		Class: "DummySink",
+		Type:  "sink",
+	}
+	pluginDescribe = connectv1.InlineResponse2003Configs{
+		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
+	}
+)
+
 type ConnectTestSuite struct {
 	suite.Suite
 	conf               *v1.Config
 	kafkaCluster       *schedv1.KafkaCluster
 	connector          *connectv1.ConnectV1Connector
 	connectorExpansion *connectv1.ConnectV1ConnectorExpansion
-	plugin             connectv1.InlineResponse2002
-	pluginDescribe     connectv1.InlineResponse2003Configs
 	connectorsMock     *connectmock.ConnectorsV1Api
 	lifecycleMock      *connectmock.LifecycleV1Api
 	pluginMock         *connectmock.PluginsV1Api
@@ -68,13 +76,6 @@ func (suite *ConnectTestSuite) SetupSuite() {
 				connectv1.ConnectV1ConnectorExpansionStatusTasks{Id: 1, State: "RUNNING"}},
 			Type: "Sink",
 		},
-	}
-	suite.plugin = connectv1.InlineResponse2002{
-		Class: "DummySink",
-		Type:  "sink",
-	}
-	suite.pluginDescribe = connectv1.InlineResponse2003Configs{
-		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
 	}
 }
 
@@ -133,14 +134,14 @@ func (suite *ConnectTestSuite) SetupTest() {
 			return connectv1.ApiListConnectv1ConnectorPluginsRequest{}
 		},
 		ListConnectv1ConnectorPluginsExecuteFunc: func(_ connectv1.ApiListConnectv1ConnectorPluginsRequest) ([]connectv1.InlineResponse2002, *http.Response, error) {
-			return []connectv1.InlineResponse2002{suite.plugin}, nil, nil
+			return []connectv1.InlineResponse2002{plugin}, nil, nil
 		},
 		ValidateConnectv1ConnectorPluginFunc: func(_ context.Context, _, _, _ string) connectv1.ApiValidateConnectv1ConnectorPluginRequest {
 			return connectv1.ApiValidateConnectv1ConnectorPluginRequest{}
 		},
 		ValidateConnectv1ConnectorPluginExecuteFunc: func(_ connectv1.ApiValidateConnectv1ConnectorPluginRequest) (connectv1.InlineResponse2003, *http.Response, error) {
 			return connectv1.InlineResponse2003{
-				Configs: &[]connectv1.InlineResponse2003Configs{suite.pluginDescribe},
+				Configs: &[]connectv1.InlineResponse2003Configs{pluginDescribe},
 			}, nil, nil
 		},
 	}

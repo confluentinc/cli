@@ -80,9 +80,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &connectCreateDisplay{
-			Id:            connectorExpansion.Id.GetId(),
-			ConnectorName: connectorInfo.GetName(),
-			ErrorTrace:    trace,
+			Id:         connectorExpansion.Id.GetId(),
+			Name:       connectorInfo.GetName(),
+			ErrorTrace: trace,
 		})
 	}
 
