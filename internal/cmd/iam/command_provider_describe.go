@@ -41,7 +41,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadIdentityProviderIDErrorMsg)
+		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
 	identityProviderProfile, _, err := c.V2Client.GetIdentityProvider(args[0])

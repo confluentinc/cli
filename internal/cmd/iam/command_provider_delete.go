@@ -28,7 +28,7 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadIdentityProviderIDErrorMsg)
+		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
 	_, err := c.V2Client.DeleteIdentityProvider(args[0])

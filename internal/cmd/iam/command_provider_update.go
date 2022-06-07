@@ -44,7 +44,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	}
 
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadIdentityProviderIDErrorMsg)
+		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 	identityProviderId := args[0]
 
