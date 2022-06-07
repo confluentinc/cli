@@ -1,1 +1,1 @@
-Error: failed parsing resource id: please ensure resource id begins with "op-"
+Error: failed parsing resource ID: resource ID does not begin with "op-"

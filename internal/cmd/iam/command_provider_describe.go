@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/spf13/cobra"
@@ -41,7 +42,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityProviderPrefix)
 	}
 
 	identityProviderProfile, _, err := c.V2Client.GetIdentityProvider(args[0])

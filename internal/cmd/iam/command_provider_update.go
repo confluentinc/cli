@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
@@ -44,7 +45,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	}
 
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityProviderPrefix)
 	}
 	identityProviderId := args[0]
 

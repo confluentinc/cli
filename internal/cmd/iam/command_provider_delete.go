@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
@@ -28,7 +29,7 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityProviderPrefix)
 	}
 
 	_, err := c.V2Client.DeleteIdentityProvider(args[0])

@@ -13,6 +13,9 @@ const (
 	ServiceAccount   = "service-account"
 	User             = "user"
 	IdentityProvider = "identity-provider"
+
+	IdentityProviderPrefix = "op"
+	UserPrefix             = "u"
 )
 
 func LookupType(resourceId string) string {
