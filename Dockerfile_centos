@@ -1,0 +1,14 @@
+FROM 037803949979.dkr.ecr.us-west-1.amazonaws.com/centos-base:latest
+
+COPY . /go/src/github.com/confluentinc/cli/
+
+COPY .netrc /root/.netrc
+RUN chmod 600 /root/.netrc
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    make gorelease-centos
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    for file in dist/*linux*; do mv -v "$file" "${file/linux/centos}"; done ; \
+    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_centos}"; done; \
+    for file in dist/*.txt; do sed -i 's/linux/centos/g' $file ; done

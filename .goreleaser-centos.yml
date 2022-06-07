@@ -35,7 +35,7 @@ archives:
   - id: binary
     format: binary
   - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}_Glibc"
     format: tar.gz
     format_overrides:
       - goos: windows
