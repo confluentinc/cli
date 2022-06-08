@@ -10,13 +10,12 @@ import (
 )
 
 func newMdsClient(baseURL, userAgent string, isTest bool) *mdsv2.APIClient {
-	mdsServer := getServerUrl(baseURL, isTest)
 	cfg := mdsv2.NewConfiguration()
-	cfg.Servers = mdsv2.ServerConfigurations{
-		{URL: mdsServer, Description: "Confluent Cloud IAM"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = mdsv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud MDS"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return mdsv2.NewAPIClient(cfg)
 }
 
