@@ -28,7 +28,7 @@ func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client
 		CmkClient:              newCmkClient(baseURL, userAgent, isTest),
 		IamClient:              newIamClient(baseURL, userAgent, isTest),
 		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
-		IdentityPoolClient:     newIdentityProviderClient(baseURL, userAgent, isTest),
+		IdentityPoolClient:     newIdentityPoolClient(baseURL, userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
 	}
