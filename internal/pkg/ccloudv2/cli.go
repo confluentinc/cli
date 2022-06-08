@@ -11,14 +11,11 @@ import (
 
 func newCliClient(baseURL, userAgent string, isTest bool) *cliv1.APIClient {
 	cfg := cliv1.NewConfiguration()
-	cfg.Servers = cliv1.ServerConfigurations{
-		{
-			URL:         getServerUrl(baseURL, isTest),
-			Description: "Confluent Cloud CLI",
-		},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = cliv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CLI"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return cliv1.NewAPIClient(cfg)
 }
 
