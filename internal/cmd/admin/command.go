@@ -16,7 +16,7 @@ func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		Use:         "admin",
 		Short:       "Perform administrative tasks for the current organization.",
 		Args:        cobra.NoArgs,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginAllowFreeTrialEnded},
 	}
 
 	c := &command{
