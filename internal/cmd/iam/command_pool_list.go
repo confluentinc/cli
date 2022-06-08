@@ -29,12 +29,12 @@ func (c *identityPoolCommand) newListCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
-	providerID, err := cmd.Flags().GetString("provider")
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
 
-	identityPools, err := c.V2Client.ListIdentityPools(providerID)
+	identityPools, err := c.V2Client.ListIdentityPools(provider)
 	if err != nil {
 		return err
 	}

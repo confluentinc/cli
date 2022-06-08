@@ -54,8 +54,8 @@ func (c *Client) GetIdentityProvider(id string) (identityproviderv2.IamV2Identit
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.GetIamV2IdentityProviderExecute(req)
 }
 
-func (c *Client) UpdateIdentityProvider(id string, update identityproviderv2.IamV2IdentityProviderUpdate) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
-	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), id).IamV2IdentityProviderUpdate(update)
+func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityProviderUpdate) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
+	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), *update.Id).IamV2IdentityProviderUpdate(update)
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProviderExecute(req)
 }
 
@@ -91,33 +91,33 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 
 // iam identity pool api calls
 
-func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerID string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerID).IamV2IdentityPool(identityPool)
+func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool)
 	return c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
 }
 
-func (c *Client) DeleteIdentityPool(providerID string, id string) (*http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPool(c.identityPoolApiContext(), providerID, id)
+func (c *Client) DeleteIdentityPool(id, providerId string) (*http.Response, error) {
+	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
 	return c.IdentityPoolClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPoolExecute(req)
 }
 
-func (c *Client) GetIdentityPool(providerID string, id string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.GetIamV2IdentityPool(c.identityPoolApiContext(), providerID, id)
+func (c *Client) GetIdentityPool(id, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.GetIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
 	return c.IdentityPoolClient.IdentityPoolsIamV2Api.GetIamV2IdentityPoolExecute(req)
 }
 
-func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerID string, id string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPool(c.identityPoolApiContext(), providerID, id).IamV2IdentityPool(identityPool)
+func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPool(c.identityPoolApiContext(), providerId, *identityPool.Id).IamV2IdentityPool(identityPool)
 	return c.IdentityPoolClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPoolExecute(req)
 }
 
-func (c *Client) ListIdentityPools(providerID string) ([]identityproviderv2.IamV2IdentityPool, error) {
+func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV2IdentityPool, error) {
 	identityPools := make([]identityproviderv2.IamV2IdentityPool, 0)
 
 	collectedAllIdentityPools := false
 	pageToken := ""
 	for !collectedAllIdentityPools {
-		identityPoolList, _, err := c.executeListIdentityPools(providerID, pageToken)
+		identityPoolList, _, err := c.executeListIdentityPools(providerId, pageToken)
 		if err != nil {
 			return nil, err
 		}

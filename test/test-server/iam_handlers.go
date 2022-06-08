@@ -240,7 +240,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(identityProviderResourceID),
 				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("at your service."),
+				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
@@ -259,7 +259,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(identityProviderResourceID),
 				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("at your service."),
+				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
@@ -308,7 +308,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:           identityproviderv2.PtrString(identityPoolResourceID),
 				DisplayName:  identityproviderv2.PtrString("identity_pool"),
-				Description:  identityproviderv2.PtrString("at your service."),
+				Description:  identityproviderv2.PtrString("pooling identities"),
 				SubjectClaim: identityproviderv2.PtrString("sub"),
 			}
 			err := json.NewEncoder(w).Encode(identityPool)
@@ -326,7 +326,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:           identityproviderv2.PtrString(identityPoolResourceID),
 				DisplayName:  identityproviderv2.PtrString("identity_pool"),
-				Description:  identityproviderv2.PtrString("at your service."),
+				Description:  identityproviderv2.PtrString("pooling identities."),
 				SubjectClaim: identityproviderv2.PtrString("sub"),
 			}
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})

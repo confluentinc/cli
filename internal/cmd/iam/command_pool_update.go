@@ -28,15 +28,16 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
-	_ = cmd.MarkFlagRequired("provider")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+
+	_ = cmd.MarkFlagRequired("provider")
 	_ = cmd.MarkFlagRequired("description")
 
 	return cmd
 }
 
 func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
-	providerID, err := cmd.Flags().GetString("provider")
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
@@ -55,9 +56,10 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	}
 	identityPoolId := args[0]
 	updateIdentityPool := identityproviderv2.IamV2IdentityPool{
+		Id:          &identityPoolId,
 		Description: identityproviderv2.PtrString(description),
 	}
-	_, httpresp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, providerID, identityPoolId)
+	_, httpresp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
 		return errors.CatchIdentityPoolNotFoundError(err, httpresp, identityPoolId)
 	}

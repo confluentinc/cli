@@ -17,19 +17,20 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an identity pool named `DemoIdentityPool`.",
-				Code: `confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --subject-claim sub`,
+				Text: `Create an identity pool named "DemoIdentityPool".`,
+				Code: "confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --subject-claim sub",
 			},
 		),
 	}
 
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
-	_ = cmd.MarkFlagRequired("provider")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	_ = cmd.MarkFlagRequired("description")
 	cmd.Flags().String("subject-claim", "", "Subject claim of the identity pool.")
-	_ = cmd.MarkFlagRequired("subject-claim")
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("provider")
+	_ = cmd.MarkFlagRequired("description")
+	_ = cmd.MarkFlagRequired("subject-claim")
 
 	return cmd
 }
@@ -41,7 +42,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	providerID, err := cmd.Flags().GetString("provider")
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		Description:  identityproviderv2.PtrString(description),
 		SubjectClaim: identityproviderv2.PtrString(subjectClaim),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, providerID)
+	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}

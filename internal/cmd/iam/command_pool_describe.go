@@ -45,12 +45,12 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityPoolPrefix)
 	}
 
-	providerID, err := cmd.Flags().GetString("provider")
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
 
-	identityPoolProfile, _, err := c.V2Client.GetIdentityPool(providerID, args[0])
+	identityPoolProfile, _, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
 		return err
 	}

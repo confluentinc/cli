@@ -50,9 +50,10 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	identityProviderId := args[0]
 
 	update := identityproviderv2.IamV2IdentityProviderUpdate{
+		Id:          &identityProviderId,
 		Description: &description,
 	}
-	_, httpresp, err := c.V2Client.UpdateIdentityProvider(identityProviderId, update)
+	_, httpresp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
 		return errors.CatchIdentityProviderNotFoundError(err, httpresp, identityProviderId)
 	}

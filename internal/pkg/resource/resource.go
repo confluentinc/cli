@@ -15,8 +15,8 @@ const (
 	IdentityProvider = "identity-provider"
 	IdentityPool     = "identity-pool"
 
-	IdentityProviderPrefix = "op"
 	IdentityPoolPrefix     = "pool"
+	IdentityProviderPrefix = "op"
 	UserPrefix             = "u"
 )
 
@@ -26,13 +26,13 @@ func LookupType(resourceId string) string {
 	}
 
 	prefixToType := map[string]string{
-		"lkc":    Kafka,
-		"lksqlc": Ksql,
-		"lsrc":   SchemaRegistry,
-		"sa":     ServiceAccount,
-		"u":      User,
-		"op":     IdentityProvider,
-		"pool":   IdentityPool,
+		IdentityPoolPrefix:     IdentityPool,
+		IdentityProviderPrefix: IdentityProvider,
+		"lkc":                  Kafka,
+		"lksqlc":               Ksql,
+		"lsrc":                 SchemaRegistry,
+		"sa":                   ServiceAccount,
+		"u":                    User,
 	}
 
 	for prefix, resourceType := range prefixToType {

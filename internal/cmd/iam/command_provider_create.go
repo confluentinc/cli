@@ -17,19 +17,20 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an identity provider named `DemoIdentityProvider`.",
+				Text: `Create an identity provider named "DemoIdentityProvider".`,
 				Code: `confluent iam provider create DemoIdentityProvider --description "description about idp" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	_ = cmd.MarkFlagRequired("description")
 	cmd.Flags().String("jwks-uri", "", "JWKS URI of the identity provider.")
-	_ = cmd.MarkFlagRequired("jwks-uri")
 	cmd.Flags().String("issuer-uri", "", "Issuer URI of the identity provider.")
-	_ = cmd.MarkFlagRequired("issuer-uri")
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("description")
+	_ = cmd.MarkFlagRequired("jwks-uri")
+	_ = cmd.MarkFlagRequired("issuer-uri")
 
 	return cmd
 }
