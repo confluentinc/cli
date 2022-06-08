@@ -30,6 +30,12 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
 			fixture:     "schema-registry/delete-terminated.golden",
 		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("invalid_confirmation\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-invalid-confirmation.golden",
+			wantErrCode: 1,
+		},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},

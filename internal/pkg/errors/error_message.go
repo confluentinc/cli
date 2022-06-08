@@ -447,7 +447,7 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadDeletionConfirmationErrorMsg = "Failed to read your deletion confirmation"
+	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
