@@ -97,6 +97,7 @@ const (
 	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
 	NoSubjectsMsg                       = "No subjects."
 	NoExporterMsg                       = "No exporters."
+	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
