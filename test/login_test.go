@@ -31,17 +31,18 @@ func (s *CLITestSuite) TestLogin_Help() {
 	s.runIntegrationTest(CLITest{args: "login -h", fixture: "login/help.golden"})
 }
 
-func (s *CLITestSuite) TestCcloudErrors() {
+func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
-	s.T().Run("invalid user or pass", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestion))
+	s.T().Run("good organization login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		s.Contains(output, loggedInAsWithOrgOutput)
+		s.Contains(output, loggedInEnvOutput)
+		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
 	})
 
-	s.T().Run("suspended organization", func(tt *testing.T) {
+	s.T().Run("suspended organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
@@ -54,6 +55,17 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
+	})
+}
+
+func (s *CLITestSuite) TestCcloudErrors() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestion))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {

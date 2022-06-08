@@ -143,7 +143,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		if err := c.printRemainingFreeCredit(cmd); err != nil {
+		if err := c.printRemainingFreeCredit(cmd, client); err != nil {
 			return err
 		}
 	}
@@ -151,16 +151,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command) error {
-	if c.isTest {
-		return nil
-	}
-
-	client, err := pcmd.CreateCCloudClient(c.Config.Context(), c.Version)
-	if err != nil {
-		return err
-	}
-
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client) error {
 	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {

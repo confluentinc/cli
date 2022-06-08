@@ -43,9 +43,7 @@ const (
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
 	EndOfFreeTrialErrorMsg                      = "organization \"%s\" has been suspended because your free trial has ended"
-	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card, or claim a Promo Code to extend your free trial. You can do so either via our CLI or UI.\n" +
-		"To unsuspend your organization via CLI, please update your payment method with \"confluent admin payment update\" or add a new promo code with \"confluent admin promo add\".\n" +
-		"To unsuspend your organization via UI, please go to https://confluent.cloud/login and follow the prompts."
+	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card with \"confluent admin payment update\" or claim a promo code with \"confluent admin promo add\". To enter payment via the UI, please go to confluent.cloud/login."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
