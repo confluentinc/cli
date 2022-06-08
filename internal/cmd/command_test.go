@@ -104,7 +104,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	}
 
 	// check that some top level cloud commands are not included (each of these top level command corresponds to a
-	// run requirement)
+	// different run requirement)
 	cloudCommands := []string{"api-key", "audit-log", "cluster", "connect", "service-quota"}
 	for _, command := range cloudCommands {
 		require.NotContains(t, out, command)
