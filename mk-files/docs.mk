@@ -44,7 +44,7 @@ publish-docs-internal:
 	git checkout -b cli-$(VERSION) origin/$(DOCS_BASE_BRANCH) || exit 1; \
 	rm -rf command-reference; \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference; \
-	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<uuid>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1; \
+	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1; \
 	git add . || exit 1; \
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
 	git commit -m "[ci skip] chore: update CLI docs for $(VERSION)" || exit 1; \

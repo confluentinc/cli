@@ -85,3 +85,21 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 
 	return ErrIfMissingRunRequirement(cmd.Parent(), cfg)
 }
+
+func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
+	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
+		switch requirement {
+		case RequireCloudLogin:
+			return true
+		case RequireNonAPIKeyCloudLogin:
+			return true
+		case RequireCloudLoginOrOnPremLogin:
+			return cfg.IsCloudLogin()
+		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
+			return cfg.IsCloudLogin()
+		case RequireOnPremLogin:
+			return false
+		}
+	}
+	return false
+}

@@ -18,7 +18,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:         "create",
 		Short:       "Create a schema.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:        c.onPremCreate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -87,7 +87,7 @@ func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *Regi
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 	}
-	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return nil, nil, err
 	}

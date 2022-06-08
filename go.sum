@@ -625,8 +625,13 @@ github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0b
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105 h1:rJjoMIEEjChHHTAkp/bxxzFR2XnU4SCAz6bgRp3vqOw=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105/go.mod h1:gFne0gmsbgH4GlpfmwadKrAMuSEvEB+mP4DfkEJ4Zi4=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
+<<<<<<< HEAD
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0 h1:YQFYJXWU4J10F2v4LhJm5OFSDe2PfZIHTHkzsbl1JuU=
 github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0/go.mod h1:y9C4nB+n7+vy50G83aY19h/1iKr+z3MvhW1YPVdf+t4=
+=======
+github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0 h1:QVDSuf625m7rG3397ez40aDrxZb2h4ouad4UzXECgl4=
+github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
+>>>>>>> main
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/KfZ/ZahCOoeTjxXOoRU=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 h1:NCEZ7nR76RThfu4oCBguMf+IHRdOr3KtAoYbzMJr18o=
@@ -1261,8 +1266,9 @@ github.com/hashicorp/go-retryablehttp v0.5.4/go.mod h1:9B5zBasrRhHXnJnui7y6sL7es
 github.com/hashicorp/go-retryablehttp v0.6.2/go.mod h1:gEx6HMUGxYYhJScX7W1Il64m6cc2C1mDaW3NQ9sY1FY=
 github.com/hashicorp/go-retryablehttp v0.6.6/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
 github.com/hashicorp/go-retryablehttp v0.6.8/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
-github.com/hashicorp/go-retryablehttp v0.7.0 h1:eu1EI/mbirUgP5C8hVsTNaGZreBDlYiwC1FZWkvQPQ4=
 github.com/hashicorp/go-retryablehttp v0.7.0/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
+github.com/hashicorp/go-retryablehttp v0.7.1 h1:sUiuQAnLlbvmExtFQs72iFW/HXeUn8Z1aJLQ4LJJbTQ=
+github.com/hashicorp/go-retryablehttp v0.7.1/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
 github.com/hashicorp/go-rootcerts v1.0.0/go.mod h1:K6zTfqpRlCUIjkwsN4Z+hiSfzSTQa6eBIzfwKfwNnHU=
 github.com/hashicorp/go-rootcerts v1.0.1/go.mod h1:pqUvnprVnM5bf7AOirdbb01K4ccR319Vf4pU3K5EGc8=
 github.com/hashicorp/go-rootcerts v1.0.2/go.mod h1:pqUvnprVnM5bf7AOirdbb01K4ccR319Vf4pU3K5EGc8=

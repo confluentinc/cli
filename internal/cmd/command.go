@@ -37,8 +37,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/launch-darkly"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -67,7 +67,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), getCloudClient(cfg, ccloudClientFactory))
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	launchdarkly.InitManager(ver, isTest)
+	featureflags.Init(ver, isTest)
 
 	help := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
@@ -157,6 +157,8 @@ func getLongDescription(cfg *v1.Config) string {
 
 func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
+	catchErrors(cmd)
+
 	cmd.Flags().SortFlags = false
 
 	for _, subcommand := range cmd.Commands() {
@@ -173,8 +175,20 @@ func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
 		// Show err for internal commands. Leaf commands will err in the PreRun function.
 		if cmd.HasSubCommands() {
 			cmd.RunE = func(_ *cobra.Command, _ []string) error { return err }
-			cmd.SilenceUsage = true
 		}
+	}
+}
+
+// catchErrors catches (and modifies) errors from any of the built-in error-producing functions.
+func catchErrors(cmd *cobra.Command) {
+	if cmd.PersistentPreRunE != nil {
+		cmd.PersistentPreRunE = pcmd.CatchErrors(cmd.PersistentPreRunE)
+	}
+	if cmd.PreRunE != nil {
+		cmd.PreRunE = pcmd.CatchErrors(cmd.PreRunE)
+	}
+	if cmd.RunE != nil {
+		cmd.RunE = pcmd.CatchErrors(cmd.RunE)
 	}
 }
 

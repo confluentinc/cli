@@ -33,7 +33,7 @@ func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-tasks [id]",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.getTasks),
+		RunE:  c.getTasks,
 		Short: "List broker tasks.",
 		Example: examples.BuildExampleString(
 			examples.Example{

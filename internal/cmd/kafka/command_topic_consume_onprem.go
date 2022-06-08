@@ -21,7 +21,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
+		RunE:  c.onPremConsume,
 		Short: "Consume messages from a Kafka topic.",
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
@@ -39,6 +39,8 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
+	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -111,7 +113,26 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	err = consumer.Subscribe(topicName, nil)
+	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
+	}
+
+	offset, err := getOffsetWithFallback(cmd)
+	if err != nil {
+		return err
+	}
+
+	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+	partitionFilter := partitionFilter{
+		changed: cmd.Flags().Changed("partition"),
+		index:   partition,
+	}
+
+	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
+	err = consumer.Subscribe(topicName, rebalanceCallback)
 	if err != nil {
 		return err
 	}
@@ -125,7 +146,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
-		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 		if err != nil {
 			return err
 		}

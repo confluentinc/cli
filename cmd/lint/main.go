@@ -9,6 +9,7 @@ import (
 	"github.com/client9/gospell"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -289,11 +290,11 @@ func main() {
 			CurrentContext: "No Context",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: v1.CCloudHostnames[0]}},
+			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: ccloudv2.Hostnames[0]}},
 			CurrentContext: "Cloud",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
+			Contexts:       map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
 			CurrentContext: "On-Prem",
 		},
 	}

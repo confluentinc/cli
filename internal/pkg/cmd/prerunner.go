@@ -7,8 +7,6 @@ import (
 	"os"
 	"strings"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -20,7 +18,9 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -88,19 +88,15 @@ type HasAPIKeyCLICommand struct {
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(c))
+	cmd.PersistentPreRunE = prerunner.Authenticated(c)
 	c.Command = cmd
 	return c
-}
-
-func (c *AuthenticatedCLICommand) SetPersistentPreRunE(persistentPreRunE func(*cobra.Command, []string) error) {
-	c.PersistentPreRunE = NewCLIPreRunnerE(persistentPreRunE)
 }
 
 // Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAuthenticatedStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
 	c := &AuthenticatedStateFlagCommand{NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Authenticated(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
+	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
 	c.Command = cmd
 	return c
 }
@@ -108,7 +104,7 @@ func NewAuthenticatedStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *
 // Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
 func NewAuthenticatedWithMDSStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
 	c := &AuthenticatedStateFlagCommand{NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
+	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
 	c.Command = cmd
 	return c
 }
@@ -116,28 +112,28 @@ func NewAuthenticatedWithMDSStateFlagCommand(cmd *cobra.Command, prerunner PreRu
 // Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
 func NewAnonymousStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *StateFlagCommand {
 	c := &StateFlagCommand{NewAnonymousCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(c.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(c.CLICommand))
+	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(c.CLICommand))
 	c.Command = cmd
 	return c
 }
 
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.AuthenticatedWithMDS(c))
+	cmd.PersistentPreRunE = prerunner.AuthenticatedWithMDS(c)
 	c.Command = cmd
 	return c
 }
 
 func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
 	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.HasAPIKey(c))
+	cmd.PersistentPreRunE = prerunner.HasAPIKey(c)
 	c.Command = cmd
 	return c
 }
 
 func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 	c := NewCLICommand(cmd, prerunner)
-	cmd.PersistentPreRunE = NewCLIPreRunnerE(prerunner.Anonymous(c, false))
+	cmd.PersistentPreRunE = prerunner.Anonymous(c, false)
 	c.Command = cmd
 	return c
 }
@@ -192,10 +188,23 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
 			return err
 		}
-		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
+
+		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
+		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
+		// check for cloud login (since it is not executed from cloud context)
+		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || CommandRequiresCloudAuth(command.Command, command.Config.Config) || isCloudLoginCmd(command, r.IsTest) {
+			if err := checkCliDisable(command, r.Config); err != nil {
+				return err
+			}
+		}
+
+		verbosity, err := cmd.Flags().GetCount("verbose")
+		if err != nil {
 			return err
 		}
+		log.CliLogger.SetVerbosity(verbosity)
 		log.CliLogger.Flush()
+
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
@@ -216,6 +225,45 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		return nil
 	}
+}
+
+func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
+	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
+	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	errMsg, errMsgOk := ldDisable["error_msg"].(string)
+	if errMsgOk && errMsg != "" {
+		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
+		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
+			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
+			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
+				return err
+			}
+			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
+			return errors.NewErrorWithSuggestions(errMsg, suggestionsMsg)
+		}
+	}
+	return nil
+}
+
+func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(urlFlag, isTest)
+}
+
+func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
+	if command.CommandPath() != "confluent login" {
+		return false
+	}
+	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
+	urlFlag, _ := command.Flags().GetString("url")
+	return (urlFlag == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(urlFlag, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
@@ -338,7 +386,7 @@ func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgR
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config),
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 	)
 	if err != nil {
@@ -578,7 +626,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
+	if log.CliLogger.Level >= log.DEBUG {
 		mdsConfig.Debug = true
 	}
 	if ctx == nil {
@@ -837,7 +885,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.Dyna
 		Name:    ctx.NetrcMachineName,
 	}
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetCredentialsFromConfig(ctx.Config),
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params),
 	)
 	if err != nil {
@@ -912,9 +960,7 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		mdsv2Config.Debug = true
-	}
+	mdsv2Config.Debug = log.CliLogger.Level >= log.DEBUG
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
@@ -938,9 +984,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		cfg.Debug = true
-	}
+	cfg.Debug = log.CliLogger.Level >= log.DEBUG
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
 	return kafkarestv3.NewAPIClient(cfg), nil
 }

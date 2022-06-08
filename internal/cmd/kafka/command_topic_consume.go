@@ -38,10 +38,12 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		prerunner:           prerunner,
 		clientID:            clientId,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.consume)
+	cmd.RunE = c.consume
 
 	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
+	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -63,10 +65,6 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 
 func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-	beginning, err := cmd.Flags().GetBool("from-beginning")
-	if err != nil {
-		return err
-	}
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
@@ -111,7 +109,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	consumer, err := newConsumer(group, cluster, c.clientID, beginning, configFile, config)
+	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerMsg, err)
 	}
@@ -128,7 +126,26 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	err = consumer.Subscribe(topic, nil)
+	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
+	}
+
+	offset, err := getOffsetWithFallback(cmd)
+	if err != nil {
+		return err
+	}
+
+	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+	partitionFilter := partitionFilter{
+		changed: cmd.Flags().Changed("partition"),
+		index:   partition,
+	}
+
+	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
+	err = consumer.Subscribe(topic, rebalanceCallback)
 	if err != nil {
 		return err
 	}
@@ -147,7 +164,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			return err
 		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, srAPIKey, srAPISecret)
+		srClient, ctx, err = sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)

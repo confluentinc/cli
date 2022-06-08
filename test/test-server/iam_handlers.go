@@ -1,14 +1,115 @@
-package test_server
+package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
+
+var (
+	keyStoreV2 = map[string]*apikeysv2.IamV2ApiKey{}
+	keyTime    = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+)
+
+func init() {
+	fillKeyStoreV2()
+}
+
+// Handler for: "/iam/v2/api-keys/{id}"
+func handleIamApiKey(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		vars := mux.Vars(r)
+		keyStr := vars["id"]
+		switch r.Method {
+		case http.MethodPatch:
+			handleIamApiKeyUpdate(t, keyStr)(w, r)
+		case http.MethodGet:
+			handleIamApiKeyGet(t, keyStr)(w, r)
+		case http.MethodDelete:
+			handleIamApiKeyDelete(t, keyStr)(w, r)
+		}
+	}
+}
+
+func handleIamApiKeyUpdate(t *testing.T, keyStr string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := new(apikeysv2.IamV2ApiKey)
+		err := json.NewDecoder(r.Body).Decode(req)
+		require.NoError(t, err)
+		apiKey := keyStoreV2[keyStr]
+		apiKey.Spec.Description = req.Spec.Description
+		err = json.NewEncoder(w).Encode(apiKey)
+		require.NoError(t, err)
+	}
+}
+
+func handleIamApiKeyGet(t *testing.T, keyStr string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if keyStr == "UNKNOWN" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
+		apiKey := keyStoreV2[keyStr]
+		err := json.NewEncoder(w).Encode(apiKey)
+		require.NoError(t, err)
+	}
+}
+
+func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		delete(keyStoreV2, keyStr)
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+// Hanlder for: "/iam/v2/api-keys"
+func handleIamApiKeys(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			handleIamApiKeysCreate(t)(w, r)
+		} else if r.Method == http.MethodGet {
+			apiKeysList := apiKeysFilterV2(r.URL)
+			err := json.NewEncoder(w).Encode(apiKeysList)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleIamApiKeysCreate(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		req := new(apikeysv2.IamV2ApiKey)
+		err := json.NewDecoder(r.Body).Decode(req)
+		require.NoError(t, err)
+		if req.Spec.Owner.Id == "sa-123456" {
+			err = writeServiceAccountInvalidError(w)
+			require.NoError(t, err)
+			return
+		}
+		apiKey := req
+		apiKey.Id = apikeysv2.PtrString(fmt.Sprintf("MYKEY%d", keyIndex))
+		apiKey.Spec = &apikeysv2.IamV2ApiKeySpec{
+			Owner:       req.Spec.Owner,
+			Secret:      apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
+			Resource:    req.Spec.Resource,
+			Description: req.Spec.Description,
+		}
+		apiKey.Metadata = &apikeysv2.ObjectMeta{CreatedAt: keyTime}
+		keyIndex++
+		keyStoreV2[*apiKey.Id] = apiKey
+		err = json.NewEncoder(w).Encode(apiKey)
+		require.NoError(t, err)
+	}
+}
 
 // Handler for: "/iam/v2/users/{id}"
 func handleIamUser(t *testing.T) http.HandlerFunc {

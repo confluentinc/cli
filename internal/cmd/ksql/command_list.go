@@ -36,7 +36,7 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 		Short: shortText,
 		Long:  longText,
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(runCommand),
+		RunE:  runCommand,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

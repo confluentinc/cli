@@ -18,7 +18,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Use:         "create",
 		Short:       "Create a connector.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.create),
+		RunE:        c.create,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

@@ -99,7 +99,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
-		RunE: pcmd.NewCLIRunE(func(cmd *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
 
 			filters := make([]string, len(filterFlags))
@@ -116,7 +116,7 @@ func (c *command) newListCommand() *cobra.Command {
 			}
 
 			return printTable(cmd, rows)
-		}),
+		},
 	}
 
 	pcmd.AddCloudFlag(cmd)

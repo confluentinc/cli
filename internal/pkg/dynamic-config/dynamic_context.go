@@ -23,7 +23,7 @@ type DynamicContext struct {
 	V2Client *ccloudv2.Client
 }
 
-func New(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		Client:   client,
@@ -44,7 +44,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, environment, d.Name)
 			}
 
-			accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
+			accounts, err := d.getAllEnvironments(client)
 			if err != nil {
 				return err
 			}
@@ -70,6 +70,22 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	return nil
 }
 
+// getAllEnvironments retrives all environments listed by ccloud v1 client.
+// It also includes the audit-log environment when that's enabled
+func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Account, error) {
+	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return environments, err
+	}
+
+	if d.State.Auth == nil || d.State.Auth.Organization == nil || d.State.Auth.Organization.GetAuditLog() == nil || d.State.Auth.Organization.AuditLog.ServiceAccountId == 0 {
+		return environments, nil
+	}
+	auditLogAccountId := d.State.Auth.Organization.GetAuditLog().GetAccountId()
+	auditLogEnvironment, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	return append(environments, auditLogEnvironment), err
+}
+
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
@@ -82,6 +98,9 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, error) {
+	if d.KafkaClusterContext == nil {
+		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
+	}
 	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)

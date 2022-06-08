@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -15,7 +15,7 @@ const (
 )
 
 // Handler for: "/api/schema_registries"
-func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")
@@ -54,7 +54,7 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 }
 
 // Handler for: "/api/schema_registries/{id}"
-func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")

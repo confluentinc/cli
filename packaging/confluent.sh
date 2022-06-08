@@ -222,4 +222,4 @@ check_executable
 init_config
 
 # call the underlying executable
-${EXECUTABLE} $@
+${EXECUTABLE} "$@"

@@ -24,8 +24,7 @@ const (
 )
 
 var (
-	ver, _          = version.NewVersion("1.0.0")
-	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
+	ver, _ = version.NewVersion("1.0.0")
 )
 
 // Config represents the CLI configuration.
@@ -263,7 +262,7 @@ func (c *Config) Validate() error {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			log.CliLogger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
+			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}

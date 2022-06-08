@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -17,7 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
@@ -36,20 +37,17 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
-		Long: fmt.Sprintf("Log in to Confluent Cloud using your email and password, or non-interactively using the `%s` and `%s` environment variables.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword) +
-			fmt.Sprintf("Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudOrganizationId) +
-			fmt.Sprintf("Log in to Confluent Platform with your username and password, or non-interactively using `%s`, `%s`, `%s`, and `%s`.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			fmt.Sprintf("In a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\n", pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath) +
-			"Even with the environment variables set, you can force an interactive login using the `--prompt` flag.",
+		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) + 
+		fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 		Args: cobra.NoArgs,
 	}
 
-	cmd.Flags().String("url", "", "Metadata Service (MDS) URL for on-prem deployments.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-prem deployments.")
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save login credentials or SSO refresh token to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
+	cmd.Flags().Bool("save", false, "Save username/password (non-SSO) credentials to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 
 	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
@@ -62,7 +60,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		authTokenHandler:         authTokenHandler,
 		isTest:                   isTest,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.login)
+	cmd.RunE = c.login
 
 	return cmd
 }
@@ -73,7 +71,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := c.isCCloudURL(url)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -205,8 +203,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = c.saveLoginToNetrc(cmd, false, credentials)
-	if err != nil {
+	if err := c.saveLoginToNetrc(cmd, false, credentials); err != nil {
 		return err
 	}
 
@@ -277,6 +274,11 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 	}
 
 	if save {
+		if credentials.IsSSO {
+			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
+			return nil
+		}
+
 		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
@@ -289,7 +291,7 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range v1.CCloudHostnames {
+		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
 				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
 					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
@@ -332,18 +334,6 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 
 	return url, strings.Join(msg, " and "), nil
-}
-
-func (c *command) isCCloudURL(url string) bool {
-	for _, hostname := range v1.CCloudHostnames {
-		if strings.Contains(url, hostname) {
-			return true
-		}
-	}
-	if c.isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host)
-	}
-	return false
 }
 
 func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {

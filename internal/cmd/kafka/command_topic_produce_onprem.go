@@ -21,7 +21,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremProduce),
+		RunE:  c.onPremProduce,
 		Short: "Produce messages to a Kafka topic.",
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
@@ -207,7 +207,7 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
 		}
-		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 		if err != nil {
 			return nil, nil, err
 		}

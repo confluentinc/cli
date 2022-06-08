@@ -13,7 +13,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		Short: "Delete a Kafka ACL.",
 		Long:  "Delete a Kafka ACL. This command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.`,

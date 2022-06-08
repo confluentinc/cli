@@ -19,7 +19,7 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List connector plugin types.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List connectors in the current or specified Kafka cluster context.",

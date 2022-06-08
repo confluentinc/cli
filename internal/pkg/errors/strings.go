@@ -97,6 +97,7 @@ const (
 	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
 	NoSubjectsMsg                       = "No subjects."
 	NoExporterMsg                       = "No exporters."
+	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
@@ -106,7 +107,6 @@ const (
 	UpToDateMsg             = "Already up to date."
 	MajorVersionUpdateMsg   = "The only available update is a major version update. Use `%s update --major` to accept the update.\n"
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
-	UpdateAutocompleteMsg   = "Update your autocomplete scripts as instructed by `%s help completion`.\n"
 
 	// cmd package
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."

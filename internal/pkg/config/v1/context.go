@@ -7,6 +7,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -24,6 +25,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -138,7 +140,7 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range CCloudHostnames {
+	for _, hostname := range ccloudv2.Hostnames {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}
@@ -160,39 +162,11 @@ func (c *Context) GetUser() *orgv1.User {
 	return nil
 }
 
-func (c *Context) GetEmail() string {
-	if user := c.GetUser(); user != nil {
-		return user.Email
-	}
-	return ""
-}
-
-func (c *Context) GetUserSso() *orgv1.Sso {
-	if user := c.GetUser(); user != nil {
-		return user.Sso
-	}
-	return nil
-}
-
 func (c *Context) GetOrganization() *orgv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
 	}
 	return nil
-}
-
-func (c *Context) GetOrganizationResourceId() string {
-	if org := c.GetOrganization(); org != nil {
-		return org.ResourceId
-	}
-	return ""
-}
-
-func (c *Context) IsUserSsoEnabled() bool {
-	if sso := c.GetUserSso(); sso != nil {
-		return sso.Enabled
-	}
-	return false
 }
 
 func (c *Context) GetEnvironment() *orgv1.Account {
@@ -214,6 +188,13 @@ func (c *Context) GetAuthRefreshToken() string {
 		return c.State.AuthRefreshToken
 	}
 	return ""
+}
+
+func (c *Context) GetLDFlags() map[string]interface{} {
+	if c.FeatureFlags == nil {
+		return map[string]interface{}{}
+	}
+	return c.FeatureFlags.Values
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

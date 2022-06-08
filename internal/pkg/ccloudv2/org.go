@@ -10,13 +10,12 @@ import (
 )
 
 func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
-	orgServer := getServerUrl(baseURL, isTest)
 	cfg := orgv2.NewConfiguration()
-	cfg.Servers = orgv2.ServerConfigurations{
-		{URL: orgServer, Description: "Confluent Cloud ORG"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = orgv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Org"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return orgv2.NewAPIClient(cfg)
 }
 
@@ -68,11 +67,9 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 }
 
 func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
-	var req orgv2.ApiListOrgV2EnvironmentsRequest
+	req := c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2Environments(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }

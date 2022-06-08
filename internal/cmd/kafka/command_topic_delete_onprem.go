@@ -14,7 +14,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDelete),
+		RunE:  c.onPremDelete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topic "my_topic" at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,

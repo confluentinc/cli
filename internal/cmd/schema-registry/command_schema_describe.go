@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -23,8 +23,8 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
-		PreRunE:     pcmd.NewCLIPreRunnerE(c.preDescribe),
-		RunE:        pcmd.NewCLIRunE(c.describe),
+		PreRunE:     c.preDescribe,
+		RunE:        c.describe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -70,7 +70,7 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

@@ -63,7 +63,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 		cmd.AddCommand(c.newConsumeCommandOnPrem())
 		cmd.AddCommand(c.newCreateCommandOnPrem())

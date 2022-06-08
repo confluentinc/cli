@@ -25,7 +25,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		Use:               "update <topic>",
 		Short:             "Update a Kafka topic.",
 		Args:              cobra.ExactArgs(1),
-		RunE:              pcmd.NewCLIRunE(c.update),
+		RunE:              c.update,
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		Example: examples.BuildExampleString(
 			examples.Example{

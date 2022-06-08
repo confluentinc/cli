@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -55,7 +57,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -114,6 +116,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+	launchdarkly.Init(nil, true)
+
 	tests := map[string]log.Level{
 		"":      log.ERROR,
 		"-v":    log.WARN,
@@ -132,7 +136,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
 		require.NoError(t, err)
 
-		require.Equal(t, level, log.CliLogger.GetLevel())
+		require.Equal(t, level, log.CliLogger.Level)
 	}
 }
 
@@ -234,7 +238,7 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -411,7 +415,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -506,7 +510,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				return ccloudCreds, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -626,16 +630,9 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			config: userNameConfigLoggedIn,
 		},
 		{
-			name:           "not logged in user",
-			config:         userNotLoggedIn,
-			errMsg:         errors.NotLoggedInErrorMsg,
-			suggestionsMsg: errors.NotLoggedInSuggestions,
-		},
-		{
-			name:           "username context corrupted auth token",
-			config:         userNameCfgCorruptedAuthToken,
-			errMsg:         errors.CorruptedTokenErrorMsg,
-			suggestionsMsg: errors.CorruptedTokenSuggestions,
+			name:   "not logged in user",
+			config: userNotLoggedIn,
+			errMsg: errors.NotLoggedInErrorMsg,
 		},
 		{
 			name:   "api credential context",
@@ -727,7 +724,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 					return nil, nil
 				}
 			},
-			GetCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+			GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}

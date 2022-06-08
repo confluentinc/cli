@@ -10,11 +10,14 @@ import (
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/token"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	keys "github.com/confluentinc/cli/internal/pkg/third-party-keys"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+const (
+	stripeTestKey = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
+	stripeLiveKey = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -22,7 +25,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Use:   "update",
 		Short: "Update the active payment method.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 	}
 }
 
@@ -46,9 +49,9 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 
 	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 	if c.isTest {
-		stripe.Key = keys.StripeTestKey
+		stripe.Key = stripeTestKey
 	} else {
-		stripe.Key = keys.StripeLiveKey
+		stripe.Key = stripeLiveKey
 	}
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
