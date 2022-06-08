@@ -2,9 +2,10 @@ package test
 
 import (
 	"fmt"
-	testserver "github.com/confluentinc/cli/test/test-server"
 	"io/ioutil"
 	str "strings"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 func (s *CLITestSuite) TestAsyncApiExport() {
@@ -24,7 +25,6 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
-		//time.Sleep(60 * time.Second)
 	}
 	s.FileExistsf("./asyncapi-spec.yaml", "Spec file not generated.")
 	file, err := ioutil.ReadFile("asyncapi-spec.yaml")
@@ -33,12 +33,10 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
 	testfile1 := str.ReplaceAll(string(testfile), "\r", "")
-	//fmt.Println(string(testfile[:]))
 	index1 := str.Index(string(file), "prod-schemaRegistry:")
 	index2 := str.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = str.ReplaceAll(file1, "\r", "")
-	//fmt.Println(file1)
 	if str.Compare(str.TrimSpace(testfile1), str.TrimSpace(file1)) != 0 {
 		var err2 error
 		fmt.Println([]byte(testfile1))
