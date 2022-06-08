@@ -21,7 +21,7 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremUpdate),
+		RunE:  c.onPremUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).`,
@@ -29,7 +29,7 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 			}),
 	}
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topics configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics configuration ("key=value") overrides for the topic being created.`)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

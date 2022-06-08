@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -22,9 +21,9 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremConsume),
+		RunE:  c.onPremConsume,
 		Short: "Consume messages from a Kafka topic.",
-		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.",
+		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
@@ -40,10 +39,14 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("group", "", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
+	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
+	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
+	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
-	cmd.Flags().String("value-format", "string", "Format of message value as string, avro, protobuf, or jsonschema.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
 	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -74,30 +77,20 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	configMap, err := getOnPremConsumerConfigMap(cmd, c.clientID)
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
-	consumerGroup, err := configMap.Get("group.id", "")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	log.CliLogger.Debugf("Created consumer group: %s", consumerGroup)
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
-	if valueFormat != "string" {
-		// Only initialize client and context when schema is specified.
-		if c.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
-		}
-		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
-		if err != nil {
-			return err
-		}
-	}
-
-	consumer, err := ckafka.NewConsumer(configMap)
+	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
@@ -120,19 +113,52 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	err = consumer.Subscribe(topicName, nil)
+	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
+	}
+
+	offset, err := getOffsetWithFallback(cmd)
+	if err != nil {
+		return err
+	}
+
+	partition, err := cmd.Flags().GetInt32("partition")
+	if err != nil {
+		return err
+	}
+	partitionFilter := partitionFilter{
+		changed: cmd.Flags().Changed("partition"),
+		index:   partition,
+	}
+
+	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
+	err = consumer.Subscribe(topicName, rebalanceCallback)
 	if err != nil {
 		return err
 	}
 
 	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
 
-	dir := filepath.Join(os.TempDir(), "confluent-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		if err := os.Mkdir(dir, 0755); err != nil {
+	var srClient *srsdk.APIClient
+	var ctx context.Context
+	if valueFormat != "string" {
+		// Only initialize client and context when schema is specified.
+		if c.State == nil { // require log-in to use oauthbearer token
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		}
+		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
+		if err != nil {
 			return err
 		}
 	}
+
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
 
 	groupHandler := &GroupHandler{
 		SrClient:   srClient,

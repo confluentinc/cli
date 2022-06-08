@@ -8,11 +8,11 @@ Get all replica reassignments for the Kafka cluster.
 
   $ confluent kafka partition get-reassignments
 
-Get replica reassignments for "my_topic".
+Get replica reassignments for topic "my_topic".
 
   $ confluent kafka partition get-reassignments --topic my_topic
 
-Get replica reassignments for partition "1" of "my_topic".
+Get replica reassignments for partition "1" of topic "my_topic".
 
   $ confluent kafka partition get-reassignments 1 --topic my_topic
 

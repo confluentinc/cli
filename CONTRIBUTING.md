@@ -43,7 +43,7 @@ Please run the following three commands *and then restart* for these changes to 
 
 #### Security
 
-We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed to this repo. Please install `pre-commit` hooks:
+We use `pre-commit` hooks and `gitleaks` to prevent secrets from being committed to this repo. Please install `pre-commit` hooks (Note that the second command should be run inside the root directory of the repository):
 
     brew install pre-commit
     pre-commit install
@@ -127,7 +127,7 @@ To run a subset of integration tests, you must specify the suite and optionally 
 
 As a basic demonstration, we'll be implementing a command which prints the name of the CLI config file a specified number of times:
 
-    $ confluent config show 3
+    $ confluent config describe 3
     ~/.confluent/config.json
     ~/.confluent/config.json
     ~/.confluent/config.json
@@ -138,7 +138,7 @@ Like all other commands, this command will reside in `internal/cmd`. First, we m
 
     mkdir internal/cmd/config
 
-Next, we create two files, one for the top-level command `config`, and another for `show`.
+Next, we create two files, one for the top-level command `config`, and another for `describe`.
 
 `internal/cmd/config/command.go`:
 
@@ -166,7 +166,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 ```
 
-`internal/cmd/config/command_show.go`:
+`internal/cmd/config/command_describe.go`:
 
 ```go
 package config
@@ -185,7 +185,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
     return &cobra.Command{
         Use:  "describe",
         Args: cobra.ExactArgs(1),
-        RunE: pcmd.NewCLIRunE(c.describe),
+        RunE: c.describe,
     }
 }
 
@@ -220,7 +220,7 @@ Add the following line to `internal/cmd/command.go`, and make sure to import its
 To build the CLI binary, run `make build`. After this, we can run our command in the following way, and see that it (hopefully) works!
 
     make build
-    dist/confluent_<os>_<arch>/confluent config file show 3
+    dist/confluent_<os>_<arch>/confluent config file describe 3
 
 #### Integration Testing
 
@@ -231,9 +231,9 @@ There's not much code here to unit test, so we'll skip right to integration test
 ```go
 package test
 
-func (s *CLITestSuite) TestConfigShow() {
+func (s *CLITestSuite) TestConfigDescribe() {
 	tests := []CLITest{
-		{args: "config show 3", fixture: "config/1.golden"},
+		{args: "config describe 3", fixture: "config/1.golden"},
 	}
 
 	for _, tt := range tests {
@@ -246,9 +246,9 @@ We'll also need to add the new golden file, `test/fixtures/output/config/1.golde
 After running the command manually to ensure the output is correct, the content for the golden file can either be:
 
 1. Copied directly from the terminal.
-2. Updated automatically with `make test INT_TEST_ARGS="-run TestCLI/TestConfigShow -update"` (slow).
+2. Updated automatically with `make test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe -update"` (slow).
 
-Now, run `make test INT_TEST_ARGS="-run TestCLI/TestConfigShow"` and verify that it works!
+Now, run `make test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
 
 ### Opening a PR
 

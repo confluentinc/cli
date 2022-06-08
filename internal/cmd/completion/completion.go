@@ -71,8 +71,6 @@ Install Zsh completions:
         autoload -U compinit && compinit
 
   #. Add the autoload command in your ` + "`~/.zshrc`" + ` to enable completions for new terminals. If you encounter error messages about insecure files, you can resolve by running the ` + "`chown`" + ` command to change the ` + "`_confluent`" + ` file to the same ` + "`user:group`" + ` as the other files in ` + "`${fpath[1]}/`" + `.
-
-  #. To update your completion scripts after updating the CLI, run ` + "`confluent completion <bash|zsh>`" + ` again and overwrite the file initially created above.
 `
 
 func New() *cobra.Command {

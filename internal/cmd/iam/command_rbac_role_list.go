@@ -15,7 +15,7 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 		Short: "List the available RBAC roles.",
 		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -35,14 +35,14 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
-
-	noNamespaceRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+	publicRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
 	if err != nil {
 		return err
 	}
+
+	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
 	dataplaneRoles, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
-	rolesV2 := append(noNamespaceRoles, dataplaneRoles...)
+	roles := append(publicRoles, dataplaneRoles...)
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -51,7 +51,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 
 	if format == output.Human.String() {
 		var data [][]string
-		for _, role := range rolesV2 {
+		for _, role := range roles {
 			roleDisplay, err := createPrettyRoleV2(role)
 			if err != nil {
 				return err
@@ -60,7 +60,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		}
 		outputTable(data)
 	} else {
-		return output.StructuredOutput(format, rolesV2)
+		return output.StructuredOutput(format, roles)
 	}
 
 	return nil

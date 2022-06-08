@@ -10,6 +10,7 @@ import (
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka ACLs for a resource.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	cmd.Flags().AddFlagSet(resourceFlags())
@@ -26,6 +27,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -44,6 +46,10 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 
 	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
 		return err
+	}
+
+	if acl[0].errors != nil {
+		return acl[0].errors
 	}
 
 	resourceIdMap, err := c.mapUserIdToResourceId()
@@ -80,7 +86,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

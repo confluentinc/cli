@@ -10,24 +10,31 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete an existing role binding.",
+		Short: "Delete a role binding.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
+	}
+
+	if c.cfg.IsCloudLogin() {
+		cmd.Example = examples.BuildExampleString(
+			examples.Example{
+				Text: `Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":`,
+				Code: "confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic",
+			},
+		)
 	}
 
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
-
 	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
-
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
-
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("principal")

@@ -52,8 +52,7 @@ func HandleMdsAuditLogApiError(cmd *cobra.Command, err error, response *http.Res
 				cmd.SilenceUsage = true
 				em := errorMessage{}
 				if err = json.Unmarshal(e.Body(), &em); err != nil {
-					// It wasn't what we expected. Use the regular error handler.
-					return errors.HandleCommon(err, cmd)
+					return err
 				}
 				return fmt.Errorf("%s\n%s", e.Error(), em.Message)
 			}

@@ -16,7 +16,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:         "list",
 		Short:       "List connectors.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.list),
+		RunE:        c.list,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

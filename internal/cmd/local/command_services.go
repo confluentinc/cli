@@ -157,7 +157,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServicesListCommand)
+	c.Command.RunE = c.runServicesListCommand
 	return c.Command
 }
 
@@ -196,7 +196,7 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStartCommand)
+	c.Command.RunE = c.runServicesStartCommand
 
 	return c.Command
 }
@@ -230,7 +230,7 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStatusCommand)
+	c.Command.RunE = c.runServicesStatusCommand
 	return c.Command
 }
 
@@ -272,7 +272,7 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServicesStopCommand)
+	c.Command.RunE = c.runServicesStopCommand
 
 	return c.Command
 }
@@ -306,7 +306,7 @@ func NewServicesTopCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runServicesTopCommand)
+	c.Command.RunE = c.runServicesTopCommand
 
 	return c.Command
 }

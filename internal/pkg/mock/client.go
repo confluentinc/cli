@@ -11,6 +11,7 @@ import (
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
 	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
@@ -32,11 +33,12 @@ func NewClientMock() *ccloud.Client {
 
 func NewV2ClientMock() *ccloudv2.Client {
 	return &ccloudv2.Client{
-		CmkClient:    newCmkClientMock(),
-		IamClient:    newIamClientMock(),
-		OrgClient:    newOrgClientMock(),
-		QuotasClient: newQuotasClientMock(),
-		AuthToken:    "auth-token"}
+		AuthToken:          "auth-token",
+		CmkClient:          newCmkClientMock(),
+		IamClient:          newIamClientMock(),
+		OrgClient:          newOrgClientMock(),
+		ServiceQuotaClient: newQuotasClientMock(),
+	}
 }
 
 func newCmkClientMock() *cmkv2.APIClient {

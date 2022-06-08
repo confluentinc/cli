@@ -41,7 +41,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandl
 		cfg:          cfg,
 		netrcHandler: netrcHandler,
 	}
-	cmd.RunE = pcmd.NewCLIRunE(c.logout)
+	cmd.RunE = c.logout
 
 	return cmd
 }

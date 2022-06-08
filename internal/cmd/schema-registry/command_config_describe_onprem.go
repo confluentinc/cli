@@ -3,10 +3,11 @@ package schemaregistry
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/spf13/cobra"
 )
 
 func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
@@ -14,7 +15,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Use:         "describe",
 		Short:       "Describe top-level or subject-level schema compatibility.",
 		Args:        cobra.MaximumNArgs(0),
-		RunE:        pcmd.NewCLIRunE(c.onPremDescribe),
+		RunE:        c.onPremDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,7 +38,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *configCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

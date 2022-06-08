@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/bincover"
+
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -22,6 +23,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},
+		{args: "schema-registry exporter create --help", fixture: "schema-registry/exporter-create-help.golden"},
+		{args: "schema-registry exporter delete --help", fixture: "schema-registry/exporter-delete-help.golden"},
+		{args: "schema-registry exporter describe --help", fixture: "schema-registry/exporter-describe-help.golden"},
+		{args: "schema-registry exporter get-config --help", fixture: "schema-registry/exporter-get-config-help.golden"},
+		{args: "schema-registry exporter get-status --help", fixture: "schema-registry/exporter-get-status-help.golden"},
+		{args: "schema-registry exporter list --help", fixture: "schema-registry/exporter-list-help.golden"},
+		{args: "schema-registry exporter pause --help", fixture: "schema-registry/exporter-pause-help.golden"},
+		{args: "schema-registry exporter reset --help", fixture: "schema-registry/exporter-reset-help.golden"},
+		{args: "schema-registry exporter resume --help", fixture: "schema-registry/exporter-resume-help.golden"},
+		{args: "schema-registry exporter update --help", fixture: "schema-registry/exporter-update-help.golden"},
 		{args: "schema-registry cluster update --help", fixture: "schema-registry/cluster-update-help.golden"},
 		{args: "schema-registry subject update --help", fixture: "schema-registry/subject-update-help.golden"},
 

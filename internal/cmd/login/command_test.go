@@ -154,8 +154,8 @@ var (
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken1, nil
+		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
+			return &flowv1.AuthenticateReply{Token: testToken1}, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{
@@ -270,8 +270,8 @@ func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 	org2 := false
 	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken1, nil
+		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
+			return &flowv1.AuthenticateReply{Token: testToken1}, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			org := org1Id
@@ -552,12 +552,7 @@ func TestPromptLoginFlag(t *testing.T) {
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
 	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
-			return func() (*pauth.Credentials, error) {
-				return nil, errors.New("DO NOT RETURN THIS ERR")
-			}
-		},
-		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
@@ -567,7 +562,12 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, orgResourceId string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, errors.New("DO NOT RETURN THIS ERR")
+			}
+		},
+		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, &ccloud.InvalidLoginError{}
 			}
@@ -576,8 +576,8 @@ func TestLoginFail(t *testing.T) {
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
-	req.Contains(err.Error(), errors.InvalidLoginErrorMsg)
-	errors.VerifyErrorAndSuggestions(req, err, errors.InvalidLoginErrorMsg, errors.CCloudInvalidLoginSuggestions)
+	req.Error(err)
+	req.Equal(new(ccloud.InvalidLoginError), err)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {
@@ -748,8 +748,8 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken1, nil
+		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
+			return &flowv1.AuthenticateReply{Token: testToken1}, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{
@@ -977,31 +977,4 @@ func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)
 	req.Empty(state.Auth)
-}
-
-func TestIsCCloudURL_True(t *testing.T) {
-	for _, url := range []string{
-		"confluent.cloud",
-		"https://confluent.cloud",
-		"https://devel.cpdev.cloud/",
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
-	} {
-		c := new(Command)
-		isCCloud := c.isCCloudURL(url)
-		require.True(t, isCCloud, url+" should return true")
-	}
-}
-
-func TestIsCCloudURL_False(t *testing.T) {
-	for _, url := range []string{
-		"example.com",
-		"example.com:8090",
-		"https://example.com",
-	} {
-		c := new(Command)
-		isCCloud := c.isCCloudURL(url)
-		require.False(t, isCCloud, url+" should return false")
-	}
 }

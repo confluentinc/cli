@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 var v1RbacRoles = map[string]string{
 	"DeveloperRead": `{

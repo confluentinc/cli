@@ -14,7 +14,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Use:               "update [context]",
 		Short:             "Update a context field.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.update),
+		RunE:              c.update,
 	}
 
 	cmd.Flags().String("name", "", "Set the name of the context.")

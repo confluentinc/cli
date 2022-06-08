@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -20,7 +21,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		Short:             "Delete a Kafka topic.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.delete),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topics "my_topic" and "my_topic_avro". Use this command carefully as data loss can occur.`,
@@ -72,7 +73,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

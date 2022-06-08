@@ -1,4 +1,4 @@
-package cmd
+package dynamicconfig
 
 import (
 	"context"
@@ -19,26 +19,20 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	resolver FlagResolver
-	client   *ccloud.Client
-	v2Client *ccloudv2.Client
+	Client   *ccloud.Client
+	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, resolver FlagResolver, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
-		resolver: resolver,
-		client:   client,
-		v2Client: v2Client,
+		Client:   client,
+		V2Client: v2Client,
 	}
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
-	if d.resolver == nil {
-		return nil
-	}
-
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
@@ -50,7 +44,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, environment, d.Name)
 			}
 
-			accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
+			accounts, err := d.getAllEnvironments(client)
 			if err != nil {
 				return err
 			}
@@ -76,6 +70,22 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	return nil
 }
 
+// getAllEnvironments retrives all environments listed by ccloud v1 client.
+// It also includes the audit-log environment when that's enabled
+func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Account, error) {
+	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return environments, err
+	}
+
+	if d.State.Auth == nil || d.State.Auth.Organization == nil || d.State.Auth.Organization.GetAuditLog() == nil || d.State.Auth.Organization.AuditLog.ServiceAccountId == 0 {
+		return environments, nil
+	}
+	auditLogAccountId := d.State.Auth.Organization.GetAuditLog().GetAccountId()
+	auditLogEnvironment, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	return append(environments, auditLogEnvironment), err
+}
+
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
@@ -88,6 +98,9 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, error) {
+	if d.KafkaClusterContext == nil {
+		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
+	}
 	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
@@ -102,7 +115,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return cluster, nil
 	}
 
-	if d.client == nil {
+	if d.Client == nil {
 		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
 	}
 
@@ -112,14 +125,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		return nil, err
 	}
 
-	cluster := kafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
+	cluster := KafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
 	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
 	err = d.Save()
 
 	return cluster, err
 }
 
-func kafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
+func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
 	return &v1.KafkaClusterConfig{
 		ID:           kcc.Id,
 		Name:         kcc.Name,

@@ -16,7 +16,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Use:         "update <subject>",
 		Short:       "Update subject compatibility or mode.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        pcmd.NewCLIRunE(c.onPremUpdate),
+		RunE:        c.onPremUpdate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -41,7 +41,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

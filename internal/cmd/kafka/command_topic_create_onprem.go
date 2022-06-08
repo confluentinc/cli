@@ -20,7 +20,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1), // <topic>
-		RunE:  pcmd.NewCLIRunE(c.onPremCreate),
+		RunE:  c.onPremCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
@@ -34,7 +34,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
 	cmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of topic configuration ('key=value') overrides for the topic being created.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
 	return cmd

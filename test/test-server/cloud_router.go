@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -16,7 +16,6 @@ const (
 	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
-	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
 	envMetadata         = "/api/env_metadata"
@@ -73,7 +72,7 @@ func NewEmptyCloudRouter() *CloudRouter {
 
 // Add handlers for cloud endpoints
 func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
-	c.HandleFunc(sessions, c.HandleLogin(t))
+	c.HandleFunc(sessions, handleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
@@ -141,7 +140,6 @@ func (c *CloudRouter) addClusterRoutes(t *testing.T) {
 
 func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 	c.HandleFunc(apiKeys, c.HandleApiKeys(t))
-	c.HandleFunc(apiKey, c.HandleApiKey(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {

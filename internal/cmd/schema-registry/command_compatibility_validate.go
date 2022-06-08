@@ -6,13 +6,14 @@ import (
 	"io/ioutil"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
@@ -21,7 +22,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.validate),
+		RunE:  c.validate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
@@ -45,7 +46,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 }
 
 func (c *compatibilityCommand) validate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

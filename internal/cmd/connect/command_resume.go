@@ -18,7 +18,7 @@ func (c *command) newResumeCommand() *cobra.Command {
 		Short:             "Resume a connector.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.resume),
+		RunE:              c.resume,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{

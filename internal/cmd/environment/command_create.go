@@ -21,7 +21,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create a new Confluent Cloud environment.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 	}
 
 	pcmd.AddOutputFlag(cmd)

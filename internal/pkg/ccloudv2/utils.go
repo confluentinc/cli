@@ -2,15 +2,19 @@ package ccloudv2
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -18,9 +22,29 @@ const (
 	ccloudV2ListPageSize    = 100
 )
 
+var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
+
+func IsCCloudURL(url string, isTest bool) bool {
+	for _, hostname := range Hostnames {
+		if strings.Contains(url, hostname) {
+			return true
+		}
+	}
+	if isTest {
+		return strings.Contains(url, testserver.TestCloudURL.Host) || strings.Contains(url, testserver.TestV2CloudURL.Host)
+	}
+	return false
+}
+
+func newRetryableHttpClient() *http.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = new(plog.LeveledLogger)
+	return client.StandardClient()
+}
+
 func getServerUrl(baseURL string, isTest bool) string {
 	if isTest {
-		return "http://127.0.0.1:2048"
+		return testserver.TestV2CloudURL.String()
 	}
 	if strings.Contains(baseURL, "devel") {
 		return "https://api.devel.cpdev.cloud"
@@ -30,24 +54,31 @@ func getServerUrl(baseURL string, isTest bool) string {
 	return "https://api.confluent.cloud"
 }
 
-func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
+func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractMdsNextPagePageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
@@ -61,13 +92,12 @@ func extractMdsNextPagePageToken(nextPageUrlStringNullable mdsv2.NullableString)
 }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
+	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {

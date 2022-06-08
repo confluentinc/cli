@@ -1,4 +1,4 @@
-package cmd
+package dynamicconfig
 
 import (
 	"context"
@@ -25,7 +25,7 @@ func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, e
 	}
 
 	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	cluster, err := c.context.client.Kafka.Describe(context.Background(), req)
+	cluster, err := c.context.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
 	}
@@ -34,25 +34,15 @@ func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, e
 }
 
 func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {
-	envId, err := c.context.AuthenticatedEnvId()
-	if err != nil {
-		return err
-	}
 	// check if this is API key exists server-side
-	key, err := c.context.client.APIKey.Get(context.Background(), &schedv1.ApiKey{AccountId: envId, Key: apiKey})
+	key, _, err := c.context.V2Client.GetApiKey(apiKey)
 	if err != nil {
 		return err
 	}
 	// check if the key is for the right cluster
-	found := false
-	for _, c := range key.LogicalClusters {
-		if c.Id == clusterID {
-			found = true
-			break
-		}
-	}
+	ok := key.Spec.Resource.Id == clusterID
 	// this means the requested api-key belongs to a different cluster
-	if !found {
+	if !ok {
 		errorMsg := fmt.Sprintf(errors.InvalidAPIKeyErrorMsg, apiKey, clusterID)
 		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
@@ -62,7 +52,7 @@ func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error 
 }
 
 func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.context.client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -76,7 +66,7 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 }
 
 func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := c.context.client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

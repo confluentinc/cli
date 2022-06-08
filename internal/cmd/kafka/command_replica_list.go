@@ -12,61 +12,41 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type replicaCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-}
-
-var (
-	replicaStatusListFields = []string{"ClusterId", "BrokerId", "TopicName", "PartitionId", "IsLeader", "IsObserver", "IsIsrEligible", "IsInIsr", "IsCaughtUp", "LogStartOffset", "LogEndOffset", "LastCaughtUpTimeMs", "LastFetchTimeMs", "LinkName"}
-	replicaHumanFields      = []string{"Cluster ID", "Broker ID", "Topic Name", "Partition ID", "Leader", "Observer", "Isr Eligible", "In Isr", "Caught Up", "Log Start Offset", "Log End Offset", "Last Caught Up Time Ms", "Last Fetch Time Ms", "Link Name"}
-)
-
-func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	replicaCommand := &replicaCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(
-			&cobra.Command{
-				Use:         "replica",
-				Short:       "Manage Kafka replicas.",
-				Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
-			}, prerunner),
-	}
-	replicaCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(replicaCommand.AuthenticatedCLICommand))
-	replicaCommand.init()
-	return replicaCommand.Command
-}
-
-func (replicaCommand *replicaCommand) init() {
-	listCmd := &cobra.Command{
+func (c *replicaCommand) newListCommand() *cobra.Command {
+	cmd := &cobra.Command{
 		Use:   "list",
-		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(replicaCommand.list),
 		Short: "List Kafka replica statuses.",
 		Long:  "List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List the replica statuses for partition 1 of "my_topic".`,
+				Text: `List the replica statuses for partition 1 of topic "my_topic".`,
 				Code: "confluent kafka replica list --topic my_topic --partition 1",
 			},
 			examples.Example{
-				Text: `List the replicas statuses for topic "my_topic".`,
+				Text: `List the replica statuses for topic "my_topic".`,
 				Code: "confluent kafka replica list --topic my_topic",
 			},
 		),
 	}
-	listCmd.Flags().String("topic", "", "Topic name.")
-	listCmd.Flags().Int32("partition", -1, "Partition ID.")
-	listCmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	pcmd.AddOutputFlag(listCmd)
-	_ = listCmd.MarkFlagRequired("topic")
-	replicaCommand.AddCommand(listCmd)
+
+	cmd.Flags().String("topic", "", "Topic name.")
+	cmd.Flags().Int32("partition", -1, "Partition ID.")
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("topic")
+
+	return cmd
 }
 
-func (replicaCommand *replicaCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	topic, partitionId, err := readFlagValues(cmd)
 	if err != nil {
 		return err
 	}
-	restClient, restContext, err := initKafkaRest(replicaCommand.AuthenticatedCLICommand, cmd)
+	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
