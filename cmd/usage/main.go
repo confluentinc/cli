@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"sort"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -27,13 +27,12 @@ var version = "v0.0.0"
 */
 
 func main() {
-	whitelist := buildWhitelist()
+	fmt.Println("BEGIN;")
+	fmt.Println("")
+	fmt.Println("INSERT INTO whitelist(version, keyword) VALUES")
 
-	lines := []string{
-		"BEGIN;",
-		"",
-		"INSERT INTO whitelist(version, keyword) VALUES",
-	}
+	whitelist := buildWhitelist()
+	sort.Strings(whitelist)
 
 	for i, keyword := range whitelist {
 		delimiter := ','
@@ -41,13 +40,11 @@ func main() {
 			delimiter = ';'
 		}
 
-		lines = append(lines, fmt.Sprintf("\t('%s', '%s')%c", version, keyword, delimiter))
+		fmt.Printf("\t('%s', '%s')%c\n", version, keyword, delimiter)
 	}
 
-	lines = append(lines, "")
-	lines = append(lines, "COMMIT;")
-
-	fmt.Println(strings.Join(lines, "\n"))
+	fmt.Println("")
+	fmt.Println("COMMIT;")
 }
 
 func buildWhitelist() []string {

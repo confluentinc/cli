@@ -12,12 +12,14 @@ update-whitelist:
 	
 	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
 	cd $(CC_CLI_SERVICE) && \
-	git checkout -b update-whitelist-$(BUMPED_VERSION)
+	git checkout -b update-whitelist-$(BUMPED_VERSION) && \
+	make db-migrate-create NAME=$(BUMPED_VERSION) && \
 	
-	go run -ldflags "-X main.version=$(BUMPED_VERSION)" cmd/usage/main.go > $(CC_CLI_SERVICE)/db/migrations/$(BUMPED_VERSION).up.sql
-	echo "$$MIGRATEDOWN" > $(CC_CLI_SERVICE)/db/migrations/$(BUMPED_VERSION).down.sql
+	go run -ldflags "-X main.version=$(BUMPED_VERSION)" cmd/usage/main.go > $(find $(CC_CLI_SERVICE)/db/migrations/ $(BUMPED_VERSION).up.sql)
+	echo "$$MIGRATEDOWN" > $(find $(CC_CLI_SERVICE)/db/migrations/ $(BUMPED_VERSION).down.sql)
 	
 	cd $(CC_CLI_SERVICE) && \
+	make db-migrate-up && \
 	git add . && \
 	git commit -m "update whitelist for $(BUMPED_VERSION)" && \
 	git push origin update-whitelist-$(BUMPED_VERSION) && \
