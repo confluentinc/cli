@@ -286,15 +286,15 @@ func main() {
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{
-			CurrentContext: "no context",
+			CurrentContext: "No Context",
 		},
 		{
 			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: v1.CCloudHostnames[0]}},
-			CurrentContext: "cloud",
+			CurrentContext: "Cloud",
 		},
 		{
 			Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
-			CurrentContext: "on-prem",
+			CurrentContext: "On-Prem",
 		},
 	}
 
