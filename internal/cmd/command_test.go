@@ -113,13 +113,13 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "payment", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "update")
-	require.NotContains(t, out, "describe")
+	require.Contains(t, out, "describe")
 
 	// check "admin promo" command
 	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "promo", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "add")
-	require.NotContains(t, out, "list")
+	require.Contains(t, out, "list")
 }
 
 func TestHelp_Cloud(t *testing.T) {

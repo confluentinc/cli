@@ -33,11 +33,10 @@ type structuredRow struct {
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "List claimed promo codes.",
-		Args:        cobra.NoArgs,
-		RunE:        c.list,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "list",
+		Short: "List claimed promo codes.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

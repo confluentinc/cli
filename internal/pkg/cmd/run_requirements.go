@@ -66,41 +66,28 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
-			if !cfg.IsCloudLogin() {
-				if !cfg.IsCloud() {
-					return requireCloudLoginErr
-				} else if !cfg.IsLoginBlockedByOrgSuspension() {
-					// user was able to log in but their org is suspended due to end of free trial
-					return requireCloudLoginFreeTrialEndedOrgUnsuspendedErr
-				} else if cfg.IsOrgSuspended() {
-					// user was not able to log in because their org is suspended
-					return requireCloudLoginOrgUnsuspendedErr
-				}
+			if _, err := cfg.CheckIsCloudLogin(); err != nil {
+				return err
 			}
 		case RequireCloudLoginAllowFreeTrialEnded:
-			if !cfg.IsCloudLoginAllowFreeTrialEnded() {
-				if !cfg.IsCloud() {
-					return requireCloudLoginErr
-				} else if cfg.IsLoginBlockedByOrgSuspension() {
-					// user was not able to even log in because their org is suspended
-					return requireCloudLoginOrgUnsuspendedErr
-				}
+			if _, err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
+				return err
 			}
 		case RequireCloudLoginOrOnPremLogin:
-			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireCloudLoginOrOnPremErr
+			if _, err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin()) {
-				return requireNonAPIKeyCloudLoginErr
+			if _, err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireNonAPIKeyCloudLoginOrOnPremLoginErr
+			if _, err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireOnPremLogin:
-			if !cfg.IsOnPremLogin() {
-				return requireOnPremLoginErr
+			if _, err := cfg.CheckIsOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireUpdatesEnabled:
 			if cfg.DisableUpdates {
