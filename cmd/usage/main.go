@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -64,7 +65,7 @@ func buildWhitelist() []string {
 	// Commands and Flags
 	configs := []*v1.Config{
 		{CurrentContext: "A"},
-		{CurrentContext: "B", Contexts: map[string]*v1.Context{"B": {PlatformName: v1.CCloudHostnames[0]}}},
+		{CurrentContext: "B", Contexts: map[string]*v1.Context{"B": {PlatformName: ccloudv2.Hostnames[0]}}},
 		{CurrentContext: "C", Contexts: map[string]*v1.Context{"C": {PlatformName: "https://example.com"}}},
 	}
 	for _, cfg := range configs {
