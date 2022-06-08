@@ -26,6 +26,37 @@ var (
 	kafkaClusterID  = "anonymous-id"
 	contextName     = "my-context"
 	accountID       = "acc-123"
+	cloudPlatforms  = []string{
+		"devel.cpdev.cloud",
+		"stag.cpdev.cloud",
+		"confluent.cloud",
+		"premium-oryx.gcp.priv.cpdev.cloud",
+	}
+	account = &orgv1.Account{
+		Id:   accountID,
+		Name: "test-env",
+	}
+	regularOrgContextState = &ContextState{
+		Auth: &AuthConfig{
+			User: &orgv1.User{
+				Id:    123,
+				Email: "test-user@email",
+			},
+			Account: account,
+			Accounts: []*orgv1.Account{
+				account,
+			},
+			Organization: testserver.RegularOrg,
+		},
+		AuthToken: "abc123",
+	}
+	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *ContextState {
+		return &ContextState{
+			Auth: &AuthConfig{
+				Organization: testserver.SuspendedOrg(eventType),
+			},
+		}
+	}
 )
 
 type TestInputs struct {
@@ -63,32 +94,11 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		APIKeyPair:     nil,
 		CredentialType: 0,
 	}
-	account := &orgv1.Account{
-		Id:   accountID,
-		Name: "test-env",
-	}
 	account2 := &orgv1.Account{
 		Id:   "env-flag",
 		Name: "test-env2",
 	}
 	testInputs.account = account
-	state := &ContextState{
-		Auth: &AuthConfig{
-			User: &orgv1.User{
-				Id:    123,
-				Email: "test-user@email",
-			},
-			Account: account,
-			Accounts: []*orgv1.Account{
-				account,
-			},
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-			},
-		},
-		AuthToken: "abc123",
-	}
 	twoEnvState := &ContextState{
 		Auth: &AuthConfig{
 			User: &orgv1.User{
@@ -136,7 +146,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				SrCredentials:          nil,
 			},
 		},
-		State: state,
+		State: regularOrgContextState,
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -182,7 +192,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			contextName: statefulContext,
 		},
 		ContextStates: map[string]*ContextState{
-			contextName: state,
+			contextName: regularOrgContextState,
 		},
 		CurrentContext: contextName,
 		IsTest:         true,
@@ -991,16 +1001,13 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 }
 
 func TestConfig_IsCloud_True(t *testing.T) {
-	platforms := []string{
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
-		"confluent.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
-	}
-
-	for _, platform := range platforms {
+	for _, platform := range cloudPlatforms {
+		// test case: org not suspended
 		cfg := &Config{
-			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: platform,
+			}},
 			CurrentContext: "context",
 		}
 		require.True(t, cfg.IsCloudLogin(), platform+" should be true")
@@ -1008,6 +1015,7 @@ func TestConfig_IsCloud_True(t *testing.T) {
 }
 
 func TestConfig_IsCloud_False(t *testing.T) {
+	// test case: platform name not cloud
 	configs := []*Config{
 		nil,
 		{
@@ -1018,6 +1026,83 @@ func TestConfig_IsCloud_False(t *testing.T) {
 
 	for _, cfg := range configs {
 		require.False(t, cfg.IsCloudLogin())
+	}
+
+	for _, platform := range cloudPlatforms {
+		// test case: org suspended due to normal reason
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
+
+		// test case: org suspended due to end of free trial
+		cfg = &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
+	}
+}
+
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
+	for _, platform := range cloudPlatforms {
+		// test case: org not suspended
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
+
+		// test case: org suspended due to end of free trial
+		cfg = &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded = cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
+	}
+}
+
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
+	// test case: platform name not cloud
+	configs := []*Config{
+		nil,
+		{
+			Contexts:       map[string]*Context{"context": {PlatformName: "https://example.com"}},
+			CurrentContext: "context",
+		},
+	}
+
+	for _, cfg := range configs {
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil)
+	}
+
+	for _, platform := range cloudPlatforms {
+		// test case: org suspended due to normal reason
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil, platform+" should be false")
 	}
 }
 
@@ -1037,7 +1122,24 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 			CurrentContext: "context",
 		},
 		{
-			Contexts:       map[string]*Context{"context": {PlatformName: "confluent.cloud"}},
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: "confluent.cloud",
+			}},
+			CurrentContext: "context",
+		},
+		{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: "confluent.cloud",
+			}},
+			CurrentContext: "context",
+		},
+		{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: "confluent.cloud",
+			}},
 			CurrentContext: "context",
 		},
 	}
