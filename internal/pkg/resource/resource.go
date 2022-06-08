@@ -5,13 +5,19 @@ import (
 )
 
 const (
-	Unknown        = "unknown"
-	Cloud          = "cloud"
-	Kafka          = "kafka"
-	Ksql           = "ksql"
-	SchemaRegistry = "schema-registry"
-	ServiceAccount = "service-account"
-	User           = "user"
+	Unknown          = "unknown"
+	Cloud            = "cloud"
+	Kafka            = "kafka"
+	Ksql             = "ksql"
+	SchemaRegistry   = "schema-registry"
+	ServiceAccount   = "service-account"
+	User             = "user"
+	IdentityProvider = "identity-provider"
+	IdentityPool     = "identity-pool"
+
+	IdentityPoolPrefix     = "pool"
+	IdentityProviderPrefix = "op"
+	UserPrefix             = "u"
 )
 
 func LookupType(resourceId string) string {
@@ -20,11 +26,13 @@ func LookupType(resourceId string) string {
 	}
 
 	prefixToType := map[string]string{
-		"lkc":    Kafka,
-		"lksqlc": Ksql,
-		"lsrc":   SchemaRegistry,
-		"sa":     ServiceAccount,
-		"u":      User,
+		IdentityPoolPrefix:     IdentityPool,
+		IdentityProviderPrefix: IdentityProvider,
+		"lkc":                  Kafka,
+		"lksqlc":               Ksql,
+		"lsrc":                 SchemaRegistry,
+		"sa":                   ServiceAccount,
+		"u":                    User,
 	}
 
 	for prefix, resourceType := range prefixToType {

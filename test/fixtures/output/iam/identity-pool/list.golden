@@ -1,0 +1,4 @@
+      ID     | Display Name  |     Description     | Subject Claim  
+-------------+---------------+---------------------+----------------
+  pool-12345 | identity_pool | pooling identities. | sub            
+  pool-12345 | identity_pool | pooling identities. | sub            
