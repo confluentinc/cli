@@ -20,7 +20,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -228,7 +228,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 }
 
 func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
-	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
+	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
 	if !ok {
 		return nil
