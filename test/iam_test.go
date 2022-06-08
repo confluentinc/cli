@@ -302,3 +302,61 @@ func (s *CLITestSuite) TestIAMProviderList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestIAMPoolCreate() {
+	tests := []CLITest{
+		{args: "iam pool create testPool --provider op-12345 --description new-description --subject-claim sub", fixture: "iam/identity-pool/create.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolDelete() {
+	tests := []CLITest{
+		{args: "iam pool delete pool-55555 --provider op-12345 ", fixture: "iam/identity-pool/delete.golden"},
+		{args: "iam pool delete 0 --provider op-12345 ", fixture: "iam/identity-pool/bad-identity-pool-id.golden", wantErrCode: 1},
+		{args: "iam pool delete pool-1 --provider op-12345 ", fixture: "iam/identity-pool/delete-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolDescribe() {
+	tests := []CLITest{
+		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
+		{args: "iam pool describe 0 --provider op-12345", fixture: "iam/identity-pool/bad-identity-pool-id.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolUpdate() {
+	tests := []CLITest{
+		{args: "iam pool update pool-12345 --description more-descriptive --provider op-12345", fixture: "iam/identity-pool/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolList() {
+	tests := []CLITest{
+		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

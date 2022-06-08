@@ -13,8 +13,10 @@ const (
 	ServiceAccount   = "service-account"
 	User             = "user"
 	IdentityProvider = "identity-provider"
+	IdentityPool     = "identity-pool"
 
 	IdentityProviderPrefix = "op"
+	IdentityPoolPrefix     = "pool"
 	UserPrefix             = "u"
 )
 
@@ -30,6 +32,7 @@ func LookupType(resourceId string) string {
 		"sa":     ServiceAccount,
 		"u":      User,
 		"op":     IdentityProvider,
+		"pool":   IdentityPool,
 	}
 
 	for prefix, resourceType := range prefixToType {

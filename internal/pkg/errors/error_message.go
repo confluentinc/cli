@@ -105,7 +105,11 @@ const (
 
 	// iam provider commands
 	IdentityProviderNotFoundErrorMsg    = `identity provider "%s" not found`
-	IdentityProviderNotFoundSuggestions = "List service accounts with `confluent iam provider list`."
+	IdentityProviderNotFoundSuggestions = "List identity providers with `confluent iam provider list`."
+
+	// iam pool commands
+	IdentityPoolNotFoundErrorMsg    = `identity pool "%s" not found`
+	IdentityPoolNotFoundSuggestions = "List identity pools with `confluent iam pool list`."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"

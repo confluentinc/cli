@@ -22,7 +22,7 @@ type identityProvider struct {
 func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "provider",
-		Short:       "Manage providers.",
+		Short:       "Manage identity providers.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

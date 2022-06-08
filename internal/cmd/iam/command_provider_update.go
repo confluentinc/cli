@@ -16,7 +16,7 @@ import (
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
-		Short:             "Update a service account.",
+		Short:             "Update an identity provider.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,
@@ -52,7 +52,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	update := identityproviderv2.IamV2IdentityProviderUpdate{
 		Description: &description,
 	}
-	_, httpresp, err := c.V2Client.UpdateIdentityProvider(args[0], update)
+	_, httpresp, err := c.V2Client.UpdateIdentityProvider(identityProviderId, update)
 	if err != nil {
 		return errors.CatchIdentityProviderNotFoundError(err, httpresp, identityProviderId)
 	}

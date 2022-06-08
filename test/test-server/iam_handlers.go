@@ -281,3 +281,68 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+// Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools/{id}"
+func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodPatch:
+			var req identityproviderv2.IamV2IdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &identityproviderv2.IamV2IdentityPool{Id: identityproviderv2.PtrString(id), Description: req.Description}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			switch id {
+			case "pool-1":
+				w.Header().Set("Content-Type", "application/json")
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+			default:
+				w.WriteHeader(http.StatusNoContent)
+			}
+		case http.MethodGet:
+			identityPool := identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:  identityproviderv2.PtrString("identity_pool"),
+				Description:  identityproviderv2.PtrString("at your service."),
+				SubjectClaim: identityproviderv2.PtrString("sub"),
+			}
+			err := json.NewEncoder(w).Encode(identityPool)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools"
+func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			identityPool := identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:  identityproviderv2.PtrString("identity_pool"),
+				Description:  identityproviderv2.PtrString("at your service."),
+				SubjectClaim: identityproviderv2.PtrString("sub"),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req identityproviderv2.IamV2IdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			identityPool := &identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString("pool-55555"),
+				DisplayName:  req.DisplayName,
+				Description:  req.Description,
+				SubjectClaim: req.SubjectClaim,
+			}
+			err = json.NewEncoder(w).Encode(identityPool)
+			require.NoError(t, err)
+		}
+	}
+}

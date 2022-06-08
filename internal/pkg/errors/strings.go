@@ -45,6 +45,7 @@ const (
 	// iam commands
 	DeletedServiceAccountMsg   = "Deleted service account \"%s\".\n"
 	DeletedIdentityProviderMsg = "Deleted identity provider \"%s\".\n"
+	DeletedIdentityPoolMsg     = "Deleted identity pool \"%s\".\n"
 
 	// kafka cluster commands
 	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
