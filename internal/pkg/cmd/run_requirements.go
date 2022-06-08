@@ -13,6 +13,7 @@ const (
 	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireCloudLogin                       = "cloud-login"
+	RequireCloudLoginAllowFreeTrialEnded    = "cloud-login-allow-free-trial-ended"
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
 	RequireOnPremLogin                      = "on-prem-login"
 	RequireUpdatesEnabled                   = "updates-enabled"
@@ -24,6 +25,14 @@ var (
 	requireCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
 		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	requireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.SuspendedOrganizationSuggestions,
+	)
+	requireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.EndOfFreeTrialSuggestions,
 	)
 	requireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
@@ -57,24 +66,28 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
-			if !cfg.IsCloudLogin() {
-				return requireCloudLoginErr
+			if _, err := cfg.CheckIsCloudLogin(); err != nil {
+				return err
+			}
+		case RequireCloudLoginAllowFreeTrialEnded:
+			if _, err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
+				return err
 			}
 		case RequireCloudLoginOrOnPremLogin:
-			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireCloudLoginOrOnPremErr
+			if _, err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin()) {
-				return requireNonAPIKeyCloudLoginErr
+			if _, err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireNonAPIKeyCloudLoginOrOnPremLoginErr
+			if _, err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireOnPremLogin:
-			if !cfg.IsOnPremLogin() {
-				return requireOnPremLoginErr
+			if _, err := cfg.CheckIsOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireUpdatesEnabled:
 			if cfg.DisableUpdates {
@@ -90,6 +103,8 @@ func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
+			return true
+		case RequireCloudLoginAllowFreeTrialEnded:
 			return true
 		case RequireNonAPIKeyCloudLogin:
 			return true

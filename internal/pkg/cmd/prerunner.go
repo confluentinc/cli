@@ -238,7 +238,7 @@ func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
-			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
+			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == v1.RequireOnPremLoginErr {
 				return err
 			}
 			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
@@ -508,6 +508,10 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 }
 
 func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
+	return CreateCCloudClient(ctx, ver)
+}
+
+func CreateCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var userAgent string
