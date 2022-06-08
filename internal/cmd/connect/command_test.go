@@ -33,38 +33,17 @@ var (
 		Class: "DummySink",
 		Type:  "sink",
 	}
+
 	pluginDescribe = connectv1.InlineResponse2003Configs{
 		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
 	}
-)
 
-type ConnectTestSuite struct {
-	suite.Suite
-	conf               *v1.Config
-	kafkaCluster       *schedv1.KafkaCluster
-	connector          *connectv1.ConnectV1Connector
-	connectorExpansion *connectv1.ConnectV1ConnectorExpansion
-	connectorsMock     *connectmock.ConnectorsV1Api
-	lifecycleMock      *connectmock.LifecycleV1Api
-	pluginMock         *connectmock.PluginsV1Api
-	kafkaMock          *ccsdkmock.Kafka
-}
-
-func (suite *ConnectTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
-	ctx := suite.conf.Context()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
-		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
-		Name:       "KafkaMock",
-		AccountId:  "testAccount",
-		Enterprise: true,
-	}
-
-	suite.connector = &connectv1.ConnectV1Connector{
+	connector = connectv1.ConnectV1Connector{
 		Name:   connectorName,
 		Config: map[string]string{},
 	}
-	suite.connectorExpansion = &connectv1.ConnectV1ConnectorExpansion{
+
+	connectorExpansion = connectv1.ConnectV1ConnectorExpansion{
 		Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString(connectorID)},
 		Status: &connectv1.ConnectV1ConnectorExpansionStatus{
 			Name: connectorName,
@@ -76,6 +55,27 @@ func (suite *ConnectTestSuite) SetupSuite() {
 				connectv1.ConnectV1ConnectorExpansionStatusTasks{Id: 1, State: "RUNNING"}},
 			Type: "Sink",
 		},
+	}
+)
+
+type ConnectTestSuite struct {
+	suite.Suite
+	conf           *v1.Config
+	kafkaCluster   *schedv1.KafkaCluster
+	connectorsMock *connectmock.ConnectorsV1Api
+	lifecycleMock  *connectmock.LifecycleV1Api
+	pluginMock     *connectmock.PluginsV1Api
+	kafkaMock      *ccsdkmock.Kafka
+}
+
+func (suite *ConnectTestSuite) SetupSuite() {
+	suite.conf = v1.AuthenticatedCloudConfigMock()
+	ctx := suite.conf.Context()
+	suite.kafkaCluster = &schedv1.KafkaCluster{
+		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
+		Name:       "KafkaMock",
+		AccountId:  "testAccount",
+		Enterprise: true,
 	}
 }
 
@@ -94,13 +94,13 @@ func (suite *ConnectTestSuite) SetupTest() {
 			return connectv1.ApiCreateConnectv1ConnectorRequest{}
 		},
 		CreateConnectv1ConnectorExecuteFunc: func(_ connectv1.ApiCreateConnectv1ConnectorRequest) (connectv1.ConnectV1Connector, *http.Response, error) {
-			return *suite.connector, nil, nil
+			return connector, nil, nil
 		},
 		CreateOrUpdateConnectv1ConnectorConfigFunc: func(_ context.Context, _, _, _ string) connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest {
 			return connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest{}
 		},
 		CreateOrUpdateConnectv1ConnectorConfigExecuteFunc: func(_ connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest) (connectv1.ConnectV1Connector, *http.Response, error) {
-			return *suite.connector, nil, nil
+			return connector, nil, nil
 		},
 		DeleteConnectv1ConnectorFunc: func(_ context.Context, _, _, _ string) connectv1.ApiDeleteConnectv1ConnectorRequest {
 			return connectv1.ApiDeleteConnectv1ConnectorRequest{}
@@ -112,7 +112,7 @@ func (suite *ConnectTestSuite) SetupTest() {
 			return connectv1.ApiListConnectv1ConnectorsWithExpansionsRequest{}
 		},
 		ListConnectv1ConnectorsWithExpansionsExecuteFunc: func(_ connectv1.ApiListConnectv1ConnectorsWithExpansionsRequest) (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
-			return map[string]connectv1.ConnectV1ConnectorExpansion{connectorName: *suite.connectorExpansion}, nil, nil
+			return map[string]connectv1.ConnectV1ConnectorExpansion{connectorName: connectorExpansion}, nil, nil
 		},
 	}
 	suite.lifecycleMock = &connectmock.LifecycleV1Api{

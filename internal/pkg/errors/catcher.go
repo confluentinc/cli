@@ -265,7 +265,9 @@ func CatchConnectorConfigurationNotValidError(err error, r *http.Response) error
 	body, _ := io.ReadAll(r.Body)
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
-	if resBody.Message != "" { // {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s). Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
+	if resBody.Message != "" {
+		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
+		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
 		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
 	}
 
