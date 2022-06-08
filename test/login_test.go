@@ -48,6 +48,14 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
 	})
 
+	s.T().Run("end of free trial suspended organization", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
+	})
+
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 0)
@@ -55,7 +63,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, errors.TokenExpiredMsg)
-		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
+		require.Contains(tt, output, "you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command")
 	})
 
 	s.T().Run("malformed token", func(tt *testing.T) {
