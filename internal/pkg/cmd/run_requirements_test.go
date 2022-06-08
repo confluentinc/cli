@@ -105,17 +105,17 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		cfg *v1.Config
 		err error
 	}{
-		{RequireCloudLogin, onPremCfg, requireCloudLoginErr},
-		{RequireCloudLogin, cloudCfg(endOfFreeTrialSuspendedOrgContextState), requireCloudLoginFreeTrialEndedOrgUnsuspendedErr},
-		{RequireCloudLogin, cloudCfg(normalSuspendedOrgContextState), requireCloudLoginOrgUnsuspendedErr},
-		{RequireCloudLoginAllowFreeTrialEnded, onPremCfg, requireCloudLoginErr},
-		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(normalSuspendedOrgContextState), requireCloudLoginOrgUnsuspendedErr},
-		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
-		{RequireCloudLoginOrOnPremLogin, noContextCfg, requireCloudLoginOrOnPremErr},
-		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, requireNonAPIKeyCloudLoginErr},
-		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, requireNonAPIKeyCloudLoginOrOnPremLoginErr},
-		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, requireNonAPIKeyCloudLoginOrOnPremLoginErr},
-		{RequireOnPremLogin, cloudCfg(regularOrgContextState), requireOnPremLoginErr},
+		{RequireCloudLogin, onPremCfg, v1.RequireCloudLoginErr},
+		{RequireCloudLogin, cloudCfg(endOfFreeTrialSuspendedOrgContextState), v1.RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr},
+		{RequireCloudLogin, cloudCfg(normalSuspendedOrgContextState), v1.RequireCloudLoginOrgUnsuspendedErr},
+		{RequireCloudLoginAllowFreeTrialEnded, onPremCfg, v1.RequireCloudLoginErr},
+		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(normalSuspendedOrgContextState), v1.RequireCloudLoginOrgUnsuspendedErr},
+		{RequireCloudLoginOrOnPremLogin, noContextCfg, v1.RequireCloudLoginOrOnPremErr},
+		{RequireCloudLoginOrOnPremLogin, noContextCfg, v1.RequireCloudLoginOrOnPremErr},
+		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginErr},
+		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
+		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
+		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RequireOnPremLoginErr},
 		{RequireUpdatesEnabled, updatesDisabledCfg, requireUpdatesEnabledErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
@@ -137,5 +137,5 @@ func TestErrIfMissingRunRequirement_Subcommand(t *testing.T) {
 
 	err := ErrIfMissingRunRequirement(b, onPremCfg)
 	require.Error(t, err)
-	require.Equal(t, err, requireCloudLoginErr)
+	require.Equal(t, err, v1.RequireCloudLoginErr)
 }
