@@ -600,7 +600,7 @@ func (c *roleBindingCommand) createContext() context.Context {
 	}
 }
 
-func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) {
+func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) { // for v2 api
 	// include org, environment, cloud-cluster, and resource name and id
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
@@ -675,7 +675,7 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 	}, err
 }
 
-func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error) {
+func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error) { // for v2 api
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
@@ -697,14 +697,6 @@ func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error)
 		crnPattern += "/cloud-cluster=" + cluster
 	}
 
-	if cmd.Flags().Changed("kafka-cluster-id") {
-		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
-		if err != nil {
-			return "", err
-		}
-		crnPattern += "/kafka=" + kafkaCluster
-	}
-
 	if cmd.Flags().Changed("schema-registry-cluster-id") {
 		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
 		if err != nil {
@@ -719,6 +711,14 @@ func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error)
 			return "", err
 		}
 		crnPattern += "/ksql=" + ksqlCluster
+	}
+
+	if cmd.Flags().Changed("kafka-cluster-id") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/kafka=" + kafkaCluster
 	}
 
 	if cmd.Flags().Changed("role") {
