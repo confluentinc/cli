@@ -32,14 +32,11 @@ func convertMapToString(m map[string]string) string {
 	return strings.Join(pairs, "\n")
 }
 
-func getServiceProviderFromUrl(url string) string {
-	if url == "" {
-		return ""
-	}
-	// Endpoint URL is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
-	stringSlice := strings.Split(url, ".")
-	if len(stringSlice) != 6 {
-		return ""
-	}
-	return strings.Trim(stringSlice[2], ".")
+var packageDisplayNameMapping = map[string]string{
+	"free": "essentials",
+	"paid": "advanced",
+}
+
+func getPackageDisplayName(packageName string) string {
+	return packageDisplayNameMapping[strings.ToLower(packageName)]
 }

@@ -589,8 +589,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.680.0/go.mod h1:SirG6NGkX0
 github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0tD5DmCox4cTTTaq/LwEd+tCd8D7sHSMbI=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.779.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0 h1:/zkNOazwZjkr9ex2mVsLZrms9cofxKIZoYHTxHzKonI=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0/go.mod h1:eGq5580GeOelsD+S0DvziopEyJMN/u/+LhxQ5M618no=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0 h1:4ZDz0vzcopeqoQHeuDjORhT24+lChUG3U9zXci20m/Q=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0 h1:Slbt8/4WHLX9wuslvRjXqBxtCRs5tAvXWWA4T9/m7Gc=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0/go.mod h1:lj7y2SOcCqcdz3xlwfh98dMaonfT9D9YOoRvIOEnNk8=
 github.com/confluentinc/cc-structs/kafka/util v0.37.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
@@ -798,8 +798,9 @@ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7
 github.com/envoyproxy/protoc-gen-validate v0.4.0/go.mod h1:amr46FC2KZvleZB2VXz+QeQDF+iIKKjQimiDrtp1rYA=
 github.com/envoyproxy/protoc-gen-validate v0.4.1/go.mod h1:E+IEazqdaWv3FrnGtZIu3b9fPFMK8AzeTTrk9SfVwWs=
 github.com/envoyproxy/protoc-gen-validate v0.6.0/go.mod h1:txg5va2Qkip90uYoSKH+nkAAmXrb2j3iq4FLwdrCbXQ=
-github.com/envoyproxy/protoc-gen-validate v0.6.2 h1:JiO+kJTpmYGjEodY7O1Zk8oZcNz1+f30UtwtXoFUPzE=
 github.com/envoyproxy/protoc-gen-validate v0.6.2/go.mod h1:2t7qjJNvHPx8IjnBOzl9E9/baC+qXE/TeeyBRzgJDws=
+github.com/envoyproxy/protoc-gen-validate v0.6.7 h1:qcZcULcd/abmQg6dwigimCNEyi4gg31M/xaciQlDml8=
+github.com/envoyproxy/protoc-gen-validate v0.6.7/go.mod h1:dyJXwwfPK2VSqiB9Klm1J6romD608Ba7Hij42vrOBCo=
 github.com/esimonov/ifshort v1.0.4 h1:6SID4yGWfRae/M7hkVDVVyppy8q/v9OuxNdmjLQStBA=
 github.com/esimonov/ifshort v1.0.4/go.mod h1:Pe8zjlRrJ80+q2CxHLfEOfTwxCZ4O+MuhcHcfgNWTk0=
 github.com/ettle/strcase v0.1.1 h1:htFueZyVeE1XNnMEfbqp5r67qAN/4r6ya1ysq8Q+Zcw=
@@ -1548,6 +1549,7 @@ github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0/go.mod h1:zJYVVT2
 github.com/lyft/protoc-gen-star v0.4.10/go.mod h1:mE8fbna26u7aEA2QCVvvfBU/ZrPgocG1206xAFPcs94=
 github.com/lyft/protoc-gen-star v0.5.1/go.mod h1:9toiA3cC7z5uVbODF7kEQ91Xn7XNFkVUl+SrEe+ZORU=
 github.com/lyft/protoc-gen-star v0.5.3/go.mod h1:V0xaHgaf5oCCqmcxYcWiDfTiKsZsRc87/1qhoTACD8w=
+github.com/lyft/protoc-gen-star v0.6.0/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
 github.com/lyft/protoc-gen-validate v0.0.13/go.mod h1:XbGvPuh87YZc5TdIa2/I4pLk0QoUACkjt2znoq26NVQ=
 github.com/magiconair/properties v1.8.0/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
