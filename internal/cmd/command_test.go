@@ -103,19 +103,18 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		require.Contains(t, out, command)
 	}
 
-	// check that some top level cloud commands are not included
-	cloudCommands := []string{"api-key", "iam", "schema-registry", "price"}
+	// check that some top level cloud commands are not included (each of these top level command corresponds to a
+	// run requirement)
+	cloudCommands := []string{"api-key", "audit-log", "cluster", "connect", "service-quota"}
 	for _, command := range cloudCommands {
 		require.NotContains(t, out, command)
 	}
 
-	// check "admin payment" command
 	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "payment", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "update")
 	require.Contains(t, out, "describe")
 
-	// check "admin promo" command
 	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "promo", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "add")

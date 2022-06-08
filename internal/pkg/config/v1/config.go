@@ -495,94 +495,92 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
-func (c *Config) CheckIsOnPremLogin() (bool, error) {
+func (c *Config) CheckIsOnPremLogin() error {
 	ctx := c.Context()
 	if ctx != nil && ctx.PlatformName != "" && !c.isCloud() {
-		return true, nil
+		return nil
 	}
-	return false, RequireOnPremLoginErr
+	return RequireOnPremLoginErr
 }
 
-func (c *Config) CheckIsCloudLogin() (bool, error) {
+func (c *Config) CheckIsCloudLogin() error {
 	if !c.isCloud() || !c.isContextStatePresent() {
-		return false, RequireCloudLoginErr
+		return RequireCloudLoginErr
 	}
 
 	if c.isOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
-			return false, RequireCloudLoginOrgUnsuspendedErr
+			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
-			return false, RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
+			return RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
 		}
 	}
 
-	return true, nil
+	return nil
 }
 
-func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() (bool, error) {
+func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
 	if !c.isCloud() || !c.isContextStatePresent() {
-		return false, RequireCloudLoginErr
+		return RequireCloudLoginErr
 	}
 
 	if c.isLoginBlockedByOrgSuspension() {
-		return false, RequireCloudLoginOrgUnsuspendedErr
+		return RequireCloudLoginOrgUnsuspendedErr
 	}
 
-	return true, nil
+	return nil
 }
 
-func (c *Config) CheckIsCloudLoginOrOnPremLogin() (bool, error) {
-	isCloudLogin, err := c.CheckIsCloudLogin()
-	isOnPremLogin, _ := c.CheckIsOnPremLogin()
+func (c *Config) CheckIsCloudLoginOrOnPremLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
 
-	if !(isCloudLogin || isOnPremLogin) {
+	if !(isCloudLoginErr == nil || isOnPremLoginErr == nil) {
 		// return org suspension errors
-		if err != nil && err != RequireCloudLoginErr {
-			return false, err
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
 		}
-		return false, RequireCloudLoginOrOnPremErr
+		return RequireCloudLoginOrOnPremErr
 	}
 
-	return true, nil
+	return nil
 }
 
-func (c *Config) CheckIsNonAPIKeyCloudLogin() (bool, error) {
-	isCloudLogin, err := c.CheckIsCloudLogin()
+func (c *Config) CheckIsNonAPIKeyCloudLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
 
-	if !(c.CredentialType() != APIKey && isCloudLogin) {
+	if !(c.CredentialType() != APIKey && isCloudLoginErr == nil) {
 		// return org suspension errors
-		if err != nil && err != RequireCloudLoginErr {
-			return false, err
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
 		}
-		return false, RequireNonAPIKeyCloudLoginErr
+		return RequireNonAPIKeyCloudLoginErr
 	}
 
-	return true, nil
+	return nil
 }
 
-func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() (bool, error) {
-	isNonAPIKeyCloudLogin, err := c.CheckIsNonAPIKeyCloudLogin()
-	isOnPremLogin, _ := c.CheckIsOnPremLogin()
+func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
+	isNonAPIKeyCloudLoginErr := c.CheckIsNonAPIKeyCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
 
-	if !(isNonAPIKeyCloudLogin || isOnPremLogin) {
+	if !(isNonAPIKeyCloudLoginErr == nil || isOnPremLoginErr == nil) {
 		// return org suspension errors
-		if err != nil && err != RequireCloudLoginErr && err != RequireNonAPIKeyCloudLoginErr {
-			return false, err
+		if isNonAPIKeyCloudLoginErr != nil && isNonAPIKeyCloudLoginErr != RequireCloudLoginErr && isNonAPIKeyCloudLoginErr != RequireNonAPIKeyCloudLoginErr {
+			return isNonAPIKeyCloudLoginErr
 		}
-		return false, RequireNonAPIKeyCloudLoginOrOnPremLoginErr
+		return RequireNonAPIKeyCloudLoginOrOnPremLoginErr
 	}
 
-	return true, nil
+	return nil
 }
 
 func (c *Config) IsCloudLogin() bool {
-	res, _ := c.CheckIsCloudLogin()
-	return res
+	return c.CheckIsCloudLogin() == nil
 }
 
 func (c *Config) IsOnPremLogin() bool {
-	res, _ := c.CheckIsOnPremLogin()
-	return res
+	return c.CheckIsOnPremLogin() == nil
 }
 
 func (c *Config) isCloud() bool {

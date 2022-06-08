@@ -170,10 +170,7 @@ func (c *Context) GetOrganization() *orgv1.Organization {
 }
 
 func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
-	if org := c.GetOrganization(); org != nil {
-		return org.GetSuspensionStatus()
-	}
-	return nil
+	return c.GetOrganization().GetSuspensionStatus()
 }
 
 func (c *Context) GetEnvironment() *orgv1.Account {

@@ -1061,8 +1061,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		isCloudLoginAllowFreeTrialEnded, _ := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
-		require.True(t, isCloudLoginAllowFreeTrialEnded, platform+" should be true")
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
 
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
@@ -1072,8 +1072,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		isCloudLoginAllowFreeTrialEnded, _ = cfg.CheckIsCloudLoginAllowFreeTrialEnded()
-		require.True(t, isCloudLoginAllowFreeTrialEnded, platform+" should be true")
+		isCloudLoginAllowFreeTrialEnded = cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
 	}
 }
 
@@ -1088,8 +1088,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
 	}
 
 	for _, cfg := range configs {
-		isCloudLoginAllowFreeTrialEnded, _ := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
-		require.False(t, isCloudLoginAllowFreeTrialEnded)
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil)
 	}
 
 	for _, platform := range cloudPlatforms {
@@ -1101,8 +1101,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
 			}},
 			CurrentContext: "context",
 		}
-		isCloudLoginAllowFreeTrialEnded, _ := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
-		require.False(t, isCloudLoginAllowFreeTrialEnded, platform+" should be false")
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil, platform+" should be false")
 	}
 }
 

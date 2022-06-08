@@ -36,27 +36,27 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
-			if _, err := cfg.CheckIsCloudLogin(); err != nil {
+			if err := cfg.CheckIsCloudLogin(); err != nil {
 				return err
 			}
 		case RequireCloudLoginAllowFreeTrialEnded:
-			if _, err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
+			if err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
 				return err
 			}
 		case RequireCloudLoginOrOnPremLogin:
-			if _, err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+			if err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
 				return err
 			}
 		case RequireNonAPIKeyCloudLogin:
-			if _, err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
+			if err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
 				return err
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			if _, err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
+			if err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
 				return err
 			}
 		case RequireOnPremLogin:
-			if _, err := cfg.CheckIsOnPremLogin(); err != nil {
+			if err := cfg.CheckIsOnPremLogin(); err != nil {
 				return err
 			}
 		case RequireUpdatesEnabled:
