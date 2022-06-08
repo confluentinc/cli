@@ -53,16 +53,14 @@ func main() {
 func buildWhitelist() []string {
 	whitelist := set.New()
 
-	// Operating Systems
-	whitelist.Add("darwin")
-	whitelist.Add("linux")
-	whitelist.Add("windows")
+	for _, os := range []string{"darwin", "linux", "windows"} {
+		whitelist.Add(os)
+	}
 
-	// Architectures
-	whitelist.Add("amd64")
-	whitelist.Add("arm64")
+	for _, arch := range []string{"amd64", "arm64"} {
+		whitelist.Add(arch)
+	}
 
-	// Commands and Flags
 	configs := []*v1.Config{
 		{CurrentContext: "A"},
 		{CurrentContext: "B", Contexts: map[string]*v1.Context{"B": {PlatformName: ccloudv2.Hostnames[0]}}},
