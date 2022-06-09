@@ -140,19 +140,18 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		if err := c.printRemainingFreeCredit(cmd, client); err != nil {
-			return err
-		}
+		c.printRemainingFreeCredit(cmd, client)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client) error {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client) {
 	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
-		return err
+		log.CliLogger.Debugf("Failed to print remaining free credit: %s", err.Error())
+		return
 	}
 
 	// only print remaining free credit if there is any unexpired promo code
@@ -163,8 +162,6 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 		}
 		utils.Println(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit)))
 	}
-
-	return nil
 }
 
 // Order of precedence: env vars > config file > netrc file > prompt
