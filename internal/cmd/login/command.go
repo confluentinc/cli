@@ -150,7 +150,7 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
-		log.CliLogger.Debugf("Failed to print remaining free credit: %s", err.Error())
+		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
 		return
 	}
 
