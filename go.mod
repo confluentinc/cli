@@ -14,8 +14,9 @@ require (
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0
+	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0

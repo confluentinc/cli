@@ -9,7 +9,7 @@ const (
 	prefixFormat = "%s: %s"
 
 	// admin commands
-	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
@@ -108,6 +108,14 @@ const (
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
+	// iam provider commands
+	IdentityProviderNotFoundErrorMsg    = `identity provider "%s" not found`
+	IdentityProviderNotFoundSuggestions = "List identity providers with `confluent iam provider list`."
+
+	// iam pool commands
+	IdentityPoolNotFoundErrorMsg    = `identity pool "%s" not found`
+	IdentityPoolNotFoundSuggestions = "List identity pools with `confluent iam pool list`."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
