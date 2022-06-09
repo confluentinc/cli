@@ -224,7 +224,13 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &identityproviderv2.IamV2IdentityProvider{Id: identityproviderv2.PtrString(id), Description: req.Description}
+			res := &identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-55555"),
+				DisplayName: req.DisplayName,
+				Description: req.Description,
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -292,7 +298,13 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 			var req identityproviderv2.IamV2IdentityPool
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &identityproviderv2.IamV2IdentityPool{Id: identityproviderv2.PtrString(id), Description: req.Description}
+			res := &identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString("op-55555"),
+				DisplayName:  req.DisplayName,
+				Description:  req.Description,
+				SubjectClaim: req.SubjectClaim,
+				Policy:       req.Policy,
+			}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -310,6 +322,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 				DisplayName:  identityproviderv2.PtrString("identity_pool"),
 				Description:  identityproviderv2.PtrString("pooling identities"),
 				SubjectClaim: identityproviderv2.PtrString("sub"),
+				Policy:       identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
 			}
 			err := json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)
@@ -328,6 +341,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 				DisplayName:  identityproviderv2.PtrString("identity_pool"),
 				Description:  identityproviderv2.PtrString("pooling identities."),
 				SubjectClaim: identityproviderv2.PtrString("sub"),
+				Policy:       identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
 			}
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
 			require.NoError(t, err)
@@ -340,6 +354,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 				DisplayName:  req.DisplayName,
 				Description:  req.Description,
 				SubjectClaim: req.SubjectClaim,
+				Policy:       req.Policy,
 			}
 			err = json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)

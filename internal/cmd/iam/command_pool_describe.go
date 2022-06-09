@@ -16,12 +16,14 @@ var (
 		"DisplayName":  "Display Name",
 		"Description":  "Description",
 		"SubjectClaim": "Subject Claim",
+		"Policy":       "Policy",
 	}
 	poolStructuredLabelMap = map[string]string{
 		"Id":           "id",
 		"DisplayName":  "display_name",
 		"Description":  "description",
 		"SubjectClaim": "subject_claim",
+		"Policy":       "policy",
 	}
 )
 
@@ -60,5 +62,6 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		DisplayName:  *identityPoolProfile.DisplayName,
 		Description:  *identityPoolProfile.Description,
 		SubjectClaim: *identityPoolProfile.SubjectClaim,
+		Policy:       *identityPoolProfile.Policy,
 	}, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

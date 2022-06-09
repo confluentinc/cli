@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	identityPoolListFields           = []string{"Id", "DisplayName", "Description", "SubjectClaim"}
-	identityPoolListHumanLabels      = []string{"ID", "Display Name", "Description", "Subject Claim"}
-	identityPoolListStructuredLabels = []string{"id", "display_name", "description", "subject_claim"}
+	identityPoolListFields           = []string{"Id", "DisplayName", "Description", "SubjectClaim", "Policy"}
+	identityPoolListHumanLabels      = []string{"ID", "Display Name", "Description", "Subject Claim", "Policy"}
+	identityPoolListStructuredLabels = []string{"id", "display_name", "description", "subject_claim", "policy"}
 )
 
 func (c *identityPoolCommand) newListCommand() *cobra.Command {
@@ -44,7 +44,7 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, pool := range identityPools {
-		element := &identityPool{Id: *pool.Id, DisplayName: *pool.DisplayName, Description: *pool.Description, SubjectClaim: *pool.SubjectClaim}
+		element := &identityPool{Id: *pool.Id, DisplayName: *pool.DisplayName, Description: *pool.Description, SubjectClaim: *pool.SubjectClaim, Policy: *pool.Policy}
 		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()

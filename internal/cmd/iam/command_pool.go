@@ -6,7 +6,7 @@ import (
 )
 
 // May need to add more fields depending on OAUTH team
-var poolListFields = []string{"Id", "DisplayName", "Description", "SubjectClaim"}
+var poolListFields = []string{"Id", "DisplayName", "Description", "SubjectClaim", "Policy"}
 
 type identityPoolCommand struct {
 	*pcmd.AuthenticatedCLICommand
@@ -18,6 +18,7 @@ type identityPool struct {
 	DisplayName  string
 	Description  string
 	SubjectClaim string
+	Policy       string
 }
 
 func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {

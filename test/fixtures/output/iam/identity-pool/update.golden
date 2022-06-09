@@ -1,1 +1,7 @@
-Updated the description of identity pool "pool-12345" to "more-descriptive".
++---------------+---------------------------------------------------+
+| ID            | op-55555                                          |
+| Display Name  | newer-name                                        |
+| Description   | more-descriptive                                  |
+| Subject Claim | new-sub                                           |
+| Policy        | claims.iss="https://new-company.new-provider.com" |
++---------------+---------------------------------------------------+

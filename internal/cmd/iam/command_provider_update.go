@@ -2,6 +2,7 @@ package iam
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
@@ -10,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
@@ -28,18 +28,26 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("name", "", "Name of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	_ = cmd.MarkFlagRequired("description")
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) error {
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+	if err := requireLen(name, nameLength, "name"); err != nil {
+		return err
+	}
+
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
-
 	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
@@ -47,17 +55,23 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	if resource.LookupType(args[0]) != resource.IdentityProvider {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityProviderPrefix)
 	}
-	identityProviderId := args[0]
 
+	identityProviderId := args[0]
 	update := identityproviderv2.IamV2IdentityProviderUpdate{
-		Id:          &identityProviderId,
-		Description: &description,
+		Id: &identityProviderId,
 	}
-	_, httpresp, err := c.V2Client.UpdateIdentityProvider(update)
+	if name != "" {
+		update.DisplayName = &name
+	}
+	if description != "" {
+		update.Description = &description
+	}
+
+	resp, httpresp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
 		return errors.CatchIdentityProviderNotFoundError(err, httpresp, identityProviderId)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "identity provider", identityProviderId, description)
-	return nil
+	describeIdentityProvider := &identityProvider{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, Issuer: *resp.Issuer, JwksUri: *resp.JwksUri}
+	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }

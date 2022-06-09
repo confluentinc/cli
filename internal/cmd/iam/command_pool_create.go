@@ -26,11 +26,13 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
 	cmd.Flags().String("subject-claim", "", "Subject claim of the identity pool.")
+	cmd.Flags().String("policy", "", "Policy of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")
 	_ = cmd.MarkFlagRequired("description")
 	_ = cmd.MarkFlagRequired("subject-claim")
+	_ = cmd.MarkFlagRequired("policy")
 
 	return cmd
 }
@@ -61,17 +63,23 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	policy, err := cmd.Flags().GetString("policy")
+	if err != nil {
+		return err
+	}
+
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
 		DisplayName:  identityproviderv2.PtrString(name),
 		Description:  identityproviderv2.PtrString(description),
 		SubjectClaim: identityproviderv2.PtrString(subjectClaim),
+		Policy:       identityproviderv2.PtrString(policy),
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeIdentityPool := &identityPool{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, SubjectClaim: *resp.SubjectClaim}
+	describeIdentityPool := &identityPool{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, SubjectClaim: *resp.SubjectClaim, Policy: *resp.Policy}
 
 	return output.DescribeObject(cmd, describeIdentityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }
