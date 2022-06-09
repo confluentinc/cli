@@ -81,11 +81,6 @@ gorelease:
 	aws s3 cp dist/confluent_linux_glibc_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_glibc_amd64; \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_glibc.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt; \
 
-.PHONY:tester
-tester:
-	echo $(shell ls)
-	./build_linux_glibc.sh
-
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
 .PHONY: goreleaser-patches
