@@ -1,10 +1,8 @@
 package connect
 
 import (
-	"context"
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -45,33 +43,32 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	config := map[string]string{"connector.class": args[0]}
-	connectorConfig := &schedv1.ConnectorConfig{
-		UserConfigs:    config,
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-		Plugin:         args[0],
+
+	reply, _, err := c.V2Client.ValidateConnectorPlugin(args[0], c.EnvironmentId(), kafkaCluster.ID, config)
+	if err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	reply, err := c.Client.Connect.Validate(context.Background(), connectorConfig)
-	if reply != nil && err != nil {
-		outputFormat, flagErr := cmd.Flags().GetString(output.FlagName)
-		if flagErr != nil {
-			return flagErr
-		}
+	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
 
-		if outputFormat == output.Human.String() {
-			utils.Println(cmd, "The following are required configs:")
-			utils.Print(cmd, "connector.class : "+args[0]+"\n"+err.Error())
-			return nil
-		}
-
-		for _, c := range reply.Configs {
-			if len(c.Value.Errors) > 0 {
-				config[c.Value.Name] = fmt.Sprintf("%s ", c.Value.Errors[0])
+	if outputFormat == output.Human.String() {
+		utils.Println(cmd, "The following are required configs:")
+		utils.Println(cmd, "connector.class : "+args[0])
+		for _, c := range *reply.Configs {
+			if len(c.Value.GetErrors()) > 0 {
+				utils.Println(cmd, c.Value.GetName()+" : ["+c.Value.GetErrors()[0]+"]")
 			}
 		}
-		return output.StructuredOutput(outputFormat, &config)
+		return nil
 	}
 
-	return errors.Errorf(errors.InvalidCloudErrorMsg)
+	for _, c := range *reply.Configs {
+		if len(c.Value.GetErrors()) > 0 {
+			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
+		}
+	}
+	return output.StructuredOutput(outputFormat, &config)
 }

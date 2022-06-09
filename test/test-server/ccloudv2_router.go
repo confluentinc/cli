@@ -8,8 +8,14 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters/{id}":           handleCmkCluster,
-	"/cmk/v2/clusters":                handleCmkClusters,
+	"/service-quota/v2/applied-quotas": handleAppliedQuotas,
+	"/cmk/v2/clusters/{id}":            handleCmkCluster,
+	"/cmk/v2/clusters":                 handleCmkClusters,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}":        handleConnector,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/config": handleConnectorConfig,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                    handleConnectors,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause":  handleConnectorPause,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume": handleConnectorResume,
 	"/iam/v2/api-keys/{id}":           handleIamApiKey,
 	"/iam/v2/api-keys":                handleIamApiKeys,
 	"/iam/v2/users/{id}":              handleIamUser,
@@ -18,11 +24,12 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/service-accounts":        handleIamServiceAccounts,
 	"/iam/v2/identity-providers/{id}": handleIamIdentityProvider,
 	"/iam/v2/identity-providers":      handleIamIdentityProviders,
-	"/iam/v2/identity-providers/{provider_id}/identity-pools/{id}": handleIamIdentityPool,
-	"/iam/v2/identity-providers/{provider_id}/identity-pools":      handleIamIdentityPools,
-	"/org/v2/environments/{id}":                                    handleOrgEnvironment,
-	"/org/v2/environments":                                         handleOrgEnvironments,
-	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
+	"/iam/v2/identity-providers/{provider_id}/identity-pools/{id}":                                  handleIamIdentityPool,
+	"/iam/v2/identity-providers/{provider_id}/identity-pools":                                       handleIamIdentityPools,
+	"/org/v2/environments/{id}":                                                                     handleOrgEnvironment,
+	"/org/v2/environments":                                                                          handleOrgEnvironments,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 }
 
 type V2Router struct {

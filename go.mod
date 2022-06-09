@@ -14,13 +14,14 @@ require (
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0
+	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
@@ -49,6 +50,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/hashicorp/go-multierror v1.1.1
+	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/hashicorp/go-version v1.4.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
@@ -69,6 +71,7 @@ require (
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.2.4
+	github.com/tj/assert v0.0.3
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
@@ -223,7 +226,6 @@ require (
 	github.com/golangci/misspell v0.3.5 // indirect
 	github.com/golangci/revgrep v0.0.0-20210930125155-c22e5001d4f2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v18 v18.2.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -245,7 +247,6 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl2 v0.0.0-20181111172936-0467c0c38ca2 // indirect
 	github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b // indirect
