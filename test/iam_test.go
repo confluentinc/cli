@@ -259,7 +259,6 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 func (s *CLITestSuite) TestIAMProviderDelete() {
 	tests := []CLITest{
 		{args: "iam provider delete op-55555", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete 0", fixture: "iam/identity-provider/bad-identity-provider-id.golden", wantErrCode: 1},
 		{args: "iam provider delete op-1", fixture: "iam/identity-provider/delete-dne.golden", wantErrCode: 1},
 	}
 
@@ -272,7 +271,6 @@ func (s *CLITestSuite) TestIAMProviderDelete() {
 func (s *CLITestSuite) TestIAMProviderDescribe() {
 	tests := []CLITest{
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
-		{args: "iam provider describe 0", fixture: "iam/identity-provider/bad-identity-provider-id.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {
@@ -317,7 +315,6 @@ func (s *CLITestSuite) TestIAMPoolCreate() {
 func (s *CLITestSuite) TestIAMPoolDelete() {
 	tests := []CLITest{
 		{args: "iam pool delete pool-55555 --provider op-12345 ", fixture: "iam/identity-pool/delete.golden"},
-		{args: "iam pool delete 0 --provider op-12345 ", fixture: "iam/identity-pool/bad-identity-pool-id.golden", wantErrCode: 1},
 		{args: "iam pool delete pool-1 --provider op-12345 ", fixture: "iam/identity-pool/delete-dne.golden", wantErrCode: 1},
 	}
 
@@ -330,7 +327,6 @@ func (s *CLITestSuite) TestIAMPoolDelete() {
 func (s *CLITestSuite) TestIAMPoolDescribe() {
 	tests := []CLITest{
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
-		{args: "iam pool describe 0 --provider op-12345", fixture: "iam/identity-pool/bad-identity-pool-id.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {

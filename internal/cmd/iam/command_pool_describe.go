@@ -1,9 +1,6 @@
 package iam
 
 import (
-	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -43,10 +40,6 @@ func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
-	if resource.LookupType(args[0]) != resource.IdentityPool {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityPoolPrefix)
-	}
-
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
@@ -57,11 +50,13 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return output.DescribeObject(cmd, &identityPool{
+	describeIdentityPool := &identityPool{
 		Id:           *identityPoolProfile.Id,
 		DisplayName:  *identityPoolProfile.DisplayName,
 		Description:  *identityPoolProfile.Description,
 		SubjectClaim: *identityPoolProfile.SubjectClaim,
 		Policy:       *identityPoolProfile.Policy,
-	}, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	}
+
+	return output.DescribeObject(cmd, describeIdentityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

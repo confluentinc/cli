@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
@@ -10,7 +9,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
@@ -40,20 +38,10 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
-	if err := requireLen(name, nameLength, "name"); err != nil {
-		return err
-	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
-	}
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
-		return err
-	}
-
-	if resource.LookupType(args[0]) != resource.IdentityProvider {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityProviderPrefix)
 	}
 
 	identityProviderId := args[0]

@@ -40,10 +40,6 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if err := requireLen(name, nameLength, "pool name"); err != nil {
-		return err
-	}
-
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
@@ -51,10 +47,6 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return err
-	}
-
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
 
@@ -79,7 +71,13 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeIdentityPool := &identityPool{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, SubjectClaim: *resp.SubjectClaim, Policy: *resp.Policy}
+	describeIdentityPool := &identityPool{
+		Id:           *resp.Id,
+		DisplayName:  *resp.DisplayName,
+		Description:  *resp.Description,
+		SubjectClaim: *resp.SubjectClaim,
+		Policy:       *resp.Policy,
+	}
 
 	return output.DescribeObject(cmd, describeIdentityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

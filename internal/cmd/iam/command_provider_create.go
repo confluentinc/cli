@@ -38,16 +38,8 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
-	if err := requireLen(name, nameLength, "provider name"); err != nil {
-		return err
-	}
-
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return err
-	}
-
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
 
@@ -72,7 +64,13 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeIdentityProvider := &identityProvider{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, Issuer: *resp.Issuer, JwksUri: *resp.JwksUri}
+	describeIdentityProvider := &identityProvider{
+		Id:          *resp.Id,
+		DisplayName: *resp.DisplayName,
+		Description: *resp.Description,
+		Issuer:      *resp.Issuer,
+		JwksUri:     *resp.JwksUri,
+	}
 
 	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }

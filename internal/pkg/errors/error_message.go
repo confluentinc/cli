@@ -9,7 +9,7 @@ const (
 	prefixFormat = "%s: %s"
 
 	// admin commands
-	BadResourceIDErrorMsg  = `failed parsing resource ID: resource ID does not begin with "%s-"`
+	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands

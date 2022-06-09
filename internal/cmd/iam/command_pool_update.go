@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
@@ -9,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
@@ -49,15 +47,9 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if err := requireLen(name, nameLength, "name"); err != nil {
-		return err
-	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return err
-	}
-	if err := requireLen(description, descriptionLength, "description"); err != nil {
 		return err
 	}
 
@@ -69,10 +61,6 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	policy, err := cmd.Flags().GetString("policy")
 	if err != nil {
 		return err
-	}
-
-	if resource.LookupType(args[0]) != resource.IdentityPool {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityPoolPrefix)
 	}
 
 	identityPoolId := args[0]

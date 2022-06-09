@@ -1,1 +1,1 @@
-Error: failed parsing resource ID: resource ID does not begin with "u-"
+Error: failed parsing resource ID: missing prefix "u-" is required

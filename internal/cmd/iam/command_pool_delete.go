@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 
@@ -33,9 +31,6 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
-	if resource.LookupType(args[0]) != resource.IdentityPool {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.IdentityPoolPrefix)
-	}
 
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {

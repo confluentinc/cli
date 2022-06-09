@@ -14,7 +14,9 @@ const (
 	User             = "user"
 	IdentityProvider = "identity-provider"
 	IdentityPool     = "identity-pool"
+)
 
+const (
 	IdentityPoolPrefix     = "pool"
 	IdentityProviderPrefix = "op"
 	UserPrefix             = "u"
