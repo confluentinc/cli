@@ -1,9 +1,7 @@
 package connect
 
 import (
-	"context"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -53,27 +51,17 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectorConfig := &schedv1.ConnectorConfig{
-		UserConfigs:    *userConfigs,
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-		Name:           (*userConfigs)["name"],
-		Plugin:         (*userConfigs)["connector.class"],
+	connectConfig := connectv1.InlineObject{
+		Name:   connectv1.PtrString((*userConfigs)["name"]),
+		Config: userConfigs,
 	}
 
-	connectorInfo, err := c.Client.Connect.Create(context.Background(), connectorConfig)
+	connectorInfo, httpResp, err := c.V2Client.CreateConnector(c.EnvironmentId(), kafkaCluster.ID, connectConfig)
 	if err != nil {
-		return err
+		return errors.CatchConnectorConfigurationNotValidError(err, httpResp)
 	}
 
-	connector := &schedv1.Connector{
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-		Name:           connectorInfo.Name,
-	}
-
-	// Resolve Connector ID from name of created connector
-	connectorExpansion, err := c.Client.Connect.GetExpansionByName(context.Background(), connector)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -83,21 +71,18 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	trace := connectorExpansion.Status.Connector.Trace
+	trace := connectorExpansion.Status.Connector.GetTrace()
+
 	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorInfo.Name, connectorExpansion.Id.Id)
+		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorInfo.GetName(), connectorExpansion.Id.GetId())
 		if trace != "" {
 			utils.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
-		return output.StructuredOutput(outputFormat, &struct {
-			ConnectorName string `json:"name" yaml:"name"`
-			Id            string `json:"id" yaml:"id"`
-			Trace         string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
-		}{
-			ConnectorName: connectorInfo.Name,
-			Id:            connectorExpansion.Id.Id,
-			Trace:         trace,
+		return output.StructuredOutput(outputFormat, &connectCreateDisplay{
+			Id:         connectorExpansion.Id.GetId(),
+			Name:       connectorInfo.GetName(),
+			ErrorTrace: trace,
 		})
 	}
 
