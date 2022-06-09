@@ -1,0 +1,4 @@
+      ID     | Display Name  |     Description     | Subject Claim |                  Policy                    
+-------------+---------------+---------------------+---------------+--------------------------------------------
+  pool-12345 | identity_pool | pooling identities. | sub           | claims.iss="https://company.provider.com"  
+  pool-12345 | identity_pool | pooling identities. | sub           | claims.iss="https://company.provider.com"  

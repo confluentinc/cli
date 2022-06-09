@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,6 +36,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c.AddCommand(newACLCommand(c.prerunner))
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", c.Context, false) {
+		c.AddCommand(newPoolCommand(c.prerunner))
+		c.AddCommand(newProviderCommand(c.prerunner))
+	}
 	c.AddCommand(newRBACCommand(cfg, c.prerunner))
 	c.AddCommand(newServiceAccountCommand(c.prerunner))
 	c.AddCommand(newUserCommand(c.prerunner))

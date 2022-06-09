@@ -1,0 +1,7 @@
++---------------+-------------------------------------------+
+| ID            | pool-55555                                |
+| Display Name  | testPool                                  |
+| Description   | new-description                           |
+| Subject Claim | sub                                       |
+| Policy        | claims.iss="https://company.provider.com" |
++---------------+-------------------------------------------+
