@@ -52,3 +52,15 @@ func TestToMap_Error(t *testing.T) {
 	_, err := ToMap([]string{"string without equal sign"})
 	require.Error(t, err)
 }
+
+func TestToMap_ValueWithComma(t *testing.T) {
+	m, err := ToMap([]string{"key=val1", "val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1,val2"}, m)
+}
+
+func TestToMap_ValueWithEquals(t *testing.T) {
+	m, err := ToMap([]string{"key=val1=val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val1=val2"}, m)
+}

@@ -35,7 +35,8 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics. Configuration ("key=value") overrides for the topic being created.`)
+
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
 	cmd.Flags().Bool("dry-run", false, "Execute request without committing changes to Kafka.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -47,11 +48,11 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	configStrings, err := cmd.Flags().GetStringSlice("config")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	configsMap, err := properties.ToMap(configStrings)
+	configsMap, err := properties.ToMap(config)
 	if err != nil {
 		return err
 	}

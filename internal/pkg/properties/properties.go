@@ -37,13 +37,19 @@ func parseLines(content string) []string {
 func ToMap(configs []string) (map[string]string, error) {
 	m := make(map[string]string)
 
-	for _, config := range configs {
-		x := strings.SplitN(config, "=", 2)
-		if len(x) < 2 {
-			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
+	for i := len(configs) - 1; i >= 0; i-- {
+		if strings.Contains(configs[i], "=") {
+			x := strings.SplitN(configs[i], "=", 2)
+			if _, ok := m[x[0]]; !ok {
+				m[x[0]] = x[1]
+			}
+		} else {
+			if i-1 >= 0 {
+				configs[i-1] += "," + configs[i]
+			} else {
+				return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, configs[i])
+			}
 		}
-
-		m[x[0]] = x[1]
 	}
 
 	return m, nil
