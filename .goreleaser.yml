@@ -42,7 +42,9 @@ archives:
   - id: binary
     format: binary
   - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_alpine_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    replacements: 
+      linux: alpine
     format: tar.gz
     format_overrides:
       - goos: windows
