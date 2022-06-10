@@ -34,7 +34,72 @@ builds:
       - linux
     goarch:
       - amd64
-
+- binary: confluent
+    id: confluent-windows-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - windows
+    goarch:
+      - amd64
+  - binary: confluent
+    id: signed-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    hooks:
+      post:
+        - cmd: make download-licenses
+          env:
+            - LICENSE_BIN=confluent
+            - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
+        - cmd: gon gon_confluent_amd64.hcl
+  - binary: confluent
+    id: signed-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    env:
+      - CGO_ENABLED=1
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    hooks:
+      pre:
+        - cmd: make switch-librdkafka-arm64
+      post:
+        - cmd: make restore-librdkafka-amd64
+        - cmd: gon gon_confluent_arm64.hcl
+        
 release:
   disable: true
 
