@@ -160,7 +160,7 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 			remainingFreeCredit += promoCode.Balance
 		}
 		if remainingFreeCredit > 0 {
-			utils.ErrPrintln(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit)))
+			utils.ErrPrintf(cmd, errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
 		}
 	}
 }
