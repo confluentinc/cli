@@ -34,7 +34,7 @@ builds:
       - linux
     goarch:
       - amd64
-- binary: confluent
+  - binary: confluent
     id: confluent-windows-amd64
     main: cmd/confluent/main.go
     flags:
@@ -99,7 +99,7 @@ builds:
       post:
         - cmd: make restore-librdkafka-amd64
         - cmd: gon gon_confluent_arm64.hcl
-        
+
 release:
   disable: true
 
