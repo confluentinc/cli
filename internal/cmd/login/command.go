@@ -9,12 +9,14 @@ import (
 	"strings"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/cli/internal/cmd/admin"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/cmd/admin"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -161,7 +163,7 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 			remainingFreeCredit += promoCode.Balance
 		}
 		if remainingFreeCredit > 0 {
-			utils.Println(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit)))
+			utils.ErrPrintln(cmd, fmt.Sprintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit)))
 		}
 	}
 }
