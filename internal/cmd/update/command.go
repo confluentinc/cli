@@ -91,8 +91,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
-	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, "v2.16.0", true)
-	fmt.Println("version", "v2.16.0")
+	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
