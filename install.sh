@@ -132,7 +132,7 @@ adjust_os() {
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
     linux) OS=linux ;;
-    alpine) OS=linux ;;
+    alpine) OS=alpine ;;
     windows) OS=windows ;;
   esac
   true
