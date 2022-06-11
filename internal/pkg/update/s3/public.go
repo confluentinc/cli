@@ -1,10 +1,12 @@
 package s3
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -236,7 +238,7 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	objectKey.goarch = r.goarch
 
 	s3URL := objectKey.URLFor(name, version)
-	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
+	downloadVersion := r.getDownloadVersion(s3URL)
 
 	resp, err := r.getHttpResponse(downloadVersion)
 	if err != nil {
@@ -310,4 +312,16 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
 	}
 	return resp, nil
+}
+
+func (r *PublicRepo) getDownloadVersion(s3URL string) string {
+	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
+	cmd := exec.Command("uname", "-a")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	_ = cmd.Run()
+	if strings.Contains(out.String(), "musl") {
+		return strings.Replace(downloadVersion, "linux", "alpine", 1)
+	}
+	return downloadVersion
 }
