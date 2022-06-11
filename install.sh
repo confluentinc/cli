@@ -131,7 +131,7 @@ adjust_os() {
   case ${OS} in
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
-    linux) OS=linux_glibc ;;
+    linux) OS=linux ;;
     alpine) OS=alpine ;;
     windows) OS=windows ;;
   esac
