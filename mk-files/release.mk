@@ -6,6 +6,8 @@ release: check-branch commit-release tag-release
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
+	$(call print-boxed-message,"UPLOADING LINUX BUILD TO GITHUB")
+	make upload-linux-build-to-github
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	@VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
@@ -157,3 +159,9 @@ download-licenses:
 publish-installer:
 	$(aws-authenticate) && \
 	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
+
+.PHONY: upload-linux-build-to-github
+## upload local copy of glibc linux build to github
+upload-linux-build-to-github:
+	hub release edit --attach dist/confluent_$(VERSION)_linux_glibc_amd64.tar.gz $(VERSION) -m ""
+	hub release edit --attach dist/confluent_linux_glibc_amd64_v1/confluent $(VERSION) -m ""
