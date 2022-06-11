@@ -39,7 +39,7 @@ verify-binaries:
 			aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; }; \
 		done; \
 	done
-	FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_linux_glibc_amd64; \
+	FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_alpine_amd64; \
 	echo "Checking binary: $${FILE}"; \
 	aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; };
 	rm -rf $(TEMP_DIR)	
