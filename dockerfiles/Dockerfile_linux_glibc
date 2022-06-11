@@ -9,6 +9,6 @@ RUN cd /go/src/github.com/confluentinc/cli && \
     make gorelease-linux-glibc
 
 RUN cd /go/src/github.com/confluentinc/cli && \
-    for file in dist/*linux*; do mv -v "$file" "${file/linux/linux_glibc}"; done ; \
-    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux_glibc}"; done; \
-    for file in dist/*.txt; do sed -i 's/linux/linux_glibc/g' $file ; done
+    for file in dist/*linux*; do mv -v "$file" "${file/linux/linux}"; done ; \
+    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
+    #for file in dist/*.txt; do sed -i 's/linux/linux/g' $file ; done
