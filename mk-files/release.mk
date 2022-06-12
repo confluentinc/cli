@@ -6,8 +6,6 @@ release: check-branch commit-release tag-release
 	make release-to-stag
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
-	$(call print-boxed-message,"UPLOADING LINUX BUILD TO GITHUB")
-	make upload-linux-build-to-github
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	@VERSION=$(VERSION) make publish-docs
 	git checkout go.sum
@@ -78,9 +76,13 @@ gorelease:
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt; \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
+	make upload-linux-build-to-github && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
+	cat dist/confluent_$(VERSION_NO_V)_checksums.txt >> confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
+	aws s3 cp confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
+	aws s3 cp confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	make restore-librdkafka-amd64
 	
 
@@ -164,5 +166,6 @@ publish-installer:
 .PHONY: upload-linux-build-to-github
 ## upload local copy of glibc linux build to github
 upload-linux-build-to-github:
-	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m ""
-	hub release edit --attach dist/confluent_linux_amd64_v1/confluent $(VERSION) -m ""
+	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
+	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
+	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
