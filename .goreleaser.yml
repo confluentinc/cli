@@ -102,6 +102,8 @@ builds:
 
 archives:
   - id: binary
+    replacements: 
+      linux: alpine
     format: binary
   - id: archive
     name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
