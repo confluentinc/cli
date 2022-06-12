@@ -127,16 +127,6 @@ copy-stag-archives-to-latest:
 	$(call copy-archives-files-to-latest,$(S3_STAG_PATH),$(S3_STAG_PATH))
 	$(call copy-archives-checksums-to-latest,$(S3_STAG_PATH),$(S3_STAG_PATH))
 
-.PHONY: tester
-tester:
-	$(eval TMP_BUILDS=$(shell mktemp -d))
-	$(call hello, $(TMP_BUILDS))
-
-define hello
-	$(aws-authenticate); \
-	echo $1
-endef
-
 # first argument: S3 folder of archives we want to copy from
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
