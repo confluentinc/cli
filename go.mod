@@ -14,7 +14,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0
+	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
@@ -29,7 +29,7 @@ require (
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
 	github.com/confluentinc/go-printer v0.16.0
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.1.2-0.20220218025201-8726fa846a9f
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
