@@ -317,10 +317,10 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 func (r *PublicRepo) getDownloadVersion(s3URL string) string {
 	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 	cmd := exec.Command("ldd", "--version")
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	_ = cmd.Run()
-	if strings.Contains(out.String(), "musl") {
+	if strings.Contains(stderr.String(), "musl") {
 		return strings.Replace(downloadVersion, "linux", "alpine", 1)
 	}
 	return downloadVersion
