@@ -71,25 +71,21 @@ gorelease-linux-glibc:
 # Uploading linux glibc files because its goreleaser file has set release disabled
 .PHONY: gorelease
 gorelease:
-	$(eval TMP_BUILDS=$(shell mktemp -d))
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
+	$(call print-boxed-message,"BUILDING FOR DARWIN, WINDOWS AND ALPINE LINUX") && \
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
+	make restore-librdkafka-amd64 && \
 	$(call print-boxed-message,"BUILDING FOR GLIBC LINUX") && \
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> $(TMP_BUILDS)/confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
-	mv dist/confluent_$(VERSION)_linux_amd64.tar.gz $(TMP_BUILDS)/confluent_$(VERSION)_linux_amd64.tar.gz && \
-	mv dist/confluent_linux_amd64_v1/confluent $(TMP_BUILDS)/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	$(call print-boxed-message,"BUILDING FOR DARWIN, WINDOWS AND ALPINE LINUX") && \
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
-	cat dist/confluent_$(VERSION_NO_V)_checksums.txt >> $(TMP_BUILDS)/confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
-	aws s3 cp $(TMP_BUILDS)/confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
-	aws s3 cp $(TMP_BUILDS)/confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
-	make restore-librdkafka-amd64 && \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	$(call print-boxed-message,"UPLOADING LINUX BUILDS TO GITHUB") && \
-	$(call upload-linux-build-to-github, $(TMP_BUILDS))
+	make upload-linux-build-to-github
 	
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
@@ -169,7 +165,9 @@ publish-installer:
 	$(aws-authenticate) && \
 	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
 
-define upload-linux-build-to-github
-	hub release edit --attach $1/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
-	hub release edit --attach $1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
-endef
+.PHONY: upload-linux-build-to-github
+## upload local copy of glibc linux build to github
+upload-linux-build-to-github:
+	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
+	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
+	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
