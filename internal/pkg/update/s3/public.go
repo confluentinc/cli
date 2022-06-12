@@ -316,7 +316,7 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 
 func (r *PublicRepo) getDownloadVersion(s3URL string) string {
 	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
-	cmd := exec.Command("uname", "-a")
+	cmd := exec.Command("ldd", "--version")
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	_ = cmd.Run()

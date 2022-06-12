@@ -221,7 +221,7 @@ uname_os() {
     cygwin*) os="windows" ;;
   esac
   case "$osid" in
-    alpine*) os="linux" ;;
+    alpine*) os="alpine" ;;
   esac
   echo "$os"
 }
