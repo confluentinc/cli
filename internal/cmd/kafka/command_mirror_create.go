@@ -28,12 +28,17 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 				Text: "Create a mirror topic with a custom replication factor and configuration file:",
 				Code: "confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config-file my-config.txt",
 			},
+			examples.Example{
+				Text: `Create a mirror topic "src_my-topic" where "src_" is the prefix configured on the link:`,
+				Code: "confluent kafka mirror create src_my-topic --link my-link --source-topic my-topic",
+			},
 		),
 	}
 
 	cmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
 	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
+	cmd.Flags().String(sourceTopicFlagName, "", "Name of the topic to be mirrored over the cluster link, i.e. the source topic's name. Only required when there is a prefix configured on the link.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,7 +49,15 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
-	sourceTopicName := args[0]
+	mirrorTopicName := args[0]
+
+	sourceTopicName, err := cmd.Flags().GetString(sourceTopicFlagName)
+	if err != nil {
+		return err
+	}
+	if sourceTopicName == "" {
+		sourceTopicName = mirrorTopicName
+	}
 
 	linkName, err := cmd.Flags().GetString(linkFlagName)
 	if err != nil {
@@ -86,6 +99,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		CreateMirrorTopicRequestData: optional.NewInterface(
 			kafkarestv3.CreateMirrorTopicRequestData{
 				SourceTopicName:   sourceTopicName,
+				MirrorTopicName:   mirrorTopicName,
 				ReplicationFactor: replicationFactor,
 				Configs:           toCreateTopicConfigs(configMap),
 			},
