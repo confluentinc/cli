@@ -95,14 +95,20 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	createMirrorTopicRequestData := kafkarestv3.CreateMirrorTopicRequestData{
+		SourceTopicName:   sourceTopicName,
+		ReplicationFactor: replicationFactor,
+		Configs:           toCreateTopicConfigs(configMap),
+	}
+	// Only set the mirror topic if it differs from the source topic. This is for backwards compatibility: old versions
+	// of ce-kafka-rest don't know about MirrorTopicName.
+	if sourceTopicName != mirrorTopicName {
+		createMirrorTopicRequestData.MirrorTopicName = mirrorTopicName
+	}
+
 	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
 		CreateMirrorTopicRequestData: optional.NewInterface(
-			kafkarestv3.CreateMirrorTopicRequestData{
-				SourceTopicName:   sourceTopicName,
-				MirrorTopicName:   mirrorTopicName,
-				ReplicationFactor: replicationFactor,
-				Configs:           toCreateTopicConfigs(configMap),
-			},
+			createMirrorTopicRequestData,
 		),
 	}
 
