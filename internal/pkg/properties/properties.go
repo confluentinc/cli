@@ -6,15 +6,14 @@ import (
 	"strings"
 )
 
-// FileToMap reads the key=value pairs from a properties file, ignoring comments and empty lines.
+// FileToMap reads key=value pairs from a properties file, ignoring comments and empty lines.
 func FileToMap(filename string) (map[string]string, error) {
 	buf, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	lines := parseLines(string(buf))
-	return ToMap(lines)
+	return toMap(parseLines(string(buf)))
 }
 
 func parseLines(content string) []string {
@@ -33,8 +32,24 @@ func parseLines(content string) []string {
 	return lines
 }
 
-// ToMap converts a list of key=value strings into a map.
-func ToMap(configs []string) (map[string]string, error) {
+// toMap converts a list of key=value strings into a map.
+func toMap(configs []string) (map[string]string, error) {
+	m := make(map[string]string)
+
+	for _, config := range configs {
+		x := strings.SplitN(config, "=", 2)
+		if len(x) < 2 {
+			return nil, fmt.Errorf(`failed to parse "key=value" pattern from configuration: %s`, config)
+		}
+
+		m[x[0]] = x[1]
+	}
+
+	return m, nil
+}
+
+// ConfigFlagToMap reads key=values pairs from the --config flag and supports configuration values containing commas.
+func ConfigFlagToMap(configs []string) (map[string]string, error) {
 	m := make(map[string]string)
 
 	for i := len(configs) - 1; i >= 0; i-- {

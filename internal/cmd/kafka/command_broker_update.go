@@ -64,21 +64,20 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configStrings, err := cmd.Flags().GetStringSlice("config")
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-
-	configsMap, err := properties.ToMap(configStrings)
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
-	configs := toAlterConfigBatchRequestData(configsMap)
+	data := toAlterConfigBatchRequestData(configMap)
 
 	if all {
 		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
 			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
 			})
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -86,7 +85,7 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	} else {
 		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
 			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
 			})
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -94,11 +93,11 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if format == output.Human.String() {
-		c.printHumanUpdate(all, clusterId, brokerId, configs)
+		c.printHumanUpdate(all, clusterId, brokerId, data)
 		return nil
 	}
 
-	return c.printStructuredUpdate(format, configs)
+	return c.printStructuredUpdate(format, data)
 }
 
 func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, configs []kafkarestv3.AlterConfigBatchRequestDataData) {

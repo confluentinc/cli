@@ -37,30 +37,47 @@ func TestParseLines_MultipleLines(t *testing.T) {
 }
 
 func TestToMap_Basic(t *testing.T) {
-	m, err := ToMap([]string{"key=val"})
+	m, err := toMap([]string{"key=val"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val"}, m)
 }
 
 func TestToMap_Override(t *testing.T) {
-	m, err := ToMap([]string{"key=val1", "key=val2"})
+	m, err := toMap([]string{"key=val1", "key=val2"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val2"}, m)
 }
 
 func TestToMap_Error(t *testing.T) {
-	_, err := ToMap([]string{"string without equal sign"})
+	_, err := toMap([]string{"string without equal sign"})
 	require.Error(t, err)
 }
 
-func TestToMap_ValueWithComma(t *testing.T) {
-	m, err := ToMap([]string{"key=val1", "val2"})
+func TestConfigFlagToMap_Basic(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val"}, m)
+}
+
+func TestConfigFlagToMap_Override(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1", "key=val2"})
+	require.NoError(t, err)
+	require.Equal(t, map[string]string{"key": "val2"}, m)
+}
+
+func TestConfigFlagToMap_Error(t *testing.T) {
+	_, err := ConfigFlagToMap([]string{"string without equal sign"})
+	require.Error(t, err)
+}
+
+func TestConfigFlagToMap_ValueWithComma(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1", "val2"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val1,val2"}, m)
 }
 
-func TestToMap_ValueWithEquals(t *testing.T) {
-	m, err := ToMap([]string{"key=val1=val2"})
+func TestConfigFlagToMap_ValueWithEquals(t *testing.T) {
+	m, err := ConfigFlagToMap([]string{"key=val1=val2"})
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val1=val2"}, m)
 }
