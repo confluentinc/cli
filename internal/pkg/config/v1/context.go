@@ -169,6 +169,10 @@ func (c *Context) GetOrganization() *orgv1.Organization {
 	return nil
 }
 
+func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+	return c.GetOrganization().GetSuspensionStatus()
+}
+
 func (c *Context) GetEnvironment() *orgv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account

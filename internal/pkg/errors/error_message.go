@@ -42,6 +42,8 @@ const (
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
+	EndOfFreeTrialErrorMsg                      = "organization \"%s\" has been suspended because your free trial has ended"
+	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card with \"confluent admin payment update\" or claim a promo code with \"confluent admin promo add\". To enter payment via the UI, please go to confluent.cloud/login."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -51,10 +53,14 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
+	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
+	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
+	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -289,6 +295,7 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
+	NoOrganizationContextErrorMsg      = "unable to check organization from context"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
 
 	// local package
