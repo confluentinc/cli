@@ -6,6 +6,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/docs"
