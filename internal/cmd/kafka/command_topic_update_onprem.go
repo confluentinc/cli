@@ -52,20 +52,22 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
+
 	// Update Config
-	configStrings, err := cmd.Flags().GetStringSlice("config") // handle config parsing errors
+	configs, err := cmd.Flags().GetStringSlice("config") // handle config parsing errors
 	if err != nil {
 		return err
 	}
-	configsMap, err := properties.ToMap(configStrings)
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
-	configs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+
+	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configMap))
 	i := 0
-	for k, v := range configsMap {
+	for k, v := range configMap {
 		v2 := v
-		configs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
+		data[i] = kafkarestv3.AlterConfigBatchRequestDataData{
 			Name:      k,
 			Value:     &v2,
 			Operation: nil,
@@ -74,7 +76,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	}
 	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName,
 		&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
 		})
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
@@ -84,8 +86,8 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
 		// Print Updated Configs
 		tableLabels := []string{"Name", "Value"}
-		tableEntries := make([][]string, len(configs))
-		for i, config := range configs {
+		tableEntries := make([][]string, len(data))
+		for i, config := range data {
 			tableEntries[i] = printer.ToRow(
 				&struct {
 					Name  string
@@ -97,10 +99,10 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		})
 		printer.RenderCollectionTable(tableEntries, tableLabels)
 	} else { //json or yaml
-		sort.Slice(configs, func(i int, j int) bool {
-			return configs[i].Name < configs[j].Name
+		sort.Slice(data, func(i int, j int) bool {
+			return data[i].Name < data[j].Name
 		})
-		err = output.StructuredOutput(format, configs)
+		err = output.StructuredOutput(format, data)
 		if err != nil {
 			return err
 		}
