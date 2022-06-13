@@ -39,7 +39,7 @@ func main() {
 	for i, cfg := range configs {
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg, false, new(version.Version)).Command,
+			Command: cmd.NewConfluentCommand(cfg, new(version.Version), false),
 		}
 	}
 
