@@ -54,7 +54,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := properties.ToMap(configs)
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -71,9 +71,9 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
-		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 		i := 0
-		for k, v := range topicConfigsMap {
+		for k, v := range configMap {
 			val := v
 			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 				Name:  k,
@@ -143,7 +143,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	topic.Spec.NumPartitions = numPartitions
 	topic.Spec.ReplicationFactor = defaultReplicationFactor
 	topic.Validate = dryRun
-	topic.Spec.Configs = topicConfigsMap
+	topic.Spec.Configs = configMap
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
