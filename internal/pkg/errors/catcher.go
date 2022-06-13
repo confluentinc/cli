@@ -25,7 +25,8 @@ import (
 const quotaExceededRegex = ".* is currently limited to .*"
 
 type responseBody struct {
-	Error []errorDetail `json:"errors"`
+	Error   []errorDetail `json:"errors"`
+	Message string        `json:"message"`
 }
 
 type errorDetail struct {
@@ -167,7 +168,7 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
 }
 
-func CatchConfigurationNotValidError(err error, r *http.Response) error {
+func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
@@ -254,6 +255,23 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 	}
 
 	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+}
+
+func CatchConnectorConfigurationNotValidError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if resBody.Message != "" {
+		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
+		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
+		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
+	}
+
+	return err
 }
 
 /*

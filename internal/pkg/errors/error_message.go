@@ -42,6 +42,8 @@ const (
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
+	EndOfFreeTrialErrorMsg                      = "organization \"%s\" has been suspended because your free trial has ended"
+	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card with \"confluent admin payment update\" or claim a promo code with \"confluent admin promo add\". To enter payment via the UI, please go to confluent.cloud/login."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -51,10 +53,14 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
+	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
+	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
+	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -173,6 +179,7 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
+	FailedToLoadSchemaSuggestions = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 
 	// Cluster Link commands
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
@@ -288,6 +295,7 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
+	NoOrganizationContextErrorMsg      = "unable to check organization from context"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
 
 	// local package
@@ -446,6 +454,7 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
+	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
