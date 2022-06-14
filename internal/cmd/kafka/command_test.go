@@ -943,7 +943,6 @@ func TestCreateMirror(t *testing.T) {
 			expect <- cliMock.CreateMirrorMatcher{
 				LinkName:        "link-1",
 				SourceTopicName: "topic-1",
-				MirrorTopicName: "topic-1",
 				Configs:         configs,
 			}
 		},
