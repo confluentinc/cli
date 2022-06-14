@@ -45,6 +45,7 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
+            - mv .ssh/id_rsa ~/.ssh/id_rsa
             - chmod 400 ~/.ssh/id_rsa
             - ssh-add ~/.ssh/id_rsa
             - ssh-add -l
@@ -112,7 +113,7 @@ blocks:
             - cat ~/.ssh/id_rsa
             
             - export GOPRIVATE=github.com/confluentinc
-            - go get github.com/confluentinc/bincover
+            - go get -v github.com/confluentinc/bincover
 #            - make deps
 #            - make build
 #            - make lint
