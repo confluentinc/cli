@@ -9,15 +9,13 @@ agent:
 execution_time_limit:
   hours: 2
 
-# TODO: Give access to private repos
-
 blocks:
-  - name: Linux
+  - name: Build
     task:
       secrets:
         - name: vault_sem2_approle
       jobs:
-        - name: Lint & Test
+        - name: Linux
           commands:
             - sem-version go 1.17.6
             - checkout
@@ -47,8 +45,6 @@ blocks:
             - source script.sh
             - rm script.sh
             - chmod 400 .ssh/id_rsa
-#            - ssh-add .ssh/id_rsa
-#            - ssh-add -l
 
             - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
             - cat script.sh
@@ -69,15 +65,23 @@ blocks:
             - cd -
               
             # Set up Go
-            - export "GOPATH=$(go env GOPATH)"
-            - export "PATH=${GOPATH}/bin:${PATH}"
-              
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export GOPRIVATE=github.com/confluentinc
-            - go get -v github.com/confluentinc/bincover
-#            - make deps
-#            - make build
-#            - make lint
-#            - make test
+            
+            - make deps
+            - make build
+            - cache store
+  
+  - name: Lint & Test
+    task:
+      prologue:
+        commands:
+          - cache restore
+      jobs:
+        - name: Lint
+          commands: make lint
+        - name: Test
+          commands: make test
 
 after_pipeline:
   task:
