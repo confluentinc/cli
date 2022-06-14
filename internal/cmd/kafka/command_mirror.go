@@ -10,6 +10,7 @@ const (
 	replicationFactorFlagName = "replication-factor"
 	mirrorStatusFlagName      = "mirror-status"
 	linkFlagName              = "link"
+	sourceTopicFlagName       = "source-topic"
 )
 
 var (
