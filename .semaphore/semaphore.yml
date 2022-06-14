@@ -103,7 +103,7 @@ blocks:
             - echo $GOPATH
             - export "PATH=${GOPATH}/bin:${PATH}"
               
-            - cat ~/.git/config
+            - cat .git/config
             - cat ~/.ssh/config
             - cat ~/.ssh/id_rsa
             
