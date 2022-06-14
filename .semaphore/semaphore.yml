@@ -79,9 +79,11 @@ blocks:
           - cache restore
       jobs:
         - name: Lint
-          commands: make lint
+          commands:
+            - make lint
         - name: Test
-          commands: make test
+          commands:
+            - make test
 
 after_pipeline:
   task:
