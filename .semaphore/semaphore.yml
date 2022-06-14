@@ -47,6 +47,7 @@ blocks:
             - source script.sh
             - rm script.sh
             - chmod 400 ~/.ssh/id_rsa
+            - ssh-add ~/.ssh/id_rsa
 
             - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
             - cat script.sh
