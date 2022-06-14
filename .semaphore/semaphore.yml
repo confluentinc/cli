@@ -20,7 +20,6 @@ blocks:
         - name: Lint & Test
           commands:
             - sem-version go 1.17.6
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - checkout
             
             - mkdir -p ${HOME}/bin/
@@ -54,8 +53,6 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
-            
-            - cat .netrc
             - mv .netrc ~/.netrc
 
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_config" > script.sh
@@ -67,6 +64,8 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
+            - mv .gitconfig ~/.gitconfig
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
               
             - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
             - cat script.sh
