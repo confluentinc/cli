@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 	"io/ioutil"
-	str "strings"
+	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -32,12 +32,12 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		s.Errorf(err, "Cannot read file asyncapi-spec.yaml")
 	}
 	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
-	testfile1 := str.ReplaceAll(string(testfile), "\r", "")
-	index1 := str.Index(string(file), "prod-schemaRegistry:")
-	index2 := str.Index(string(file), "confluentSchemaRegistry")
+	testfile1 := strings.ReplaceAll(string(testfile), "\r", "")
+	index1 := strings.Index(string(file), "prod-schemaRegistry:")
+	index2 := strings.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
-	file1 = str.ReplaceAll(file1, "\r", "")
-	if str.Compare(str.TrimSpace(testfile1), str.TrimSpace(file1)) != 0 {
+	file1 = strings.ReplaceAll(file1, "\r", "")
+	if strings.Compare(strings.TrimSpace(testfile1), strings.TrimSpace(file1)) != 0 {
 		var err2 error
 		fmt.Println([]byte(testfile1))
 		fmt.Println([]byte(file1))
