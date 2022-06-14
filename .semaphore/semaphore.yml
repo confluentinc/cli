@@ -66,6 +66,7 @@ blocks:
             - rm script.sh
             - mv .gitconfig ~/.gitconfig
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - cat ~/.gitconfig
               
             - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
             - cat script.sh
