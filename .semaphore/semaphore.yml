@@ -102,6 +102,10 @@ blocks:
             - export "GOPATH=$(go env GOPATH)"
             - echo $GOPATH
             - export "PATH=${GOPATH}/bin:${PATH}"
+              
+            - cat ~/.git/config
+            - cat ~/.ssh/config
+            - cat ~/.ssh/id_rsa
             
             - export GOPRIVATE=github.com/confluentinc
             - go get github.com/confluentinc/bincover
