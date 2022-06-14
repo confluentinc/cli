@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	"os"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
