@@ -93,6 +93,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 
 	cmd.AddCommand(admin.New(prerunner, isTest))
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
+	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory))
@@ -114,7 +115,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
-	cmd.AddCommand(asyncapi.New(prerunner))
 
 	changeDefaults(cmd, cfg)
 

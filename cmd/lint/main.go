@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	"github.com/client9/gospell"
 
@@ -140,6 +141,8 @@ var properNouns = []string{
 	"ACL",
 	"API",
 	"Apache",
+	"Async",
+	"AsyncAPI",
 	"CLI",
 	"Confluent Cloud",
 	"Confluent Platform",

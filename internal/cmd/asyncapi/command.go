@@ -9,7 +9,7 @@ import (
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "asyncapi",
-		Short:       "Manages asyncapi document tooling.",
+		Short:       "Manages AsyncAPI document tooling.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

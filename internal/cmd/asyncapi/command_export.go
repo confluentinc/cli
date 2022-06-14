@@ -4,11 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
-	"net/http"
 	"strconv"
-	str "strings"
+	"strings"
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -20,6 +18,7 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.1.0"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	asyncapi2 "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -78,7 +77,7 @@ type SecurityConfigsSR struct {
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Create asyncapi spec for the Kafka cluster.",
+		Short: "Create AsyncAPI spec for the Kafka cluster.",
 	}
 	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.RunE = c.export
@@ -111,7 +110,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	//For Getting Broker URL
+	//For getting Kafka cluster details and Broker URL
 	cluster, topics, clusterCreds, broker, err := getClusterDetails(c)
 	if err != nil {
 		return err
@@ -119,18 +118,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	//Creating Consumer
 	var consumer *kafka.Consumer
 	if getExamples {
-		consumer, err = kafka.NewConsumer(&kafka.ConfigMap{
-			"bootstrap.servers":  broker,
-			"sasl.mechanisms":    "PLAIN",
-			"security.protocol":  "SASL_SSL",
-			"sasl.username":      clusterCreds.Key,
-			"sasl.password":      clusterCreds.Secret,
-			"group.id":           groupId,
-			"auto.offset.reset":  "earliest",
-			"enable.auto.commit": "false",
-		})
+		consumer, err = createConsumer(broker, clusterCreds, groupId)
 		if err != nil {
-			log.CliLogger.Warn("Error in creating Kafka Consumer")
 			return err
 		}
 	}
@@ -167,15 +156,29 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	for idx := 0; idx < len(topics); idx++ {
 		//For a given topic
 		for i := 0; i < len(subjects); i++ {
-			if subjects[i] != (topics[idx].Name+"-value") || str.HasPrefix(topics[idx].Name, "_") {
+			if subjects[i] != (topics[idx].Name+"-value") || strings.HasPrefix(topics[idx].Name, "_") {
 				//Avoid internal topics or if no schema is set for value.
 				continue
 			} else {
 				//Subject and Topic matches
-				contentType, tags, msgBindings, bindings, opBindings, producer, mapOfMessageCompat, err := getChannelDetails(topics[idx], srClient, ctx, subjects[i], schemaCluster, cluster, apiKey, apiSecret, clusterCreds, groupId)
+				contentType, Schema, producer, err := getChannelDetails(topics[idx], srClient, ctx, subjects[i])
 				if contentType == "PROTOBUF" {
 					continue
 				}
+				if err != nil {
+					return err
+				}
+				tags, err := getTags(schemaCluster, Schema, apiKey, apiSecret)
+				if err != nil {
+					log.CliLogger.Warn(err, "Error in getting tags")
+				}
+				bindings, opBindings, msgBindings, err := getBindings(cluster, topics[idx], clusterCreds, groupId)
+				if err != nil {
+					log.CliLogger.Warn("Bindings not found")
+					return err
+				}
+				//x-messageCompatibility
+				mapOfMessageCompat, err := AddMessageCompatibility(srClient, ctx, subjects[i])
 				if err != nil {
 					return err
 				}
@@ -213,36 +216,16 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 }
 
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
-	dataCatalogUrl := schemaCluster.SchemaRegistryEndpoint + "/catalog/v1/entity/type/sr_schema/name/" + schemaCluster.Id + ":.:" + strconv.Itoa(int(prodSchema.Id)) + "/tags"
-	req, _ := http.NewRequest("GET", dataCatalogUrl, nil)
-	req.SetBasicAuth(apiKey, apiSecret)
-	resp, _ := http.DefaultClient.Do(req)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.CliLogger.Warn("Error in getting Tags")
-		}
-	}(resp.Body)
+	body := asyncapi2.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
 	var tag []TagsFromId
-	body, _ := ioutil.ReadAll(resp.Body)
 	err := json.Unmarshal(body, &tag)
 	if err != nil {
 		return nil, err
 	}
 	var tags []spec.Tag
 	for j := 0; j < len(tag); j++ {
-		tagDefsUrl := schemaCluster.SchemaRegistryEndpoint + "/catalog/v1/types/tagdefs/" + tag[j].TypeName
-		req, _ = http.NewRequest("GET", tagDefsUrl, nil)
-		req.SetBasicAuth(apiKey, apiSecret)
-		resp, _ = http.DefaultClient.Do(req)
-		defer func(Body io.ReadCloser) {
-			err = Body.Close()
-			if err != nil {
-				log.CliLogger.Warn("Error in getting Tag Definitions")
-			}
-		}(resp.Body)
+		body := asyncapi2.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tag[j].TypeName, apiKey, apiSecret)
 		var tagDef TagDef
-		body, _ = ioutil.ReadAll(resp.Body)
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
 			fmt.Println("Error in Unmarshalling tags")
@@ -266,7 +249,7 @@ func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}
 	} else {
 		var example interface{}
 		val := string(message.Value)
-		val = val[str.IndexRune(val, '{'):]
+		val = val[strings.IndexRune(val, '{'):]
 		err = json.Unmarshal([]byte(val), &example)
 		if err != nil {
 			fmt.Printf("Example received for topic %s is not a valid JSON for unmarshalling.\n", topicName)
@@ -281,23 +264,11 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	var binding ConfluentBinding
 	//Cleanup Policy
 	var CleanupPolicy TopicConfigs
-	var resp *http.Response
-	cleanupPolicyUrl := cluster.RestEndpoint + "/kafka/v3/clusters/" + cluster.Id + "/topics/" + topic.Name + "/configs/cleanup.policy"
-	req, _ := http.NewRequest("GET", cleanupPolicyUrl, nil)
-	req.SetBasicAuth(clusterCreds.Key, clusterCreds.Secret)
-	resp, _ = http.DefaultClient.Do(req)
-	if resp == nil {
+	body := asyncapi2.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	if body == nil {
 		CleanupPolicy.Name = "cleanup.policy"
 		CleanupPolicy.Value = "delete"
 	} else {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.CliLogger.Warn("Error in getting Bindings")
-				log.CliLogger.Warn(err)
-			}
-		}(resp.Body)
-		body, _ := ioutil.ReadAll(resp.Body)
 		err := json.Unmarshal(body, &CleanupPolicy)
 		if err != nil {
 			fmt.Println("Error in Unmarshalling Topic Configs: Cleanup Policy")
@@ -306,22 +277,13 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	}
 	//DeleteRetentionMs
 	var DeleteRetentionMs TopicConfigs
-	deleteRetentionMsUrl := cluster.RestEndpoint + "/kafka/v3/clusters/" + cluster.Id + "/topics/" + topic.Name + "/configs/delete.retention.ms"
-	req, _ = http.NewRequest("GET", deleteRetentionMsUrl, nil)
-	req.SetBasicAuth(clusterCreds.Key, clusterCreds.Secret)
-	resp, _ = http.DefaultClient.Do(req)
-	if resp == nil {
+
+	body = asyncapi2.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	if body == nil {
 		//for tests
 		DeleteRetentionMs.Name = "delete.retention.ms"
 		DeleteRetentionMs.Value = "86400000"
 	} else {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.CliLogger.Warn("Error in getting Bindings")
-			}
-		}(resp.Body)
-		body, _ := ioutil.ReadAll(resp.Body)
 		err := json.Unmarshal(body, &DeleteRetentionMs)
 		if err != nil {
 			fmt.Println("Error in Unmarshalling Topic Configs: DeleteRetentionMs")
@@ -372,12 +334,11 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 		log.CliLogger.Warn("Error in getting topics")
 		return nil, nil, nil, "", err
 	}
-	broker := str.Split(cluster.GetEndpoint(), "//")[1]
+	broker := strings.Split(cluster.GetEndpoint(), "//")[1]
 	return cluster, topics, clusterCreds, broker, nil
 }
 
-func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string,
-	schemaCluster *v1.SchemaRegistryCluster, cluster *schedv1.KafkaCluster, apiKey, apiSecret string, clusterCreds *v1.APIKeyPair, groupId string) (string, []spec.Tag, interface{}, interface{}, interface{}, map[string]interface{}, map[string]interface{}, error) {
+func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, schemaregistry.Schema, map[string]interface{}, error) {
 	log.CliLogger.Debug("Adding Operation : " + topic.Name + "\n")
 	Schema, _, _ := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
 	contentType := Schema.SchemaType
@@ -389,42 +350,25 @@ func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry
 	var producer map[string]interface{}
 	if contentType == "PROTOBUF" {
 		fmt.Println("Protobuf not supported")
-		return contentType, nil, nil, nil, nil, nil, nil, nil
+		return contentType, Schema, nil, nil
 	} else { //JSON or Avro Format
 		err := json.Unmarshal([]byte(Schema.Schema), &producer)
 		if err != nil {
 			log.CliLogger.Warn("Error in unmarshalling schema")
 		}
 	}
-	tags, err := getTags(schemaCluster, Schema, apiKey, apiSecret)
-	if err != nil {
-		log.CliLogger.Warn(err, "Error in getting tags")
-	}
-	bindings, opBindings, msgBindings, err := getBindings(cluster, topic, clusterCreds, groupId)
-	if err != nil {
-		log.CliLogger.Warn("Bindings not found")
-		return contentType, nil, nil, nil, nil, nil, nil, err
-	}
-	//x-messageCompatibility
-	mapOfMessageCompat, err := AddMessageCompatibility(srClient, ctx, subject)
-	if err != nil {
-		return contentType, nil, nil, nil, nil, nil, nil, err
-	}
-	return contentType, tags, msgBindings, bindings, opBindings, producer, mapOfMessageCompat, nil
-}
-func getEnv(broker string) string {
-	var env string
-	if str.Contains(broker, "devel") {
-		env = "dev"
-	} else if str.Contains(broker, "local") {
-		env = "local"
-	} else {
-		env = "prod"
-	}
-	return env
+	return contentType, Schema, producer, nil
 }
 
-//Functions to Add stuff to spec file
+func getEnv(broker string) string {
+	if strings.Contains(broker, "devel") {
+		return "dev"
+	} else if strings.Contains(broker, "local") {
+		return "local"
+	} else {
+		return "prod"
+	}
+}
 
 func AddServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluster) (asyncapi.Reflector, error) {
 	reflector := asyncapi.Reflector{
@@ -555,4 +499,22 @@ func AddComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 		},
 	})
 	return reflector, nil
+}
+
+func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) (*kafka.Consumer, error) {
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers":  broker,
+		"sasl.mechanisms":    "PLAIN",
+		"security.protocol":  "SASL_SSL",
+		"sasl.username":      clusterCreds.Key,
+		"sasl.password":      clusterCreds.Secret,
+		"group.id":           groupId,
+		"auto.offset.reset":  "earliest",
+		"enable.auto.commit": "false",
+	})
+	if err != nil {
+		log.CliLogger.Warn("Error in creating Kafka Consumer")
+		return nil, err
+	}
+	return consumer, nil
 }
