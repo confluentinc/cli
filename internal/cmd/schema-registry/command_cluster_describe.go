@@ -20,7 +20,7 @@ import (
 var (
 	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
 	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility",
-		"ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region", "Package": "Package"}
+		"ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
 	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility",
 		"Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
 )
