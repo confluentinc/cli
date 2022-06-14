@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -217,18 +218,25 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			res := orgv1.GetPaymentInfoReply{
-				Card: &orgv1.Card{
-					Cardholder: "Miles Todzo",
-					Brand:      "Visa",
-					Last4:      "4242",
-					ExpMonth:   "01",
-					ExpYear:    "99",
-				},
-				Organization: &orgv1.Organization{
-					Id: 0,
-				},
-				Error: nil,
+			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD") != "false"
+			var res orgv1.GetPaymentInfoReply
+
+			if hasPaymentMethod {
+				res = orgv1.GetPaymentInfoReply{
+					Card: &orgv1.Card{
+						Cardholder: "Miles Todzo",
+						Brand:      "Visa",
+						Last4:      "4242",
+						ExpMonth:   "01",
+						ExpYear:    "99",
+					},
+					Organization: &orgv1.Organization{
+						Id: 0,
+					},
+					Error: nil,
+				}
+			} else {
+				res = orgv1.GetPaymentInfoReply{}
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -265,27 +273,34 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			var tenDollars int64 = 10 * 10000
+			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS") != "false"
+			var res *billingv1.GetPromoCodeClaimsReply
 
-			// The time is set to noon so that all time zones display the same local time
-			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
-			expiration := &types.Timestamp{Seconds: date.Unix()}
+			if hasPromoCodeClaims {
+				var tenDollars int64 = 10 * 10000
 
-			res := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 "PROMOCODE1",
-						Amount:               tenDollars,
-						Balance:              tenDollars,
-						CreditExpirationDate: expiration,
+				// The time is set to noon so that all time zones display the same local time
+				date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
+				expiration := &types.Timestamp{Seconds: date.Unix()}
+
+				res = &billingv1.GetPromoCodeClaimsReply{
+					Claims: []*billingv1.PromoCodeClaim{
+						{
+							Code:                 "PROMOCODE1",
+							Amount:               tenDollars,
+							Balance:              tenDollars,
+							CreditExpirationDate: expiration,
+						},
+						{
+							Code:                 "PROMOCODE2",
+							Balance:              tenDollars,
+							Amount:               tenDollars,
+							CreditExpirationDate: expiration,
+						},
 					},
-					{
-						Code:                 "PROMOCODE2",
-						Balance:              tenDollars,
-						Amount:               tenDollars,
-						CreditExpirationDate: expiration,
-					},
-				},
+				}
+			} else {
+				res = &billingv1.GetPromoCodeClaimsReply{}
 			}
 
 			listReply, err := utilv1.MarshalJSONToBytes(res)

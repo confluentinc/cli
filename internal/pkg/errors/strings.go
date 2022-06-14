@@ -24,7 +24,8 @@ const (
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundOrganizationIdMsg = "Found default organization id for user \"%s\" from environment variable \"%s\".\n"
-	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n"
+	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
+		"You are currently using a free trial version of Confluent Cloud. Add a payment method with \"confluent admin payment update\" to avoid an interruption in service once your trial ends.\n"
 
 	// confluent cluster command
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
