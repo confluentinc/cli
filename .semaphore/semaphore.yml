@@ -62,7 +62,42 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
-          
+              
+            - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/testbreak-reporting" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_aws_credentials" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/halyard-secrets" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/service-foundations/cc-mk-include" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+            
             - export "GOPATH=$(go env GOPATH)"
             - echo $GOPATH
             - export "PATH=${GOPATH}/bin:${PATH}"
