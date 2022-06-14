@@ -69,22 +69,24 @@ func createTestConfigFile(name string, configs map[string]string) (string, error
 	logger.Println("Test config file dir:", dir)
 	file, err := os.OpenFile(name, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 	if err != nil {
-		return dir, err
+		return "", err
 	}
+
+	path := dir + "/" + name
 
 	write := bufio.NewWriter(file)
 	for key, val := range configs {
 		if _, err = write.WriteString(key + "=" + val + "\n"); err != nil {
 			file.Close()
-			return dir, err
+			return path, err
 		}
 	}
 
 	if err = write.Flush(); err != nil {
-		return dir, err
+		return path, err
 	}
 
-	return dir, file.Close()
+	return path, file.Close()
 }
 
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {
