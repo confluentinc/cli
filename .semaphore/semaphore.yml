@@ -1,0 +1,95 @@
+version: v1.0
+name: Confluent CLI
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+execution_time_limit:
+  hours: 2
+
+blocks:
+  - name: Build
+    task:
+      secrets:
+        - name: vault_sem2_approle
+      jobs:
+        - name: Linux
+          commands:
+            - checkout
+              
+            - pwd
+            
+            # Install Vault
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - unzip vault.zip
+            - chmod +x vault
+            - export PATH="$(pwd):${PATH}"
+
+            # Log in to Vault
+            - VAULT_TOKEN=$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - vault login -no-print token="${VAULT_TOKEN}"
+            
+            # Execute Vault scripts
+            - cd ~
+            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+            
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_config" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/gitconfig" > script.sh
+            - cat script.sh
+            - source script.sh
+            - rm script.sh
+
+            - cd -
+            
+            # Other
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - chmod 400 ~/.ssh/id_rsa
+              
+            # Set up Go
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - export GOPRIVATE=github.com/confluentinc
+            
+            - make deps
+            - make build
+            - cache store
+  
+  - name: Lint & Test
+    task:
+      prologue:
+        commands:
+          - checkout
+          - cache restore
+      jobs:
+        - name: Lint
+          commands:
+            - make lint
+        - name: Test
+          commands:
+            - make test
+
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
