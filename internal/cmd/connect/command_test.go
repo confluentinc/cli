@@ -1,21 +1,24 @@
 package connect
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
 	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"github.com/tj/assert"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -25,15 +28,44 @@ const (
 	pluginType    = "DummyPlugin"
 )
 
+var (
+	plugin = connectv1.InlineResponse2002{
+		Class: "DummySink",
+		Type:  "sink",
+	}
+
+	pluginDescribe = connectv1.InlineResponse2003Configs{
+		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
+	}
+
+	connector = connectv1.ConnectV1Connector{
+		Name:   connectorName,
+		Config: map[string]string{},
+	}
+
+	connectorExpansion = connectv1.ConnectV1ConnectorExpansion{
+		Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString(connectorID)},
+		Status: &connectv1.ConnectV1ConnectorExpansionStatus{
+			Name: connectorName,
+			Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
+				State: "RUNNING",
+				Trace: connectv1.PtrString(""),
+			},
+			Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{
+				connectv1.ConnectV1ConnectorExpansionStatusTasks{Id: 1, State: "RUNNING"}},
+			Type: "Sink",
+		},
+	}
+)
+
 type ConnectTestSuite struct {
 	suite.Suite
-	conf               *v1.Config
-	kafkaCluster       *schedv1.KafkaCluster
-	connector          *schedv1.Connector
-	connectorInfo      *opv1.ConnectorInfo
-	connectMock        *ccsdkmock.Connect
-	kafkaMock          *ccsdkmock.Kafka
-	connectorExpansion *opv1.ConnectorExpansion
+	conf           *v1.Config
+	kafkaCluster   *schedv1.KafkaCluster
+	connectorsMock *connectmock.ConnectorsV1Api
+	lifecycleMock  *connectmock.LifecycleV1Api
+	pluginMock     *connectmock.PluginsV1Api
+	kafkaMock      *ccsdkmock.Kafka
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
@@ -45,31 +77,6 @@ func (suite *ConnectTestSuite) SetupSuite() {
 		AccountId:  "testAccount",
 		Enterprise: true,
 	}
-	suite.connector = &schedv1.Connector{
-		Name:           connectorName,
-		Id:             connectorID,
-		KafkaClusterId: suite.kafkaCluster.Id,
-		AccountId:      "testAccount",
-		Status:         schedv1.Connector_RUNNING,
-		UserConfigs:    map[string]string{},
-	}
-
-	suite.connectorInfo = &opv1.ConnectorInfo{
-		Name: connectorName,
-		Type: "source",
-	}
-
-	suite.connectorExpansion = &opv1.ConnectorExpansion{
-		Id: &opv1.ConnectorId{Id: connectorID},
-		Info: &opv1.ConnectorInfo{
-			Name:   connectorName,
-			Type:   "Sink",
-			Config: map[string]string{},
-		},
-		Status: &opv1.ConnectorStateInfo{Name: connectorName, Connector: &opv1.ConnectorState{State: "Running"},
-			Tasks: []*opv1.TaskState{{Id: 1, State: "Running"}},
-		}}
-
 }
 
 func (suite *ConnectTestSuite) SetupTest() {
@@ -81,50 +88,73 @@ func (suite *ConnectTestSuite) SetupTest() {
 			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
-	suite.connectMock = &ccsdkmock.Connect{
-		CreateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConnectorInfo, error) {
-			return suite.connectorInfo, nil
+
+	suite.connectorsMock = &connectmock.ConnectorsV1Api{
+		CreateConnectv1ConnectorFunc: func(_ context.Context, _, _ string) connectv1.ApiCreateConnectv1ConnectorRequest {
+			return connectv1.ApiCreateConnectv1ConnectorRequest{}
 		},
-		UpdateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConnectorInfo, error) {
-			return suite.connectorInfo, nil
+		CreateConnectv1ConnectorExecuteFunc: func(_ connectv1.ApiCreateConnectv1ConnectorRequest) (connectv1.ConnectV1Connector, *http.Response, error) {
+			return connector, nil, nil
 		},
-		PauseFunc: func(_ context.Context, _ *schedv1.Connector) error {
-			return nil
+		CreateOrUpdateConnectv1ConnectorConfigFunc: func(_ context.Context, _, _, _ string) connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest {
+			return connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest{}
 		},
-		ResumeFunc: func(_ context.Context, _ *schedv1.Connector) error {
-			return nil
+		CreateOrUpdateConnectv1ConnectorConfigExecuteFunc: func(_ connectv1.ApiCreateOrUpdateConnectv1ConnectorConfigRequest) (connectv1.ConnectV1Connector, *http.Response, error) {
+			return connector, nil, nil
 		},
-		DeleteFunc: func(_ context.Context, _ *schedv1.Connector) error {
-			return nil
+		DeleteConnectv1ConnectorFunc: func(_ context.Context, _, _, _ string) connectv1.ApiDeleteConnectv1ConnectorRequest {
+			return connectv1.ApiDeleteConnectv1ConnectorRequest{}
 		},
-		ListWithExpansionsFunc: func(_ context.Context, _ *schedv1.Connector, _ string) (map[string]*opv1.ConnectorExpansion, error) {
-			return map[string]*opv1.ConnectorExpansion{connectorID: suite.connectorExpansion}, nil
+		DeleteConnectv1ConnectorExecuteFunc: func(_ connectv1.ApiDeleteConnectv1ConnectorRequest) (connectv1.InlineResponse200, *http.Response, error) {
+			return connectv1.InlineResponse200{}, nil, nil
 		},
-		GetExpansionByIdFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorExpansion, error) {
-			return suite.connectorExpansion, nil
+		ListConnectv1ConnectorsWithExpansionsFunc: func(_ context.Context, _, _ string) connectv1.ApiListConnectv1ConnectorsWithExpansionsRequest {
+			return connectv1.ApiListConnectv1ConnectorsWithExpansionsRequest{}
 		},
-		GetExpansionByNameFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorExpansion, error) {
-			return suite.connectorExpansion, nil
+		ListConnectv1ConnectorsWithExpansionsExecuteFunc: func(_ connectv1.ApiListConnectv1ConnectorsWithExpansionsRequest) (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+			return map[string]connectv1.ConnectV1ConnectorExpansion{connectorName: connectorExpansion}, nil, nil
 		},
-		GetFunc: func(_ context.Context, _ *schedv1.Connector) (*opv1.ConnectorInfo, error) {
-			return suite.connectorInfo, nil
+	}
+	suite.lifecycleMock = &connectmock.LifecycleV1Api{
+		PauseConnectv1ConnectorFunc: func(_ context.Context, _, _, _ string) connectv1.ApiPauseConnectv1ConnectorRequest {
+			return connectv1.ApiPauseConnectv1ConnectorRequest{}
 		},
-		ValidateFunc: func(_ context.Context, _ *schedv1.ConnectorConfig) (*opv1.ConfigInfos, error) {
-			return &opv1.ConfigInfos{Configs: []*opv1.Configs{{Value: &opv1.ConfigValue{Value: "abc", Errors: []string{"new error"}}}}}, errors.New("config.name")
+		PauseConnectv1ConnectorExecuteFunc: func(_ connectv1.ApiPauseConnectv1ConnectorRequest) (*http.Response, error) {
+			return nil, nil
 		},
-		GetPluginsFunc: func(_ context.Context, _ *schedv1.Connector, _ string) ([]*opv1.ConnectorPluginInfo, error) {
-			return []*opv1.ConnectorPluginInfo{
-				{
-					Class: "test-plugin",
-					Type:  "source",
-				},
-			}, nil
+		ResumeConnectv1ConnectorFunc: func(_ context.Context, _, _, _ string) connectv1.ApiResumeConnectv1ConnectorRequest {
+			return connectv1.ApiResumeConnectv1ConnectorRequest{}
+		},
+		ResumeConnectv1ConnectorExecuteFunc: func(_ connectv1.ApiResumeConnectv1ConnectorRequest) (*http.Response, error) {
+			return nil, nil
+		},
+	}
+	suite.pluginMock = &connectmock.PluginsV1Api{
+		ListConnectv1ConnectorPluginsFunc: func(_ context.Context, _, _ string) connectv1.ApiListConnectv1ConnectorPluginsRequest {
+			return connectv1.ApiListConnectv1ConnectorPluginsRequest{}
+		},
+		ListConnectv1ConnectorPluginsExecuteFunc: func(_ connectv1.ApiListConnectv1ConnectorPluginsRequest) ([]connectv1.InlineResponse2002, *http.Response, error) {
+			return []connectv1.InlineResponse2002{plugin}, nil, nil
+		},
+		ValidateConnectv1ConnectorPluginFunc: func(_ context.Context, _, _, _ string) connectv1.ApiValidateConnectv1ConnectorPluginRequest {
+			return connectv1.ApiValidateConnectv1ConnectorPluginRequest{}
+		},
+		ValidateConnectv1ConnectorPluginExecuteFunc: func(_ connectv1.ApiValidateConnectv1ConnectorPluginRequest) (connectv1.InlineResponse2003, *http.Response, error) {
+			return connectv1.InlineResponse2003{
+				Configs: &[]connectv1.InlineResponse2003Configs{pluginDescribe},
+			}, nil, nil
 		},
 	}
 }
 
 func (suite *ConnectTestSuite) newCmd() *cobra.Command {
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Connect: suite.connectMock, Kafka: suite.kafkaMock}, nil, nil, nil, suite.conf)
+	connectClient := &connectv1.APIClient{
+		ConnectorsV1Api: suite.connectorsMock,
+		LifecycleV1Api:  suite.lifecycleMock,
+		PluginsV1Api:    suite.pluginMock,
+	}
+	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock},
+		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(prerunner)
 }
 
@@ -134,9 +164,8 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.PauseCalled())
-	retVal := suite.connectMock.PauseCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.lifecycleMock.PauseConnectv1ConnectorCalled())
+	req.True(suite.lifecycleMock.PauseConnectv1ConnectorExecuteCalled())
 }
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
@@ -145,9 +174,8 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.ResumeCalled())
-	retVal := suite.connectMock.ResumeCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.lifecycleMock.ResumeConnectv1ConnectorCalled())
+	req.True(suite.lifecycleMock.ResumeConnectv1ConnectorExecuteCalled())
 }
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
@@ -156,19 +184,21 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	retVal := suite.connectMock.DeleteCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.DeleteConnectv1ConnectorCalled())
+	req.True(suite.connectorsMock.DeleteConnectv1ConnectorExecuteCalled())
 }
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"list"})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.ListWithExpansionsCalled())
-	retVal := suite.connectMock.ListWithExpansionsCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.ListConnectv1ConnectorsWithExpansionsCalled())
+	req.True(suite.connectorsMock.ListConnectv1ConnectorsWithExpansionsExecuteCalled())
+	req.Contains(buf.String(), connectorID)
 }
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
@@ -177,31 +207,34 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.GetExpansionByIdCalled())
-	retVal := suite.connectMock.GetExpansionByIdCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.ListConnectv1ConnectorsWithExpansionsCalled())
+	req.True(suite.connectorsMock.ListConnectv1ConnectorsWithExpansionsExecuteCalled())
 }
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.CreateCalled())
-	retVal := suite.connectMock.CreateCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.CreateConnectv1ConnectorCalled())
+	req.True(suite.connectorsMock.CreateConnectv1ConnectorExecuteCalled())
+	req.Contains(buf.String(), connectorID)
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-new-format.json"})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.CreateCalled())
-	retVal := suite.connectMock.CreateCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.CreateConnectv1ConnectorCalled())
+	req.True(suite.connectorsMock.CreateConnectv1ConnectorExecuteCalled())
+	req.Contains(buf.String(), connectorID)
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
@@ -227,34 +260,40 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.connectMock.UpdateCalled())
-	retVal := suite.connectMock.UpdateCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.connectorsMock.CreateOrUpdateConnectv1ConnectorConfigCalled())
+	req.True(suite.connectorsMock.CreateOrUpdateConnectv1ConnectorConfigExecuteCalled())
+	req.Contains(buf.String(), "Updated connector "+connectorID)
 }
 
 func (suite *ConnectTestSuite) TestPluginList() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"plugin", "list"})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
-	req.True(suite.connectMock.GetPluginsCalled())
-	retVal := suite.connectMock.GetPluginsCalls()[0]
-	req.Equal(retVal.Arg1.KafkaClusterId, suite.kafkaCluster.Id)
+	req.True(suite.pluginMock.ListConnectv1ConnectorPluginsCalled())
+	req.True(suite.pluginMock.ListConnectv1ConnectorPluginsExecuteCalled())
+	req.Contains(buf.String(), "DummySink")
 }
 
 func (suite *ConnectTestSuite) TestPluginDescribeConnector() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"plugin", "describe", pluginType})
+	buf := new(bytes.Buffer)
+	cmd.SetOut(buf)
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
-	req.True(suite.connectMock.ValidateCalled())
-	retVal := suite.connectMock.ValidateCalls()[0]
-	req.Equal(retVal.Arg1.Plugin, pluginType)
+	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginCalled())
+	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginExecuteCalled())
+	req.Contains(buf.String(), pluginType)
 }
 
 func TestConnectTestSuite(t *testing.T) {

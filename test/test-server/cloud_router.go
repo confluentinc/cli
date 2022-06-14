@@ -32,13 +32,6 @@ const (
 	invitations         = "/api/invitations"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
-	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-	connectorUpdate     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-	connectors          = "/api/accounts/{env}/clusters/{cluster}/connectors"
-	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
-	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
@@ -87,7 +80,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addClusterRoutes(t)
 	c.addKsqlRoutes(t)
 	c.addUserRoutes(t)
-	c.addConnectorsRoutes(t)
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
 	c.addMetricsQueryRoutes(t)
@@ -145,16 +137,6 @@ func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
 	c.HandleFunc(accounts, c.HandleEnvironments(t))
 	c.HandleFunc(account, c.HandleEnvironment(t))
-}
-
-func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
-	c.HandleFunc(connector, c.HandleConnector())
-	c.HandleFunc(connectors, c.HandleConnectors(t))
-	c.HandleFunc(connectorPause, c.HandleConnectorPause())
-	c.HandleFunc(connectorResume, c.HandleConnectorResume())
-	c.HandleFunc(connectorPlugins, c.HandlePlugins(t))
-	c.HandleFunc(connectCatalog, c.HandleConnectCatalog(t))
-	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate())
 }
 
 func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {

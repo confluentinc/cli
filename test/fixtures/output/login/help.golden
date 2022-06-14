@@ -1,8 +1,22 @@
-Log in to Confluent Cloud using your email and password, or non-interactively using the `CONFLUENT_CLOUD_EMAIL` and `CONFLUENT_CLOUD_PASSWORD` environment variables.
+Confluent Cloud:
+
+Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.
+
+Email and password login can be accomplished non-interactively using the `CONFLUENT_CLOUD_EMAIL` and `CONFLUENT_CLOUD_PASSWORD` environment variables.
+
+Email and password can also be stored locally for non-interactive re-authentication with the `--save` flag.
+
+SSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.
 
 Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `CONFLUENT_CLOUD_ORGANIZATION_ID`.
 
-Log in to Confluent Platform with your username and password, or non-interactively using `CONFLUENT_PLATFORM_USERNAME`, `CONFLUENT_PLATFORM_PASSWORD`, `CONFLUENT_PLATFORM_MDS_URL`, and `CONFLUENT_PLATFORM_CA_CERT_PATH`. In a non-interactive login, `CONFLUENT_PLATFORM_MDS_URL` replaces the `--url` flag, and `CONFLUENT_PLATFORM_CA_CERT_PATH` replaces the `--ca-cert-path` flag.
+Confluent Platform:
+
+Log in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.
+
+Login can be accomplished non-interactively using the `CONFLUENT_PLATFORM_USERNAME`, `CONFLUENT_PLATFORM_PASSWORD`, `CONFLUENT_PLATFORM_MDS_URL`, and `CONFLUENT_PLATFORM_CA_CERT_PATH` environment variables.
+
+In a non-interactive login, `CONFLUENT_PLATFORM_MDS_URL` replaces the `--url` flag, and `CONFLUENT_PLATFORM_CA_CERT_PATH` replaces the `--ca-cert-path` flag.
 
 Even with the environment variables set, you can force an interactive login using the `--prompt` flag.
 

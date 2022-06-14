@@ -21,7 +21,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	opv1 "github.com/confluentinc/cc-structs/operator/v1"
 	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
@@ -36,6 +35,21 @@ var (
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+
+	RegularOrg = &orgv1.Organization{
+		Id:   321,
+		Name: "test-org",
+	}
+	SuspendedOrg = func(eventType orgv1.SuspensionEventType) *orgv1.Organization {
+		return &orgv1.Organization{
+			Id:   321,
+			Name: "test-org",
+			SuspensionStatus: &orgv1.SuspensionStatus{
+				Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+				EventType: eventType,
+			},
+		}
+	}
 )
 
 const (
@@ -105,6 +119,9 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 		case "suspended@user.com":
 			w.WriteHeader(http.StatusForbidden)
 			res.Error = &corev1.Error{Message: errors.SuspendedOrganizationSuggestions}
+		case "end-of-free-trial-suspended@user.com":
+			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+			res.Organization = SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
@@ -113,6 +130,7 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 			res.Token = "invalid"
 		default:
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
+			res.Organization = RegularOrg
 		}
 
 		err = json.NewEncoder(w).Encode(res)
@@ -665,159 +683,6 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
-	}
-}
-
-// Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-func (c *CloudRouter) HandleConnector() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-//Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-func (c *CloudRouter) HandleConnectorPause() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-//Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-func (c *CloudRouter) HandleConnectorResume() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-// Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors"
-func (c *CloudRouter) HandleConnectors(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["env"]
-		clusterId := vars["cluster"]
-		if r.Method == http.MethodGet {
-			connectorExpansion := &opv1.ConnectorExpansion{
-				Id: &opv1.ConnectorId{Id: "lcc-123"},
-				Info: &opv1.ConnectorInfo{
-					Name:   "az-connector",
-					Type:   "Sink",
-					Config: map[string]string{},
-				},
-				Status: &opv1.ConnectorStateInfo{Name: "az-connector", Connector: &opv1.ConnectorState{State: "Running"},
-					Tasks: []*opv1.TaskState{{Id: 1, State: "Running"}},
-				}}
-			listReply, err := json.Marshal(map[string]*opv1.ConnectorExpansion{"lcc-123": connectorExpansion})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodPost {
-			var request opv1.ConnectorInfo
-			err := utilv1.UnmarshalJSON(r.Body, &request)
-			require.NoError(t, err)
-			connector1 := &schedv1.Connector{
-				Name:           request.Name,
-				KafkaClusterId: clusterId,
-				AccountId:      envId,
-				UserConfigs:    request.Config,
-				Plugin:         request.Config["connector.class"],
-			}
-			reply, err := utilv1.MarshalJSONToBytes(connector1)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors-plugins"
-func (c *CloudRouter) HandlePlugins(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			connectorPlugin1 := &opv1.ConnectorPluginInfo{
-				Class: "GcsSink",
-				Type:  "Sink",
-			}
-			connectorPlugin2 := &opv1.ConnectorPluginInfo{
-				Class: "AzureBlobSink",
-				Type:  "Sink",
-			}
-			listReply, err := json.Marshal([]*opv1.ConnectorPluginInfo{connectorPlugin1, connectorPlugin2})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
-func (c *CloudRouter) HandleConnectCatalog(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		configInfos := &opv1.ConfigInfos{
-			Name:       "",
-			Groups:     nil,
-			ErrorCount: 1,
-			Configs: []*opv1.Configs{
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "kafka.api.key",
-						Errors: []string{"\"kafka.api.key\" is required"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "kafka.api.secret",
-						Errors: []string{"\"kafka.api.secret\" is required"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "topics",
-						Errors: []string{"\"topics\" is required"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "data.format",
-						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "gcs.credentials.config",
-						Errors: []string{"\"gcs.credentials.config\" is required"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "gcs.bucket.name",
-						Errors: []string{"\"gcs.bucket.name\" is required"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "time.interval",
-						Errors: []string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"},
-					},
-				},
-				{
-					Value: &opv1.ConfigValue{
-						Name:   "tasks.max",
-						Errors: []string{"\"tasks.max\" is required"},
-					},
-				},
-			},
-		}
-		reply, err := json.Marshal(configInfos)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
-		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-func (c *CloudRouter) HandleConnectUpdate() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

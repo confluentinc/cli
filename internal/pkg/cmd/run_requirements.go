@@ -13,34 +13,13 @@ const (
 	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireCloudLogin                       = "cloud-login"
+	RequireCloudLoginAllowFreeTrialEnded    = "cloud-login-allow-free-trial-ended"
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
 	RequireOnPremLogin                      = "on-prem-login"
 	RequireUpdatesEnabled                   = "updates-enabled"
 )
 
-const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
-
 var (
-	requireCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
-	)
-	requireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
-		"you must log in to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
-	)
-	requireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
-	)
-	requireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
-	)
-	requireOnPremLoginErr = errors.NewErrorWithSuggestions(
-		"you must log in to Confluent Platform to use this command",
-		`Log in with "confluent login --url <mds-url>".`,
-	)
 	requireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
 		"you must enable updates to use this command",
 		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
@@ -57,24 +36,28 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
-			if !cfg.IsCloudLogin() {
-				return requireCloudLoginErr
+			if err := cfg.CheckIsCloudLogin(); err != nil {
+				return err
+			}
+		case RequireCloudLoginAllowFreeTrialEnded:
+			if err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
+				return err
 			}
 		case RequireCloudLoginOrOnPremLogin:
-			if !(cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireCloudLoginOrOnPremErr
+			if err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin()) {
-				return requireNonAPIKeyCloudLoginErr
+			if err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
+				return err
 			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			if !(cfg.CredentialType() != v1.APIKey && cfg.IsCloudLogin() || cfg.IsOnPremLogin()) {
-				return requireNonAPIKeyCloudLoginOrOnPremLoginErr
+			if err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireOnPremLogin:
-			if !cfg.IsOnPremLogin() {
-				return requireOnPremLoginErr
+			if err := cfg.CheckIsOnPremLogin(); err != nil {
+				return err
 			}
 		case RequireUpdatesEnabled:
 			if cfg.DisableUpdates {
@@ -90,6 +73,8 @@ func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin:
+			return true
+		case RequireCloudLoginAllowFreeTrialEnded:
 			return true
 		case RequireNonAPIKeyCloudLogin:
 			return true
