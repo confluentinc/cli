@@ -46,6 +46,7 @@ blocks:
             - cat script.sh
             - source script.sh
             - rm script.sh
+            - chmod 400 ~/.ssh/id_rsa
 
             - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
             - cat script.sh
@@ -62,17 +63,16 @@ blocks:
             - source script.sh
             - rm script.sh
           
-            - chmod 400 ~/.ssh/id_rsa
-            - echo $GOPATH
             - export "GOPATH=$(go env GOPATH)"
             - echo $GOPATH
             - export "PATH=${GOPATH}/bin:${PATH}"
             
-            - make deps
             - export GOPRIVATE=github.com/confluentinc
-            - make build
-            - make lint
-            - make test
+            - go get github.com/confluentinc/bincover
+#            - make deps
+#            - make build
+#            - make lint
+#            - make test
 
 after_pipeline:
   task:
