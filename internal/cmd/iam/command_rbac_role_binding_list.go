@@ -244,7 +244,7 @@ func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 	return userToEmailMap, nil
 }
 
-func (c *roleBindingCommand) serviceAccountIdToNameMap() (map[string]string, error) {
+func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
