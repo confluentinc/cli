@@ -139,7 +139,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
+func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
@@ -242,6 +242,19 @@ func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 		userToEmailMap["User:"+u.ResourceId] = u.Email
 	}
 	return userToEmailMap, nil
+}
+
+func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	serviceAccountToNameMap := make(map[string]string)
+	for _, u := range users {
+		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
+	}
+	return serviceAccountToNameMap, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -282,24 +295,42 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
 	if err != nil {
 		return err
 	}
 
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName"}, []string{"Principal", "Email", "Service Name"}, []string{"principal", "email", "service_name"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
 		if email, ok := userToEmailMap[principal]; ok {
 			displayStruct := &struct {
-				Principal string
-				Email     string
+				Principal   string
+				Email       string
+				ServiceName string
 			}{
-				Principal: principal,
-				Email:     email,
+				Principal:   principal,
+				Email:       email,
+				ServiceName: "",
+			}
+			outputWriter.AddElement(displayStruct)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			displayStruct := &struct {
+				Principal   string
+				Email       string
+				ServiceName string
+			}{
+				Principal:   principal,
+				ServiceName: name,
 			}
 			outputWriter.AddElement(displayStruct)
 		}
