@@ -27,6 +27,7 @@ blocks:
         - name: Build & Lint
           commands:
             # Install Vault
+            # TODO: Cache vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
             - chmod +x vault
@@ -39,17 +40,13 @@ blocks:
             # Execute Vault scripts
             - cd ~
             
-            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
-            - source script.sh
-            - rm script.sh
-            
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
             - rm script.sh
 
-            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
-            - source script.sh
-            - rm script.sh
+#            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
+#            - source script.sh
+#            - rm script.sh
 
             - cd -
             
@@ -63,6 +60,7 @@ blocks:
             - export GOPRIVATE=github.com/confluentinc
 
             - cache restore
+            # TODO: Cache deps
             - make deps
             - make build
             - cache store
