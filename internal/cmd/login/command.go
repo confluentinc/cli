@@ -3,6 +3,7 @@ package login
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -12,7 +13,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -139,27 +139,35 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		c.printRemainingFreeCredit(cmd, client)
+		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client) {
-	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+	org := &orgv1.Organization{Id: currentOrg.Id}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
 		return
 	}
 
-	// only print remaining free credit if there is any unexpired promo code
-	if len(promoCodes) != 0 {
-		var remainingFreeCredit int64
-		for _, promoCode := range promoCodes {
-			remainingFreeCredit += promoCode.Balance
+	// aggregate remaining free credit
+	var remainingFreeCredit int64
+	for _, promoCode := range promoCodes {
+		remainingFreeCredit += promoCode.Balance
+	}
+
+	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
+	if remainingFreeCredit > 0 {
+		card, err := client.Billing.GetPaymentInfo(context.Background(), org)
+		if err != nil {
+			log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+			return
 		}
-		if remainingFreeCredit > 0 {
+
+		if card == nil {
 			utils.ErrPrintf(cmd, errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
 		}
 	}
