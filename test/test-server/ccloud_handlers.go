@@ -218,10 +218,14 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD") != "false"
+			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
+
 			var res orgv1.GetPaymentInfoReply
 
-			if hasPaymentMethod {
+			switch hasPaymentMethod {
+			case "false":
+				res = orgv1.GetPaymentInfoReply{}
+			default:
 				res = orgv1.GetPaymentInfoReply{
 					Card: &orgv1.Card{
 						Cardholder: "Miles Todzo",
@@ -235,8 +239,6 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 					},
 					Error: nil,
 				}
-			} else {
-				res = orgv1.GetPaymentInfoReply{}
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -273,34 +275,52 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS") != "false"
+			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
+
 			var res *billingv1.GetPromoCodeClaimsReply
 
-			if hasPromoCodeClaims {
-				var tenDollars int64 = 10 * 10000
+			var tenDollars int64 = 10 * 10000
 
-				// The time is set to noon so that all time zones display the same local time
-				date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
-				expiration := &types.Timestamp{Seconds: date.Unix()}
+			// The time is set to noon so that all time zones display the same local time
+			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
+			expiration := &types.Timestamp{Seconds: date.Unix()}
 
-				res = &billingv1.GetPromoCodeClaimsReply{
-					Claims: []*billingv1.PromoCodeClaim{
-						{
-							Code:                 "PROMOCODE1",
-							Amount:               tenDollars,
-							Balance:              tenDollars,
-							CreditExpirationDate: expiration,
-						},
-						{
-							Code:                 "PROMOCODE2",
-							Balance:              tenDollars,
-							Amount:               tenDollars,
-							CreditExpirationDate: expiration,
-						},
+			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
+				Claims: []*billingv1.PromoCodeClaim{
+					{
+						Code:                 "FREETRIAL400",
+						Amount:               400 * 10000,
+						Balance:              0,
+						CreditExpirationDate: expiration,
 					},
-				}
-			} else {
+				}}
+
+			regularCodes := &billingv1.GetPromoCodeClaimsReply{
+				Claims: []*billingv1.PromoCodeClaim{
+					{
+						Code:                 "PROMOCODE1",
+						Amount:               tenDollars,
+						Balance:              tenDollars,
+						CreditExpirationDate: expiration,
+					},
+					{
+						Code:                 "PROMOCODE2",
+						Balance:              tenDollars,
+						Amount:               tenDollars,
+						CreditExpirationDate: expiration,
+					},
+				}}
+
+			switch hasPromoCodeClaims {
+			case "false":
 				res = &billingv1.GetPromoCodeClaimsReply{}
+			case "onlyFreeTrialCode":
+				res = freeTrialCode
+			case "multiCodes":
+				res = &billingv1.GetPromoCodeClaimsReply{}
+				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
+			default:
+				res = regularCodes
 			}
 
 			listReply, err := utilv1.MarshalJSONToBytes(res)

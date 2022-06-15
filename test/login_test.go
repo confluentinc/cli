@@ -38,40 +38,56 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		os.Setenv("HAS_PAYMENT_METHOD", "true")
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+
 		output := runCommand(tt, testBin, env, args, 0)
 		s.Contains(output, loggedInAsWithOrgOutput)
 		s.Contains(output, loggedInEnvOutput)
 		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+
+		os.Unsetenv("HAS_PAYMENT_METHOD")
+		os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
 	})
 
 	s.T().Run("good organization with payment method and no codes login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		os.Setenv("HAS_PAYMENT_METHOD", "true")
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+
 		output := runCommand(tt, testBin, env, args, 0)
-		s.Contains(output, loggedInAsWithOrgOutput)
-		s.Contains(output, loggedInEnvOutput)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
 		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+
+		os.Unsetenv("HAS_PAYMENT_METHOD")
+		os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
 	})
 
 	s.T().Run("good organization without payment method and has codes login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		os.Setenv("HAS_PAYMENT_METHOD", "false")
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+
 		output := runCommand(tt, testBin, env, args, 0)
-		s.Contains(output, loggedInAsWithOrgOutput)
-		s.Contains(output, loggedInEnvOutput)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
 		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+
+		os.Unsetenv("HAS_PAYMENT_METHOD")
+		os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
 	})
 
 	s.T().Run("good organization without payment method and no codes login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		os.Setenv("HAS_PAYMENT_METHOD", "false")
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+
 		output := runCommand(tt, testBin, env, args, 0)
-		s.Contains(output, loggedInAsWithOrgOutput)
-		s.Contains(output, loggedInEnvOutput)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
 		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+
+		os.Unsetenv("HAS_PAYMENT_METHOD")
+		os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
 	})
 
 	s.T().Run("suspended organization login", func(tt *testing.T) {
