@@ -497,13 +497,11 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
 
-	// resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
-	// if err != nil {
-	// 	return err
-	// }
-	// roleBindings := resp.Data
-
-	roleBindings, _ := c.V2Client.ListIamRoleBindings(*listRoleBinding.CrnPattern, *listRoleBinding.Principal, *listRoleBinding.RoleName)
+	resp, _, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
+	if err != nil {
+		return err
+	}
+	roleBindings := resp.Data
 
 	userToEmailMap, err := c.userIdToEmailMap()
 	if err != nil {
@@ -593,7 +591,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
 	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern) // +"/*"? can it be prefixed? add a prefix flag for LIST?
 
-	resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
+	resp, _, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
 		return err
 	}

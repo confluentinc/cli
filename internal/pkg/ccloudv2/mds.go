@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -34,51 +33,10 @@ func (c *Client) DeleteIamRoleBinding(id string) (mdsv2.IamV2RoleBinding, *http.
 	return c.MdsClient.RoleBindingsIamV2Api.DeleteIamV2RoleBindingExecute(req)
 }
 
-func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]mdsv2.IamV2RoleBinding, error) {
-	roleBindings := make([]mdsv2.IamV2RoleBinding, 0)
-
-	collectedAllRoleBindings := false
-	pageToken := ""
-	for !collectedAllRoleBindings {
-		roleBindingList, _, err := c.executeListRoleBindings(pageToken, crnPattern, principal, roleName)
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println("we got", len(roleBindingList.Data), "on this page")
-		roleBindings = append(roleBindings, roleBindingList.GetData()...)
-
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := roleBindingList.GetMetadata().Next
-		pageToken, collectedAllRoleBindings, err = extractMdsNextPagePageToken(nextPageUrlStringNullable)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return roleBindings, nil
-}
-
-func (c *Client) executeListRoleBindings(pageToken, crnPattern, principal, roleName string) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-	req := c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern)
-	if principal != "" {
-		req = req.Principal(principal)
-	}
-	if roleName != "" {
-		req = req.RoleName(roleName)
-	}
-
-	req = req.PageSize(ccloudV2ListPageSize)
-
-	if pageToken != "" {
-		req = req.PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	}
-	return c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
-}
-
-func (c *Client) ListIamRoleBindingsNaive(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-	crnPattern := *iamV2RoleBinding.CrnPattern
+func (c *Client) ListIamRoleBindings(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
 	principal := *iamV2RoleBinding.Principal
 	roleName := *iamV2RoleBinding.RoleName
-	req := c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern)
+	req := c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(*iamV2RoleBinding.CrnPattern)
 	if principal != "" {
 		req = req.Principal(principal)
 	}

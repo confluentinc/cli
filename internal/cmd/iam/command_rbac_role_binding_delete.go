@@ -85,7 +85,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 
 func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) (*http.Response, error) {
 	fmt.Println(*deleteRoleBinding.CrnPattern)
-	resp, httpResp, err := c.V2Client.ListIamRoleBindingsNaive(deleteRoleBinding)
+	resp, httpResp, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding)
 	if err != nil {
 		return httpResp, err
 	}

@@ -9,7 +9,6 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -19,7 +18,7 @@ import (
 
 const (
 	pageTokenQueryParameter = "page_token"
-	ccloudV2ListPageSize    = 10
+	ccloudV2ListPageSize    = 100
 )
 
 var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
@@ -79,16 +78,6 @@ func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString)
 	nextPageUrlString := *nextPageUrlStringNullable.Get()
 	pageToken, err := extractPageToken(nextPageUrlString)
 	return pageToken, false, err
-}
-
-func extractMdsNextPagePageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		return pageToken, false, err
-	} else {
-		return "", true, nil
-	}
 }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
