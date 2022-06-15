@@ -141,6 +141,18 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
+func CatchQuotaExceedError(err error, body []byte) error {
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
+	}
+	return err
+}
+
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
@@ -182,16 +194,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
-		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
-		}
-	}
-
-	return err
+	return CatchQuotaExceedError(err, body)
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string) error {
@@ -227,16 +230,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
-		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
-		}
-	}
-
-	return err
+	return CatchQuotaExceedError(err, body)
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {

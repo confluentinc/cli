@@ -3,6 +3,8 @@ package apikey
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
@@ -99,9 +101,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 			key.Spec.Resource.Id = "cloud"
 		}
 
-		v2Key, _, err := c.V2Client.CreateApiKey(key)
+		v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 		if err != nil {
-			return c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
+			return c.catchServiceAccountNotValidError(err, httpResp, clusterId, ownerResourceId)
 		}
 
 		userKey = &v1.APIKeyPair{
@@ -154,7 +156,7 @@ func (c *command) createV1(ownerResourceId, clusterId, resourceType, description
 		Key:    schedv1ApiKey.Key,
 		Secret: schedv1ApiKey.Secret,
 	}
-	return displayKey, c.catchServiceAccountNotValidError(err, clusterId, ownerResourceId)
+	return displayKey, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
 }
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
@@ -188,12 +190,12 @@ func (c *command) getCurrentUserId() (string, error) {
 			return user.ResourceId, nil
 		}
 	}
-	return "", fmt.Errorf("Unable to find authenticated user")
+	return "", fmt.Errorf("unable to find authenticated user")
 }
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
-func (c *command) catchServiceAccountNotValidError(err error, clusterId, serviceAccountId string) error {
+func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, clusterId, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
@@ -209,5 +211,10 @@ func (c *command) catchServiceAccountNotValidError(err error, clusterId, service
 		}
 	}
 
-	return err
+	if r == nil {
+		return err
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	return errors.CatchQuotaExceedError(err, body)
 }
