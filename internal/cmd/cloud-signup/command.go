@@ -3,6 +3,7 @@ package cloudsignup
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	"os"
 	"strings"
 
@@ -20,6 +21,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+const (
+	freeTrialPromoCode       = "FREETRIAL400"
+	freeTrialPromoCodeAmount = 4000000
 )
 
 type command struct {
@@ -170,7 +176,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 
-		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
+		utils.Print(cmd, errors.CloudSignUpMsg)
 
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
@@ -184,7 +190,40 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return nil
 		}
 
+		c.printFreeTrialAnnouncement(cmd, authorizedClient, currentOrg)
+
 		utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, fEmailName.Responses["email"].(string), currentOrg.ResourceId, currentOrg.Name)
 		return nil
+	}
+}
+
+func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+	// sanity check that org is not suspended
+	orgSuspended := c.Config.IsOrgSuspended()
+
+	if !orgSuspended {
+		org := &orgv1.Organization{Id: currentOrg.Id}
+		promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+		if err != nil {
+			log.CliLogger.Warnf("Failed to print free trial announcement: %v", err)
+			return
+		}
+
+		// try to find free trial $400 promo code
+		var hasFreeTrialCode bool
+		for _, promoCode := range promoCodes {
+			if promoCode.Code == freeTrialPromoCode && promoCode.Amount == freeTrialPromoCodeAmount {
+				hasFreeTrialCode = true
+				break
+			}
+		}
+
+		if hasFreeTrialCode {
+			utils.Printf(cmd, errors.FreeTrialSignUpMsg, admin.ConvertToUSD(freeTrialPromoCodeAmount))
+		} else {
+			log.CliLogger.Warn("Failed to print free trial announcement: failed to find free trial promo code")
+		}
+	} else {
+		log.CliLogger.Warn("Failed to print free trial announcement: org is suspended")
 	}
 }
