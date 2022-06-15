@@ -18,7 +18,7 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.1.0"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	asyncapi2 "github.com/confluentinc/cli/internal/pkg/asyncapi"
+	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -77,13 +77,13 @@ type SecurityConfigsSR struct {
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Create AsyncAPI spec for the Kafka cluster.",
+		Short: "Create an AsyncAPI specification for a Kafka cluster.",
 	}
 	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.RunE = c.export
 	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka Binding.")
-	c.Flags().Bool("consume-examples", false, "Consume Messages from Topics for populating Examples.")
+	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
+	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	return c.Command
@@ -98,7 +98,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	getExamples, err := cmd.Flags().GetBool("consume-examples")
+	consumeExamples, err := cmd.Flags().GetBool("consume-examples")
 	if err != nil {
 		return err
 	}
@@ -110,29 +110,33 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	//For getting Kafka cluster details and Broker URL
+	//For getting Kafka cluster details and broker URL
 	cluster, topics, clusterCreds, broker, err := getClusterDetails(c)
 	if err != nil {
 		return err
 	}
 	//Creating Consumer
 	var consumer *kafka.Consumer
-	if getExamples {
+	if consumeExamples {
 		consumer, err = createConsumer(broker, clusterCreds, groupId)
 		if err != nil {
 			return err
 		}
+		defer func(consumer *kafka.Consumer) {
+			err := consumer.Close()
+			if err != nil {
+				log.CliLogger.Warnf("Error in closing the consumer. %v", err)
+			}
+		}(consumer)
 	}
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
 		return fmt.Errorf("unable to get schema registry cluster: %s", err)
 	}
-
 	if apiKey == "" && apiSecret == "" && schemaCluster.SrCredentials != nil {
 		apiKey = schemaCluster.SrCredentials.Key
 		apiSecret = schemaCluster.SrCredentials.Secret
 	}
-
 	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, apiKey, apiSecret)
 	if err != nil {
 		return nil
@@ -149,9 +153,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
 	log.CliLogger.Debug("Generating AsyncAPI Spec...")
-
 	messages := make(map[string]spec.Message)
 	for idx := 0; idx < len(topics); idx++ {
 		//For a given topic
@@ -182,58 +184,46 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				if err != nil {
 					return err
 				}
-				reflector, err = AddMessage(reflector, topics[idx].Name, contentType, tags, getExamples, consumer, msgBindings, bindings, opBindings, messages, producer, mapOfMessageCompat)
+				reflector, err = AddMessage(reflector, topics[idx].Name, contentType, tags, consumeExamples, consumer, msgBindings, bindings, opBindings, messages, producer, mapOfMessageCompat)
 				if err != nil {
 					return err
 				}
 			}
 		}
 	}
-
 	//Components
 	reflector, err = AddComponents(reflector, messages)
 	if err != nil {
 		return err
-	}
-	if getExamples {
-		err = consumer.Close()
-		if err != nil {
-			log.CliLogger.Warn("Error in Closing the Consumer.")
-			return err
-		}
 	}
 	//Convert reflector to YAML File
 	yaml, err := reflector.Schema.MarshalYAML()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("\nSpec generated in file %s in current folder.\n", file)
-	err = ioutil.WriteFile(file, yaml, 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	fmt.Printf("AsyncAPI specification file generated at %s.\n", file)
+	return ioutil.WriteFile(file, yaml, 0644)
 }
 
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
-	body := asyncapi2.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
-	var tag []TagsFromId
-	err := json.Unmarshal(body, &tag)
+	body := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
+	var tagsFromId []TagsFromId
+	err := json.Unmarshal(body, &tagsFromId)
 	if err != nil {
 		return nil, err
 	}
-	var tags []spec.Tag
-	for j := 0; j < len(tag); j++ {
-		body := asyncapi2.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tag[j].TypeName, apiKey, apiSecret)
+	var tagsInSpec []spec.Tag
+	for j := 0; j < len(tagsFromId); j++ {
+		body := pasyncapi.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tagsFromId[j].TypeName, apiKey, apiSecret)
 		var tagDef TagDef
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
 			fmt.Println("Error in Unmarshalling tags")
 			return nil, err
 		}
-		tags = append(tags, spec.Tag{Name: tag[j].TypeName, Description: tagDef.Description})
+		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tagsFromId[j].TypeName, Description: tagDef.Description})
 	}
-	return tags, nil
+	return tagsInSpec, nil
 }
 
 func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}, error) {
@@ -242,29 +232,26 @@ func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}
 		log.CliLogger.Warn("Error in example: Subscribing to the topic")
 		return nil, err
 	}
-	message, err := consumer.ReadMessage(10000 * time.Millisecond)
+	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
 		fmt.Printf("No example received for topic %s\n", topicName)
 		return nil, err
-	} else {
-		var example interface{}
-		val := string(message.Value)
-		val = val[strings.IndexRune(val, '{'):]
-		err = json.Unmarshal([]byte(val), &example)
-		if err != nil {
-			fmt.Printf("Example received for topic %s is not a valid JSON for unmarshalling.\n", topicName)
-			return nil, err
-		} else {
-			return example, nil
-		}
 	}
+	var example interface{}
+	val := string(message.Value)
+	val = val[strings.IndexRune(val, '{'):]
+	err = json.Unmarshal([]byte(val), &example)
+	if err != nil {
+		fmt.Printf("Example received for topic %s is not a valid JSON for unmarshalling.\n", topicName)
+		return nil, err
+	}
+	return example, nil
 }
 
 func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, clusterCreds *v1.APIKeyPair, groupId string) (interface{}, interface{}, interface{}, error) {
 	var binding ConfluentBinding
-	//Cleanup Policy
 	var CleanupPolicy TopicConfigs
-	body := asyncapi2.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	body := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if body == nil {
 		CleanupPolicy.Name = "cleanup.policy"
 		CleanupPolicy.Value = "delete"
@@ -278,7 +265,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	//DeleteRetentionMs
 	var DeleteRetentionMs TopicConfigs
 
-	body = asyncapi2.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	body = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if body == nil {
 		//for tests
 		DeleteRetentionMs.Name = "delete.retention.ms"

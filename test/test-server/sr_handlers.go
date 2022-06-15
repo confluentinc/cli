@@ -98,7 +98,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 					Version:    1,
 					Id:         1,
 					SchemaType: "avro",
-					Schema:     "{\"doc\":\"Sample schema to help you get started.\",\"fields\":[{\"doc\":\"The int type is a 32-bit signed integer.\",\"name\":\"my_field1\",\"type\":\"int\"},{\"doc\":\"The double type is a double precision(64-bit) IEEE754 floating-point number.\",\"name\":\"my_field2\",\"type\":\"double\"},{\"doc\":\"The string is a unicode character sequence.\",\"name\":\"my_field3\",\"type\":\"string\"}],\"name\":\"sampleRecord\",\"namespace\":\"com.mycorp.mynamespace\",\"type\":\"record\"}",
+					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision (64-bit) IEEE 754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
 				})
 				require.NoError(t, err)
 			} else {

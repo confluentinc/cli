@@ -6,11 +6,10 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-
 	"github.com/client9/gospell"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
