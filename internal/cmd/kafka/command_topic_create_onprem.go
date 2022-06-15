@@ -60,22 +60,22 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
-	topicConfigStrings, err := cmd.Flags().GetStringSlice("config")
-	if err != nil {
-		return err
-	}
 	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
 	}
 
-	topicConfigsMap, err := properties.ToMap(topicConfigStrings)
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+	configMap, err := properties.ConfigFlagToMap(configs)
+	if err != nil {
+		return err
+	}
+	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 	i := 0
-	for k, v := range topicConfigsMap {
+	for k, v := range configMap {
 		v2 := v // create a local copy to use pointer
 		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 			Name:  k,
