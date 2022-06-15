@@ -75,9 +75,7 @@ blocks:
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export GOPRIVATE=github.com/confluentinc
 
-            - make deps
-            - make lint
-            
+            - cache restore
             - make build
             - cache store
   
@@ -88,6 +86,10 @@ blocks:
           - checkout
           - cache restore
       jobs:
+#        - name: Lint
+#          commands:
+#            - make deps
+#            - make lint
         - name: Test
           commands:
             - make test
