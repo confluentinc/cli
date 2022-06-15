@@ -10,12 +10,13 @@ execution_time_limit:
   hours: 2
 
 blocks:
-  - name: Build
+  - name: Build & Lint
     task:
       prologue:
-        - checkout
+        commands:
+          - checkout
       jobs:
-        - name: Build
+        - name: Build & Lint
           commands:
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
