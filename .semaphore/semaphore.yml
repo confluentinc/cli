@@ -76,6 +76,7 @@ blocks:
             - export GOPRIVATE=github.com/confluentinc
 
             - cache restore
+            - make deps
             - make build
             - cache store
   
@@ -84,6 +85,9 @@ blocks:
       prologue:
         commands:
           - checkout
+          - sem-version go 1.17.6
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
+          # TODO: GOROOT?
           - cache restore
       jobs:
 #        - name: Lint
