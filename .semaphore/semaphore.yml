@@ -12,15 +12,11 @@ execution_time_limit:
 blocks:
   - name: Build
     task:
-      secrets:
-        - name: vault_sem2_approle
+      prologue:
+        - checkout
       jobs:
         - name: Build
           commands:
-            - checkout
-              
-            - pwd
-            
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
@@ -33,6 +29,7 @@ blocks:
             
             # Execute Vault scripts
             - cd ~
+            
             - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
             - cat script.sh
             - source script.sh
@@ -68,8 +65,10 @@ blocks:
             - sem-version go 1.17.6
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export GOPRIVATE=github.com/confluentinc
-            
+
             - make deps
+            - make lint
+            
             - make build
             - cache store
   
@@ -79,12 +78,7 @@ blocks:
         commands:
           - checkout
           - cache restore
-          - sem-version go 1.17.6
-          - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
-        - name: Lint
-          commands:
-            - make lint
         - name: Test
           commands:
             - make test
