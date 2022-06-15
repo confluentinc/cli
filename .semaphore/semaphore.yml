@@ -26,12 +26,6 @@ blocks:
             - cache restore
             # TODO: Exit job if restore was successful
              
-            - checkout
-            
-            # Set up Go
-            - sem-version go 1.17.6
-            - export "PATH=$(go env GOPATH)/bin:${PATH}"
-            
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
@@ -52,6 +46,11 @@ blocks:
             - chmod 400 ~/.ssh/id_rsa
             
             # Download Go dependencies
+            - checkout
+            
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
