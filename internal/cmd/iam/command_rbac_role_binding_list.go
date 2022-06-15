@@ -245,11 +245,12 @@ func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) serviceAccountIdToNameMap() (map[string]string, error) {
-	serviceAccountToNameMap := make(map[string]string)
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
-		return serviceAccountToNameMap, err
+		return nil, err
 	}
+	
+	serviceAccountToNameMap := make(map[string]string)
 	for _, u := range users {
 		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
 	}
