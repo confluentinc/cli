@@ -6,8 +6,16 @@ agent:
     type: e1-standard-2
     os_image: ubuntu2004
 
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  secrets:
+    - name: vault_sem2_approle
+
 execution_time_limit:
-  hours: 2
+  hours: 1
 
 blocks:
   - name: Build & Lint
