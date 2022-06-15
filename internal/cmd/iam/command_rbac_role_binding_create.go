@@ -2,7 +2,6 @@ package iam
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -62,7 +61,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	createRoleBinding, err := c.parseRoleBinding(cmd) // v2 usage
+	createRoleBinding, err := c.parseV2RoleBinding(cmd) // v2 usage
 	if err != nil {
 		return err
 	}
@@ -74,15 +73,18 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 
 	var httpResp *http.Response
 	if isCloud {
-		// resp, err = c.ccloudCreate(options)
-		_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
-		b, _ := io.ReadAll(httpResp.Body)
-		fmt.Println(string(b))
+		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
+			fmt.Println("explicit: calling alpha v1")
+			httpResp, err = c.ccloudCreate(options)
+		} else {
+			fmt.Println("explicit: calling v2")
+			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
+		}
 	} else {
 		httpResp, err = c.confluentCreate(options)
 	}
 	if err != nil {
-		return err
+		return errors.CatchRequestNotValidMessageError(err, httpResp)
 	}
 
 	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {

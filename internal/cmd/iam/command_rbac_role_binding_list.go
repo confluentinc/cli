@@ -96,6 +96,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
+	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -108,13 +109,15 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listRoleBinding, err := c.parseRoleBinding(cmd)
+	listRoleBinding, err := c.parseV2RoleBinding(cmd)
 	if err != nil {
 		return err
 	}
 
 	if c.cfg.IsCloudLogin() {
+		fmt.Println("calling v2")
 		c.ccloudListV2(cmd, listRoleBinding)
+		fmt.Println("calling v1")
 		return c.ccloudList(cmd, options)
 	} else {
 		return c.confluentList(cmd, options)
@@ -277,10 +280,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		if err != nil {
 			return err
 		}
-		err = c.validateRoleAndResourceTypeV2(role, resource.ResourceType)
-		if err != nil {
-			return err
-		}
+		// TODO: skip validateRoleAndResourceTypeV2 before migrating to v2 role api
 		principals, _, err = c.MDSv2Client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
 			c.createContext(),
 			role,
@@ -497,11 +497,13 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
 
-	resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
-	if err != nil {
-		return err
-	}
-	roleBindings := resp.Data
+	// resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
+	// if err != nil {
+	// 	return err
+	// }
+	// roleBindings := resp.Data
+
+	roleBindings, _ := c.V2Client.ListIamRoleBindings(*listRoleBinding.CrnPattern, *listRoleBinding.Principal, *listRoleBinding.RoleName)
 
 	userToEmailMap, err := c.userIdToEmailMap()
 	if err != nil {
@@ -547,9 +549,6 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 				envName = content
 			case "cloud-cluster":
 				cloudClusterName = content
-			case "connector":
-				clusterType = "Connect"
-				logicalCluster = content
 			case "ksql":
 				clusterType = "ksqlDB"
 				logicalCluster = content
@@ -559,16 +558,18 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 			case "kafka":
 				clusterType = "Kafka"
 				logicalCluster = content
+				resourceType = "Cluster"
+				resourceName = "kafka-cluster"
+				patternType = literalPatternType
 			default:
-				resourceType = prefix
-				resourceName = content
-				if strings.HasSuffix(content, "*") {
-					patternType = prefixedPatternType
-					resourceName = strings.TrimSuffix(resourceName, "*")
-				} else {
-					patternType = literalPatternType
-				}
+				resourceType = strings.Title(prefix)
+				resourceName = strings.TrimSuffix(content, "*")
+				patternType = literalPatternType
 			}
+		}
+
+		if strings.Contains(crnPattern, "*") {
+			patternType = prefixedPatternType
 		}
 
 		outputWriter.AddElement(&listDisplay{
@@ -590,7 +591,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
-	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern) // +"/*"? can it be prefixed? add a prefix flag for LIST?
 
 	resp, _, err := c.V2Client.ListIamRoleBindingsNaive(listRoleBinding)
 	if err != nil {
@@ -598,10 +599,10 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 	}
 	roleBindings := resp.Data
 
-	principals := make([]string, len(roleBindings))
+	principals := make(map[string]bool)
 
 	for i := 0; i < len(roleBindings); i++ {
-		principals[i] = *roleBindings[i].Principal
+		principals[*roleBindings[i].Principal] = true
 	}
 
 	userToEmailMap, err := c.userIdToEmailMap()
@@ -610,12 +611,11 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 	}
 
 	// only print out principals, and get email in map by principal
-	sort.Strings(principals)
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
 	if err != nil {
 		return err
 	}
-	for _, principal := range principals {
+	for principal := range principals {
 		if email, ok := userToEmailMap[principal]; ok {
 			displayStruct := &struct {
 				Principal string

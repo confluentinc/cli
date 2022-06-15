@@ -3,7 +3,6 @@ package iam
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
@@ -122,7 +121,10 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	// The err is ignored here since the --prefix flag is not defined by the list subcommand
-	prefix, _ := cmd.Flags().GetBool("prefix")
+	prefix, err := cmd.Flags().GetBool("prefix")
+	if err != nil {
+		return nil, err
+	}
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -170,15 +172,12 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			// Resource types are defined under roles' access policies, so if no role is specified,
 			// we have to loop over the possible resource types for all roles (this is what
 			// validateResourceTypeV2 does).
-			if role != "" {
-				if err := c.validateRoleAndResourceTypeV2(role, parsedResourcePattern.ResourceType); err != nil {
-					return nil, err
-				}
-			} else {
+			if role == "" {
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-			}
+				fmt.Println("passed validateResourceTypeV2")
+			} // TODO: skip validation when role != "" before migrating to v2 role api
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
 				Scope:            *scopeV2,
@@ -390,39 +389,39 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 	return result, nil
 }
 
-func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
-	ctx := c.createContext()
-	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+// func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
+// 	ctx := c.createContext()
+// 	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
 
-	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
-	if err != nil || resp.StatusCode == http.StatusNoContent {
-		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
-		if err != nil || resp.StatusCode == http.StatusNoContent {
-			if err == nil {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-			} else {
-				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-			}
-		}
-	}
+// 	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
+// 	// namespace and if we get an error try without any namespace.
+// 	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
+// 	if err != nil || resp.StatusCode == http.StatusNoContent {
+// 		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
+// 		if err != nil || resp.StatusCode == http.StatusNoContent {
+// 			if err == nil {
+// 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+// 			} else {
+// 				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+// 			}
+// 		}
+// 	}
 
-	var allResourceTypes []string
-	for _, policies := range role.Policies {
-		for _, operation := range policies.AllowedOperations {
-			allResourceTypes = append(allResourceTypes, operation.ResourceType)
-			if operation.ResourceType == resourceType {
-				return nil
-			}
-		}
-	}
+// 	var allResourceTypes []string
+// 	for _, policies := range role.Policies {
+// 		for _, operation := range policies.AllowedOperations {
+// 			allResourceTypes = append(allResourceTypes, operation.ResourceType)
+// 			if operation.ResourceType == resourceType {
+// 				return nil
+// 			}
+// 		}
+// 	}
 
-	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
-}
+// 	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
+// 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
+// }
 
-func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
+func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error { // do i keep this????
 	ctx := c.createContext()
 	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(ctx, nil)
 	if err != nil {
@@ -605,14 +604,11 @@ func (c *roleBindingCommand) createContext() context.Context {
 	}
 }
 
-func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) { // for v2 api
-	// include org, environment, cloud-cluster, and resource name and id
+func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) {
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return nil, err
 	}
-
-	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -637,7 +633,12 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 		}
 	}
 
-	crnPattern, err := c.parseCrnPattern(cmd)
+	crnPattern, err := c.parseBaseCrnPattern(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	prefix, err := cmd.Flags().GetBool("prefix")
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +647,7 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 	if err != nil {
 		return nil, err
 	}
-	if resource != "" { // add resource to the very end of crn
+	if resource != "" {
 		parts := strings.SplitN(resource, ":", 2)
 		if len(parts) != 2 {
 			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
@@ -654,17 +655,13 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 		resourceType := parts[0]
 		resourceName := parts[1]
 
-		if role != "" {
-			if err := c.validateRoleAndResourceTypeV2(role, resourceType); err != nil {
-				fmt.Println("failed to validate role and resource")
-				return nil, err
-			}
-		} else {
+		if role == "" {
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
 				fmt.Println("failed to validate resource type")
 				return nil, err
 			}
-		}
+			fmt.Println("passed validateResourceTypeV2")
+		} // TODO: skip validation when role != "" before migrating to v2 role api
 
 		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
 
@@ -680,7 +677,7 @@ func (c *roleBindingCommand) parseRoleBinding(cmd *cobra.Command) (*mdsv2.IamV2R
 	}, err
 }
 
-func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error) { // for v2 api
+func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, error) { // for v2 api
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
@@ -702,7 +699,7 @@ func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error)
 		crnPattern += "/cloud-cluster=" + cluster
 	}
 
-	if cmd.Flags().Changed("schema-registry-cluster-id") {
+	if cmd.Flags().Changed("schema-registry-cluster-id") { // api not implemented yet
 		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
 		if err != nil {
 			return "", err
@@ -710,7 +707,7 @@ func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error)
 		crnPattern += "/schema-registry=" + srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
+	if cmd.Flags().Changed("ksql-cluster-id") { // api not implemented yet
 		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
 		if err != nil {
 			return "", err
@@ -743,4 +740,11 @@ func (c *roleBindingCommand) parseCrnPattern(cmd *cobra.Command) (string, error)
 		return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
 	}
 	return crnPattern, nil
+}
+
+func isSchemaRegistryOrKsqlRoleBinding(roleBinding *mdsv2.IamV2RoleBinding) bool {
+	if strings.Contains(*roleBinding.CrnPattern, "schema-registry") || strings.Contains(*roleBinding.CrnPattern, "ksql") {
+		return true
+	}
+	return false
 }

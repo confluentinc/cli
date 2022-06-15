@@ -2,7 +2,6 @@ package iam
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -49,7 +48,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	deleteRoleBinding, err := c.parseRoleBinding(cmd)
+	deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
 	if err != nil {
 		return err
 	}
@@ -58,15 +57,18 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	var httpResp *http.Response
 	if isCloud {
-		httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
-		b, _ := io.ReadAll(httpResp.Body)
-		fmt.Println(string(b))
-		// resp, err = c.ccloudDelete(options)
+		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
+			fmt.Println("explicit: calling alpha v1")
+			httpResp, err = c.ccloudDelete(options)
+		} else {
+			fmt.Println("explicit: calling v2")
+			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
+		}
 	} else {
 		httpResp, err = c.confluentDelete(options)
 	}
 	if err != nil {
-		return err
+		return errors.CatchRequestNotValidMessageError(err, httpResp)
 	}
 
 	// might be able to add catchers here, to print out more useful msgs. like 403: Either unauthorized to access role binding or role binding does not exist
@@ -82,21 +84,20 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) (*http.Response, error) {
-	// do we distinguish resource nil or not nil? // probably not. It's all in the crn
-	// maybe should not add the *? This is not listing everything but just one specific entry
 	fmt.Println(*deleteRoleBinding.CrnPattern)
 	resp, httpResp, err := c.V2Client.ListIamRoleBindingsNaive(deleteRoleBinding)
 	if err != nil {
 		return httpResp, err
 	}
-	if len(resp.Data) == 0 {
-		return httpResp, errors.New("No matching role-bindings found.")
-		// probably won't need this, the err code of resp will be caught anyway
+	roleBindingList := resp.Data
+
+	for _, rolebinding := range roleBindingList {
+		if *rolebinding.CrnPattern == *deleteRoleBinding.CrnPattern {
+			_, httpResp, err = c.V2Client.DeleteIamRoleBinding(*rolebinding.Id)
+			return httpResp, err
+		}
 	}
-	id := *resp.Data[0].Id
-	// are you supposed to delete more than one at a time?
-	_, httpResp, err = c.V2Client.DeleteIamRoleBinding(id)
-	return httpResp, err
+	return httpResp, errors.New("No matching role-bindings found.") // to be touched up
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {

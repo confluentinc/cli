@@ -257,18 +257,25 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 }
 
-func CatchConnectorConfigurationNotValidError(err error, r *http.Response) error {
+func CatchRequestNotValidMessageError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
+	}
+
+	if r == nil {
+		return err
 	}
 
 	body, _ := io.ReadAll(r.Body)
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
 	if resBody.Message != "" {
-		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
+		// Connector error: {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
 		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
-		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
+
+		// Rolebinding error: {"status_code":400,"message":"Cannot bind role OrganizationAdmin with resources.","type":"CLIENT_ERROR"}
+		message := strings.TrimSuffix(strings.TrimSuffix(resBody.Message, "\n"), ".")
+		return Wrap(err, message)
 	}
 
 	return err

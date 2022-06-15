@@ -19,7 +19,7 @@ import (
 
 const (
 	pageTokenQueryParameter = "page_token"
-	ccloudV2ListPageSize    = 100
+	ccloudV2ListPageSize    = 10
 )
 
 var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}

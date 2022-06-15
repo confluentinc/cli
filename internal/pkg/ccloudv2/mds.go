@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -43,6 +44,7 @@ func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]
 		if err != nil {
 			return nil, err
 		}
+		fmt.Println("we got", len(roleBindingList.Data), "on this page")
 		roleBindings = append(roleBindings, roleBindingList.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
@@ -56,11 +58,18 @@ func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]
 }
 
 func (c *Client) executeListRoleBindings(pageToken, crnPattern, principal, roleName string) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-	var req mdsv2.ApiListIamV2RoleBindingsRequest
+	req := c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern)
+	if principal != "" {
+		req = req.Principal(principal)
+	}
+	if roleName != "" {
+		req = req.RoleName(roleName)
+	}
+
+	req = req.PageSize(ccloudV2ListPageSize)
+
 	if pageToken != "" {
-		req = c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern).Principal(principal).RoleName(roleName).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindings(c.mdsApiContext()).CrnPattern(crnPattern).Principal(principal).RoleName(roleName).PageSize(ccloudV2ListPageSize)
+		req = req.PageSize(ccloudV2ListPageSize).PageToken(pageToken)
 	}
 	return c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
 }
