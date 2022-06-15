@@ -244,6 +244,19 @@ func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
 	return userToEmailMap, nil
 }
 
+func (c *roleBindingCommand) serviceAccountIdToNameMap() (map[string]string, error) {
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	
+	serviceAccountToNameMap := make(map[string]string)
+	for _, u := range users {
+		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
+	}
+	return serviceAccountToNameMap, nil
+}
+
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
 	scopeV2 := &options.scopeV2
 	role := options.role
@@ -287,19 +300,37 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
+	serviceAccountToNameMap, err := c.serviceAccountIdToNameMap()
+	if err != nil {
+		return err
+	}
+
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName"}, []string{"Principal", "Email", "Service Name"}, []string{"principal", "email", "service_name"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
 		if email, ok := userToEmailMap[principal]; ok {
 			displayStruct := &struct {
-				Principal string
-				Email     string
+				Principal   string
+				Email       string
+				ServiceName string
 			}{
-				Principal: principal,
-				Email:     email,
+				Principal:   principal,
+				Email:       email,
+				ServiceName: "",
+			}
+			outputWriter.AddElement(displayStruct)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			displayStruct := &struct {
+				Principal   string
+				Email       string
+				ServiceName string
+			}{
+				Principal:   principal,
+				ServiceName: name,
 			}
 			outputWriter.AddElement(displayStruct)
 		}
