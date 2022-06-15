@@ -10,14 +10,7 @@ const (
 	s3ReleaseNotesFilePath = "./release-notes/latest-release.rst"
 	updatedDocsFilePath    = "./release-notes/release-notes.rst"
 
-	s3ReleaseNotesTitleFormat = `
-===================================
-%s %s Release Notes
-===================================
-`
-	docsReleaseNotesTitleFormat = `
-%s %s Release Notes
-=====================================`
+	titleFormat = "[%s] %s %s Release Notes"
 
 	s3SectionHeaderFormat   = "%s\n-------------"
 	docsSectionHeaderFormat = "**%s**"
@@ -29,12 +22,10 @@ const (
 var (
 	s3ReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName:      s3CLIName,
-		titleFormat:         s3ReleaseNotesTitleFormat,
 		sectionHeaderFormat: s3SectionHeaderFormat,
 	}
-	docsReleaseNotesBuilderParmas = &ReleaseNotesBuilderParams{
+	docsReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName:      docsCLIName,
-		titleFormat:         docsReleaseNotesTitleFormat,
 		sectionHeaderFormat: docsSectionHeaderFormat,
 	}
 )
@@ -57,22 +48,19 @@ func getReleaseNotesContent() (*ReleaseNotesContent, error) {
 }
 
 func buildAndWriteReleaseNotes(version string, content *ReleaseNotesContent, docsPath string) error {
-	s3ReleaseNotes := buildReleaseNotes(version, s3ReleaseNotesBuilderParams, content)
+	s3ReleaseNotesBuilder := NewReleaseNotesBuilder(version, s3ReleaseNotesBuilderParams)
+	s3ReleaseNotes := s3ReleaseNotesBuilder.buildS3ReleaseNotes(content)
 	err := writeFile(s3ReleaseNotesFilePath, s3ReleaseNotes)
 	if err != nil {
 		return err
 	}
-	docsReleaseNotes := buildReleaseNotes(version, docsReleaseNotesBuilderParmas, content)
+	docsReleaseNotesBuilder := NewReleaseNotesBuilder(version, docsReleaseNotesBuilderParams)
+	docsReleaseNotes := docsReleaseNotesBuilder.buildDocsReleaseNotes(content)
 	updatedDocsPage, err := buildDocsPage(docsPath, docsPageHeader, docsReleaseNotes)
 	if err != nil {
 		return err
 	}
 	return writeFile(updatedDocsFilePath, updatedDocsPage)
-}
-
-func buildReleaseNotes(version string, releaseNotesBuildParams *ReleaseNotesBuilderParams, content *ReleaseNotesContent) string {
-	releaseNotesBuilder := NewReleaseNotesBuilder(version, releaseNotesBuildParams)
-	return releaseNotesBuilder.buildReleaseNotes(content)
 }
 
 func buildDocsPage(docsFilePath string, docsHeader string, latestReleaseNotes string) (string, error) {
