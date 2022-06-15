@@ -1,0 +1,88 @@
+version: v1.0
+name: Confluent CLI
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  secrets:
+    - name: vault_sem2_approle
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: Build & Lint
+    task:
+      jobs:
+        - name: Build & Lint
+          commands:
+            - cache restore
+            # TODO: Exit job if restore was successful
+             
+            - checkout
+            
+            # Set up Go
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            
+            # Install Vault
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - unzip vault.zip
+            - chmod +x vault
+            - export PATH="$(pwd):${PATH}"
+
+            # Log in to Vault
+            - VAULT_TOKEN=$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - vault login -no-print token="${VAULT_TOKEN}"
+
+            - pwd
+            - cd ~ && pwd && cd -
+            
+            # Get GitHub SSH key from Vault
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > ~/script.sh
+            - cd ~ && source script.sh && cd -
+            - ls -l ~/.ssh/id_rsa
+            - chmod 400 ~/.ssh/id_rsa
+            
+            # Download Go dependencies
+            - export GOPRIVATE=github.com/confluentinc
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+            - go get ./...
+            - cache store
+  
+  - name: Linux
+    task:
+      prologue:
+        commands:
+          - cache restore
+          - checkout
+          - sem-version go 1.17.6
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
+      jobs:
+        - name: Lint
+          commands:
+            - make lint
+        - name: Unit Tests
+          commands:
+            - make unit-test
+        - name: Integration Tests
+          commands:
+            - make int-test
+        - name: Smoke Tests
+          commands:
+            - make test-installer
+
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
