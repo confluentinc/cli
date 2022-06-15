@@ -13,6 +13,11 @@ const (
 	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
 )
 
+var packageDisplayNameMapping = map[string]string{
+	"free": "essentials",
+	"paid": "advanced",
+}
+
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
 	var entries [][]string
@@ -32,11 +37,6 @@ func convertMapToString(m map[string]string) string {
 	return strings.Join(pairs, "\n")
 }
 
-var packageDisplayNameMapping = map[string]string{
-	"free": "essentials",
-	"paid": "advanced",
-}
-
 func getPackageDisplayName(packageName string) string {
-	return packageDisplayNameMapping[strings.ToLower(packageName)]
+	return packageDisplayNameMapping[packageName]
 }
