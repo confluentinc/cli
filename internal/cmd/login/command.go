@@ -3,7 +3,6 @@ package login
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/cmd/admin"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,6 +12,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -139,14 +139,14 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		c.printRemainingFreeCredit(cmd, client)
+		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client) {
-	org := &orgv1.Organization{Id: c.Config.Context().State.Auth.Account.OrganizationId}
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+	org := &orgv1.Organization{Id: currentOrg.Id}
 	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
