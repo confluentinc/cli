@@ -19,7 +19,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		Use:   "update <subject>",
 		Short: "Update subject compatibility or mode.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject level compatibility of subject "payments".`,
@@ -45,7 +45,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

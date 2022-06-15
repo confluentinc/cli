@@ -6,7 +6,6 @@ import (
 	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -16,7 +15,7 @@ func (c *command) newRotateCommand() *cobra.Command {
 		Short: "Rotate master or data key.",
 		Long:  "This command rotates either the master or data key. To rotate the master key, specify the current master key passphrase flag (`--passphrase`) followed by the new master key passphrase flag (`--passphrase-new`). To rotate the data key, specify the current master key passphrase flag (`--passphrase`).",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.rotate),
+		RunE:  c.rotate,
 	}
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the encrypted configuration properties file.")

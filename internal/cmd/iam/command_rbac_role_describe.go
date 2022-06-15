@@ -19,7 +19,7 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -50,12 +50,16 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		details, r, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
 		if err != nil {
 			if r.StatusCode == http.StatusNotFound {
-				availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
+				publicRolenames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
 				if err != nil {
 					return err
 				}
 
-				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+				opts := &mdsv2alpha1.RolenamesOpts{Namespace: dataplaneNamespace}
+				dataplaneRolenames, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
+				rolenames := append(publicRolenames, dataplaneRolenames...)
+
+				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(rolenames, ", "))
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 			}
 

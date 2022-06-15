@@ -32,18 +32,19 @@ var (
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list <quota-scope>",
-		Short:   "List Confluent Cloud service quota limits by a scope.",
-		Long:    "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
-		Example: "list environment",
-		Args:    cobra.ExactArgs(1),
-		RunE:    pcmd.NewCLIRunE(c.list),
+		Use:   "list <quota-scope>",
+		Short: "List Confluent Cloud service quota limits by a scope.",
+		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.list,
 	}
+
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("quota-code", "", "Filter the result by quota code.")
 	cmd.Flags().String("network", "", "Filter the result by network id.")
 	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 
@@ -75,7 +76,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{}
 	// Since we use paginated results, get all results by iterating the list.
 	for {
-		req := c.V2Client.QuotasClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
+		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
 			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {

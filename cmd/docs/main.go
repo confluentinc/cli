@@ -3,6 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/docs"
@@ -24,7 +26,7 @@ func main() {
 	// Auto-generate documentation for cloud and on-prem commands.
 	configs := []*v1.Config{
 		{
-			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: v1.CCloudHostnames[0]}},
+			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: ccloudv2.Hostnames[0]}},
 			CurrentContext: "Cloud",
 		},
 		{

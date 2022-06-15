@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 )
 
 // Handler for: "/security/1.0/registry/clusters"
-func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (m MdsRouter) HandleRegistryClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			w.Header().Set("Content-Type", "text/json")
@@ -94,7 +94,7 @@ func (m MdsRouter) HandleRegistryClusters(t *testing.T) func(http.ResponseWriter
 }
 
 // Handler for: "/security/1.0/authenticate"
-func (m MdsRouter) HandleAuthenticate(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (m MdsRouter) HandleAuthenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{

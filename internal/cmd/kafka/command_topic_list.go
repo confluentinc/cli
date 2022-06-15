@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -19,7 +20,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka topics.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all topics.",
@@ -88,7 +89,7 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return []*schedv1.TopicDescription{}, err
 	}

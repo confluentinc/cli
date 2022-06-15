@@ -6,6 +6,8 @@ import (
 	"os"
 	"strconv"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -32,7 +34,7 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 		Long:              longText,
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(runCommand),
+		RunE:              runCommand,
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
@@ -55,7 +57,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp boo
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
-	kafkaCluster, err := pcmd.KafkaCluster(c.Context)
+	kafkaCluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}

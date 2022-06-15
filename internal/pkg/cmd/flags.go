@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
@@ -23,7 +23,7 @@ func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteApiKeys(command.EnvironmentId(), command.Client)
+		return AutocompleteApiKeys(command.EnvironmentId(), command.V2Client)
 	})
 }
 
@@ -31,18 +31,18 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 	cmd.Flags().String("api-secret", "", "API key secret.")
 }
 
-func AutocompleteApiKeys(environment string, client *ccloud.Client) []string {
-	apiKeys, err := client.APIKey.List(context.Background(), &schedv1.ApiKey{AccountId: environment})
+func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
+	apiKeys, err := client.ListApiKeys("", "")
 	if err != nil {
 		return nil
 	}
 
 	suggestions := make([]string, len(apiKeys))
 	for i, apiKey := range apiKeys {
-		if apiKey.UserId == 0 {
+		if !apiKey.Spec.HasOwner() {
 			continue
 		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.Key, apiKey.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *apiKey.Id, *apiKey.GetSpec().Description)
 	}
 	return suggestions
 }
@@ -146,12 +146,12 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.V2Client)
+		return AutocompleteEnvironments(command.Client, command.V2Client, command.State)
 	})
 }
 
-func AutocompleteEnvironments(client *ccloudv2.Client) []string {
-	environments, err := client.ListOrgEnvironments()
+func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, state *v1.ContextState) []string {
+	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
 	}
@@ -160,6 +160,16 @@ func AutocompleteEnvironments(client *ccloudv2.Client) []string {
 	for i, environment := range environments {
 		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
 	}
+
+	if auditLog := v1.GetAuditLog(state); auditLog != nil {
+		auditLogAccountId := auditLog.AccountId
+		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+		if err != nil {
+			return nil
+		}
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLogAccountId, auditLogAccount.Name))
+	}
+
 	return suggestions
 }
 
@@ -231,5 +241,13 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string {
 		return []string{"AVRO", "PROTOBUF", "JSON"}
+	})
+}
+
+func AddValueFormatFlag(cmd *cobra.Command) {
+	cmd.Flags().String("value-format", "string", `Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.`)
+
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
+		return []string{"string", "avro", "protobuf", "jsonschema"}
 	})
 }

@@ -6,7 +6,7 @@ The CLI codebase stores the strings of all messages in the `errors` package. Thi
 - `""` surrounding names and ID’s
     - e.g. `Check that the resource "lkc-abc" exists.`, `Error: topic "bob" does not exist`
 - ```` `` ```` surrounding commands or flags
-    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka in your context with `confluent kafka cluster use`.``
+    - e.g. ``You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`.``
 
 ## Creating an Error
 ### Message Format
@@ -83,7 +83,7 @@ type CLITypedError interface {
 4. For important errors that are thrown by external packages that need to be caught and translated, define a catcher in [catcher.go](catcher.go). The catcher can then be either inserted anyhwere in the CLI repo, or simply in `handleErrors` function in [handle.go](handle.go).
 
 ## HandleCommon
-`errors.HandleCommon` is called for every cobra RunE or PrerunE command, to handle common logic required for all errors, including turning off the usage message. This is done under the hood when defining new CLI RunE and PrerunE with `cmd.NewCLIRunE` and `cmd.NewCLIPrerunE` intializers.
+`errors.HandleCommon` is called for every cobra RunE or PrerunE command, to handle common logic required for all errors, including turning off the usage message.
 
 ## Non-error communcation
 For all non-error messages, define the string variables in [strings.go](strings.go), with variables name ending with *Msg*. The only exception being that warning messages are defined in [warning_message.go](warning_message.go) instead.

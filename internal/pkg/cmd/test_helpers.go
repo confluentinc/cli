@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	"github.com/spf13/cobra"
+
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 // ExecuteCommand runs the root command with the given args, and returns the output string or an error.
@@ -22,6 +24,8 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	root.SetArgs(args)
 
 	c, err = root.ExecuteC()
+
+	launchdarkly.Init(nil, true)
 
 	return c, buf.String(), err
 }

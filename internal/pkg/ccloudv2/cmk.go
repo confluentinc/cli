@@ -2,21 +2,20 @@ package ccloudv2
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
-	cmkServer := getServerUrl(baseURL, isTest)
 	cfg := cmkv2.NewConfiguration()
-	cfg.Servers = cmkv2.ServerConfigurations{
-		{URL: cmkServer, Description: "Confluent Cloud IAM"},
-	}
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.Servers = cmkv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CMK"}}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+
 	return cmkv2.NewAPIClient(cfg)
 }
 
@@ -50,9 +49,8 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 	collectedAllClusters := false
 	pageToken := ""
 	for !collectedAllClusters {
-		clusterList, resp, err := c.executeListClusters(pageToken, environment)
+		clusterList, _, err := c.executeListClusters(pageToken, environment)
 		if err != nil {
-			log.Printf("[ERROR] Clusters get failed %v, %s", resp, err)
 			return nil, err
 		}
 		clusters = append(clusters, clusterList.GetData()...)
@@ -68,11 +66,9 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 }
 
 func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
-	var req cmkv2.ApiListCmkV2ClustersRequest
+	req := c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.CmkClient.ClustersCmkV2Api.ListCmkV2Clusters(c.cmkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+		req = req.PageToken(pageToken)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
 }

@@ -17,7 +17,7 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
+		RunE:  c.onPremDescribe,
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{

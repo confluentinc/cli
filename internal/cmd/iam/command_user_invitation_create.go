@@ -8,7 +8,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -18,7 +17,7 @@ func (c invitationCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <email>",
 		Short: "Invite a user to join your organization.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.createInvitation),
+		RunE:  c.createInvitation,
 	}
 }
 

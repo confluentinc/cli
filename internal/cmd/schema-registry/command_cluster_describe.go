@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -38,7 +39,7 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.describe),
+		RunE:        c.describe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
@@ -62,7 +63,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	ctxClient := pcmd.NewContextClient(c.Context)
+	ctxClient := dynamicconfig.NewContextClient(c.Context)
 	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if srClusterHasAPIKey {
-		srClient, ctx, err = GetApiClient(cmd, c.srClient, c.Config, c.Version)
+		srClient, ctx, err = getApiClient(cmd, c.srClient, c.Config, c.Version)
 		if err != nil {
 			return err
 		}

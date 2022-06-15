@@ -21,7 +21,7 @@ func (c userCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List an organization's users.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

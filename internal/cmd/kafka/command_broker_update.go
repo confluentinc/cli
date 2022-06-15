@@ -19,7 +19,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Short: "Update per-broker or cluster-wide Kafka broker configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -33,7 +33,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the broker being updated.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the broker being updated.`)
 	cmd.Flags().Bool("all", false, "Apply config update to all brokers in the cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)

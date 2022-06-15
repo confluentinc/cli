@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logger "log"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,9 +31,11 @@ import (
 )
 
 const (
-	serviceAccountId   = int32(123)
-	serviceAccountName = "service-account"
-	userResourceId     = "sa-55555"
+	serviceAccountId         = int32(123)
+	serviceAccountResourceId = "sa-123"
+	serviceAccountName       = "service-account"
+	userId                   = int32(456)
+	userResourceId           = "sa-456"
 )
 
 var conf *v1.Config
@@ -284,6 +286,96 @@ var aclEntries = []struct {
 			{
 				PermissionType: schedv1.ACLPermissionTypes_DENY,
 				Principal:      "User:42", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "read"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_READ, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "read"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_READ, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "write"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "write"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_WRITE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "create"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "create"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_CREATE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "delete"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "delete"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_DELETE, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--allow", "--principal", "User:sa-456", "--operation", "alter"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_ALTER, Host: "*",
+			},
+		},
+	},
+	{
+		args: []string{"--deny", "--principal", "User:sa-456", "--operation", "alter"},
+		entries: []*schedv1.AccessControlEntryConfig{
+			{
+				PermissionType: schedv1.ACLPermissionTypes_DENY,
+				Principal:      "User:456", Operation: schedv1.ACLOperations_ALTER, Host: "*",
 			},
 		},
 	},
@@ -672,10 +764,8 @@ func Test_HandleError_NotLoggedIn(t *testing.T) {
 	cmd.SetOutput(buf)
 
 	err := cmd.Execute()
-	want := errors.NotLoggedInErrorMsg
 	require.Error(t, err)
-	require.Equal(t, want, err.Error())
-	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.NotLoggedInErrorMsg, errors.NotLoggedInSuggestions)
+	require.Equal(t, errors.NotLoggedInErrorMsg, err.Error())
 }
 
 /*************** TEST command_links ***************/
@@ -798,10 +888,11 @@ func configMapWithJsonConfigValues() map[string]string {
 func TestBatchAlterLink(t *testing.T) {
 	const configFileName = "link-config.in"
 	configs := configMapWithJsonConfigValues()
-	dir, err := createTestConfigFile(configFileName, configs)
+	path, err := createTestConfigFile(configFileName, configs)
 	if err != nil {
-		logger.Fatal("Cannot create the test config file")
+		log.Fatalf("failed to create test config file: %v", err)
 	}
+	defer os.Remove(path)
 
 	linkTestHelper(
 		t,
@@ -815,8 +906,6 @@ func TestBatchAlterLink(t *testing.T) {
 			}
 		},
 	)
-
-	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestCreateLink(t *testing.T) {
@@ -839,51 +928,51 @@ func TestCreateLink(t *testing.T) {
 func TestCreateMirror(t *testing.T) {
 	const configFileName = "mirror-topic-config.in"
 	configs := configMapWithJsonConfigValues()
-	dir, err := createTestConfigFile(configFileName, configs)
+	path, err := createTestConfigFile(configFileName, configs)
 	if err != nil {
-		logger.Fatal("Cannot create the test config file")
+		log.Fatalf("failed to create test config file: %v", err)
 	}
+	defer os.Remove(path)
 
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "create", "src-topic-1", "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName}
+			return []string{"mirror", "create", "topic-1", "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateMirrorMatcher{
 				LinkName:        "link-1",
-				SourceTopicName: "src-topic-1",
+				SourceTopicName: "topic-1",
 				Configs:         configs,
 			}
 		},
 	)
-	defer os.Remove(dir + "/" + configFileName)
 }
 
-//func TestCreateMirrorWithLinkPrefix(t *testing.T) {
-//	const configFileName, topicName, clusterLinkPrefix = "prefixed-mirror-topic-config.in", "topic-1", "src_"
-//	configs := configMapWithJsonConfigValues()
-//	dir, err := createTestConfigFile(configFileName, configs)
-//	if err != nil {
-//		logger.Fatal("Cannot create the test config file")
-//	}
-//
-//	linkTestHelper(
-//		t,
-//		func(link testLink) []string {
-//			return []string{"mirror", "create", clusterLinkPrefix + topicName, "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName, "--source-topic", topicName}
-//		},
-//		func(expect chan interface{}, link testLink) {
-//			expect <- cliMock.CreateMirrorMatcher{
-//				LinkName:        "link-1",
-//				SourceTopicName: clusterLinkPrefix + topicName,
-//				Configs:         configs,
-//				MirrorTopicName: topicName,
-//			}
-//		},
-//	)
-//	defer os.Remove(dir + "/" + configFileName)
-//}
+func TestCreateMirrorWithLinkPrefix(t *testing.T) {
+	const configFileName, topicName, clusterLinkPrefix = "prefixed-mirror-topic-config.in", "topic-1", "src_"
+	configs := configMapWithJsonConfigValues()
+	path, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		log.Fatalf("failed to create test config file: %v", err)
+	}
+	defer os.Remove(path)
+
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "create", clusterLinkPrefix + topicName, "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName, "--source-topic", topicName}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.CreateMirrorMatcher{
+				LinkName:        "link-1",
+				SourceTopicName: topicName,
+				MirrorTopicName: clusterLinkPrefix + topicName,
+				Configs:         configs,
+			}
+		},
+	)
+}
 
 func TestListAllMirror(t *testing.T) {
 	linkTestHelper(
@@ -1160,22 +1249,30 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
-			DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
+			DescribeFunc: func(_ context.Context, _ *orgv1.User) (*orgv1.User, error) {
 				return &orgv1.User{
 					Email: "csreesangkom@confluent.io",
 				}, nil
 			},
-			GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
+			GetServiceAccountsFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
 				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
-						ResourceId:  userResourceId,
+						ResourceId:  serviceAccountResourceId,
 						ServiceName: serviceAccountName,
 					},
 					{
 						Id:          42,
 						ResourceId:  "sa-42",
 						ServiceName: serviceAccountName,
+					},
+				}, nil
+			},
+			ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
+				return []*orgv1.User{
+					{
+						Id:         userId,
+						ResourceId: userResourceId,
 					},
 				}, nil
 			},

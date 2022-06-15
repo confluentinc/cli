@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/bincover"
+
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -19,9 +20,35 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{args: "schema-registry cluster enable --cloud gcp --geo us -o yaml", fixture: "schema-registry/enable-yaml.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo us", fixture: "schema-registry/enable.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo somethingwrong", fixture: "schema-registry/enable-invalid-geo.golden", wantErrCode: 1},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-terminated.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("invalid_confirmation\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-invalid-confirmation.golden",
+			wantErrCode: 1,
+		},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},
+		{args: "schema-registry exporter create --help", fixture: "schema-registry/exporter-create-help.golden"},
+		{args: "schema-registry exporter delete --help", fixture: "schema-registry/exporter-delete-help.golden"},
+		{args: "schema-registry exporter describe --help", fixture: "schema-registry/exporter-describe-help.golden"},
+		{args: "schema-registry exporter get-config --help", fixture: "schema-registry/exporter-get-config-help.golden"},
+		{args: "schema-registry exporter get-status --help", fixture: "schema-registry/exporter-get-status-help.golden"},
+		{args: "schema-registry exporter list --help", fixture: "schema-registry/exporter-list-help.golden"},
+		{args: "schema-registry exporter pause --help", fixture: "schema-registry/exporter-pause-help.golden"},
+		{args: "schema-registry exporter reset --help", fixture: "schema-registry/exporter-reset-help.golden"},
+		{args: "schema-registry exporter resume --help", fixture: "schema-registry/exporter-resume-help.golden"},
+		{args: "schema-registry exporter update --help", fixture: "schema-registry/exporter-update-help.golden"},
 		{args: "schema-registry cluster update --help", fixture: "schema-registry/cluster-update-help.golden"},
 		{args: "schema-registry subject update --help", fixture: "schema-registry/subject-update-help.golden"},
 
@@ -80,8 +107,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    "schema-registry schema delete --subject payments --version all --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-delete-all.golden",
 		},
+		{args: "schema-registry schema describe --subject payments", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --subject payments", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --version 1", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --version 1", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --show-refs", wantErrCode: 1, fixture: "schema-registry/schema-describe-either-id-or-subject.golden"},
+		{args: "schema-registry schema describe --subject payments --version 1 123", wantErrCode: 1, fixture: "schema-registry/schema-describe-both-id-and-subject.golden"},
+		{args: "schema-registry schema describe --show-refs --subject payments --version 1 123", wantErrCode: 1, fixture: "schema-registry/schema-describe-both-id-and-subject.golden"},
 		{
-			name:    "schema-registry schema describe --subject payments --version all",
+			name:    "schema-registry schema describe --subject payments --version 2",
 			args:    "schema-registry schema describe --subject payments --version 2 --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-describe.golden",
 		},
@@ -90,7 +125,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    "schema-registry schema describe 10 --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/schema-describe.golden",
 		},
-
+		{
+			name:    "schema-registry schema describe 1001 --show-refs",
+			args:    "schema-registry schema describe 1001 --show-refs --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-describe-refs-id.golden",
+		},
+		{
+			name:    "schema-registry schema describe --subject lvl0 --version 1 --show-refs",
+			args:    "schema-registry schema describe --subject lvl0 --version 1 --show-refs --api-key key --api-secret secret --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/schema-describe-refs-subject.golden",
+		},
 		{
 			name:    "schema-registry subject list",
 			args:    "schema-registry subject list --api-key=key --api-secret=secret --environment=" + testserver.SRApiEnvId,

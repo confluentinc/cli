@@ -27,7 +27,7 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 		Short:             "Describe a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.describe),
+		RunE:              c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "my-consumer-group" consumer group:`,

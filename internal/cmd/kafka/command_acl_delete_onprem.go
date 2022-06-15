@@ -13,7 +13,7 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Use:   "delete",
 		Short: "Delete Kafka ACLs matching the search criteria.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.deleteOnPrem),
+		RunE:  c.deleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete all READ access ACLs for the specified user:",

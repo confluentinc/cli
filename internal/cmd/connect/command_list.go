@@ -1,9 +1,6 @@
 package connect
 
 import (
-	"context"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,7 +13,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:         "list",
 		Short:       "List connectors.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.list),
+		RunE:        c.list,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -43,7 +40,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectors, err := c.Client.Connect.ListWithExpansions(context.Background(), &schedv1.Connector{AccountId: c.EnvironmentId(), KafkaClusterId: kafkaCluster.ID}, "status,info,id")
+	connectorExpansions, _, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
 	if err != nil {
 		return err
 	}
@@ -53,13 +50,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for name, connector := range connectors {
+	for name, connector := range connectorExpansions {
 		connector := &connectorDescribeDisplay{
 			Name:   name,
-			ID:     connector.Id.Id,
-			Status: connector.Status.Connector.State,
-			Type:   connector.Info.Type,
-			Trace:  connector.Status.Connector.Trace,
+			ID:     connector.Id.GetId(),
+			Status: connector.Status.Connector.GetState(),
+			Type:   connector.Status.GetType(),
+			Trace:  connector.Status.Connector.GetTrace(),
 		}
 		outputWriter.AddElement(connector)
 	}

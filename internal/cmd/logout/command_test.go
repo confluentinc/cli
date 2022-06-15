@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -130,8 +131,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	contextName := cfg.Context().NetrcMachineName
 	// run login command
 	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _, _, _, _ string) (string, error) {
-			return testToken, nil
+		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
+			return &flowv1.AuthenticateReply{Token: testToken}, nil
 		},
 		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 			return &flowv1.GetMeReply{
@@ -181,7 +182,12 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}, Auth: auth, User: user}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-			return &ccloud.Client{Auth: auth, User: user}
+			return &ccloud.Client{Auth: auth, User: user, Billing: &sdkMock.Billing{
+				GetClaimedPromoCodesFunc: func(_ context.Context, _ *orgv1.Organization, _ bool) ([]*billingv1.PromoCodeClaim, error) {
+					var claims []*billingv1.PromoCodeClaim
+					return claims, nil
+				},
+			}}
 		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{

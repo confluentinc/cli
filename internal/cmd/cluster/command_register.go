@@ -36,8 +36,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-
-	c.RunE = pcmd.NewCLIRunE(c.register)
+	c.RunE = c.register
 
 	c.Flags().String("hosts", "", "A comma separated list of hosts.")
 	c.Flags().String("protocol", "", "Security protocol.")
