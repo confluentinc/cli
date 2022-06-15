@@ -18,10 +18,10 @@ execution_time_limit:
   hours: 1
 
 blocks:
-  - name: Build & Lint
+  - name: Download Dependencies
     task:
       jobs:
-        - name: Build & Lint
+        - name: Download Dependencies
           commands:
             - cache restore
             # TODO: Exit job if restore was successful
@@ -46,33 +46,35 @@ blocks:
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - go get ./...
+            
+            - echo $(go env GOPATH)
+            
+            # Cache dependencies
+            - cache store GOPATH $(go env GOPATH)
             - cache store
   
   - name: Linux
     task:
       prologue:
         commands:
-          - cache restore
           - checkout
-          - sem-version go 1.17.6
-          - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
         - name: Lint
           commands:
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - cache restore GOPATH
             - make lint
         - name: Unit Tests
           commands:
+            - cache restore
             - make unit-test
         - name: Integration Tests
           commands:
+            - cache restore
             - make int-test
         - name: Smoke Tests
           commands:
             - make test-installer
 
-after_pipeline:
-  task:
-    jobs:
-      - name: Publish Results
-        commands:
-          - test-results gen-pipeline-report
+# TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
