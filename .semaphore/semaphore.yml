@@ -30,30 +30,21 @@ blocks:
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
             - chmod +x vault
-            - export PATH="$(pwd):${PATH}"
 
             # Log in to Vault
-            - VAULT_TOKEN=$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
-            - vault login -no-print token="${VAULT_TOKEN}"
+            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - ./vault login -no-print token="${VAULT_TOKEN}"
 
-            - pwd
-            - cd ~ && pwd && cd -
-            
             # Get GitHub SSH key from Vault
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > ~/script.sh
-            - cd ~ && source script.sh && cd -
-            - ls -l ~/.ssh/id_rsa
-            - chmod 400 ~/.ssh/id_rsa
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
             
             # Download Go dependencies
             - checkout
-            
             - sem-version go 1.17.6
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
-            
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
             - go get ./...
             - cache store
   
