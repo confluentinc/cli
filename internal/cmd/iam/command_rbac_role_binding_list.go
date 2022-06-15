@@ -139,7 +139,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
+func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
@@ -249,7 +249,7 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 	if err != nil {
 		return nil, err
 	}
-	
+
 	serviceAccountToNameMap := make(map[string]string)
 	for _, u := range users {
 		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
@@ -295,12 +295,12 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
 
-	serviceAccountToNameMap, err := c.serviceAccountIdToNameMap()
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
 	if err != nil {
 		return err
 	}
