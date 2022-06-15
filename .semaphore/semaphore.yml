@@ -15,7 +15,7 @@ blocks:
       secrets:
         - name: vault_sem2_approle
       jobs:
-        - name: Linux
+        - name: Build
           commands:
             - checkout
               
@@ -73,12 +73,14 @@ blocks:
             - make build
             - cache store
   
-  - name: Lint & Test
+  - name: Linux
     task:
       prologue:
         commands:
           - checkout
           - cache restore
+          - sem-version go 1.17.6
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
         - name: Lint
           commands:
