@@ -40,8 +40,8 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
 
 		output := runCommand(tt, testBin, env, args, 0)
-		s.Contains(output, loggedInAsWithOrgOutput)
-		s.Contains(output, loggedInEnvOutput)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
 		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
 
 		os.Unsetenv("HAS_PAYMENT_METHOD")
