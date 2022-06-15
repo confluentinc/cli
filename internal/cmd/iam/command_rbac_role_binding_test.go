@@ -106,6 +106,12 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 				ResourceId: v1.MockUserResourceId,
 			}}, nil
 		},
+		GetServiceAccountsFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
+			return []*orgv1.User{{
+				ServiceName: "One Great Service",
+				ResourceId:  "User:sa-123456",
+			}}, nil
+		},
 	}
 	client := &ccloud.Client{
 		User: userMock,
