@@ -3,6 +3,7 @@ package releasenotes
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -48,7 +49,7 @@ func (suite *ReleaseNotesBuilderTestSuite) TestS3() {
 }
 
 func (suite *ReleaseNotesBuilderTestSuite) TestDocs() {
-	suite.runTest("docs", docsReleaseNotesBuilderParmas)
+	suite.runTest("docs", docsReleaseNotesBuilderParams)
 }
 
 func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, releaseNotesBuilderParams *ReleaseNotesBuilderParams) {
@@ -80,8 +81,16 @@ func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, releas
 	}
 	for _, tt := range tests {
 		suite.T().Run(tt.name, func(t *testing.T) {
-			releaseNotesBuilder := NewReleaseNotesBuilder(suite.version, releaseNotesBuilderParams)
-			releaseNotes := releaseNotesBuilder.buildReleaseNotes(tt.content)
+			builder := NewReleaseNotesBuilder(suite.version, releaseNotesBuilderParams)
+			builder.date = time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC)
+
+			var releaseNotes string
+			if testNamePrefix == "s3" {
+				releaseNotes = builder.buildS3ReleaseNotes(tt.content)
+			} else {
+				releaseNotes = builder.buildDocsReleaseNotes(tt.content)
+			}
+
 			want, err := readTestFile(tt.wantFile)
 			require.NoError(t, err)
 			require.Equal(t, want, releaseNotes)
