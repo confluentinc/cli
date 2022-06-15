@@ -65,19 +65,14 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(*createRoleBinding.Principal)
-	fmt.Println(*createRoleBinding.RoleName)
-	fmt.Println(*createRoleBinding.CrnPattern)
 
 	isCloud := c.cfg.IsCloudLogin()
 
 	var httpResp *http.Response
 	if isCloud {
 		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
-			fmt.Println("explicit: calling alpha v1")
 			httpResp, err = c.ccloudCreate(options)
 		} else {
-			fmt.Println("explicit: calling v2")
 			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		}
 	} else {

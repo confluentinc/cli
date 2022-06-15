@@ -85,7 +85,8 @@ func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
 }
 
 func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	resp, _, err := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).Execute()
+	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext())
+	resp, _, err := c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 	if err != nil {
 		return iamv2.IamV2User{}, err
 	}
@@ -95,6 +96,11 @@ func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
 		}
 	}
 	return iamv2.IamV2User{}, fmt.Errorf(errors.InvalidEmailErrorMsg, email)
+}
+
+func (c *Client) GetIamUserById(id string) (iamv2.IamV2User, *http.Response, error) {
+	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
+	return c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

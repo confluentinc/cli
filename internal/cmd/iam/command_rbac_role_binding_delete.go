@@ -58,10 +58,8 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	var httpResp *http.Response
 	if isCloud {
 		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
-			fmt.Println("explicit: calling alpha v1")
 			httpResp, err = c.ccloudDelete(options)
 		} else {
-			fmt.Println("explicit: calling v2")
 			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
 		}
 	} else {
@@ -97,7 +95,7 @@ func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBi
 			return httpResp, err
 		}
 	}
-	return httpResp, errors.New("No matching role-bindings found.") // to be touched up
+	return httpResp, errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -134,11 +133,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue})
+				user, err := c.V2Client.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + user.ResourceId
+				principal = "User:" + *user.Id
 			}
 		}
 	}
@@ -176,7 +175,6 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-				fmt.Println("passed validateResourceTypeV2")
 			} // TODO: skip validation when role != "" before migrating to v2 role api
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
@@ -536,7 +534,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
+	user, _, err := c.V2Client.GetIamUserById(userResourceId)
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -562,7 +560,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = user.Email
+			displayStruct.Email = *user.Email
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}
@@ -657,10 +655,8 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 
 		if role == "" {
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
-				fmt.Println("failed to validate resource type")
 				return nil, err
 			}
-			fmt.Println("passed validateResourceTypeV2")
 		} // TODO: skip validation when role != "" before migrating to v2 role api
 
 		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
