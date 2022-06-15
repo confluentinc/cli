@@ -1,10 +1,12 @@
 [
   {
     "email": "u-33ccc@confluent.io",
-    "principal": "User:u-33ccc"
+    "principal": "User:u-33ccc",
+    "service_naeme": ""
   },
   {
     "email": "mhe@confluent.io",
-    "principal": "User:u-44ddd"
+    "principal": "User:u-44ddd",
+    "service_naeme": ""
   }
 ]
