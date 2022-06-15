@@ -37,7 +37,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	index2 := strings.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = strings.ReplaceAll(file1, "\r", "")
-	if strings.Compare(strings.TrimSpace(testfile1), strings.TrimSpace(file1)) != 0 {
+	if strings.Compare(file1, testfile1) != 0 {
 		var err2 error
 		fmt.Println([]byte(testfile1))
 		fmt.Println([]byte(file1))
