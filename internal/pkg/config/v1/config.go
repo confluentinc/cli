@@ -524,7 +524,7 @@ func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
 		return RequireCloudLoginErr
 	}
 
-	if c.isOrgSuspended() && c.isLoginBlockedByOrgSuspension() {
+	if c.isLoginBlockedByOrgSuspension() {
 		return RequireCloudLoginOrgUnsuspendedErr
 	}
 
