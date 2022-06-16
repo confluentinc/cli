@@ -48,7 +48,6 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             - go get ./...
-            - which golangci-lint
             - make deps
             
             # Cache dependencies
