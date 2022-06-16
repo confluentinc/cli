@@ -38,12 +38,11 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore
-            # TODO: Exit block if restore was successful 
+            - cache restore $(checksum go.sum)
+            # TODO: Exit block if restore was successful
             
             # Download Go dependencies
             - sem-version go 1.17.6
-            - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/confluentinc/cli"
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
@@ -51,8 +50,7 @@ blocks:
             - go get -d ./...
             - make deps
             
-            - cache store
-            - cache store GOPATH-$(checksum go.sum) $(go env GOPATH)/bin
+            - cache store $(checksum go.sum) $(go env GOPATH)
   
   - name: Linux
     task:
@@ -60,13 +58,13 @@ blocks:
         commands:
           - checkout
           - sem-version go 1.17.6
-          - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/confluentinc/cli"
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
         - name: Lint
           commands:
-            - cache restore GOPATH-$(checksum go.sum)
-            - ls
+            - cache restore $(checksum go.sum)
+            - ls $(go env GOPATH)/bin
+            - ls $(go env GOPATH)/pkg/mod
             - make lint
         - name: Unit Tests
           commands:
