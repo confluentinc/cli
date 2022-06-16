@@ -43,8 +43,9 @@ blocks:
             
             # Download Go dependencies
             - sem-version go 1.17.6
+            - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/confluentinc/cli"
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
-            - export GOPRIVATE=github.com/confluentinc
+            - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             - go get -d ./...
@@ -59,11 +60,13 @@ blocks:
         commands:
           - checkout
           - sem-version go 1.17.6
+          - export "SEMAPHORE_GIT_DIR=$(go env GOPATH)/src/github.com/confluentinc/cli"
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
         - name: Lint
           commands:
             - cache restore GOPATH-$(checksum go.sum)
+            - ls
             - make lint
         - name: Unit Tests
           commands:
