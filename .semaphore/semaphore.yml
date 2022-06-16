@@ -47,8 +47,8 @@ blocks:
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
-            - go get ./...
-            - make deps
+            - go get -dt ./...
+#            - make deps
             
             # Cache dependencies
             - cache store
