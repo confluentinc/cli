@@ -3,7 +3,6 @@ package connect
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"github.com/tj/assert"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -243,8 +241,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
-	fmt.Printf("error-- %s", err.Error())
-	assert.Contains(suite.T(), err.Error(), "unable to parse config")
+	req.Contains(err.Error(), "unable to parse config")
 }
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
@@ -253,8 +250,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
-	fmt.Printf("error-- %s", err.Error())
-	assert.Contains(suite.T(), err.Error(), "unable to parse config")
+	req.Contains(err.Error(), "unable to parse config")
 }
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
