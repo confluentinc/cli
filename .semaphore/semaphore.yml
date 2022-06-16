@@ -38,7 +38,6 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - ls
             - cache restore
             # TODO: Exit block if restore was successful 
             
@@ -59,11 +58,11 @@ blocks:
       prologue:
         commands:
           - checkout
+          - sem-version go 1.17.6
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
       jobs:
         - name: Lint
           commands:
-            - sem-version go 1.17.6
-            - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - cache restore GOPATH-$(checksum go.sum)
             - make lint
         - name: Unit Tests
@@ -73,6 +72,7 @@ blocks:
         - name: Integration Tests
           commands:
             - cache restore
+            - ls $(go env GOPATH)/pkg/mod
             - make int-test
         - name: Smoke Tests
           commands:
