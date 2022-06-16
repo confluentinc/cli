@@ -25,10 +25,12 @@ import (
 )
 
 const (
-	baseURL         = "https://confluent.cloud/ldapi/sdk/eval/%s/"
-	userPath        = "users/%s"
-	prodEnvClientId = "61af57740127630ce47de5be"
-	testEnvClientId = "61af57740127630ce47de5bd"
+	baseURL               = "https://confluent.cloud/ldapi/sdk/eval/%s/"
+	userPath              = "users/%s"
+	prodEnvClientId       = "61af57740127630ce47de5be"
+	testEnvClientId       = "61af57740127630ce47de5bd"
+	ccloudProdEnvClientId = "5c636508aa445d32c86f26b1"
+	ccloudCpdEnvClientId  = "5c6365ffaa445d32c86f26c0"
 )
 
 // Manager is a global feature flag manager
@@ -37,33 +39,38 @@ var Manager featureFlagManager
 var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 
 type featureFlagManager interface {
-	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool
-	StringVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal string) string
-	IntVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal int) int
-	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{}
+	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal bool) bool
+	StringVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal string) string
+	IntVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal int) int
+	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal interface{}) interface{}
 }
 
 type launchDarklyManager struct {
-	client  *sling.Sling
-	version *version.Version
+	client       *sling.Sling
+	ccloudClient *sling.Sling
+	version      *version.Version
 }
 
 func Init(version *version.Version, isTest bool) {
 	basePath := fmt.Sprintf(baseURL, prodEnvClientId)
+	ccloudBasePath := fmt.Sprintf(baseURL, ccloudProdEnvClientId)
 	if isTest {
 		basePath = testserver.TestCloudURL.Path + "/ldapi/sdk/eval/1234"
+		ccloudBasePath = fmt.Sprintf(baseURL, ccloudCpdEnvClientId)
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		basePath = fmt.Sprintf(baseURL, testEnvClientId)
+		ccloudBasePath = fmt.Sprintf(baseURL, ccloudCpdEnvClientId)
 	}
 
 	Manager = &launchDarklyManager{
-		client:  sling.New().Base(basePath),
-		version: version,
+		client:       sling.New().Base(basePath),
+		ccloudClient: sling.New().Base(ccloudBasePath),
+		version:      version,
 	}
 }
 
-func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal bool) bool {
-	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal bool) bool {
+	flagValInterface := ld.generalVariation(key, ctx, ccloud, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
 		logUnexpectedValueTypeMsg(key, flagValInterface, "bool")
@@ -72,8 +79,8 @@ func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	return flagVal
 }
 
-func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal string) string {
-	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
+func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal string) string {
+	flagValInterface := ld.generalVariation(key, ctx, ccloud, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
 	}
@@ -81,8 +88,8 @@ func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal int) int {
-	flagValInterface := ld.generalVariation(key, ctx, defaultVal)
+func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal int) int {
+	flagValInterface := ld.generalVariation(key, ctx, ccloud, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
 	}
@@ -93,19 +100,19 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
-	flagVal := ld.generalVariation(key, ctx, defaultVal)
+func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal interface{}) interface{} {
+	flagVal := ld.generalVariation(key, ctx, ccloud, defaultVal)
 	return flagVal
 }
 
-func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, defaultVal interface{}) interface{} {
+func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, ccloud bool, defaultVal interface{}) interface{} {
 	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	var flagVals map[string]interface{}
 	var err error
 	if !areCachedFlagsAvailable(ctx, user) {
-		flagVals, err = ld.fetchFlags(user)
+		flagVals, err = ld.fetchFlags(user, ccloud)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
 			return defaultVal
@@ -126,14 +133,18 @@ func logUnexpectedValueTypeMsg(key string, value interface{}, expectedType strin
 	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
 }
 
-func (ld *launchDarklyManager) fetchFlags(user lduser.User) (map[string]interface{}, error) {
+func (ld *launchDarklyManager) fetchFlags(user lduser.User, ccloud bool) (map[string]interface{}, error) {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding user: %w", err)
 	}
 	var resp *http.Response
 	var flagVals map[string]interface{}
-	resp, err = ld.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+	if ccloud {
+		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+	} else {
+		resp, err = ld.client.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
