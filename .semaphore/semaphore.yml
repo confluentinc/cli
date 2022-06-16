@@ -23,9 +23,6 @@ blocks:
       jobs:
         - name: Download Dependencies
           commands:
-            - cache restore
-            # TODO: Exit job if restore was successful
-             
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
@@ -39,15 +36,17 @@ blocks:
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
             
-            # Download Go dependencies
+            # Try to restore cached dependencies
             - checkout
+            - cache restore
+            # TODO: Exit job if restore was successful 
+            
+            # Download Go dependencies
             - sem-version go 1.17.6
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - go get ./...
-            
-            - echo $(go env GOPATH)
             
             # Cache dependencies
             - cache store GOPATH $(go env GOPATH)
