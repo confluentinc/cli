@@ -356,6 +356,7 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+			return nil, nil
 			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
@@ -725,6 +726,7 @@ func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, er
 			return "", err
 		}
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+			return "", nil
 			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
