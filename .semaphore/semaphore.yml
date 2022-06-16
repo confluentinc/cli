@@ -21,7 +21,7 @@ blocks:
   - name: Download Dependencies
     task:
       jobs:
-        - name: Download Dependencies
+        - name: go get ./...
           commands:
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
@@ -46,7 +46,10 @@ blocks:
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export GOPRIVATE=github.com/confluentinc
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
             - go get ./...
+            - which golangci-lint
+            - make deps
             
             # Cache dependencies
             - cache store GOPATH $(go env GOPATH)
