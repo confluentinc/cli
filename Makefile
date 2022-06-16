@@ -177,19 +177,8 @@ endif
 
 .PHONY: lint
 lint:
-ifdef CI
-ifeq ($(shell uname),Darwin)
-	true
-else ifneq (,$(findstring NT,$(shell uname)))
-	true
-else
-	@make lint-go
-	@make lint-cli
-endif
-else
-	@make lint-go
-	@make lint-cli
-endif
+	make lint-go
+	make lint-cli
 
 .PHONY: lint-go
 lint-go:
