@@ -110,12 +110,12 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	//For getting Kafka cluster details and broker URL
+	//Get Kafka cluster details and broker URL
 	cluster, topics, clusterCreds, broker, err := getClusterDetails(c)
 	if err != nil {
 		return err
 	}
-	//Creating Consumer
+	//Create Consumer
 	var consumer *kafka.Consumer
 	if consumeExamples {
 		consumer, err = createConsumer(broker, clusterCreds, groupId)
@@ -125,13 +125,13 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		defer func(consumer *kafka.Consumer) {
 			err := consumer.Close()
 			if err != nil {
-				log.CliLogger.Warnf("Error in closing the consumer. %v", err)
+				log.CliLogger.Errorf("Error in closing the consumer. \"%v\"", err)
 			}
 		}(consumer)
 	}
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
-		return fmt.Errorf("unable to get schema registry cluster: %s", err)
+		return fmt.Errorf("unable to get schema registry cluster: \"%s\"", err)
 	}
 	if apiKey == "" && apiSecret == "" && schemaCluster.SrCredentials != nil {
 		apiKey = schemaCluster.SrCredentials.Key
@@ -155,15 +155,15 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	}
 	log.CliLogger.Debug("Generating AsyncAPI Spec...")
 	messages := make(map[string]spec.Message)
-	for idx := 0; idx < len(topics); idx++ {
+	for _, topic := range topics {
 		//For a given topic
 		for i := 0; i < len(subjects); i++ {
-			if subjects[i] != (topics[idx].Name+"-value") || strings.HasPrefix(topics[idx].Name, "_") {
+			if subjects[i] != (topic.Name+"-value") || strings.HasPrefix(topic.Name, "_") {
 				//Avoid internal topics or if no schema is set for value.
 				continue
 			} else {
 				//Subject and Topic matches
-				contentType, Schema, producer, err := getChannelDetails(topics[idx], srClient, ctx, subjects[i])
+				contentType, Schema, producer, err := getChannelDetails(topic, srClient, ctx, subjects[i])
 				if contentType == "PROTOBUF" {
 					continue
 				}
@@ -174,7 +174,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				if err != nil {
 					log.CliLogger.Warn(err, "Error in getting tags")
 				}
-				bindings, opBindings, msgBindings, err := getBindings(cluster, topics[idx], clusterCreds, groupId)
+				bindings, opBindings, msgBindings, err := getBindings(cluster, topic, clusterCreds, groupId)
 				if err != nil {
 					log.CliLogger.Warn("Bindings not found")
 					return err
@@ -184,7 +184,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				if err != nil {
 					return err
 				}
-				reflector, err = AddMessage(reflector, topics[idx].Name, contentType, tags, consumeExamples, consumer, msgBindings, bindings, opBindings, messages, producer, mapOfMessageCompat)
+				reflector, err = AddMessage(reflector, topic.Name, contentType, tags, consumeExamples, consumer, msgBindings, bindings, opBindings, messages, producer, mapOfMessageCompat)
 				if err != nil {
 					return err
 				}
@@ -201,7 +201,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("AsyncAPI specification file generated at %s.\n", file)
+	fmt.Printf("AsyncAPI specification file generated at \"%s\".\n", file)
 	return ioutil.WriteFile(file, yaml, 0644)
 }
 
@@ -229,27 +229,26 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}, error) {
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
-		log.CliLogger.Warn("Error in example: Subscribing to the topic")
-		return nil, err
+		log.CliLogger.Warnf("Error in subscribing to the topic: \"%v\"", err)
+		return nil, nil
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
-		fmt.Printf("No example received for topic %s\n", topicName)
-		return nil, err
+		log.CliLogger.Warnf("No example received for topic \"%s\": \"%v\"\n", topicName, err)
+		return nil, nil
 	}
 	var example interface{}
 	val := string(message.Value)
-	val = val[strings.IndexRune(val, '{'):]
+	val = val[strings.Index(val, "{"):]
 	err = json.Unmarshal([]byte(val), &example)
 	if err != nil {
-		fmt.Printf("Example received for topic %s is not a valid JSON for unmarshalling.\n", topicName)
+		err = fmt.Errorf("Example received for topic \"%s\" is not a valid JSON for unmarshalling: \"%v\"\n", topicName, err)
 		return nil, err
 	}
 	return example, nil
 }
 
 func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, clusterCreds *v1.APIKeyPair, groupId string) (interface{}, interface{}, interface{}, error) {
-	var binding ConfluentBinding
 	var CleanupPolicy TopicConfigs
 	body := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if body == nil {
@@ -264,7 +263,6 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	}
 	//DeleteRetentionMs
 	var DeleteRetentionMs TopicConfigs
-
 	body = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if body == nil {
 		//for tests
@@ -277,6 +275,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 			return nil, nil, nil, err
 		}
 	}
+	var binding ConfluentBinding
 	binding.Partitions = len(topic.GetPartitions())
 	binding.Replicas = len(topic.GetPartitions()[0].Replicas)
 	binding.Configs.CleanupPolicy = CleanupPolicy.Value
@@ -300,25 +299,25 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	var ctx context.Context
 	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
-	//Getting Kafka Cluster
+	//Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
-		log.CliLogger.Warn("Error in getting cluster")
+		err = fmt.Errorf("error in getting cluster: \"%v\"", err)
+		return nil, nil, nil, "", err
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
 	if err != nil {
-		log.CliLogger.Warn("Unable to Find Kafka Cluster")
+		err = fmt.Errorf("cannot find Kafka cluster: \"%v\"", err)
 		return nil, nil, nil, "", err
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
-		fmt.Println("Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
-		err = errors.New("API Key not set for the Kafka Cluster")
+		err := errors.NewErrorWithSuggestions("API Key not set for the Kafka cluster", "Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
 		return nil, nil, nil, "", err
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
-		log.CliLogger.Warn("Error in getting topics")
+		err = fmt.Errorf("error in getting topics: \"%v\"", err)
 		return nil, nil, nil, "", err
 	}
 	broker := strings.Split(cluster.GetEndpoint(), "//")[1]
@@ -341,7 +340,8 @@ func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry
 	} else { //JSON or Avro Format
 		err := json.Unmarshal([]byte(Schema.Schema), &producer)
 		if err != nil {
-			log.CliLogger.Warn("Error in unmarshalling schema")
+			err = fmt.Errorf("error in unmarshalling schema: \"%v\"", err)
+			return contentType, Schema, nil, err
 		}
 	}
 	return contentType, Schema, producer, nil
