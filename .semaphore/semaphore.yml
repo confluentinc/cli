@@ -50,6 +50,9 @@ blocks:
             - go get ./...
             - make deps
             
+            - which golangci-lint
+            - echo $(go env GOPATH)
+            
             # Cache dependencies
             - cache store GOPATH $(go env GOPATH)
             - cache store
