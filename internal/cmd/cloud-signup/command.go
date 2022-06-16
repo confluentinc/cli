@@ -211,7 +211,7 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 		return
 	}
 
-	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), true, "")
+	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), launchdarkly.CcloudClientType, "")
 
 	// try to find free trial $400 promo code
 	hasFreeTrialCode := false
@@ -223,7 +223,7 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 	}
 
 	if hasFreeTrialCode {
-		utils.Printf(cmd, errors.FreeTrialSignUpMsg, admin.ConvertToUSD(freeTrialPromoCodeAmount))
+		utils.ErrPrintf(cmd, errors.FreeTrialSignUpMsg, admin.ConvertToUSD(freeTrialPromoCodeAmount))
 	} else {
 		log.CliLogger.Warn("Failed to print free trial announcement: failed to find free trial promo code")
 	}
