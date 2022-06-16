@@ -2,16 +2,17 @@ package test
 
 import (
 	"fmt"
-	"github.com/confluentinc/bincover"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/stretchr/testify/require"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/bincover"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestCloudSignup_FreeTrialAnnouncement() {
-	args := fmt.Sprintf("cloud-signup --url=%s", s.TestBackend.GetCloudUrl())
+	args := fmt.Sprintf("cloud-signup --url=%s -vvv", s.TestBackend.GetCloudUrl())
 
 	s.T().Run("signup only has free trial code", func(tt *testing.T) {
 		os.Setenv("HAS_PROMO_CODE_CLAIMS", "onlyFreeTrialCode")

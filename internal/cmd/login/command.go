@@ -154,7 +154,7 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 	}
 
 	// aggregate remaining free credit
-	var remainingFreeCredit int64
+	remainingFreeCredit := int64(0)
 	for _, promoCode := range promoCodes {
 		remainingFreeCredit += promoCode.Balance
 	}

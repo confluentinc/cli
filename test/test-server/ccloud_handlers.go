@@ -288,7 +288,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
 					{
-						Code:                 "FREETRIAL400",
+						Code:                 "SignUpPromo01",
 						Amount:               400 * 10000,
 						Balance:              0,
 						CreditExpirationDate: expiration,
