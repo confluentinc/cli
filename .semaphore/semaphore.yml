@@ -1,0 +1,81 @@
+version: v1.0
+name: Confluent CLI
+
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  secrets:
+    - name: vault_sem2_approle
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: Download Dependencies
+    task:
+      jobs:
+        - name: go get ./...
+          commands:
+            # Install Vault
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - unzip vault.zip
+            - chmod +x vault
+            
+            # Log in to Vault
+            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - ./vault login -no-print token="${VAULT_TOKEN}"
+            
+            # Get GitHub SSH key from Vault
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            
+            # Try to restore cached dependencies
+            - checkout
+            - ls
+            - cache restore
+            # TODO: Exit block if restore was successful 
+            
+            # Download Go dependencies
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - export GOPRIVATE=github.com/confluentinc
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
+            - go get -d -t ./...
+            - make deps
+            
+            - cache store
+            - cache store GOPATH-$(checksum go.sum) $(go env GOPATH)/bin
+  
+  - name: Linux
+    task:
+      prologue:
+        commands:
+          - checkout
+      jobs:
+        - name: Lint
+          commands:
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - cache restore GOPATH-$(checksum go.sum)
+            - make lint
+        - name: Unit Tests
+          commands:
+            - cache restore
+            - make unit-test
+        - name: Integration Tests
+          commands:
+            - cache restore
+            - make int-test
+        - name: Smoke Tests
+          commands:
+            - make test-installer
+
+# TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
