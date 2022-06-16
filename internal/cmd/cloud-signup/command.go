@@ -24,10 +24,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const (
-	freeTrialPromoCodeAmount = 4000000
-)
-
 type command struct {
 	*pcmd.CLICommand
 	userAgent     string
@@ -211,13 +207,30 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 		return
 	}
 
-	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), launchdarkly.CcloudClientType, "")
+	url, err := c.Flags().GetString("url")
+	if err != nil {
+		log.CliLogger.Warn("Failed to print free trial announcement: failed to get url")
+		return
+	}
 
-	// try to find free trial $400 promo code
+	var ldClient launchdarkly.LaunchDarklyClient
+	switch url {
+	case "https://devel.cpdev.cloud":
+		ldClient = launchdarkly.CcloudDevelLaunchDarklyClient
+	case "https://stag.cpdev.cloud":
+		ldClient = launchdarkly.CcloudStagLaunchDarklyClient
+	default:
+		ldClient = launchdarkly.CcloudProdLaunchDarklyClient
+	}
+	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, "")
+
+	// try to find free trial promo code
 	hasFreeTrialCode := false
+	freeTrialPromoCodeAmount := int64(0)
 	for _, promoCode := range promoCodes {
-		if promoCode.Code == freeTrialPromoCode && promoCode.Amount == freeTrialPromoCodeAmount {
+		if promoCode.Code == freeTrialPromoCode {
 			hasFreeTrialCode = true
+			freeTrialPromoCodeAmount = promoCode.Amount
 			break
 		}
 	}
