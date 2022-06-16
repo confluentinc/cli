@@ -73,17 +73,19 @@ gorelease-linux-glibc:
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
+	$(call print-boxed-message,"BUILDING FOR DARWIN, WINDOWS AND ALPINE LINUX") && \
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
+	make restore-librdkafka-amd64 && \
+	$(call print-boxed-message,"BUILDING FOR GLIBC LINUX") && \
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
-	make upload-linux-build-to-github && \
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
-	cat dist/confluent_$(VERSION_NO_V)_checksums.txt >> confluent_$(VERSION_NO_V)_checksums_tmp.txt && \
-	aws s3 cp confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
-	aws s3 cp confluent_$(VERSION_NO_V)_checksums_tmp.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
-	make restore-librdkafka-amd64
+	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
+	$(call print-boxed-message,"UPLOADING LINUX BUILDS TO GITHUB") && \
+	make upload-linux-build-to-github
 	
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
