@@ -210,17 +210,16 @@ const (
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// schema-registry commands
-	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
-	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
-	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg                    = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
-	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
-	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
+	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions     = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg       = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions    = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
+	SRInvalidPackageType         = "\"%s\" is an invalid package type"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
