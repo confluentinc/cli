@@ -319,7 +319,6 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 			}{
 				Principal:   principal,
 				Email:       email,
-				ServiceName: "",
 			}
 			outputWriter.AddElement(displayStruct)
 		}
