@@ -50,12 +50,9 @@ blocks:
             - go get ./...
             - make deps
             
-            - which golangci-lint
-            - echo $(go env GOPATH)
-            
             # Cache dependencies
-            - cache store GOPATH $(go env GOPATH)
             - cache store
+            - cache store GOPATH-$(checksum go.sum) $(go env GOPATH)/bin
   
   - name: Linux
     task:
@@ -67,7 +64,7 @@ blocks:
           commands:
             - sem-version go 1.17.6
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
-            - cache restore GOPATH
+            - cache restore GOPATH-$(checksum go.sum)
             - make lint
         - name: Unit Tests
           commands:
