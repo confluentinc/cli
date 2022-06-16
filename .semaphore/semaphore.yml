@@ -27,19 +27,20 @@ blocks:
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
             - unzip vault.zip
             - chmod +x vault
-
+            
             # Log in to Vault
             - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
             - ./vault login -no-print token="${VAULT_TOKEN}"
-
+            
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
             
             # Try to restore cached dependencies
             - checkout
+            - ls
             - cache restore
-            # TODO: Exit job if restore was successful 
+            # TODO: Exit block if restore was successful 
             
             # Download Go dependencies
             - sem-version go 1.17.6
@@ -50,7 +51,6 @@ blocks:
             - go get -d -t ./...
             - make deps
             
-            # Cache dependencies
             - cache store
             - cache store GOPATH-$(checksum go.sum) $(go env GOPATH)/bin
   
