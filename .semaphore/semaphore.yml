@@ -48,7 +48,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             - go get -d -t ./...
-#            - make deps
+            - make deps
             
             # Cache dependencies
             - cache store
