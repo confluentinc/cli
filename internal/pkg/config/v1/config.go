@@ -508,7 +508,7 @@ func (c *Config) CheckIsCloudLogin() error {
 		return RequireCloudLoginErr
 	}
 
-	if c.isOrgSuspended() {
+	if c.IsOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
 			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
@@ -606,14 +606,14 @@ func (c *Config) isContextStatePresent() bool {
 	return true
 }
 
-func (c *Config) isOrgSuspended() bool {
+func (c *Config) IsOrgSuspended() bool {
 	status := c.Context().GetSuspensionStatus().GetStatus()
 	return status == orgv1.SuspensionStatusType_SUSPENSION_IN_PROGRESS || status == orgv1.SuspensionStatusType_SUSPENSION_COMPLETED
 }
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	eventType := c.Context().GetSuspensionStatus().GetEventType()
-	return c.isOrgSuspended() && eventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
+	return c.IsOrgSuspended() && eventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
 }
 
 func (c *Config) GetLastUsedOrgId() string {

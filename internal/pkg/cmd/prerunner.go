@@ -228,7 +228,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 }
 
 func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
-	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
+	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), launchdarkly.CliLaunchDarklyClient, nil)
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
 	if !ok {
 		return nil
