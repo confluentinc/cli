@@ -114,7 +114,7 @@ const (
 	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
 	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
-		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
+		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n\n"
 	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
