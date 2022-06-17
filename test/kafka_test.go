@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/confluentinc/bincover"
@@ -145,6 +146,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1", fixture: "kafka/cluster-linking/promote-mirror.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/cluster-linking/promote-mirror-json.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror promote topic1 topic2 --cluster lkc-describe-topic --link link-1 -o yaml", fixture: "kafka/cluster-linking/promote-mirror-yaml.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
+	}
+
+	if runtime.GOOS != "windows" {
+		noSchemaTest := CLITest{args: "kafka topic produce topic-exist --value-format avro --api-key=key --api-secret=secret", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-produce-no-schema.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}}
+		tests = append(tests, noSchemaTest)
 	}
 
 	resetConfiguration(s.T())
@@ -394,9 +400,6 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor 4 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Replication factor: 4 larger than available brokers: 3. (40002)\n", wantErrCode: 1, name: "creating topic with larger replication factor than num. brokers should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --replication-factor -2 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Replication factor must be larger than 0. (40002)\n", wantErrCode: 1, name: "creating topic with negative replication factor should fail"},
 		// --config errors
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: retention.ms`, wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1, --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: `, wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=1,compression --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: compression`, wantErrCode: 1, name: "creating topic with poorly formatted config arg should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config asdf=1 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Unknown topic config name: asdf (40002)\n", wantErrCode: 1, name: "creating topic with incorrect config name should fail"},
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as --no-auth", kafkaRestURL), contains: "Error: REST request failed: Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", wantErrCode: 1, name: "creating topic with correct key incorrect config value should fail"},
 		// Success
@@ -432,9 +435,6 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 		{args: fmt.Sprintf("kafka topic update --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
 		{args: fmt.Sprintf("kafka topic update topic-not-exist --url %s --no-auth", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", wantErrCode: 1, name: "update config of a non-existent topic should fail"},
 		// --config errors
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: retention.ms`, wantErrCode: 1, name: "poorly formatted config arg should fail"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1, --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: `, wantErrCode: 1, name: "poorly formatted config arg should fail"},
-		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression --no-auth", kafkaRestURL), contains: `Error: failed to parse "key=value" pattern from configuration: compression`, wantErrCode: 1, name: "poorly formatted config arg should fail"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config asdf=1 --no-auth", kafkaRestURL), contains: "Error: REST request failed: Config asdf cannot be found for TOPIC topic-exist in cluster cluster-1. (404)\n", wantErrCode: 1, name: "incorrect config name should fail"},
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=as --no-auth", kafkaRestURL), contains: "Error: REST request failed: Invalid config value for resource ConfigResource(type=TOPIC, name='topic-exist'): Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", wantErrCode: 1, name: "correct key incorrect config value should fail"},
 		// Success cases

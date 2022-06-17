@@ -7,10 +7,6 @@ import (
 	"os"
 	"strings"
 
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
-
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -22,7 +18,9 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -200,10 +198,13 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			}
 		}
 
-		if err := log.SetLoggingVerbosity(cmd, log.CliLogger); err != nil {
+		verbosity, err := cmd.Flags().GetCount("verbose")
+		if err != nil {
 			return err
 		}
+		log.CliLogger.SetVerbosity(verbosity)
 		log.CliLogger.Flush()
+
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
@@ -237,7 +238,7 @@ func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
-			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == requireOnPremLoginErr {
+			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == v1.RequireOnPremLoginErr {
 				return err
 			}
 			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
@@ -625,7 +626,7 @@ func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
 func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
+	if log.CliLogger.Level >= log.DEBUG {
 		mdsConfig.Debug = true
 	}
 	if ctx == nil {
@@ -959,9 +960,7 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		mdsv2Config.Debug = true
-	}
+	mdsv2Config.Debug = log.CliLogger.Level >= log.DEBUG
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
@@ -985,9 +984,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.GetLevel() >= log.DEBUG {
-		cfg.Debug = true
-	}
+	cfg.Debug = log.CliLogger.Level >= log.DEBUG
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
 	return kafkarestv3.NewAPIClient(cfg), nil
 }

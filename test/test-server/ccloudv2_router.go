@@ -8,8 +8,17 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters/{id}":            handleCmkCluster,
-	"/cmk/v2/clusters":                 handleCmkClusters,
+	"/cmk/v2/clusters/{id}": handleCmkCluster,
+	"/cmk/v2/clusters":      handleCmkClusters,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}":                     handleConnector,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/config":              handleConnectorConfig,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                                 handleConnectors,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause":               handleConnectorPause,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume":              handleConnectorResume,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
+	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
+	"/iam/v2/api-keys/{id}":            handleIamApiKey,
+	"/iam/v2/api-keys":                 handleIamApiKeys,
 	"/iam/v2/users/{id}":               handleIamUser,
 	"/iam/v2/users":                    handleIamUsers,
 	"/iam/v2/service-accounts/{id}":    handleIamServiceAccount,

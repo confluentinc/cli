@@ -76,7 +76,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{}
 	// Since we use paginated results, get all results by iterating the list.
 	for {
-		req := c.V2Client.QuotasClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
+		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
 			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {

@@ -33,11 +33,12 @@ func NewClientMock() *ccloud.Client {
 
 func NewV2ClientMock() *ccloudv2.Client {
 	return &ccloudv2.Client{
-		CmkClient:    newCmkClientMock(),
-		IamClient:    newIamClientMock(),
-		OrgClient:    newOrgClientMock(),
-		QuotasClient: newQuotasClientMock(),
-		AuthToken:    "auth-token"}
+		AuthToken:          "auth-token",
+		CmkClient:          newCmkClientMock(),
+		IamClient:          newIamClientMock(),
+		OrgClient:          newOrgClientMock(),
+		ServiceQuotaClient: newQuotasClientMock(),
+	}
 }
 
 func newCmkClientMock() *cmkv2.APIClient {

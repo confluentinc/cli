@@ -30,11 +30,11 @@ func TestCatchClustersExceedError(t *testing.T) {
 		wantErr:  true,
 	}
 	var err error
-	if err = CatchConfigurationNotValidError(tt.err, tt.response); (err != nil) != tt.wantErr {
-		t.Errorf("CatchConfigurationNotValidError()\nerror: %v\nwantErr: %v", err, tt.wantErr)
+	if err = CatchClusterConfigurationNotValidError(tt.err, tt.response); (err != nil) != tt.wantErr {
+		t.Errorf("CatchClusterConfigurationNotValidError()\nerror: %v\nwantErr: %v", err, tt.wantErr)
 	}
 	if err.Error() != tt.want {
-		t.Errorf("CatchConfigurationNotValidError()\ngot: %s\nwant: %s", err, tt.want)
+		t.Errorf("CatchClusterConfigurationNotValidError()\ngot: %s\nwant: %s", err, tt.want)
 	}
 }
 

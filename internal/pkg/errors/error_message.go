@@ -22,9 +22,12 @@ const (
 	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
 	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
-	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`."
+	APIKeyNotFoundErrorMsg              = "Unknown API key %s"
+	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
+	InvalidOperationOnApiKeyErrorMsg    = "Cannot perform this api key operation on a KSQL or a Schema Registry key. Please use Confluent UI"
+	APIKeyAccessForbiddenErrorMsg       = "API key not found or access forbidden"
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -39,6 +42,8 @@ const (
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
+	EndOfFreeTrialErrorMsg                      = "organization \"%s\" has been suspended because your free trial has ended"
+	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card with \"confluent admin payment update\" or claim a promo code with \"confluent admin promo add\". To enter payment via the UI, please go to confluent.cloud/login."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -48,10 +53,14 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
+	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
+	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
+	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -153,6 +162,7 @@ const (
 	FailedToCreateProducerMsg            = "failed to create producer: %v"
 	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
 	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	InvalidOffsetErrorMsg                = "offset value must be a non-negative integer"
 	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
@@ -169,6 +179,7 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
+	FailedToLoadSchemaSuggestions = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 
 	// Cluster Link commands
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
@@ -284,6 +295,7 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
+	NoOrganizationContextErrorMsg      = "unable to check organization from context"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
 
 	// local package
@@ -389,7 +401,7 @@ const (
 	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` or `--resource` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
@@ -442,6 +454,7 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
+	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"

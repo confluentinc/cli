@@ -6,18 +6,24 @@ import (
 	"io/ioutil"
 	"os"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
+
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/properties"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
 )
 
 type kafkaClientConfigs struct {
 	configurations map[string]string
+}
+
+type partitionFilter struct {
+	changed bool
+	index   int32
 }
 
 func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
@@ -46,13 +52,15 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap := getCommonConfig(kafka, clientID)
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
-	if err := setAutoOffsetReset(configMap, beginning); err != nil {
+
+	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 	if err := setConsumerDebugOption(configMap); err != nil {
@@ -119,11 +127,8 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	beginning, err := cmd.Flags().GetBool("from-beginning")
-	if err != nil {
-		return nil, err
-	}
-	if err := setAutoOffsetReset(configMap, beginning); err != nil {
+	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
+	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
 
@@ -232,16 +237,44 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-func setAutoOffsetReset(configMap *ckafka.ConfigMap, beginning bool) error {
-	autoOffsetReset := "latest"
-	if beginning {
-		autoOffsetReset = "earliest"
+func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
+	if cmd.Flags().Changed("offset") {
+		offset, err := cmd.Flags().GetInt64("offset")
+		if err != nil {
+			return ckafka.OffsetInvalid, err
+		}
+		if offset < 0 {
+			return ckafka.OffsetInvalid, errors.New(errors.InvalidOffsetErrorMsg)
+		}
+		return ckafka.NewOffset(offset)
+	} else {
+		beginning, err := cmd.Flags().GetBool("from-beginning")
+		if err != nil {
+			return ckafka.OffsetInvalid, err
+		}
+		autoOffsetReset := "latest"
+		if beginning {
+			autoOffsetReset = "earliest"
+		}
+		return ckafka.NewOffset(autoOffsetReset)
 	}
-	return configMap.SetKey("auto.offset.reset", autoOffsetReset)
+}
+
+func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter partitionFilter) []ckafka.TopicPartition {
+	if partitionFilter.changed {
+		for _, partition := range partitions {
+			if partition.Partition == int32(partitionFilter.index) {
+				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.index)
+				return []ckafka.TopicPartition{partition}
+			}
+		}
+		return []ckafka.TopicPartition{}
+	}
+	return partitions
 }
 
 func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
+	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
 	case log.TRACE:
@@ -251,7 +284,7 @@ func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
 }
 
 func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
-	switch log.CliLogger.GetLevel() {
+	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
 	case log.TRACE:
@@ -278,7 +311,7 @@ func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 	return ckafka.NewConsumer(configMap)
 }
 
-func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) error {
+func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configs []string) error {
 	configurations := make(map[string]string)
 	if configPath != "" {
 		configFile, err := os.Open(configPath)
@@ -298,8 +331,8 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 	}
 
 	var err error
-	if len(configStrings) > 0 {
-		configurations, err = properties.ToMap(configStrings)
+	if len(configs) > 0 {
+		configurations, err = properties.ConfigFlagToMap(configs)
 		if err != nil {
 			return err
 		}

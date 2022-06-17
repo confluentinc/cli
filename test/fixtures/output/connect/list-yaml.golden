@@ -1,5 +1,5 @@
 - id: lcc-123
-  name: lcc-123
-  status: Running
+  name: az-connector
+  status: RUNNING
   trace: ""
   type: Sink

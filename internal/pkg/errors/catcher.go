@@ -25,7 +25,8 @@ import (
 const quotaExceededRegex = ".* is currently limited to .*"
 
 type responseBody struct {
-	Error []errorDetail `json:"errors"`
+	Error   []errorDetail `json:"errors"`
+	Message string        `json:"message"`
 }
 
 type errorDetail struct {
@@ -140,6 +141,18 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
+func CatchQuotaExceedError(err error, body []byte) error {
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if len(resBody.Error) > 0 {
+		detail := resBody.Error[0].Detail
+		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
+			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		}
+	}
+	return err
+}
+
 func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
@@ -167,19 +180,26 @@ func CatchKafkaNotFoundError(err error, clusterId string) error {
 	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
 }
 
-func CatchConfigurationNotValidError(err error, r *http.Response) error {
+func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
-		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
-		}
+	return CatchQuotaExceedError(err, body)
+}
+
+func CatchApiKeyForbiddenAccessError(err error, operation string) error {
+	if err.Error() == "403 Forbidden" {
+		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
 	}
 	return err
 }
@@ -199,33 +219,53 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 	if err == nil {
 		return nil
 	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
-		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
-		}
-	}
-	return err
+	return CatchQuotaExceedError(err, body)
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
+
+	if r == nil {
+		return err
+	}
+
 	body, _ := io.ReadAll(r.Body)
 	if strings.Contains(string(body), "Service Account Not Found") {
 		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 	}
+
 	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+}
+
+func CatchConnectorConfigurationNotValidError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	var resBody responseBody
+	_ = json.Unmarshal(body, &resBody)
+	if resBody.Message != "" {
+		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
+		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
+		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
+	}
+
+	return err
 }
 
 /*
@@ -295,22 +335,34 @@ func CatchClusterNotReadyError(err error, clusterId string) error {
 	return err
 }
 
-func CatchSchemaNotFoundError(err error, resp *http.Response) error {
+func CatchSchemaNotFoundError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(resp.Status, "Not Found") {
+
+	if r == nil {
+		return err
+	}
+
+	if strings.Contains(r.Status, "Not Found") {
 		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
 	}
+
 	return err
 }
 
-func CatchNoSubjectLevelConfigError(err error, resp *http.Response, subject string) error {
+func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string) error {
 	if err == nil {
 		return nil
 	}
-	if strings.Contains(resp.Status, "Not Found") {
+
+	if r == nil {
+		return err
+	}
+
+	if strings.Contains(r.Status, "Not Found") {
 		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
 	}
+
 	return err
 }
