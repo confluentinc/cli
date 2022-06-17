@@ -47,6 +47,7 @@ blocks:
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
+            # TODO: Remove -d in go1.18
             - go get -d ./...
             - make deps
             
@@ -59,21 +60,16 @@ blocks:
           - checkout
           - sem-version go 1.17.6
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
+          - cache restore $(checksum go.sum)
       jobs:
         - name: Lint
           commands:
-            - cache restore $(checksum go.sum)
-            - ls $(go env GOPATH)/bin
-            - ls $(go env GOPATH)/pkg/mod
             - make lint
         - name: Unit Tests
           commands:
-            - cache restore
             - make unit-test
         - name: Integration Tests
           commands:
-            - cache restore
-            - ls $(go env GOPATH)/pkg/mod
             - make int-test
         - name: Smoke Tests
           commands:
