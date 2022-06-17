@@ -10,19 +10,18 @@ import (
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/iancoleman/strcase"
-	"github.com/spf13/cobra"
-	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.1.0"
-	"github.com/swaggest/go-asyncapi/spec-2.1.0"
-
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/iancoleman/strcase"
+	"github.com/spf13/cobra"
+	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.1.0"
+	"github.com/swaggest/go-asyncapi/spec-2.1.0"
 )
 
 type command struct {
@@ -141,7 +140,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		apiKey = schemaCluster.SrCredentials.Key
 		apiSecret = schemaCluster.SrCredentials.Secret
 	}
-	srClient, ctx, err := sr.GetAPIClientWithAPIKey(cmd, nil, c.Config, c.Version, apiKey, apiSecret)
+
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, apiKey, apiSecret)
 	if err != nil {
 		return nil
 	}
