@@ -73,18 +73,18 @@ gorelease-linux-glibc:
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
-	$(call print-boxed-message,"BUILDING FOR DARWIN, WINDOWS AND ALPINE LINUX") && \
+	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
 	make restore-librdkafka-amd64 && \
-	$(call print-boxed-message,"BUILDING FOR GLIBC LINUX") && \
+	echo "BUILDING FOR GLIBC LINUX" && \
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
-	$(call print-boxed-message,"UPLOADING LINUX BUILDS TO GITHUB") && \
+	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
 	make upload-linux-build-to-github
 	
 
