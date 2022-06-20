@@ -274,6 +274,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	body, err := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if err != nil {
 		err = fmt.Errorf("error in getting cleanup policy: %v", err)
+		return nil, err
 	}
 	if body == nil {
 		// for tests
@@ -291,6 +292,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	body, err = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
 	if err != nil {
 		err = fmt.Errorf("error in getting delete retention ms: %v", err)
+		return nil, err
 	}
 	if body == nil {
 		// for tests
