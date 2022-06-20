@@ -278,7 +278,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	if body == nil {
 		// for tests
 		cleanupPolicy.Name = "cleanup.policy"
-		cleanupPolicy.Value = "delete"
+		cleanupPolicy.Value = ""
 	} else {
 		err := json.Unmarshal(body, &cleanupPolicy)
 		if err != nil {
@@ -295,7 +295,7 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 	if body == nil {
 		// for tests
 		deleteRetentionMs.Name = "delete.retention.ms"
-		deleteRetentionMs.Value = "86400000"
+		deleteRetentionMs.Value = "-1"
 	} else {
 		err := json.Unmarshal(body, &deleteRetentionMs)
 		if err != nil {
@@ -325,6 +325,9 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 			GroupId:  groupId,
 			ClientId: "client1",
 		},
+	}
+	if deleteRetentionMsValue == -1 || cleanupPolicy.Value == "" {
+		bindings.ChannelBindings = nil
 	}
 	return &bindings, nil
 }
@@ -465,7 +468,7 @@ func addMessage(reflector asyncapi.Reflector, topicName string, contentType stri
 	}
 	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &bindings.MessageBinding})
 	messages[strcase.ToCamel(topicName)+"Message"] = spec.Message{OneOf1: &spec.MessageOneOf1{MessageEntity: (*spec.MessageEntity).WithPayload(entityProducer, producer)}}
-	err := reflector.AddChannel(asyncapi.ChannelInfo{
+	channel := asyncapi.ChannelInfo{
 		Name: topicName,
 		BaseChannelItem: &spec.ChannelItem{
 			MapOfAnything: mapOfMessageCompat,
@@ -474,9 +477,12 @@ func addMessage(reflector asyncapi.Reflector, topicName string, contentType stri
 				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + strcase.ToCamel(topicName) + "Message"}},
 				Bindings: &spec.OperationBindingsObject{Kafka: &bindings.OperationBinding},
 			},
-			Bindings: &spec.ChannelBindingsObject{Kafka: &bindings.ChannelBindings},
 		},
-	})
+	}
+	if bindings.ChannelBindings != nil {
+		channel.BaseChannelItem.Bindings = &spec.ChannelBindingsObject{Kafka: &bindings.ChannelBindings}
+	}
+	err := reflector.AddChannel(channel)
 	if err != nil {
 		return reflector, err
 	}
