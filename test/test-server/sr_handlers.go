@@ -91,61 +91,74 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			versionStr := vars["version"]
-			version64, err := strconv.ParseInt(versionStr, 10, 32)
-			require.NoError(t, err)
-			subject := vars["subject"]
-			schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "record"}
-			switch subject {
-			case "lvl0":
-				schema.Id = 1001
-				schema.Schema = "schema0"
-				schema.References = []srsdk.SchemaReference{
-					{
-						Name:    "ref_lvl1_1",
-						Subject: "lvl1-1",
+			if versionStr == "latest" {
+				subject := vars["subject"]
+				err := json.NewEncoder(w).Encode(srsdk.Schema{
+					Subject:    subject,
+					Version:    1,
+					Id:         1,
+					SchemaType: "avro",
+					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
+				})
+				require.NoError(t, err)
+			} else {
+
+				version64, err := strconv.ParseInt(versionStr, 10, 32)
+				require.NoError(t, err)
+				subject := vars["subject"]
+				schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "record"}
+				switch subject {
+				case "lvl0":
+					schema.Id = 1001
+					schema.Schema = "schema0"
+					schema.References = []srsdk.SchemaReference{
+						{
+							Name:    "ref_lvl1_1",
+							Subject: "lvl1-1",
+							Version: 1,
+						},
+						{
+							Name:    "ref_lvl1_2",
+							Subject: "lvl1-2",
+							Version: 1,
+						},
+					}
+				case "lvl1-1":
+					schema.Id = 1002
+					schema.Schema = "schema11"
+					schema.References = []srsdk.SchemaReference{
+						{
+							Name:    "ref_lvl2",
+							Subject: "lvl2",
+							Version: 1,
+						},
+					}
+				case "lvl1-2":
+					schema.Id = 1003
+					schema.Schema = "schema12"
+					schema.References = []srsdk.SchemaReference{
+						{
+							Name:    "ref_lvl2",
+							Subject: "lvl2",
+							Version: 1,
+						},
+					}
+				case "lvl2":
+					schema.Id = 1004
+					schema.Schema = "schema2"
+					schema.References = []srsdk.SchemaReference{}
+				default:
+					schema.Id = 10
+					schema.Schema = "schema"
+					schema.References = []srsdk.SchemaReference{{
+						Name:    "ref",
+						Subject: "payment",
 						Version: 1,
-					},
-					{
-						Name:    "ref_lvl1_2",
-						Subject: "lvl1-2",
-						Version: 1,
-					},
+					}}
 				}
-			case "lvl1-1":
-				schema.Id = 1002
-				schema.Schema = "schema11"
-				schema.References = []srsdk.SchemaReference{
-					{
-						Name:    "ref_lvl2",
-						Subject: "lvl2",
-						Version: 1,
-					},
-				}
-			case "lvl1-2":
-				schema.Id = 1003
-				schema.Schema = "schema12"
-				schema.References = []srsdk.SchemaReference{
-					{
-						Name:    "ref_lvl2",
-						Subject: "lvl2",
-						Version: 1,
-					},
-				}
-			case "lvl2":
-				schema.Id = 1004
-				schema.Schema = "schema2"
-				schema.References = []srsdk.SchemaReference{}
-			default:
-				schema.Id = 10
-				schema.Schema = "schema"
-				schema.References = []srsdk.SchemaReference{{
-					Name:    "ref",
-					Subject: "payment",
-					Version: 1,
-				}}
+				err = json.NewEncoder(w).Encode(schema)
+				require.NoError(t, err)
 			}
-			err = json.NewEncoder(w).Encode(schema)
-			require.NoError(t, err)
 		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(int32(1))
 			require.NoError(t, err)
@@ -216,7 +229,7 @@ func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 func (s *SRRouter) HandleSRSubjects(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		subjects := []string{"subject1", "subject2", "subject3"}
+		subjects := []string{"subject1", "subject2", "subject3", "topic1-value"}
 		err := json.NewEncoder(w).Encode(subjects)
 		require.NoError(t, err)
 	}
