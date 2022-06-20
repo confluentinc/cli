@@ -70,7 +70,7 @@ type MessageBinding struct {
 	BindingVersion string      `json:"bindingVersion"`
 }
 
-type Bindings struct {
+type bindings struct {
 	ChannelBindings  interface{}
 	MessageBinding   interface{}
 	OperationBinding interface{}
@@ -95,7 +95,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) export(cmd *cobra.Command, _ []string) error {
+func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return err
@@ -117,10 +117,11 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	// Get Kafka cluster details and broker URL
-	cluster, topics, clusterCreds, broker, err := getClusterDetails(c)
+	cluster, topics, clusterCreds, err := getClusterDetails(c)
 	if err != nil {
 		return err
 	}
+	broker := getBroker(cluster)
 	// Create Consumer
 	var consumer *kafka.Consumer
 	if consumeExamples {
@@ -128,10 +129,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		err := closeConsumer(consumer)
-		if err != nil {
-			return err
-		}
+		defer func(consumer *kafka.Consumer) {
+			err = consumer.Close()
+			err = fmt.Errorf("failed to close consumer: %v", err)
+		}(consumer)
 	}
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
@@ -181,7 +182,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				}
 				var example interface{}
 				if consumeExamples {
-					example, _ = getMessageExamples(consumer, topic.Name)
+					example, err = getMessageExamples(consumer, topic.Name)
+					if err != nil {
+						log.CliLogger.Warn(err)
+					}
 				}
 				bindings, err := getBindings(cluster, topic, clusterCreds, groupId)
 				if err != nil {
@@ -192,7 +196,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				if err != nil {
 					return err
 				}
-				reflector, err = addMessage(reflector, topic.Name, contentType, tags, example, bindings, messages, producer, mapOfMessageCompat)
+				reflector, err = addMessage(reflector, topic.Name, contentType, tags, example, *bindings, messages, producer, mapOfMessageCompat)
 				if err != nil {
 					return err
 				}
@@ -210,26 +214,35 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	fmt.Printf("AsyncAPI specification file generated at \"%s\".\n", file)
-	return ioutil.WriteFile(file, yaml, 0644)
+	err = ioutil.WriteFile(file, yaml, 0644)
+	return err
 }
 
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
-	body := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
+	body, err := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
+	if err != nil {
+		err = fmt.Errorf("error in getting schema level tags %v", err)
+		return nil, err
+	}
 	var tagsFromId []TagsFromId
-	err := json.Unmarshal(body, &tagsFromId)
+	err = json.Unmarshal(body, &tagsFromId)
 	if err != nil {
 		return nil, err
 	}
 	var tagsInSpec []spec.Tag
-	for j := 0; j < len(tagsFromId); j++ {
-		body := pasyncapi.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tagsFromId[j].TypeName, apiKey, apiSecret)
+	for _, tags := range tagsFromId {
+		body, err := pasyncapi.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
+		if err != nil {
+			err = fmt.Errorf("failed to get tag definitions: %v", err)
+			return nil, err
+		}
 		var tagDef TagDef
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
-			fmt.Println("Error in Unmarshalling tags")
+			err = fmt.Errorf("failed to unmarshal tags: %v", err)
 			return nil, err
 		}
-		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tagsFromId[j].TypeName, Description: tagDef.Description})
+		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tags.TypeName, Description: tagDef.Description})
 	}
 	return tagsInSpec, nil
 }
@@ -237,74 +250,86 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}, error) {
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
-		log.CliLogger.Warnf("Error in subscribing to the topic: \"%v\"", err)
-		return nil, nil
+		err = fmt.Errorf("error in subscribing to the topic: %v", err)
+		return nil, err
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
-		log.CliLogger.Warnf("No example received for topic \"%s\": %v\n", topicName, err)
-		return nil, nil
+		err = fmt.Errorf("no example received for topic \"%s\": %v\n", topicName, err)
+		return nil, err
 	}
 	var example interface{}
 	val := string(message.Value)
 	val = val[strings.Index(val, "{"):]
 	err = json.Unmarshal([]byte(val), &example)
 	if err != nil {
-		log.CliLogger.Warnf("Example received for topic \"%s\" is not a valid JSON for unmarshalling: %v\n", topicName, err)
-		return nil, nil
+		err = fmt.Errorf("example received for topic \"%s\" is not a valid JSON for unmarshalling: %v\n", topicName, err)
+		return nil, err
 	}
 	return example, nil
 }
 
-func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, clusterCreds *v1.APIKeyPair, groupId string) (Bindings, error) {
-	var CleanupPolicy TopicConfigs
-	var bindings Bindings
-	body := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, clusterCreds *v1.APIKeyPair, groupId string) (*bindings, error) {
+	var cleanupPolicy TopicConfigs
+	body, err := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	if err != nil {
+		err = fmt.Errorf("error in getting cleanup policy: %v", err)
+	}
 	if body == nil {
-		CleanupPolicy.Name = "cleanup.policy"
-		CleanupPolicy.Value = "delete"
+		// for tests
+		cleanupPolicy.Name = "cleanup.policy"
+		cleanupPolicy.Value = "delete"
 	} else {
-		err := json.Unmarshal(body, &CleanupPolicy)
+		err := json.Unmarshal(body, &cleanupPolicy)
 		if err != nil {
-			fmt.Println("Error in Unmarshalling Topic Configs: Cleanup Policy")
-			return bindings, err
+			err = fmt.Errorf("error in unmarshalling topic configs: cleanup policy: %v", err)
+			return nil, err
 		}
 	}
 	// DeleteRetentionMs
-	var DeleteRetentionMs TopicConfigs
-	body = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	var deleteRetentionMs TopicConfigs
+	body, err = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+	if err != nil {
+		err = fmt.Errorf("error in getting delete retention ms: %v", err)
+	}
 	if body == nil {
 		// for tests
-		DeleteRetentionMs.Name = "delete.retention.ms"
-		DeleteRetentionMs.Value = "86400000"
+		deleteRetentionMs.Name = "delete.retention.ms"
+		deleteRetentionMs.Value = "86400000"
 	} else {
-		err := json.Unmarshal(body, &DeleteRetentionMs)
+		err := json.Unmarshal(body, &deleteRetentionMs)
 		if err != nil {
-			fmt.Println("Error in Unmarshalling Topic Configs: DeleteRetentionMs")
-			return bindings, err
+			err = fmt.Errorf("error in unmarshalling topic configs: deleteRetentionMs: %v", err)
+			return nil, err
 		}
 	}
-	var channelBindings ConfluentBinding
-	channelBindings.Partitions = len(topic.GetPartitions())
-	channelBindings.Replicas = len(topic.GetPartitions()[0].Replicas)
-	channelBindings.Configs.CleanupPolicy = CleanupPolicy.Value
-	channelBindings.Configs.DeleteRetentionMs, _ = strconv.Atoi(DeleteRetentionMs.Value)
-	channelBindings.Configs.ConfluentValueSchemaValidation = "true"
-	// OperationBindings
-	var opBindings OperationBinding
-	opBindings.GroupId = groupId
-	opBindings.ClientId = "client1"
-	// MessageBindings
-	var msgBindings MessageBinding
-	msgBindings.Key = Key{Type: "string"}
-	msgBindings.BindingVersion = "0.1.0"
-	bindings.ChannelBindings = channelBindings
-	bindings.MessageBinding = msgBindings
-	bindings.OperationBinding = opBindings
-	return bindings, nil
+	deleteRetentionMsValue, err := strconv.Atoi(deleteRetentionMs.Value)
+	if err != nil {
+		return nil, err
+	}
+	bindings := bindings{
+		ChannelBindings: ConfluentBinding{
+			Partitions: len(topic.GetPartitions()),
+			Replicas:   len(topic.GetPartitions()[0].Replicas),
+			Configs: Configs{
+				CleanupPolicy:                  cleanupPolicy.Value,
+				DeleteRetentionMs:              deleteRetentionMsValue,
+				ConfluentValueSchemaValidation: "true",
+			},
+		},
+		MessageBinding: MessageBinding{
+			Key:            Key{Type: "string"},
+			BindingVersion: "0.1.0",
+		},
+		OperationBinding: OperationBinding{
+			GroupId:  groupId,
+			ClientId: "client1",
+		},
+	}
+	return &bindings, nil
 }
 
-func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, string, error) {
+func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
 	var ctx context.Context
 	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
@@ -312,31 +337,34 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
 		err = fmt.Errorf("error in getting cluster: \"%v\"", err)
-		return nil, nil, nil, "", err
+		return nil, nil, nil, err
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
 	if err != nil {
 		err = fmt.Errorf("cannot find Kafka cluster: \"%v\"", err)
-		return nil, nil, nil, "", err
+		return nil, nil, nil, err
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
 		err := errors.NewErrorWithSuggestions("API Key not set for the Kafka cluster", "Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
-		return nil, nil, nil, "", err
+		return nil, nil, nil, err
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
 		err = fmt.Errorf("error in getting topics: \"%v\"", err)
-		return nil, nil, nil, "", err
+		return nil, nil, nil, err
 	}
-	broker := strings.Split(cluster.GetEndpoint(), "//")[1]
-	return cluster, topics, clusterCreds, broker, nil
+	return cluster, topics, clusterCreds, nil
 }
 
+func getBroker(cluster *schedv1.KafkaCluster) string {
+	broker := strings.Split(cluster.GetEndpoint(), "//")[1]
+	return broker
+}
 func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, schemaregistry.Schema, map[string]interface{}, error) {
-	log.CliLogger.Debug("Adding Operation : " + topic.Name + "\n")
-	Schema, _, _ := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
-	contentType := Schema.SchemaType
+	log.CliLogger.Debugf("Adding operation: %s\n", topic.Name)
+	schema, _, _ := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
+	contentType := schema.SchemaType
 	if contentType == "" {
 		contentType = "application/avro"
 	} else if contentType == "JSON" {
@@ -344,16 +372,16 @@ func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry
 	}
 	var producer map[string]interface{}
 	if contentType == "PROTOBUF" {
-		fmt.Println("Protobuf not supported")
-		return contentType, Schema, nil, nil
+		log.CliLogger.Warn("Protobuf not supported.")
+		return contentType, schema, nil, nil
 	} else { // JSON or Avro Format
-		err := json.Unmarshal([]byte(Schema.Schema), &producer)
+		err := json.Unmarshal([]byte(schema.Schema), &producer)
 		if err != nil {
 			err = fmt.Errorf("error in unmarshalling schema: \"%v\"", err)
-			return contentType, Schema, nil, err
+			return contentType, schema, nil, err
 		}
 	}
-	return contentType, Schema, producer, nil
+	return contentType, schema, producer, nil
 }
 
 func getEnv(broker string) string {
@@ -420,7 +448,7 @@ func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 }
 
 func addMessage(reflector asyncapi.Reflector, topicName string, contentType string, tags []spec.Tag, example interface{},
-	bindings Bindings, messages map[string]spec.Message, producer, mapOfMessageCompat map[string]interface{}) (asyncapi.Reflector, error) {
+	bindings bindings, messages map[string]spec.Message, producer, mapOfMessageCompat map[string]interface{}) (asyncapi.Reflector, error) {
 	entityProducer := new(spec.MessageEntity)
 	(*spec.MessageEntity).WithContentType(entityProducer, contentType)
 	if contentType == "application/avro" {
@@ -507,12 +535,4 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		return nil, err
 	}
 	return consumer, nil
-}
-
-func closeConsumer(consumer *kafka.Consumer) (err error) {
-	defer func(consumer *kafka.Consumer) {
-		err = consumer.Close()
-		err = fmt.Errorf("failed to close consumer: %v", err)
-	}(consumer)
-	return err
 }
