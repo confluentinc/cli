@@ -82,8 +82,9 @@ type listDisplay struct {
 }
 
 type displayByRoleStruct struct {
-	Principal string
-	Email     string
+	Principal   string
+	Email       string
+	ServiceName string
 }
 
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {

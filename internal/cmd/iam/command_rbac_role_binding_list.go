@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"sort"
@@ -249,25 +248,25 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
-	users, err := c.Client.User.List(context.Background())
+	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return userToEmailMap, err
 	}
 	for _, u := range users {
-		userToEmailMap["User:"+u.ResourceId] = u.Email
+		userToEmailMap["User:"+*u.Id] = *u.Email
 	}
 	return userToEmailMap, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 
 	serviceAccountToNameMap := make(map[string]string)
-	for _, u := range users {
-		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
+	for _, sa := range serviceAccounts {
+		serviceAccountToNameMap["User:"+*sa.Id] = *sa.DisplayName
 	}
 	return serviceAccountToNameMap, nil
 }
@@ -324,22 +323,14 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 	}
 	for _, principal := range principals {
 		if email, ok := userToEmailMap[principal]; ok {
-			displayStruct := &struct {
-				Principal   string
-				Email       string
-				ServiceName string
-			}{
+			displayStruct := &displayByRoleStruct{
 				Principal: principal,
 				Email:     email,
 			}
 			outputWriter.AddElement(displayStruct)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
-			displayStruct := &struct {
-				Principal   string
-				Email       string
-				ServiceName string
-			}{
+			displayStruct := &displayByRoleStruct{
 				Principal:   principal,
 				ServiceName: name,
 			}
@@ -347,18 +338,6 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 	return outputWriter.Out()
-}
-
-func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
-	userToEmailMap := make(map[string]string)
-	users, err := c.V2Client.ListIamUsers()
-	if err != nil {
-		return userToEmailMap, err
-	}
-	for _, u := range users {
-		userToEmailMap["User:"+*u.Id] = *u.Email
-	}
-	return userToEmailMap, nil
 }
 
 func (c *roleBindingCommand) confluentList(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -560,7 +539,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 	}
 	roleBindings := resp.Data
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return outputWriter, err
 	}
@@ -643,7 +622,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (output.ListOutputWriter, error) {
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName"}, []string{"Principal", "Email", "Service Name"}, []string{"principal", "email", "service_name"})
 	if err != nil {
 		return outputWriter, err
 	}
@@ -669,7 +648,12 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 		}
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
+	if err != nil {
+		return outputWriter, err
+	}
+
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
 	if err != nil {
 		return outputWriter, err
 	}
@@ -680,6 +664,13 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 			displayStruct := &displayByRoleStruct{
 				Principal: principal,
 				Email:     email,
+			}
+			outputWriter.AddElement(displayStruct)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			displayStruct := &displayByRoleStruct{
+				Principal:   principal,
+				ServiceName: name,
 			}
 			outputWriter.AddElement(displayStruct)
 		}

@@ -20,6 +20,8 @@ var (
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
 		buildRoleBinding("u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("sa-12345", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("u-11aaa", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
 		buildRoleBinding("u-22bbb", "CloudClusterAdmin",

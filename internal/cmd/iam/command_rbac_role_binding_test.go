@@ -138,6 +138,16 @@ var v2UserMock = &iammock.UsersIamV2Api{
 	},
 }
 
+var v2ServiceAccountMock = &iammock.ServiceAccountsIamV2Api{
+	ListIamV2ServiceAccountsFunc: func(_ context.Context) iamv2.ApiListIamV2ServiceAccountsRequest {
+		return iamv2.ApiListIamV2ServiceAccountsRequest{}
+	},
+	ListIamV2ServiceAccountsExecuteFunc: func(_ iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+		serviceAccount := iamv2.IamV2ServiceAccount{DisplayName: iamv2.PtrString("One Great Service"), Id: iamv2.PtrString("sa-123456")}
+		return iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}}, nil, nil
+	},
+}
+
 type roleBindingTest struct {
 	args      []string
 	principal string
@@ -193,7 +203,7 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 	}
 
 	v2Client := &ccloudv2.Client{
-		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock},
+		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock, ServiceAccountsIamV2Api: v2ServiceAccountMock},
 		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: v2RoleBindingMock},
 		AuthToken: "auth-token",
 	}
