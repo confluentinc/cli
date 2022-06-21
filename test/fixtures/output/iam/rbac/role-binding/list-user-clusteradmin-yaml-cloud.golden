@@ -4,5 +4,7 @@
   principal: User:u-22bbb
 - email: u-33ccc@confluent.io
   principal: User:u-33ccc
+  service_name: ""
 - email: mhe@confluent.io
   principal: User:u-44ddd
+  service_name: ""

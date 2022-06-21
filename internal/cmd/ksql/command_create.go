@@ -33,7 +33,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		RunE:  runCommand,
 	}
 
-	cmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (use \"confluent api-key create --resource cloud\" to create one if none exist).")
+	cmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (use \"confluent api-key create --resource lkc-abc123\" to create one if none exist).")
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
