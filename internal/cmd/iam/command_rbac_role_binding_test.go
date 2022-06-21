@@ -33,6 +33,111 @@ const (
 	env123 = "env-123"
 )
 
+var v2RoleBindingMock = &mdsmock.RoleBindingsIamV2Api{
+	CreateIamV2RoleBindingFunc: func(_ context.Context) mdsv2.ApiCreateIamV2RoleBindingRequest {
+		return mdsv2.ApiCreateIamV2RoleBindingRequest{}
+	},
+	CreateIamV2RoleBindingExecuteFunc: func(_ mdsv2.ApiCreateIamV2RoleBindingRequest) (mdsv2.IamV2RoleBinding, *http.Response, error) {
+		return mdsv2.IamV2RoleBinding{}, &http.Response{StatusCode: http.StatusOK}, nil
+	},
+	ListIamV2RoleBindingsFunc: func(_ context.Context) mdsv2.ApiListIamV2RoleBindingsRequest {
+		return mdsv2.ApiListIamV2RoleBindingsRequest{}
+	},
+	ListIamV2RoleBindingsExecuteFunc: func(_ mdsv2.ApiListIamV2RoleBindingsRequest) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
+		return mdsv2.IamV2RoleBindingList{
+			Data: []mdsv2.IamV2RoleBinding{
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("1"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("ResourceOwner"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/ksql=ksql-9999"),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("2"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("ResourceOwner"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/schema-registry=sr-777"),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("3"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("OrganizationAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("4"),
+					Principal:  mdsv2.PtrString("User:u-xyz"),
+					RoleName:   mdsv2.PtrString("OrganizationAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("5"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("OrganizationAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("6"),
+					Principal:  mdsv2.PtrString("User:notfound@email.com"),
+					RoleName:   mdsv2.PtrString("OrganizationAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("7"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("8"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + env123),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("9"),
+					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
+					RoleName:   mdsv2.PtrString("ResourceOwner"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/kafka=lkc-123"),
+				},
+				mdsv2.IamV2RoleBinding{
+					Id:         mdsv2.PtrString("10"),
+					Principal:  mdsv2.PtrString("User:u-noemail"),
+					RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId),
+				},
+			}}, nil, nil
+	},
+	DeleteIamV2RoleBindingFunc: func(_ context.Context, _ string) mdsv2.ApiDeleteIamV2RoleBindingRequest {
+		return mdsv2.ApiDeleteIamV2RoleBindingRequest{}
+	},
+	DeleteIamV2RoleBindingExecuteFunc: func(_ mdsv2.ApiDeleteIamV2RoleBindingRequest) (mdsv2.IamV2RoleBinding, *http.Response, error) {
+		return mdsv2.IamV2RoleBinding{}, &http.Response{StatusCode: http.StatusOK}, nil
+	},
+}
+
+var v2UserMock = &iammock.UsersIamV2Api{
+	ListIamV2UsersFunc: func(_ context.Context) iamv2.ApiListIamV2UsersRequest {
+		return iamv2.ApiListIamV2UsersRequest{}
+	},
+	ListIamV2UsersExecuteFunc: func(_ iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
+		user := iamv2.IamV2User{
+			Email: iamv2.PtrString("test@email.com"),
+			Id:    iamv2.PtrString(v1.MockUserResourceId),
+		}
+		return iamv2.IamV2UserList{Data: []iamv2.IamV2User{user}}, nil, nil
+	},
+	GetIamV2UserFunc: func(_ context.Context, _ string) iamv2.ApiGetIamV2UserRequest {
+		return iamv2.ApiGetIamV2UserRequest{}
+	},
+	GetIamV2UserExecuteFunc: func(_ iamv2.ApiGetIamV2UserRequest) (iamv2.IamV2User, *http.Response, error) {
+		return iamv2.IamV2User{
+			Email: iamv2.PtrString("test@email.com"),
+			Id:    iamv2.PtrString(v1.MockUserResourceId),
+		}, nil, nil
+	},
+}
+
 type roleBindingTest struct {
 	args      []string
 	principal string
@@ -55,123 +160,27 @@ type expectedListCmdArgs struct {
 
 type RoleBindingTestSuite struct {
 	suite.Suite
-	conf              *v1.Config
-	v2RoleBindingMock *mdsmock.RoleBindingsIamV2Api
-	v2UserMock        *iammock.UsersIamV2Api
+	conf *v1.Config
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
 	os.Setenv("XX_DATAPLANE_3_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
-	suite.v2RoleBindingMock = &mdsmock.RoleBindingsIamV2Api{
-		CreateIamV2RoleBindingFunc: func(_ context.Context) mdsv2.ApiCreateIamV2RoleBindingRequest {
-			return mdsv2.ApiCreateIamV2RoleBindingRequest{}
-		},
-		CreateIamV2RoleBindingExecuteFunc: func(_ mdsv2.ApiCreateIamV2RoleBindingRequest) (mdsv2.IamV2RoleBinding, *http.Response, error) {
-			return mdsv2.IamV2RoleBinding{}, &http.Response{StatusCode: http.StatusOK}, nil
-		},
-		ListIamV2RoleBindingsFunc: func(_ context.Context) mdsv2.ApiListIamV2RoleBindingsRequest {
-			return mdsv2.ApiListIamV2RoleBindingsRequest{}
-		},
-		ListIamV2RoleBindingsExecuteFunc: func(_ mdsv2.ApiListIamV2RoleBindingsRequest) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-			return mdsv2.IamV2RoleBindingList{
-				Data: []mdsv2.IamV2RoleBinding{
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("1"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("ResourceOwner"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/ksql=ksql-9999"),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("2"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("ResourceOwner"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/schema-registry=sr-777"),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("3"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("OrganizationAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("4"),
-						Principal:  mdsv2.PtrString("User:u-xyz"),
-						RoleName:   mdsv2.PtrString("OrganizationAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("5"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("OrganizationAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("6"),
-						Principal:  mdsv2.PtrString("User:notfound@email.com"),
-						RoleName:   mdsv2.PtrString("OrganizationAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=" + v1.MockOrgResourceId),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("7"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("8"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + env123),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("9"),
-						Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
-						RoleName:   mdsv2.PtrString("ResourceOwner"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/kafka=lkc-123"),
-					},
-					mdsv2.IamV2RoleBinding{
-						Id:         mdsv2.PtrString("10"),
-						Principal:  mdsv2.PtrString("User:u-noemail"),
-						RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
-						CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId),
-					},
-				}}, nil, nil
-		},
-		DeleteIamV2RoleBindingFunc: func(_ context.Context, _ string) mdsv2.ApiDeleteIamV2RoleBindingRequest {
-			return mdsv2.ApiDeleteIamV2RoleBindingRequest{}
-		},
-		DeleteIamV2RoleBindingExecuteFunc: func(_ mdsv2.ApiDeleteIamV2RoleBindingRequest) (mdsv2.IamV2RoleBinding, *http.Response, error) {
-			return mdsv2.IamV2RoleBinding{}, &http.Response{StatusCode: http.StatusOK}, nil
-		},
-	}
-
-	suite.v2UserMock = &iammock.UsersIamV2Api{
-		ListIamV2UsersFunc: func(_ context.Context) iamv2.ApiListIamV2UsersRequest {
-			return iamv2.ApiListIamV2UsersRequest{}
-		},
-		ListIamV2UsersExecuteFunc: func(_ iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
-			user := iamv2.IamV2User{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}
-			return iamv2.IamV2UserList{Data: []iamv2.IamV2User{user}}, nil, nil
-		},
-		GetIamV2UserFunc: func(_ context.Context, _ string) iamv2.ApiGetIamV2UserRequest {
-			return iamv2.ApiGetIamV2UserRequest{}
-		},
-		GetIamV2UserExecuteFunc: func(_ iamv2.ApiGetIamV2UserRequest) (iamv2.IamV2User, *http.Response, error) {
-			return iamv2.IamV2User{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}, nil, nil
-		},
-	}
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
+	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
+		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, "", scope}, <-expect, message)
+			return nil, nil, nil
+		},
+		LookupPrincipalsWithRoleFunc: func(ctx context.Context, roleName string, scope mdsv2alpha1.Scope) ([]string, *http.Response, error) {
+			assert.Equal(suite.T(), expectedListCmdArgs{"", roleName, scope}, <-expect, message)
+			return nil, nil, nil
+		},
+	}
 	mdsClient.RBACRoleBindingCRUDApi = &mds2mock.RBACRoleBindingCRUDApi{
 		AddRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
 			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
@@ -184,8 +193,8 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 	}
 
 	v2Client := &ccloudv2.Client{
-		IamClient: &iamv2.APIClient{UsersIamV2Api: suite.v2UserMock},
-		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: suite.v2RoleBindingMock},
+		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock},
+		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: v2RoleBindingMock},
 		AuthToken: "auth-token",
 	}
 
@@ -200,18 +209,22 @@ var roleBindingListTests = []roleBindingTest{
 	{
 		args:      []string{"--current-user"},
 		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId},
 		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:u-xyz"},
 		principal: "User:u-xyz",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:      []string{"--principal", "User:test@email.com"},
 		principal: "User:" + v1.MockUserResourceId,
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
@@ -220,26 +233,41 @@ var roleBindingListTests = []roleBindingTest{
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
 		roleName: "OrganizationAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
 		args:     []string{"--role", "EnvironmentAdmin", "--current-env"},
 		roleName: "EnvironmentAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
 	{
 		args:     []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
 		roleName: "EnvironmentAdmin",
+		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
 	},
 	{
 		args:      []string{"--current-user", "--environment", "env-123", "--kafka-cluster-id", "lkc-123"},
 		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
+		},
 	},
 	{
 		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
 		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
+		},
 	},
 	{
 		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
 		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
+		},
 	},
 }
 
@@ -261,7 +289,6 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
 		} else {
-			// error case
 			err := cmd.Execute()
 			assert.Equal(suite.T(), tc.err, err)
 		}
@@ -296,7 +323,6 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{
-	// Principal whose email address is NOT known will be returned without an email address
 	{
 		mockRoleBindingsResult: mdsv2.IamV2RoleBindingList{
 			Data: []mdsv2.IamV2RoleBinding{

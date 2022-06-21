@@ -177,7 +177,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-			} // TODO: skip validation when role != "" before migrating to v2 role api
+			} // skip validation when role != "" before migrating to v2 role api
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
 				Scope:            *scopeV2,
@@ -421,7 +421,7 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 // 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 // }
 
-func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error { // do i keep this????
+func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	ctx := c.createContext()
 	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(ctx, nil)
 	if err != nil {
@@ -656,7 +656,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
 				return nil, err
 			}
-		} // TODO: skip validation when role != "" before migrating to v2 role api
+		} // skip validation when role != "" before migrating to v2 role api
 
 		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
 

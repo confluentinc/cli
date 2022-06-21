@@ -61,7 +61,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	createRoleBinding, err := c.parseV2RoleBinding(cmd) // v2 usage
+	createRoleBinding, err := c.parseV2RoleBinding(cmd)
 	if err != nil {
 		return err
 	}

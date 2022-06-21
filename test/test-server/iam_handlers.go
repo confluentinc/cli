@@ -267,6 +267,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodPost:
+			w.WriteHeader(http.StatusCreated)
 		}
 	}
 }
@@ -275,10 +276,9 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Println("in binding", r.Method)
 		switch r.Method {
-		case http.MethodGet:
 		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }

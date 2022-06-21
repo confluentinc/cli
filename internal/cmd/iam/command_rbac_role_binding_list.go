@@ -261,6 +261,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		if err != nil {
 			return err
 		}
+		//  skip validation when role != "" before migrating to v2 role api
 		principals, _, err = c.MDSv2Client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
 			c.createContext(),
 			role,
@@ -475,17 +476,15 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 }
 
 func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	var outputWriter output.ListOutputWriter
+	var err error
 	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
-		outputWriter, err := c.listMyRoleBindingsV2(cmd, listRoleBinding)
-		return printRoleBindingListWithFallBack(err, outputWriter)
+		outputWriter, err = c.listMyRoleBindingsV2(cmd, listRoleBinding)
 	} else if cmd.Flags().Changed("role") {
-		outputWriter, err := c.ccloudListRolePrincipalsV2(cmd, listRoleBinding)
-		return printRoleBindingListWithFallBack(err, outputWriter)
+		outputWriter, err = c.ccloudListRolePrincipalsV2(cmd, listRoleBinding)
+	} else {
+		err = errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
 	}
-	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
-}
-
-func printRoleBindingListWithFallBack(err error, outputWriter output.ListOutputWriter) error {
 	if err != nil {
 		return err
 	}
@@ -542,7 +541,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 		var envName, cloudClusterName, clusterType, logicalCluster, resourceType, resourceName, patternType string
 		for _, elem := range strings.Split(crnPattern, "/") {
 			elemParts := strings.Split(elem, "=")
-			if len(elemParts) < 2 { // not a resource entry
+			if len(elemParts) < 2 {
 				continue
 			}
 
@@ -598,7 +597,6 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (output.ListOutputWriter, error) {
-	// only print out principals, and get email in map by principal
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
 	if err != nil {
 		return outputWriter, err
@@ -620,9 +618,9 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 			return outputWriter, ksqlOrSchemaRegistryRoleBindingError
 		}
 		if !principals[*roleBindings[i].Principal] {
+			principals[*roleBindings[i].Principal] = true
 			principalStrings = append(principalStrings, *roleBindings[i].Principal)
 		}
-		principals[*roleBindings[i].Principal] = true
 	}
 
 	userToEmailMap, err := c.userIdToEmailMap()
