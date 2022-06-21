@@ -21,6 +21,7 @@ import (
 var (
 	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -256,6 +257,12 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
+	return err
+}
+
+func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
+	w.WriteHeader(http.StatusBadRequest)
+	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
 	return err
 }
 

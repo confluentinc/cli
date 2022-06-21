@@ -81,6 +81,11 @@ type listDisplay struct {
 	PatternType    string `json:"pattern_type"`
 }
 
+type displayByRoleStruct struct {
+	Principal string
+	Email     string
+}
+
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "role-binding",
@@ -120,10 +125,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	// The err is ignored here since the --prefix flag is not defined by the list subcommand
-	prefix, err := cmd.Flags().GetBool("prefix")
-	if err != nil {
-		return nil, err
-	}
+	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -356,7 +358,6 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
-			return nil, nil
 			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
@@ -632,15 +633,12 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		}
 	}
 
-	crnPattern, err := c.parseBaseCrnPattern(cmd)
+	crnPattern, err := c.parseV2BaseCrnPattern(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	prefix, err := cmd.Flags().GetBool("prefix")
-	if err != nil {
-		return nil, err
-	}
+	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
@@ -674,7 +672,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 	}, err
 }
 
-func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, error) { // for v2 api
+func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
 	orgResourceId := c.State.Auth.Organization.GetResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
@@ -696,7 +694,7 @@ func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, er
 		crnPattern += "/cloud-cluster=" + cluster
 	}
 
-	if cmd.Flags().Changed("schema-registry-cluster-id") { // api not implemented yet
+	if cmd.Flags().Changed("schema-registry-cluster-id") { // route not implemented yet
 		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
 		if err != nil {
 			return "", err
@@ -704,7 +702,7 @@ func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, er
 		crnPattern += "/schema-registry=" + srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") { // api not implemented yet
+	if cmd.Flags().Changed("ksql-cluster-id") { // route not implemented yet
 		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
 		if err != nil {
 			return "", err
@@ -726,7 +724,6 @@ func (c *roleBindingCommand) parseBaseCrnPattern(cmd *cobra.Command) (string, er
 			return "", err
 		}
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
-			return "", nil
 			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
 		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {

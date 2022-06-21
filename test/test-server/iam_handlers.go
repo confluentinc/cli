@@ -24,6 +24,8 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
 		buildRoleBinding("u-22bbb", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-22bbb", "EnvironmentAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595"),
 		buildRoleBinding("u-33ccc", "CloudClusterAdmin",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
 		buildRoleBinding("u-44ddd", "CloudClusterAdmin",
@@ -35,9 +37,9 @@ var (
 		buildRoleBinding("u-55eee", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=payroll"),
 		buildRoleBinding("u-66fff", "ResourceOwner",
-			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
-		buildRoleBinding("u-66fff", "ResourceOwner",
-			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=lksqlc-2222bbb/cluster=lksqlc-2222bbb"),
+		buildRoleBinding("u-77ggg", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 )
 
@@ -248,9 +250,13 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 		crnPattern := r.URL.Query().Get("crn_pattern")
 		principal := r.URL.Query().Get("principal")
 		roleName := r.URL.Query().Get("role_name")
-		// fmt.Printf("%+v\n", r.URL.Query())
 		switch r.Method {
 		case http.MethodGet:
+			if roleName == "InvalidOrgAdmin" || roleName == "InvalidMetricsViewer" {
+				err := writeInvalidRoleNameError(w, roleName)
+				require.NoError(t, err)
+				return
+			}
 			roleBindings := []mdsv2.IamV2RoleBinding{}
 			for _, rolebinding := range roleBindingStore {
 				if isRoleBindingMatch(rolebinding, principal, roleName, crnPattern) {
@@ -269,6 +275,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+		fmt.Println("in binding", r.Method)
 		switch r.Method {
 		case http.MethodGet:
 		case http.MethodDelete:
