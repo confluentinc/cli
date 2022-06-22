@@ -10,9 +10,10 @@ import (
 )
 
 func newCliClient(baseURL, userAgent string, isTest bool) *cliv1.APIClient {
+	// We do not use a retryable HTTP client so the CLI does not hang if there is a problem with the usage service.
+
 	cfg := cliv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
 	cfg.Servers = cliv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CLI"}}
 	cfg.UserAgent = userAgent
 
