@@ -18,20 +18,24 @@ import (
 )
 
 var (
-	describeLabels            = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider"}
-	describeHumanRenames      = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider"}
-	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider"}
+	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
+	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility",
+		"ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
+	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility",
+		"Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
 )
 
 type describeDisplay struct {
-	Name            string
-	ID              string
-	URL             string
-	Used            string
-	Available       string
-	Compatibility   string
-	Mode            string
-	ServiceProvider string
+	Name                  string
+	ID                    string
+	URL                   string
+	Used                  string
+	Available             string
+	Compatibility         string
+	Mode                  string
+	ServiceProvider       string
+	ServiceProviderRegion string
+	Package               string
 }
 
 func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
@@ -119,16 +123,17 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		availableSchemas = ""
 	}
 
-	serviceProvider := getServiceProviderFromUrl(cluster.Endpoint)
 	data := &describeDisplay{
-		Name:            cluster.Name,
-		ID:              cluster.Id,
-		URL:             cluster.Endpoint,
-		ServiceProvider: serviceProvider,
-		Used:            numSchemas,
-		Available:       availableSchemas,
-		Compatibility:   compatibility,
-		Mode:            mode,
+		Name:                  cluster.Name,
+		ID:                    cluster.Id,
+		URL:                   cluster.Endpoint,
+		ServiceProvider:       cluster.ServiceProvider,
+		ServiceProviderRegion: cluster.ServiceProviderRegion,
+		Package:               getPackageDisplayName(cluster.Package),
+		Used:                  numSchemas,
+		Available:             availableSchemas,
+		Compatibility:         compatibility,
+		Mode:                  mode,
 	}
 	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
 }

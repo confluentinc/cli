@@ -166,6 +166,22 @@ var v2RoutesAndReplies = map[string]string{
 				}
 		  	}
 		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:sa-12345": `[
+		{
+			"scope": {
+				"path": [
+					"organization=1111aaaa-11aa-11aa-11aa-111111aaaaaac"
+				],
+				"clusters": {
+				}
+			},
+			"rolebindings": {
+				"User:u-11aaa": {
+					"OrganizationAdmin": []
+				}
+			}
+		}
+	]`,
 	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-22bbb": `[
 		  	{
 				"scope": {
@@ -284,7 +300,8 @@ var v2RoutesAndReplies = map[string]string{
 		  	}
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
-			"User:u-11aaa"
+			"User:u-11aaa",
+			"User:sa-12345"
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
 			"User:u-22bbb"
