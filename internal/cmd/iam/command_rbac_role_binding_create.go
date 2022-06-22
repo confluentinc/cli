@@ -65,13 +65,13 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 
 	var httpResp *http.Response
 	if isCloud {
+		createRoleBinding, err := c.parseV2RoleBinding(cmd)
+		if err != nil {
+			return err
+		}
 		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
 			httpResp, err = c.ccloudCreate(options)
 		} else {
-			createRoleBinding, err := c.parseV2RoleBinding(cmd)
-			if err != nil {
-				return err
-			}
 			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		}
 	} else {
