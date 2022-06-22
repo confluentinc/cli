@@ -69,8 +69,8 @@ func TestSearchPath(t *testing.T) {
 	}()
 
 	file, err := os.CreateTemp(root, "confluent-plugin")
-	fileName := filepath.Base(file.Name())
 	require.NoError(t, err)
+	fileName := filepath.Base(file.Name())
 
 	err = file.Chmod(fs.ModePerm)
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestSearchPath(t *testing.T) {
 
 	pluginMap, err := SearchPath()
 	require.NoError(t, err)
-	pluginPath, exists := pluginMap[fileName]
-	require.Equal(t, true, exists)
-	require.Equal(t, fileName, filepath.Base(pluginPath[0]))
+	pluginPaths, ok := pluginMap[fileName]
+	require.Equal(t, true, ok)
+	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
 }

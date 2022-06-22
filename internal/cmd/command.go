@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"os/exec"
 	"strings"
@@ -125,7 +126,6 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 }
 
 func (c *command) Execute(args []string) error {
-	// TODO: get set of all existing CLI commands and cross reference
 
 	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
@@ -133,8 +133,17 @@ func (c *command) Execute(args []string) error {
 	}
 
 	potentialPlugin := pversion.CLIName
+	nameConflict := false
 	var flagsAndArgs []string
 	for i, s := range args {
+		if i == 0 {
+			commandList := c.Commands()
+			for _, cmd := range commandList {
+				if cmd.Name() == args[0] {
+					nameConflict = true
+				}
+			}
+		}
 		if strings.HasPrefix(s, "--") {
 			flagsAndArgs = append(flagsAndArgs, args[i:]...)
 			break
@@ -144,14 +153,16 @@ func (c *command) Execute(args []string) error {
 
 	for len(potentialPlugin) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
+			if nameConflict {
+				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+				break
+			}
 			cliPlugin := &exec.Cmd{
 				Path:   pluginPathList[0],
 				Args:   flagsAndArgs,
 				Stdout: os.Stdout,
 				Stdin:  os.Stdin,
 			}
-			fmt.Println(cliPlugin.Path)
-			fmt.Println(cliPlugin.Args)
 			if err := cliPlugin.Run(); err != nil {
 				return err
 			}

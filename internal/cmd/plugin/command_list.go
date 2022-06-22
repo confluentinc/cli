@@ -30,7 +30,7 @@ func list(cmd *cobra.Command, _ []string) error {
 	for _, v := range pluginMap {
 		var firstPlugin string
 		for i, e := range v {
-			cmd.Println(e)
+			utils.Println(cmd, e)
 			if i != 0 {
 				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", e, firstPlugin)
 			} else {
