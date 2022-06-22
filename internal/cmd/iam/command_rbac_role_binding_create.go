@@ -74,11 +74,14 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		} else {
 			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		}
+		if err != nil {
+			return errors.CatchRequestNotValidMessageError(err, httpResp)
+		}
 	} else {
 		httpResp, err = c.confluentCreate(options)
-	}
-	if err != nil {
-		return errors.CatchRequestNotValidMessageError(err, httpResp)
+		if err != nil {
+			return err
+		}
 	}
 
 	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {

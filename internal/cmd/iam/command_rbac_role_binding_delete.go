@@ -61,11 +61,14 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		} else {
 			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
 		}
+		if err != nil {
+			return errors.CatchRequestNotValidMessageError(err, httpResp)
+		}
 	} else {
 		httpResp, err = c.confluentDelete(options)
-	}
-	if err != nil {
-		return errors.CatchRequestNotValidMessageError(err, httpResp)
+		if err != nil {
+			return err
+		}
 	}
 
 	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
