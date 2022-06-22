@@ -6,8 +6,8 @@ import (
 )
 
 type FileInfo struct {
-	NameVal  string
-	IsDirVal bool
+	NameVal string
+	ModeVal os.FileMode
 }
 
 func (f *FileInfo) Name() string {
@@ -19,7 +19,7 @@ func (f *FileInfo) Size() int64 {
 }
 
 func (f *FileInfo) Mode() os.FileMode {
-	panic("implement me")
+	return f.ModeVal
 }
 
 func (f *FileInfo) ModTime() time.Time {
@@ -27,7 +27,7 @@ func (f *FileInfo) ModTime() time.Time {
 }
 
 func (f *FileInfo) IsDir() bool {
-	return f.IsDirVal
+	panic("implement me")
 }
 
 func (f *FileInfo) Sys() interface{} {
