@@ -10,7 +10,7 @@ func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List plugins in user's $PATH.",
-		Long:  `Lists plugins in user's $PATH; plugins are executable files that begin with "confluent-"`,
+		Long:  `Lists plugins in user's $PATH; plugins are executable files that begin with "confluent-".`,
 		Args:  cobra.NoArgs,
 		RunE:  list,
 	}
