@@ -5,6 +5,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"testing"
@@ -61,16 +62,30 @@ func TestIsPluginFn(t *testing.T) {
 func TestSearchPath(t *testing.T) {
 
 	root, err := os.MkdirTemp(os.TempDir(), "plugin_test")
-	defer os.RemoveAll(root)
 	require.NoError(t, err)
-	file, err := os.CreateTemp(root, "confluent-plugin.sh")
+	defer func() {
+		err := os.RemoveAll(root)
+		require.NoError(t, err)
+	}()
+
+	file, err := os.CreateTemp(root, "confluent-plugin")
+	fileName := filepath.Base(file.Name())
 	require.NoError(t, err)
+
 	err = file.Chmod(fs.ModePerm)
 	require.NoError(t, err)
+
 	path := os.Getenv("PATH")
-	os.Setenv("PATH", root)
+	err = os.Setenv("PATH", root)
+	require.NoError(t, err)
+	defer func() {
+		err := os.Setenv("PATH", path)
+		require.NoError(t, err)
+	}()
+
 	pluginMap, err := SearchPath()
 	require.NoError(t, err)
-	require.Equal(t, 1, len(pluginMap))
-	os.Setenv("PATH", path)
+	pluginPath, exists := pluginMap[fileName]
+	require.Equal(t, true, exists)
+	require.Equal(t, fileName, filepath.Base(pluginPath[0]))
 }

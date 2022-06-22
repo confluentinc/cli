@@ -2,14 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	plugins "github.com/confluentinc/cli/internal/pkg/plugin"
+	"os"
 	"os/exec"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
-	"os"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -43,11 +42,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
-
-const Confluent = "confluent"
 
 type command struct {
 	*cobra.Command
@@ -129,12 +127,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 func (c *command) Execute(args []string) error {
 	// TODO: get set of all existing CLI commands and cross reference
 
-	pluginMap, err := plugins.SearchPath()
+	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
 		return err
 	}
 
-	potentialPlugin := Confluent
+	potentialPlugin := pversion.CLIName
 	var flagsAndArgs []string
 	for i, s := range args {
 		if strings.HasPrefix(s, "--") {
@@ -144,7 +142,7 @@ func (c *command) Execute(args []string) error {
 		potentialPlugin += "-" + s
 	}
 
-	for len(potentialPlugin) > len(Confluent) {
+	for len(potentialPlugin) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
 			cliPlugin := &exec.Cmd{
 				Path:   pluginPathList[0],
