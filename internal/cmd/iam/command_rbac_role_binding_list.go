@@ -626,7 +626,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 		return outputWriter, err
 	}
 
-	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern)
+	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {

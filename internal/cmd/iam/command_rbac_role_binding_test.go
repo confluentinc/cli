@@ -508,7 +508,7 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 	}
 }
 
-var roleBindingCreateDeleteTests = []roleBindingTest{
+var roleBindingCreateTests = []roleBindingTest{
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
 		principal: "User:" + v1.MockUserResourceId,
@@ -580,7 +580,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 	expect := make(chan expectedListCmdArgs)
-	for _, tc := range roleBindingCreateDeleteTests {
+	for _, tc := range roleBindingCreateTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
 
@@ -603,9 +603,79 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 	}
 }
 
+var roleBindingDeleteTests = []roleBindingTest{
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "OrganizationAdmin"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:u-xyz", "--role", "OrganizationAdmin"},
+		principal: "User:u-xyz",
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+	},
+	{
+		args:      []string{"--principal", "User:test@email.com", "--role", "OrganizationAdmin"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "OrganizationAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+	},
+	{
+		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
+		err:  errNotFound,
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--kafka-cluster-id", "lkc-123"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
+		principal: "User:u-noemail",
+		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+	},
+}
+
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 	expect := make(chan expectedListCmdArgs)
-	for _, tc := range roleBindingCreateDeleteTests {
+	for _, tc := range roleBindingDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
 
