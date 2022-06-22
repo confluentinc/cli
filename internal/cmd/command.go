@@ -137,7 +137,7 @@ func (c *command) Execute(args []string) error {
 	potentialPlugin := Confluent
 	var flagsAndArgs []string
 	for i, s := range args {
-		if strings.Index(s, "--") != -1 {
+		if strings.HasPrefix(s, "--") {
 			flagsAndArgs = append(flagsAndArgs, args[i:]...)
 			break
 		}

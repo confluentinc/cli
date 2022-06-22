@@ -30,25 +30,31 @@ func TestIsExec_Windows(t *testing.T) {
 
 func TestIsPluginFn(t *testing.T) {
 	pluginMap := make(map[string][]string)
-	re := regexp.MustCompile("confluent(-[a-z]+)+(\\.[a-z]+)?")
+	re := regexp.MustCompile(`confluent(-[a-z]+)+(\.[a-z]+)?`)
 	f := isPluginFn(re, pluginMap)
 
-	f("confluent-plugin1", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	err := f("confluent-plugin1", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(pluginMap))
 
-	f("onfluent-plugin1", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	err = f("onfluent-plugin1", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(pluginMap))
 
-	f("confluent-", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	err = f("confluent-", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(pluginMap))
 
-	f("confluent", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	err = f("confluent", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(pluginMap))
 
-	f("confluent-foo-bar-baz", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	err = f("confluent-foo-bar-baz", &mock.FileInfo{ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(pluginMap))
 
-	f("confluent-foo-bar", &mock.FileInfo{ModeVal: fs.ModeDir}, nil)
+	err = f("confluent-foo-bar", &mock.FileInfo{ModeVal: fs.ModeDir}, nil)
+	require.NoError(t, err)
 	require.Equal(t, 2, len(pluginMap))
 }
 
@@ -58,7 +64,8 @@ func TestSearchPath(t *testing.T) {
 	defer os.RemoveAll(root)
 	require.NoError(t, err)
 	file, err := os.CreateTemp(root, "confluent-plugin.sh")
-	file.Chmod(fs.ModePerm)
+	require.NoError(t, err)
+	err = file.Chmod(fs.ModePerm)
 	require.NoError(t, err)
 	path := os.Getenv("PATH")
 	os.Setenv("PATH", root)

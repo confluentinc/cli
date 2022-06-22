@@ -12,7 +12,7 @@ import (
 
 func SearchPath() (map[string][]string, error) {
 	pluginMap := make(map[string][]string)
-	re := regexp.MustCompile("confluent(-[a-z]+)+(\\.[a-z]+)?")
+	re := regexp.MustCompile(`confluent(-[a-z]+)+(\.[a-z]+)?`)
 	pathSlice := strings.Split(os.Getenv("PATH"), ":")
 
 	for _, dir := range pathSlice {
