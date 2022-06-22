@@ -26,7 +26,6 @@ func list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	// TODO: Print warnings for plugins with same name as existing commands
 	for _, v := range pluginMap {
 		var firstPlugin string
 		for i, e := range v {
