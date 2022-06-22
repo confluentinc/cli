@@ -3,6 +3,7 @@ package cloudsignup
 import (
 	"context"
 	"fmt"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"os"
 	"strings"
 
@@ -207,20 +208,16 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 		return
 	}
 
-	url, err := c.Flags().GetString("url")
-	if err != nil {
-		log.CliLogger.Warn("Failed to print free trial announcement: failed to get url")
-		return
-	}
+	url, _ := c.Flags().GetString("url")
 
-	var ldClient launchdarkly.LaunchDarklyClient
+	var ldClient v1.LaunchDarklyClient
 	switch url {
 	case "https://devel.cpdev.cloud":
-		ldClient = launchdarkly.CcloudDevelLaunchDarklyClient
+		ldClient = v1.CcloudDevelLaunchDarklyClient
 	case "https://stag.cpdev.cloud":
-		ldClient = launchdarkly.CcloudStagLaunchDarklyClient
+		ldClient = v1.CcloudStagLaunchDarklyClient
 	default:
-		ldClient = launchdarkly.CcloudProdLaunchDarklyClient
+		ldClient = v1.CcloudProdLaunchDarklyClient
 	}
 	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, "")
 

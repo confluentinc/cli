@@ -194,8 +194,8 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags() map[string]interface{} {
-	if c.FeatureFlags == nil {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+	if c.FeatureFlags == nil || IsCcloudLaunchDarklyClient(client) {
 		return map[string]interface{}{}
 	}
 	return c.FeatureFlags.Values
