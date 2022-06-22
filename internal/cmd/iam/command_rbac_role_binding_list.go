@@ -109,12 +109,11 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listRoleBinding, err := c.parseV2RoleBinding(cmd)
-	if err != nil {
-		return err
-	}
-
 	if c.cfg.IsCloudLogin() {
+		listRoleBinding, err := c.parseV2RoleBinding(cmd)
+		if err != nil {
+			return err
+		}
 		err = c.ccloudListV2(cmd, listRoleBinding)
 		if err == ksqlOrSchemaRegistryRoleBindingError {
 			return c.ccloudList(cmd, options)

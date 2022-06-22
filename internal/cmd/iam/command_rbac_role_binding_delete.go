@@ -48,11 +48,6 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
 	var httpResp *http.Response
@@ -60,6 +55,10 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
 			httpResp, err = c.ccloudDelete(options)
 		} else {
+			deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
+			if err != nil {
+				return err
+			}
 			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
 		}
 	} else {
