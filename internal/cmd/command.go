@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -23,6 +25,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -39,6 +42,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -105,6 +109,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(plugin.New(prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -120,8 +125,44 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 }
 
 func (c *command) Execute(args []string) error {
+	// TODO: get set of all existing CLI commands and cross reference
+
+	pluginMap, err := pplugin.SearchPath()
+	if err != nil {
+		return err
+	}
+
+	potentialPlugin := pversion.CLIName
+	var flagsAndArgs []string
+	for i, s := range args {
+		if strings.HasPrefix(s, "--") {
+			flagsAndArgs = append(flagsAndArgs, args[i:]...)
+			break
+		}
+		potentialPlugin += "-" + s
+	}
+
+	for len(potentialPlugin) > len(pversion.CLIName) {
+		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
+			cliPlugin := &exec.Cmd{
+				Path:   pluginPathList[0],
+				Args:   flagsAndArgs,
+				Stdout: os.Stdout,
+				Stdin:  os.Stdin,
+			}
+			fmt.Println(cliPlugin.Path)
+			fmt.Println(cliPlugin.Args)
+			if err := cliPlugin.Run(); err != nil {
+				return err
+			}
+			return nil
+		}
+		flagsAndArgs = append([]string{potentialPlugin[strings.LastIndex(potentialPlugin, "-")+1:]}, flagsAndArgs...)
+		potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
+	}
+
 	c.Command.SetArgs(args)
-	err := c.Command.Execute()
+	err = c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	return err
 }

@@ -166,6 +166,7 @@ var properNouns = []string{
 	"Kotlin",
 	"Ktor",
 	"Node.js",
+	"PATH",
 	"Python",
 	"Ruby",
 	"Rust",
