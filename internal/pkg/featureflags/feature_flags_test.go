@@ -29,7 +29,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 
 	ld := launchDarklyManager{}
 	suite.ctx.FeatureFlags = &v1.FeatureFlags{
-		Values:         map[string]interface{}{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
+		Values:         map[v1.LaunchDarklyClient]map[string]interface{}{v1.CliLaunchDarklyClient: {"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"}},
 		LastUpdateTime: time.Now().Unix(),
 		User:           ld.contextToLDUser(suite.ctx),
 	}
@@ -85,7 +85,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 	ld := launchDarklyManager{}
 
 	evaluatedFlag := ld.JsonVariation("testJson", suite.ctx, v1.CliLaunchDarklyClient, nil)
-	req.Equal(suite.ctx.FeatureFlags.Values["testJson"], evaluatedFlag)
+	req.Equal(suite.ctx.FeatureFlags.Values[v1.CliLaunchDarklyClient]["testJson"], evaluatedFlag)
 }
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {

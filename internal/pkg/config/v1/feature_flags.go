@@ -12,11 +12,7 @@ const (
 )
 
 type FeatureFlags struct {
-	Values         map[string]interface{} `json:"values" hcl:"values"`
-	LastUpdateTime int64                  `json:"last_update_time" hcl:"last_update_time"`
-	User           lduser.User            `json:"user" hcl:"user"`
-}
-
-func IsCcloudLaunchDarklyClient(client LaunchDarklyClient) bool {
-	return client == CcloudProdLaunchDarklyClient || client == CcloudStagLaunchDarklyClient || client == CcloudDevelLaunchDarklyClient
+	Values         map[LaunchDarklyClient]map[string]interface{} `json:"values" hcl:"values"`
+	LastUpdateTime int64                                         `json:"last_update_time" hcl:"last_update_time"`
+	User           lduser.User                                   `json:"user" hcl:"user"`
 }

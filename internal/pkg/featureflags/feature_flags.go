@@ -176,11 +176,6 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 		return false
 	}
 
-	// always fetch new flags for ccloud clients
-	if v1.IsCcloudLaunchDarklyClient(client) {
-		return false
-	}
-
 	flags := ctx.FeatureFlags
 
 	// only use cached flags if they were fetched for the same LD User
@@ -188,7 +183,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 		return false
 	}
 
-	if len(flags.Values) == 0 {
+	if flags.Values == nil || len(flags.Values[client]) == 0 {
 		return false
 	}
 
@@ -274,14 +269,19 @@ func parsePkcFromBootstrap(bootstrap string) string {
 }
 
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, vals map[string]interface{}, user lduser.User, client v1.LaunchDarklyClient) {
-	if ctx == nil || v1.IsCcloudLaunchDarklyClient(client) {
+	if ctx == nil {
 		return
 	}
 
 	if ctx.FeatureFlags == nil {
 		ctx.FeatureFlags = new(v1.FeatureFlags)
 	}
-	ctx.FeatureFlags.Values = vals
+
+	if ctx.FeatureFlags.Values == nil {
+		ctx.FeatureFlags.Values = make(map[v1.LaunchDarklyClient]map[string]interface{})
+	}
+
+	ctx.FeatureFlags.Values[client] = vals
 	ctx.FeatureFlags.LastUpdateTime = time.Now().Unix()
 	ctx.FeatureFlags.User = user
 
