@@ -1,10 +1,12 @@
 package plugin
 
 import (
+	"fmt"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
+	"sort"
 )
 
 func newListCommand() *cobra.Command {
@@ -23,19 +25,24 @@ func newListCommand() *cobra.Command {
 
 func list(cmd *cobra.Command, _ []string) error {
 	pluginMap, err := plugin.SearchPath()
+	var pluginList []string
 	if err != nil {
 		return err
 	}
 	for _, v := range pluginMap {
 		var firstPlugin string
 		for i, e := range v {
-			utils.Println(cmd, e)
+			pluginList = append(pluginList, e)
 			if i != 0 {
 				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", e, firstPlugin)
 			} else {
 				firstPlugin = e
 			}
 		}
+	}
+	sort.Strings(pluginList)
+	for _, v := range pluginList {
+		fmt.Println(v)
 	}
 	return nil
 }
