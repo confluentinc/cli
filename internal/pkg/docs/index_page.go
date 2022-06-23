@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -84,11 +85,10 @@ func printTableOfContents(tabs []Tab) []string {
 		"   :hidden:",
 		"",
 	}
-	
+
 	if tabs[0].Command.CommandPath() == "confluent" {
 		rows = append(rows, "   Overview <../command-reference-index>")
 	}
-
 
 	for _, name := range names {
 		rows = append(rows, fmt.Sprintf("   %s", linksByName[name]))
@@ -135,7 +135,18 @@ func printLongestDescription(cmd *cobra.Command) string {
 
 func formatReST(s string) string {
 	// ReST uses double backticks for code snippets.
-	return strings.ReplaceAll(s, "`", "``")
+	s = strings.ReplaceAll(s, "`", "``")
+
+	// ReST targets are formatted like "target_" and can be added to a string inline.
+	// We escape the underscore because none of our CLI descriptions or examples include ReST targets.
+	matches := regexp.MustCompile(`[0-9A-Za-z]+(_)[^0-9A-Za-z]`).FindAllStringSubmatchIndex(s, -1)
+	for i := len(matches) - 1; i >= 0; i-- {
+		lo := matches[i][2]
+		hi := matches[i][3]
+		s = fmt.Sprintf(`%s\_%s`, s[:lo], s[hi:])
+	}
+
+	return s
 }
 
 func printSubcommands(cmd *cobra.Command) ([]string, bool) {
