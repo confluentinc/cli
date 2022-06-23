@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/stretchr/testify/require"
 	"io/fs"
@@ -126,8 +127,7 @@ func TestSearchPath_Windows(t *testing.T) {
 	root, err := os.MkdirTemp(os.TempDir(), "plugin_test")
 	require.NoError(t, err)
 	defer func() {
-		err := os.RemoveAll(root)
-		require.NoError(t, err)
+		_ = os.RemoveAll(root)
 	}()
 
 	file, err := os.CreateTemp(root, "confluent-plugin*.exe")
@@ -146,6 +146,8 @@ func TestSearchPath_Windows(t *testing.T) {
 	}()
 
 	pluginMap, err := SearchPath()
+	fmt.Println(fileName)
+	fmt.Println(pluginMap)
 	require.NoError(t, err)
 	pluginPaths, ok := pluginMap[fileName]
 	require.True(t, ok)
