@@ -296,10 +296,11 @@ func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) http.HandlerFu
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
 		if r.Method == http.MethodGet { //part of describe call
+			reply := &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}}}}
 			if cluster == "lkc-asyncapi" {
-				listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "delete.retention.ms", Value: "86400000"}}}}
+				reply.TopicConfig.Entries = append(reply.TopicConfig.Entries, &schedv1.TopicConfigEntry{Name: "delete.retention.ms", Value: "86400000"})
 			} else {
-				listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
+				reply.TopicConfig.Entries = append(reply.TopicConfig.Entries, &schedv1.TopicConfigEntry{Name: "retention.ms", Value: "604800000"})
 			}
 			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
 			require.NoError(t, err)

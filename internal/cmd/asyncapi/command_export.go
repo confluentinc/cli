@@ -120,14 +120,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		}
 		defer consumer.Close()
 	}
-	schemaCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, flags.apiKey, flags.apiSecret)
+	srCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, flags.apiKey, flags.apiSecret)
 	if err != nil {
 		return nil
 	}
 	// environment type - local, devel or prod
 	env := getEnv(broker)
 	// Servers & Info Section
-	reflector := addServer(env, broker, schemaCluster)
+	reflector := addServer(env, broker, srCluster)
 	// SR Client
 	subjects, _, err := srClient.DefaultApi.List(ctx, nil)
 	if err != nil {
@@ -150,7 +150,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				tags, err := getTags(schemaCluster, Schema, flags.apiKey, flags.apiSecret)
+				tags, err := getTags(srCluster, Schema, flags.apiKey, flags.apiSecret)
 				if err != nil {
 					log.CliLogger.Warnf("failed to get tags: %v", err)
 				}
