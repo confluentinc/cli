@@ -292,7 +292,6 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) http.HandlerFunc {
 //Handler for: "/2.0/kafka/{cluster}/topics/{topic}/config"
 func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var listTopicConfigReply *schedv1.ListTopicConfigReply
 		vars := mux.Vars(r)
 		cluster := vars["cluster"]
 		if r.Method == http.MethodGet { //part of describe call
@@ -302,7 +301,7 @@ func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) http.HandlerFu
 			} else {
 				reply.TopicConfig.Entries = append(reply.TopicConfig.Entries, &schedv1.TopicConfigEntry{Name: "retention.ms", Value: "604800000"})
 			}
-			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
+			topicReply, err := json.Marshal(reply.TopicConfig)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(topicReply))
 			require.NoError(t, err)
