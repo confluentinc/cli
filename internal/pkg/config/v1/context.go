@@ -194,11 +194,17 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags() map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 	if c.FeatureFlags == nil {
 		return map[string]interface{}{}
 	}
-	return c.FeatureFlags.Values
+
+	switch client {
+	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
+		return c.FeatureFlags.CcloudValues
+	default:
+		return c.FeatureFlags.Values
+	}
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
