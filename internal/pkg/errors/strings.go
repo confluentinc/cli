@@ -72,6 +72,9 @@ const (
 	DeletedACLsCountMsg      = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg          = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
+	// kafka quota commands
+	DeletedClientQuotaMessage = "Deleted client quota \"%s\".\n"
+
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
 	KsqlDBDeletedMsg          = "ksqlDB app \"%s\" has been deleted.\n"

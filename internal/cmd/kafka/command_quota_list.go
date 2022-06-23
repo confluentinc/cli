@@ -1,13 +1,16 @@
 package kafka
 
 import (
-	"context"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 )
 
-var quotaListFields = []string{"DisplayName", "Description", "Throughput", "Cluster", "Principals"}
+var (
+	quotaListFields       = []string{"Id", "DisplayName", "Description", "Ingress", "Egress", "Cluster", "Principals"}
+	quotaHumanFields      = []string{"ID", "Display Name", "Description", "Ingress", "Egress", "Cluster", "Principals"}
+	quotaStructuredFields = []string{"id", "display_name", "description", "ingress", "egress", "cluster", "principals"}
+)
 
 func (c *quotaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -25,34 +28,26 @@ func (c *quotaCommand) newListCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
-
-	// TODO figure out how to specify Service Account
-	//sa, err := cmd.Flags().GetString("service-account")
-	//if err != nil {
-	//	return err
-	//}
-
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	//fmt.Println(sa)
-	//fmt.Println(cluster)
+	// TODO pagination
 
-	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(context.Background())
-	kafkaQuotaList, _, err := req.Cluster(cluster.ID).Execute()
+	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.quotaContext())
+	kafkaQuotaList, _, err := req.Cluster(cluster.ID).Environment(c.EnvironmentId()).Execute()
 	if err != nil {
-		return err
+		return quotaErr(err)
 	}
 
-	w, err := output.NewListOutputWriter(cmd, quotaListFields, camelToSpaced(quotaListFields), camelToSnake(quotaListFields))
+	w, err := output.NewListOutputWriter(cmd, quotaListFields, quotaHumanFields, quotaStructuredFields)
 	if err != nil {
 		return err
 	}
 
 	for _, quota := range kafkaQuotaList.Data {
-		w.AddElement(quota)
+		w.AddElement(quotaToPrintable(quota))
 	}
 
 	return w.Out()

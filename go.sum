@@ -624,8 +624,10 @@ github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105 h1:rJjoMIEEjChHHTAkp/bxxzFR2XnU4SCAz6bgRp3vqOw=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105/go.mod h1:gFne0gmsbgH4GlpfmwadKrAMuSEvEB+mP4DfkEJ4Zi4=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.1 h1:+/Pfz37tW7oEWtMxZ+QT8opri0JYcBdRq1L5fWYI0NI=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.1/go.mod h1:DuC+mfFCLXE4WN1wHsn5QFiulQqrZex8NV0zMivCRBA=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.2 h1:CJbFRiGVmL/FYAGY7098gw0ZcvTFBKaNS1+LX+y1te0=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.2/go.mod h1:DuC+mfFCLXE4WN1wHsn5QFiulQqrZex8NV0zMivCRBA=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.3 h1:k5iLBduIvDLpU7KEJ3zhX0AsJ1QeSUosXVN6KkqOc9I=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.3/go.mod h1:DuC+mfFCLXE4WN1wHsn5QFiulQqrZex8NV0zMivCRBA=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/KfZ/ZahCOoeTjxXOoRU=

@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -10,8 +9,8 @@ import (
 )
 
 var (
-	humanRenames      = map[string]string{"DisplayName": "Display Name", "Description": "Description", "Throughput": "Throughput", "Cluster": "Cluster", "Principals": "Principals"}
-	structuredRenames = map[string]string{"DisplayName": "display_name", "Description": "description", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals"}
+	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Display Name", "Description": "Description", "Throughput": "Throughput", "Cluster": "Cluster", "Principals": "Principals"}
+	structuredRenames = map[string]string{"Id": "id", "DisplayName": "display_name", "Description": "description", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals"}
 )
 
 func (c *quotaCommand) newCreateCommand() *cobra.Command {
@@ -22,23 +21,27 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	// TODO example
+	// TODO should i mention the <default> principal as well?
 	cmd.Flags().String("ingress", "", "Ingress throughput limit for client.")
 	cmd.Flags().String("egress", "", "Egress throughput limit for client.")
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("name", "", "Display name for quota.")
-	cmd.Flags().StringSlice("service-accounts", []string{}, "List of service accounts to apply quota for (comma-separated).")
+	cmd.Flags().StringSlice("principals", []string{}, "List of service accounts to apply quota for (comma-separated).")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }
 
 func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
-	serviceAccounts, err := cmd.Flags().GetStringSlice("service-accounts")
+	serviceAccounts, err := cmd.Flags().GetStringSlice("principals")
 	if err != nil {
 		return err
 	}
-	principals := sliceToObjRefArray(serviceAccounts)
+	principals := c.sliceToObjRefArray(serviceAccounts)
 
 	displayName, err := cmd.Flags().GetString("name")
 	if err != nil {
@@ -51,29 +54,33 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	throughput, err := getQuotaThroughput(cmd)
+	if err != nil {
+		return err
+	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(context.Background())
-	envId := c.EnvironmentId()
+	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(c.quotaContext())
 	req = req.KafkaQuotasV1ClientQuota(kafkaquotas.KafkaQuotasV1ClientQuota{
 		DisplayName: &displayName,
 		Description: &description,
 		Throughput:  throughput,
-		Cluster:     &kafkaquotas.ObjectReference{Id: cluster.ID, Environment: &envId},
+		Cluster:     &kafkaquotas.ObjectReference{Id: cluster.ID},
 		Principals:  principals,
+		Environment: &kafkaquotas.ObjectReference{Id: c.EnvironmentId()},
 	})
 	quota, _, err := req.Execute()
 	if err != nil {
-		return err
+		return quotaErr(err)
 	}
-	return output.DescribeObject(cmd, quota, quotaListFields, humanRenames, structuredRenames)
+	printableQuota := quotaToPrintable(quota)
+	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func sliceToObjRefArray(accounts []string) *[]kafkaquotas.ObjectReference {
+func (c *quotaCommand) sliceToObjRefArray(accounts []string) *[]kafkaquotas.ObjectReference {
 	a := make([]kafkaquotas.ObjectReference, len(accounts))
 	for i := range a {
 		a[i] = kafkaquotas.ObjectReference{
@@ -84,22 +91,22 @@ func sliceToObjRefArray(accounts []string) *[]kafkaquotas.ObjectReference {
 }
 
 func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
-	if cmd.Flags().Changed("ingress") && cmd.Flags().Changed("egress") {
-		return nil, errors.New(errors.OnlySpecifyIngressOrEgress)
-	}
 	var throughput kafkaquotas.KafkaQuotasV1Throughput
-	if cmd.Flags().Changed("ingress") {
-		ingress, err := cmd.Flags().GetString("ingress")
-		if err != nil {
-			return nil, err
-		}
-		throughput.IngressByteRate = &ingress
-	} else if cmd.Flags().Changed("egress") {
-		egress, err := cmd.Flags().GetString("egress")
-		if err != nil {
-			return nil, err
-		}
-		throughput.EgressByteRate = &egress
+
+	ingress, err := cmd.Flags().GetString("ingress")
+	if err != nil {
+		return nil, err
+	}
+	throughput.IngressByteRate = &ingress
+
+	egress, err := cmd.Flags().GetString("egress")
+	if err != nil {
+		return nil, err
+	}
+	throughput.EgressByteRate = &egress
+
+	if ingress == "" || egress == "" {
+		return &throughput, errors.New(errors.MustSpecifyIngressAndEgress)
 	}
 	return &throughput, nil
 }
