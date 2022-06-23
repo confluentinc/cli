@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/fs"
 	"os"
@@ -27,7 +28,8 @@ func SearchPath() (map[string][]string, error) {
 func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.FileInfo, error) error {
 	return func(path string, info fs.FileInfo, _ error) error {
 		pluginName := filepath.Base(path)
-		if re.MatchString(pluginName) && isExec(info) {
+		fmt.Println(re.MatchString(pluginName), isExec(info))
+		if re.MatchString(pluginName) && ((runtime.GOOS != "windows" && isExec(info)) || (runtime.GOOS == "windows" && isExecWindows(pluginName))) {
 			if strings.Contains(pluginName, ".") {
 				pluginName = pluginName[:strings.LastIndex(pluginName, ".")]
 			}
@@ -38,10 +40,10 @@ func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string,
 }
 
 func isExec(info fs.FileInfo) bool {
-	if runtime.GOOS == "windows" {
-		fileExt := strings.ToLower(filepath.Ext(info.Name()))
-		return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, fileExt)
-	}
 	m := info.Mode()
 	return !m.IsDir() && m&0111 != 0
+}
+
+func isExecWindows(fileName string) bool {
+	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, fileName[strings.LastIndex(fileName, "."):])
 }

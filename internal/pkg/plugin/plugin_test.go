@@ -29,8 +29,7 @@ func TestIsExec_Windows(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		return
 	}
-	f := &mock.FileInfo{NameVal: "hello.exe"}
-	require.Equal(t, true, isExec(f))
+	require.Equal(t, true, isExecWindows("hello.exe"))
 }
 
 func TestPluginWalkFn(t *testing.T) {
