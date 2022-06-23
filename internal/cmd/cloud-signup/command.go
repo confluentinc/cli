@@ -3,7 +3,6 @@ package cloudsignup
 import (
 	"context"
 	"fmt"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"os"
 	"strings"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -219,7 +219,7 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 	default:
 		ldClient = v1.CcloudProdLaunchDarklyClient
 	}
-	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, "")
+	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
 
 	// try to find free trial promo code
 	hasFreeTrialCode := false
@@ -234,7 +234,5 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 
 	if hasFreeTrialCode {
 		utils.ErrPrintf(cmd, errors.FreeTrialSignUpMsg, admin.ConvertToUSD(freeTrialPromoCodeAmount))
-	} else {
-		log.CliLogger.Warn("Failed to print free trial announcement: failed to find free trial promo code")
 	}
 }

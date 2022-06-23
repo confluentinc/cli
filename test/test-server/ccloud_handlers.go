@@ -218,10 +218,9 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
-
 			var res orgv1.GetPaymentInfoReply
 
+			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
 			switch hasPaymentMethod {
 			case "false":
 				res = orgv1.GetPaymentInfoReply{}
@@ -234,10 +233,8 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 						ExpMonth:   "01",
 						ExpYear:    "99",
 					},
-					Organization: &orgv1.Organization{
-						Id: 0,
-					},
-					Error: nil,
+					Organization: &orgv1.Organization{Id: 0},
+					Error:        nil,
 				}
 			}
 			data, err := json.Marshal(res)
@@ -275,8 +272,6 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
-
 			var res *billingv1.GetPromoCodeClaimsReply
 
 			var tenDollars int64 = 10 * 10000
@@ -293,7 +288,8 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 						Balance:              0,
 						CreditExpirationDate: expiration,
 					},
-				}}
+				},
+			}
 
 			regularCodes := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
@@ -309,8 +305,10 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 						Amount:               tenDollars,
 						CreditExpirationDate: expiration,
 					},
-				}}
+				},
+			}
 
+			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
 			switch hasPromoCodeClaims {
 			case "false":
 				res = &billingv1.GetPromoCodeClaimsReply{}

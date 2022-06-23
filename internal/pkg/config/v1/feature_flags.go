@@ -12,7 +12,8 @@ const (
 )
 
 type FeatureFlags struct {
-	Values         map[LaunchDarklyClient]map[string]interface{} `json:"values" hcl:"values"`
+	Values         map[string]interface{}                        `json:"values" hcl:"values"`
+	CcloudValues   map[LaunchDarklyClient]map[string]interface{} `json:"ccloud_values" hcl:"ccloud_values"`
 	LastUpdateTime int64                                         `json:"last_update_time" hcl:"last_update_time"`
 	User           lduser.User                                   `json:"user" hcl:"user"`
 }
