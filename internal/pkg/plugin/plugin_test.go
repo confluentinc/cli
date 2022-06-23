@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/stretchr/testify/require"
 	"io/fs"
@@ -114,7 +113,6 @@ func TestSearchPath(t *testing.T) {
 	}()
 
 	pluginMap, err := SearchPath()
-	fmt.Println(pluginMap)
 	require.NoError(t, err)
 	pluginPaths, ok := pluginMap[fileName]
 	require.True(t, ok)
@@ -147,8 +145,6 @@ func TestSearchPath_Windows(t *testing.T) {
 	}()
 
 	pluginMap, err := SearchPath()
-	fmt.Println(fileName)
-	fmt.Println(pluginMap)
 	require.NoError(t, err)
 	pluginPaths, ok := pluginMap[fileName]
 	require.True(t, ok)
