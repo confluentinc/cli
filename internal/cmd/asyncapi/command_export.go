@@ -80,6 +80,14 @@ type SecurityConfigsSR struct {
 	BasicAuthInfo string `json:"basic.auth.user.info:"`
 }
 
+type flags struct {
+	file            string
+	groupId         string
+	consumeExamples bool
+	apiKey          string
+	apiSecret       string
+}
+
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
@@ -96,26 +104,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
-	file, err := cmd.Flags().GetString("file")
-	if err != nil {
-		return err
-	}
-	groupId, err := cmd.Flags().GetString("group-id")
-	if err != nil {
-		return err
-	}
-	consumeExamples, err := cmd.Flags().GetBool("consume-examples")
-	if err != nil {
-		return err
-	}
-	apiKey, err := cmd.Flags().GetString("api-key")
-	if err != nil {
-		return err
-	}
-	apiSecret, err := cmd.Flags().GetString("api-secret")
-	if err != nil {
-		return err
-	}
+	flags, err := getFlags(cmd)
 	// Get Kafka cluster details and broker URL
 	cluster, topics, clusterCreds, err := getClusterDetails(c)
 	if err != nil {
@@ -124,17 +113,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	broker := getBroker(cluster)
 	// Create Consumer
 	var consumer *kafka.Consumer
-	if consumeExamples {
-		consumer, err = createConsumer(broker, clusterCreds, groupId)
+	if flags.consumeExamples {
+		consumer, err = createConsumer(broker, clusterCreds, flags.groupId)
 		if err != nil {
 			return err
 		}
-		defer func(consumer *kafka.Consumer) {
-			err = consumer.Close()
-			err = fmt.Errorf("failed to close consumer: %v", err)
-		}(consumer)
+		defer consumer.Close()
 	}
-	schemaCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, apiKey, apiSecret)
+	schemaCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, flags.apiKey, flags.apiSecret)
 	if err != nil {
 		return nil
 	}
@@ -164,18 +150,18 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				tags, err := getTags(schemaCluster, Schema, apiKey, apiSecret)
+				tags, err := getTags(schemaCluster, Schema, flags.apiKey, flags.apiSecret)
 				if err != nil {
 					log.CliLogger.Warnf("failed to get tags: %v", err)
 				}
 				var example interface{}
-				if consumeExamples {
+				if flags.consumeExamples {
 					example, err = getMessageExamples(consumer, topic.Name)
 					if err != nil {
 						log.CliLogger.Warn(err)
 					}
 				}
-				bindings, err := c.getBindings(cluster, topic, groupId)
+				bindings, err := c.getBindings(cluster, topic, flags.groupId)
 				if err != nil {
 					return fmt.Errorf("bindings not found: %v", err)
 				}
@@ -198,8 +184,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("AsyncAPI specification written to \"%s\".\n", file)
-	return ioutil.WriteFile(file, yaml, 0644)
+	fmt.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
+	return ioutil.WriteFile(flags.file, yaml, 0644)
 }
 
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
@@ -360,6 +346,37 @@ func getEnv(broker string) string {
 	} else {
 		return "prod"
 	}
+}
+
+func getFlags(cmd *cobra.Command) (*flags, error) {
+
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return nil, err
+	}
+	groupId, err := cmd.Flags().GetString("group-id")
+	if err != nil {
+		return nil, err
+	}
+	consumeExamples, err := cmd.Flags().GetBool("consume-examples")
+	if err != nil {
+		return nil, err
+	}
+	apiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return nil, err
+	}
+	apiSecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return nil, err
+	}
+	return &flags{
+		file:            file,
+		groupId:         groupId,
+		consumeExamples: consumeExamples,
+		apiKey:          apiKey,
+		apiSecret:       apiSecret,
+	}, nil
 }
 
 func getSchemaRegistry(c *command, cmd *cobra.Command, apiKey, apiSecret string) (*v1.SchemaRegistryCluster, *schemaregistry.APIClient, context.Context, error) {
