@@ -134,32 +134,20 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 			err = fmt.Errorf("failed to close consumer: %v", err)
 		}(consumer)
 	}
-	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
-	if err != nil {
-		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
-	}
-	if apiKey == "" && apiSecret == "" && schemaCluster.SrCredentials != nil {
-		apiKey = schemaCluster.SrCredentials.Key
-		apiSecret = schemaCluster.SrCredentials.Secret
-	}
-
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, apiKey, apiSecret)
+	schemaCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, apiKey, apiSecret)
 	if err != nil {
 		return nil
 	}
 	// environment type - local, devel or prod
 	env := getEnv(broker)
 	// Servers & Info Section
-	reflector, err := addServer(env, broker, schemaCluster)
-	if err != nil {
-		return err
-	}
+	reflector := addServer(env, broker, schemaCluster)
 	// SR Client
 	subjects, _, err := srClient.DefaultApi.List(ctx, nil)
 	if err != nil {
 		return err
 	}
-	log.CliLogger.Debug("Generating AsyncAPI spec")
+	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
 	for _, topic := range topics {
 		// For a given topic
@@ -187,7 +175,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 						log.CliLogger.Warn(err)
 					}
 				}
-				bindings, err := getBindings(cluster, topic, clusterCreds, groupId)
+				bindings, err := c.getBindings(cluster, topic, groupId)
 				if err != nil {
 					return fmt.Errorf("bindings not found: %v", err)
 				}
@@ -204,18 +192,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		}
 	}
 	// Components
-	reflector, err = addComponents(reflector, messages)
-	if err != nil {
-		return err
-	}
+	reflector = addComponents(reflector, messages)
 	// Convert reflector to YAML File
 	yaml, err := reflector.Schema.MarshalYAML()
 	if err != nil {
 		return err
 	}
-	fmt.Printf("AsyncAPI specification file generated at \"%s\".\n", file)
-	err = ioutil.WriteFile(file, yaml, 0644)
-	return err
+	fmt.Printf("AsyncAPI specification written to \"%s\".\n", file)
+	return ioutil.WriteFile(file, yaml, 0644)
 }
 
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
@@ -239,8 +223,8 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 		var tagDef TagDef
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
-			err = fmt.Errorf("failed to unmarshal tags: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("failed to unmarshal tags: %v", err)
+
 		}
 		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tags.TypeName, Description: tagDef.Description})
 	}
@@ -269,50 +253,31 @@ func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}
 	return example, nil
 }
 
-func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, clusterCreds *v1.APIKeyPair, groupId string) (*bindings, error) {
-	var cleanupPolicy TopicConfigs
-	body, err := pasyncapi.GetClusterCleanupPolicy(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
+func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, groupId string) (*bindings, error) {
+	topic1 := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.Name}}
+	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic1)
 	if err != nil {
-		log.CliLogger.Warnf("error in getting cleanup policy: %v", err)
+		return nil, fmt.Errorf("error in getting topic configs: %v", err)
 	}
-	if body == nil {
-		// for tests
-		cleanupPolicy.Name = "cleanup.policy"
-		cleanupPolicy.Value = ""
-	} else {
-		err := json.Unmarshal(body, &cleanupPolicy)
-		if err != nil {
-			err = fmt.Errorf("error in unmarshalling topic configs: cleanup policy: %v", err)
-			return nil, err
+	var cleanupPolicy string
+	deleteRetentionMsValue := -1
+	for _, config := range configs.Entries {
+		if config.Name == "cleanup.policy" {
+			cleanupPolicy = config.Value
 		}
-	}
-	// DeleteRetentionMs
-	var deleteRetentionMs TopicConfigs
-	body, err = pasyncapi.GetClusterDeleteRetentionMs(cluster.RestEndpoint, cluster.Id, topic.Name, clusterCreds)
-	if err != nil {
-		log.CliLogger.Warnf("error in getting delete retention ms: %v", err)
-	}
-	if body == nil {
-		// for tests
-		deleteRetentionMs.Name = "delete.retention.ms"
-		deleteRetentionMs.Value = "-1"
-	} else {
-		err := json.Unmarshal(body, &deleteRetentionMs)
-		if err != nil {
-			err = fmt.Errorf("error in unmarshalling topic configs: deleteRetentionMs: %v", err)
-			return nil, err
+		if config.Name == "delete.retention.ms" {
+			deleteRetentionMsValue, err = strconv.Atoi(config.Value)
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
-	deleteRetentionMsValue, err := strconv.Atoi(deleteRetentionMs.Value)
-	if err != nil {
-		return nil, err
 	}
 	bindings := bindings{
 		ChannelBindings: ConfluentBinding{
 			Partitions: len(topic.GetPartitions()),
 			Replicas:   len(topic.GetPartitions()[0].Replicas),
 			Configs: Configs{
-				CleanupPolicy:                  cleanupPolicy.Value,
+				CleanupPolicy:                  cleanupPolicy,
 				DeleteRetentionMs:              deleteRetentionMsValue,
 				ConfluentValueSchemaValidation: "true",
 			},
@@ -325,9 +290,6 @@ func getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription,
 			GroupId:  groupId,
 			ClientId: "client1",
 		},
-	}
-	if deleteRetentionMsValue == -1 || cleanupPolicy.Value == "" {
-		bindings.ChannelBindings = nil
 	}
 	return &bindings, nil
 }
@@ -366,7 +328,10 @@ func getBroker(cluster *schedv1.KafkaCluster) string {
 }
 func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, schemaregistry.Schema, map[string]interface{}, error) {
 	log.CliLogger.Debugf("Adding operation: %s\n", topic.Name)
-	schema, _, _ := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
+	schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
+	if err != nil {
+		return "", schema, nil, err
+	}
 	contentType := schema.SchemaType
 	if contentType == "" {
 		contentType = "application/avro"
@@ -397,7 +362,24 @@ func getEnv(broker string) string {
 	}
 }
 
-func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluster) (asyncapi.Reflector, error) {
+func getSchemaRegistry(c *command, cmd *cobra.Command, apiKey, apiSecret string) (*v1.SchemaRegistryCluster, *schemaregistry.APIClient, context.Context, error) {
+	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("unable to get Schema Registry cluster: %v", err)
+	}
+	if apiKey == "" && apiSecret == "" && schemaCluster.SrCredentials != nil {
+		apiKey = schemaCluster.SrCredentials.Key
+		apiSecret = schemaCluster.SrCredentials.Secret
+	}
+
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, apiKey, apiSecret)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return schemaCluster, srClient, ctx, nil
+}
+
+func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
 	reflector := asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.Server{
@@ -430,7 +412,7 @@ func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluste
 			},
 		},
 	}
-	return reflector, nil
+	return reflector
 }
 
 func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]interface{}, error) {
@@ -438,12 +420,11 @@ func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	mapOfMessageCompat := make(map[string]interface{})
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 	if err != nil {
-		log.CliLogger.Warn("Error in getting subject level configuration")
+		log.CliLogger.Warnf("error in getting subject level configuration: %v", err)
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
 		if err != nil {
-			log.CliLogger.Warn("Error in getting top level config")
-			// If not found, set a default value
-			config.CompatibilityLevel = "BACKWARD"
+			err = fmt.Errorf("error in getting top level config: %v", err)
+			return nil, err
 		}
 	}
 	mapOfMessageCompat["x-messageCompatibility"] = interface{}(config.CompatibilityLevel)
@@ -483,13 +464,10 @@ func addMessage(reflector asyncapi.Reflector, topicName string, contentType stri
 		channel.BaseChannelItem.Bindings = &spec.ChannelBindingsObject{Kafka: &bindings.ChannelBindings}
 	}
 	err := reflector.AddChannel(channel)
-	if err != nil {
-		return reflector, err
-	}
-	return reflector, nil
+	return reflector, err
 }
 
-func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Message) (asyncapi.Reflector, error) {
+func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Message) asyncapi.Reflector {
 	reflector.Schema.WithComponents(spec.Components{Messages: messages,
 		SecuritySchemes: &spec.ComponentsSecuritySchemes{
 			MapOfComponentsSecuritySchemesWDValues: map[string]spec.ComponentsSecuritySchemesWD{
@@ -522,7 +500,7 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 			},
 		},
 	})
-	return reflector, nil
+	return reflector
 }
 
 func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) (*kafka.Consumer, error) {
@@ -537,8 +515,7 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		"enable.auto.commit": "false",
 	})
 	if err != nil {
-		log.CliLogger.Warn("Error in creating Kafka Consumer")
-		return nil, err
+		return nil, fmt.Errorf("error in creating Kafka consumer: %v", err)
 	}
 	return consumer, nil
 }

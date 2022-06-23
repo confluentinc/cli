@@ -21,6 +21,14 @@ channels:
           clientId: client1
       message:
         $ref: '#/components/messages/Topic1Message'
+    bindings:
+      kafka:
+        x-partitions: 3
+        x-replicas: 3
+        x-configs:
+          cleanup.policy: delete
+          delete.retention.ms: 8.64e+07
+          confluent.value.schema.validation: "true"
     x-messageCompatibility: FORWARD
 components:
   messages:

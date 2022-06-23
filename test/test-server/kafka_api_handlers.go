@@ -293,8 +293,14 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) http.HandlerFunc {
 func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var listTopicConfigReply *schedv1.ListTopicConfigReply
+		vars := mux.Vars(r)
+		cluster := vars["cluster"]
 		if r.Method == http.MethodGet { //part of describe call
-			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
+			if cluster == "lkc-asyncapi" {
+				listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "delete.retention.ms", Value: "86400000"}}}}
+			} else {
+				listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
+			}
 			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(topicReply))

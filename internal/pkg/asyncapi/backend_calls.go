@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -26,8 +25,7 @@ func GetSchemaLevelTags(srEndpoint, schemaClusterId, schemaId, apiKey, apiSecret
 			log.CliLogger.Warnf("error getting tags: %v", err)
 		}
 	}(resp.Body)
-	body, err := ioutil.ReadAll(resp.Body)
-	return body, err
+	return ioutil.ReadAll(resp.Body)
 }
 
 func GetTagDefinitions(srEndpoint, tagName, apiKey, apiSecret string) ([]byte, error) {
@@ -49,54 +47,4 @@ func GetTagDefinitions(srEndpoint, tagName, apiKey, apiSecret string) ([]byte, e
 	}(resp.Body)
 	body, err := ioutil.ReadAll(resp.Body)
 	return body, err
-}
-
-func GetClusterCleanupPolicy(clusterEndpoint, clusterId, topicName string, clusterCreds *v1.APIKeyPair) ([]byte, error) {
-	cleanupPolicyUrl := clusterEndpoint + "/kafka/v3/clusters/" + clusterId + "/topics/" + topicName + "/configs/cleanup.policy"
-	req, err := http.NewRequest("GET", cleanupPolicyUrl, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(clusterCreds.Key, clusterCreds.Secret)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	} else {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.CliLogger.Warnf("error in getting bindings: %v", err)
-			}
-		}(resp.Body)
-		body, err := ioutil.ReadAll(resp.Body)
-		return body, err
-	}
-}
-
-func GetClusterDeleteRetentionMs(clusterEndpoint, clusterId, topicName string, clusterCreds *v1.APIKeyPair) ([]byte, error) {
-	deleteRetentionMsUrl := clusterEndpoint + "/kafka/v3/clusters/" + clusterId + "/topics/" + topicName + "/configs/delete.retention.ms"
-	req, err := http.NewRequest("GET", deleteRetentionMsUrl, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(clusterCreds.Key, clusterCreds.Secret)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp == nil {
-		return nil, nil
-	} else {
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.CliLogger.Warn("Error in getting Bindings")
-			}
-		}(resp.Body)
-		body, err := ioutil.ReadAll(resp.Body)
-		return body, err
-	}
 }
