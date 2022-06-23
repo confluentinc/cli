@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
 
 	"github.com/client9/gospell"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -140,6 +140,8 @@ var properNouns = []string{
 	"ACL",
 	"API",
 	"Apache",
+	"Async",
+	"AsyncAPI",
 	"CLI",
 	"Confluent Cloud",
 	"Confluent Platform",
@@ -183,6 +185,7 @@ var vocabWords = []string{
 	"api",
 	"apikey",
 	"apisecret",
+	"asyncapi",
 	"auth",
 	"avro",
 	"aws",
