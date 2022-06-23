@@ -16,7 +16,7 @@ func SearchPath() (map[string][]string, error) {
 	pathSlice := strings.Split(os.Getenv("PATH"), ":")
 
 	for _, dir := range pathSlice {
-		err := filepath.Walk(dir, isPluginFn(re, pluginMap))
+		err := filepath.Walk(dir, pluginWalkFn(re, pluginMap))
 		if err != nil {
 			return nil, err
 		}
@@ -24,10 +24,13 @@ func SearchPath() (map[string][]string, error) {
 	return pluginMap, nil
 }
 
-func isPluginFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.FileInfo, error) error {
+func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.FileInfo, error) error {
 	return func(path string, info fs.FileInfo, _ error) error {
 		if re.MatchString(path) && isExec(info) {
 			pluginName := filepath.Base(path)
+			if strings.Contains(pluginName, ".") {
+				pluginName = pluginName[:strings.LastIndex(pluginName, ".")]
+			}
 			pluginMap[pluginName] = append(pluginMap[pluginName], path)
 		}
 		return nil
