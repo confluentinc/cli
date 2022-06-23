@@ -45,10 +45,10 @@ var Manager featureFlagManager
 var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
 
 type featureFlagManager interface {
-	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal bool) bool
-	StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal string) string
-	IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal int) int
-	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal interface{}) interface{}
+	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool
+	StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal string) string
+	IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal int) int
+	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{}
 }
 
 type launchDarklyManager struct {
@@ -90,8 +90,8 @@ func Init(version *version.Version, isTest bool) {
 	}
 }
 
-func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal bool) bool {
-	flagValInterface := ld.generalVariation(key, ctx, client, cacheFlag, defaultVal)
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool {
+	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
 		logUnexpectedValueTypeMsg(key, flagValInterface, "bool")
@@ -100,8 +100,8 @@ func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	return flagVal
 }
 
-func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal string) string {
-	flagValInterface := ld.generalVariation(key, ctx, client, cacheFlag, defaultVal)
+func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal string) string {
+	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
 	}
@@ -109,8 +109,8 @@ func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal int) int {
-	flagValInterface := ld.generalVariation(key, ctx, client, cacheFlag, defaultVal)
+func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal int) int {
+	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
 	}
@@ -121,12 +121,12 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal interface{}) interface{} {
-	flagVal := ld.generalVariation(key, ctx, client, cacheFlag, defaultVal)
+func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{} {
+	flagVal := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	return flagVal
 }
 
-func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, cacheFlag bool, defaultVal interface{}) interface{} {
+func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{} {
 	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
@@ -138,7 +138,7 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 			log.CliLogger.Debug(err.Error())
 			return defaultVal
 		}
-		if cacheFlag {
+		if shouldCache {
 			writeFlagsToConfig(ctx, key, flagVals, user, client)
 		}
 	} else {
@@ -191,7 +191,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 
 	switch client {
 	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:
-		if flags.CcloudValues == nil || len(flags.CcloudValues[client]) == 0 {
+		if len(flags.CcloudValues) == 0 {
 			return false
 		}
 	default:
@@ -290,18 +290,14 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 		ctx.FeatureFlags = new(v1.FeatureFlags)
 	}
 
-	if ctx.FeatureFlags.CcloudValues == nil {
-		ctx.FeatureFlags.CcloudValues = make(map[v1.LaunchDarklyClient]map[string]interface{})
-	}
-
 	switch client {
 	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:
 		// only store the target feature flag for ccloud clients
+		if ctx.FeatureFlags.CcloudValues == nil {
+			ctx.FeatureFlags.CcloudValues = make(map[string]interface{})
+		}
 		if v, ok := vals[key]; ok {
-			if ctx.FeatureFlags.CcloudValues[client] == nil {
-				ctx.FeatureFlags.CcloudValues[client] = make(map[string]interface{})
-			}
-			ctx.FeatureFlags.CcloudValues[client][key] = v
+			ctx.FeatureFlags.CcloudValues[key] = v
 		}
 	default:
 		ctx.FeatureFlags.Values = vals

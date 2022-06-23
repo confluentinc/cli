@@ -201,7 +201,7 @@ func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 
 	switch client {
 	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
-		return c.FeatureFlags.CcloudValues[client]
+		return c.FeatureFlags.CcloudValues
 	default:
 		return c.FeatureFlags.Values
 	}
