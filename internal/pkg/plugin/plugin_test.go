@@ -114,6 +114,7 @@ func TestSearchPath(t *testing.T) {
 	}()
 
 	pluginMap, err := SearchPath()
+	fmt.Println(pluginMap)
 	require.NoError(t, err)
 	pluginPaths, ok := pluginMap[fileName]
 	require.True(t, ok)

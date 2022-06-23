@@ -15,7 +15,7 @@ func (s *CLITestSuite) TestPlugin() {
 	}()
 
 	tests := []CLITest{
-		{args: "", fixture: ""},
+		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden"},
 	}
 
 	resetConfiguration(s.T())

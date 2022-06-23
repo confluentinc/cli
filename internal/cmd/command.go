@@ -133,10 +133,8 @@ func (c *command) Execute(args []string) error {
 	}
 
 	potentialPlugin := pversion.CLIName
-	var flagsAndArgs []string
-	for i, s := range args {
+	for _, s := range args {
 		if strings.HasPrefix(s, "--") {
-			flagsAndArgs = append(flagsAndArgs, args[i:]...)
 			break
 		}
 		potentialPlugin += "-" + s
@@ -144,12 +142,12 @@ func (c *command) Execute(args []string) error {
 
 	for len(potentialPlugin) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
-			if cmd, _, _ := c.Find(flagsAndArgs); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
+			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
 				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
 			}
 			cliPlugin := &exec.Cmd{
 				Path:   pluginPathList[0],
-				Args:   flagsAndArgs,
+				Args:   args,
 				Stdout: os.Stdout,
 				Stdin:  os.Stdin,
 			}
@@ -158,7 +156,6 @@ func (c *command) Execute(args []string) error {
 			}
 			return nil
 		}
-		flagsAndArgs = append([]string{potentialPlugin[strings.LastIndex(potentialPlugin, "-")+1:]}, flagsAndArgs...)
 		potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
 	}
 
