@@ -211,10 +211,6 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, mdsClient, suite.conf))
 }
 
-func TestRoleBindingTestSuite(t *testing.T) {
-	suite.Run(t, new(RoleBindingTestSuite))
-}
-
 var roleBindingListTests = []roleBindingTest{
 	{
 		args:      []string{"--current-user"},
@@ -726,4 +722,8 @@ func TestParseAndValidateResourcePattern_TopicWithColon(t *testing.T) {
 func TestParseAndValidateResourcePattern_ErrIncorrectResourceFormat(t *testing.T) {
 	_, err := parseAndValidateResourcePattern("string with no colon", true)
 	require.Error(t, err)
+}
+
+func TestRoleBindingTestSuite(t *testing.T) {
+	suite.Run(t, new(RoleBindingTestSuite))
 }

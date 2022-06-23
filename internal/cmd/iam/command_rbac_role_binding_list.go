@@ -93,7 +93,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-
+	cmd.Flags().Bool("non-inclusive", false, "Do non-inclusive search when listing role bindings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -530,7 +530,16 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.State.Auth.User.ResourceId)
 	}
 
-	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+	nonInclusive, err := cmd.Flags().GetBool("non-inclusive")
+	if err != nil {
+		return outputWriter, err
+	}
+
+	if nonInclusive {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern)
+	} else {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+	}
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
@@ -626,7 +635,16 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 		return outputWriter, err
 	}
 
-	listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+	nonInclusive, err := cmd.Flags().GetBool("non-inclusive")
+	if err != nil {
+		return outputWriter, err
+	}
+
+	if nonInclusive {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern)
+	} else {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(*listRoleBinding.CrnPattern + "/*")
+	}
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
