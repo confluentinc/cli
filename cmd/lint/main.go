@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"os"
 	"strings"
 
 	"github.com/client9/gospell"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -287,22 +287,22 @@ func main() {
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{
-			CurrentContext: "no context",
+			CurrentContext: "No Context",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: ccloudv2.Hostnames[0]}},
-			CurrentContext: "cloud",
+			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: ccloudv2.Hostnames[0]}},
+			CurrentContext: "Cloud",
 		},
 		{
-			Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
-			CurrentContext: "on-prem",
+			Contexts:       map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
+			CurrentContext: "On-Prem",
 		},
 	}
 
 	code := 0
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, true, new(version.Version))
-		if err := l.Lint(cmd.Command); err != nil {
+		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version), true)
+		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1
 		}
