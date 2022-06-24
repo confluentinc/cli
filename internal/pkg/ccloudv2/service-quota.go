@@ -1,17 +1,17 @@
 package ccloudv2
 
 import (
-	servicequotav2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
+	quotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newServiceQuotaClient(baseURL, userAgent string, isTest bool) *servicequotav2.APIClient {
-	cfg := servicequotav2.NewConfiguration()
+func newServiceQuotaClient(baseURL, userAgent string, isTest bool) *quotasv1.APIClient {
+	cfg := quotasv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = servicequotav2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Service Quota"}}
+	cfg.Servers = quotasv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Service Quota"}}
 	cfg.UserAgent = userAgent
 
-	return servicequotav2.NewAPIClient(cfg)
+	return quotasv1.NewAPIClient(cfg)
 }
