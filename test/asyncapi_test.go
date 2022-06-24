@@ -41,7 +41,8 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		var err2 error
 		fmt.Println([]byte(testfile1))
 		fmt.Println([]byte(file1))
-		s.Errorf(err2, "Spec generated does not match the template output file.")
+		err2 = fmt.Errorf("spec generated does not match the template output file")
+		s.Error(err2)
 	}
 	resetConfiguration(s.T())
 }

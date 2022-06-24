@@ -105,6 +105,9 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	flags, err := getFlags(cmd)
+	if err != nil {
+		return err
+	}
 	// Get Kafka cluster details and broker URL
 	cluster, topics, clusterCreds, err := getClusterDetails(c)
 	if err != nil {
@@ -143,14 +146,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
-				contentType, Schema, producer, err := getChannelDetails(topic, srClient, ctx, subject)
+				contentType, schema, producer, err := getChannelDetails(topic, srClient, ctx, subject)
 				if contentType == "PROTOBUF" {
 					continue
 				}
 				if err != nil {
 					return err
 				}
-				tags, err := getTags(srCluster, Schema, flags.apiKey, flags.apiSecret)
+				tags, err := getTags(srCluster, *schema, flags.apiKey, flags.apiSecret)
 				if err != nil {
 					log.CliLogger.Warnf("failed to get tags: %v", err)
 				}
@@ -191,8 +194,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
 	body, err := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
 	if err != nil {
-		err = fmt.Errorf("error in getting schema level tags %v", err)
-		return nil, err
+		return nil, fmt.Errorf("error in getting schema level tags %v", err)
 	}
 	var tagsFromId []TagsFromId
 	err = json.Unmarshal(body, &tagsFromId)
@@ -210,7 +212,6 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal tags: %v", err)
-
 		}
 		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tags.TypeName, Description: tagDef.Description})
 	}
@@ -258,7 +259,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 			}
 		}
 	}
-	bindings := bindings{
+	bindings := &bindings{
 		ChannelBindings: ConfluentBinding{
 			Partitions: len(topic.GetPartitions()),
 			Replicas:   len(topic.GetPartitions()[0].Replicas),
@@ -277,7 +278,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 			ClientId: "client1",
 		},
 	}
-	return &bindings, nil
+	return bindings, nil
 }
 
 func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
@@ -292,7 +293,7 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
 	if err != nil {
-		err = fmt.Errorf("cannot find Kafka cluster: \"%v\"", err)
+		err = fmt.Errorf(`cannot find Kafka cluster: ""%v"`, err)
 		return nil, nil, nil, err
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
@@ -309,14 +310,14 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 }
 
 func getBroker(cluster *schedv1.KafkaCluster) string {
-	broker := strings.Split(cluster.GetEndpoint(), "//")[1]
-	return broker
+	return strings.Split(cluster.GetEndpoint(), "//")[1]
 }
-func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, schemaregistry.Schema, map[string]interface{}, error) {
+
+func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, *schemaregistry.Schema, map[string]interface{}, error) {
 	log.CliLogger.Debugf("Adding operation: %s\n", topic.Name)
 	schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
 	if err != nil {
-		return "", schema, nil, err
+		return "", nil, nil, err
 	}
 	contentType := schema.SchemaType
 	if contentType == "" {
@@ -327,15 +328,15 @@ func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry
 	var producer map[string]interface{}
 	if contentType == "PROTOBUF" {
 		log.CliLogger.Warn("Protobuf not supported.")
-		return contentType, schema, nil, nil
+		return contentType, nil, nil, nil
 	} else { // JSON or Avro Format
 		err := json.Unmarshal([]byte(schema.Schema), &producer)
 		if err != nil {
 			err = fmt.Errorf("error in unmarshalling schema: \"%v\"", err)
-			return contentType, schema, nil, err
+			return "", nil, nil, err
 		}
 	}
-	return contentType, schema, producer, nil
+	return contentType, &schema, producer, nil
 }
 
 func getEnv(broker string) string {
@@ -349,7 +350,6 @@ func getEnv(broker string) string {
 }
 
 func getFlags(cmd *cobra.Command) (*flags, error) {
-
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
 		return nil, err
