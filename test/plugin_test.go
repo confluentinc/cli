@@ -13,7 +13,6 @@ func (s *CLITestSuite) TestPlugin() {
 		err := os.Setenv("PATH", path)
 		require.NoError(s.T(), err)
 	}()
-	// TODO: test overlap with existing commands
 	tests := []CLITest{
 		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden"},
 		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden"},
