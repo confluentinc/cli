@@ -147,6 +147,9 @@ func (c *command) Execute(args []string) error {
 				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
 				break
 			}
+			if potentialPlugin[strings.LastIndex(potentialPlugin, "-")+1:] == pluginArgs[0] {
+				pluginArgs = pluginArgs[1:]
+			}
 			pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
 			cliPlugin := &exec.Cmd{
 				Path:   pluginPathList[0],
