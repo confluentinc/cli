@@ -161,4 +161,5 @@ publish-installer:
 upload-linux-build-to-github:
 	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
+	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m "" && \
+	hub release edit --attach dist/confluent_$(VERSION_NO_V)_checksums.txt $(VERSION) -m ""
