@@ -8,6 +8,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -21,15 +23,13 @@ var (
 )
 
 func main() {
-	cfg, err := cmd.LoadConfig()
+	cfg, err := config.LoadAndMigrate(v1.New())
 	cobra.CheckErr(err)
 
 	ver := pversion.NewVersion(version, commit, date, host)
 
 	isTest, err := strconv.ParseBool(isTest)
-	if err != nil {
-		panic(err)
-	}
+	cobra.CheckErr(err)
 	cfg.IsTest = isTest
 
 	cli := cmd.NewConfluentCommand(cfg, ver, isTest)

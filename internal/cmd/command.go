@@ -34,7 +34,6 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -121,27 +120,22 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New(ver.Version)
 
-	if !isTest && cfg.IsCloudLogin() {
+	if !isTest {
 		cmd.PersistentPostRun = u.Collect
 	}
 
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 
-	if u.Command != nil && *(u.Command) != "" {
+	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		ctx := cfg.Context()
-		client := ccloudv2.NewClient(ctx.Platform.Server, ver.UserAgent, isTest, ctx.GetAuthToken())
+		client := ccloudv2.NewClient(ctx.GetPlatformServer(), ver.UserAgent, isTest, ctx.GetAuthToken())
 
 		u.Error = cliv1.PtrBool(err != nil)
 		u.Report(client)
 	}
 
 	return err
-}
-
-func LoadConfig() (*v1.Config, error) {
-	cfg := v1.New()
-	return load.LoadAndMigrate(cfg)
 }
 
 func getLongDescription(cfg *v1.Config) string {
