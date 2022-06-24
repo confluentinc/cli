@@ -17,7 +17,7 @@ func (s *CLITestSuite) TestPlugin() {
 	tests := []CLITest{
 		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden"},
 		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden"},
-		{args: "version", fixture: "plugin/exact-name-overlap.golden"},
+		{args: "version", fixture: "plugin/exact-name-overlap.golden", regex: true},
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 
