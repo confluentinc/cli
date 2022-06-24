@@ -1,0 +1,9 @@
+	- warning: test/fixtures/input/plugin/confluent-version is overshadowed by an existing Confluent CLI command.
+confluent - Confluent CLI
+
+Version:     v2.17.2-15-gf4beaf43
+Git Ref:     f4beaf43
+Build Date:  2022-06-24T18:17:37Z
+Go Version:  go1.17.6 (darwin/amd64)
+Development: true
+
