@@ -473,8 +473,7 @@ func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, er
 
 	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
 	// potentially remove this once Rest Proxy is enabled across prod
-	client := dynamicconfig.NewContextClient(ctx)
-	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
+	kafkaCluster, err := ctx.FetchCluster(clusterConfig.ID)
 	if err != nil {
 		return "", "", err
 	}
