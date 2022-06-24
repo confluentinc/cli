@@ -13,7 +13,7 @@ import (
 
 func TestIsExec_Dir(t *testing.T) {
 	f := &mock.FileInfo{ModeVal: fs.ModeDir}
-	require.Equal(t, false, isExec(f))
+	require.Equal(t, false, isExecutable(f))
 }
 
 func TestIsExec_Executable(t *testing.T) {
@@ -21,15 +21,14 @@ func TestIsExec_Executable(t *testing.T) {
 		return
 	}
 	f := &mock.FileInfo{ModeVal: fs.ModePerm}
-	require.Equal(t, true, isExec(f))
+	require.Equal(t, true, isExecutable(f))
 }
 
 func TestIsExec_Windows(t *testing.T) {
 	if runtime.GOOS != "windows" {
 		return
 	}
-	f := &mock.FileInfo{NameVal: "hello.exe"}
-	require.Equal(t, true, isExec(f))
+	require.Equal(t, true, isExecutableWindows("hello.exe"))
 }
 
 func TestPluginWalkFn(t *testing.T) {
