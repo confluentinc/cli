@@ -120,7 +120,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Resolve cluster details if not found locally.
-	kcc, err := NewContextClient(d).FetchCluster(clusterId)
+	kcc, err := d.FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
@@ -162,9 +162,7 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 		return err
 	}
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
-		// Fetch API key error.
-		ctxClient := NewContextClient(d)
-		return ctxClient.FetchAPIKeyError(apiKey, clusterId)
+		return d.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
 	return d.Save()
@@ -182,7 +180,6 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 		return nil, err
 	}
 
-	ctxClient := NewContextClient(d)
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
 	if resourceType == resource.SchemaRegistry {
@@ -192,7 +189,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, envId)
+			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resourceId, envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
@@ -202,7 +199,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByAccountId(context.Background(), envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
