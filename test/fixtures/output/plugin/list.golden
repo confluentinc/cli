@@ -1,0 +1,4 @@
+test/fixtures/input/plugin/confluent-plugin1.sh
+test/fixtures/input/plugin/confluent-print-args.sh
+test/fixtures/input/plugin/confluent-version
+test/fixtures/input/plugin/dummy/confluent-plugin2
