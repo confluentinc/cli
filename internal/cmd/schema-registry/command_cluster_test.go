@@ -21,16 +21,20 @@ import (
 
 const (
 	srClusterID = "sr"
+	cloud       = "aws"
+	region      = "us-east-1"
+	packageType = "advanced"
 )
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
-	srCluster    *schedv1.SchemaRegistryCluster
-	srMock       *ccsdkmock.SchemaRegistry
-	srClientMock *srsdk.APIClient
-	metricsApi   *ccsdkmock.MetricsApi
+	conf            *v1.Config
+	kafkaCluster    *schedv1.KafkaCluster
+	srCluster       *schedv1.SchemaRegistryCluster
+	srMock          *ccsdkmock.SchemaRegistry
+	srClientMock    *srsdk.APIClient
+	metricsApi      *ccsdkmock.MetricsApi
+	envMetadataMock *ccsdkmock.EnvironmentMetadata
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -86,19 +90,36 @@ func (suite *ClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
+	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
+		GetFunc: func(arg0 context.Context) (metadata []*schedv1.CloudMetadata, e error) {
+			cloudMeta := &schedv1.CloudMetadata{
+				Id: cloud,
+				Regions: []*schedv1.Region{
+					{
+						Id:            region,
+						IsSchedulable: true,
+					},
+				},
+			}
+			return []*schedv1.CloudMetadata{
+				cloudMeta,
+			}, nil
+		},
+	}
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
-		SchemaRegistry: suite.srMock,
-		MetricsApi:     suite.metricsApi,
+		SchemaRegistry:      suite.srMock,
+		MetricsApi:          suite.metricsApi,
+		EnvironmentMetadata: suite.envMetadataMock,
 	}
 	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"})
+	cmd.SetArgs([]string{"cluster", "enable", "--cloud", cloud, "--region", region, "--package", packageType})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
