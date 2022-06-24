@@ -143,7 +143,7 @@ func (c *command) Execute(args []string) error {
 	pluginArgs := append([]string{}, args...)
 	for len(potentialPlugin) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
-			if cmd, _, _ := c.Find(pluginArgs); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
+			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
 				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
 			}
 			pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
@@ -159,7 +159,9 @@ func (c *command) Execute(args []string) error {
 			return nil
 		}
 		potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
-		pluginArgs = append(pluginArgs[:0], pluginArgs[1:]...)
+		if len(pluginArgs) > 1 {
+			pluginArgs = pluginArgs[1:]
+		}
 	}
 
 	c.Command.SetArgs(args)
