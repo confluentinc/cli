@@ -9,8 +9,8 @@ import (
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
-	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2/mock"
+	quotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
@@ -56,6 +56,6 @@ func newIamClientMock() *iamv2.APIClient {
 	}
 }
 
-func newQuotasClientMock() *quotasv2.APIClient {
-	return &quotasv2.APIClient{AppliedQuotasServiceQuotaV2Api: &quotasmock.AppliedQuotasServiceQuotaV2Api{}}
+func newQuotasClientMock() *quotasv1.APIClient {
+	return &quotasv1.APIClient{AppliedQuotasServiceQuotaV1Api: &quotasmock.AppliedQuotasServiceQuotaV1Api{}}
 }
