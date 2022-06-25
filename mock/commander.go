@@ -6,7 +6,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	quotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -26,7 +26,7 @@ type Commander struct {
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
-	QuotasClient      *quotasv1.APIClient
+	QuotasClient      *servicequotav1.APIClient
 	Version           *version.Version
 	Config            *v1.Config
 }

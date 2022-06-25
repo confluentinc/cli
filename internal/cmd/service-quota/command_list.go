@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/url"
 
-	quotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 
 	"github.com/spf13/cobra"
 
@@ -49,7 +49,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) createContext() context.Context {
-	return context.WithValue(context.Background(), quotasv1.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -73,7 +73,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	token := ""
-	quotaList := []quotasv1.ServiceQuotaV1AppliedQuota{}
+	quotaList := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	// Since we use paginated results, get all results by iterating the list.
 	for {
 		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.createContext()).
@@ -134,8 +134,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 // TODO: remove this filter func when service-quota api supports filtering by quota code.
-func filterQuotaResults(quotaList []quotasv1.ServiceQuotaV1AppliedQuota, quotaCode string) []quotasv1.ServiceQuotaV1AppliedQuota {
-	filteredQuotas := []quotasv1.ServiceQuotaV1AppliedQuota{}
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+	filteredQuotas := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if quotaCode != "" {
 		for _, quota := range quotaList {
 			if *quota.Id == quotaCode {
