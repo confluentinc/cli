@@ -84,8 +84,8 @@ func (k *KafkaClusterContext) GetKafkaClusterConfig(clusterId string) *KafkaClus
 	if !k.EnvContext {
 		return k.KafkaClusterConfigs[clusterId]
 	}
-	kafkaEnvContext := k.GetCurrentKafkaEnvContext()
-	return kafkaEnvContext.KafkaClusterConfigs[clusterId]
+
+	return k.GetCurrentKafkaEnvContext().KafkaClusterConfigs[clusterId]
 }
 
 func (k *KafkaClusterContext) AddKafkaClusterConfig(kcc *KafkaClusterConfig) {
