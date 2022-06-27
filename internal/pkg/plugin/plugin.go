@@ -13,8 +13,12 @@ import (
 func SearchPath() (map[string][]string, error) {
 	pluginMap := make(map[string][]string)
 	re := regexp.MustCompile(`^confluent(-[a-z][0-9a-z]*)+(\.[a-z]+)?$`)
-	pathSlice := strings.Split(os.Getenv("PATH"), ":")
-	//fmt.Println(pathSlice)
+	var pathSlice []string
+	if runtime.GOOS != "windows" {
+		pathSlice = strings.Split(os.Getenv("PATH"), ":")
+	} else {
+		pathSlice = strings.Split(os.Getenv("PATH"), ";")
+	}
 
 	for _, dir := range pathSlice {
 		//files, err := os.ReadDir(dir)
