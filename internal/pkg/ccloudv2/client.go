@@ -6,7 +6,7 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-	servicequotav2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-v2
@@ -17,7 +17,7 @@ type Client struct {
 	CmkClient          *cmkv2.APIClient
 	IamClient          *iamv2.APIClient
 	OrgClient          *orgv2.APIClient
-	ServiceQuotaClient *servicequotav2.APIClient
+	ServiceQuotaClient *servicequotav1.APIClient
 }
 
 func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client {

@@ -637,6 +637,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0 h1:4Fh6u+0LqvlU/poWV44SIVDfnizSekH3sAYOHZbAabA=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
+github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
+github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=
