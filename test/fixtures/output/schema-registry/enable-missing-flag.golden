@@ -1,0 +1,21 @@
+Error: required flag(s) "package" not set
+Usage:
+  confluent schema-registry cluster enable [flags]
+
+Examples:
+Enable Schema Registry, using "Google Cloud Platform" in the US with "advanced" package for environment "env-12345"
+
+  $ confluent schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345
+
+Flags:
+      --cloud string         REQUIRED: Cloud provider (aws, azure, gcp).
+      --geo string           REQUIRED: Either 'us', 'eu', or 'apac'.
+      --package string       REQUIRED: Specify the type of Stream Governance package as (essentials, advanced).
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

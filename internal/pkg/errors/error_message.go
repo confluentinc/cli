@@ -221,6 +221,7 @@ const (
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
+	SRInvalidPackageType         = "\"%s\" is an invalid package type"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
