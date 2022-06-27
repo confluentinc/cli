@@ -154,6 +154,7 @@ func (c *command) Execute(args []string) error {
 				Args:   pluginArgs,
 				Stdout: os.Stdout,
 				Stdin:  os.Stdin,
+				Stderr: os.Stderr,
 			}
 			if err := cliPlugin.Run(); err != nil {
 				return err

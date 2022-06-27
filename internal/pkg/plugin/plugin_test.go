@@ -132,7 +132,13 @@ func TestSearchPath_Windows(t *testing.T) {
 	file, err := os.CreateTemp(root, "confluent-plugin*.exe")
 	require.NoError(t, err)
 	fileName := filepath.Base(file.Name())
-	fmt.Println(os.ReadDir(root))
+	files, err := os.ReadDir(root)
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, file := range files {
+		fmt.Println(file.Name())
+	}
 
 	path := os.Getenv("PATH")
 	err = os.Setenv("PATH", root)

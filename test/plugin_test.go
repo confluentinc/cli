@@ -13,6 +13,7 @@ func (s *CLITestSuite) TestPlugin() {
 		err := os.Setenv("PATH", path)
 		require.NoError(s.T(), err)
 	}()
+	//TODO: plugin that prints to stderr
 	//TODO: handle plugin with a dash in name?
 	tests := []CLITest{
 		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden"},
