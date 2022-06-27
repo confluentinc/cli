@@ -39,6 +39,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 	c.AddCommand(c.newEnableCommand(cfg))
 	c.AddCommand(c.newListCommandOnPrem())
 	c.AddCommand(c.newUpdateCommand(cfg))
+	c.AddCommand(c.newUpgradeCommand(cfg))
 
 	return c.Command
 }
