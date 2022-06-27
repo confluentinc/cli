@@ -71,6 +71,35 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDCloud() {
 	}
 }
 
+func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
+	tests := []CLITest{
+		{args: "iam rbac role-binding list", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", wantErrCode: 1},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", wantErrCode: 1},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-1-cloud.golden"},
+		{args: "iam rbac role-binding list --current-env --cloud-cluster lkc-1111aaa --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-1-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-22bbb", fixture: "iam/rbac/role-binding/list-user-2-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-33ccc", fixture: "iam/rbac/role-binding/list-user-3-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-44ddd", fixture: "iam/rbac/role-binding/list-user-4-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee", fixture: "iam/rbac/role-binding/list-user-5-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-66fff", fixture: "iam/rbac/role-binding/list-user-6-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-77ggg", fixture: "iam/rbac/role-binding/list-user-7-cloud.golden"},
+		{args: "iam rbac role-binding list --role OrganizationAdmin", fixture: "iam/rbac/role-binding/list-user-orgadmin-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --role EnvironmentAdmin", fixture: "iam/rbac/role-binding/list-user-envadmin-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin", fixture: "iam/rbac/role-binding/list-user-clusteradmin-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o yaml", fixture: "iam/rbac/role-binding/list-user-clusteradmin-yaml-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o json", fixture: "iam/rbac/role-binding/list-user-clusteradmin-json-cloud.golden"},
+		{args: "iam rbac role-binding list --principal User:u-41dxz3 --cluster pantsCluster", fixture: "iam/rbac/role-binding/list-failure-help-cloud.golden", wantErrCode: 1},
+		{args: "iam rbac role-binding list --help", fixture: "iam/rbac/role-binding/list-help-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidOrgAdmin", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-1-cloud.golden", wantErrCode: 1},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidMetricsViewer", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-2-cloud.golden", wantErrCode: 1},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}
+
 func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --help", fixture: "iam/rbac/role-binding/create-help-onprem.golden"},
@@ -131,35 +160,6 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListOnPrem() {
 
 	for _, tt := range tests {
 		tt.login = "platform"
-		s.runIntegrationTest(tt)
-	}
-}
-
-func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
-	tests := []CLITest{
-		{args: "iam rbac role-binding list", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", wantErrCode: 1},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", wantErrCode: 1},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-1-cloud.golden"},
-		{args: "iam rbac role-binding list --current-env --cloud-cluster lkc-1111aaa --principal User:u-11aaa", fixture: "iam/rbac/role-binding/list-user-1-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-22bbb", fixture: "iam/rbac/role-binding/list-user-2-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-33ccc", fixture: "iam/rbac/role-binding/list-user-3-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-44ddd", fixture: "iam/rbac/role-binding/list-user-4-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee", fixture: "iam/rbac/role-binding/list-user-5-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-66fff", fixture: "iam/rbac/role-binding/list-user-6-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-77ggg", fixture: "iam/rbac/role-binding/list-user-7-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role OrganizationAdmin", fixture: "iam/rbac/role-binding/list-user-orgadmin-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role EnvironmentAdmin", fixture: "iam/rbac/role-binding/list-user-envadmin-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin", fixture: "iam/rbac/role-binding/list-user-clusteradmin-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o yaml", fixture: "iam/rbac/role-binding/list-user-clusteradmin-yaml-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin -o json", fixture: "iam/rbac/role-binding/list-user-clusteradmin-json-cloud.golden"},
-		{args: "iam rbac role-binding list --principal User:u-41dxz3 --cluster pantsCluster", fixture: "iam/rbac/role-binding/list-failure-help-cloud.golden", wantErrCode: 1},
-		{args: "iam rbac role-binding list --help", fixture: "iam/rbac/role-binding/list-help-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidOrgAdmin", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-1-cloud.golden", wantErrCode: 1},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidMetricsViewer", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-2-cloud.golden", wantErrCode: 1},
-	}
-
-	for _, tt := range tests {
-		tt.login = "cloud"
 		s.runIntegrationTest(tt)
 	}
 }

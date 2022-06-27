@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -49,18 +50,29 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	isCloud := c.cfg.IsCloudLogin()
 
-	var resp *http.Response
+	var httpResp *http.Response
 	if isCloud {
-		resp, err = c.ccloudDelete(options)
+		deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
+		if err != nil {
+			return err
+		}
+		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
+			httpResp, err = c.ccloudDelete(options)
+		} else {
+			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
+		}
+		if err != nil {
+			return errors.CatchRequestNotValidMessageError(err, httpResp)
+		}
 	} else {
-		resp, err = c.confluentDelete(options)
-	}
-	if err != nil {
-		return err
+		httpResp, err = c.confluentDelete(options)
+		if err != nil {
+			return err
+		}
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	if isCloud {
@@ -68,6 +80,22 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
+}
+
+func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) (*http.Response, error) {
+	resp, httpResp, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding)
+	if err != nil {
+		return httpResp, err
+	}
+	roleBindingList := resp.Data
+
+	for _, rolebinding := range roleBindingList {
+		if *rolebinding.CrnPattern == *deleteRoleBinding.CrnPattern {
+			_, httpResp, err = c.V2Client.DeleteIamRoleBinding(*rolebinding.Id)
+			return httpResp, err
+		}
+	}
+	return httpResp, errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {
