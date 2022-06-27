@@ -9,13 +9,40 @@ import (
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	keyStoreV2 = map[string]*apikeysv2.IamV2ApiKey{}
-	keyTime    = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
+	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	roleBindingStore = []mdsv2.IamV2RoleBinding{
+		buildRoleBinding("u-11aaa", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("sa-12345", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("u-11aaa", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-22bbb", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-22bbb", "EnvironmentAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595"),
+		buildRoleBinding("u-33ccc", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-44ddd", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/group=readers"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=clicks-*"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=payroll"),
+		buildRoleBinding("u-66fff", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=lksqlc-2222bbb/cluster=lksqlc-2222bbb"),
+		buildRoleBinding("u-77ggg", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/schema-registry=lsrc-3333ccc/subject=clicks"),
+	}
 )
 
 func init() {
@@ -121,6 +148,11 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 			w.Header().Set("Content-Type", "application/json")
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
+		case "u-11aaa":
+			w.Header().Set("Content-Type", "application/json")
+			user := buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa")
+			err := json.NewEncoder(w).Encode(user)
+			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
 		}
@@ -209,6 +241,46 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 			}
 			err = json.NewEncoder(w).Encode(serviceAccount)
 			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for :"/iam/v2/role-bindings"
+func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		crnPattern := r.URL.Query().Get("crn_pattern")
+		principal := r.URL.Query().Get("principal")
+		roleName := r.URL.Query().Get("role_name")
+		switch r.Method {
+		case http.MethodGet:
+			if roleName == "InvalidOrgAdmin" || roleName == "InvalidMetricsViewer" {
+				err := writeInvalidRoleNameError(w, roleName)
+				require.NoError(t, err)
+				return
+			}
+			roleBindings := []mdsv2.IamV2RoleBinding{}
+			for _, rolebinding := range roleBindingStore {
+				if isRoleBindingMatch(rolebinding, principal, roleName, crnPattern) {
+					roleBindings = append(roleBindings, rolebinding)
+				}
+			}
+			res := mdsv2.IamV2RoleBindingList{Data: roleBindings}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodPost:
+			w.WriteHeader(http.StatusCreated)
+		}
+	}
+}
+
+// Handler for :"/iam/v2/role-bindings/{id}"
+func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
