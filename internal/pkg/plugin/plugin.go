@@ -12,7 +12,7 @@ import (
 
 func SearchPath() (map[string][]string, error) {
 	pluginMap := make(map[string][]string)
-	re := regexp.MustCompile(`^confluent(-[a-z][0-9a-z]*)+(\.[a-z]+)?$`)
+	re := regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+(\.[a-z]+)?$`)
 	var pathSlice []string
 	if runtime.GOOS != "windows" {
 		pathSlice = strings.Split(os.Getenv("PATH"), ":")
