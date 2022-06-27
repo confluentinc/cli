@@ -40,3 +40,24 @@ func convertMapToString(m map[string]string) string {
 func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
+
+func getPackageInternalName(packageDisplayName string) (packageInternalName string, isValid bool) {
+	packageDisplayName = strings.ToLower(packageDisplayName)
+	for k, v := range packageDisplayNameMapping {
+		if v == packageDisplayName {
+			packageInternalName = k
+			isValid = true
+			return
+		}
+	}
+	return
+}
+
+func getAllPackageDisplayNames() []string {
+	packageDisplayNames := make([]string, 0, len(packageDisplayNameMapping))
+	for _, displayName := range packageDisplayNameMapping {
+		packageDisplayNames = append(packageDisplayNames, displayName)
+	}
+
+	return packageDisplayNames
+}

@@ -98,7 +98,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 
 func (suite *ClusterTestSuite) TestCreateSR() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us"})
+	cmd.SetArgs([]string{"cluster", "enable", "--cloud", "aws", "--geo", "us", "--package", "advanced"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
