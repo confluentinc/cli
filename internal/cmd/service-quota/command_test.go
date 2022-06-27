@@ -3,14 +3,14 @@ package servicequota
 import (
 	"testing"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 )
 
 type QuotasTestSuite struct {
 	suite.Suite
-	QuotasClient *quotasv2.APIClient
+	QuotasClient *servicequotav1.APIClient
 }
 
 func TestQuotasTestSuite(t *testing.T) {
@@ -27,54 +27,54 @@ func int32ToPtr(i int32) *int32 {
 
 func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 	t := suite.T()
-	quota1 := quotasv2.ServiceQuotaV2AppliedQuota{
+	quota1 := servicequotav1.ServiceQuotaV1AppliedQuota{
 		Id:           stringToPtr("quota_a"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota A"),
-		Organization: quotasv2.NewObjectReference("org-123", "", ""),
-		KafkaCluster: quotasv2.NewObjectReference("lkc-1", "", ""),
-		Environment:  quotasv2.NewObjectReference("env-1", "", ""),
-		Network:      quotasv2.NewObjectReference("n-1", "", ""),
+		Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+		KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
+		Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
+		Network:      servicequotav1.NewObjectReference("n-1", "", ""),
 		AppliedLimit: int32ToPtr(15),
 	}
 
-	quota2 := quotasv2.ServiceQuotaV2AppliedQuota{
+	quota2 := servicequotav1.ServiceQuotaV1AppliedQuota{
 		Id:           stringToPtr("quota_a"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Qutoa A"),
-		Organization: quotasv2.NewObjectReference("org-123", "", ""),
-		KafkaCluster: quotasv2.NewObjectReference("lkc-2", "", ""),
-		Environment:  quotasv2.NewObjectReference("env-2", "", ""),
+		Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+		KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
+		Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
 		AppliedLimit: int32ToPtr(16),
 	}
 
-	quota3 := quotasv2.ServiceQuotaV2AppliedQuota{
+	quota3 := servicequotav1.ServiceQuotaV1AppliedQuota{
 		Id:           stringToPtr("quota_b"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota B"),
-		Organization: quotasv2.NewObjectReference("org-123", "", ""),
-		KafkaCluster: quotasv2.NewObjectReference("lkc-1", "", ""),
-		Environment:  quotasv2.NewObjectReference("env-1", "", ""),
+		Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+		KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
+		Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
 		AppliedLimit: int32ToPtr(17),
 	}
 
-	quota4 := quotasv2.ServiceQuotaV2AppliedQuota{
+	quota4 := servicequotav1.ServiceQuotaV1AppliedQuota{
 		Id:           stringToPtr("quota_b"),
 		Scope:        stringToPtr("kafka_cluster"),
 		DisplayName:  stringToPtr("Quota B"),
-		Organization: quotasv2.NewObjectReference("org-123", "", ""),
-		KafkaCluster: quotasv2.NewObjectReference("lkc-2", "", ""),
-		Environment:  quotasv2.NewObjectReference("env-2", "", ""),
+		Organization: servicequotav1.NewObjectReference("org-123", "", ""),
+		KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
+		Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
 		AppliedLimit: int32ToPtr(18),
 	}
 
-	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{quota1, quota2, quota3, quota4}
+	quotaList := []servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}
 
 	type test struct {
 		name            string
 		filterQuotaCode string
-		originData      []quotasv2.ServiceQuotaV2AppliedQuota
-		expectedData    []quotasv2.ServiceQuotaV2AppliedQuota
+		originData      []servicequotav1.ServiceQuotaV1AppliedQuota
+		expectedData    []servicequotav1.ServiceQuotaV1AppliedQuota
 	}
 
 	tests := []*test{
@@ -87,7 +87,7 @@ func (suite *QuotasTestSuite) TestFilterQuotasFunc() {
 			name:            "Filter by quota code",
 			filterQuotaCode: "quota_a",
 			originData:      quotaList,
-			expectedData:    []quotasv2.ServiceQuotaV2AppliedQuota{quota1, quota2},
+			expectedData:    []servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2},
 		},
 	}
 
