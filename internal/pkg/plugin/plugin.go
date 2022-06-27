@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/fs"
 	"os"
@@ -21,14 +22,14 @@ func SearchPath() (map[string][]string, error) {
 	}
 
 	for _, dir := range pathSlice {
-		//files, err := os.ReadDir(dir)
-		//if err != nil {
-		//	fmt.Println(err)
-		//}
-		//for _, file := range files {
-		//	fmt.Println(file.Name())
-		//}
-		err := filepath.Walk(dir, pluginWalkFn(re, pluginMap))
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, file := range files {
+			fmt.Println(file.Name())
+		}
+		err = filepath.Walk(dir, pluginWalkFn(re, pluginMap))
 		if err != nil {
 			return nil, err
 		}
@@ -39,10 +40,10 @@ func SearchPath() (map[string][]string, error) {
 func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.FileInfo, error) error {
 	return func(path string, info fs.FileInfo, _ error) error {
 		pluginName := filepath.Base(path)
-		//fmt.Println(path, pluginName, re.MatchString(pluginName))
-		//if runtime.GOOS == "windows" {
-		//	fmt.Println(isExecutableWindows(pluginName))
-		//}
+		fmt.Println(path, pluginName, re.MatchString(pluginName))
+		if runtime.GOOS == "windows" {
+			fmt.Println(isExecutableWindows(pluginName))
+		}
 		if re.MatchString(pluginName) && ((runtime.GOOS != "windows" && isExecutable(info)) || (runtime.GOOS == "windows" && isExecutableWindows(pluginName))) {
 			if strings.Contains(pluginName, ".") {
 				pluginName = pluginName[:strings.LastIndex(pluginName, ".")]

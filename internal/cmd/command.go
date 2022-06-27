@@ -139,6 +139,9 @@ func (c *command) Execute(args []string) error {
 			pluginArgs = append([]string{}, args[i:]...)
 			break
 		}
+		if strings.Contains(s, "-") {
+			s = strings.ReplaceAll(s, "-", "_")
+		}
 		potentialPlugin += "-" + s
 	}
 
