@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
@@ -112,7 +112,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
 				cfg := v1.New()
-				cfg, err := config.LoadAndMigrate(cfg)
+				cfg, err := load.LoadAndMigrate(cfg)
 				require.NoError(t, err)
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
