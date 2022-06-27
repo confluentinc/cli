@@ -133,13 +133,15 @@ func (c *command) Execute(args []string) error {
 	}
 
 	var pluginArgs []string
+	var dashModified []bool
 	potentialPlugin := pversion.CLIName
 	for i, s := range args {
 		if strings.HasPrefix(s, "--") {
 			pluginArgs = append([]string{}, args[i:]...)
 			break
 		}
-		if strings.Contains(s, "-") {
+		dashModified = append(dashModified, strings.Contains(s, "-"))
+		if dashModified[len(dashModified)-1] {
 			s = strings.ReplaceAll(s, "-", "_")
 		}
 		potentialPlugin += "-" + s
@@ -165,6 +167,10 @@ func (c *command) Execute(args []string) error {
 			return nil
 		}
 		pluginArgs = append([]string{potentialPlugin[strings.LastIndex(potentialPlugin, "-")+1:]}, pluginArgs...)
+		if dashModified[len(dashModified)-1] {
+			pluginArgs[0] = strings.ReplaceAll(pluginArgs[0], "_", "-")
+		}
+		dashModified = dashModified[:len(dashModified)-1]
 		potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
 	}
 

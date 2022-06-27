@@ -132,9 +132,7 @@ func TestSearchPath_Windows(t *testing.T) {
 	file, err := os.CreateTemp(root, "confluent-plugin*.exe")
 	require.NoError(t, err)
 	fileName := filepath.Base(file.Name())
-	if strings.Contains(fileName, ".") {
-		fileName = fileName[:strings.LastIndex(fileName, ".")]
-	}
+	pluginName := fileName[:strings.LastIndex(fileName, ".")]
 
 	path := os.Getenv("PATH")
 	err = os.Setenv("PATH", root)
@@ -146,7 +144,7 @@ func TestSearchPath_Windows(t *testing.T) {
 
 	pluginMap, err := SearchPath()
 	require.NoError(t, err)
-	pluginPaths, ok := pluginMap[fileName]
+	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
 }
