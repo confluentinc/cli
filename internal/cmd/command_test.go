@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -86,8 +87,8 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		CurrentContext: "cloud",
 	}
 
-	cli := NewConfluentCommand(cfg, true, mockVersion)
-	out, err := pcmd.ExecuteCommand(cli.Command, "help")
+	cmd := NewConfluentCommand(cfg, mockVersion, true)
+	out, err := pcmd.ExecuteCommand(cmd, "help")
 	require.NoError(t, err)
 
 	// note users can still run "confluent admin payment update" or "confluent admin promo add" if the org is suspended
@@ -110,12 +111,12 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		require.NotContains(t, out, command)
 	}
 
-	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "payment", "--help")
+	out, err = pcmd.ExecuteCommand(cmd, "admin", "payment", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "update")
 	require.Contains(t, out, "describe")
 
-	out, err = pcmd.ExecuteCommand(cli.Command, "admin", "promo", "--help")
+	out, err = pcmd.ExecuteCommand(cmd, "admin", "promo", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "add")
 	require.Contains(t, out, "list")
@@ -194,6 +195,6 @@ func TestHelp_OnPrem(t *testing.T) {
 }
 
 func runWithConfig(cfg *v1.Config) (string, error) {
-	cli := NewConfluentCommand(cfg, true, mockVersion)
-	return pcmd.ExecuteCommand(cli.Command, "help")
+	cmd := NewConfluentCommand(cfg, mockVersion, true)
+	return pcmd.ExecuteCommand(cmd, "help")
 }

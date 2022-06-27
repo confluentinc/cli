@@ -148,6 +148,20 @@ func (c *Context) IsCloud(isTest bool) bool {
 	return false
 }
 
+func (c *Context) GetPlatform() *Platform {
+	if c != nil {
+		return c.Platform
+	}
+	return nil
+}
+
+func (c *Context) GetPlatformServer() string {
+	if platform := c.GetPlatform(); platform != nil {
+		return platform.Server
+	}
+	return ""
+}
+
 func (c *Context) GetAuth() *AuthConfig {
 	if c.State != nil {
 		return c.State.Auth
@@ -180,9 +194,16 @@ func (c *Context) GetEnvironment() *orgv1.Account {
 	return nil
 }
 
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
-	if c.State != nil {
-		return c.State.AuthToken
+	if state := c.GetState(); state != nil {
+		return state.AuthToken
 	}
 	return ""
 }

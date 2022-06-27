@@ -6,9 +6,10 @@ import (
 
 	"github.com/confluentinc/bincover"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/confluentinc/cli/internal/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -22,24 +23,18 @@ var (
 )
 
 func main() {
-	viper.AutomaticEnv()
+	cfg, err := load.LoadAndMigrate(v1.New())
+	cobra.CheckErr(err)
 
-	cfg, err := cmd.LoadConfig()
-	if err != nil {
-		cobra.CheckErr(err)
-	}
+	ver := pversion.NewVersion(version, commit, date, host)
 
 	isTest, err := strconv.ParseBool(isTest)
-	if err != nil {
-		panic(err)
-	}
+	cobra.CheckErr(err)
 	cfg.IsTest = isTest
 
-	version := pversion.NewVersion(version, commit, date, host)
+	cli := cmd.NewConfluentCommand(cfg, ver, isTest)
 
-	cli := cmd.NewConfluentCommand(cfg, isTest, version)
-
-	if err := cli.Execute(os.Args[1:]); err != nil {
+	if err := cmd.Execute(cli, cfg, ver, isTest); err != nil {
 		if isTest {
 			bincover.ExitCode = 1
 		} else {
