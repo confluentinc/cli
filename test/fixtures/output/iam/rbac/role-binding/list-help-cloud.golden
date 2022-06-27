@@ -29,7 +29,7 @@ Flags:
       --cloud-cluster string      Cloud cluster ID for scope of role binding listings.
       --kafka-cluster-id string   Kafka cluster ID for scope of role binding listings.
       --resource string           If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
-      --non-inclusive             List role bindings in a specific scope but not its nested scopes.
+      --non-inclusive             List all role bindings in a specific scope and its nested scopes.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
