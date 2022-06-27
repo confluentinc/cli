@@ -500,7 +500,7 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 }
 
 func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
-	var outputWriter output.ListOutputWriter
+	var outputWriter *output.ListOutputWriter
 	var err error
 	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
 		outputWriter, err = c.listMyRoleBindingsV2(cmd, listRoleBinding)
@@ -512,18 +512,18 @@ func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *m
 	if err != nil {
 		return err
 	}
-	return outputWriter.Out()
+	return (*outputWriter).Out()
 }
 
-func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (output.ListOutputWriter, error) {
+func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (*output.ListOutputWriter, error) {
 	outputWriter, err := output.NewListOutputWriter(cmd, ccloudResourcePatternListFields, ccloudResourcePatternHumanListLabels, ccloudResourcePatternStructuredListLabels)
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	if currentUser {
@@ -532,7 +532,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 	nonInclusive, err := cmd.Flags().GetBool("non-inclusive")
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	if nonInclusive {
@@ -543,18 +543,18 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
-		return outputWriter, errors.CatchRequestNotValidMessageError(err, httpResp)
+		return nil, errors.CatchRequestNotValidMessageError(err, httpResp)
 	}
 	roleBindings := resp.Data
 
 	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	for _, rolebinding := range roleBindings {
@@ -568,7 +568,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 		crnPattern := *rolebinding.CrnPattern
 		if strings.Contains(crnPattern, "ksql") || strings.Contains(crnPattern, "schema") {
-			return outputWriter, ksqlOrSchemaRegistryRoleBindingError
+			return nil, ksqlOrSchemaRegistryRoleBindingError
 		}
 
 		var envName, cloudClusterName, clusterType, logicalCluster, resourceType, resourceName, patternType string
@@ -626,18 +626,18 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 	}
 	outputWriter.StableSort()
 
-	return outputWriter, nil
+	return &outputWriter, nil
 }
 
-func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (output.ListOutputWriter, error) {
+func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) (*output.ListOutputWriter, error) {
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName"}, []string{"Principal", "Email", "Service Name"}, []string{"principal", "email", "service_name"})
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	nonInclusive, err := cmd.Flags().GetBool("non-inclusive")
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	if nonInclusive {
@@ -648,7 +648,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
-		return outputWriter, errors.CatchRequestNotValidMessageError(err, httpResp)
+		return nil, errors.CatchRequestNotValidMessageError(err, httpResp)
 	}
 	roleBindings := resp.Data
 
@@ -657,7 +657,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 
 	for i := 0; i < len(roleBindings); i++ {
 		if strings.Contains(*roleBindings[i].CrnPattern, "ksql") || strings.Contains(*roleBindings[i].CrnPattern, "schema") {
-			return outputWriter, ksqlOrSchemaRegistryRoleBindingError
+			return nil, ksqlOrSchemaRegistryRoleBindingError
 		}
 		if !principals[*roleBindings[i].Principal] {
 			principals[*roleBindings[i].Principal] = true
@@ -667,12 +667,12 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 
 	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
 	if err != nil {
-		return outputWriter, err
+		return nil, err
 	}
 
 	sort.Strings(principalStrings)
@@ -692,5 +692,5 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 			outputWriter.AddElement(displayStruct)
 		}
 	}
-	return outputWriter, nil
+	return &outputWriter, nil
 }
