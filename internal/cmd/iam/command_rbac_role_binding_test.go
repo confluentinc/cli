@@ -162,12 +162,6 @@ type expectedListCmdArgs struct {
 	scope     mdsv2alpha1.Scope
 }
 
-type expectedListCmdArgsCopy struct {
-	principal string
-	roleName  string
-	scope     mdsv2alpha1.Scope
-}
-
 type RoleBindingTestSuite struct {
 	suite.Suite
 	conf *v1.Config
@@ -179,25 +173,25 @@ func (suite *RoleBindingTestSuite) SetupSuite() {
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
-func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgsCopy, message string) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgsCopy{principal, "", scope}, <-expect, message)
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, "", scope}, <-expect, message)
 			return nil, nil, nil
 		},
 		LookupPrincipalsWithRoleFunc: func(ctx context.Context, roleName string, scope mdsv2alpha1.Scope) ([]string, *http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgsCopy{"", roleName, scope}, <-expect, message)
+			assert.Equal(suite.T(), expectedListCmdArgs{"", roleName, scope}, <-expect, message)
 			return nil, nil, nil
 		},
 	}
 	mdsClient.RBACRoleBindingCRUDApi = &mds2mock.RBACRoleBindingCRUDApi{
 		AddRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgsCopy{principal, roleName, scope}, <-expect, message)
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		},
 		DeleteRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgsCopy{principal, roleName, scope}, <-expect, message)
+			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		},
 	}
@@ -278,14 +272,14 @@ var roleBindingListTests = []roleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
-	expect := make(chan expectedListCmdArgsCopy)
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
-				copy := expectedListCmdArgsCopy{
+				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
 				fmt.Println("")
@@ -574,14 +568,14 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
-	expect := make(chan expectedListCmdArgsCopy)
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
-				copy := expectedListCmdArgsCopy{
+				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
 				fmt.Println("")
@@ -598,14 +592,14 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
-	expect := make(chan expectedListCmdArgsCopy)
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
 
 		if tc.err == nil {
 			go func() {
-				copy := expectedListCmdArgsCopy{
+				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
 				fmt.Println("")
