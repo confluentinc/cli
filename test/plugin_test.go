@@ -21,6 +21,7 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "version", fixture: "plugin/exact-name-overlap.golden", regex: true},
 		{args: "kafka something kafkaesque", fixture: "plugin/partial-name-overlap.golden"},
 		{args: "foo bar baz boo far foo bar baz --flag=true", fixture: "plugin/long-plugin-name.golden"},
+		//{args: "can print to stderr --meaningless-flag=false and stdout", fixture: "plugin/print-stderr.golden"},
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 

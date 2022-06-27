@@ -18,7 +18,14 @@ func SearchPath() (map[string][]string, error) {
 	fmt.Println(pathSlice)
 
 	for _, dir := range pathSlice {
-		err := filepath.Walk(dir, pluginWalkFn(re, pluginMap))
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for _, file := range files {
+			fmt.Println(file.Name())
+		}
+		err = filepath.Walk(dir, pluginWalkFn(re, pluginMap))
 		if err != nil {
 			return nil, err
 		}
