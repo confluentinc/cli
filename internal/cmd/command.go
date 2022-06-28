@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -23,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -105,6 +105,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(plugin.New(prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -120,6 +121,51 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 }
 
 func (c *command) Execute(args []string) error {
+
+	//pluginMap, err := pplugin.SearchPath()
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//var pluginArgs []string
+	//potentialPlugin := pversion.CLIName
+	//potentialPluginSize := len(args)
+	//for i, arg := range args {
+	//	if strings.HasPrefix(arg, "--") {
+	//		pluginArgs = append([]string{}, args[i:]...)
+	//		potentialPluginSize = i
+	//		break
+	//	}
+	//	if strings.Contains(arg, "-") {
+	//		arg = strings.ReplaceAll(arg, "-", "_")
+	//	}
+	//	potentialPlugin += "-" + arg
+	//}
+	//
+	//for len(potentialPlugin) > len(pversion.CLIName) {
+	//	if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
+	//		if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
+	//			utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+	//			break
+	//		}
+	//		pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
+	//		cliPlugin := &exec.Cmd{
+	//			Path:   pluginPathList[0],
+	//			Args:   pluginArgs,
+	//			Stdout: os.Stdout,
+	//			Stdin:  os.Stdin,
+	//			Stderr: os.Stderr,
+	//		}
+	//		if err := cliPlugin.Run(); err != nil {
+	//			return err
+	//		}
+	//		return nil
+	//	}
+	//	pluginArgs = append([]string{args[potentialPluginSize-1]}, pluginArgs...)
+	//	potentialPluginSize--
+	//	potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
+	//}
+
 	c.Command.SetArgs(args)
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
