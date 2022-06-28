@@ -33,10 +33,8 @@ blocks:
             - ./vault login -no-print token="${VAULT_TOKEN}"
             
             # Get GitHub SSH key from Vault
-            - cat .ssh/id_rsa
-            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-            - cat .ssh/id_rsa
+#            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+#            - source script.sh
             
             # Try to restore cached dependencies
             - checkout
