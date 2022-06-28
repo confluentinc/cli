@@ -135,16 +135,16 @@ func (c *command) Execute(args []string) error {
 	var pluginArgs []string
 	potentialPlugin := pversion.CLIName
 	potentialPluginSize := len(args)
-	for i, s := range args {
-		if strings.HasPrefix(s, "--") {
+	for i, arg := range args {
+		if strings.HasPrefix(arg, "--") {
 			pluginArgs = append([]string{}, args[i:]...)
 			potentialPluginSize = i
 			break
 		}
-		if strings.Contains(s, "-") {
-			s = strings.ReplaceAll(s, "-", "_")
+		if strings.Contains(arg, "-") {
+			arg = strings.ReplaceAll(arg, "-", "_")
 		}
-		potentialPlugin += "-" + s
+		potentialPlugin += "-" + arg
 	}
 
 	for len(potentialPlugin) > len(pversion.CLIName) {
