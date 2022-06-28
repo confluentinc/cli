@@ -62,7 +62,7 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 RDKAFKA_VERSION = 1.8.2
-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
+RDKAFKA_PATH := $(shell find $(go env GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -88,17 +88,6 @@ deps:
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 jenkins-deps:
 	go get github.com/goreleaser/goreleaser@v1.4.1
-
-ifeq ($(shell uname),Darwin)
-    SHASUM ?= gsha256sum
-else ifneq (,$(findstring NT,$(shell uname)))
-# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-    SHASUM ?= CertUtil SHA256 -hashfile
-else ifneq (,$(findstring Windows,$(shell systeminfo)))
-    SHASUM ?= CertUtil SHA256 -hashfile
-else
-    SHASUM ?= sha256sum
-endif
 
 show-args:
 	@echo "VERSION: $(VERSION)"
@@ -177,19 +166,8 @@ endif
 
 .PHONY: lint
 lint:
-ifdef CI
-ifeq ($(shell uname),Darwin)
-	true
-else ifneq (,$(findstring NT,$(shell uname)))
-	true
-else
-	@make lint-go
-	@make lint-cli
-endif
-else
-	@make lint-go
-	@make lint-cli
-endif
+	make lint-go
+	make lint-cli
 
 .PHONY: lint-go
 lint-go:
