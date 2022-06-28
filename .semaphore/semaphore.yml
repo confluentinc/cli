@@ -70,6 +70,7 @@ blocks:
             - make unit-test
         - name: Integration Tests
           commands:
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - make int-test
         - name: Smoke Tests
           commands:
