@@ -28,6 +28,10 @@ func Printf(cmd *cobra.Command, format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(cmd.OutOrStdout(), format, args...)
 }
 
+func ErrPrint(cmd *cobra.Command, args ...interface{}) {
+	_, _ = fmt.Fprint(cmd.OutOrStderr(), args...)
+}
+
 // ErrPrintln formats using the default formats for its operands and writes to stderr.
 // Spaces are always added between operands and a newline is appended.
 func ErrPrintln(cmd *cobra.Command, args ...interface{}) {
