@@ -62,7 +62,6 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 RDKAFKA_VERSION = 1.8.2
-RDKAFKA_PATH := $(shell find $(go env GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -91,7 +90,6 @@ jenkins-deps:
 
 show-args:
 	@echo "VERSION: $(VERSION)"
-	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
 
 #
 # START DEVELOPMENT HELPERS

@@ -50,6 +50,7 @@ blocks:
             # TODO: Remove -d in go1.18
             - go get -d ./...
             - make deps
+            - which goreleaser
             
             - cache store $(checksum go.sum) $(go env GOPATH)
   
