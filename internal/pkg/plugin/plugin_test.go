@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -24,12 +25,12 @@ func TestIsExec_Executable(t *testing.T) {
 	require.Equal(t, true, isExecutable(f))
 }
 
-//func TestIsExec_Windows(t *testing.T) {
-//	if runtime.GOOS != "windows" {
-//		return
-//	}
-//	require.Equal(t, true, isExecutableWindows("hello.exe"))
-//}
+func TestIsExec_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		return
+	}
+	require.Equal(t, true, isExecutableWindows("hello.exe"))
+}
 
 func TestPluginWalkFn(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -64,26 +65,26 @@ func TestPluginWalkFn(t *testing.T) {
 	require.Equal(t, 2, len(pluginMap))
 }
 
-//func TestPluginWalkFn_Windows(t *testing.T) {
-//	if runtime.GOOS != "windows" {
-//		return
-//	}
-//	pluginMap := make(map[string][]string)
-//	re := regexp.MustCompile(`confluent(-[a-z]+)+(\.[a-z]+)?`)
-//	f := pluginWalkFn(re, pluginMap)
-//
-//	err := f("confluent-plugin1.exe", &mock.FileInfo{NameVal: "confluent-plugin1.exe", ModeVal: fs.ModePerm}, nil)
-//	require.NoError(t, err)
-//	require.Equal(t, 1, len(pluginMap))
-//
-//	err = f("confluent-foo-bar-baz", &mock.FileInfo{NameVal: "confluent-foo-bar-baz", ModeVal: fs.ModePerm}, nil)
-//	require.NoError(t, err)
-//	require.Equal(t, 1, len(pluginMap))
-//
-//	err = f("confluent-foo-bar.bat", &mock.FileInfo{NameVal: "confluent-foo-bar.bat", ModeVal: fs.ModePerm}, nil)
-//	require.NoError(t, err)
-//	require.Equal(t, 2, len(pluginMap))
-//}
+func TestPluginWalkFn_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		return
+	}
+	pluginMap := make(map[string][]string)
+	re := regexp.MustCompile(`confluent(-[a-z]+)+(\.[a-z]+)?`)
+	f := pluginWalkFn(re, pluginMap)
+
+	err := f("confluent-plugin1.exe", &mock.FileInfo{NameVal: "confluent-plugin1.exe", ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(pluginMap))
+
+	err = f("confluent-foo-bar-baz", &mock.FileInfo{NameVal: "confluent-foo-bar-baz", ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(pluginMap))
+
+	err = f("confluent-foo-bar.bat", &mock.FileInfo{NameVal: "confluent-foo-bar.bat", ModeVal: fs.ModePerm}, nil)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(pluginMap))
+}
 
 func TestSearchPath(t *testing.T) {
 	if runtime.GOOS == "windows" {
@@ -118,32 +119,32 @@ func TestSearchPath(t *testing.T) {
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
 }
 
-//func TestSearchPath_Windows(t *testing.T) {
-//	if runtime.GOOS != "windows" {
-//		return
-//	}
-//	root, err := os.MkdirTemp(os.TempDir(), "plugin_test")
-//	require.NoError(t, err)
-//	defer func() {
-//		_ = os.RemoveAll(root)
-//	}()
-//
-//	file, err := os.CreateTemp(root, "confluent-plugin*.exe")
-//	require.NoError(t, err)
-//	fileName := filepath.Base(file.Name())
-//	pluginName := fileName[:strings.LastIndex(fileName, ".")]
-//
-//	path := os.Getenv("PATH")
-//	err = os.Setenv("PATH", root)
-//	require.NoError(t, err)
-//	defer func() {
-//		err := os.Setenv("PATH", path)
-//		require.NoError(t, err)
-//	}()
-//
-//	pluginMap, err := SearchPath()
-//	require.NoError(t, err)
-//	pluginPaths, ok := pluginMap[pluginName]
-//	require.True(t, ok)
-//	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
-//}
+func TestSearchPath_Windows(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		return
+	}
+	root, err := os.MkdirTemp(os.TempDir(), "plugin_test")
+	require.NoError(t, err)
+	defer func() {
+		_ = os.RemoveAll(root)
+	}()
+
+	file, err := os.CreateTemp(root, "confluent-plugin*.exe")
+	require.NoError(t, err)
+	fileName := filepath.Base(file.Name())
+	pluginName := fileName[:strings.LastIndex(fileName, ".")]
+
+	path := os.Getenv("PATH")
+	err = os.Setenv("PATH", root)
+	require.NoError(t, err)
+	defer func() {
+		err := os.Setenv("PATH", path)
+		require.NoError(t, err)
+	}()
+
+	pluginMap, err := SearchPath()
+	require.NoError(t, err)
+	pluginPaths, ok := pluginMap[pluginName]
+	require.True(t, ok)
+	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
+}
