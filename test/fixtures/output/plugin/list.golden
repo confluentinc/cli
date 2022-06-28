@@ -1,0 +1,9 @@
+test/fixtures/input/plugin/confluent-another_dash_test-but_with.sh
+test/fixtures/input/plugin/confluent-dash_test.sh
+test/fixtures/input/plugin/confluent-foo-bar-baz-boo-far.sh
+test/fixtures/input/plugin/confluent-kafka-something.sh
+test/fixtures/input/plugin/confluent-plugin1.sh
+test/fixtures/input/plugin/confluent-print-args.sh
+test/fixtures/input/plugin/confluent-version
+test/fixtures/input/plugin/dummy/confluent-can-print-to-stderr.sh
+test/fixtures/input/plugin/dummy/confluent-plugin2
