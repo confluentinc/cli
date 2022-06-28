@@ -41,16 +41,14 @@ func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
 
-func getPackageInternalName(packageDisplayName string) (packageInternalName string, isValid bool) {
-	packageDisplayName = strings.ToLower(packageDisplayName)
-	for k, v := range packageDisplayNameMapping {
-		if v == packageDisplayName {
-			packageInternalName = k
-			isValid = true
-			return
+func getPackageInternalName(inputPackageDisplayName string) (string, bool) {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName, true
 		}
 	}
-	return
+	return "", false
 }
 
 func getAllPackageDisplayNames() []string {
