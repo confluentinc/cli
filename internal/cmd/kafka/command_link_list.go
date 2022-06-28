@@ -37,7 +37,7 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 func (c *linkCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List previously created cluster links.",
+		Short: "List previously created cluster links if the provided cluster is the destination cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
