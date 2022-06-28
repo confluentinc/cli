@@ -12,7 +12,7 @@ import (
 func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List plugins in user's $PATH.",
+		Short: "List Confluent CLI plugins in $PATH.",
 		Long:  `List Confluent CLI plugins in user's $PATH. Plugins are executable files that begin with "confluent-".`,
 		Args:  cobra.NoArgs,
 		RunE:  list,
@@ -29,20 +29,20 @@ func list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, v := range pluginMap {
+	for _, pluginName := range pluginMap {
 		var firstPlugin string
-		for i, e := range v {
-			pluginList = append(pluginList, e)
+		for i, pluginPath := range pluginName {
+			pluginList = append(pluginList, pluginPath)
 			if i != 0 {
-				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", e, firstPlugin)
+				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", pluginPath, firstPlugin)
 			} else {
-				firstPlugin = e
+				firstPlugin = pluginPath
 			}
 		}
 	}
 	sort.Strings(pluginList)
-	for _, v := range pluginList {
-		fmt.Println(v)
+	for _, pluginPath := range pluginList {
+		fmt.Println(pluginPath)
 	}
 	return nil
 }

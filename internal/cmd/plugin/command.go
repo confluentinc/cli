@@ -13,11 +13,10 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plugin",
-		Short: "Confluent plugins.",
+		Short: "Manage Confluent plugins.",
 	}
 
 	cmd.AddCommand(newListCommand())
-
 	c := &command{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 	return c.Command
 }
