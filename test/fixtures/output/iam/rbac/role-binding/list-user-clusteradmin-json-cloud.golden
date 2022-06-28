@@ -1,5 +1,15 @@
 [
   {
+    "email": "u-11aaa@confluent.io",
+    "principal": "User:u-11aaa",
+    "service_name": ""
+  },
+  {
+    "email": "u-22bbb@confluent.io",
+    "principal": "User:u-22bbb",
+    "service_name": ""
+  },
+  {
     "email": "u-33ccc@confluent.io",
     "principal": "User:u-33ccc",
     "service_name": ""
