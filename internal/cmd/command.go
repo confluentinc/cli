@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
+	"os"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -44,7 +41,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -124,48 +120,49 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	return &command{Command: cmd}
 }
 
-// TODO: Bug somewhere here causing Windows job to fail
+// TODO: Bug somewhere here causing Windows int-tests to not run
 func (c *command) Execute(args []string) error {
 	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
 		return err
 	}
+	fmt.Println(pluginMap)
 
-	var pluginArgs []string
-	potentialPlugin := pversion.CLIName
-	potentialPluginSize := len(args)
-	for i, arg := range args {
-		if strings.HasPrefix(arg, "--") {
-			pluginArgs = append([]string{}, args[i:]...)
-			potentialPluginSize = i
-			break
-		}
-		if strings.Contains(arg, "-") {
-			arg = strings.ReplaceAll(arg, "-", "_")
-		}
-		potentialPlugin += "-" + arg
-	}
-
-	for len(potentialPlugin) > len(pversion.CLIName) {
-		if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
-			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
-				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
-				break
-			}
-			pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
-			cliPlugin := &exec.Cmd{
-				Path:   pluginPathList[0],
-				Args:   pluginArgs,
-				Stdout: os.Stdout,
-				Stdin:  os.Stdin,
-				Stderr: os.Stderr,
-			}
-			return cliPlugin.Run()
-		}
-		pluginArgs = append([]string{args[potentialPluginSize-1]}, pluginArgs...)
-		potentialPluginSize--
-		potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
-	}
+	//var pluginArgs []string
+	//potentialPlugin := pversion.CLIName
+	//potentialPluginSize := len(args)
+	//for i, arg := range args {
+	//	if strings.HasPrefix(arg, "--") {
+	//		pluginArgs = append([]string{}, args[i:]...)
+	//		potentialPluginSize = i
+	//		break
+	//	}
+	//	if strings.Contains(arg, "-") {
+	//		arg = strings.ReplaceAll(arg, "-", "_")
+	//	}
+	//	potentialPlugin += "-" + arg
+	//}
+	//
+	//for len(potentialPlugin) > len(pversion.CLIName) {
+	//	if pluginPathList, ok := pluginMap[potentialPlugin]; ok {
+	//		if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin {
+	//			utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+	//			break
+	//		}
+	//		pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
+	//		cliPlugin := &exec.Cmd{
+	//			Path:   pluginPathList[0],
+	//			Args:   pluginArgs,
+	//			Stdout: os.Stdout,
+	//			Stdin:  os.Stdin,
+	//			Stderr: os.Stderr,
+	//		}
+	//		return cliPlugin.Run()
+	//	}
+	//	pluginArgs = append([]string{args[potentialPluginSize-1]}, pluginArgs...)
+	//	potentialPluginSize--
+	//	potentialPlugin = potentialPlugin[:strings.LastIndex(potentialPlugin, "-")]
+	//}
 
 	c.Command.SetArgs(args)
 	err = c.Command.Execute()
