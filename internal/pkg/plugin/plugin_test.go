@@ -58,7 +58,7 @@ func TestPluginWalkFn(t *testing.T) {
 		f := pluginWalkFn(re, pluginMap)
 		err := f(test.name, &mock.FileInfo{ModeVal: test.fileMode}, nil)
 		assert.NoError(t, err)
-		assert.True(t, len(pluginMap) == test.expectSize)
+		assert.Equal(t, test.expectSize, len(pluginMap))
 	}
 }
 
@@ -78,7 +78,7 @@ func TestPluginWalkFn_Windows(t *testing.T) {
 		f := pluginWalkFn(re, pluginMap)
 		err := f(test.name, &mock.FileInfo{NameVal: test.name, ModeVal: test.fileMode}, nil)
 		assert.NoError(t, err)
-		assert.True(t, len(pluginMap) == test.expectSize)
+		assert.Equal(t, test.expectSize, len(pluginMap))
 	}
 }
 

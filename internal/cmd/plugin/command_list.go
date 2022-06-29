@@ -1,19 +1,20 @@
 package plugin
 
 import (
-	"fmt"
+	"sort"
+
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
-	"sort"
 )
 
 func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent CLI plugins in $PATH.",
-		Long:  `List Confluent CLI plugins in user's $PATH. Plugins are executable files that begin with "confluent-".`,
+		Long:  `List Confluent CLI plugins in $PATH. Plugins are executable files that begin with "confluent-".`,
 		Args:  cobra.NoArgs,
 		RunE:  list,
 	}
@@ -25,24 +26,20 @@ func newListCommand() *cobra.Command {
 
 func list(cmd *cobra.Command, _ []string) error {
 	pluginMap, err := plugin.SearchPath()
-	var pluginList []string
 	if err != nil {
 		return err
 	}
-	for _, pluginName := range pluginMap {
-		var firstPlugin string
-		for i, pluginPath := range pluginName {
-			pluginList = append(pluginList, pluginPath)
-			if i != 0 {
-				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", pluginPath, firstPlugin)
-			} else {
-				firstPlugin = pluginPath
-			}
+	var pluginList []string
+	for _, pluginNames := range pluginMap {
+		pluginList = append(pluginList, pluginNames[0])
+		for i := 1; i < len(pluginNames); i++ {
+			pluginList = append(pluginList, pluginNames[i])
+			utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin: %s\n", pluginNames[i], pluginNames[0])
 		}
 	}
 	sort.Strings(pluginList)
 	for _, pluginPath := range pluginList {
-		fmt.Println(pluginPath)
+		utils.Println(cmd, pluginPath)
 	}
 	return nil
 }

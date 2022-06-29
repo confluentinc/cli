@@ -14,16 +14,14 @@ func SearchPath() (map[string][]string, error) {
 	pluginMap := make(map[string][]string)
 	re := regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+(\.[a-z]+)?$`)
 	var pathSlice []string
-	path := os.Getenv("PATH")
-	if runtime.GOOS != "windows" {
-		pathSlice = strings.Split(path, ":")
+	if runtime.GOOS == "windows" {
+		pathSlice = strings.Split(os.Getenv("PATH"), ";")
 	} else {
-		pathSlice = strings.Split(path, ";")
+		pathSlice = strings.Split(os.Getenv("PATH"), ":")
 	}
 
 	for _, dir := range pathSlice {
-		err := filepath.Walk(dir, pluginWalkFn(re, pluginMap))
-		if err != nil {
+		if err := filepath.Walk(dir, pluginWalkFn(re, pluginMap)); err != nil {
 			return nil, err
 		}
 	}
@@ -49,6 +47,6 @@ func isExecutable(info fs.FileInfo) bool {
 }
 
 func isExecutableWindows(name string) bool {
-	fileExt := strings.ToLower(filepath.Ext(name))
-	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, fileExt)
+	ext := strings.ToLower(filepath.Ext(name))
+	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, ext)
 }

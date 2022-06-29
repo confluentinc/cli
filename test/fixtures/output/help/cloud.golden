@@ -19,7 +19,7 @@ Available Commands:
   local           Manage a local Confluent Platform development environment.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud.
-  plugin          Confluent plugins.
+  plugin          Manage Confluent plugins.
   price           See Confluent Cloud pricing information.
   prompt          Add Confluent CLI context to your terminal prompt.
   schema-registry Manage Schema Registry.

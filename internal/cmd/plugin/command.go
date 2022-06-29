@@ -16,7 +16,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Confluent plugins.",
 	}
 
-	cmd.AddCommand(newListCommand())
 	c := &command{CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+	cmd.AddCommand(newListCommand())
 	return c.Command
 }
