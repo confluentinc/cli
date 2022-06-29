@@ -47,7 +47,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # TODO: Remove -d in go1.18
-            - go mod download
+            - go get -d -t -tags=testrunmain ./...
             - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
