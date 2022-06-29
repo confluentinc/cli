@@ -262,12 +262,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return nil
 	}
 
-	if r == nil {
-		return err
-	}
-
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Service Account Not Found") {
+	if err.Error() == "404 Not Found" {
 		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 	}
@@ -276,7 +271,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchV2ErrorDetailWithResponseBody(err, r)
 }
 
 func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
