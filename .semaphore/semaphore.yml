@@ -38,8 +38,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum)
-            # TODO: Exit block if restore was successful
+            - cache restore $(checksum go.sum) && return
             
             # Download Go dependencies
             - sem-version go 1.17.6
@@ -47,9 +46,8 @@ blocks:
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
-            - which goreleaser
             # TODO: Remove -d in go1.18
-            - go get -d -v ./...
+            - go get -d ./...
             - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
