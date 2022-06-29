@@ -39,7 +39,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -122,11 +121,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 
 // TODO: Bug somewhere here causing Windows int-tests to not run
 func (c *command) Execute(args []string) error {
-	_, err := pplugin.SearchPath()
-	if err != nil {
-		return err
-	}
-
+	fmt.Println(os.Getenv("PATH"))
+	//pluginMap, err := pplugin.SearchPath()
+	//if err != nil {
+	//	return err
+	//}
+	//
 	//pluginArgs := make([]string, 0, len(args))
 	//pluginSlice := []string{pversion.CLIName}
 	//pluginSize := len(args)
