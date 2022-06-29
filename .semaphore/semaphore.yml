@@ -53,6 +53,7 @@ blocks:
             - cache store $(checksum go.sum) $(go env GOPATH)
 
   - name: Linux
+    dependencies: ["Download Dependencies"]
     task:
       prologue:
         commands:
@@ -76,6 +77,7 @@ blocks:
             - make test-installer
 
   - name: MacOS
+    dependencies: ["Download Dependencies"]
     task:
       agent:
         machine:
@@ -88,9 +90,6 @@ blocks:
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
       jobs:
-        - name: Lint
-          commands:
-            - make lint
         - name: Unit Tests
           commands:
             - make unit-test
