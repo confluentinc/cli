@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"io/fs"
 	"os"
@@ -16,6 +17,7 @@ func SearchPath() (map[string][]string, error) {
 	var pathSlice []string
 	if runtime.GOOS == "windows" {
 		pathSlice = strings.Split(os.Getenv("PATH"), ";")
+		fmt.Println(pathSlice)
 	} else {
 		pathSlice = strings.Split(os.Getenv("PATH"), ":")
 	}
