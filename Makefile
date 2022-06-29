@@ -115,7 +115,6 @@ run:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	ls $(go env GOPATH)/pkg/mod/github.com/confluentinc
 	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
