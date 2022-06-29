@@ -19,6 +19,7 @@ execution_time_limit:
 
 blocks:
   - name: Download Dependencies
+    dependencies: []
     task:
       jobs:
         - name: go get ./...
