@@ -244,7 +244,7 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 	})
 }
 
-func AddStreamGovernancePackageFlag(cmd *cobra.Command, packageDisplayNames []string) {
+func AddPackageFlag(cmd *cobra.Command, packageDisplayNames []string) {
 	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
 		"Stream Governance package as (%s).", strings.Join(packageDisplayNames, ", ")))
 

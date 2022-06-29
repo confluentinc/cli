@@ -41,14 +41,14 @@ func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
 
-func getPackageInternalName(inputPackageDisplayName string) (string, bool) {
+func getPackageInternalName(inputPackageDisplayName string) string {
 	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
 	for internalName, displayName := range packageDisplayNameMapping {
 		if displayName == inputPackageDisplayName {
-			return internalName, true
+			return internalName
 		}
 	}
-	return "", false
+	return ""
 }
 
 func getAllPackageDisplayNames() []string {
