@@ -58,8 +58,9 @@ blocks:
     task:
       prologue:
         commands:
-          - checkout
           - sem-version go 1.17.6
+          - which go
+          - checkout
           - export "GOPATH=$(go env GOPATH)"
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
@@ -86,8 +87,9 @@ blocks:
           os_image: macos-xcode13
       prologue:
         commands:
+          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
+          - tar -xzf go1.17.6.darwin-amd64.tar.gz
           - checkout
-          - sem-version go 1.17.6
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
       jobs:
