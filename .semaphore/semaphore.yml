@@ -46,8 +46,8 @@ blocks:
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
-            # TODO: Remove -d in go1.18
-            - go get -d -t -tags=testrunmain ./...
+            - go mod download
+            - go test ./cmd/confluent -tags=testrunmain -c
             - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
