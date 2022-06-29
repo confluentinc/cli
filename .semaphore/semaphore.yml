@@ -46,11 +46,11 @@ blocks:
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            
-            # TODO: Remove -d in go1.18
-            - go get -d ./...
-            - make deps
+
             - which goreleaser
+            # TODO: Remove -d in go1.18
+            - go get -d -v ./...
+            - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
   
@@ -71,7 +71,6 @@ blocks:
             - make unit-test
         - name: Integration Tests
           commands:
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - make int-test
         - name: Smoke Tests
           commands:
