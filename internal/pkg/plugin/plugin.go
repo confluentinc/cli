@@ -21,17 +21,17 @@ func SearchPath() (map[string][]string, error) {
 	}
 
 	for _, dir := range pathSlice {
-		if err := filepath.Walk(dir, pluginWalkFn(re, pluginMap)); err != nil {
+		if err := filepath.WalkDir(dir, pluginWalkFn(re, pluginMap)); err != nil {
 			return nil, err
 		}
 	}
 	return pluginMap, nil
 }
 
-func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.FileInfo, error) error {
-	return func(path string, info fs.FileInfo, _ error) error {
+func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.DirEntry, error) error {
+	return func(path string, entry fs.DirEntry, _ error) error {
 		pluginName := filepath.Base(path)
-		if re.MatchString(pluginName) && ((runtime.GOOS != "windows" && isExecutable(info)) || (runtime.GOOS == "windows" && isExecutableWindows(pluginName))) {
+		if re.MatchString(pluginName) && ((runtime.GOOS != "windows" && isExecutable(entry)) || (runtime.GOOS == "windows" && isExecutableWindows(pluginName))) {
 			if strings.Contains(pluginName, ".") {
 				pluginName = pluginName[:strings.LastIndex(pluginName, ".")]
 			}
@@ -41,9 +41,12 @@ func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string,
 	}
 }
 
-func isExecutable(info fs.FileInfo) bool {
-	m := info.Mode()
-	return !m.IsDir() && m&0111 != 0
+func isExecutable(entry fs.DirEntry) bool {
+	fileInfo, err := entry.Info()
+	if err != nil {
+		return false
+	}
+	return !fileInfo.Mode().IsDir() && fileInfo.Mode()&0111 != 0
 }
 
 func isExecutableWindows(name string) bool {

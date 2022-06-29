@@ -1,6 +1,7 @@
 package mock
 
 import (
+	"io/fs"
 	"os"
 	"time"
 )
@@ -8,6 +9,15 @@ import (
 type FileInfo struct {
 	NameVal string
 	ModeVal os.FileMode
+}
+
+func (f *FileInfo) Type() fs.FileMode {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (f *FileInfo) Info() (fs.FileInfo, error) {
+	return &FileInfo{NameVal: f.NameVal, ModeVal: f.ModeVal}, nil
 }
 
 func (f *FileInfo) Name() string {
