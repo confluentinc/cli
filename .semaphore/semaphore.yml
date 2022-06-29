@@ -69,7 +69,6 @@ blocks:
             - make unit-test
         - name: Integration Tests
           commands:
-            - ls $(go env GOPATH)/pkg/mod
             - make int-test
         - name: Smoke Tests
           commands:
