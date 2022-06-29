@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -23,6 +25,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -39,7 +42,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -105,6 +110,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(plugin.New(prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -115,13 +121,53 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-
 	return &command{Command: cmd}
 }
 
+// TODO: Bug somewhere here causing Windows int-tests to not run
 func (c *command) Execute(args []string) error {
+	pluginMap, err := pplugin.SearchPath()
+	if err != nil {
+		return err
+	}
+
+	pluginArgs := make([]string, 0, len(args))
+	pluginSlice := []string{pversion.CLIName}
+	pluginSize := len(args)
+	for i, arg := range args {
+		if strings.HasPrefix(arg, "--") {
+			pluginArgs = args[i:]
+			pluginSize = i
+			break
+		}
+		arg = strings.ReplaceAll(arg, "-", "_")
+		pluginSlice = append(pluginSlice, arg)
+	}
+	pluginName := strings.Join(pluginSlice, "-")
+
+	for len(pluginName) > len(pversion.CLIName) {
+		if pluginPathList, ok := pluginMap[pluginName]; ok {
+			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == pluginName {
+				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+				break
+			}
+			pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
+			cliPlugin := &exec.Cmd{
+				Path:   pluginPathList[0],
+				Args:   pluginArgs,
+				Stdout: os.Stdout,
+				Stdin:  os.Stdin,
+				Stderr: os.Stderr,
+			}
+			return cliPlugin.Run()
+		}
+		pluginArgs = append([]string{args[pluginSize-1]}, pluginArgs...)
+		pluginSize--
+		pluginName = pluginName[:strings.LastIndex(pluginName, "-")]
+	}
+
 	c.Command.SetArgs(args)
-	err := c.Command.Execute()
+	err = c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	return err
 }
