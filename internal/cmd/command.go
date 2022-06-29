@@ -163,7 +163,7 @@ func (c *command) Execute(args []string) error {
 	//}
 
 	c.Command.SetArgs(args)
-	err = c.Command.Execute()
+	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	return err
 }
