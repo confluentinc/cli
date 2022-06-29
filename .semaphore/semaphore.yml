@@ -38,7 +38,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum) && return
+            - cache restore $(checksum go.sum)
             
             # Download Go dependencies
             - sem-version go 1.17.6
@@ -47,9 +47,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # TODO: Remove -d in go1.18
-            - go get -d ./...
-            - go get -d ./test
-            - go get -d ./test/test-server
+            - go mod download
             - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
