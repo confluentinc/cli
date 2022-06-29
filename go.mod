@@ -42,7 +42,6 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.44.0
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v25 v25.1.3
 	github.com/google/uuid v1.3.0
 	github.com/goreleaser/goreleaser v1.4.1
@@ -224,6 +223,7 @@ require (
 	github.com/golangci/misspell v0.3.5 // indirect
 	github.com/golangci/revgrep v0.0.0-20210930125155-c22e5001d4f2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v18 v18.2.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
