@@ -48,6 +48,8 @@ blocks:
 
             # TODO: Remove -d in go1.18
             - go get -d ./...
+            - go get -d test
+            - go get -d test/test-server
             - make deps
             
             - cache store $(checksum go.sum) $(go env GOPATH)
