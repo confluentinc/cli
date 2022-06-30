@@ -222,7 +222,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
-	if err.Error() == "403 Forbidden" {
+	if err.Error() == "403 Forbidden" || strings.Contains(err.Error(), "Unknown API key") {
 		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
 	}
 	return CatchV2ErrorDetailWithResponse(err, r)
@@ -262,7 +262,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return nil
 	}
 
-	if err.Error() == "404 Not Found" {
+	if err.Error() == "404 NOT " {
 		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 	}
@@ -271,7 +271,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, r)
+	return CatchV2ErrorDetailWithResponse(err, r)
 }
 
 func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
