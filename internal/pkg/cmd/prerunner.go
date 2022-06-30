@@ -463,32 +463,12 @@ func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, er
 		return "", "", nil
 	}
 
-	clusterConfig, err := ctx.GetKafkaClusterForCommand()
-	if err != nil {
-		return "", "", err
-	}
-	if clusterConfig.RestEndpoint != "" {
-		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
-	}
-
-	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
-	// potentially remove this once Rest Proxy is enabled across prod
-	kafkaCluster, err := ctx.FetchCluster(clusterConfig.ID)
+	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
 	}
 
-	// no need to update the config if it's still empty
-	if kafkaCluster.RestEndpoint == "" {
-		return "", clusterConfig.ID, nil
-	}
-
-	// update config to have updated cluster if rest endpoint is no longer ""
-	clusterConfig = dynamicconfig.KafkaClusterToKafkaClusterConfig(kafkaCluster, clusterConfig.APIKeys)
-	ctx.KafkaClusterContext.AddKafkaClusterConfig(clusterConfig)
-	err = ctx.Save()
-
-	return kafkaCluster.RestEndpoint, clusterConfig.ID, err
+	return config.RestEndpoint, config.ID, err
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
