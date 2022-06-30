@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"sort"
 	"strings"
 
@@ -58,4 +59,17 @@ func getAllPackageDisplayNames() []string {
 	}
 
 	return packageDisplayNames
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	packageDisplayNames := getAllPackageDisplayNames()
+
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
+		"Stream Governance package as \"%s\".",
+		strings.Join(
+			[]string{
+				strings.Join(packageDisplayNames[:len(packageDisplayNames)-1], "\", \""),
+				packageDisplayNames[len(packageDisplayNames)-1],
+			}, "\" or \""),
+	))
 }

@@ -32,7 +32,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Enable Schema Registry, using Google Cloud Platform in the US with "advanced" package for environment "env-12345"`,
+				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package for environment "env-12345"`,
 				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345", version.CLIName),
 			},
 		),
@@ -40,7 +40,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
-	pcmd.AddPackageFlag(cmd, getAllPackageDisplayNames())
+	addPackageFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -111,16 +111,14 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			Id:                     existingCluster.Id,
 			SchemaRegistryEndpoint: existingCluster.Endpoint,
 		}
-		_ = output.DescribeObject(cmd, existingClusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
-	} else {
-		v2Cluster := &v1.SchemaRegistryCluster{
-			Id:                     newCluster.Id,
-			SchemaRegistryEndpoint: newCluster.Endpoint,
-		}
-		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+		return output.DescribeObject(cmd, existingClusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
 	}
 
-	return nil
+	v2Cluster := &v1.SchemaRegistryCluster{
+		Id:                     newCluster.Id,
+		SchemaRegistryEndpoint: newCluster.Endpoint,
+	}
+	return output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 }
 
 func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
