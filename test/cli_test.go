@@ -159,10 +159,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if !tt.workflow {
-			resetConfiguration(t)
-			if !tt.pluginsEnabled {
-				disablePlugins(t)
-			}
+			resetConfiguration(t, tt.pluginsEnabled)
 		}
 
 		// Executes login command if test specifies
@@ -300,18 +297,13 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T) {
+func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New()
-
-	err := cfg.Save()
-	require.NoError(t, err)
-}
-
-func disablePlugins(t *testing.T) {
-	cfg := v1.New()
-	cfg.DisablePlugins = true
+	if !arePluginsEnabled {
+		cfg.DisablePlugins = true
+	}
 	err := cfg.Save()
 	require.NoError(t, err)
 }

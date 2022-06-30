@@ -28,7 +28,7 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), true)
 
 	if runtime.GOOS != "windows" {
 		for _, tt := range tests {

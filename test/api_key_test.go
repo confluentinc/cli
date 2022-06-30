@@ -133,7 +133,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.workflow = true
