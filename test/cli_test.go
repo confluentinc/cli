@@ -61,6 +61,8 @@ type CLITest struct {
 	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
+	// True iff testing plugins
+	pluginsEnabled bool
 	// Fixed string to check if output contains
 	contains string
 	// Fixed string to check that output does not contain
@@ -157,7 +159,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if !tt.workflow {
-			resetConfiguration(t)
+			resetConfiguration(t, tt.pluginsEnabled)
 		}
 
 		// Executes login command if test specifies
@@ -295,11 +297,13 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T) {
+func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New()
-
+	if !arePluginsEnabled {
+		cfg.DisablePlugins = true
+	}
 	err := cfg.Save()
 	require.NoError(t, err)
 }

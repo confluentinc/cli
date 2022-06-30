@@ -17,13 +17,13 @@ func (s *CLITestSuite) contextCreateArgs(name string) string {
 }
 
 func (s *CLITestSuite) TestContextCreate() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
 	s.runIntegrationTest(tt)
 }
 
 func (s *CLITestSuite) TestContextDelete() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -38,7 +38,7 @@ func (s *CLITestSuite) TestContextDelete() {
 }
 
 func (s *CLITestSuite) TestDescribe() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -57,7 +57,7 @@ func (s *CLITestSuite) TestDescribe() {
 }
 
 func (s *CLITestSuite) TestContextList() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -72,7 +72,7 @@ func (s *CLITestSuite) TestContextList() {
 }
 
 func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: "login --url " + s.TestBackend.GetCloudUrl()},
@@ -94,7 +94,7 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 }
 
 func (s *CLITestSuite) TestContextUpdate() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -112,7 +112,7 @@ func (s *CLITestSuite) TestContextUpdate() {
 }
 
 func (s *CLITestSuite) TestContextUse() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
