@@ -2,11 +2,13 @@ package schemaregistry
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"sort"
 	"strings"
 
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const (
@@ -42,14 +44,14 @@ func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
 
-func getPackageInternalName(inputPackageDisplayName string) string {
+func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
 	for internalName, displayName := range packageDisplayNameMapping {
 		if displayName == inputPackageDisplayName {
-			return internalName
+			return internalName, nil
 		}
 	}
-	return ""
+	return "", fmt.Errorf(errors.SRInvalidPackageType, inputPackageDisplayName)
 }
 
 func getAllPackageDisplayNames() []string {
@@ -63,13 +65,14 @@ func getAllPackageDisplayNames() []string {
 
 func addPackageFlag(cmd *cobra.Command) {
 	packageDisplayNames := getAllPackageDisplayNames()
+	numOfPackages := len(packageDisplayNames)
+
+	var flagDescriptionStr strings.Builder
+	for _, displayName := range packageDisplayNames[:numOfPackages-1] {
+		flagDescriptionStr.WriteString(fmt.Sprintf("\"%s\", ", displayName))
+	}
+	flagDescriptionStr.WriteString(fmt.Sprintf("or \"%s\"", packageDisplayNames[numOfPackages-1]))
 
 	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
-		"Stream Governance package as \"%s\".",
-		strings.Join(
-			[]string{
-				strings.Join(packageDisplayNames[:len(packageDisplayNames)-1], "\", \""),
-				packageDisplayNames[len(packageDisplayNames)-1],
-			}, "\" or \""),
-	))
+		"Stream Governance package as %s.", flagDescriptionStr.String()))
 }

@@ -81,9 +81,9 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	packageInternalName := getPackageInternalName(packageDisplayName)
-	if packageInternalName == "" {
-		return fmt.Errorf(errors.SRInvalidPackageType, packageDisplayName)
+	packageInternalName, err := getPackageInternalName(packageDisplayName)
+	if err != nil {
+		return err
 	}
 
 	// Build the SR instance
