@@ -61,6 +61,8 @@ type CLITest struct {
 	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
+	// True iff testing plugins
+	pluginsEnabled bool
 	// Fixed string to check if output contains
 	contains string
 	// Fixed string to check that output does not contain
@@ -158,6 +160,9 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 
 		if !tt.workflow {
 			resetConfiguration(t)
+			if !tt.pluginsEnabled {
+				disablePlugins(t)
+			}
 		}
 
 		// Executes login command if test specifies
@@ -300,6 +305,13 @@ func resetConfiguration(t *testing.T) {
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New()
 
+	err := cfg.Save()
+	require.NoError(t, err)
+}
+
+func disablePlugins(t *testing.T) {
+	cfg := v1.New()
+	cfg.DisablePlugins = true
 	err := cfg.Save()
 	require.NoError(t, err)
 }
