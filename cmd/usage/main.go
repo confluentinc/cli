@@ -58,6 +58,8 @@ func buildWhitelist() []string {
 		whitelist.Add(arch)
 	}
 
+	// Certain commands and flags are only present in Confluent Cloud or Confluent Platform.
+	// Consider all contexts when compiling the whitelist.
 	configs := []*v1.Config{
 		{CurrentContext: "A"},
 		{CurrentContext: "B", Contexts: map[string]*v1.Context{"B": {PlatformName: ccloudv2.Hostnames[0]}}},
