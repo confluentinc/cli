@@ -39,7 +39,7 @@ func main() {
 
 	cli := cmd.NewConfluentCommand(cfg, isTest, version)
 
-	if err := cli.Execute(os.Args[1:]); err != nil {
+	if err := cli.Execute(os.Args[1:], cfg); err != nil {
 		if isTest {
 			bincover.ExitCode = 1
 		} else {

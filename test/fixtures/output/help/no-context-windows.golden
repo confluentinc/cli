@@ -11,6 +11,7 @@ Available Commands:
   kafka           Manage Apache Kafka.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud or Confluent Platform.
+  plugin          Confluent plugins.
   prompt          Add Confluent CLI context to your terminal prompt.
   shell           Start an interactive shell.
   update          Update the Confluent CLI.
