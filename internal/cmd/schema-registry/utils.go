@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
 	"sort"
 	"strings"
 
@@ -39,4 +40,36 @@ func convertMapToString(m map[string]string) string {
 
 func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
+}
+
+func getPackageInternalName(inputPackageDisplayName string) string {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName
+		}
+	}
+	return ""
+}
+
+func getAllPackageDisplayNames() []string {
+	packageDisplayNames := make([]string, 0, len(packageDisplayNameMapping))
+	for _, displayName := range packageDisplayNameMapping {
+		packageDisplayNames = append(packageDisplayNames, displayName)
+	}
+
+	return packageDisplayNames
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	packageDisplayNames := getAllPackageDisplayNames()
+
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
+		"Stream Governance package as \"%s\".",
+		strings.Join(
+			[]string{
+				strings.Join(packageDisplayNames[:len(packageDisplayNames)-1], "\", \""),
+				packageDisplayNames[len(packageDisplayNames)-1],
+			}, "\" or \""),
+	))
 }
