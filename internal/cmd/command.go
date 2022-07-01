@@ -38,6 +38,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -68,11 +69,9 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(ver, isTest)
 
-	help := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
-		cmd.SetOut(os.Stderr)
-		help(cmd, args)
+		_ = help.WriteHelpTemplate(cmd)
 	})
 
 	prerunner := &pcmd.PreRun{
