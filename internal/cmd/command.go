@@ -71,6 +71,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	help := cmd.HelpFunc()
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
+		cmd.SetOut(os.Stderr)
 		help(cmd, args)
 	})
 
