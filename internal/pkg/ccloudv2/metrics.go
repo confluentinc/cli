@@ -36,7 +36,8 @@ func (c *Client) metricsApiContext() context.Context {
 }
 
 func (c *Client) MetricsDatasetQuery(dataset string, query metricsv2.QueryRequest) (*metricsv2.QueryResponse, *http.Response, error) {
-	return c.MetricsClient.Version2Api.V2MetricsDatasetQueryPost(c.metricsApiContext(), dataset).QueryRequest(query).Execute()
+	req := c.MetricsClient.Version2Api.V2MetricsDatasetQueryPost(c.metricsApiContext(), dataset).QueryRequest(query)
+	return c.MetricsClient.Version2Api.V2MetricsDatasetQueryPostExecute(req)
 }
 
 func UnmarshalFlatQueryResponseIfDataMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
