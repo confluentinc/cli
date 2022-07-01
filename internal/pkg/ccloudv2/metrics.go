@@ -2,12 +2,24 @@ package ccloudv2
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
+	"time"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
+
+type flatQueryResponse struct {
+	Data []responseDataPoint `json:"data"`
+}
+
+type responseDataPoint struct {
+	Timestamp time.Time `json:"timestamp"`
+	Value     float32   `json:"value"`
+}
 
 func newMetricsClient(userAgent string, isTest bool) *metricsv2.APIClient {
 	cfg := metricsv2.NewConfiguration()
@@ -25,4 +37,33 @@ func (c *Client) metricsApiContext() context.Context {
 
 func (c *Client) MetricsDatasetQuery(dataset string, query metricsv2.QueryRequest) (*metricsv2.QueryResponse, *http.Response, error) {
 	return c.MetricsClient.Version2Api.V2MetricsDatasetQueryPost(c.metricsApiContext(), dataset).QueryRequest(query).Execute()
+}
+
+func UnmarshalFlatQueryResponseIfDataMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
+	if IsDataMatchesMoreThanOneSchemaError(err) {
+		body, err := io.ReadAll(httpResp.Body)
+		if err != nil {
+			return err
+		}
+		var resBody flatQueryResponse
+		err = json.Unmarshal(body, &resBody)
+		if err != nil {
+			return err
+		}
+
+		metricsResponse.FlatQueryResponse = metricsv2.NewFlatQueryResponse([]metricsv2.Point{})
+
+		for _, dataPoint := range resBody.Data {
+			metricsResponse.FlatQueryResponse.Data = append(metricsResponse.FlatQueryResponse.Data,
+				metricsv2.Point{Value: dataPoint.Value, Timestamp: dataPoint.Timestamp})
+		}
+	}
+	return nil
+}
+
+func IsDataMatchesMoreThanOneSchemaError(err error) bool {
+	if err != nil && err.Error() == "Data matches more than one schema in oneOf(QueryResponse)" {
+		return true
+	}
+	return false
 }

@@ -2,12 +2,10 @@ package schemaregistry
 
 import (
 	"context"
-	"encoding/json"
-	"io"
 	"math"
 	"strconv"
-	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
@@ -26,15 +24,6 @@ var (
 	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility",
 		"Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
 )
-
-type schemaQueryResponse struct {
-	Data []responseData `json:"data"`
-}
-
-type responseData struct {
-	Timestamp time.Time `json:"timestamp"`
-	Value     float32   `json:"value"`
-}
 
 type describeDisplay struct {
 	Name                  string
@@ -116,26 +105,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	query := schemaCountQueryFor(cluster.Id)
 	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
-	if err.Error() == "Data matches more than one schema in oneOf(QueryResponse)" { // unmarshal error
-		body, err := io.ReadAll(httpResp.Body)
-		if err != nil {
-			return err
-		}
-		var resBody schemaQueryResponse
-		err = json.Unmarshal(body, &resBody)
-		if err != nil {
-			return err
-		}
-
-		metricsResponse.FlatQueryResponse = metricsv2.NewFlatQueryResponse([]metricsv2.Point{}) // initialize
-
-		for _, dataPoint := range resBody.Data {
-			metricsResponse.FlatQueryResponse.Data = append(metricsResponse.FlatQueryResponse.Data,
-				metricsv2.Point{Value: dataPoint.Value, Timestamp: dataPoint.Timestamp})
-		}
+	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataMatchError(err, metricsResponse, httpResp)
+	if unmarshalErr != nil {
+		return unmarshalErr
 	}
 
-	if err.Error() != "Data matches more than one schema in oneOf(QueryResponse)" || metricsResponse == nil { // all other errors.
+	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || metricsResponse == nil {
 		log.CliLogger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
