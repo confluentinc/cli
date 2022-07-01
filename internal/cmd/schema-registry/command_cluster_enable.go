@@ -99,6 +99,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	}
 
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	clusterOutput := &v1.SchemaRegistryCluster{}
 	if err != nil {
 		// If it already exists, return the existing one
 		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
@@ -107,18 +108,18 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		existingClusterOutput := &v1.SchemaRegistryCluster{
+		clusterOutput = &v1.SchemaRegistryCluster{
 			Id:                     existingCluster.Id,
 			SchemaRegistryEndpoint: existingCluster.Endpoint,
 		}
-		return output.DescribeObject(cmd, existingClusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
+	} else {
+		clusterOutput = &v1.SchemaRegistryCluster{
+			Id:                     newCluster.Id,
+			SchemaRegistryEndpoint: newCluster.Endpoint,
+		}
 	}
 
-	v2Cluster := &v1.SchemaRegistryCluster{
-		Id:                     newCluster.Id,
-		SchemaRegistryEndpoint: newCluster.Endpoint,
-	}
-	return output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+	return output.DescribeObject(cmd, clusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
 }
 
 func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
