@@ -3,7 +3,6 @@ package apikey
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -215,6 +214,5 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		return err
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	return errors.CatchQuotaExceedError(err, body)
+	return errors.CatchV2ErrorDetailWithResponse(err, r)
 }
