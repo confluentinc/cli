@@ -2,39 +2,27 @@ package testserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 )
 
-// Handler for "/v2/metrics/cloud/query"
-func (c *CloudRouter) HandleMetricsQuery(t *testing.T) http.HandlerFunc {
+func handleMetricsQuery(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := &ccloud.MetricsApiQueryReply{
-			Result: []ccloud.ApiData{
-				{
-					Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
-					Value:     0,
-					Labels:    map[string]interface{}{"metric.topic": "test-topic"},
+		fmt.Println("metrics being called..")
+		w.Header().Set("Content-Type", "application/json")
+		resp := &metricsv2.QueryResponse{
+			FlatQueryResponse: &metricsv2.FlatQueryResponse{
+				Data: []metricsv2.Point{
+					{Value: 0.0, Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)},
 				},
 			},
 		}
-		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(response)
-		require.NoError(t, err)
-	}
-}
-
-func (c *CloudRouter) HandleJwtToken(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		type CreateOAuthTokenReply struct {
-			Token string `json:"token"`
-		}
-		err := json.NewEncoder(w).Encode(&CreateOAuthTokenReply{Token: "OAUTH_TOKEN"})
+		err := json.NewEncoder(w).Encode(resp)
 		require.NoError(t, err)
 	}
 }

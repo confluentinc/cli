@@ -455,7 +455,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	if err != nil {
 		return err
 	}
-	jwtToken, err := pauth.GetJwtToken(state, ctx.Platform.Server)
+	jwtToken, err := pauth.GetJwtTokenForV2Client(state, ctx.Platform.Server)
 	if err != nil {
 		return err
 	}

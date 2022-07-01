@@ -207,12 +207,12 @@ func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId strin
 	return responses.Token, nil
 }
 
-func GetJwtToken(authenticatedState *v1.ContextState, server string) (string, error) {
+func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) (string, error) {
 	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Post(accessTokenEndpoint).Body(strings.NewReader("{}")).Receive(&responses, &responses)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return "", err
 	}

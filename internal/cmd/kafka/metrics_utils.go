@@ -78,7 +78,6 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		return err
 	}
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.FlatQueryResponse.GetData())
-	fmt.Println("maxClusterLoad.Value", maxClusterLoad.Value)
 	if maxClusterLoad.Value > 0.7 {
 		return fmt.Errorf("\nCluster Load was %f percent at %s. \nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.In(time.Local))
 	}
@@ -97,7 +96,6 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 		return err
 	}
 	maxPartitionCount := maxApiDataValue(partitionMetricsResponse.FlatQueryResponse.GetData())
-	fmt.Println("int32(maxPartitionCount.Value)", int32(maxPartitionCount.Value))
 	if int32(maxPartitionCount.Value) > requiredPartitionCount {
 		return fmt.Errorf("partition count was %f at %s.\nRecommended partition count is less than %d for %d cku", maxPartitionCount.Value, maxPartitionCount.Timestamp.In(time.Local), requiredPartitionCount, cku)
 	}
