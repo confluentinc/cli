@@ -40,7 +40,7 @@ func (c *Client) MetricsDatasetQuery(dataset string, query metricsv2.QueryReques
 	return c.MetricsClient.Version2Api.V2MetricsDatasetQueryPostExecute(req)
 }
 
-func UnmarshalFlatQueryResponseIfDataMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
+func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse *metricsv2.QueryResponse, httpResp *http.Response) error {
 	if IsDataMatchesMoreThanOneSchemaError(err) {
 		body, err := io.ReadAll(httpResp.Body)
 		if err != nil {

@@ -14,8 +14,8 @@ const (
 	ClusterLoadMetricName                        = "io.confluent.kafka.server/cluster_load_percent"
 	PartitionMetricName                          = "io.confluent.kafka.server/partition_count"
 	StorageMetricName                            = "io.confluent.kafka.server/retained_bytes"
-	threeDayLookbackWindow                       = "P3D/now|d"
-	latestLookbackWindow                         = "PT15M/now|m"
+	threeDayLookbackWindow                       = "P3D/now"
+	latestLookbackWindow                         = "PT15M/now"
 	hourGranularity        metricsv2.Granularity = "PT1H"
 	minuteGranularity      metricsv2.Granularity = "PT1M"
 )
@@ -33,12 +33,11 @@ func getMetricsOptions(isLatestMetric bool) (metricsv2.Granularity, string, int3
 func getMetricsApiRequest(metricName string, agg string, clusterId string, isLatestMetric bool) metricsv2.QueryRequest {
 	granularity, lookback, limit := getMetricsOptions(isLatestMetric)
 	aggFunc := metricsv2.AggregationFunction(agg)
-	asd := metricsv2.NullableAggregationFunction{}
-	asd.Set(&aggFunc)
+	nullableAggFunc := metricsv2.NewNullableAggregationFunction(&aggFunc)
 	aggregations := []metricsv2.Aggregation{
 		{
 			Metric: metricName,
-			Agg:    asd,
+			Agg:    *nullableAggFunc,
 		},
 	}
 	filter := metricsv2.Filter{
@@ -73,7 +72,7 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 
-	err = ccloudv2.UnmarshalFlatQueryResponseIfDataMatchError(err, clusterLoadResponse, httpResp)
+	err = ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, clusterLoadResponse, httpResp)
 	if err != nil {
 		return err
 	}
@@ -91,7 +90,7 @@ func (c *clusterCommand) validatePartitionCount(clusterId string, requiredPartit
 		return errors.Errorf("could not retrieve partition count metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 
-	err = ccloudv2.UnmarshalFlatQueryResponseIfDataMatchError(err, partitionMetricsResponse, httpResp)
+	err = ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, partitionMetricsResponse, httpResp)
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func (c *clusterCommand) validateStorageLimit(clusterId string, requiredStorageL
 		return errors.Errorf("could not retrieve storage metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 
-	err = ccloudv2.UnmarshalFlatQueryResponseIfDataMatchError(err, storageMetricsResponse, httpResp)
+	err = ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, storageMetricsResponse, httpResp)
 	if err != nil {
 		return err
 	}

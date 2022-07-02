@@ -460,6 +460,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 	v2Client.JwtToken = jwtToken
+
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.V2Client = v2Client
 	cliCmd.Config.V2Client = v2Client

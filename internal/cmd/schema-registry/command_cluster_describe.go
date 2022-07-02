@@ -105,7 +105,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	query := schemaCountQueryFor(cluster.Id)
 	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
-	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataMatchError(err, metricsResponse, httpResp)
+	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp)
 	if unmarshalErr != nil {
 		return unmarshalErr
 	}
