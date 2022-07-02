@@ -12,6 +12,8 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -33,6 +35,8 @@ const (
 	regionId      = "us-west-2"
 	environmentId = "abc"
 )
+
+var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
 var shouldError bool
 var shouldPrompt bool
@@ -78,7 +82,7 @@ type KafkaClusterTestSuite struct {
 	conf            *v1.Config
 	kafkaMock       *ccsdkmock.Kafka
 	envMetadataMock *ccsdkmock.EnvironmentMetadata
-	metricsApi      *ccsdkmock.MetricsApi
+	metricsApi      *metricsmock.Version2Api
 	usageLimits     *ccsdkmock.UsageLimits
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
@@ -128,36 +132,26 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			}, nil
 		},
 	}
-	suite.metricsApi = &ccsdkmock.MetricsApi{
-		QueryV2Func: func(ctx context.Context, view string, query *ccloud.MetricsApiRequest, jwt string) (*ccloud.MetricsApiQueryReply, error) {
-			if query.Aggregations[0].Metric != ClusterLoadMetricName {
-				value := 10.0
-				if shouldError {
-					value = 5000
-				}
-				return &ccloud.MetricsApiQueryReply{
-					Result: []ccloud.ApiData{
-						{
-							Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
-							Value:     value,
-							Labels:    map[string]interface{}{"metric.topic": "test-topic"},
-						},
-					},
-				}, nil
-			}
-			value := 0.1
+	suite.metricsApi = &metricsmock.Version2Api{
+		V2MetricsDatasetQueryPostFunc: func(_ context.Context, _ string) metricsv2.ApiV2MetricsDatasetQueryPostRequest {
+			return metricsv2.ApiV2MetricsDatasetQueryPostRequest{}
+		},
+		V2MetricsDatasetQueryPostExecuteFunc: func(_ metricsv2.ApiV2MetricsDatasetQueryPostRequest) (*metricsv2.QueryResponse, *http.Response, error) {
+			value := float32(0.1)
 			if shouldPrompt {
 				value = 0.8
 			}
-			return &ccloud.MetricsApiQueryReply{
-				Result: []ccloud.ApiData{
-					{
-						Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC),
-						Value:     value,
-						Labels:    map[string]interface{}{"metric.topic": "test-topic"},
+			if shouldError {
+				value = 5000
+			}
+			resp := &metricsv2.QueryResponse{
+				FlatQueryResponse: &metricsv2.FlatQueryResponse{
+					Data: []metricsv2.Point{
+						{Value: value, Timestamp: queryTime},
 					},
 				},
-			}, nil
+			}
+			return resp, nil, nil
 		},
 	}
 	suite.usageLimits = &ccsdkmock.UsageLimits{
@@ -196,13 +190,14 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	client := &ccloud.Client{
 		Kafka:               suite.kafkaMock,
 		EnvironmentMetadata: suite.envMetadataMock,
-		MetricsApi:          suite.metricsApi,
 		UsageLimits:         suite.usageLimits,
 	}
-	cmkClient := &cmkv2.APIClient{
-		ClustersCmkV2Api: suite.cmkClusterApi,
+	v2Client := &ccloudv2.Client{
+		AuthToken:     "auth-token",
+		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
+		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, &ccloudv2.Client{CmkClient: cmkClient, AuthToken: "auth-token"}, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -223,7 +218,8 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
 	err := cmd.Execute()
 	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
-	req.True(suite.metricsApi.QueryV2Called())
+	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
+	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
@@ -242,7 +238,8 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
 	err := cmd.Execute()
-	req.True(suite.metricsApi.QueryV2Called())
+	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
+	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 	req.Contains(err.Error(), "cluster shrink validation error")
 }
 

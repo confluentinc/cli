@@ -451,6 +451,15 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	}
 
 	v2Client := ccloudv2.NewClient(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
+	state, err := ctx.AuthenticatedState()
+	if err != nil {
+		return err
+	}
+	jwtToken, err := pauth.GetJwtTokenForV2Client(state, ctx.Platform.Server)
+	if err != nil {
+		return err
+	}
+	v2Client.JwtToken = jwtToken
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.V2Client = v2Client
