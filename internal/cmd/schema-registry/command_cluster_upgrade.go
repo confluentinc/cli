@@ -16,7 +16,7 @@ import (
 func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "upgrade",
-		Short:       "Upgrade Schema Registry for this environment.",
+		Short:       "Upgrade Schema Registry package for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.upgrade,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -56,6 +56,10 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
+	}
+
+	if packageInternalName == cluster.Package {
+		return errors.New(fmt.Sprintf(errors.SRInvalidPackageUpgrade, packageDisplayName))
 	}
 
 	cluster.Package = packageInternalName
