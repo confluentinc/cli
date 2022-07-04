@@ -244,6 +244,15 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 	})
 }
 
+func AddStreamGovernancePackageFlag(cmd *cobra.Command, packageDisplayNames []string) {
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
+		"Stream Governance package as (%s).", strings.Join(packageDisplayNames, ", ")))
+
+	RegisterFlagCompletionFunc(cmd, "package", func(_ *cobra.Command, _ []string) []string {
+		return packageDisplayNames
+	})
+}
+
 func AddValueFormatFlag(cmd *cobra.Command) {
 	cmd.Flags().String("value-format", "string", `Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.`)
 
