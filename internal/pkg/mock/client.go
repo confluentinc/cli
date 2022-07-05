@@ -26,7 +26,6 @@ func NewClientMock() *ccloud.Client {
 		User:           &mock.User{},
 		APIKey:         &mock.APIKey{},
 		KSQL:           &mock.KSQL{},
-		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
 }

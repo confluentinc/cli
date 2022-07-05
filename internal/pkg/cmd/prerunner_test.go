@@ -553,6 +553,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
+			cfg.Context().Platform.Server = "https://confluent.cloud"
 
 			var envVarCalled bool
 			var netrcCalled bool
