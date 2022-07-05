@@ -39,22 +39,22 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	server := testserver.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
 	ld := launchDarklyManager{
-		client:  sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
-		version: version.NewVersion("v1.2", "", "", ""),
+		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
+		version:   version.NewVersion("v1.2", "", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 	req := require.New(suite.T())
 
-	boolFlag := ld.BoolVariation("testBool", ctx, false)
+	boolFlag := ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)
 	req.Equal(true, boolFlag)
 
-	stringFlag := ld.StringVariation("testString", ctx, "")
+	stringFlag := ld.StringVariation("testString", ctx, v1.CliLaunchDarklyClient, true, "")
 	req.Equal("string", stringFlag)
 
-	intFlag := ld.IntVariation("testInt", ctx, 5)
+	intFlag := ld.IntVariation("testInt", ctx, v1.CliLaunchDarklyClient, true, 5)
 	req.Equal(1, intFlag)
 
-	jsonFlag := ld.JsonVariation("testJson", ctx, map[string]string{})
+	jsonFlag := ld.JsonVariation("testJson", ctx, v1.CliLaunchDarklyClient, true, map[string]string{})
 	req.Equal(map[string]interface{}{"key": "val"}, jsonFlag)
 }
 
@@ -62,21 +62,21 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 func (suite *LaunchDarklyTestSuite) TestBoolVariation() {
 	req := require.New(suite.T())
 	ld := launchDarklyManager{}
-	evaluatedFlag := ld.BoolVariation("testBool", suite.ctx, false)
+	evaluatedFlag := ld.BoolVariation("testBool", suite.ctx, v1.CliLaunchDarklyClient, true, false)
 	req.Equal(true, evaluatedFlag)
 }
 
 func (suite *LaunchDarklyTestSuite) TestIntVariation() {
 	req := require.New(suite.T())
 	ld := launchDarklyManager{}
-	evaluatedFlag := ld.IntVariation("testInt", suite.ctx, 0)
+	evaluatedFlag := ld.IntVariation("testInt", suite.ctx, v1.CliLaunchDarklyClient, true, 0)
 	req.Equal(3, evaluatedFlag)
 }
 
 func (suite *LaunchDarklyTestSuite) TestStringVariation() {
 	req := require.New(suite.T())
 	ld := launchDarklyManager{}
-	evaluatedFlag := ld.StringVariation("testString", suite.ctx, "")
+	evaluatedFlag := ld.StringVariation("testString", suite.ctx, v1.CliLaunchDarklyClient, true, "")
 	req.Equal("value", evaluatedFlag)
 }
 
@@ -84,7 +84,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 	req := require.New(suite.T())
 	ld := launchDarklyManager{}
 
-	evaluatedFlag := ld.JsonVariation("testJson", suite.ctx, nil)
+	evaluatedFlag := ld.JsonVariation("testJson", suite.ctx, v1.CliLaunchDarklyClient, true, nil)
 	req.Equal(suite.ctx.FeatureFlags.Values["testJson"], evaluatedFlag)
 }
 
