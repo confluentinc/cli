@@ -41,7 +41,9 @@ echo $output
 ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
 [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
+echo "1"
 ./bin/${binary} -h 1>/dev/null
+echo "2"
 ./bin/${binary} -h 2>/dev/null
 
 ./bin/${binary} -h 2>&1 >/dev/null | grep -q "Manage your .*" || ( echo "Unable to execute installed ${binary} CLI" && exit 1 )
