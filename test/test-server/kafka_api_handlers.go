@@ -157,6 +157,29 @@ func (k *KafkaApiRouter) HandleKafkaListTopic(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
+		case "lkc-asyncapi":
+			listTopicReply = schedv1.ListTopicReply{
+				Topics: []*schedv1.TopicDescription{
+					{
+						Name: "topic1",
+						Config: []*schedv1.TopicConfigEntry{
+							{
+								Name:  "cleanup.policy",
+								Value: "delete",
+							},
+							{
+								Name:  "delete.retention.ms",
+								Value: "86400000",
+							},
+						},
+						Partitions: []*schedv1.TopicPartitionInfo{
+							{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
+							{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
+							{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
+						},
+					},
+				},
+			}
 		case "lkc-kafka-api-no-topics":
 			listTopicReply = schedv1.ListTopicReply{Topics: []*schedv1.TopicDescription{}}
 		default: //cluster not ready
@@ -269,10 +292,16 @@ func (k *KafkaApiRouter) HandleKafkaDeleteTopic(t *testing.T) http.HandlerFunc {
 //Handler for: "/2.0/kafka/{cluster}/topics/{topic}/config"
 func (k *KafkaApiRouter) HandleKafkaTopicListConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var listTopicConfigReply *schedv1.ListTopicConfigReply
+		vars := mux.Vars(r)
+		cluster := vars["cluster"]
 		if r.Method == http.MethodGet { //part of describe call
-			listTopicConfigReply = &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}, {Name: "retention.ms", Value: "604800000"}}}}
-			topicReply, err := json.Marshal(listTopicConfigReply.TopicConfig)
+			reply := &schedv1.ListTopicConfigReply{TopicConfig: &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{{Name: "cleanup.policy", Value: "delete"}, {Name: "compression.type", Value: "producer"}}}}
+			if cluster == "lkc-asyncapi" {
+				reply.TopicConfig.Entries = append(reply.TopicConfig.Entries, &schedv1.TopicConfigEntry{Name: "delete.retention.ms", Value: "86400000"})
+			} else {
+				reply.TopicConfig.Entries = append(reply.TopicConfig.Entries, &schedv1.TopicConfigEntry{Name: "retention.ms", Value: "604800000"})
+			}
+			topicReply, err := json.Marshal(reply.TopicConfig)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(topicReply))
 			require.NoError(t, err)
