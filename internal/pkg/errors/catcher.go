@@ -182,7 +182,7 @@ func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
 		return nil
 	}
 
-	if err.Error() == "403 Forbidden" {
+	if r != nil && r.StatusCode == http.StatusForbidden {
 		return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
 	}
 
@@ -197,7 +197,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
 
-	if err.Error() == "403 Forbidden" {
+	if r != nil && r.StatusCode == http.StatusForbidden {
 		return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
 	}
 
@@ -222,7 +222,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
-	if err.Error() == "403 Forbidden" || strings.Contains(err.Error(), "Unknown API key") {
+	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
 		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
 	}
 	return CatchV2ErrorDetailWithResponse(err, r)
@@ -262,13 +262,14 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return nil
 	}
 
-	if err.Error() == "404 NOT " {
-		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
-		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
-	}
-
-	if err.Error() == "403 Forbidden" {
-		return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+	if r != nil {
+		switch r.StatusCode {
+		case http.StatusNotFound:
+			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+		case http.StatusForbidden:
+			return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+		}
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
