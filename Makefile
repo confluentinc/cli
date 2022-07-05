@@ -254,7 +254,8 @@ else
 endif
 
 .PHONY: test
-test: test-prep unit-test int-test test-installer
+test:
+	OVERRIDE_S3_FOLDER=cli-release-stag make test-installer
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

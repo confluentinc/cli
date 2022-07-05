@@ -33,6 +33,7 @@ TEST_OS=$(go env GOOS)
 TEST_ARCH=$(go env GOARCH)
 [[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
 echo === TESTING installer script, VERSION: $VERSION_TO_TEST ===
+./install.sh -d ${ARCHIVES_VERSION} 2>&1
 output=$(./install.sh -d ${ARCHIVES_VERSION} 2>&1)
 tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
 echo "<install.sh output and debug log>:"
@@ -41,7 +42,10 @@ echo $output
 ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
 [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
-rm ~/.confluent/config.json
+echo "1"
+./bin/${binary} -h 1>/dev/null
+echo "2"
+./bin/${binary} -h 2>/dev/null
 
 ./bin/${binary} -h 2>&1 >/dev/null | grep -q "Manage your .*" || ( echo "Unable to execute installed ${binary} CLI" && exit 1 )
 
