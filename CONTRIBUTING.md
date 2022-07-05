@@ -24,7 +24,7 @@ Then, add the following to your shell profile:
 
     export GOENV_ROOT="$HOME/.goenv"
     export PATH="$GOENV_ROOT/bin:$PATH"
-    eval $(goenv init -)
+    eval "$(goenv init -)"
     export PATH="$PATH:$GOPATH/bin"
 
 Finally, you can install the appropriate version of Go by running the following command inside the root directory of the repository:
