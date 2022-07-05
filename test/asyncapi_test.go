@@ -38,11 +38,9 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = strings.ReplaceAll(file1, "\r", "")
 	if strings.Compare(file1, testfile1) != 0 {
-		var err2 error
 		fmt.Println([]byte(testfile1))
 		fmt.Println([]byte(file1))
-		err2 = fmt.Errorf("spec generated does not match the template output file")
-		s.Error(err2)
+		s.Error(nil, "spec generated does not match the template output file")
 	}
 	resetConfiguration(s.T())
 }
