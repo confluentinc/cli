@@ -28,19 +28,10 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 
-	windowsTests := []CLITest{
-		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden", pluginsEnabled: true},
-	}
-
 	resetConfiguration(s.T(), true)
 
 	if runtime.GOOS != "windows" {
 		for _, tt := range tests {
-			tt.workflow = true
-			s.runIntegrationTest(tt)
-		}
-	} else {
-		for _, tt := range windowsTests {
 			tt.workflow = true
 			s.runIntegrationTest(tt)
 		}
