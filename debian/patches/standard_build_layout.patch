@@ -1,6 +1,6 @@
---- cli/Makefile	2022-07-05 11:19:01.000000000 -0700
+--- cli/Makefile	2022-07-05 13:55:01.000000000 -0700
 +++ debian/Makefile	2022-05-20 17:00:21.000000000 -0700
-@@ -1,261 +1,130 @@
+@@ -1,262 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -364,12 +364,14 @@
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
--.PHONY: test
--test: test-installer
++
 +RPM_BUILDING/%:
 +	mkdir -p $@
  
+-.PHONY: test
+-test:
+-	OVERRIDE_S3_FOLDER=cli-release-stag make test-installer
+-
 -.PHONY: generate-packaging-patch
 -generate-packaging-patch:
 -	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
