@@ -21,14 +21,14 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*schedv1.KafkaCluster, 
 	}
 
 	cluster, err = d.Client.Kafka.Describe(context.Background(), cluster)
-	return cluster, errors.CatchKafkaNotFoundError(err, clusterId)
+	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
 func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
 	// check if this is API key exists server-side
-	key, _, err := d.V2Client.GetApiKey(apiKey)
+	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return err
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 	// check if the key is for the right cluster
 	ok := key.Spec.Resource.Id == clusterID
