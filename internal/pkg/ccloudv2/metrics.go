@@ -12,6 +12,8 @@ import (
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
+const dataSchemaMatchError = "Data matches more than one schema in oneOf(QueryResponse)"
+
 type flatQueryResponse struct {
 	Data []responseDataPoint `json:"data"`
 }
@@ -63,7 +65,7 @@ func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse
 }
 
 func IsDataMatchesMoreThanOneSchemaError(err error) bool {
-	if err != nil && err.Error() == "Data matches more than one schema in oneOf(QueryResponse)" {
+	if err != nil && err.Error() == dataSchemaMatchError {
 		return true
 	}
 	return false

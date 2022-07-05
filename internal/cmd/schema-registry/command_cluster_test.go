@@ -26,6 +26,8 @@ const (
 	srClusterID = "sr"
 )
 
+var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
+
 type ClusterTestSuite struct {
 	suite.Suite
 	conf         *v1.Config
@@ -84,7 +86,7 @@ func (suite *ClusterTestSuite) SetupTest() {
 			resp := &metricsv2.QueryResponse{
 				FlatQueryResponse: &metricsv2.FlatQueryResponse{
 					Data: []metricsv2.Point{
-						{Value: 0.0, Timestamp: time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)},
+						{Value: 0.0, Timestamp: queryTime},
 					},
 				},
 			}
