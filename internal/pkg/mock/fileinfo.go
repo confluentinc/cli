@@ -12,7 +12,6 @@ type FileInfo struct {
 }
 
 func (f *FileInfo) Type() fs.FileMode {
-	//TODO implement me
 	panic("implement me")
 }
 

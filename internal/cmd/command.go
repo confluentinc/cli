@@ -52,6 +52,12 @@ type command struct {
 	*cobra.Command
 }
 
+type pluginInfo struct {
+	args []string
+	name string
+	size int
+}
+
 func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
@@ -124,47 +130,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	return &command{Command: cmd}
 }
 
-// TODO: Bug somewhere here causing Windows int-tests to not run
 func (c *command) Execute(args []string, cfg *v1.Config) error {
 	if !cfg.DisablePlugins {
-		pluginMap, err := pplugin.SearchPath()
-		if err != nil {
+		if plugin, err := c.pluginExists(args); err != nil {
 			return err
-		}
-
-		pluginArgs := make([]string, 0, len(args))
-		pluginSlice := []string{pversion.CLIName}
-		pluginSize := len(args)
-		for i, arg := range args {
-			if strings.HasPrefix(arg, "--") {
-				pluginArgs = args[i:]
-				pluginSize = i
-				break
-			}
-			arg = strings.ReplaceAll(arg, "-", "_")
-			pluginSlice = append(pluginSlice, arg)
-		}
-		pluginName := strings.Join(pluginSlice, "-")
-
-		for len(pluginName) > len(pversion.CLIName) {
-			if pluginPathList, ok := pluginMap[pluginName]; ok {
-				if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == pluginName {
-					utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
-					break
-				}
-				pluginArgs = append([]string{pluginPathList[0]}, pluginArgs...)
-				cliPlugin := &exec.Cmd{
-					Path:   pluginPathList[0],
-					Args:   pluginArgs,
-					Stdout: os.Stdout,
-					Stdin:  os.Stdin,
-					Stderr: os.Stderr,
-				}
-				return cliPlugin.Run()
-			}
-			pluginArgs = append([]string{args[pluginSize-1]}, pluginArgs...)
-			pluginSize--
-			pluginName = pluginName[:strings.LastIndex(pluginName, "-")]
+		} else if plugin.args != nil {
+			return execPlugin(plugin)
 		}
 	}
 
@@ -172,6 +143,61 @@ func (c *command) Execute(args []string, cfg *v1.Config) error {
 	err := c.Command.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 	return err
+}
+
+func (c *command) pluginExists(args []string) (pluginInfo, error) {
+	pluginMap, err := pplugin.SearchPath()
+	if err != nil {
+		return pluginInfo{}, err
+	}
+
+	potentialPlugin := buildPluginInfo(args)
+
+	for len(potentialPlugin.name) > len(pversion.CLIName) {
+		if pluginPathList, ok := pluginMap[potentialPlugin.name]; ok {
+			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin.name {
+				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+				break
+			}
+			potentialPlugin.args = append([]string{pluginPathList[0]}, potentialPlugin.args...)
+			return potentialPlugin, nil
+		}
+		potentialPlugin.args = append([]string{args[potentialPlugin.size-1]}, potentialPlugin.args...)
+		potentialPlugin.size--
+		potentialPlugin.name = potentialPlugin.name[:strings.LastIndex(potentialPlugin.name, "-")]
+	}
+	return pluginInfo{}, err
+}
+
+func buildPluginInfo(args []string) pluginInfo {
+	infoArgs := make([]string, 0, len(args))
+	name := []string{pversion.CLIName}
+	size := len(args)
+	for i, arg := range args {
+		if strings.HasPrefix(arg, "--") {
+			infoArgs = args[i:]
+			size = i
+			break
+		}
+		arg = strings.ReplaceAll(arg, "-", "_")
+		name = append(name, arg)
+	}
+	return pluginInfo{
+		args: infoArgs,
+		name: strings.Join(name, "-"),
+		size: size,
+	}
+}
+
+func execPlugin(info pluginInfo) error {
+	cliPlugin := &exec.Cmd{
+		Path:   info.args[0],
+		Args:   info.args,
+		Stdout: os.Stdout,
+		Stdin:  os.Stdin,
+		Stderr: os.Stderr,
+	}
+	return cliPlugin.Run()
 }
 
 func LoadConfig() (*v1.Config, error) {

@@ -301,9 +301,7 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New()
-	if !arePluginsEnabled {
-		cfg.DisablePlugins = true
-	}
+	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)
 }

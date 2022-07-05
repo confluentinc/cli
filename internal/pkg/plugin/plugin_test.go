@@ -1,9 +1,6 @@
 package plugin
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -11,6 +8,11 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestIsExec_Dir(t *testing.T) {
