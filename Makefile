@@ -254,7 +254,7 @@ else
 endif
 
 .PHONY: test
-test: test-prep unit-test int-test test-installer
+test: test-installer
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

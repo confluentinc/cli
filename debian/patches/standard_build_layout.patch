@@ -1,4 +1,4 @@
---- cli/Makefile	2022-06-22 13:54:59.000000000 -0700
+--- cli/Makefile	2022-07-05 11:19:01.000000000 -0700
 +++ debian/Makefile	2022-05-20 17:00:21.000000000 -0700
 @@ -1,261 +1,130 @@
 -SHELL           := /bin/bash
@@ -366,7 +366,7 @@
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
  
 -.PHONY: test
--test: test-prep unit-test int-test test-installer
+-test: test-installer
 +RPM_BUILDING/%:
 +	mkdir -p $@
  
