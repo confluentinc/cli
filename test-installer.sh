@@ -41,8 +41,6 @@ echo $output
 ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 )
 [[ "$(ls "${tmpdir}/legal/licenses" | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
-rm ~/.confluent/config.json
-
 ./bin/${binary} -h 1>/dev/null
 ./bin/${binary} -h 2>/dev/null
 
