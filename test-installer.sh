@@ -33,6 +33,7 @@ TEST_OS=$(go env GOOS)
 TEST_ARCH=$(go env GOARCH)
 [[ -z "$ARCHIVES_VERSION" ]] && VERSION_TO_TEST="LATEST" || VERSION_TO_TEST=$ARCHIVES_VERSION
 echo === TESTING installer script, VERSION: $VERSION_TO_TEST ===
+./install.sh -d ${ARCHIVES_VERSION} 2>&1
 output=$(./install.sh -d ${ARCHIVES_VERSION} 2>&1)
 tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
 echo "<install.sh output and debug log>:"
