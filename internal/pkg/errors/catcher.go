@@ -283,7 +283,6 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	if r == nil {
 		return err
 	}
-
 	body, _ := io.ReadAll(r.Body)
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
@@ -294,6 +293,42 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	}
 
 	return err
+}
+
+func CatchIdentityProviderNotFoundError(err error, r *http.Response, identityProviderId string) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		return err
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Identity Provider Not Found") {
+		errorMsg := fmt.Sprintf(IdentityProviderNotFoundErrorMsg, identityProviderId)
+		return NewErrorWithSuggestions(errorMsg, IdentityProviderNotFoundSuggestions)
+	}
+
+	return NewWrapErrorWithSuggestions(err, "Identity provider not found or access forbidden", IdentityProviderNotFoundSuggestions)
+}
+
+func CatchIdentityPoolNotFoundError(err error, r *http.Response, identityPoolId string) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		return err
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	if strings.Contains(string(body), "Identity Pool Not Found") {
+		errorMsg := fmt.Sprintf(IdentityPoolNotFoundErrorMsg, identityPoolId)
+		return NewErrorWithSuggestions(errorMsg, IdentityPoolNotFoundSuggestions)
+	}
+
+	return NewWrapErrorWithSuggestions(err, "Identity pool not found or access forbidden", IdentityPoolNotFoundSuggestions)
 }
 
 /*
