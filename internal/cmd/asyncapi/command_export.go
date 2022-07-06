@@ -197,7 +197,6 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
 	body, err := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
 	if err != nil {
-		fmt.Println(1)
 		return nil, fmt.Errorf("error in getting schema level tags: %v", err)
 	}
 	var tagsFromId []TagsFromId
