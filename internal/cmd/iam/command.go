@@ -36,7 +36,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c.AddCommand(newACLCommand(c.prerunner))
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", c.Context, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", c.Context, v1.CliLaunchDarklyClient, true, false) {
 		c.AddCommand(newPoolCommand(c.prerunner))
 		c.AddCommand(newProviderCommand(c.prerunner))
 	}

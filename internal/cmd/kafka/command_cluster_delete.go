@@ -28,9 +28,9 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	_, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
+	httpResp, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0])
+		return errors.CatchKafkaNotFoundError(err, args[0], httpResp)
 	}
 
 	if err := c.Context.RemoveKafkaClusterConfig(args[0]); err != nil {
