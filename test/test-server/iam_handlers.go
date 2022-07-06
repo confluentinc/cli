@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/gorilla/mux"
@@ -208,6 +209,154 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 				Description: req.Description,
 			}
 			err = json.NewEncoder(w).Encode(serviceAccount)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/identity-provider/{id}"
+func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodPatch:
+			var req identityproviderv2.IamV2IdentityProvider
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-55555"),
+				DisplayName: req.DisplayName,
+				Description: req.Description,
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			switch id {
+			case "op-1":
+				w.Header().Set("Content-Type", "application/json")
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+			default:
+				w.WriteHeader(http.StatusNoContent)
+			}
+		case http.MethodGet:
+			identityProvider := identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString(identityProviderResourceID),
+				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				Description: identityproviderv2.PtrString("providing identities."),
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err := json.NewEncoder(w).Encode(identityProvider)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/identity-providers"
+func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			identityProvider := identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString(identityProviderResourceID),
+				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				Description: identityproviderv2.PtrString("providing identities."),
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req identityproviderv2.IamV2IdentityProvider
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			identityProvider := &identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-55555"),
+				DisplayName: req.DisplayName,
+				Description: req.Description,
+				Issuer:      req.Issuer,
+				JwksUri:     req.JwksUri,
+			}
+			err = json.NewEncoder(w).Encode(identityProvider)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools/{id}"
+func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		id := mux.Vars(r)["id"]
+		switch r.Method {
+		case http.MethodPatch:
+			var req identityproviderv2.IamV2IdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := &identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString("op-55555"),
+				DisplayName:  req.DisplayName,
+				Description:  req.Description,
+				SubjectClaim: req.SubjectClaim,
+				Policy:       req.Policy,
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			switch id {
+			case "pool-1":
+				w.Header().Set("Content-Type", "application/json")
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+			default:
+				w.WriteHeader(http.StatusNoContent)
+			}
+		case http.MethodGet:
+			identityPool := identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:  identityproviderv2.PtrString("identity_pool"),
+				Description:  identityproviderv2.PtrString("pooling identities"),
+				SubjectClaim: identityproviderv2.PtrString("sub"),
+				Policy:       identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
+			}
+			err := json.NewEncoder(w).Encode(identityPool)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools"
+func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			identityPool := identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:  identityproviderv2.PtrString("identity_pool"),
+				Description:  identityproviderv2.PtrString("pooling identities."),
+				SubjectClaim: identityproviderv2.PtrString("sub"),
+				Policy:       identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req identityproviderv2.IamV2IdentityPool
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			identityPool := &identityproviderv2.IamV2IdentityPool{
+				Id:           identityproviderv2.PtrString("pool-55555"),
+				DisplayName:  req.DisplayName,
+				Description:  req.Description,
+				SubjectClaim: req.SubjectClaim,
+				Policy:       req.Policy,
+			}
+			err = json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)
 		}
 	}
