@@ -1,6 +1,7 @@
 package asyncapi
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -9,7 +10,7 @@ import (
 )
 
 func GetSchemaLevelTags(srEndpoint, schemaClusterId, schemaId, apiKey, apiSecret string) ([]byte, error) {
-	dataCatalogUrl := srEndpoint + "/catalog/v1/entity/type/sr_schema/name/" + schemaClusterId + ":.:" + schemaId + "/tags"
+	dataCatalogUrl := fmt.Sprintf("%s/catalog/v1/entity/type/sr_schema/name/%s:.:%s/tags", srEndpoint, schemaClusterId, schemaId)
 	req, err := http.NewRequest("GET", dataCatalogUrl, nil)
 	if err != nil {
 		return nil, err
@@ -45,6 +46,5 @@ func GetTagDefinitions(srEndpoint, tagName, apiKey, apiSecret string) ([]byte, e
 			log.CliLogger.Warnf("error getting tags: %v", err)
 		}
 	}(resp.Body)
-	body, err := ioutil.ReadAll(resp.Body)
-	return body, err
+	return ioutil.ReadAll(resp.Body)
 }
