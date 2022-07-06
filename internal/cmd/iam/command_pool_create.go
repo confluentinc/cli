@@ -18,7 +18,7 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an identity pool named "DemoIdentityPool".`,
-				Code: "confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --subject-claim sub",
+				Code: "confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --subject-claim claims.sub --policy claims.iss",
 			},
 		),
 	}
