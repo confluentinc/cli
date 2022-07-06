@@ -159,7 +159,7 @@ publish-installer:
 .PHONY: upload-linux-build-to-github
 ## upload local copy of glibc linux build to github
 upload-linux-build-to-github:
-	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m "" && \
+	gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt
