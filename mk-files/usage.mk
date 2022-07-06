@@ -20,4 +20,4 @@ update-whitelist:
 	git add . && \
 	git commit -m "update whitelist for $(BUMPED_VERSION)" && \
 	git push origin update-whitelist-$(BUMPED_VERSION) && \
-	hub pull-request -b master -m "Update whitelist for $(BUMPED_VERSION)"
+	gh pr create -B master -t "Update whitelist for $(BUMPED_VERSION)"
