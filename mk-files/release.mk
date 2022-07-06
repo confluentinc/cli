@@ -93,7 +93,6 @@ gorelease:
 .PHONY: goreleaser-patches
 goreleaser-patches:
 	make set-acls
-	make rename-archives-checksums
 
 # goreleaser does not yet support setting ACLs for cloud storage
 # We have to set `public-read` manually by copying the file in place
@@ -106,14 +105,6 @@ set-acls:
 		echo "SETTING ACLS: $${folder_path}"; \
 		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
 	done
-
-# goreleaser uploads the checksum for archives as confluent_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. confluent_v1.19.0_checksums.txt
-# Chose not to change install script to expect no-v because older versions use the format with 'v'.
-.PHONY: rename-archives-checksums
-rename-archives-checksums:
-	$(aws-authenticate); \
-	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
-	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
@@ -170,4 +161,5 @@ publish-installer:
 upload-linux-build-to-github:
 	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
+	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m "" && \
+	hub release edit --attach dist/confluent_$(VERSION_NO_V)_checksums.txt $(VERSION) -m ""
