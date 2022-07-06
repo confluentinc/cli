@@ -132,7 +132,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 
 func (c *command) Execute(args []string, cfg *v1.Config) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := c.pluginExists(args); err != nil {
+		if plugin, err := c.findPlugin(args); err != nil {
 			return err
 		} else if plugin.args != nil {
 			return execPlugin(plugin)
@@ -145,38 +145,38 @@ func (c *command) Execute(args []string, cfg *v1.Config) error {
 	return err
 }
 
-func (c *command) pluginExists(args []string) (pluginInfo, error) {
+// Determines if the arguments passed in are meant for a plugin
+func (c *command) findPlugin(args []string) (pluginInfo, error) {
 	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
 		return pluginInfo{}, err
 	}
 
-	potentialPlugin := buildPluginInfo(args)
+	plugin := buildPluginInfo(args)
 
-	for len(potentialPlugin.name) > len(pversion.CLIName) {
-		if pluginPathList, ok := pluginMap[potentialPlugin.name]; ok {
-			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == potentialPlugin.name {
+	for len(plugin.name) > len(pversion.CLIName) {
+		if pluginPathList, ok := pluginMap[plugin.name]; ok {
+			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
 				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
 				break
 			}
-			potentialPlugin.args = append([]string{pluginPathList[0]}, potentialPlugin.args...)
-			return potentialPlugin, nil
+			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
+			return plugin, nil
 		}
-		potentialPlugin.args = append([]string{args[potentialPlugin.size-1]}, potentialPlugin.args...)
-		potentialPlugin.size--
-		potentialPlugin.name = potentialPlugin.name[:strings.LastIndex(potentialPlugin.name, "-")]
+		plugin.args = append([]string{args[plugin.size-1]}, plugin.args...)
+		plugin.size--
+		plugin.name = plugin.name[:strings.LastIndex(plugin.name, "-")]
 	}
 	return pluginInfo{}, err
 }
 
+// Initializes a pluginInfo struct from command line arguments
 func buildPluginInfo(args []string) pluginInfo {
 	infoArgs := make([]string, 0, len(args))
 	name := []string{pversion.CLIName}
-	size := len(args)
 	for i, arg := range args {
 		if strings.HasPrefix(arg, "--") {
 			infoArgs = args[i:]
-			size = i
 			break
 		}
 		arg = strings.ReplaceAll(arg, "-", "_")
@@ -185,10 +185,11 @@ func buildPluginInfo(args []string) pluginInfo {
 	return pluginInfo{
 		args: infoArgs,
 		name: strings.Join(name, "-"),
-		size: size,
+		size: len(name) - 1,
 	}
 }
 
+// Runs a plugin found by the above findPlugin function
 func execPlugin(info pluginInfo) error {
 	cliPlugin := &exec.Cmd{
 		Path:   info.args[0],

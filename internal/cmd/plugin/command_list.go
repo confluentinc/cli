@@ -10,6 +10,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+//var (
+//	listFields		 = []string{"PluginName", "FilePath"}
+//	humanLabels      = []string{"Plugin Name", "File Path"}
+//	structuredLabels = []string{"plugin_name", "file_path"}
+//)
+
 func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",

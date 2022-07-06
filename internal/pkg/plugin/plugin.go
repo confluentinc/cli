@@ -18,9 +18,8 @@ func SearchPath() (map[string][]string, error) {
 	if runtime.GOOS == "windows" {
 		delimiter = ";"
 	}
-	pathSlice := strings.Split(os.Getenv("PATH"), delimiter)
 
-	for _, dir := range pathSlice {
+	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
 		if err := filepath.WalkDir(dir, pluginWalkFn(re, pluginMap)); err != nil {
 			return nil, err
 		}
