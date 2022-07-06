@@ -263,6 +263,46 @@ func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
 	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
 }
 
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithHideProcessingLogFlag() {
+	suite.testCreateKSQLWithHideProcessingLogFlag(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithHideProcessingLogFlag() {
+	suite.testCreateKSQLWithHideProcessingLogFlag(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithHideProcessingLogFlag(isApp bool) {
+	commandName := getCommandName(isApp)
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--hide-rows-in-processing-log"})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.CreateCalled())
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal(false, cfg.DetailedProcessingLog.Value)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithoutHideProcessingLogFlag() {
+	suite.testCreateKSQLWithoutHideProcessingLogFlag(true)
+}
+
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithoutHideProcessingLogFlag() {
+	suite.testCreateKSQLWithoutHideProcessingLogFlag(false)
+}
+
+func (suite *KSQLTestSuite) testCreateKSQLWithoutHideProcessingLogFlag(isApp bool) {
+	commandName := getCommandName(isApp)
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.ksqlc.CreateCalled())
+	cfg := suite.ksqlc.CreateCalls()[0].Arg1
+	req.Equal(true, cfg.DetailedProcessingLog.Value)
+}
+
 func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKey() {
 	suite.testCreateKSQLWithApiKeyMissingKey(true)
 }

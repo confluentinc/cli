@@ -3,12 +3,12 @@ package ksql
 import (
 	"context"
 	"fmt"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+	"strconv"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -27,13 +27,14 @@ type ksqlCommand struct {
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
 // in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
-	Id                string `json:"id,omitempty"`
-	Name              string `json:"name,omitempty"`
-	OutputTopicPrefix string `json:"output_topic_prefix,omitempty"`
-	KafkaClusterId    string `json:"kafka_cluster_id,omitempty"`
-	Storage           int32  `json:"storage,omitempty"`
-	Endpoint          string `json:"endpoint,omitempty"`
-	Status            string `json:"status,omitempty"`
+	Id                    string `json:"id,omitempty"`
+	Name                  string `json:"name,omitempty"`
+	OutputTopicPrefix     string `json:"output_topic_prefix,omitempty"`
+	KafkaClusterId        string `json:"kafka_cluster_id,omitempty"`
+	Storage               int32  `json:"storage,omitempty"`
+	Endpoint              string `json:"endpoint,omitempty"`
+	Status                string `json:"status,omitempty"`
+	DetailedProcessingLog string `json:"detailed_processing_log,omitempty"`
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -53,7 +54,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
+func (c *ksqlCommand) updateKsqlClusterToCLIDescribe(cluster *schedv1.KSQLCluster) *ksqlCluster {
 	status := cluster.Status.String()
 	if cluster.IsPaused {
 		status = "PAUSED"
@@ -65,15 +66,21 @@ func (c *ksqlCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksq
 			status = "PROVISIONING FAILED"
 		}
 	}
-
+	var detailedProcessingLog string
+	if cluster.DetailedProcessingLog == nil {
+		detailedProcessingLog = "true"
+	} else {
+		detailedProcessingLog = strconv.FormatBool(cluster.DetailedProcessingLog.Value)
+	}
 	return &ksqlCluster{
-		Id:                cluster.Id,
-		Name:              cluster.Name,
-		OutputTopicPrefix: cluster.OutputTopicPrefix,
-		KafkaClusterId:    cluster.KafkaClusterId,
-		Storage:           cluster.Storage,
-		Endpoint:          cluster.Endpoint,
-		Status:            status,
+		Id:                    cluster.Id,
+		Name:                  cluster.Name,
+		OutputTopicPrefix:     cluster.OutputTopicPrefix,
+		KafkaClusterId:        cluster.KafkaClusterId,
+		Storage:               cluster.Storage,
+		Endpoint:              cluster.Endpoint,
+		Status:                status,
+		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 

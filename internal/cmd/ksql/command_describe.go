@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	describeFields            = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
+	describeFields            = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status", "DetailedProcessingLog"}
 	describeHumanRenames      = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix"}
 	describeStructuredRenames = map[string]string{"KafkaClusterId": "kafka", "OutputTopicPrefix": "topic_prefix"}
 )
@@ -64,5 +64,5 @@ func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) er
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterStatus(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterToCLIDescribe(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

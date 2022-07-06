@@ -69,7 +69,7 @@ func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
 		return err
 	}
 	for _, cluster := range clusters {
-		outputWriter.AddElement(c.updateKsqlClusterStatus(cluster))
+		outputWriter.AddElement(c.updateKsqlClusterToCLIDescribe(cluster))
 	}
 	return outputWriter.Out()
 }

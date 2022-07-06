@@ -589,8 +589,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.680.0/go.mod h1:SirG6NGkX0
 github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0tD5DmCox4cTTTaq/LwEd+tCd8D7sHSMbI=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.779.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0 h1:4ZDz0vzcopeqoQHeuDjORhT24+lChUG3U9zXci20m/Q=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1249.0 h1:/Xo0WvSav2q405wrTbbNvI3Ln94CWg+YqawGEaGa68o=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1249.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0 h1:Slbt8/4WHLX9wuslvRjXqBxtCRs5tAvXWWA4T9/m7Gc=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0/go.mod h1:lj7y2SOcCqcdz3xlwfh98dMaonfT9D9YOoRvIOEnNk8=
 github.com/confluentinc/cc-structs/kafka/util v0.37.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
@@ -637,8 +637,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 h1:NCEZ7nR76RThfu4oCBguMf+IH
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6lqvR3OQ2k/VrReF75g=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
-github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0 h1:4Fh6u+0LqvlU/poWV44SIVDfnizSekH3sAYOHZbAabA=
-github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
