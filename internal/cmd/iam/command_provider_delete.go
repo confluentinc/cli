@@ -19,7 +19,7 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete identity provider op-12345.`,
-				Code: "confluent iam provider delete op-12345",
+				Code: `confluent iam provider delete "op-12345"`,
 			},
 		),
 	}

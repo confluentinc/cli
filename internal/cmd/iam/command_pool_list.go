@@ -44,7 +44,13 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, pool := range identityPools {
-		element := &identityPool{Id: *pool.Id, DisplayName: *pool.DisplayName, Description: *pool.Description, SubjectClaim: *pool.SubjectClaim, Policy: *pool.Policy}
+		element := &identityPool{
+			Id:           *pool.Id,
+			DisplayName:  *pool.DisplayName,
+			Description:  *pool.Description,
+			SubjectClaim: *pool.SubjectClaim,
+			Policy:       *pool.Policy,
+		}
 		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()

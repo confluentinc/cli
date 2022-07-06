@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// May need to add more fields depending on OAUTH team
 var poolListFields = []string{"Id", "DisplayName", "Description", "SubjectClaim", "Policy"}
 
 type identityPoolCommand struct {

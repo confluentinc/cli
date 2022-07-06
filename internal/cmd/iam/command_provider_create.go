@@ -24,13 +24,13 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	cmd.Flags().String("jwks-uri", "", "JWKS URI of the identity provider.")
-	cmd.Flags().String("issuer-uri", "", "Issuer URI of the identity provider.")
+	cmd.Flags().String("issuer-uri", "", "URI (Uniform Resource Identifier) of the identity provider issuer.")
+	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("description")
-	_ = cmd.MarkFlagRequired("jwks-uri")
 	_ = cmd.MarkFlagRequired("issuer-uri")
+	_ = cmd.MarkFlagRequired("jwks-uri")
 
 	return cmd
 }

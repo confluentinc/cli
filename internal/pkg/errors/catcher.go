@@ -310,7 +310,7 @@ func CatchIdentityProviderNotFoundError(err error, r *http.Response, identityPro
 		return NewErrorWithSuggestions(errorMsg, IdentityProviderNotFoundSuggestions)
 	}
 
-	return NewWrapErrorWithSuggestions(err, "Identity provider not found or access forbidden", IdentityProviderNotFoundSuggestions)
+	return NewWrapErrorWithSuggestions(err, "identity provider not found or access forbidden", IdentityProviderNotFoundSuggestions)
 }
 
 func CatchIdentityPoolNotFoundError(err error, r *http.Response, identityPoolId string) error {
@@ -328,7 +328,7 @@ func CatchIdentityPoolNotFoundError(err error, r *http.Response, identityPoolId 
 		return NewErrorWithSuggestions(errorMsg, IdentityPoolNotFoundSuggestions)
 	}
 
-	return NewWrapErrorWithSuggestions(err, "Identity pool not found or access forbidden", IdentityPoolNotFoundSuggestions)
+	return NewWrapErrorWithSuggestions(err, "identity pool not found or access forbidden", IdentityPoolNotFoundSuggestions)
 }
 
 /*

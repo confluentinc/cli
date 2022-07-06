@@ -20,16 +20,16 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity pool "op-123456".`,
-				Code: `confluent iam pool update op-123456 --description "Update demo identity pool information."`,
+				Code: `confluent iam pool update op-123456 --description "new description."`,
 			},
 		),
 	}
 
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
-	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	cmd.Flags().String("subject-claim", "", "Subject claim of the identity pool.")
+	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("policy", "", "Policy of the identity pool.")
+	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	cmd.Flags().String("subject-claim", "", "Subject claim of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")
@@ -38,7 +38,7 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
-	provider, err := cmd.Flags().GetString("provider")
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,12 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	description, err := cmd.Flags().GetString("description")
+	policy, err := cmd.Flags().GetString("policy")
+	if err != nil {
+		return err
+	}
+
+	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
@@ -58,15 +63,8 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	policy, err := cmd.Flags().GetString("policy")
-	if err != nil {
-		return err
-	}
-
 	identityPoolId := args[0]
-	updateIdentityPool := identityproviderv2.IamV2IdentityPool{
-		Id: &identityPoolId,
-	}
+	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: &identityPoolId}
 	if name != "" {
 		updateIdentityPool.DisplayName = &name
 	}

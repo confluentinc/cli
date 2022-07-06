@@ -26,20 +26,20 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("name", "", "Name of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
+	cmd.Flags().String("name", "", "Name of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) error {
-	name, err := cmd.Flags().GetString("name")
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
 
-	description, err := cmd.Flags().GetString("description")
+	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}

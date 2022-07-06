@@ -19,7 +19,7 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete identity pool pool-12345.`,
-				Code: "confluent iam pool delete pool-12345",
+				Code: `confluent iam pool delete "pool-12345" --provider op-12345`,
 			},
 		),
 	}
@@ -31,7 +31,6 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
-
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
