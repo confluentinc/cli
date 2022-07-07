@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -286,17 +286,9 @@ func main() {
 
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
-		{
-			CurrentContext: "No Context",
-		},
-		{
-			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: ccloudv2.Hostnames[0]}},
-			CurrentContext: "Cloud",
-		},
-		{
-			Contexts:       map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
-			CurrentContext: "On-Prem",
-		},
+		{CurrentContext: "No Context"},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &orgv1.Organization{}}}}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
 	code := 0
