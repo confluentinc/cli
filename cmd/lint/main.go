@@ -251,6 +251,7 @@ var vocabWords = []string{
 	"restapi",
 	"scala",
 	"springboot",
+	"detailedProcessinglog",
 }
 
 var (
