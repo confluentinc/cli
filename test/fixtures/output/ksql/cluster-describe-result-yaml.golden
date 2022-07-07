@@ -1,4 +1,4 @@
-detailed_processing_log: "true"
+Detailed_Processing_Log: "true"
 endpoint: SASL_SSL://ksql-endpoint
 id: lksqlc-12345
 kafka: lkc-abcde

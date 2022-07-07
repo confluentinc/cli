@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	listFields           = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status"}
-	listHumanLabels      = []string{"ID", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status"}
-	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status"}
+	listFields           = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status", "DetailedProcessingLog"}
+	listHumanLabels      = []string{"ID", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status", "Detailed Processing Log"}
+	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status", "Detailed_Processing_Log"}
 )
 
 func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {

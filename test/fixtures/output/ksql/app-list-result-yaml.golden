@@ -1,12 +1,14 @@
 In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
-- endpoint: SASL_SSL://ksql-endpoint
+- Detailed_Processing_Log: "true"
+  endpoint: SASL_SSL://ksql-endpoint
   id: lksqlc-ksql5
   kafka: lkc-qwert
   name: account ksql
   status: PROVISIONING
   storage: "101"
   topic_prefix: pksqlc-abcde
-- endpoint: SASL_SSL://ksql-endpoint
+- Detailed_Processing_Log: "true"
+  endpoint: SASL_SSL://ksql-endpoint
   id: lksqlc-woooo
   kafka: lkc-zxcvb
   name: kay cee queue elle
