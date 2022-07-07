@@ -212,6 +212,7 @@ var vocabWords = []string{
 	"kafka",
 	"ksql",
 	"lifecycle",
+	"lkc",
 	"lz4",
 	"mds",
 	"netrc",
