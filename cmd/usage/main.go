@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"sort"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -58,12 +59,11 @@ func buildWhitelist() []string {
 		whitelist.Add(arch)
 	}
 
-	// Certain commands and flags are only present in Confluent Cloud or Confluent Platform.
-	// Consider all contexts when compiling the whitelist.
+	// Compile a whitelist for all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
-		{CurrentContext: "A"},
-		{CurrentContext: "B", Contexts: map[string]*v1.Context{"B": {PlatformName: ccloudv2.Hostnames[0]}}},
-		{CurrentContext: "C", Contexts: map[string]*v1.Context{"C": {PlatformName: "https://example.com"}}},
+		{CurrentContext: "No Context"},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &orgv1.Organization{}}}}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 	for _, cfg := range configs {
 		cmd := pcmd.NewConfluentCommand(cfg, new(pversion.Version), false)
