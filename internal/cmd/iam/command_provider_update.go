@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
@@ -9,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {

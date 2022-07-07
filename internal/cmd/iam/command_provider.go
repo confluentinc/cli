@@ -1,8 +1,9 @@
 package iam
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var providerListFields = []string{"Id", "DisplayName", "Description", "Issuer", "JwksUri"}

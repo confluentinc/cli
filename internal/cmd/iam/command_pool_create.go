@@ -1,12 +1,14 @@
 package iam
 
 import (
+	"github.com/spf13/cobra"
+
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
@@ -71,7 +73,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeIdentityPool := &identityPool{
+	identityPool := &identityPool{
 		Id:           *resp.Id,
 		DisplayName:  *resp.DisplayName,
 		Description:  *resp.Description,
@@ -79,5 +81,5 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		Policy:       *resp.Policy,
 	}
 
-	return output.DescribeObject(cmd, describeIdentityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	return output.DescribeObject(cmd, identityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

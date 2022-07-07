@@ -1,8 +1,9 @@
 package iam
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var poolListFields = []string{"Id", "DisplayName", "Description", "SubjectClaim", "Policy"}
@@ -11,7 +12,6 @@ type identityPoolCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-// May need to add more fields depending on OAUTH team
 type identityPool struct {
 	Id           string
 	DisplayName  string

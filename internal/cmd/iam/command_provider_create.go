@@ -1,12 +1,14 @@
 package iam
 
 import (
+	"github.com/spf13/cobra"
+
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
@@ -53,18 +55,18 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	createIdentityProvider := identityproviderv2.IamV2IdentityProvider{
+	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
 		DisplayName: identityproviderv2.PtrString(name),
 		Description: identityproviderv2.PtrString(description),
 		Issuer:      identityproviderv2.PtrString(issuer),
 		JwksUri:     identityproviderv2.PtrString(jwksuri),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityProvider(createIdentityProvider)
+	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeIdentityProvider := &identityProvider{
+	identityProvider := &identityProvider{
 		Id:          *resp.Id,
 		DisplayName: *resp.DisplayName,
 		Description: *resp.Description,
@@ -72,5 +74,5 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		JwksUri:     *resp.JwksUri,
 	}
 
-	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	return output.DescribeObject(cmd, identityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }
