@@ -20,16 +20,6 @@ type row struct {
 	filePath   string
 }
 
-type humanRow struct {
-	pluginName string
-	filePath   string
-}
-
-type structuredRow struct {
-	pluginName string
-	filePath   string
-}
-
 func newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -58,7 +48,9 @@ func list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	printTable(cmd, pluginList)
+	if err := printTable(cmd, pluginList); err != nil {
+		return err
+	}
 	for _, path := range overshadowedList {
 		utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin\n", path)
 	}
@@ -66,25 +58,16 @@ func list(cmd *cobra.Command, _ []string) error {
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {
-	output, _ := cmd.Flags().GetString("output")
-
 	w, err := poutput.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, cmd.OutOrStdout())
 	if err != nil {
 		return err
 	}
 
-	for _, row := range rows {
-		if output == poutput.Human.String() {
-			w.AddElement(&humanRow{
-				pluginName: row.pluginName,
-				filePath:   row.filePath,
-			})
-		} else {
-			w.AddElement(&structuredRow{
-				pluginName: row.pluginName,
-				filePath:   row.filePath,
-			})
-		}
+	for _, r := range rows {
+		w.AddElement(&row{
+			pluginName: r.pluginName,
+			filePath:   r.filePath,
+		})
 	}
 
 	w.StableSort()

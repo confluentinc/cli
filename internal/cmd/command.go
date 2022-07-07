@@ -134,7 +134,7 @@ func (c *command) Execute(args []string, cfg *v1.Config) error {
 	if !cfg.DisablePlugins {
 		if plugin, err := c.findPlugin(args); err != nil {
 			return err
-		} else if plugin.args != nil {
+		} else if plugin != nil {
 			return execPlugin(plugin)
 		}
 	}
@@ -145,11 +145,11 @@ func (c *command) Execute(args []string, cfg *v1.Config) error {
 	return err
 }
 
-// Determines if the arguments passed in are meant for a plugin
-func (c *command) findPlugin(args []string) (pluginInfo, error) {
+// findPlugin determines if the arguments passed in are meant for a plugin
+func (c *command) findPlugin(args []string) (*pluginInfo, error) {
 	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
-		return pluginInfo{}, err
+		return nil, err
 	}
 
 	plugin := buildPluginInfo(args)
@@ -161,16 +161,16 @@ func (c *command) findPlugin(args []string) (pluginInfo, error) {
 				break
 			}
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
-			return plugin, nil
+			return &plugin, nil
 		}
 		plugin.args = append([]string{args[plugin.size-1]}, plugin.args...)
 		plugin.size--
 		plugin.name = plugin.name[:strings.LastIndex(plugin.name, "-")]
 	}
-	return pluginInfo{}, err
+	return nil, err
 }
 
-// Initializes a pluginInfo struct from command line arguments
+// buildPluginInfo initializes a pluginInfo struct from command line arguments
 func buildPluginInfo(args []string) pluginInfo {
 	infoArgs := make([]string, 0, len(args))
 	name := []string{pversion.CLIName}
@@ -189,16 +189,16 @@ func buildPluginInfo(args []string) pluginInfo {
 	}
 }
 
-// Runs a plugin found by the above findPlugin function
-func execPlugin(info pluginInfo) error {
-	cliPlugin := &exec.Cmd{
+// execPlugin runs a plugin found by the above findPlugin function
+func execPlugin(info *pluginInfo) error {
+	plugin := &exec.Cmd{
 		Path:   info.args[0],
 		Args:   info.args,
 		Stdout: os.Stdout,
 		Stdin:  os.Stdin,
 		Stderr: os.Stderr,
 	}
-	return cliPlugin.Run()
+	return plugin.Run()
 }
 
 func LoadConfig() (*v1.Config, error) {
