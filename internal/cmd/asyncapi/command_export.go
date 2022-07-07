@@ -174,7 +174,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 					return err
 				}
 				messageEntity := buildMessageEntity(topic.Name, contentType, tags, example, producer, *bindings)
-				//Add message Entity to Map of messages
+				// Add message entity to map of messages
 				messages[strcase.ToCamel(topic.Name)+"Message"] = spec.Message{OneOf1: &spec.MessageOneOf1{MessageEntity: messageEntity}}
 				reflector, err = addChannel(reflector, topic.Name, *bindings, mapOfMessageCompat)
 				if err != nil {
@@ -197,7 +197,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
 	body, err := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
 	if err != nil {
-		return nil, fmt.Errorf("error in getting schema level tags: %v", err)
+		return nil, fmt.Errorf("failed to get schema level tags: %v", err)
 	}
 	var tagsFromId []TagsFromId
 	err = json.Unmarshal(body, &tagsFromId)
@@ -229,7 +229,7 @@ func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
-		return nil, fmt.Errorf("no example received for topic \"%s\": %v\n", topicName, err)
+		return nil, fmt.Errorf(`no example received for topic "%s": %v`, topicName, err)
 	}
 	var example interface{}
 	val := string(message.Value)
