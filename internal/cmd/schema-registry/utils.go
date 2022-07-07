@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -51,7 +52,9 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 			return internalName, nil
 		}
 	}
-	return "", fmt.Errorf(errors.SRInvalidPackageType, inputPackageDisplayName)
+
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageType, inputPackageDisplayName),
+		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
 }
 
 func getAllPackageDisplayNames() []string {
@@ -63,16 +66,13 @@ func getAllPackageDisplayNames() []string {
 	return packageDisplayNames
 }
 
-func addPackageFlag(cmd *cobra.Command) {
+func getCommaDelimitedPackagesString() string {
 	packageDisplayNames := getAllPackageDisplayNames()
-	numOfPackages := len(packageDisplayNames)
+	packagesStr := utils.ArrayToCommaDelimitedString(packageDisplayNames)
 
-	var flagDescriptionStr strings.Builder
-	for _, displayName := range packageDisplayNames[:numOfPackages-1] {
-		flagDescriptionStr.WriteString(fmt.Sprintf("\"%s\", ", displayName))
-	}
-	flagDescriptionStr.WriteString(fmt.Sprintf("or \"%s\"", packageDisplayNames[numOfPackages-1]))
+	return packagesStr
+}
 
-	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of "+
-		"Stream Governance package as %s.", flagDescriptionStr.String()))
+func addPackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }
