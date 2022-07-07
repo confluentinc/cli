@@ -78,9 +78,9 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		updateIdentityPool.Policy = &policy
 	}
 
-	resp, httpresp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
+	resp, httpResp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
-		return errors.CatchIdentityPoolNotFoundError(err, httpresp, identityPoolId)
+		return errors.CatchIdentityPoolNotFoundError(err, httpResp, identityPoolId)
 	}
 
 	describeIdentityPool := &identityPool{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, SubjectClaim: *resp.SubjectClaim, Policy: *resp.Policy}

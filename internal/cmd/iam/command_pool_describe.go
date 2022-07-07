@@ -11,7 +11,6 @@ var (
 	poolHumanLabelMap = map[string]string{
 		"Id":           "ID",
 		"DisplayName":  "Display Name",
-		"Description":  "Description",
 		"SubjectClaim": "Subject Claim",
 		"Policy":       "Policy",
 	}
@@ -33,9 +32,9 @@ func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
-	_ = cmd.MarkFlagRequired("provider")
 	pcmd.AddOutputFlag(cmd)
 
+	_ = cmd.MarkFlagRequired("provider")
 	return cmd
 }
 

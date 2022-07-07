@@ -36,8 +36,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = c.V2Client.DeleteIdentityPool(args[0], provider)
-	if err != nil {
+	if _, err = c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
 		return errors.Errorf(`failed to delete identity pool "%s": %v`, args[0], err)
 	}
 

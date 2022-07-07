@@ -37,8 +37,6 @@ func (c *Client) identityPoolApiContext() context.Context {
 	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
 }
 
-// iam identity provider api calls
-
 func (c *Client) CreateIdentityProvider(identityProvider identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
 	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProvider(c.identityProviderApiContext()).IamV2IdentityProvider(identityProvider)
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProviderExecute(req)
@@ -60,7 +58,7 @@ func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityP
 }
 
 func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProvider, error) {
-	identityProviders := make([]identityproviderv2.IamV2IdentityProvider, 0)
+	var identityProviders []identityproviderv2.IamV2IdentityProvider
 
 	collectedAllIdentityProviders := false
 	pageToken := ""
@@ -89,8 +87,6 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.ListIamV2IdentityProvidersExecute(req)
 }
 
-// iam identity pool api calls
-
 func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
 	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool)
 	return c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
@@ -112,7 +108,7 @@ func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2Identit
 }
 
 func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV2IdentityPool, error) {
-	identityPools := make([]identityproviderv2.IamV2IdentityPool, 0)
+	var identityPools []identityproviderv2.IamV2IdentityPool
 
 	collectedAllIdentityPools := false
 	pageToken := ""

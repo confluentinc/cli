@@ -11,8 +11,6 @@ var (
 	providerHumanLabelMap = map[string]string{
 		"Id":          "ID",
 		"DisplayName": "Display Name",
-		"Description": "Description",
-		"Issuer":      "Issuer",
 		"JwksUri":     "JWKS URI",
 	}
 	providerStructuredLabelMap = map[string]string{

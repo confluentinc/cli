@@ -55,9 +55,9 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		update.Description = &description
 	}
 
-	resp, httpresp, err := c.V2Client.UpdateIdentityProvider(update)
+	resp, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		return errors.CatchIdentityProviderNotFoundError(err, httpresp, identityProviderId)
+		return errors.CatchIdentityProviderNotFoundError(err, httpResp, identityProviderId)
 	}
 
 	describeIdentityProvider := &identityProvider{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, Issuer: *resp.Issuer, JwksUri: *resp.JwksUri}
