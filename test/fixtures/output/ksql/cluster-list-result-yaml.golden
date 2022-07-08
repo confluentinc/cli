@@ -1,4 +1,4 @@
-- Detailed_Processing_Log: "true"
+- detailed_processing_log: "true"
   endpoint: SASL_SSL://ksql-endpoint
   id: lksqlc-ksql5
   kafka: lkc-qwert
@@ -6,7 +6,7 @@
   status: PROVISIONING
   storage: "101"
   topic_prefix: pksqlc-abcde
-- Detailed_Processing_Log: "true"
+- detailed_processing_log: "true"
   endpoint: SASL_SSL://ksql-endpoint
   id: lksqlc-woooo
   kafka: lkc-zxcvb

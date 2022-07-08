@@ -198,6 +198,7 @@ var vocabWords = []string{
 	"decrypt",
 	"deserializer",
 	"deserializers",
+	"detailedProcessinglog",
 	"env",
 	"eu",
 	"failover",
@@ -251,7 +252,6 @@ var vocabWords = []string{
 	"restapi",
 	"scala",
 	"springboot",
-	"detailedProcessinglog",
 }
 
 var (
