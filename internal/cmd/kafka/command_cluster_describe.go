@@ -119,9 +119,9 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, _, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, lkc)
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
 	return c.outputKafkaClusterDescriptionWithKAPI(cmd, &cluster, all)
@@ -242,7 +242,7 @@ func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
 	kafkaCluster, err := c.Client.Kafka.Describe(context.Background(), req)
 	if err != nil {
-		return "", errors.CatchKafkaNotFoundError(err, lkc)
+		return "", errors.CatchKafkaNotFoundError(err, lkc, nil)
 	}
 	return kafkaCluster.ApiEndpoint, nil
 }

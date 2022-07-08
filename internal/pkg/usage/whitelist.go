@@ -12,6 +12,9 @@ func WhitelistCommandsAndFlags(cmd *cobra.Command, whitelist set.Set) {
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		whitelist.Add(flag.Name)
 	})
+	cmd.PersistentFlags().VisitAll(func(flag *pflag.Flag) {
+		whitelist.Add(flag.Name)
+	})
 
 	for _, subcommand := range cmd.Commands() {
 		WhitelistCommandsAndFlags(subcommand, whitelist)

@@ -562,7 +562,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		default:
-			err := writeResourceNotFoundError(w)
+			err := writeV1ResourceNotFoundError(w)
 			require.NoError(t, err)
 		}
 	}

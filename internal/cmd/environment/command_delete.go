@@ -21,9 +21,9 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	_, err := c.V2Client.DeleteOrgEnvironment(id)
+	httpResp, err := c.V2Client.DeleteOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchEnvironmentNotFoundError(err, id)
+		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
