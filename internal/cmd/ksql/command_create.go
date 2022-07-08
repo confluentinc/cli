@@ -37,7 +37,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
-	cmd.Flags().Bool("hide-rows-in-processing-log", false, "Hide the rows in the processing log (Default: show the rows in processing log)")
+	cmd.Flags().Bool("hide-rows-in-processing-log", false, "Hide the rows in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
