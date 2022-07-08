@@ -66,10 +66,8 @@ func (c *ksqlCommand) updateKsqlClusterToCLIDescribe(cluster *schedv1.KSQLCluste
 			status = "PROVISIONING FAILED"
 		}
 	}
-	var detailedProcessingLog string
-	if cluster.DetailedProcessingLog == nil {
-		detailedProcessingLog = "true"
-	} else {
+	detailedProcessingLog := "true"
+	if cluster.DetailedProcessingLog != nil {
 		detailedProcessingLog = strconv.FormatBool(cluster.DetailedProcessingLog.Value)
 	}
 	return &ksqlCluster{
