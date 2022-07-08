@@ -80,11 +80,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	if hideRowsInProcessingLog {
-		cfg.DetailedProcessingLog = &types.BoolValue{Value: false}
-	} else { // maintain default behaviour
-		cfg.DetailedProcessingLog = &types.BoolValue{Value: true}
-	}
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !hideRowsInProcessingLog}
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
