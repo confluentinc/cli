@@ -23,16 +23,6 @@ func (c *Client) identityProviderApiContext() context.Context {
 	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
 }
 
-func newIdentityPoolClient(baseURL, userAgent string, isTest bool) *identityproviderv2.APIClient {
-	cfg := identityproviderv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Identity Pool"}}
-	cfg.UserAgent = userAgent
-
-	return identityproviderv2.NewAPIClient(cfg)
-}
-
 func (c *Client) identityPoolApiContext() context.Context {
 	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
 }
@@ -88,23 +78,23 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 }
 
 func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool)
-	return c.IdentityPoolClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool)
+	return c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
 }
 
 func (c *Client) DeleteIdentityPool(id, providerId string) (*http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
-	return c.IdentityPoolClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPoolExecute(req)
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
+	return c.IdentityProviderClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPoolExecute(req)
 }
 
 func (c *Client) GetIdentityPool(id, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.GetIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
-	return c.IdentityPoolClient.IdentityPoolsIamV2Api.GetIamV2IdentityPoolExecute(req)
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.GetIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
+	return c.IdentityProviderClient.IdentityPoolsIamV2Api.GetIamV2IdentityPoolExecute(req)
 }
 
 func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPool(c.identityPoolApiContext(), providerId, *identityPool.Id).IamV2IdentityPool(identityPool)
-	return c.IdentityPoolClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPoolExecute(req)
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPool(c.identityPoolApiContext(), providerId, *identityPool.Id).IamV2IdentityPool(identityPool)
+	return c.IdentityProviderClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPoolExecute(req)
 }
 
 func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV2IdentityPool, error) {
@@ -130,9 +120,9 @@ func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV
 }
 
 func (c *Client) executeListIdentityPools(providerID string, pageToken string) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
-	req := c.IdentityPoolClient.IdentityPoolsIamV2Api.ListIamV2IdentityPools(c.identityPoolApiContext(), providerID).PageSize(ccloudV2ListPageSize)
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPools(c.identityPoolApiContext(), providerID).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.IdentityPoolClient.IdentityPoolsIamV2Api.ListIamV2IdentityPoolsExecute(req)
+	return c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPoolsExecute(req)
 }

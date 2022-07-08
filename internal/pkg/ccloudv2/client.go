@@ -22,7 +22,6 @@ type Client struct {
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
-	IdentityPoolClient     *identityproviderv2.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
@@ -37,7 +36,6 @@ func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client
 		ConnectClient:          newConnectClient(baseURL, userAgent, isTest),
 		IamClient:              newIamClient(baseURL, userAgent, isTest),
 		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
-		IdentityPoolClient:     newIdentityPoolClient(baseURL, userAgent, isTest),
 		MetricsClient:          newMetricsClient(userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
