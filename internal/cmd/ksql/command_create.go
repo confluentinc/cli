@@ -3,10 +3,10 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
+	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -37,6 +37,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
+	cmd.Flags().Bool("hide-rows-in-processing-log", false, "Hide the rows in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -62,7 +63,6 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 	if err != nil {
 		return err
 	}
-
 	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return err
@@ -74,6 +74,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	hideRowsInProcessingLog, err := cmd.Flags().GetBool("hide-rows-in-processing-log")
+	if err != nil {
+		return err
+	}
+
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !hideRowsInProcessingLog}
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
@@ -119,5 +126,5 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterToCLIDescribe(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
