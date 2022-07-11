@@ -23,15 +23,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
 	*pcmd.CLICommand
 	userAgent     string
 	clientFactory pauth.CCloudClientFactory
+	isTest        bool
 }
 
-func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *cobra.Command {
+func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
@@ -42,6 +44,7 @@ func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.C
 		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
+		isTest:        isTest,
 	}
 	cmd.RunE = c.cloudSignupRunE
 
@@ -219,7 +222,13 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 	default:
 		ldClient = v1.CcloudProdLaunchDarklyClient
 	}
-	freeTrialPromoCode := launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
+
+	var freeTrialPromoCode string
+	if c.isTest {
+		freeTrialPromoCode = testserver.PromoTestCode
+	} else {
+		freeTrialPromoCode = launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
+	}
 
 	// try to find free trial promo code
 	hasFreeTrialCode := false
