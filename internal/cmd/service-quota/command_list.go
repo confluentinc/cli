@@ -3,6 +3,7 @@ package servicequota
 import (
 	"context"
 	"net/url"
+	"strconv"
 
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 
@@ -17,7 +18,9 @@ type quotaValue struct {
 	DisplayName  string
 	Scope        string
 	AppliedLimit int32
-	Usage 		 int32
+	//The usage field is actually an integer, but this field is not a required one.
+	//Set to an empty string if it does not exist.
+	Usage 		 string
 	Organization string
 	Environment  string
 	KafkaCluster string
@@ -113,11 +116,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			Scope:        *quota.Scope,
 			AppliedLimit: *quota.AppliedLimit,
 		}
+
 		if quota.Usage != nil {
-			outQt.Usage = *quota.Usage
-		} else {
-			outQt.Usage = int32ToPtr
+			outQt.Usage = strconv.Itoa(int(*quota.Usage))
 		}
+
 		if quota.Organization != nil {
 			outQt.Organization = quota.Organization.Id
 		}
