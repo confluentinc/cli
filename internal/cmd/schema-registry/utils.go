@@ -6,6 +6,10 @@ import (
 	"strings"
 
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -41,16 +45,16 @@ func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
 
-func getPackageInternalName(packageDisplayName string) (packageInternalName string, isValid bool) {
-	packageDisplayName = strings.ToLower(packageDisplayName)
-	for k, v := range packageDisplayNameMapping {
-		if v == packageDisplayName {
-			packageInternalName = k
-			isValid = true
-			return
+func getPackageInternalName(inputPackageDisplayName string) (string, error) {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName, nil
 		}
 	}
-	return
+
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageType, inputPackageDisplayName),
+		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
 }
 
 func getAllPackageDisplayNames() []string {
@@ -60,4 +64,15 @@ func getAllPackageDisplayNames() []string {
 	}
 
 	return packageDisplayNames
+}
+
+func getCommaDelimitedPackagesString() string {
+	packageDisplayNames := getAllPackageDisplayNames()
+	packagesStr := utils.ArrayToCommaDelimitedString(packageDisplayNames)
+
+	return packagesStr
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

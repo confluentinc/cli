@@ -28,7 +28,7 @@ func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
 		),
 	}
 
-	pcmd.AddStreamGovernancePackageFlag(cmd, getAllPackageDisplayNames())
+	addPackageFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,9 +48,9 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	packageInternalName, isValid := getPackageInternalName(packageDisplayName)
-	if !isValid {
-		return errors.New(fmt.Sprintf(errors.SRInvalidPackageType, packageDisplayName))
+	packageInternalName, err := getPackageInternalName(packageDisplayName)
+	if err != nil {
+		return err
 	}
 
 	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
