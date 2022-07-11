@@ -33,9 +33,10 @@ func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	return output.DescribeObject(cmd, &serviceAccount{
+	saOut := &serviceAccount{
 		ResourceId:  *sa.Id,
 		Name:		 *sa.DisplayName,
 		Description: *sa.Description,
-	}, describeFields, describeHumanRenames, describeStructuredRenames)
+	}
+	return output.DescribeObject(cmd, saOut, describeFields, describeHumanRenames, describeStructuredRenames)
 }
