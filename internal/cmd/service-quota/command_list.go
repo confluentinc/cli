@@ -30,7 +30,7 @@ type quotaValue struct {
 
 var (
 	listFields           = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Usage", "Organization", "Environment", "Network", "KafkaCluster", "User"}
-	listHumanLabels      = []string{"Quota Code", "Display Name", "Scope", "Applied Limit", "Usage","Organization", "Environment", "Network", "Kafka Cluster", "User"}
+	listHumanLabels      = []string{"Quota Code", "Display Name", "Scope", "Applied Limit", "Usage", "Organization", "Environment", "Network", "Kafka Cluster", "User"}
 	listStructuredLabels = []string{"quota_code", "display_name", "scope", "applied_limit", "usage", "organization", "environment", "network", "kafka_cluster", "user"}
 )
 
