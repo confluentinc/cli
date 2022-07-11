@@ -23,10 +23,10 @@ func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error {
-	if resource.LookupType(args[0]) != resource.ServiceAccount {
+	serviceAccountId := args[0]
+	if resource.LookupType(serviceAccountId) != resource.ServiceAccount {
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
-	serviceAccountId := args[0]
 
 	sa, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
 	if err != nil {
