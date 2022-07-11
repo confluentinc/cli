@@ -9,12 +9,13 @@ import (
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	"github.com/google/uuid"
+	"github.com/hashicorp/go-version"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/google/uuid"
-	"github.com/hashicorp/go-version"
 )
 
 const (
