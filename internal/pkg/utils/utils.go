@@ -2,9 +2,11 @@ package utils
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/confluentinc/properties"
@@ -147,4 +149,23 @@ func CropString(s string, n int) string {
 func FormatUnixTime(timeMs int64) string {
 	time := time.Unix(0, timeMs*int64(time.Millisecond))
 	return time.UTC().Format("2006-01-02 15:04:05 MST")
+}
+
+func ArrayToCommaDelimitedString(arr []string) string {
+	size := len(arr)
+	if size == 0 {
+		return ""
+	}
+
+	var delimitedStr strings.Builder
+	for _, v := range arr[:size-1] {
+		delimitedStr.WriteString(fmt.Sprintf(`"%s", `, v))
+	}
+	if size == 1 {
+		delimitedStr.WriteString(fmt.Sprintf(`"%s"`, arr[size-1]))
+	} else {
+		delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
+	}
+
+	return delimitedStr.String()
 }
