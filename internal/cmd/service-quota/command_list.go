@@ -20,7 +20,7 @@ type quotaValue struct {
 	AppliedLimit int32
 	//The usage field is actually an integer, but this field is not a required one.
 	//Set to an empty string if it does not exist.
-	Usage 		 string
+	Usage        string
 	Organization string
 	Environment  string
 	KafkaCluster string
