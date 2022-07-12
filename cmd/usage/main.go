@@ -59,6 +59,8 @@ func buildWhitelist() []string {
 		whitelist.Add(arch)
 	}
 
+	whitelist.Add("__complete")
+
 	// Compile a whitelist for all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{CurrentContext: "No Context"},
