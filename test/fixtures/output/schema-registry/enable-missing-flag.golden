@@ -8,7 +8,7 @@ Enable Schema Registry, using Google Cloud Platform in the US with the "advanced
   $ confluent schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345
 
 Flags:
-      --cloud string         REQUIRED: Cloud provider (aws, azure, gcp).
+      --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --geo string           REQUIRED: Specify the geo as "us", "eu", or "apac".
       --package string       Specify the type of Stream Governance package as "essentials" or "advanced". (default "essentials")
       --context string       CLI context name.
