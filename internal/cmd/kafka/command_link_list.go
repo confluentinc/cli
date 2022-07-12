@@ -38,6 +38,7 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List previously created cluster links.",
+		Long: "List previously created cluster links if the provided cluster is a destination cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
