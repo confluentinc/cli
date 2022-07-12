@@ -276,3 +276,31 @@ func TestCropString(t *testing.T) {
 		require.Equal(t, tt.cropped, CropString(tt.s, tt.n))
 	}
 }
+
+func TestArrayToCommaDelimitedString(t *testing.T) {
+	tests := []struct {
+		input    []string
+		expected string
+	}{
+		{
+			input:    []string{},
+			expected: "",
+		},
+		{
+			input:    []string{"val1"},
+			expected: `"val1"`,
+		},
+		{
+			input:    []string{"val1", "val2"},
+			expected: `"val1" or "val2"`,
+		},
+		{
+			input:    []string{"val1", "val2", "val3"},
+			expected: `"val1", "val2", or "val3"`,
+		},
+	}
+	for _, tt := range tests {
+		out := ArrayToCommaDelimitedString(tt.input)
+		require.Equal(t, tt.expected, out)
+	}
+}
