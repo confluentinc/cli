@@ -291,6 +291,10 @@ func TestArrayToCommaDelimitedString(t *testing.T) {
 			expected: `"val1"`,
 		},
 		{
+			input:    []string{"val1", "val2"},
+			expected: `"val1" or "val2"`,
+		},
+		{
 			input:    []string{"val1", "val2", "val3"},
 			expected: `"val1", "val2", or "val3"`,
 		},

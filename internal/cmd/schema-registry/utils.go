@@ -68,9 +68,7 @@ func getAllPackageDisplayNames() []string {
 
 func getCommaDelimitedPackagesString() string {
 	packageDisplayNames := getAllPackageDisplayNames()
-	packagesStr := utils.ArrayToCommaDelimitedString(packageDisplayNames)
-
-	return packagesStr
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
 }
 
 func addPackageFlag(cmd *cobra.Command) {

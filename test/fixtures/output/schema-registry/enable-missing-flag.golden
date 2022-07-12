@@ -9,8 +9,8 @@ Enable Schema Registry, using Google Cloud Platform in the US with the "advanced
 
 Flags:
       --cloud string         REQUIRED: Cloud provider (aws, azure, gcp).
-      --geo string           REQUIRED: Either 'us', 'eu', or 'apac'.
-      --package string       Specify the type of Stream Governance package as "essentials", or "advanced". (default "essentials")
+      --geo string           REQUIRED: Specify the geo as "us", "eu", or "apac".
+      --package string       Specify the type of Stream Governance package as "essentials" or "advanced". (default "essentials")
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

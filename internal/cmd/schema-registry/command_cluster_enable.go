@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -39,7 +40,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
+	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString([]string{"us", "eu", "apac"})))
 	addPackageFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
