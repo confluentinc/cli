@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster enable --cloud aws --geo us",
+			args:        "schema-registry cluster enable --geo us --package essentials",
 			fixture:     "schema-registry/enable-missing-flag.golden",
 			wantErrCode: 1,
 		},
