@@ -49,7 +49,6 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
-	_ = cmd.MarkFlagRequired("package")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return []string{"apac", "eu", "us"} })
 
