@@ -224,6 +224,19 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestIAMUserUpdate() {
+	tests := []CLITest{
+		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
+		{args: "iam user update u-1 --full-name Test", fixture: "iam/user/update-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	tests := []CLITest{
 		{args: "iam user invitation create miles@confluent.io", fixture: "iam/user/invite.golden"},
