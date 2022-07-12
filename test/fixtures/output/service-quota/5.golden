@@ -8,6 +8,7 @@
     "organization": "org-123",
     "quota_code": "quota_a",
     "scope": "kafka_cluster",
+    "usage": "10",
     "user": ""
   },
   {
@@ -19,6 +20,7 @@
     "organization": "org-123",
     "quota_code": "quota_a",
     "scope": "kafka_cluster",
+    "usage": "11",
     "user": ""
   }
 ]
