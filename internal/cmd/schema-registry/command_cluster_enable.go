@@ -32,14 +32,15 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Enable Schema Registry, using Google Cloud Platform in the US.",
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", version.CLIName),
+				Text: `Enable Schema Registry, using "Google Cloud Platform" in the US with "advanced" package for environment "env-12345"`,
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345", version.CLIName),
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
+	pcmd.AddStreamGovernancePackageFlag(cmd, getAllPackageDisplayNames())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,6 +49,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
+	_ = cmd.MarkFlagRequired("package")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return []string{"apac", "eu", "us"} })
 
@@ -74,11 +76,22 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	packageDisplayName, err := cmd.Flags().GetString("package")
+	if err != nil {
+		return err
+	}
+
+	packageInternalName, isValid := getPackageInternalName(packageDisplayName)
+	if !isValid {
+		return errors.New(fmt.Sprintf(errors.SRInvalidPackageType, packageDisplayName))
+	}
+
 	// Build the SR instance
 	clusterConfig := &schedv1.SchemaRegistryClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Location:        location,
 		ServiceProvider: serviceProvider,
+		Package:         packageInternalName,
 		// Name is a special string that everyone expects. Originally, this field was added to support
 		// multiple SR instances, but for now there's a contract between our services that it will be
 		// this hardcoded string constant
@@ -88,12 +101,17 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		cluster, getExistingErr := c.Context.SchemaRegistryCluster(cmd)
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
 		}
-		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+
+		existingClusterOutput := &v1.SchemaRegistryCluster{
+			Id:                     existingCluster.Id,
+			SchemaRegistryEndpoint: existingCluster.Endpoint,
+		}
+		_ = output.DescribeObject(cmd, existingClusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
 	} else {
 		v2Cluster := &v1.SchemaRegistryCluster{
 			Id:                     newCluster.Id,
