@@ -3,8 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: e1-standard-2
-    os_image: ubuntu2004
+    type: s1-prod-ubuntu20-04-amd64-1
 
 auto_cancel:
   running:
@@ -83,8 +82,31 @@ blocks:
     task:
       agent:
         machine:
-          type: a1-standard-4
-          os_image: macos-xcode13
+          type: s1-prod-macos
+      prologue:
+        commands:
+          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
+          - tar -xzf go1.17.6.darwin-amd64.tar.gz
+          - checkout
+          - export "PATH=$(go env GOPATH)/bin:${PATH}"
+          - cache restore $(checksum go.sum)
+      jobs:
+        - name: Unit Tests
+          commands:
+            - make unit-test
+        - name: Integration Tests
+          commands:
+            - make int-test
+        - name: Smoke Tests
+          commands:
+            - make test-installer
+
+  - name: Windows
+    dependencies: ["Download Dependencies"]
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
       prologue:
         commands:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
