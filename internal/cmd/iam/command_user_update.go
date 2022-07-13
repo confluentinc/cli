@@ -12,10 +12,10 @@ import (
 
 func (c *userCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "update <id>",
+		Use:   "update <id>",
 		Short: "Update a user.",
-		Args: cobra.ExactArgs(1),
-		RunE: c.update,
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.update,
 	}
 
 	cmd.Flags().String("full-name", "", "The user's full name.")
