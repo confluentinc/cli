@@ -91,7 +91,7 @@ blocks:
         commands:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
           - echo $PATH
-          - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
+          - tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/bin/
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
