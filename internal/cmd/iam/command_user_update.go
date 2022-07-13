@@ -25,7 +25,7 @@ func (c *userCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *userCommand) update(cmd *cobra.Command, args []string) error {
-	full_name, err := cmd.Flags().GetString("full-name")
+	fullName, err := cmd.Flags().GetString("full-name")
 	if err != nil {
 		return err
 	}
