@@ -21,7 +21,7 @@ blocks:
     dependencies: []
     task:
       jobs:
-        - name: go get ./...
+        - name: go mod download
           commands:
             # Install Vault
             - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
@@ -85,8 +85,9 @@ blocks:
           type: s1-prod-macos
       prologue:
         commands:
-          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
-          - tar -xzf go1.17.6.darwin-amd64.tar.gz
+          # TODO: Remove --no-check-certificate
+          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz --no-check-certificate
+          - tar -xzvf go1.17.6.darwin-amd64.tar.gz
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
@@ -109,8 +110,8 @@ blocks:
           type: s1-prod-windows
       prologue:
         commands:
-          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
-          - tar -xzf go1.17.6.darwin-amd64.tar.gz
+          - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
+          - Expand-Archive go1.17.6.windows-amd64.zip
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
