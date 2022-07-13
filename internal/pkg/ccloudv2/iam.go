@@ -82,6 +82,11 @@ func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
 	return c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
 }
 
+func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, *http.Response, error) {
+	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
+	return c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+}
+
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 	users := make([]iamv2.IamV2User, 0)
 
