@@ -8,6 +8,7 @@ import (
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -34,8 +35,8 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -44,6 +45,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/usage"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -58,7 +60,7 @@ type pluginInfo struct {
 	size int
 }
 
-func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *command {
+func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
 		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -66,18 +68,12 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 		Version: ver.Version,
 	}
 
-	cmd.SetHelpFunc(func(cmd *cobra.Command, _ []string) {
-		pcmd.LabelRequiredFlags(cmd)
-		_ = help.WriteHelpTemplate(cmd)
-	})
-
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
-
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -87,6 +83,11 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(ver, isTest)
+
+	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		pcmd.LabelRequiredFlags(cmd)
+		_ = help.WriteHelpTemplate(cmd)
+	})
 
 	prerunner := &pcmd.PreRun{
 		AuthTokenHandler:        authTokenHandler,
@@ -105,7 +106,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent))
-	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory))
+	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory, isTest))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(prerunner))
@@ -127,26 +128,40 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-	return &command{Command: cmd}
+	return cmd
 }
 
-func (c *command) Execute(args []string, cfg *v1.Config) error {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := c.findPlugin(args); err != nil {
+		if plugin, err := findPlugin(cmd, args); err != nil {
 			return err
 		} else if plugin != nil {
 			return execPlugin(plugin)
 		}
 	}
+	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
+	u := usage.New(ver.Version)
 
-	c.Command.SetArgs(args)
-	err := c.Command.Execute()
+	if !isTest {
+		cmd.PersistentPostRun = u.Collect
+	}
+
+	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
+
+	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
+		ctx := cfg.Context()
+		client := ccloudv2.NewClient(ctx.GetPlatformServer(), ver.UserAgent, isTest, ctx.GetAuthToken())
+
+		u.Error = cliv1.PtrBool(err != nil)
+		u.Report(client)
+	}
+
 	return err
 }
 
 // findPlugin determines if the arguments passed in are meant for a plugin
-func (c *command) findPlugin(args []string) (*pluginInfo, error) {
+func findPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
 	pluginMap, err := pplugin.SearchPath()
 	if err != nil {
 		return nil, err
@@ -156,8 +171,8 @@ func (c *command) findPlugin(args []string) (*pluginInfo, error) {
 
 	for len(plugin.name) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[plugin.name]; ok {
-			if cmd, _, _ := c.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
-				utils.ErrPrintf(c.Command, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
+				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
 				break
 			}
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
@@ -201,11 +216,6 @@ func execPlugin(info *pluginInfo) error {
 	return plugin.Run()
 }
 
-func LoadConfig() (*v1.Config, error) {
-	cfg := v1.New()
-	return load.LoadAndMigrate(cfg)
-}
-
 func getLongDescription(cfg *v1.Config) string {
 	switch {
 	case cfg.IsCloudLogin():
@@ -220,6 +230,7 @@ func getLongDescription(cfg *v1.Config) string {
 func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	catchErrors(cmd)
+
 	cmd.Flags().SortFlags = false
 
 	for _, subcommand := range cmd.Commands() {

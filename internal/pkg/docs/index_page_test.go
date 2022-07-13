@@ -174,8 +174,12 @@ func TestPrintLongestDescription_Long(t *testing.T) {
 	require.Equal(t, "Long description.", printLongestDescription(cmd))
 }
 
-func TestFormatReST(t *testing.T) {
+func TestFormatReST_CodeSnippet(t *testing.T) {
 	require.Equal(t, "Description of ``command``.", formatReST("Description of `command`."))
+}
+
+func TestFormatReST_Target(t *testing.T) {
+	require.Equal(t, `"target\_" "target\_"`, formatReST(`"target_" "target_"`))
 }
 
 func TestPrintSubcommands(t *testing.T) {

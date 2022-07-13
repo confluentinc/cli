@@ -25,7 +25,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/service-accounts":         handleIamServiceAccounts,
 	"/org/v2/environments/{id}":        handleOrgEnvironment,
 	"/org/v2/environments":             handleOrgEnvironments,
-	"/service-quota/v2/applied-quotas": handleAppliedQuotas,
+	"/service-quota/v1/applied-quotas": handleAppliedQuotas,
+	"/v2/metrics/cloud/query":          handleMetricsQuery,
 }
 
 type V2Router struct {

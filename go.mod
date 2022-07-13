@@ -12,16 +12,18 @@ require (
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1071.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0
+	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
@@ -29,7 +31,7 @@ require (
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
 	github.com/confluentinc/go-printer v0.16.0
 	github.com/confluentinc/go-ps1 v1.0.2
-	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.1.2-0.20220218025201-8726fa846a9f
+	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
@@ -42,7 +44,6 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.44.0
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v25 v25.1.3
 	github.com/google/uuid v1.3.0
 	github.com/goreleaser/goreleaser v1.4.1
@@ -64,13 +65,11 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.2.4
-	github.com/tj/assert v0.0.3
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
@@ -183,7 +182,7 @@ require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
 	github.com/envoyproxy/go-control-plane v0.10.1 // indirect
-	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
+	github.com/envoyproxy/protoc-gen-validate v0.6.7 // indirect
 	github.com/esimonov/ifshort v1.0.4 // indirect
 	github.com/ettle/strcase v0.1.1 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
@@ -225,6 +224,7 @@ require (
 	github.com/golangci/misspell v0.3.5 // indirect
 	github.com/golangci/revgrep v0.0.0-20210930125155-c22e5001d4f2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v18 v18.2.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -338,6 +338,7 @@ require (
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.10.1 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect

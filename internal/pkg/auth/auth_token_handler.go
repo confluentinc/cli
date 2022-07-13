@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 )
@@ -77,7 +76,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return "", "", err
 	}
 
-	if res.GetOrganization().GetSuspensionStatus().GetEventType() == orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL {
+	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
 		log.CliLogger.Debugf(errors.EndOfFreeTrialErrorMsg, res.GetOrganization().GetSuspensionStatus())
 		return res.Token, res.RefreshToken, &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
 	}
