@@ -65,6 +65,7 @@ type Config struct {
 	*config.BaseConfig
 	DisableUpdateCheck     bool                     `json:"disable_update_check"`
 	DisableUpdates         bool                     `json:"disable_updates"`
+	DisablePlugins         bool                     `json:"disable_plugins"`
 	NoBrowser              bool                     `json:"no_browser" hcl:"no_browser"`
 	Platforms              map[string]*Platform     `json:"platforms,omitempty"`
 	Credentials            map[string]*Credential   `json:"credentials,omitempty"`
