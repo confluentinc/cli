@@ -35,9 +35,7 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.BadResourceIDErrorMsg)
 	}
 
-	update := iamv2.IamV2UserUpdate{
-		FullName: &full_name,
-	}
+	update := iamv2.IamV2UserUpdate{FullName: &full_name}
 
 	_, httpResp, err := c.V2Client.UpdateIamUser(resourceId, update)
 	if err != nil {
