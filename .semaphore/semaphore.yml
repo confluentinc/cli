@@ -45,10 +45,12 @@ blocks:
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
             - go mod download
-            - go test ./cmd/confluent -tags=testrunmain -c
             - make deps
+            
+            # The integration tests use github.com/confluentinc/bincover, which uses a separate build tag "testrunmain".
+            # As a result, `go mod download` will not download dependencies specific to the integration tests.
+            - go test ./cmd/confluent -tags=testrunmain -c
             
             - cache store $(checksum go.sum) $(go env GOPATH)
 
@@ -88,7 +90,8 @@ blocks:
       prologue:
         commands:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
-          - tar -xzvf go1.17.6.darwin-amd64.tar.gz
+          - echo $PATH
+          - tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
@@ -103,28 +106,28 @@ blocks:
           commands:
             - make test-installer
 
-  - name: Windows
-    dependencies: ["Download Dependencies"]
-    task:
-      agent:
-        machine:
-          type: s1-prod-windows
-      prologue:
-        commands:
-          - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
-          - Expand-Archive go1.17.6.windows-amd64.zip
-          - checkout
-          - export "PATH=$(go env GOPATH)/bin:${PATH}"
-          - cache restore $(checksum go.sum)
-      jobs:
-        - name: Unit Tests
-          commands:
-            - make unit-test
-        - name: Integration Tests
-          commands:
-            - make int-test
-        - name: Smoke Tests
-          commands:
-            - make test-installer
+#  - name: Windows
+#    dependencies: ["Download Dependencies"]
+#    task:
+#      agent:
+#        machine:
+#          type: s1-prod-windows
+#      prologue:
+#        commands:
+#          - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
+#          - Expand-Archive go1.17.6.windows-amd64.zip
+#          - checkout
+#          - export "PATH=$(go env GOPATH)/bin:${PATH}"
+#          - cache restore $(checksum go.sum)
+#      jobs:
+#        - name: Unit Tests
+#          commands:
+#            - make unit-test
+#        - name: Integration Tests
+#          commands:
+#            - make int-test
+#        - name: Smoke Tests
+#          commands:
+#            - make test-installer
 
 # TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
