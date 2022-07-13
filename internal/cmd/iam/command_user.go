@@ -50,6 +50,7 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(newInvitationCommand(prerunner))
 	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
 }
