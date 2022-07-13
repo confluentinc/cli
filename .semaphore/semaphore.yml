@@ -82,11 +82,12 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-macos
+          # TODO: Use s1-prod-macos
+          type: a1-standard-4
+          os_image: macos-xcode13
       prologue:
         commands:
-          # TODO: Remove --no-check-certificate
-          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz --no-check-certificate
+          - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
           - tar -xzvf go1.17.6.darwin-amd64.tar.gz
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
