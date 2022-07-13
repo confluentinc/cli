@@ -52,7 +52,7 @@ func list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, path := range overshadowedList {
-		utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by a similarly named plugin\n", path)
+		utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by a similarly named plugin in the list above\n", path)
 	}
 	return nil
 }

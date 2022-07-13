@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"github.com/mitchellh/go-homedir"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -20,7 +21,11 @@ func SearchPath() (map[string][]string, error) {
 	}
 
 	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
-		if err := filepath.WalkDir(dir, pluginWalkFn(re, pluginMap)); err != nil {
+		dirName, err := homedir.Expand(dir)
+		if err != nil {
+			return nil, err
+		}
+		if err := filepath.WalkDir(dirName, pluginWalkFn(re, pluginMap)); err != nil {
 			return nil, err
 		}
 	}
