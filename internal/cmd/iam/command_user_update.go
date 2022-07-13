@@ -42,6 +42,6 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(`failed to update user "%s": %v`, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "full-name", "user", resourceId, fullName)
+	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
 	return nil
 }
