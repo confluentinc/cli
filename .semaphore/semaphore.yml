@@ -63,7 +63,6 @@ blocks:
       prologue:
         commands:
           - sem-version go 1.17.6
-          - which go
           - checkout
           - export "GOPATH=$(go env GOPATH)"
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
@@ -95,8 +94,6 @@ blocks:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
           - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
           - export "PATH=/usr/local/go/bin:${PATH}"
-          - ls /usr/local
-          - echo $PATH
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
