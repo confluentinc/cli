@@ -198,7 +198,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)

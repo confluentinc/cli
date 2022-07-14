@@ -154,7 +154,8 @@ const (
 	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
 	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
 	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
-		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
+		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`.\n" +
+		"Ensure the cluster you are specifying is not associated with any active connectors."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
 	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
 
