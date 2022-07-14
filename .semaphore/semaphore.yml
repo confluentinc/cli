@@ -75,13 +75,11 @@ blocks:
         - name: Unit Tests
           commands:
             - make unit-test
-        - name: Integration Tests
+        - name: Integration + Smoke Tests
           commands:
             - go list ./... | grep cli/test
             - go test -v $(go list ./... | grep cli/test)
 #            - make int-test
-        - name: Smoke Tests
-          commands:
             - make test-installer
 
   - name: MacOS
@@ -106,11 +104,9 @@ blocks:
         - name: Unit Tests
           commands:
             - make unit-test
-        - name: Integration Tests
+        - name: Integration + Smoke Tests
           commands:
             - make int-test
-        - name: Smoke Tests
-          commands:
             - make test-installer
 
 #  - name: Windows
