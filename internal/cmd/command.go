@@ -120,7 +120,7 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New(ver.Version)
 
-	if !isTest {
+	if !isTest && ver.IsReleased() {
 		cmd.PersistentPostRun = u.Collect
 	}
 
