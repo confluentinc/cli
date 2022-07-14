@@ -12,7 +12,7 @@ auto_cancel:
 global_job_config:
   env_vars:
     - name: CI
-      value: true
+      value: "true"
   secrets:
     - name: vault_sem2_approle
 
