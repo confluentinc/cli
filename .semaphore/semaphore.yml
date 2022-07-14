@@ -10,6 +10,9 @@ auto_cancel:
     when: "true"
 
 global_job_config:
+  env_vars:
+    - name: CI
+      value: true
   secrets:
     - name: vault_sem2_approle
 
@@ -74,7 +77,10 @@ blocks:
             - make unit-test
         - name: Integration Tests
           commands:
-            - make int-test
+            - go list ./...
+            - go list ./... | grep cli/test
+            - go test -v $$(go list ./... | grep cli/test)
+#            - make int-test
         - name: Smoke Tests
           commands:
             - make test-installer
@@ -90,8 +96,10 @@ blocks:
       prologue:
         commands:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
+          - tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
+          - export "PATH=/usr/local/go:${PATH}"
+          - ls /usr/local
           - echo $PATH
-          - tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/bin/
           - checkout
           - export "PATH=$(go env GOPATH)/bin:${PATH}"
           - cache restore $(checksum go.sum)
