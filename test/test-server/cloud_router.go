@@ -36,7 +36,6 @@ const (
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
 	usageLimits         = "/api/usage_limits"
-	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
@@ -82,7 +81,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addUserRoutes(t)
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
-	c.addMetricsQueryRoutes(t)
+	c.addJwtTokenRoutes(t)
 	c.addServiceAccountRoutes(t)
 }
 
@@ -143,8 +142,7 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
 }
 
-func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
-	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
+func (c *CloudRouter) addJwtTokenRoutes(t *testing.T) {
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }
 

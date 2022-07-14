@@ -309,7 +309,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 		createTopicConfigs           []kafkarestv3.CreateTopicRequestDataConfigs
 	}{
 		{
-			input:               "create topic-X --url http://localhost:8082 --config retention.ms=1,compression",
+			input:               "create topic-X --url http://localhost:8082 --config compression,retention.ms=1",
 			expectError:         true,
 			errorMsgContainsAll: []string{`failed to parse "key=value" pattern from configuration: compression`},
 			createTopicName:     "topic-X",

@@ -32,10 +32,13 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 			endpoint = "SASL_SSL://sr-endpoint"
 		}
 		srCluster := &schedv1.SchemaRegistryCluster{
-			Id:        id,
-			AccountId: accountId,
-			Name:      "account schema-registry",
-			Endpoint:  endpoint,
+			Id:                    id,
+			AccountId:             accountId,
+			Name:                  "account schema-registry",
+			Endpoint:              endpoint,
+			ServiceProvider:       "aws",
+			ServiceProviderRegion: "us-west-2",
+			Package:               "free",
 		}
 		switch r.Method {
 		case http.MethodPost:

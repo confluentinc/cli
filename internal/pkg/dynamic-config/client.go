@@ -9,35 +9,26 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-type contextClient struct {
-	context *DynamicContext
-}
-
-// NewContextClient returns a new contextClient, with the specified context and a client.
-func NewContextClient(ctx *DynamicContext) *contextClient {
-	return &contextClient{context: ctx}
-}
-
-func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
-	envId, err := c.context.AuthenticatedEnvId()
+func (d *DynamicContext) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
+	environmentId, err := d.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}
 
-	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	cluster, err := c.context.Client.Kafka.Describe(context.Background(), req)
-	if err != nil {
-		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
+	cluster := &schedv1.KafkaCluster{
+		AccountId: environmentId,
+		Id:        clusterId,
 	}
 
-	return cluster, nil
+	cluster, err = d.Client.Kafka.Describe(context.Background(), cluster)
+	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
-func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {
+func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
 	// check if this is API key exists server-side
-	key, _, err := c.context.V2Client.GetApiKey(apiKey)
+	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return err
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 	// check if the key is for the right cluster
 	ok := key.Spec.Resource.Id == clusterID
@@ -51,8 +42,8 @@ func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error 
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
+	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -65,8 +56,8 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 	return nil, errors.NewSRNotEnabledError()
 }
 
-func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
+	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})
