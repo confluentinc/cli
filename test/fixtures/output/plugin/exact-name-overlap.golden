@@ -1,4 +1,3 @@
-	- warning: test/fixtures/input/plugin/confluent-version is overshadowed by an existing Confluent CLI command.
 confluent - Confluent CLI
 
 Version:     v.*

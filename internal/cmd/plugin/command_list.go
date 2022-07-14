@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -51,8 +53,14 @@ func list(cmd *cobra.Command, _ []string) error {
 	if err := printTable(cmd, pluginList); err != nil {
 		return err
 	}
+	for _, plugin := range pluginList {
+		args := strings.Split(plugin.pluginName, "-")
+		if cmd, _, _ := cmd.Root().Find(args[1:]); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.pluginName {
+			utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by `%s`.\n", plugin.filePath, cmd.CommandPath())
+		}
+	}
 	for _, path := range overshadowedList {
-		utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by a similarly named plugin in the list above\n", path)
+		utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by a similarly named plugin in the list above.\n", path)
 	}
 	return nil
 }

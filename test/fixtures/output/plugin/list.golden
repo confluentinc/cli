@@ -9,4 +9,5 @@
   confluent-plugin2                    | test/fixtures/input/plugin/confluent-plugin2.sh                     
   confluent-print-args                 | test/fixtures/input/plugin/confluent-print-args.sh                  
   confluent-version                    | test/fixtures/input/plugin/confluent-version                        
-[WARN] test/fixtures/input/plugin/dummy/confluent-plugin2 is overshadowed by a similarly named plugin in the list above
+[WARN] test/fixtures/input/plugin/confluent-version is overshadowed by `confluent version`.
+[WARN] test/fixtures/input/plugin/dummy/confluent-plugin2 is overshadowed by a similarly named plugin in the list above.

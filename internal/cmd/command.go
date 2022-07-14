@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
 	"os/exec"
 	"strings"
@@ -46,13 +47,8 @@ import (
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
-
-type command struct {
-	*cobra.Command
-}
 
 type pluginInfo struct {
 	args []string
@@ -172,7 +168,7 @@ func findPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
 	for len(plugin.name) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[plugin.name]; ok {
 			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
-				utils.ErrPrintf(cmd, "	- warning: %s is overshadowed by an existing Confluent CLI command.\n", pluginPathList[0])
+				log.CliLogger.Warnf("[WARN] User plugin %s is ignored because its command line invocation matches existing CLI command `%s`.\n", pluginPathList[0], cmd.CommandPath())
 				break
 			}
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)

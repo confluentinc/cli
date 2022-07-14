@@ -1,9 +1,10 @@
 package test
 
 import (
-	"github.com/stretchr/testify/require"
 	"os"
 	"runtime"
+
+	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestPlugin() {
