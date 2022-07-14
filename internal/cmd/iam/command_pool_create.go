@@ -20,21 +20,21 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an identity pool named "DemoIdentityPool".`,
-				Code: "confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --subject-claim claims.sub --policy claims.iss",
+				Code: "confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss==\"https://my.issuer.com\"'",
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	cmd.Flags().String("policy", "", "Filters which identities can authenticate using your identity pool.")
+	cmd.Flags().String("filter", "", "Filters which identities can authenticate using your identity pool.")
+	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
-	cmd.Flags().String("subject-claim", "", "Principal that is the subject of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("description")
-	_ = cmd.MarkFlagRequired("policy")
+	_ = cmd.MarkFlagRequired("filter")
+	_ = cmd.MarkFlagRequired("identity-claim")
 	_ = cmd.MarkFlagRequired("provider")
-	_ = cmd.MarkFlagRequired("subject-claim")
 
 	return cmd
 }
@@ -47,7 +47,12 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	policy, err := cmd.Flags().GetString("policy")
+	filter, err := cmd.Flags().GetString("filter")
+	if err != nil {
+		return err
+	}
+
+	identityClaim, err := cmd.Flags().GetString("identity-claim")
 	if err != nil {
 		return err
 	}
@@ -57,16 +62,11 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	subjectClaim, err := cmd.Flags().GetString("subject-claim")
-	if err != nil {
-		return err
-	}
-
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
 		DisplayName:  identityproviderv2.PtrString(name),
 		Description:  identityproviderv2.PtrString(description),
-		SubjectClaim: identityproviderv2.PtrString(subjectClaim),
-		Policy:       identityproviderv2.PtrString(policy),
+		SubjectClaim: identityproviderv2.PtrString(identityClaim),
+		Policy:       identityproviderv2.PtrString(filter),
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
@@ -74,12 +74,12 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	identityPool := &identityPool{
-		Id:           *resp.Id,
-		DisplayName:  *resp.DisplayName,
-		Description:  *resp.Description,
-		SubjectClaim: *resp.SubjectClaim,
-		Policy:       *resp.Policy,
+		Id:            *resp.Id,
+		DisplayName:   *resp.DisplayName,
+		Description:   *resp.Description,
+		IdentityClaim: *resp.SubjectClaim,
+		Filter:        *resp.Policy,
 	}
 
-	return output.DescribeObject(cmd, identityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	return output.DescribeObject(cmd, identityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

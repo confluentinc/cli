@@ -6,18 +6,16 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var poolListFields = []string{"Id", "DisplayName", "Description", "SubjectClaim", "Policy"}
-
 type identityPoolCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
 type identityPool struct {
-	Id           string
-	DisplayName  string
-	Description  string
-	SubjectClaim string
-	Policy       string
+	Id            string
+	DisplayName   string
+	Description   string
+	IdentityClaim string
+	Filter        string
 }
 
 func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {

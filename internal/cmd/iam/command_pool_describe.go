@@ -9,17 +9,16 @@ import (
 
 var (
 	poolHumanLabelMap = map[string]string{
-		"Id":           "ID",
-		"DisplayName":  "Display Name",
-		"SubjectClaim": "Subject Claim",
-		"Policy":       "Policy",
+		"Id":            "ID",
+		"DisplayName":   "Display Name",
+		"IdentityClaim": "Identity Claim",
 	}
 	poolStructuredLabelMap = map[string]string{
-		"Id":           "id",
-		"DisplayName":  "display_name",
-		"Description":  "description",
-		"SubjectClaim": "subject_claim",
-		"Policy":       "policy",
+		"Id":            "id",
+		"DisplayName":   "display_name",
+		"Description":   "description",
+		"IdentityClaim": "identity_claim",
+		"Filter":        "filter",
 	}
 )
 
@@ -50,12 +49,12 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	describeIdentityPool := &identityPool{
-		Id:           *identityPoolProfile.Id,
-		DisplayName:  *identityPoolProfile.DisplayName,
-		Description:  *identityPoolProfile.Description,
-		SubjectClaim: *identityPoolProfile.SubjectClaim,
-		Policy:       *identityPoolProfile.Policy,
+		Id:            *identityPoolProfile.Id,
+		DisplayName:   *identityPoolProfile.DisplayName,
+		Description:   *identityPoolProfile.Description,
+		IdentityClaim: *identityPoolProfile.SubjectClaim,
+		Filter:        *identityPoolProfile.Policy,
 	}
 
-	return output.DescribeObject(cmd, describeIdentityPool, poolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }
