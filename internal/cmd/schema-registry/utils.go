@@ -68,11 +68,9 @@ func getAllPackageDisplayNames() []string {
 
 func getCommaDelimitedPackagesString() string {
 	packageDisplayNames := getAllPackageDisplayNames()
-	packagesStr := utils.ArrayToCommaDelimitedString(packageDisplayNames)
-
-	return packagesStr
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
 }
 
 func addPackageFlag(cmd *cobra.Command) {
-	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+	cmd.Flags().String("package", "essentials", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

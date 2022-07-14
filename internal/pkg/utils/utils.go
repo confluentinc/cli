@@ -153,19 +153,20 @@ func FormatUnixTime(timeMs int64) string {
 
 func ArrayToCommaDelimitedString(arr []string) string {
 	size := len(arr)
-	if size == 0 {
+	switch size {
+	case 0:
 		return ""
+	case 1:
+		return fmt.Sprintf(`"%s"`, arr[0])
+	case 2:
+		return fmt.Sprintf(`"%s" or "%s"`, arr[0], arr[1])
 	}
 
 	var delimitedStr strings.Builder
 	for _, v := range arr[:size-1] {
 		delimitedStr.WriteString(fmt.Sprintf(`"%s", `, v))
 	}
-	if size == 1 {
-		delimitedStr.WriteString(fmt.Sprintf(`"%s"`, arr[size-1]))
-	} else {
-		delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
-	}
+	delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
 
 	return delimitedStr.String()
 }

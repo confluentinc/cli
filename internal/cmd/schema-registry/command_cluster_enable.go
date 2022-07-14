@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -21,6 +21,7 @@ var (
 	enableLabels            = []string{"Id", "SchemaRegistryEndpoint"}
 	enableHumanRenames      = map[string]string{"ID": "Cluster ID", "SchemaRegistryEndpoint": "Endpoint URL"}
 	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
+	availableGeos           = []string{"us", "eu", "apac"}
 )
 
 func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
@@ -39,7 +40,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
+	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos)))
 	addPackageFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -49,9 +50,8 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
-	_ = cmd.MarkFlagRequired("package")
 
-	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return []string{"apac", "eu", "us"} })
+	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return availableGeos })
 
 	return cmd
 }
