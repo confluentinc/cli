@@ -6,17 +6,27 @@ import (
 	"strings"
 
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
-	SubjectUsage            = "Subject of the schema."
-	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	SubjectUsage              = "Subject of the schema."
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	EssentialsPackage         = "essentials"
+	AdvancedPackage           = "advanced"
+	EssentialsPackageInternal = "free"
+	AdvancedPackageInternal   = "paid"
 )
 
 var packageDisplayNameMapping = map[string]string{
-	"free": "essentials",
-	"paid": "advanced",
+	EssentialsPackageInternal: EssentialsPackage,
+	AdvancedPackageInternal:   AdvancedPackage,
 }
+
+var packageDisplayNames = []string{EssentialsPackage, AdvancedPackage}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
@@ -39,4 +49,24 @@ func convertMapToString(m map[string]string) string {
 
 func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
+}
+
+func getPackageInternalName(inputPackageDisplayName string) (string, error) {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName, nil
+		}
+	}
+
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageType, inputPackageDisplayName),
+		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
+}
+
+func getCommaDelimitedPackagesString() string {
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", EssentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }
