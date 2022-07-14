@@ -1,0 +1,7 @@
++--------------+---------------------------------------------+
+| ID           | op-55555                                    |
+| Display Name | new-name                                    |
+| Description  | new-description                             |
+| Issuer       | https://company.provider.com                |
+| JWKS URI     | https://company.provider.com/oauth2/v1/keys |
++--------------+---------------------------------------------+
