@@ -77,9 +77,8 @@ blocks:
             - make unit-test
         - name: Integration Tests
           commands:
-            - go list ./...
             - go list ./... | grep cli/test
-            - go test -v $$(go list ./... | grep cli/test)
+            - go test -v $(go list ./... | grep cli/test)
 #            - make int-test
         - name: Smoke Tests
           commands:
@@ -96,7 +95,7 @@ blocks:
       prologue:
         commands:
           - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
-          - tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
+          - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
           - export "PATH=/usr/local/go:${PATH}"
           - ls /usr/local
           - echo $PATH
