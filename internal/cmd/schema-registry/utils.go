@@ -15,18 +15,18 @@ import (
 const (
 	SubjectUsage              = "Subject of the schema."
 	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
-	EssentialsPackage         = "essentials"
-	AdvancedPackage           = "advanced"
-	EssentialsPackageInternal = "free"
-	AdvancedPackageInternal   = "paid"
+	essentialsPackage         = "essentials"
+	advancedPackage           = "advanced"
+	essentialsPackageInternal = "free"
+	advancedPackageInternal   = "paid"
 )
 
 var packageDisplayNameMapping = map[string]string{
-	EssentialsPackageInternal: EssentialsPackage,
-	AdvancedPackageInternal:   AdvancedPackage,
+	essentialsPackageInternal: essentialsPackage,
+	advancedPackageInternal:   advancedPackage,
 }
 
-var packageDisplayNames = []string{EssentialsPackage, AdvancedPackage}
+var packageDisplayNames = []string{essentialsPackage, advancedPackage}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
@@ -68,5 +68,5 @@ func getCommaDelimitedPackagesString() string {
 }
 
 func addPackageFlag(cmd *cobra.Command) {
-	cmd.Flags().String("package", EssentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+	cmd.Flags().String("package", essentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

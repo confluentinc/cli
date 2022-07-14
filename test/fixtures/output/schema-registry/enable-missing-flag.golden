@@ -3,9 +3,9 @@ Usage:
   confluent schema-registry cluster enable [flags]
 
 Examples:
-Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package for environment "env-12345"
+Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.
 
-  $ confluent schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345
+  $ confluent schema-registry cluster enable --cloud gcp --geo us --package advanced
 
 Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".

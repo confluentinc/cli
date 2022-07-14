@@ -33,8 +33,8 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package for environment "env-12345"`,
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced --environment env-12345", version.CLIName),
+				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.`,
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced", version.CLIName),
 			},
 		),
 	}
