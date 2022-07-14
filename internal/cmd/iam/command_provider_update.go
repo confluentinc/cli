@@ -44,6 +44,10 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
+	if description == "" && name == "" {
+		return errors.New(errors.IdentityProviderNoOpUpdateErrorMsg)
+	}
+
 	identityProviderId := args[0]
 	update := identityproviderv2.IamV2IdentityProviderUpdate{
 		Id: &identityProviderId,

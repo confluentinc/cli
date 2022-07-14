@@ -63,6 +63,10 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if description == "" && filter == "" && identityClaim == "" && name == "" {
+		return errors.New(errors.IdentityPoolNoOpUpdateErrorMsg)
+	}
+
 	identityPoolId := args[0]
 	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: &identityPoolId}
 	if name != "" {
