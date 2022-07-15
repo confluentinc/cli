@@ -62,10 +62,10 @@ func list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, pluginInfo := range nameConflictPlugins {
-		utils.ErrPrintf(cmd, "[WARN] When running `%s`, the existing CLI command will be run instead of the plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
+		utils.ErrPrintf(cmd, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
 	}
 	for _, pluginInfo := range overshadowedPlugins {
-		utils.ErrPrintf(cmd, "[WARN] When running `%s`, the plugin listed above will be run instead of the plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
+		utils.ErrPrintf(cmd, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
 	}
 	return nil
 }

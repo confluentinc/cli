@@ -9,5 +9,5 @@
   confluent plugin1              | test/fixtures/input/plugin/confluent-plugin1.sh                     
   confluent plugin2              | test/fixtures/input/plugin/confluent-plugin2.sh                     
   confluent print args           | test/fixtures/input/plugin/confluent-print-args.sh                  
-[WARN] When running `confluent version`, the existing CLI command will be run instead of the plugin at test/fixtures/input/plugin/confluent-version.
-[WARN] When running `confluent plugin2`, the plugin listed above will be run instead of the plugin at test/fixtures/input/plugin/dummy/confluent-plugin2.
+[WARN] The built-in command `confluent version` will be run instead of the duplicate plugin at test/fixtures/input/plugin/confluent-version.
+[WARN] The command `confluent plugin2` will run the plugin listed above instead of the duplicate plugin at test/fixtures/input/plugin/dummy/confluent-plugin2.
