@@ -71,7 +71,7 @@ blocks:
         - name: Test
           commands:
             # Install Vault
-            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_darwin_amd64.zip
             - unzip vault.zip
             - chmod +x vault
             
