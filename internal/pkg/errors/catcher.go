@@ -196,9 +196,12 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	if isResourceNotFoundError(err) {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
-
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+		suggestions := ChooseRightEnvironmentSuggestions
+		if r.Request.Method == http.MethodDelete {
+			suggestions = KafkaClusterDeletingSuggestions
+		}
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Kafka cluster not found or access forbidden", suggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
