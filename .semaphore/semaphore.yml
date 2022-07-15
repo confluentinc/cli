@@ -103,7 +103,6 @@ blocks:
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
-            - make lint
             - make test
             - make lint-licenses
             
@@ -124,6 +123,7 @@ blocks:
             - Expand-Archive vault_1.11.0_windows_amd64.zip
             
             # Log in to Vault
+            - .\vault.exe write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID}
             - VAULT_TOKEN=$(.\vault.exe write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
             - .\vault.exe login -no-print token="${VAULT_TOKEN}"
               
@@ -149,7 +149,6 @@ blocks:
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
-            - make lint
             - make test
             - make lint-licenses
             
