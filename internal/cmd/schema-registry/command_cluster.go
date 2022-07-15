@@ -40,5 +40,9 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 	c.AddCommand(c.newListCommandOnPrem())
 	c.AddCommand(c.newUpdateCommand(cfg))
 
+	if cfg.IsCloudLogin() {
+		c.AddCommand(c.newUpgradeCommand(cfg))
+	}
+
 	return c.Command
 }
