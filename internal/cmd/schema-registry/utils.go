@@ -63,10 +63,31 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
 }
 
+<<<<<<< HEAD
+func getAllPackageDisplayNames() []string {
+	packageDisplayNames := make([]string, 0, len(packageDisplayNameMapping))
+	for _, displayName := range packageDisplayNameMapping {
+		packageDisplayNames = append(packageDisplayNames, displayName)
+	}
+
+	return packageDisplayNames
+}
+
+func getCommaDelimitedPackagesString() string {
+	packageDisplayNames := getAllPackageDisplayNames()
+	packagesStr := utils.ArrayToCommaDelimitedString(packageDisplayNames)
+
+	return packagesStr
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+=======
 func getCommaDelimitedPackagesString() string {
 	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
 }
 
 func addPackageFlag(cmd *cobra.Command) {
 	cmd.Flags().String("package", essentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+>>>>>>> origin/main
 }
