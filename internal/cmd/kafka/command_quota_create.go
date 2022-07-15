@@ -4,6 +4,7 @@ import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -19,15 +20,21 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a Kafka client quota.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
+		Example: examples.BuildExampleString(examples.Example{
+			Text: `Create a client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".`,
+			Code: `confluent kafka quota create --name clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
+		},
+			examples.Example{
+				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
+				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<defualt>" --cluster lkc-1234"`,
+			}),
 	}
 
-	// TODO example
-	// TODO should i mention the <default> principal as well?
-	cmd.Flags().String("ingress", "", "Ingress throughput limit for client.")
-	cmd.Flags().String("egress", "", "Egress throughput limit for client.")
+	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (B/s).")
+	cmd.Flags().String("egress", "", "Egress throughput limit for client (B/s).")
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("name", "", "Display name for quota.")
-	cmd.Flags().StringSlice("principals", []string{}, "List of service accounts to apply quota for (comma-separated).")
+	cmd.Flags().StringSlice("principals", []string{}, "List of service accounts to apply quota for (comma-separated). Use \"<default>\" to apply quota to all service accounts.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -62,17 +69,10 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(c.quotaContext())
-	req = req.KafkaQuotasV1ClientQuota(kafkaquotas.KafkaQuotasV1ClientQuota{
-		DisplayName: &displayName,
-		Description: &description,
-		Throughput:  throughput,
-		Cluster:     &kafkaquotas.ObjectReference{Id: cluster.ID},
-		Principals:  principals,
-		Environment: &kafkaquotas.ObjectReference{Id: c.EnvironmentId()},
-	})
-	quota, _, err := req.Execute()
+	quota, err := c.V2Client.CreateKafkaQuota(displayName, description, throughput,
+		&kafkaquotas.ObjectReference{Id: cluster.ID}, principals,
+		&kafkaquotas.ObjectReference{Id: c.EnvironmentId()},
+	)
 	if err != nil {
 		return quotaErr(err)
 	}

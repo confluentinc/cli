@@ -150,6 +150,17 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("principal", "", "Principal ID.")
+	RegisterFlagCompletionFunc(cmd, "principal", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteServiceAccounts(command.V2Client)
+	})
+}
+
 func AutocompleteEnvironments(client *ccloudv2.Client) []string {
 	environments, err := client.ListOrgEnvironments()
 	if err != nil {

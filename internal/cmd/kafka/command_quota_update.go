@@ -3,6 +3,7 @@ package kafka
 import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -13,6 +14,10 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 		Short: "Update a previously created cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
+		Example: examples.BuildExampleString(examples.Example{
+			Text: `Add "sa-1234" to an existing quota and remove "sa-5678".'`,
+			Code: `confluent kafka quota update cq-123ab --add-principals sa-1234 --remove-principals sa-5678`,
+		}),
 	}
 
 	cmd.Flags().String("ingress", "", "Update ingress limit for quota.")
@@ -36,11 +41,11 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return quotaErr(err)
 	}
 
-	updateName, err := getUpdateName(cmd, quota.DisplayName)
+	updateName, err := getUpdateName(cmd, *quota.DisplayName)
 	if err != nil {
 		return err
 	}
-	updateDescription, err := getUpdateDescription(cmd, quota.Description)
+	updateDescription, err := getUpdateDescription(cmd, *quota.Description)
 	if err != nil {
 		return err
 	}
@@ -53,21 +58,14 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateReq := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.UpdateKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
-	updateReq = updateReq.KafkaQuotasV1ClientQuota(kafkaquotas.KafkaQuotasV1ClientQuota{
-		Id:          &quotaId,
-		DisplayName: updateName,
-		Description: updateDescription,
-		Throughput:  updateThroughput,
-		Principals:  updatePrincipals,
-		Environment: &kafkaquotas.ObjectReference{Id: quota.Environment.Id}, //quota.Environment,
-		Cluster:     &kafkaquotas.ObjectReference{Id: quota.Cluster.Id},     //quota.Cluster,
-	})
-	quota, _, err = updateReq.Execute()
+	updatedQuota, err := c.V2Client.CreateKafkaQuota(updateName, updateDescription, updateThroughput,
+		&kafkaquotas.ObjectReference{Id: quota.Cluster.Id}, updatePrincipals,
+		&kafkaquotas.ObjectReference{Id: quota.Environment.Id},
+	)
 	if err != nil {
 		return quotaErr(err)
 	}
-	printableQuota := quotaToPrintable(quota)
+	printableQuota := quotaToPrintable(updatedQuota)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
@@ -121,18 +119,18 @@ func getUpdateThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotas
 	return throughput, nil
 }
 
-func getUpdateDescription(cmd *cobra.Command, description *string) (*string, error) {
+func getUpdateDescription(cmd *cobra.Command, description string) (string, error) {
 	if cmd.Flags().Changed("description") {
 		updatedDescription, err := cmd.Flags().GetString("description")
-		return &updatedDescription, err
+		return updatedDescription, err
 	}
 	return description, nil
 }
 
-func getUpdateName(cmd *cobra.Command, name *string) (*string, error) {
+func getUpdateName(cmd *cobra.Command, name string) (string, error) {
 	if cmd.Flags().Changed("name") {
 		updatedName, err := cmd.Flags().GetString("name")
-		return &updatedName, err
+		return updatedName, err
 	}
 	return name, nil
 }

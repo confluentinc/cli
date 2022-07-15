@@ -27,13 +27,13 @@ func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newListCommand())
 	c.AddCommand(c.newUpdateCommand())
-	// TODO describe command
+	c.AddCommand(c.newDescribeCommand())
 
 	return c.Command
 }
 
 func (c *quotaCommand) quotaContext() context.Context {
-	return context.WithValue(context.Background(), kafkaquotas.ContextAccessToken, c.AuthToken())
+	return context.WithValue(context.Background(), kafkaquotas.ContextAccessToken, c.AuthToken)
 }
 
 func quotaErr(err error) error {
@@ -65,8 +65,8 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota) interface{} {
 		Id:          *quota.Id,
 		DisplayName: *quota.DisplayName,
 		Description: *quota.Description,
-		Ingress:     *quota.Throughput.IngressByteRate,
-		Egress:      *quota.Throughput.EgressByteRate,
+		Ingress:     *quota.Throughput.IngressByteRate + " B/s",
+		Egress:      *quota.Throughput.EgressByteRate + " B/s",
 		Principals:  principalsToString(*quota.Principals),
 		Cluster:     quota.Cluster.Id,
 		Environment: quota.Environment.Id,

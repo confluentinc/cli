@@ -20,10 +20,9 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.DeleteKafkaQuotasV1ClientQuota(c.quotaContext(), args[0])
-	_, err := req.Execute()
+	err := c.V2Client.DeleteKafkaQuota(args[0])
 	if err != nil {
-		return err
+		return quotaErr(err)
 	}
 	utils.Printf(cmd, errors.DeletedClientQuotaMessage, args[0])
 	return nil

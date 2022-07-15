@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"fmt"
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	"net/url"
 	"strings"
 
@@ -50,6 +51,16 @@ func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString)
 }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
+	if nextPageUrlStringNullable.IsSet() {
+		nextPageUrlString := *nextPageUrlStringNullable.Get()
+		pageToken, err := extractPageToken(nextPageUrlString)
+		return pageToken, false, err
+	} else {
+		return "", true, nil
+	}
+}
+
+func extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable kafkaquotas.NullableString) (string, bool, error) {
 	if nextPageUrlStringNullable.IsSet() {
 		nextPageUrlString := *nextPageUrlStringNullable.Get()
 		pageToken, err := extractPageToken(nextPageUrlString)

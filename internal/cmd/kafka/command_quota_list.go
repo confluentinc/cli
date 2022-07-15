@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"fmt"
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -15,13 +18,18 @@ var (
 func (c *quotaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List cloud provider regions.",
+		Short: "List client quotas for given cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
+		Example: examples.BuildExampleString(examples.Example{
+			Text: `List client quotas for cluster "lkc-1234".`,
+			Code: `confluent kafka quota list --cluster lkc-1234`,
+		}),
 	}
 
-	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddPrincipalFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -33,10 +41,7 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// TODO pagination
-
-	req := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.quotaContext())
-	kafkaQuotaList, _, err := req.Cluster(cluster.ID).Environment(c.EnvironmentId()).Execute()
+	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
 	if err != nil {
 		return quotaErr(err)
 	}
@@ -46,9 +51,37 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, quota := range kafkaQuotaList.Data {
+	// TODO use API for filtering by principal when it becomes available: https://confluentinc.atlassian.net/browse/KPLATFORM-733
+	if cmd.Flags().Changed("principal") {
+		principal, err := cmd.Flags().GetString("principal")
+		if err != nil {
+			return err
+		}
+		quotas = getQuotasForPrincipal(quotas, principal)
+	}
+
+	for _, quota := range quotas {
 		w.AddElement(quotaToPrintable(quota))
 	}
 
 	return w.Out()
+}
+
+func getQuotasForPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
+	var filteredQuotaData []v1.KafkaQuotasV1ClientQuota
+out:
+	for _, quota := range quotas {
+		fmt.Println("q loop")
+		for _, p := range *quota.Principals {
+			fmt.Println("p loop")
+			if p.Id == principal {
+				filteredQuotaData = append(filteredQuotaData, quota)
+				fmt.Println("found quota")
+				// principals can only belong to one quota so break after finding it
+				break out
+			}
+		}
+	}
+	fmt.Println("out of for loops")
+	return filteredQuotaData
 }
