@@ -111,6 +111,7 @@ blocks:
           commands:
             # Install Vault
             - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip
+            - dir
             - Expand-Archive vault_1.11.0_windows_amd64.zip
             
             # Log in to Vault
