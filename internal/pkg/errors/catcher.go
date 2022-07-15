@@ -196,6 +196,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	if isResourceNotFoundError(err) {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
+
 	if r != nil && r.StatusCode == http.StatusForbidden {
 		suggestions := ChooseRightEnvironmentSuggestions
 		if r.Request.Method == http.MethodDelete {
