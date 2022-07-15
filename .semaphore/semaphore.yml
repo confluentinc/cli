@@ -1,0 +1,118 @@
+version: v1.0
+name: Confluent CLI
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-1
+
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  env_vars:
+    - name: CI
+      value: "true"
+  secrets:
+    - name: vault_sem2_approle
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: Linux
+    task:
+      jobs:
+        - name: Test
+          commands:
+            # Install Vault
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - unzip vault.zip
+            - chmod +x vault
+            
+            # Log in to Vault
+            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - ./vault login -no-print token="${VAULT_TOKEN}"
+            
+            # Get GitHub SSH key from Vault
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            
+            # Try to restore cached dependencies
+            - checkout
+            - cache restore $(checksum go.sum)
+            
+            # Set up Go
+            - sem-version go 1.17.6
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            
+            # Download and cache Go dependencies
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - go mod download
+            - make deps
+            - cache store $(checksum go.sum) $(go env GOPATH)
+            
+            # Run tests
+            - make lint
+            - make unit-test
+            - make int-test
+            - make test-installer
+
+  - name: MacOS
+    task:
+      agent:
+        machine:
+          type: a1-standard-4 # TODO: Use s1-prod-macos
+          os_image: macos-xcode13
+      jobs:
+        - name: Test
+          commands:
+            # Install Vault
+            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
+            - unzip vault.zip
+            - chmod +x vault
+            
+            # Log in to Vault
+            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - ./vault login -no-print token="${VAULT_TOKEN}"
+            
+            # Get GitHub SSH key from Vault
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            
+            # Try to restore cached dependencies
+            - checkout
+            - cache restore $(checksum go.sum)
+            
+            # Set up Go
+            - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
+            - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
+            - export "PATH=/usr/local/go/bin:${PATH}"
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            
+            # Download and cache Go dependencies
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - go mod download
+            - make deps
+            - cache store $(checksum go.sum) $(go env GOPATH)
+            
+            # Run tests
+            - make lint
+            - make unit-test
+            - make int-test
+            - make test-installer
+
+#  - name: Windows
+#    task:
+#      agent:
+#        machine:
+#          type: s1-prod-windows
+#      jobs:
+#        - name: Test
+#          commands:
+#          - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
+#          - Expand-Archive go1.17.6.windows-amd64.zip
+
+# TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
