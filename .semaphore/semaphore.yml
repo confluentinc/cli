@@ -21,6 +21,7 @@ execution_time_limit:
 
 blocks:
   - name: Linux
+    dependencies: []
     task:
       jobs:
         - name: Test
@@ -54,12 +55,14 @@ blocks:
             - cache store $(checksum go.sum) $(go env GOPATH)
             
             # Run tests
+            - echo "mode: atomic" > coverage.txt
             - make lint
             - make unit-test
             - make int-test
             - make test-installer
 
   - name: MacOS
+    dependencies: []
     task:
       agent:
         machine:
