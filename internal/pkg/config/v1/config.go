@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -607,13 +607,11 @@ func (c *Config) isContextStatePresent() bool {
 }
 
 func (c *Config) IsOrgSuspended() bool {
-	status := c.Context().GetSuspensionStatus().GetStatus()
-	return status == orgv1.SuspensionStatusType_SUSPENSION_IN_PROGRESS || status == orgv1.SuspensionStatusType_SUSPENSION_COMPLETED
+	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
-	eventType := c.Context().GetSuspensionStatus().GetEventType()
-	return c.IsOrgSuspended() && eventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
+	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) GetLastUsedOrgId() string {

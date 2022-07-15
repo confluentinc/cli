@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -163,32 +164,29 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 }
 
 func createUsernameCredential(credentialName string, auth *AuthConfig) *Credential {
-	credential := &Credential{
+	return &Credential{
 		Name:           credentialName,
 		Username:       auth.User.Email,
 		CredentialType: Username,
 	}
-	return credential
 }
 
 func createAPIKeyCredential(credentialName string, apiKeyPair *APIKeyPair) *Credential {
-	credential := &Credential{
+	return &Credential{
 		Name:           credentialName,
 		APIKeyPair:     apiKeyPair,
 		CredentialType: APIKey,
 	}
-	return credential
 }
 func createPlatform(name, server string) *Platform {
-	platform := &Platform{
+	return &Platform{
 		Name:   name,
 		Server: server,
 	}
-	return platform
 }
 
-func createAuthConfig(userId int32, email string, userResourceId string, envId string, organizationId int32, orgResourceId string) *AuthConfig {
-	auth := &AuthConfig{
+func createAuthConfig(userId int32, email, userResourceId, envId string, organizationId int32, orgResourceId string) *AuthConfig {
+	return &AuthConfig{
 		User: &orgv1.User{
 			Id:         userId,
 			Email:      email,
@@ -199,50 +197,42 @@ func createAuthConfig(userId int32, email string, userResourceId string, envId s
 			Id:         organizationId,
 			ResourceId: orgResourceId,
 		},
-		Accounts: []*orgv1.Account{
-			{Id: envId},
-		},
+		Accounts: []*orgv1.Account{{Id: envId}},
 	}
-	return auth
 }
 
 func createContextState(authConfig *AuthConfig, authToken string) *ContextState {
-	contextState := &ContextState{
+	return &ContextState{
 		Auth:      authConfig,
 		AuthToken: authToken,
 	}
-	return contextState
 }
 
 func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
-	keyPair := &APIKeyPair{
+	return &APIKeyPair{
 		Key:    apiKey,
 		Secret: apiSecret,
 	}
-	return keyPair
 }
 
-func createKafkaCluster(clusterID string, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
-	cluster := &KafkaClusterConfig{
+func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
+	return &KafkaClusterConfig{
 		ID:          clusterID,
 		Name:        clusterName,
 		Bootstrap:   bootstrapServer,
 		APIEndpoint: kafkaApiEndpoint,
-		APIKeys: map[string]*APIKeyPair{
-			apiKeyPair.Key: apiKeyPair,
-		},
-		APIKey: apiKeyPair.Key,
+		APIKeys:     map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
+		APIKey:      apiKeyPair.Key,
+		LastUpdate:  time.Now(),
 	}
-	return cluster
 }
 
 func createSRCluster(apiKeyPair *APIKeyPair) *SchemaRegistryCluster {
-	cluster := &SchemaRegistryCluster{
+	return &SchemaRegistryCluster{
 		Id:                     srClusterId,
 		SchemaRegistryEndpoint: srEndpoint,
 		SrCredentials:          apiKeyPair,
 	}
-	return cluster
 }
 
 func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Credential, contextState *ContextState) {

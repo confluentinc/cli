@@ -25,18 +25,18 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
 
-	key, _, err := c.V2Client.GetApiKey(apiKey)
+	key, httpResp, err := c.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {
 		err = c.deleteV1(apiKey)
 	} else {
-		_, err = c.V2Client.DeleteApiKey(apiKey)
+		httpResp, err = c.V2Client.DeleteApiKey(apiKey)
 	}
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation)
+		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
 	}
 
 	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)

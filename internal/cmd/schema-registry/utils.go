@@ -13,14 +13,20 @@ import (
 )
 
 const (
-	SubjectUsage            = "Subject of the schema."
-	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	SubjectUsage              = "Subject of the schema."
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	essentialsPackage         = "essentials"
+	advancedPackage           = "advanced"
+	essentialsPackageInternal = "free"
+	advancedPackageInternal   = "paid"
 )
 
 var packageDisplayNameMapping = map[string]string{
-	"free": "essentials",
-	"paid": "advanced",
+	essentialsPackageInternal: essentialsPackage,
+	advancedPackageInternal:   advancedPackage,
 }
+
+var packageDisplayNames = []string{essentialsPackage, advancedPackage}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
@@ -57,6 +63,7 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
 }
 
+<<<<<<< HEAD
 func getAllPackageDisplayNames() []string {
 	packageDisplayNames := make([]string, 0, len(packageDisplayNameMapping))
 	for _, displayName := range packageDisplayNameMapping {
@@ -75,4 +82,12 @@ func getCommaDelimitedPackagesString() string {
 
 func addPackageFlag(cmd *cobra.Command) {
 	cmd.Flags().String("package", "", fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+=======
+func getCommaDelimitedPackagesString() string {
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+}
+
+func addPackageFlag(cmd *cobra.Command) {
+	cmd.Flags().String("package", essentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+>>>>>>> origin/main
 }
