@@ -17,7 +17,7 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment delete not-595", fixture: "environment/11.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.workflow = true
