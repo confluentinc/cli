@@ -1,13 +1,13 @@
-              Plugin Name              |                             File Path                               
----------------------------------------+---------------------------------------------------------------------
-  confluent-another_dash_test-but_with | test/fixtures/input/plugin/confluent-another_dash_test-but_with.sh  
-  confluent-can-print-to-stderr        | test/fixtures/input/plugin/dummy/confluent-can-print-to-stderr.sh   
-  confluent-dash_test                  | test/fixtures/input/plugin/confluent-dash_test.sh                   
-  confluent-foo-bar-baz-boo-far        | test/fixtures/input/plugin/confluent-foo-bar-baz-boo-far.sh         
-  confluent-kafka-something            | test/fixtures/input/plugin/confluent-kafka-something.sh             
-  confluent-plugin1                    | test/fixtures/input/plugin/confluent-plugin1.sh                     
-  confluent-plugin2                    | test/fixtures/input/plugin/confluent-plugin2.sh                     
-  confluent-print-args                 | test/fixtures/input/plugin/confluent-print-args.sh                  
-  confluent-version                    | test/fixtures/input/plugin/confluent-version                        
-[WARN] test/fixtures/input/plugin/confluent-version is overshadowed by `confluent version`.
+           Plugin Name           |                             File Path                               
+---------------------------------+---------------------------------------------------------------------
+  confluent another_dash_test    | test/fixtures/input/plugin/confluent-another_dash_test-but_with.sh  
+  but_with                       |                                                                     
+  confluent can print to stderr  | test/fixtures/input/plugin/dummy/confluent-can-print-to-stderr.sh   
+  confluent dash_test            | test/fixtures/input/plugin/confluent-dash_test.sh                   
+  confluent foo bar baz boo far  | test/fixtures/input/plugin/confluent-foo-bar-baz-boo-far.sh         
+  confluent kafka something      | test/fixtures/input/plugin/confluent-kafka-something.sh             
+  confluent plugin1              | test/fixtures/input/plugin/confluent-plugin1.sh                     
+  confluent plugin2              | test/fixtures/input/plugin/confluent-plugin2.sh                     
+  confluent print args           | test/fixtures/input/plugin/confluent-print-args.sh                  
+  confluent version              | test/fixtures/input/plugin/confluent-version                        
 [WARN] test/fixtures/input/plugin/dummy/confluent-plugin2 is overshadowed by a similarly named plugin in the list above.

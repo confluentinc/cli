@@ -44,7 +44,7 @@ func list(cmd *cobra.Command, _ []string) error {
 	var pluginList []row
 	var overshadowedList []string
 	for name, pathList := range pluginMap {
-		pluginList = append(pluginList, row{pluginName: name, filePath: pathList[0]})
+		pluginList = append(pluginList, row{pluginName: strings.ReplaceAll(name, "-", " "), filePath: pathList[0]})
 		for i := 1; i < len(pathList); i++ {
 			overshadowedList = append(overshadowedList, pathList[i])
 		}
