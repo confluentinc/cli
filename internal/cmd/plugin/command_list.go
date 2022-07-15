@@ -41,26 +41,31 @@ func list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	var pluginList []row
-	var overshadowedList []string
+	var pluginList, overshadowedPlugins, nameConflictPlugins []row
 	for name, pathList := range pluginMap {
-		pluginList = append(pluginList, row{pluginName: strings.ReplaceAll(name, "-", " "), filePath: pathList[0]})
+		pluginInfo := row{
+			pluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
+			filePath:   pathList[0],
+		}
+		args := strings.Split(pluginInfo.pluginName, " ")
+		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.pluginName {
+			nameConflictPlugins = append(nameConflictPlugins, pluginInfo)
+		} else {
+			pluginList = append(pluginList, pluginInfo)
+		}
 		for i := 1; i < len(pathList); i++ {
-			overshadowedList = append(overshadowedList, pathList[i])
+			overshadowedPlugins = append(overshadowedPlugins, row{pluginName: pluginInfo.pluginName, filePath: pathList[i]})
 		}
 	}
 
 	if err := printTable(cmd, pluginList); err != nil {
 		return err
 	}
-	for _, plugin := range pluginList {
-		args := strings.Split(plugin.pluginName, "-")
-		if cmd, _, _ := cmd.Root().Find(args[1:]); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.pluginName {
-			utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by `%s`.\n", plugin.filePath, cmd.CommandPath())
-		}
+	for _, pluginInfo := range nameConflictPlugins {
+		utils.ErrPrintf(cmd, "[WARN] When running `%s`, the existing CLI command will be run instead of the plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
 	}
-	for _, path := range overshadowedList {
-		utils.ErrPrintf(cmd, "[WARN] %s is overshadowed by a similarly named plugin in the list above.\n", path)
+	for _, pluginInfo := range overshadowedPlugins {
+		utils.ErrPrintf(cmd, "[WARN] When running `%s`, the plugin listed above will be run instead of the plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
 	}
 	return nil
 }
