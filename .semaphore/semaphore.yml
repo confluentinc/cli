@@ -41,7 +41,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum)
+            - cache restore
             
             # Set up Go
             - sem-version go 1.17.6
@@ -52,13 +52,10 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - go mod download
             - make deps
-            - cache store $(checksum go.sum) $(go env GOPATH)
+            - cache store
             
             # Run tests
-            - make lint
-            - make unit-test
-            - make int-test
-            - make test-installer
+            - make test
 
   - name: MacOS
     dependencies: []
@@ -85,7 +82,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum)
+            - cache restore
             
             # Set up Go
             - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
@@ -98,13 +95,10 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             - go mod download
             - make deps
-            - cache store $(checksum go.sum) $(go env GOPATH)
+            - cache store
             
             # Run tests
-            - make lint
-            - make unit-test
-            - make int-test
-            - make test-installer
+            - make test
 
 #  - name: Windows
 #    task:
