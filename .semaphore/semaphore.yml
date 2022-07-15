@@ -48,15 +48,20 @@ blocks:
             - sem-version go 1.17.6
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
-            # Download and cache Go dependencies
+            # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            - go mod download
-            - cache store
             
             # Run tests
+            - make generate-packaging-patch
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
+            - make lint
             - make test
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
 
   - name: MacOS
     dependencies: []
@@ -90,15 +95,20 @@ blocks:
             - export "PATH=/usr/local/go/bin:${PATH}"
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
-            # Download and cache Go dependencies
+            # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            - go mod download
-            - cache store
             
             # Run tests
+            - make generate-packaging-patch
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
+            - make lint
             - make test
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
 
   - name: Windows
     dependencies: []
@@ -132,14 +142,19 @@ blocks:
             - export "PATH=/usr/local/go/bin:${PATH}"
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
-            # Download and cache Go dependencies
+            # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            - go mod download
-            - cache store
             
             # Run tests
+            - make generate-packaging-patch
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
+            - make lint
             - make test
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
 
 # TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
