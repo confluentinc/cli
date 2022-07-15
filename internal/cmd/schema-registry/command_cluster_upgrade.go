@@ -22,7 +22,7 @@ func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Upgrade Schema Registry to "advanced" package for environment "env-12345"`,
+				Text: `Upgrade Schema Registry to "advanced" package for environment "env-12345".`,
 				Code: fmt.Sprintf("%s schema-registry cluster upgrade --package advanced --environment env-12345", version.CLIName),
 			},
 		),
@@ -30,9 +30,7 @@ func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
 
 	addPackageFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("package")
