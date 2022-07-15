@@ -55,7 +55,6 @@ blocks:
             - cache store $(checksum go.sum) $(go env GOPATH)
             
             # Run tests
-            - echo "mode: atomic" > coverage.txt
             - make lint
             - make unit-test
             - make int-test
