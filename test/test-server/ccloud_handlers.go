@@ -220,24 +220,16 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			var res orgv1.GetPaymentInfoReply
-
-			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
-			switch hasPaymentMethod {
-			case "false":
-				res = orgv1.GetPaymentInfoReply{}
-			default:
-				res = orgv1.GetPaymentInfoReply{
-					Card: &orgv1.Card{
-						Cardholder: "Miles Todzo",
-						Brand:      "Visa",
-						Last4:      "4242",
-						ExpMonth:   "01",
-						ExpYear:    "99",
-					},
-					Organization: &orgv1.Organization{Id: 0},
-					Error:        nil,
-				}
+			res := orgv1.GetPaymentInfoReply{
+				Card: &orgv1.Card{
+					Cardholder: "Miles Todzo",
+					Brand:      "Visa",
+					Last4:      "4242",
+					ExpMonth:   "01",
+					ExpYear:    "99",
+				},
+				Organization: &orgv1.Organization{Id: 0},
+				Error:        nil,
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
