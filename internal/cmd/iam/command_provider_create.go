@@ -68,9 +68,9 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 
 	identityProvider := &identityProvider{
 		Id:          *resp.Id,
-		DisplayName: *resp.DisplayName,
+		Name:        *resp.DisplayName,
 		Description: *resp.Description,
-		Issuer:      *resp.Issuer,
+		IssuerUri:   *resp.Issuer,
 		JwksUri:     *resp.JwksUri,
 	}
 

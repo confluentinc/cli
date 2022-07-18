@@ -9,15 +9,14 @@ import (
 
 var (
 	providerHumanLabelMap = map[string]string{
-		"Id":          "ID",
-		"DisplayName": "Display Name",
-		"JwksUri":     "JWKS URI",
+		"Id":        "ID",
+		"IssuerUri": "Issuer URI",
+		"JwksUri":   "JWKS URI",
 	}
 	providerStructuredLabelMap = map[string]string{
 		"Id":          "id",
-		"DisplayName": "display_name",
 		"Description": "description",
-		"Issuer":      "issuer",
+		"IssuerUri":   "issuer_uri",
 		"JwksUri":     "jwks_uri",
 	}
 )
@@ -43,9 +42,9 @@ func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) err
 
 	describeIdentityProvider := &identityProvider{
 		Id:          *identityProviderProfile.Id,
-		DisplayName: *identityProviderProfile.DisplayName,
+		Name:        *identityProviderProfile.DisplayName,
 		Description: *identityProviderProfile.Description,
-		Issuer:      *identityProviderProfile.Issuer,
+		IssuerUri:   *identityProviderProfile.Issuer,
 		JwksUri:     *identityProviderProfile.JwksUri,
 	}
 

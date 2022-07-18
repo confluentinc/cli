@@ -8,9 +8,9 @@ import (
 )
 
 var (
-	identityProviderListFields           = []string{"Id", "DisplayName", "Description", "Issuer", "JwksUri"}
-	identityProviderListHumanLabels      = []string{"ID", "Display Name", "Description", "Issuer", "JWKS URI"}
-	identityProviderListStructuredLabels = []string{"id", "display_name", "description", "issuer", "jwks_uri"}
+	identityProviderListFields           = []string{"Id", "Name", "Description", "IssuerUri", "JwksUri"}
+	identityProviderListHumanLabels      = []string{"ID", "Name", "Description", "Issuer URI", "JWKS URI"}
+	identityProviderListStructuredLabels = []string{"id", "name", "description", "issuer_uri", "jwks_uri"}
 )
 
 func (c *identityProviderCommand) newListCommand() *cobra.Command {
@@ -37,7 +37,13 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, op := range identityProviders {
-		element := &identityProvider{Id: *op.Id, DisplayName: *op.DisplayName, Description: *op.Description, Issuer: *op.Issuer, JwksUri: *op.JwksUri}
+		element := &identityProvider{
+			Id:          *op.Id,
+			Name:        *op.DisplayName,
+			Description: *op.Description,
+			IssuerUri:   *op.Issuer,
+			JwksUri:     *op.JwksUri,
+		}
 		outputWriter.AddElement(element)
 	}
 	return outputWriter.Out()

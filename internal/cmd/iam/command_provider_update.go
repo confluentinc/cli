@@ -64,6 +64,12 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return errors.CatchIdentityProviderNotFoundError(err, httpResp, identityProviderId)
 	}
 
-	describeIdentityProvider := &identityProvider{Id: *resp.Id, DisplayName: *resp.DisplayName, Description: *resp.Description, Issuer: *resp.Issuer, JwksUri: *resp.JwksUri}
+	describeIdentityProvider := &identityProvider{
+		Id:          *resp.Id,
+		Name:        *resp.DisplayName,
+		Description: *resp.Description,
+		IssuerUri:   *resp.Issuer,
+		JwksUri:     *resp.JwksUri,
+	}
 	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }

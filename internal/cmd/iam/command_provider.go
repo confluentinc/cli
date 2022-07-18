@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var providerListFields = []string{"Id", "DisplayName", "Description", "Issuer", "JwksUri"}
+var providerListFields = []string{"Id", "Name", "Description", "IssuerUri", "JwksUri"}
 
 type identityProviderCommand struct {
 	*pcmd.AuthenticatedCLICommand
@@ -14,9 +14,9 @@ type identityProviderCommand struct {
 
 type identityProvider struct {
 	Id          string
-	DisplayName string
+	Name        string
 	Description string
-	Issuer      string
+	IssuerUri   string
 	JwksUri     string
 }
 
