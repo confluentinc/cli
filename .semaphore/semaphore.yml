@@ -42,6 +42,7 @@ blocks:
             
             # Set up Go
             - sem-version go 1.17.6
+            - echo $(go env GOPATH)
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
             # Set up Git
@@ -53,7 +54,6 @@ blocks:
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
             - make lint
-            - ulimit -n
             - ulimit -n 2048
             - make test
             - make lint-licenses
@@ -86,6 +86,7 @@ blocks:
             - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
             - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
             - export "PATH=/usr/local/go/bin:${PATH}"
+            - echo $(go env GOPATH)
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
             # Set up Git
@@ -116,7 +117,7 @@ blocks:
             - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
             - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Select-String 'echo' script.sh
+            - $(Select-String "echo" script.sh).Split('"')[1]
             
             # Try to restore cached dependencies
             - checkout
@@ -125,8 +126,8 @@ blocks:
             # Set up Go
             - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
             - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
-            - $Env:PATH = /usr/local/go/bin:$Env:PATH
-            - $Env:PATH = $(go env GOPATH)/bin:$Env:PATH
+            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
+            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
