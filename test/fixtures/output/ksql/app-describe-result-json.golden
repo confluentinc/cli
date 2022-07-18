@@ -6,5 +6,6 @@ In the next major release, the `confluent ksql app` commands will be removed. Us
   "kafka": "lkc-abcde",
   "storage": 130,
   "endpoint": "SASL_SSL://ksql-endpoint",
-  "status": "PROVISIONING"
+  "status": "PROVISIONING",
+  "detailed_processing_log": true
 }
