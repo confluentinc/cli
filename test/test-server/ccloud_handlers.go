@@ -72,6 +72,8 @@ const (
 
 	auditLogServiceAccountID         = int32(1337)
 	auditLogServiceAccountResourceID = "sa-1337"
+
+	PromoTestCode = "PromoTestCode"
 )
 
 // Fill API keyStore with default data
@@ -285,7 +287,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
 					{
-						Code:                 "SignUpPromo01",
+						Code:                 PromoTestCode,
 						Amount:               400 * 10000,
 						Balance:              0,
 						CreditExpirationDate: expiration,

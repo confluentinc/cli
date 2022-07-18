@@ -91,7 +91,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent))
-	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory))
+	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory, isTest))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(prerunner))
@@ -120,7 +120,7 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New(ver.Version)
 
-	if !isTest {
+	if !isTest && ver.IsReleased() {
 		cmd.PersistentPostRun = u.Collect
 	}
 
