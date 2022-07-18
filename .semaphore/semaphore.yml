@@ -27,9 +27,8 @@ blocks:
         - name: Test
           commands:
             # Install Vault
-            - wget -O vault.zip https://vault-zipfile-public-cache.s3-us-west-2.amazonaws.com/vault_1.4.0_linux_amd64.zip
-            - unzip vault.zip
-            - chmod +x vault
+            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_linux_amd64.zip
+            - unzip vault_1.11.0_linux_amd64.zip
             
             # Log in to Vault
             - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
@@ -121,6 +120,7 @@ blocks:
             # Install Vault
             - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
             - Expand-Archive vault_1.11.0_windows_amd64.zip
+            - dir
             
             # Log in to Vault
             - .\vault.exe write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID}
