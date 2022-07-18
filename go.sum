@@ -589,8 +589,8 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.680.0/go.mod h1:SirG6NGkX0
 github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0tD5DmCox4cTTTaq/LwEd+tCd8D7sHSMbI=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.753.0/go.mod h1:kVPBJEDa1rPfaw3GcSFYCr9LuT/YzzwSmgsEOMW4bVQ=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.779.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0 h1:4ZDz0vzcopeqoQHeuDjORhT24+lChUG3U9zXci20m/Q=
-github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1249.0 h1:/Xo0WvSav2q405wrTbbNvI3Ln94CWg+YqawGEaGa68o=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1249.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0 h1:Slbt8/4WHLX9wuslvRjXqBxtCRs5tAvXWWA4T9/m7Gc=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0/go.mod h1:lj7y2SOcCqcdz3xlwfh98dMaonfT9D9YOoRvIOEnNk8=
 github.com/confluentinc/cc-structs/kafka/util v0.37.0/go.mod h1:2dfBQRadkzTsF+JgcEODjsvrHsw/U3GcftdEOZVv+D4=
