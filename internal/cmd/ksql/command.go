@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/dghubble/sling"
