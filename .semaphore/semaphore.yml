@@ -27,9 +27,6 @@ blocks:
         - name: Test
           commands:
             # https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/1342058645/Semaphore+FAQ#Semaphore-job-is-stuck-(no-new-log-lines)-and-eventually-times-Out-OR-job-log-on-the-UI-is-stuck-on-'Fetching...'
-            - sudo service docker stop
-            - sudo umount -f /var/lib/docker
-            - sudo service docker start
             - sudo rm -rf ~/.phpbrew ~/.kerl ~/.sbt ~/.nvm ~/.npm ~/.kiex /usr/local/golang/ /usr/lib/jvm /opt/* /opt/az
 
             # Install Vault
@@ -37,8 +34,7 @@ blocks:
             - unzip vault_1.11.0_linux_amd64.zip
             
             # Log in to Vault
-            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
-            - ./vault login -no-print token="${VAULT_TOKEN}"
+            - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
@@ -83,8 +79,7 @@ blocks:
             - unzip vault_1.11.0_darwin_amd64.zip
             
             # Log in to Vault
-            - VAULT_TOKEN=$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
-            - ./vault login -no-print token="${VAULT_TOKEN}"
+            - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
@@ -133,8 +128,8 @@ blocks:
             - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
             
             # Log in to Vault
-            - .\vault.exe write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID}
-            - VAULT_TOKEN=$(.\vault.exe write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})
+            - .\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID
+            - $env:VAULT_TOKEN = $(.\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID)
             - .\vault.exe login -no-print token="${VAULT_TOKEN}"
               
             # Get GitHub SSH key from Vault
