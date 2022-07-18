@@ -472,8 +472,6 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/ksqls"
 func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
-		bs := string(body)
 		ksqlCluster1 := &schedv1.KSQLCluster{
 			Id:                "lksqlc-ksql5",
 			AccountId:         "25",
@@ -506,7 +504,8 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
-			if strings.Contains(bs, "lkc-processLogFalse") {
+			body, _ := ioutil.ReadAll(r.Body)
+			if strings.Contains(string(body), "lkc-processLogFalse") {
 				reply, err = utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 					Cluster: ksqlClusterForDetailedProcessingLogFalse,
 				})
