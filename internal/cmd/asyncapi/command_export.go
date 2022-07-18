@@ -23,6 +23,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -190,7 +191,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
+	utils.Printf(cmd, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return ioutil.WriteFile(flags.file, yaml, 0644)
 }
 
@@ -224,8 +225,7 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}, error) {
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
-		err = fmt.Errorf("error in subscribing to the topic: %v", err)
-		return nil, err
+		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
 	if err != nil {
@@ -298,7 +298,7 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
 	if err != nil {
-		err = fmt.Errorf(`cannot find Kafka cluster: ""%v"`, err)
+		err = fmt.Errorf(`cannot find Kafka cluster: "%v"`, err)
 		return nil, nil, nil, err
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
@@ -308,8 +308,7 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
-		err = fmt.Errorf("error in getting topics: \"%v\"", err)
-		return nil, nil, nil, err
+		return nil, nil, nil, fmt.Errorf("failed to get topics: %v", err)
 	}
 	return cluster, topics, clusterCreds, nil
 }
@@ -337,8 +336,7 @@ func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry
 	} else { // JSON or Avro Format
 		err := json.Unmarshal([]byte(schema.Schema), &producer)
 		if err != nil {
-			err = fmt.Errorf("error in unmarshalling schema: \"%v\"", err)
-			return "", nil, nil, err
+			return "", nil, nil, fmt.Errorf("failed to unmarshal schema: %v", err)
 		}
 	}
 	return contentType, &schema, producer, nil
@@ -442,11 +440,10 @@ func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	mapOfMessageCompat := make(map[string]interface{})
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 	if err != nil {
-		log.CliLogger.Warnf("error in getting subject level configuration: %v", err)
+		log.CliLogger.Warnf("failed to get subject level configuration: %v", err)
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
 		if err != nil {
-			err = fmt.Errorf("error in getting top level config: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
 		}
 	}
 	mapOfMessageCompat["x-messageCompatibility"] = interface{}(config.CompatibilityLevel)
@@ -539,7 +536,7 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		"enable.auto.commit": "false",
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error in creating Kafka consumer: %v", err)
+		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 	return consumer, nil
 }
