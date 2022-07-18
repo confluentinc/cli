@@ -29,14 +29,10 @@ blocks:
             # https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/1342058645/Semaphore+FAQ#Semaphore-job-is-stuck-(no-new-log-lines)-and-eventually-times-Out-OR-job-log-on-the-UI-is-stuck-on-'Fetching...'
             - sudo rm -rf ~/.phpbrew ~/.kerl ~/.sbt ~/.nvm ~/.npm ~/.kiex /usr/local/golang/ /usr/lib/jvm /opt/* /opt/az
 
-            # Install Vault
+            # Get GitHub SSH key from Vault
             - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_linux_amd64.zip
             - unzip vault_1.11.0_linux_amd64.zip
-            
-            # Log in to Vault
             - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            
-            # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
             
@@ -57,6 +53,8 @@ blocks:
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
             - make lint
+            - ulimit -n
+            - ulimit -n 2048
             - make test
             - make lint-licenses
             
@@ -73,20 +71,12 @@ blocks:
       jobs:
         - name: Test
           commands:
-            # Install Vault
+            # Get GitHub SSH key from Vault
             - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
             - unzip vault_1.11.0_darwin_amd64.zip
-            
-            # Log in to Vault
             - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            
-            # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - echo $HOME
-            - cat script.sh
             - source script.sh
-            - ls ~
-            - ls
             
             # Try to restore cached dependencies
             - checkout
@@ -121,26 +111,22 @@ blocks:
       jobs:
         - name: Test
           commands:
-            # Install Vault
+            # Get GitHub SSH key from Vault
             - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
             - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
-            
-            # Log in to Vault
-            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID)"
-              
-            # Get GitHub SSH key from Vault
+            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
+            - Select-String 'echo' script.sh
             
             # Try to restore cached dependencies
             - checkout
             - cache restore
             
             # Set up Go
-            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip
+            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
             - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
-            - export "PATH=/usr/local/go/bin:${PATH}"
-            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - $Env:PATH = /usr/local/go/bin:$Env:PATH
+            - $Env:PATH = $(go env GOPATH)/bin:$Env:PATH
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
