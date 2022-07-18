@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -47,7 +48,7 @@ func (c userCommand) newDescribeCommand() *cobra.Command {
 
 func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	if resource.LookupType(args[0]) != resource.User {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
 	userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: args[0]})
