@@ -6,5 +6,5 @@
   "storage": 123,
   "endpoint": "SASL_SSL://ksql-endpoint",
   "status": "PROVISIONING",
-  "detailed_processing_log": "false"
+  "detailed_processing_log": false
 }

@@ -64,5 +64,5 @@ func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) er
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterToCLIDescribe(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

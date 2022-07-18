@@ -3,8 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"strconv"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/dghubble/sling"
@@ -35,7 +33,7 @@ type ksqlCluster struct {
 	Storage               int32  `json:"storage,omitempty"`
 	Endpoint              string `json:"endpoint,omitempty"`
 	Status                string `json:"status,omitempty"`
-	DetailedProcessingLog string `json:"detailed_processing_log,omitempty"`
+	DetailedProcessingLog bool   `json:"detailed_processing_log,omitempty"`
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -55,7 +53,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) updateKsqlClusterToCLIDescribe(cluster *schedv1.KSQLCluster) *ksqlCluster {
+func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *schedv1.KSQLCluster) *ksqlCluster {
 	status := cluster.Status.String()
 	if cluster.IsPaused {
 		status = "PAUSED"
@@ -67,9 +65,9 @@ func (c *ksqlCommand) updateKsqlClusterToCLIDescribe(cluster *schedv1.KSQLCluste
 			status = "PROVISIONING FAILED"
 		}
 	}
-	detailedProcessingLog := "true"
+	detailedProcessingLog := true
 	if cluster.DetailedProcessingLog != nil {
-		detailedProcessingLog = strconv.FormatBool(cluster.DetailedProcessingLog.Value)
+		detailedProcessingLog = cluster.DetailedProcessingLog.Value
 	}
 	return &ksqlCluster{
 		Id:                    cluster.Id,

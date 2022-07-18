@@ -109,6 +109,7 @@ var flagRules = []linter.FlagRule{
 			"destination-api-secret",
 			"destination-cluster-id",
 			"enable-systest-events",
+			"log-exclude-rows",
 			"if-not-exists",
 			"kafka-cluster-id",
 			"ksql-cluster-id",
