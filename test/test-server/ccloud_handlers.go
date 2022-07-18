@@ -229,7 +229,6 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 					ExpYear:    "99",
 				},
 				Organization: &orgv1.Organization{Id: 0},
-				Error:        nil,
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)

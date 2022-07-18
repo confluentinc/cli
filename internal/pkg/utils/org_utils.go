@@ -4,15 +4,6 @@ import (
 	"os"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
-)
-
-const (
-	stripeTestKey = "pk_test_0MJU6ihIFpxuWMwG6HhjGQ8P"
-	stripeLiveKey = "pk_live_t0P8AKi9DEuvAqfKotiX5xHM"
 )
 
 func IsOrgSuspended(suspensionStatus *orgv1.SuspensionStatus) bool {
@@ -44,12 +35,7 @@ func IsOrgOnFreeTrial(org *orgv1.Organization, isTest bool) bool {
 	}
 
 	if isTest {
-		hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
-		if hasPaymentMethod == "true" {
-			return false
-		} else {
-			return true
-		}
+		return os.Getenv("HAS_PAYMENT_METHOD") != "true"
 	}
 
 	if orgv1.BillingMethod_STRIPE == org.GetPlan().GetBilling().GetMethod() {
@@ -69,35 +55,4 @@ func IsOrgOnFreeTrial(org *orgv1.Organization, isTest bool) bool {
 	}
 
 	return false
-}
-
-// hasDefaultPaymentMethod reuses the logic of HasDefaultPaymentMethod defined in https://github.com/confluentinc/cc-billing-worker/blob/master/stripe/customer.go
-func hasDefaultPaymentMethod(stripeCustomerId string, isTest bool) (bool, error) {
-	if isTest {
-		stripe.Key = stripeTestKey
-	} else {
-		stripe.Key = stripeLiveKey
-	}
-	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
-		Level: 0,
-	}
-
-	stripeCustomer, err := customer.Get(stripeCustomerId, nil)
-	if err != nil {
-		return false, err
-	}
-
-	if stripeCustomer == nil {
-		return false, errors.New("customer is nil")
-	}
-
-	if stripeCustomer.DefaultSource != nil {
-		return true, nil
-	}
-
-	if stripeCustomer.InvoiceSettings != nil && stripeCustomer.InvoiceSettings.DefaultPaymentMethod != nil {
-		return true, nil
-	}
-
-	return false, nil
 }

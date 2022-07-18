@@ -198,8 +198,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 }
 
 func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	isOrgOnFreeTrial := utils.IsOrgOnFreeTrial(currentOrg, c.isTest)
-	if !isOrgOnFreeTrial {
+	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
 		return
 	}
 
