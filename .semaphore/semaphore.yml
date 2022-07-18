@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-1
+    type: s1-prod-ubuntu20-04-amd64-2
 
 auto_cancel:
   running:
@@ -82,7 +82,9 @@ blocks:
             
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - cat script.sh
             - source script.sh
+            - ls ~/.ssh
             
             # Try to restore cached dependencies
             - checkout
@@ -119,7 +121,7 @@ blocks:
           commands:
             # Install Vault
             - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
-            - Expand-Archive vault_1.11.0_windows_amd64.zip
+            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath vault
             - dir
             
             # Log in to Vault
