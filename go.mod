@@ -12,7 +12,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1249.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
 	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
