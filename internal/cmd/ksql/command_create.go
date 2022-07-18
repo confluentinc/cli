@@ -76,12 +76,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		KafkaClusterId: kafkaCluster.ID,
 	}
 
-	hideRowsInProcessingLog, err := cmd.Flags().GetBool("log-exclude-rows")
+	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
 	if err != nil {
 		return err
 	}
 
-	cfg.DetailedProcessingLog = &types.BoolValue{Value: !hideRowsInProcessingLog}
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
