@@ -20,7 +20,7 @@ execution_time_limit:
   hours: 1
 
 blocks:
-  - name: Linux
+  - name: linux/amd64
     dependencies: []
     task:
       jobs:
@@ -38,7 +38,6 @@ blocks:
             
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - cat script.sh
             - source script.sh
             
             # Try to restore cached dependencies
@@ -64,7 +63,7 @@ blocks:
             # Cache Go dependencies
             - cache store
 
-  - name: MacOS
+  - name: darwin/amd64
     dependencies: []
     task:
       agent:
@@ -83,11 +82,10 @@ blocks:
             
             # Get GitHub SSH key from Vault
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - echo $HOME
             - cat script.sh
-            - ls ~/.ssh
-            - pwd
             - source script.sh
-            - ls ~/.ssh
+            - ls ~
             - ls
             
             # Try to restore cached dependencies
@@ -114,7 +112,7 @@ blocks:
             # Cache Go dependencies
             - cache store
 
-  - name: Windows
+  - name: windows/amd64
     dependencies: []
     task:
       agent:
@@ -128,9 +126,7 @@ blocks:
             - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
             
             # Log in to Vault
-            - .\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID
-            - $env:VAULT_TOKEN = $(.\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID)
-            - .\vault.exe login -no-print token="${VAULT_TOKEN}"
+            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$env:VAULT_ROLE_ID secret_id=$env:VAULT_SECRET_ID)"
               
             # Get GitHub SSH key from Vault
             - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
