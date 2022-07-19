@@ -9,8 +9,7 @@ import (
 func (s *providerShareCommand) newListProviderShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List provider shares.",
-		Long:  "This command can be used to list shares for provider.",
+		Short: "List shares for provider.",
 		Args:  cobra.NoArgs,
 		RunE:  s.listProviderShares,
 		Example: examples.BuildExampleString(
