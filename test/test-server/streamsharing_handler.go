@@ -13,9 +13,9 @@ import (
 func handleStreamSharingListProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		redeemedAt := time.Now().Add(2 * time.Hour)
-		invitedAt := time.Now()
-		expiresAt := time.Now().Add(24 * time.Hour)
+		invitedAt, _ := time.Parse(time.RFC3339, "2022-07-19T15:04:05-07:00")
+		redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-20T15:04:05-07:00")
+		expiresAt, _ := time.Parse(time.RFC3339, "2022-07-21T15:04:05-07:00")
 		list := v1.CdxV1ProviderShareList{
 			Data: []v1.CdxV1ProviderShare{
 				{
