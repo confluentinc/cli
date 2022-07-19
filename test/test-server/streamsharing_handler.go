@@ -49,9 +49,14 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		b, err := json.Marshal(getTestProviderShare())
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodGet:
+			b, err := json.Marshal(getTestProviderShare())
+			require.NoError(t, err)
+			_, err = io.WriteString(w, string(b))
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }

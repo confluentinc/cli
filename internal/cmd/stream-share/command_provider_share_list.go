@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (s *providerShareCommand) newListProviderShareCommand() *cobra.Command {
+func (s *providerShareCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List shares for provider.",
 		Args:  cobra.NoArgs,
-		RunE:  s.listProviderShares,
+		RunE:  s.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List provider shares",

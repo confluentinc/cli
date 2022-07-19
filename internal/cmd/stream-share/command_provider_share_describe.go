@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (s *providerShareCommand) newDescribeProviderShareCommand() *cobra.Command {
+func (s *providerShareCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe provider share.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  s.DescribeProviderShare,
+		RunE:  s.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe provider share",
