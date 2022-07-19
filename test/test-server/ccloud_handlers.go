@@ -490,10 +490,29 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
+		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
+			Id:                    "lksqlc-woooo",
+			AccountId:             "25",
+			KafkaClusterId:        "lkc-zxcvb",
+			OutputTopicPrefix:     "pksqlc-ghjkl",
+			Name:                  "kay cee queue elle",
+			Storage:               123,
+			Endpoint:              "SASL_SSL://ksql-endpoint",
+			DetailedProcessingLog: &types.BoolValue{Value: false},
+		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
+			require.NoError(t, err)
+			req := &schedv1.CreateKSQLClusterRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if !req.Config.DetailedProcessingLog.Value {
+				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+					Cluster: ksqlClusterForDetailedProcessingLogFalse,
+				})
+			}
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
