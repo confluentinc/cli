@@ -38,7 +38,6 @@ blocks:
             
             # Set up Go
             - sem-version go 1.17.6
-            - echo $GOROOT
             - export "GOROOT=${HOME}/go"
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
@@ -135,6 +134,8 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
+            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            - choco install make
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
