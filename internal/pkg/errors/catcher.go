@@ -272,7 +272,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 		case http.StatusForbidden:
-			return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+			return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 		}
 	}
 
