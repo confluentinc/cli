@@ -3,17 +3,17 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newUpgradeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "upgrade",
 		Short:       "Upgrade Schema Registry package for this environment.",
