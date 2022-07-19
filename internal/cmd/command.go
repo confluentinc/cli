@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	streamshare "github.com/confluentinc/cli/internal/cmd/stream-share"
 	"os"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -110,6 +111,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(shell.New(cmd))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
+	cmd.AddCommand(streamshare.New(prerunner))
 
 	changeDefaults(cmd, cfg)
 

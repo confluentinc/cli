@@ -1,0 +1,16 @@
++----------------------------+--------------------------------+
+| ID                         | id                             |
+| Consumer Name              | consumer                       |
+| Consumer Organization Name | consumer org                   |
+| Provider Name              | provider                       |
+| Status                     | active                         |
+| Delivery Method            | email                          |
+| Service Account ID         | service account                |
+| Shared Resource ID         | shared resource                |
+| Invited At                 | 2022-07-19 15:04:05 -0700      |
+|                            |                          -0700 |
+| Redeemed At                | 2022-07-20 15:04:05 -0700      |
+|                            |                          -0700 |
+| Invite Expires At          | 2022-07-21 15:04:05 -0700      |
+|                            |                          -0700 |
++----------------------------+--------------------------------+

@@ -1,0 +1,4 @@
+  ID | Consumer Name | Consumer Organization Name | Provider Name | Status | Delivery Method | Service Account ID | Shared Resource ID |           Invited At           |          Redeemed At           |       Invite Expires At         
+-----+---------------+----------------------------+---------------+--------+-----------------+--------------------+--------------------+--------------------------------+--------------------------------+---------------------------------
+  id | consumer      | consumer org               | provider      | active | email           | service account    | shared resource    | 2022-07-19 15:04:05 -0700      | 2022-07-20 15:04:05 -0700      | 2022-07-21 15:04:05 -0700       
+     |               |                            |               |        |                 |                    |                    |                          -0700 |                          -0700 |                          -0700  
