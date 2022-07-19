@@ -1,0 +1,4 @@
+Error: Environment not found or access forbidden: 403 Forbidden
+
+Suggestions:
+    List available environments with `confluent environment list`.
