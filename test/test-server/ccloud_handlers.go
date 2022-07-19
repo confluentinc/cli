@@ -501,12 +501,15 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			DetailedProcessingLog: &types.BoolValue{Value: false},
 		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
-			body, _ := ioutil.ReadAll(r.Body)
-			if strings.Contains(string(body), "lkc-processLogFalse") {
-				reply, err = utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			require.NoError(t, err)
+			req := &schedv1.CreateKSQLClusterRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if !req.Config.DetailedProcessingLog.Value {
+				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 					Cluster: ksqlClusterForDetailedProcessingLogFalse,
 				})
 			}
