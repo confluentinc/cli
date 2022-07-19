@@ -6,16 +6,15 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newUpgradePackageCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "upgrade",
+		Use:         "upgrade-package",
 		Short:       "Upgrade Schema Registry package for this environment.",
 		Args:        cobra.NoArgs,
 		RunE:        c.upgrade,
@@ -23,7 +22,7 @@ func (c *clusterCommand) newUpgradeCommand(cfg *v1.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Upgrade Schema Registry to "advanced" package for environment "env-12345".`,
-				Code: fmt.Sprintf("%s schema-registry cluster upgrade --package advanced --environment env-12345", version.CLIName),
+				Code: fmt.Sprintf("%s schema-registry cluster upgrade-package --package advanced --environment env-12345", version.CLIName),
 			},
 		),
 	}

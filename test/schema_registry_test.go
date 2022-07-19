@@ -51,22 +51,22 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster upgrade",
+			args:        "schema-registry cluster upgrade-package",
 			fixture:     "schema-registry/upgrade-missing-flag.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster upgrade --package invalid-package",
+			args:        "schema-registry cluster upgrade-package --package invalid-package",
 			fixture:     "schema-registry/upgrade-invalid-package.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster upgrade --package essentials",
+			args:        "schema-registry cluster upgrade-package --package essentials",
 			fixture:     "schema-registry/upgrade-current-package.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:    "schema-registry cluster upgrade --package advanced --environment=" + testserver.SRApiEnvId,
+			args:    "schema-registry cluster upgrade-package --package advanced --environment=" + testserver.SRApiEnvId,
 			fixture: "schema-registry/upgrade.golden",
 		},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
