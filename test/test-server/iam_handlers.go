@@ -173,13 +173,19 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := iamv2.IamV2ServiceAccount{
-				Id:          iamv2.PtrString(serviceAccountResourceID),
-				DisplayName: iamv2.PtrString("service_account"),
-				Description: iamv2.PtrString("at your service."),
+			switch id {
+			case "sa-6789":
+				err := writeResourceNotFoundError(w)
+				require.NoError(t, err)
+			default:
+				serviceAccount := iamv2.IamV2ServiceAccount{
+					Id:          iamv2.PtrString(serviceAccountResourceID),
+					DisplayName: iamv2.PtrString("service_account"),
+					Description: iamv2.PtrString("at your service."),
+				}
+				err := json.NewEncoder(w).Encode(serviceAccount)
+				require.NoError(t, err)
 			}
-			err := json.NewEncoder(w).Encode(serviceAccount)
-			require.NoError(t, err)
 		case http.MethodPatch:
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)

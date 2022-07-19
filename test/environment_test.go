@@ -15,6 +15,7 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment create saucayyy -o json", fixture: "environment/9.golden"},
 		{args: "environment create saucayyy -o yaml", fixture: "environment/10.golden"},
 		{args: "environment delete not-595", fixture: "environment/11.golden"},
+		{args: "environment delete env-dne", fixture: "environment/12.golden", wantErrCode: 1},
 	}
 
 	resetConfiguration(s.T())
