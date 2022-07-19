@@ -183,7 +183,7 @@ func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Environment not found or access forbidden", EnvNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
