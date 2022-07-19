@@ -61,9 +61,8 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster upgrade --package essentials",
-			fixture:     "schema-registry/upgrade-current-package.golden",
-			wantErrCode: 1,
+			args:    "schema-registry cluster upgrade --package essentials",
+			fixture: "schema-registry/upgrade-current-package.golden",
 		},
 		{
 			args:    "schema-registry cluster upgrade --package advanced --environment=" + testserver.SRApiEnvId,
