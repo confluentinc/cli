@@ -38,8 +38,10 @@ blocks:
             
             # Set up Go
             - sem-version go 1.17.6
-            - export "GOROOT=${HOME}/go"
-            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            - export "GOPATH=$(go env GOPATH)"
+            - echo $GOPATH
+            - ls $GOPATH
+            - export "PATH=${GOPATH}/bin:${PATH}"
             
             # Try to restore cached dependencies
             - checkout
@@ -82,6 +84,7 @@ blocks:
             - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
             - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
             - export "PATH=/usr/local/go/bin:${PATH}"
+            - echo $(go env GOPATH)
             - export "PATH=$(go env GOPATH)/bin:${PATH}"
             
             # Try to restore cached dependencies
@@ -93,8 +96,6 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
             - ls -R $(go env GOPATH)
             - make test
@@ -136,8 +137,6 @@ blocks:
             # Run tests
             - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
             - choco install make
-            - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
             - make test
             - make lint-licenses
