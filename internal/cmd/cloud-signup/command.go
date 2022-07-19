@@ -198,9 +198,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 }
 
 func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	// sanity check that org is not suspended
-	if c.Config.IsOrgSuspended() {
-		log.CliLogger.Warn("Failed to print free trial announcement: org is suspended")
+	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
 		return
 	}
 
