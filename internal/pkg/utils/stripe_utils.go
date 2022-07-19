@@ -2,6 +2,8 @@ package utils
 
 import (
 	"errors"
+	"strings"
+
 	"github.com/stripe/stripe-go"
 	"github.com/stripe/stripe-go/customer"
 	"github.com/stripe/stripe-go/token"
@@ -47,14 +49,16 @@ func hasDefaultPaymentMethod(stripeCustomerId string, isTest bool) (bool, error)
 	return false, nil
 }
 
-func NewStripeToken(cardNumber string, expMonth string, expYear string, cvc string, name string, isTest bool) (*stripe.Token, error) {
+func NewStripeToken(cardNumber string, expiration string, cvc string, name string, isTest bool) (*stripe.Token, error) {
 	setStripeKey(isTest)
+
+	exp := strings.Split(expiration, "/")
 
 	params := &stripe.TokenParams{
 		Card: &stripe.CardParams{
 			Number:   stripe.String(cardNumber),
-			ExpMonth: stripe.String(expMonth),
-			ExpYear:  stripe.String(expYear),
+			ExpMonth: stripe.String(exp[0]),
+			ExpYear:  stripe.String(exp[1]),
 			CVC:      stripe.String(cvc),
 			Name:     stripe.String(name),
 		},

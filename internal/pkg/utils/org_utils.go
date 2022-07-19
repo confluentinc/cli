@@ -41,7 +41,7 @@ func IsOrgOnFreeTrial(org *orgv1.Organization, isTest bool) bool {
 	if orgv1.BillingMethod_STRIPE == org.GetPlan().GetBilling().GetMethod() {
 		stripeCustomerId := org.GetPlan().GetBilling().GetStripeCustomerId()
 		// If there is no stripe customer ID, then the org does not have payment info
-		if "" == stripeCustomerId {
+		if stripeCustomerId == "" {
 			return true
 		}
 

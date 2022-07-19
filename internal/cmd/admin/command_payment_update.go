@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"os"
-	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
@@ -39,13 +38,12 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 		return err
 	}
 
-	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
-	exp := strings.Split(f.Responses["expiration"].(string), "/")
-
-	stripeToken, err := utils.NewStripeToken(f.Responses["card number"].(string), exp[0], exp[1], f.Responses["cvc"].(string), f.Responses["name"].(string), c.isTest)
+	stripeToken, err := utils.NewStripeToken(f.Responses["card number"].(string), f.Responses["expiration"].(string), f.Responses["cvc"].(string), f.Responses["name"].(string), c.isTest)
 	if err != nil {
 		return err
 	}
+
+	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
 
 	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
 		return err
