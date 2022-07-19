@@ -175,7 +175,6 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			switch id {
 			case "sa-6789":
-				w.Header().Set("Content-Type", "application/json")
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 			default:
