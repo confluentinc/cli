@@ -1,6 +1,7 @@
 In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
 [
   {
+    "detailed_processing_log": "true",
     "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-ksql5",
     "kafka": "lkc-qwert",
@@ -10,6 +11,7 @@ In the next major release, the `confluent ksql app` commands will be removed. Us
     "topic_prefix": "pksqlc-abcde"
   },
   {
+    "detailed_processing_log": "true",
     "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-woooo",
     "kafka": "lkc-zxcvb",
