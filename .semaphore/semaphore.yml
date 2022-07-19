@@ -120,7 +120,7 @@ blocks:
             - echo '$(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1])'
             - dir %USERPROFILE%
             - mkdir %USERPROFILE%\.ssh\
-            - [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1])) > %USERPROFILE%\.ssh\id_rsa
+#            - [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1])) > %USERPROFILE%\.ssh\id_rsa
             
             # Set up Go
             - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
