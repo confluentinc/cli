@@ -183,7 +183,7 @@ func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Environment not found or access forbidden", EnvNotFoundSuggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
@@ -227,7 +227,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
 	}
 	return CatchV2ErrorDetailWithResponse(err, r)
 }
@@ -272,7 +272,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 		case http.StatusForbidden:
-			return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+			return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 		}
 	}
 
