@@ -154,7 +154,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				tags, err := getTags(srCluster, *schema, flags.apiKey, flags.apiSecret)
+				var catalog pasyncapi.Catalog
+				tags, err := getTags(srCluster, *schema, flags.apiKey, flags.apiSecret, catalog)
 				if err != nil {
 					log.CliLogger.Warnf("failed to get tags: %v", err)
 				}
@@ -195,8 +196,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	return ioutil.WriteFile(flags.file, yaml, 0644)
 }
 
-func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string) ([]spec.Tag, error) {
-	body, err := pasyncapi.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
+func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string, catalog pasyncapi.Catalog) ([]spec.Tag, error) {
+	body, err := catalog.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get schema level tags: %v", err)
 	}
@@ -207,7 +208,7 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 	}
 	var tagsInSpec []spec.Tag
 	for _, tags := range tagsFromId {
-		body, err := pasyncapi.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
+		body, err := catalog.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
 		if err != nil {
 			err = fmt.Errorf("failed to get tag definitions: %v", err)
 			return nil, err
@@ -293,12 +294,12 @@ func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescr
 	// Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
-		err = fmt.Errorf(`failed to describe cluster: "%v"`, err)
+		err = fmt.Errorf(`failed to describe cluster: %v`, err)
 		return nil, nil, nil, err
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
 	if err != nil {
-		err = fmt.Errorf(`cannot find Kafka cluster: "%v"`, err)
+		err = fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 		return nil, nil, nil, err
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
@@ -449,6 +450,7 @@ func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	mapOfMessageCompat["x-messageCompatibility"] = interface{}(config.CompatibilityLevel)
 	return mapOfMessageCompat, nil
 }
+
 func buildMessageEntity(topicName, contentType string, tags []spec.Tag, example interface{}, producer map[string]interface{}, bindings bindings) *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
 	(*spec.MessageEntity).WithContentType(entityProducer, contentType)
