@@ -146,16 +146,20 @@ func (c *command) createV1(ownerResourceId, clusterId, resourceType, description
 	if err != nil {
 		return nil, err
 	}
-
 	if resourceType != resource.Cloud {
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
+
 	schedv1ApiKey, err := c.Client.APIKey.Create(context.Background(), key)
+	if err != nil {
+		return nil, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
+	}
+
 	displayKey := &v1.APIKeyPair{
 		Key:    schedv1ApiKey.Key,
 		Secret: schedv1ApiKey.Secret,
 	}
-	return displayKey, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
+	return displayKey, nil
 }
 
 func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
