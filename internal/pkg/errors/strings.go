@@ -102,7 +102,7 @@ const (
 	NoSubjectsMsg                       = "No subjects."
 	NoExporterMsg                       = "No exporters."
 	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
-	SchemaRegistryClusterUpgradedMsg    = `Upgraded the Schema Registry cluster for environment "%s" to the "%s" package.`
+	SchemaRegistryClusterUpgradedMsg    = "Stream Governance package for environment \"%s\" upgraded to \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
