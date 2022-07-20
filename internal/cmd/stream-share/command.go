@@ -1,4 +1,4 @@
-package stream_share
+package streamshare
 
 import (
 	"github.com/spf13/cobra"
@@ -13,6 +13,7 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "stream-share",
+		Aliases:     []string{"ss"},
 		Short:       "Manage stream shares.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}

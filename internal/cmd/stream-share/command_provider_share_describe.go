@@ -1,4 +1,4 @@
-package stream_share
+package streamshare
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

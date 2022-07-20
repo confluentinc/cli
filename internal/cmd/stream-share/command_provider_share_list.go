@@ -1,4 +1,4 @@
-package stream_share
+package streamshare
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -19,6 +19,8 @@ func (s *providerShareCommand) newListCommand() *cobra.Command {
 			},
 		),
 	}
+
+	cmd.Flags().String("shared_resource", "", "Filter the results by exact match for shared_resource.")
 
 	pcmd.AddOutputFlag(cmd)
 

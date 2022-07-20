@@ -1,7 +1,6 @@
-package stream_share
+package streamshare
 
 import (
-	"context"
 	streamsharev1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -77,31 +76,30 @@ func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	s := &providerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	s.AddCommand(s.newListCommand())
-	s.AddCommand(s.newDescribeCommand())
 	s.AddCommand(s.newDeleteCommand())
+	s.AddCommand(s.newDescribeCommand())
+	s.AddCommand(s.newListCommand())
 
 	return s.Command
 }
 
-func (s *providerShareCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), streamsharev1.ContextAccessToken, s.State.AuthToken)
-}
-
 func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
+	sharedResource, err := cmd.Flags().GetString("shared_resource")
+	if err != nil {
+		return err
+	}
+
 	var sharesList []streamsharev1.CdxV1ProviderShare
+	var token string
 
 	for {
-		request := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-			ListCdxV1ProviderShares(s.createContext())
-		listResult, _, err := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-			ListCdxV1ProviderSharesExecute(request)
+		listResult, _, err := s.V2Client.ListProviderShares(sharedResource, token)
 		if err != nil {
 			return err
 		}
 		sharesList = append(sharesList, listResult.Data...)
 
-		var token string
+		token = ""
 		if md, ok := listResult.GetMetadataOk(); ok && md.GetNext() != "" {
 			parsed, err := url.Parse(*md.Next.Get())
 			if err != nil {
@@ -155,25 +153,19 @@ func (s *providerShareCommand) buildProviderShare(share streamsharev1.CdxV1Provi
 func (s *providerShareCommand) describe(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	request := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-		GetCdxV1ProviderShare(s.createContext(), shareId)
-	getResult, _, err := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-		GetCdxV1ProviderShareExecute(request)
+	provideShare, _, err := s.V2Client.DescribeProvideShare(shareId)
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, s.buildProviderShare(getResult), providerShareListFields, humanLabelMap,
+	return output.DescribeObject(cmd, s.buildProviderShare(provideShare), providerShareListFields, humanLabelMap,
 		structuredLabelMap)
 }
 
 func (s *providerShareCommand) delete(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	request := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-		DeleteCdxV1ProviderShare(s.createContext(), shareId)
-	_, err := s.V2Client.StreamShareClient.ProviderSharesCdxV1Api.
-		DeleteCdxV1ProviderShareExecute(request)
+	_, err := s.V2Client.DeleteProviderShare(shareId)
 	if err != nil {
 		return err
 	}

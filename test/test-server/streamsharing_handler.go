@@ -11,9 +11,9 @@ import (
 )
 
 func getTestProviderShare() v1.CdxV1ProviderShare {
-	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-19T15:04:05-07:00")
-	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-20T15:04:05-07:00")
-	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-21T15:04:05-07:00")
+	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
+	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
+	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 	return v1.CdxV1ProviderShare{
 		Id:                       stringToPtr("id"),
 		ConsumerUserName:         stringToPtr("consumer"),
@@ -22,7 +22,7 @@ func getTestProviderShare() v1.CdxV1ProviderShare {
 		Status:                   stringToPtr("active"),
 		DeliveryMethod:           stringToPtr("email"),
 		ServiceAccount: &v1.ObjectReference{
-			Id: "service account",
+			Id: "sa-123456",
 		},
 		SharedResource: &v1.ObjectReference{
 			Id: "shared resource",
@@ -33,6 +33,7 @@ func getTestProviderShare() v1.CdxV1ProviderShare {
 	}
 }
 
+// Handler for: "/cdx/v1/provider-shares"
 func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -46,6 +47,7 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/cdx/v1/provider-shares/{id}"
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

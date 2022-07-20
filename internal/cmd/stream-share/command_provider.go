@@ -1,4 +1,4 @@
-package stream_share
+package streamshare
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,9 +16,9 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	s := &providerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &providerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	s.AddCommand(newProviderShareCommand(prerunner))
+	c.AddCommand(newProviderShareCommand(prerunner))
 
-	return s.Command
+	return c.Command
 }
