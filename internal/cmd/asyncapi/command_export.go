@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
@@ -89,7 +88,6 @@ type flags struct {
 	apiKey          string
 	apiSecret       string
 	kafkaClusterId  string
-	environmentId   string
 }
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -105,7 +103,6 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	return c.Command
 }
 
@@ -115,7 +112,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 	// Get Kafka cluster details and broker URL
-	cluster, topics, clusterCreds, err := c.getClusterDetails(flags.environmentId, flags.kafkaClusterId)
+	cluster, topics, clusterCreds, err := c.getClusterDetails(flags.kafkaClusterId)
 	if err != nil {
 		return err
 	}
@@ -292,19 +289,12 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 	return bindings, nil
 }
 
-func (c *command) getClusterDetails(environmentId, kafkaClusterId string) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
+func (c *command) getClusterDetails(kafkaClusterId string) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
 	var ctx context.Context
-	if environmentId == "" {
-		environmentId = c.EnvironmentId()
-	}
-	_, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: environmentId})
-	if err != nil {
-		return nil, nil, nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, environmentId), errors.EnvNotFoundSuggestions)
-	}
 	if kafkaClusterId == "" {
 		kafkaClusterId = c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
 	}
-	req := &schedv1.KafkaCluster{AccountId: environmentId, Id: kafkaClusterId}
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: kafkaClusterId}
 	// Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
@@ -389,10 +379,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	environmentId, err := cmd.Flags().GetString("environment")
-	if err != nil {
-		return nil, err
-	}
 	return &flags{
 		file:            file,
 		groupId:         groupId,
@@ -400,7 +386,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
 		kafkaClusterId:  kafkaClusterId,
-		environmentId:   environmentId,
 	}, nil
 }
 

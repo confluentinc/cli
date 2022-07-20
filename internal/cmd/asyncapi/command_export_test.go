@@ -174,8 +174,9 @@ func TestGetEnv(t *testing.T) {
 
 func TestGetClusterDetails(t *testing.T) {
 	c := newCmd()
-
-	_, _, _, err := c.getClusterDetails("", "")
+	_, _, _, err := c.getClusterDetails("lkc-test-failure")
+	require.EqualError(t, err, "failed to find Kafka cluster: unable to obtain Kafka cluster information for cluster \"lkc-test-failure\": no client")
+	_, _, _, err = c.getClusterDetails("")
 	if err != nil {
 		require.NoError(t, err)
 	}
