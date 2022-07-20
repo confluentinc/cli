@@ -84,7 +84,7 @@ func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
-	sharedResource, err := cmd.Flags().GetString("shared_resource")
+	sharedResource, err := cmd.Flags().GetString("shared-resource")
 	if err != nil {
 		return err
 	}

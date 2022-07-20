@@ -20,7 +20,7 @@ func (s *providerShareCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("shared_resource", "", "Filter the results by exact match for shared_resource.")
+	cmd.Flags().String("shared-resource", "", "Filter the results by exact match for shared_resource.")
 
 	pcmd.AddOutputFlag(cmd)
 
