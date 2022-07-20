@@ -89,7 +89,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 
 	updatedCluster, httpResp, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
 	if err != nil {
-		return errors.Wrap(errors.CatchV2ErrorDetailWithResponse(err, httpResp), errors.KafkaClusterUpdateFailedSuggestions)
+		return errors.NewWrapErrorWithSuggestions(errors.CatchV2ErrorDetailWithResponse(err, httpResp), "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster)

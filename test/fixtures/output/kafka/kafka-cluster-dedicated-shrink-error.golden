@@ -1,0 +1,4 @@
+Error: failed to update Kafka cluster: your cluster update config is invalid. Please check documentation for more details, for example, multi-zone clusters cannot be downscaled below 2 CKUs: 400 Bad Request
+
+Suggestions:
+    A cluster can't be updated while still provisioning.  If you just created this cluster, retry in a few minutes.
