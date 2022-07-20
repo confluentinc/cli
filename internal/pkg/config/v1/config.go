@@ -508,7 +508,7 @@ func (c *Config) CheckIsCloudLogin() error {
 		return RequireCloudLoginErr
 	}
 
-	if c.IsOrgSuspended() {
+	if c.isOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
 			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
@@ -606,7 +606,7 @@ func (c *Config) isContextStatePresent() bool {
 	return true
 }
 
-func (c *Config) IsOrgSuspended() bool {
+func (c *Config) isOrgSuspended() bool {
 	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
 }
 
