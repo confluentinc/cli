@@ -20,7 +20,7 @@ var (
 	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
 	resourceNotFoundErrMsg      = `{"errors":[{"status":"403","detail":"Forbidden"}]}`
 	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
-	badRequestErrMsg               = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
+	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
