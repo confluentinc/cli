@@ -1,5 +1,6 @@
 [
   {
+    "detailed_processing_log": "true",
     "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-ksql5",
     "kafka": "lkc-qwert",
@@ -9,6 +10,7 @@
     "topic_prefix": "pksqlc-abcde"
   },
   {
+    "detailed_processing_log": "true",
     "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-woooo",
     "kafka": "lkc-zxcvb",
