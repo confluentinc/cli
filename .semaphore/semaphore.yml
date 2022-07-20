@@ -115,9 +115,11 @@ blocks:
             - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
             - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - dir %USERPROFILE%
+            - Get-Content script.sh
+            - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
+            - Get-Content id_rsa.b64
             - mkdir .ssh\
-            - [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1])) > .ssh\id_rsa
+            - certutil -decode id_rsa.b64 .ssh\id_rsa
             
             # Set up Go
             - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
