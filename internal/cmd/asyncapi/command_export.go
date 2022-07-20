@@ -390,6 +390,9 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		return nil, err
 	}
 	environmentId, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:            file,
 		groupId:         groupId,
@@ -410,7 +413,6 @@ func getSchemaRegistry(c *command, cmd *cobra.Command, apiKey, apiSecret string)
 		apiKey = schemaCluster.SrCredentials.Key
 		apiSecret = schemaCluster.SrCredentials.Secret
 	}
-
 	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, apiKey, apiSecret)
 	if err != nil {
 		return nil, nil, nil, err
