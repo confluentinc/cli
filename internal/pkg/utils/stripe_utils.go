@@ -49,7 +49,7 @@ func hasDefaultPaymentMethod(stripeCustomerId string, isTest bool) (bool, error)
 	return false, nil
 }
 
-func NewStripeToken(cardNumber string, expiration string, cvc string, name string, isTest bool) (*stripe.Token, error) {
+func NewStripeToken(cardNumber, expiration, cvc, name string, isTest bool) (*stripe.Token, error) {
 	setStripeKey(isTest)
 
 	exp := strings.Split(expiration, "/")
