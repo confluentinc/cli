@@ -308,14 +308,13 @@ func handleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			id := r.URL.Query().Get("id")
 			cluster := getCmkDedicatedDescribeCluster(id, "lkc-update-dedicated-shrink-multi", 3)
 			err := json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
-		}
-		// Update client call
-		if r.Method == http.MethodPatch {
+		case http.MethodPatch:
 			w.WriteHeader(http.StatusBadRequest)
 			_, err := io.WriteString(w, clusterInvalidUpdateMsg)
 			require.NoError(t, err)
