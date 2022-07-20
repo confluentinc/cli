@@ -31,6 +31,8 @@ var kafkaCluster = &schedv1.KafkaCluster{
 	AccountId: "env-asyncapi",
 }
 
+const BACKWARD = "BACKWARD"
+
 var srClient = &srsdk.APIClient{
 	DefaultApi: &srMock.DefaultApi{
 		ListFunc: func(ctx context.Context, opts *srsdk.ListOpts) ([]string, *http.Response, error) {
@@ -49,10 +51,10 @@ var srClient = &srsdk.APIClient{
 			}, nil, nil
 		},
 		GetSubjectLevelConfigFunc: func(ctx context.Context, subject string, localVarOptionals *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: "BACKWARD"}, nil, nil
+			return srsdk.Config{CompatibilityLevel: BACKWARD}, nil, nil
 		},
 		GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: "BACKWARD"}, nil, nil
+			return srsdk.Config{CompatibilityLevel: BACKWARD}, nil, nil
 		},
 	},
 }
@@ -104,58 +106,64 @@ func newCmd() *command {
 	}
 	prerunner := &pcmd.PreRun{Config: cfg}
 	cmd := cobra.Command{}
-	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(&cmd, prerunner)}
+	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cmd, prerunner)}
 	c.State = cfg.Context().State
 	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
-	kafkaCluster := &schedv1.KafkaCluster{
-		Id:        "lkc-asyncapi",
-		Name:      "AsyncAPI Cluster",
-		Endpoint:  "kafka-endpoint",
-		AccountId: "env-asyncapi",
-	}
-	c.Client = &ccloud.Client{Kafka: &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return kafkaCluster, nil
+	c.Client = &ccloud.Client{
+		Account: &ccsdkmock.Account{
+			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
+				return nil, nil
+			},
+			GetFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
+				return nil, nil
+			},
+			ListFunc: func(context.Context, *orgv1.Account) ([]*orgv1.Account, error) {
+				return nil, nil
+			},
 		},
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
-			return []*schedv1.KafkaCluster{kafkaCluster}, nil
-		},
-		ListTopicsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.TopicDescription, error) {
-			return []*schedv1.TopicDescription{
-				{
-					Name: "topic1",
-					Config: []*schedv1.TopicConfigEntry{
-						{
-							Name:  "cleanup.policy",
-							Value: "delete",
+		Kafka: &ccsdkmock.Kafka{
+			DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+				return kafkaCluster, nil
+			},
+			ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+				return []*schedv1.KafkaCluster{kafkaCluster}, nil
+			},
+			ListTopicsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.TopicDescription, error) {
+				return []*schedv1.TopicDescription{
+					{
+						Name: "topic1",
+						Config: []*schedv1.TopicConfigEntry{
+							{
+								Name:  "cleanup.policy",
+								Value: "delete",
+							},
+							{
+								Name:  "delete.retention.ms",
+								Value: "86400000",
+							},
 						},
-						{
-							Name:  "delete.retention.ms",
-							Value: "86400000",
+						Partitions: []*schedv1.TopicPartitionInfo{
+							{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
+							{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
+							{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
 						},
 					},
-					Partitions: []*schedv1.TopicPartitionInfo{
-						{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
-						{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
-						{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
+				}, nil
+			},
+			ListTopicConfigFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, topic *schedv1.Topic) (*schedv1.TopicConfig, error) {
+				return &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{
+					{
+						Name:  "cleanup.policy",
+						Value: "delete",
 					},
-				},
-			}, nil
-		},
-		ListTopicConfigFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, topic *schedv1.Topic) (*schedv1.TopicConfig, error) {
-			return &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{
-				{
-					Name:  "cleanup.policy",
-					Value: "delete",
-				},
-				{
-					Name:  "delete.retention.ms",
-					Value: "86400000",
-				},
-			}}, nil
-		},
-	}}
+					{
+						Name:  "delete.retention.ms",
+						Value: "86400000",
+					},
+				}}, nil
+			},
+		}}
 	return c
 }
 
@@ -166,7 +174,8 @@ func TestGetEnv(t *testing.T) {
 
 func TestGetClusterDetails(t *testing.T) {
 	c := newCmd()
-	_, _, _, err := getClusterDetails(c)
+
+	_, _, _, err := c.getClusterDetails("", "")
 	if err != nil {
 		require.NoError(t, err)
 	}

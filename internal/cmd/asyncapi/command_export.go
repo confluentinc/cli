@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
@@ -27,7 +28,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 }
 
 type TagsFromId struct {
@@ -87,6 +88,8 @@ type flags struct {
 	consumeExamples bool
 	apiKey          string
 	apiSecret       string
+	kafkaClusterId  string
+	environmentId   string
 }
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -94,13 +97,15 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:   "export",
 		Short: "Create an AsyncAPI specification for a Kafka cluster.",
 	}
-	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.RunE = c.export
 	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
 	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	return c.Command
 }
 
@@ -110,7 +115,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 	// Get Kafka cluster details and broker URL
-	cluster, topics, clusterCreds, err := getClusterDetails(c)
+	cluster, topics, clusterCreds, err := c.getClusterDetails(flags.environmentId, flags.kafkaClusterId)
 	if err != nil {
 		return err
 	}
@@ -142,7 +147,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	for _, topic := range topics {
 		// For a given topic
 		for _, subject := range subjects {
-			if subject != (topic.Name+"-value") || strings.HasPrefix(topic.Name, "_") {
+			if subject != topic.Name+"-value" || strings.HasPrefix(topic.Name, "_") {
 				// Avoid internal topics or if no schema is set for value.
 				continue
 			} else {
@@ -287,25 +292,31 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 	return bindings, nil
 }
 
-func getClusterDetails(c *command) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
+func (c *command) getClusterDetails(environmentId, kafkaClusterId string) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
 	var ctx context.Context
-	lkc := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
+	if environmentId == "" {
+		environmentId = c.EnvironmentId()
+	}
+	_, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: environmentId})
+	if err != nil {
+		return nil, nil, nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, environmentId), errors.EnvNotFoundSuggestions)
+	}
+	if kafkaClusterId == "" {
+		kafkaClusterId = c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	}
+	req := &schedv1.KafkaCluster{AccountId: environmentId, Id: kafkaClusterId}
 	// Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
-		err = fmt.Errorf(`failed to describe cluster: %v`, err)
-		return nil, nil, nil, err
+		return nil, nil, nil, fmt.Errorf(`failed to describe cluster: %v`, err)
 	}
-	clusterConfig, err := c.Config.Context().FindKafkaCluster(cluster.GetId())
+	clusterConfig, err := c.Config.Context().FindKafkaCluster(kafkaClusterId)
 	if err != nil {
-		err = fmt.Errorf(`failed to find Kafka cluster: %v`, err)
-		return nil, nil, nil, err
+		return nil, nil, nil, fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
-		err := errors.NewErrorWithSuggestions("API Key not set for the Kafka cluster", "Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
-		return nil, nil, nil, err
+		return nil, nil, nil, errors.NewErrorWithSuggestions("API Key not set for the Kafka cluster", "Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
@@ -374,12 +385,19 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	kafkaClusterId, err := cmd.Flags().GetString("cluster")
+	if err != nil {
+		return nil, err
+	}
+	environmentId, err := cmd.Flags().GetString("environment")
 	return &flags{
 		file:            file,
 		groupId:         groupId,
 		consumeExamples: consumeExamples,
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
+		kafkaClusterId:  kafkaClusterId,
+		environmentId:   environmentId,
 	}, nil
 }
 
