@@ -33,8 +33,34 @@ func (c *Client) DescribeProvideShare(shareId string) (cdxv1.CdxV1ProviderShare,
 	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(request)
 }
 
-func (c *Client) ListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
+func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
+	providerShares := make([]cdxv1.CdxV1ProviderShare, 0)
+
+	collectedAllShares := false
+	pageToken := ""
+	for !collectedAllShares {
+		sharesList, _, err := c.executeListProviderShares(sharedResource, pageToken)
+		if err != nil {
+			return nil, err
+		}
+		providerShares = append(providerShares, sharesList.GetData()...)
+
+		// nextPageUrlStringNullable is nil for the last page
+		nextPageUrlStringNullable := sharesList.GetMetadata().Next
+		pageToken, collectedAllShares, err = extractStreamShareNextPagePageToken(nextPageUrlStringNullable)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return providerShares, nil
+}
+
+func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
 	request := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.streamSharingApiContext()).
-		PageToken(pageToken).SharedResource(sharedResource)
+		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		request = request.PageToken(pageToken)
+	}
 	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(request)
 }

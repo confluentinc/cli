@@ -1,7 +1,6 @@
 package streamshare
 
 import (
-	"net/url"
 	"time"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
@@ -90,28 +89,9 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var sharesList []cdxv1.CdxV1ProviderShare
-	var token string
-
-	for {
-		listResult, _, err := s.V2Client.ListProviderShares(sharedResource, token)
-		if err != nil {
-			return err
-		}
-		sharesList = append(sharesList, listResult.Data...)
-
-		token = ""
-		if md, ok := listResult.GetMetadataOk(); ok && md.GetNext() != "" {
-			parsed, err := url.Parse(*md.Next.Get())
-			if err != nil {
-				return err
-			}
-			token = parsed.Query().Get("page_token")
-		}
-
-		if token == "" {
-			break
-		}
+	providerShares, err := s.V2Client.ListProviderShares(sharedResource)
+	if err != nil {
+		return err
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels,
@@ -120,7 +100,7 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, share := range sharesList {
+	for _, share := range providerShares {
 		element := s.buildProviderShare(share)
 
 		outputWriter.AddElement(element)
