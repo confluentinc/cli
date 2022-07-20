@@ -217,7 +217,7 @@ endif
 int-test:
 ifdef CI
 	@# Run integration tests with coverage.
-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc @INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@# Run integration tests.
