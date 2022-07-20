@@ -1,14 +1,15 @@
 package streamshare
 
 import (
-	streamsharev1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
+	"net/url"
+	"time"
+
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
-	"net/url"
-	"time"
 )
 
 var (
@@ -89,7 +90,7 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var sharesList []streamsharev1.CdxV1ProviderShare
+	var sharesList []cdxv1.CdxV1ProviderShare
 	var token string
 
 	for {
@@ -128,7 +129,7 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 	return outputWriter.Out()
 }
 
-func (s *providerShareCommand) buildProviderShare(share streamsharev1.CdxV1ProviderShare) *providerShare {
+func (s *providerShareCommand) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
 	serviceAccount := share.GetServiceAccount()
 	sharedResource := share.GetSharedResource()
 	element := &providerShare{

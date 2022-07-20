@@ -2,30 +2,31 @@ package testserver
 
 import (
 	"encoding/json"
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
+	"github.com/stretchr/testify/require"
 )
 
-func getTestProviderShare() v1.CdxV1ProviderShare {
+func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
 	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
 	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
-	return v1.CdxV1ProviderShare{
-		Id:                       stringToPtr("id"),
+	return cdxv1.CdxV1ProviderShare{
+		Id:                       stringToPtr("ss-12345"),
 		ConsumerUserName:         stringToPtr("consumer"),
 		ConsumerOrganizationName: stringToPtr("consumer org"),
 		ProviderUserName:         stringToPtr("provider"),
 		Status:                   stringToPtr("active"),
 		DeliveryMethod:           stringToPtr("email"),
-		ServiceAccount: &v1.ObjectReference{
+		ServiceAccount: &cdxv1.ObjectReference{
 			Id: "sa-123456",
 		},
-		SharedResource: &v1.ObjectReference{
-			Id: "shared resource",
+		SharedResource: &cdxv1.ObjectReference{
+			Id: "topic-12345",
 		},
 		RedeemedAt:      &redeemedAt,
 		InvitedAt:       &invitedAt,
@@ -33,12 +34,12 @@ func getTestProviderShare() v1.CdxV1ProviderShare {
 	}
 }
 
-// Handler for: "/cdx/v1/provider-shares"
+// Handler for: "/cdx/cdxv1/provider-shares"
 func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		list := v1.CdxV1ProviderShareList{
-			Data: []v1.CdxV1ProviderShare{getTestProviderShare()},
+		list := cdxv1.CdxV1ProviderShareList{
+			Data: []cdxv1.CdxV1ProviderShare{getTestProviderShare()},
 		}
 		b, err := json.Marshal(&list)
 		require.NoError(t, err)
@@ -47,7 +48,7 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/cdx/v1/provider-shares/{id}"
+// Handler for: "/cdx/cdxv1/provider-shares/{id}"
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
