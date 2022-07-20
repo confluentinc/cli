@@ -316,7 +316,7 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPatch:
 			w.WriteHeader(http.StatusBadRequest)
-			_, err := io.WriteString(w, clusterInvalidUpdateMsg)
+			_, err := io.WriteString(w, badRequestErrMsg)
 			require.NoError(t, err)
 		}
 	}
