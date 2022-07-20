@@ -36,7 +36,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			}
 		} else {
 			// env not found
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusForbidden)
 		}
 	}
 }
