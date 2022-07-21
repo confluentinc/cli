@@ -23,6 +23,7 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	runCommand := c.configureACLsCluster
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "Configure ACLs for a ksqlDB app."
 		longText = "Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.configureACLsApp
 	}

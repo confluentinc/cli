@@ -25,6 +25,7 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	runCommand := c.describeCluster
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+		shortText = "Describe a ksqlDB app."
 		longText = "Describe a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.describeApp
 	}

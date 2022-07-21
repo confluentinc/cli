@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -116,7 +117,6 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	changeDefaults(cmd, cfg)
 	// deprecation
 	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil), v1.CliLaunchDarklyClient, true, []interface{}{})
-	fmt.Println(deprecatedCommands)
 	commandsToFlags := make(map[string]string)
 	for _, val := range deprecatedCommands.([]interface{}) {
 		flags := ""

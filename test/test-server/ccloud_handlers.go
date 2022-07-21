@@ -767,10 +767,9 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 // Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
 func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("here")
 		w.Header().Set("Content-Type", "application/json")
 		jsonVal := map[string]interface{}{"key": "val"}
-		jsonVal2 := []map[string]interface{}{{"pattern": "confluent ksql app"}, {"pattern": "confluent kafka cluster list --all"}}
+		jsonVal2 := []map[string]interface{}{{"pattern": "ksql app"}}
 		flags := map[string]interface{}{
 			"testBool":                true,
 			"testString":              "string",
