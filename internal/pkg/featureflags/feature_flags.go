@@ -60,7 +60,7 @@ type launchDarklyManager struct {
 func Init(version *version.Version, isTest bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
-		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.Path, "1234")
+		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.Scheme+"://"+testserver.TestCloudURL.Host, "1234")
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
 	}

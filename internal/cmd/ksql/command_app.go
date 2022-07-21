@@ -10,8 +10,8 @@ import (
 func newAppCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "app",
-		Short:       "DEPRECATED: Manage ksqlDB apps.",
-		Long:        "DEPRECATED: Manage ksqlDB apps. " + errors.KSQLAppDeprecateWarning,
+		Short:       "Manage ksqlDB apps.",
+		Long:        "Manage ksqlDB apps. " + errors.KSQLAppDeprecateWarning,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
