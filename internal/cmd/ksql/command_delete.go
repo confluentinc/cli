@@ -24,8 +24,7 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	runCommand := c.deleteCluster
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Delete a ksqlDB app."
-		longText = "DEPRECATED: Delete a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		longText = "Delete a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.deleteApp
 	}
 
