@@ -6,22 +6,25 @@ require (
 	github.com/brianstrauch/cobra-shell v0.2.4
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
+	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/core v0.1071.0
+	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
-	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0
-	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
+	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
+	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
+	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
-	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
@@ -42,7 +45,6 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.44.0
-	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v25 v25.1.3
 	github.com/google/uuid v1.3.0
 	github.com/goreleaser/goreleaser v1.4.1
@@ -64,16 +66,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.2.4
-	github.com/tj/assert v0.0.3
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
@@ -162,14 +162,13 @@ require (
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211216145620-d92e9ce0af51 // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/cc-structs/common v0.996.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/auth v0.719.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/authz v0.1015.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/marketplace v0.881.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/marketplace v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
-	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
+	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
@@ -197,8 +196,8 @@ require (
 	github.com/go-git/go-billy/v5 v5.3.1 // indirect
 	github.com/go-git/go-git/v5 v5.4.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.3 // indirect
-	github.com/go-openapi/jsonreference v0.19.2 // indirect
-	github.com/go-openapi/spec v0.19.2 // indirect
+	github.com/go-openapi/jsonreference v0.19.3 // indirect
+	github.com/go-openapi/spec v0.19.3 // indirect
 	github.com/go-openapi/swag v0.19.5 // indirect
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible // indirect
 	github.com/go-toolsmith/astcast v1.0.0 // indirect
@@ -225,6 +224,7 @@ require (
 	github.com/golangci/misspell v0.3.5 // indirect
 	github.com/golangci/revgrep v0.0.0-20210930125155-c22e5001d4f2 // indirect
 	github.com/golangci/unconvert v0.0.0-20180507085042-28b1c447d1f4 // indirect
+	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-github/v18 v18.2.0 // indirect
 	github.com/google/go-github/v41 v41.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -253,11 +253,11 @@ require (
 	github.com/iancoleman/orderedmap v0.2.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.8.1 // indirect
+	github.com/jackc/pgconn v1.9.0 // indirect
 	github.com/jackc/pgerrcode v0.0.0-20201024163028-a0d42d470451 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
-	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
+	github.com/jackc/pgproto3/v2 v2.1.1 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jdkato/prose v1.1.0 // indirect
@@ -278,6 +278,7 @@ require (
 	github.com/ldez/gomoddirectives v0.2.2 // indirect
 	github.com/ldez/tagliatelle v0.3.0 // indirect
 	github.com/leonklingele/grouper v1.1.0 // indirect
+	github.com/lib/pq v1.10.4 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
 	github.com/maratori/testpackage v1.0.1 // indirect
@@ -338,6 +339,7 @@ require (
 	github.com/spf13/afero v1.6.0 // indirect
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/viper v1.10.1 // indirect
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stretchr/objx v0.3.0 // indirect
@@ -368,9 +370,9 @@ require (
 	gocloud.dev v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
 	golang.org/x/mod v0.5.1 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
+	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
@@ -380,8 +382,8 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/api v0.63.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
-	google.golang.org/grpc v1.43.0 // indirect
+	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
+	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
@@ -400,10 +402,10 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	honnef.co/go/tools v0.2.2 // indirect
-	k8s.io/api v0.18.0-alpha.2 // indirect
+	k8s.io/api v0.20.1 // indirect
 	k8s.io/apiextensions-apiserver v0.17.18-rc.0 // indirect
 	k8s.io/apimachinery v0.21.3 // indirect
-	k8s.io/kube-openapi v0.0.0-20200427153329-656914f816f9 // indirect
+	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd // indirect
 	mvdan.cc/gofumpt v0.2.1 // indirect
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect

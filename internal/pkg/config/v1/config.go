@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -54,9 +54,17 @@ var (
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
 		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
 	)
+	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
+		"you must log out of Confluent Cloud to use this command",
+		"Log out with \"confluent logout\".\n",
+	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
 		`Log in with "confluent login --url <mds-url>".`,
+	)
+	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
 	)
 )
 
@@ -575,6 +583,20 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
+func (c *Config) CheckIsNonCloudLogin() error {
+	if c.isCloud() {
+		return RequireNonCloudLogin
+	}
+	return nil
+}
+
+func (c *Config) CheckAreUpdatesEnabled() error {
+	if c.DisableUpdates {
+		return RequireUpdatesEnabledErr
+	}
+	return nil
+}
+
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
@@ -607,13 +629,11 @@ func (c *Config) isContextStatePresent() bool {
 }
 
 func (c *Config) isOrgSuspended() bool {
-	status := c.Context().GetSuspensionStatus().GetStatus()
-	return status == orgv1.SuspensionStatusType_SUSPENSION_IN_PROGRESS || status == orgv1.SuspensionStatusType_SUSPENSION_COMPLETED
+	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
-	eventType := c.Context().GetSuspensionStatus().GetEventType()
-	return c.isOrgSuspended() && eventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
+	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) GetLastUsedOrgId() string {

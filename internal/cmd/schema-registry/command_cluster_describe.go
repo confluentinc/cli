@@ -5,10 +5,10 @@ import (
 	"math"
 	"strconv"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
@@ -67,8 +67,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	ctxClient := dynamicconfig.NewContextClient(c.Context)
-	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -105,16 +104,21 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	query := schemaCountQueryFor(cluster.Id)
-	metricsResponse, err := c.Client.MetricsApi.QueryV2(ctx, "cloud", query, "")
-	if err != nil || metricsResponse == nil {
+	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
+	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp)
+	if unmarshalErr != nil {
+		return unmarshalErr
+	}
+
+	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || metricsResponse == nil {
 		log.CliLogger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
-	} else if len(metricsResponse.Result) == 0 {
+	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 0 {
 		numSchemas = "0"
 		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas))
-	} else if len(metricsResponse.Result) == 1 {
-		numSchemasInt := int(math.Round(metricsResponse.Result[0].Value)) // the return value is a double
+	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 1 {
+		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
 		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
 	} else {
@@ -138,19 +142,20 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
 }
 
-func schemaCountQueryFor(schemaRegistryId string) *ccloud.MetricsApiRequest {
-	return &ccloud.MetricsApiRequest{
-		Aggregations: []ccloud.ApiAggregation{
-			{
-				Metric: "io.confluent.kafka.schema_registry/schema_count",
-			},
+func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
+	aggregations := []metricsv2.Aggregation{
+		{
+			Metric: "io.confluent.kafka.schema_registry/schema_count",
 		},
-		Filter: ccloud.ApiFilter{
-			Field: "resource.schema_registry.id",
-			Op:    "EQ",
-			Value: schemaRegistryId,
-		},
-		Granularity: "ALL",
-		Intervals:   []string{"PT1M/now-2m|m"},
 	}
+	filter := metricsv2.Filter{
+		FieldFilter: &metricsv2.FieldFilter{
+			Field: metricsv2.PtrString("resource.schema_registry.id"),
+			Op:    "EQ",
+			Value: metricsv2.StringAsFieldFilterValue(metricsv2.PtrString(schemaRegistryId)),
+		},
+	}
+	req := metricsv2.NewQueryRequest(aggregations, "ALL", []string{"PT1M/now-2m|m"})
+	req.SetFilter(filter)
+	return *req
 }

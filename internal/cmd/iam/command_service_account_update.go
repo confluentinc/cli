@@ -51,9 +51,9 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	update := iamv2.IamV2ServiceAccountUpdate{
 		Description: &description,
 	}
-	_, httpresp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update)
+	_, httpResp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update)
 	if err != nil {
-		return errors.CatchServiceAccountNotFoundError(err, httpresp, serviceAccountId)
+		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)

@@ -173,6 +173,10 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
+		{args: "iam service-account describe sa-12345 -o json", fixture: "iam/service-account/describe-json.golden"},
+		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
+		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},
+		{args: "iam service-account describe sa-6789", fixture: "iam/service-account/service-account-not-found.golden", wantErrCode: 1},
 		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update.golden"},
 		{args: "iam service-account update sa-12345 --description new-description-2", fixture: "iam/service-account/update-2.golden"},
 		{args: "iam service-account delete sa-12345", fixture: "iam/service-account/delete.golden"},
@@ -213,6 +217,19 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 		{args: "iam user delete u-0", fixture: "iam/user/delete.golden"},
 		{args: "iam user delete 0", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
 		{args: "iam user delete u-1", fixture: "iam/user/delete-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMUserUpdate() {
+	tests := []CLITest{
+		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
+		{args: "iam user update u-1 --full-name Test", fixture: "iam/user/update-dne.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {

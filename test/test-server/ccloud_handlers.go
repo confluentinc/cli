@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -69,6 +70,8 @@ const (
 
 	auditLogServiceAccountID         = int32(1337)
 	auditLogServiceAccountResourceID = "sa-1337"
+
+	PromoTestCode = "PromoTestCode"
 )
 
 // Fill API keyStore with default data
@@ -225,10 +228,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 					ExpMonth:   "01",
 					ExpYear:    "99",
 				},
-				Organization: &orgv1.Organization{
-					Id: 0,
-				},
-				Error: nil,
+				Organization: &orgv1.Organization{Id: 0},
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -265,13 +265,26 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			var res *billingv1.GetPromoCodeClaimsReply
+
 			var tenDollars int64 = 10 * 10000
 
 			// The time is set to noon so that all time zones display the same local time
 			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
 			expiration := &types.Timestamp{Seconds: date.Unix()}
 
-			res := &billingv1.GetPromoCodeClaimsReply{
+			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
+				Claims: []*billingv1.PromoCodeClaim{
+					{
+						Code:                 PromoTestCode,
+						Amount:               400 * 10000,
+						Balance:              0,
+						CreditExpirationDate: expiration,
+					},
+				},
+			}
+
+			regularCodes := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
 					{
 						Code:                 "PROMOCODE1",
@@ -286,6 +299,19 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 						CreditExpirationDate: expiration,
 					},
 				},
+			}
+
+			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
+			switch hasPromoCodeClaims {
+			case "false":
+				res = &billingv1.GetPromoCodeClaimsReply{}
+			case "onlyFreeTrialCode":
+				res = freeTrialCode
+			case "multiCodes":
+				res = &billingv1.GetPromoCodeClaimsReply{}
+				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
+			default:
+				res = regularCodes
 			}
 
 			listReply, err := utilv1.MarshalJSONToBytes(res)
@@ -455,10 +481,29 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
+		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
+			Id:                    "lksqlc-woooo",
+			AccountId:             "25",
+			KafkaClusterId:        "lkc-zxcvb",
+			OutputTopicPrefix:     "pksqlc-ghjkl",
+			Name:                  "kay cee queue elle",
+			Storage:               123,
+			Endpoint:              "SASL_SSL://ksql-endpoint",
+			DetailedProcessingLog: &types.BoolValue{Value: false},
+		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
+			require.NoError(t, err)
+			req := &schedv1.CreateKSQLClusterRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if !req.Config.DetailedProcessingLog.Value {
+				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+					Cluster: ksqlClusterForDetailedProcessingLogFalse,
+				})
+			}
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
@@ -512,7 +557,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		default:
-			err := writeResourceNotFoundError(w)
+			err := writeV1ResourceNotFoundError(w)
 			require.NoError(t, err)
 		}
 	}

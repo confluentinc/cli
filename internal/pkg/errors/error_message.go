@@ -153,6 +153,8 @@ const (
 	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
 	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
 	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
+	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
@@ -210,16 +212,20 @@ const (
 	NothingToDestroyErrorMsg = "nothing to destroy"
 
 	// schema-registry commands
-	CompatibilityOrModeErrorMsg  = "must pass either `--compatibility` or `--mode` flag"
-	BothSchemaAndSubjectErrorMsg = "cannot specify both schema ID and subject/version"
-	SchemaOrSubjectErrorMsg      = "must specify either schema ID or subject/version"
-	SchemaIntegerErrorMsg        = "invalid schema ID \"%s\""
-	SchemaIntegerSuggestions     = "Schema ID must be an integer."
-	SchemaNotFoundErrorMsg       = "schema registry subject or version not found"
-	SchemaNotFoundSuggestions    = "List available subjects with `confluent schema-registry subject list`.\n" +
+	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
+	InvalidSchemaRegistryLocationSuggestions = `Geo must be either "us", "eu", or "apac".`
+	CompatibilityOrModeErrorMsg              = "must pass either `--compatibility` or `--mode` flag"
+	BothSchemaAndSubjectErrorMsg             = "cannot specify both schema ID and subject/version"
+	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
+	SchemaIntegerErrorMsg                    = "invalid schema ID \"%s\""
+	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
+	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
+	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
-	SRInvalidPackageType         = "\"%s\" is an invalid package type"
+	SRInvalidPackageType         = `"%s" is an invalid package type`
+	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
+	SRInvalidPackageUpgrade      = `Schema Registry already uses "%s" package`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

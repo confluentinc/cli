@@ -1,0 +1,11 @@
+In the next major release, the `confluent ksql app` commands will be removed. Use the equivalent `confluent ksql cluster` commands instead.
++-------------------------+--------------------------+
+| Id                      | lksqlc-woooo             |
+| Name                    | kay cee queue elle       |
+| Topic Prefix            | pksqlc-ghjkl             |
+| Kafka                   | lkc-zxcvb                |
+| Storage                 |                      123 |
+| Endpoint                | SASL_SSL://ksql-endpoint |
+| Status                  | PROVISIONING             |
+| Detailed Processing Log | false                    |
++-------------------------+--------------------------+

@@ -3,8 +3,9 @@ package servicequota
 import (
 	"context"
 	"net/url"
+	"strconv"
 
-	quotasv2 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v2"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 
 	"github.com/spf13/cobra"
 
@@ -12,11 +13,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type quotaLimit struct {
+type quotaValue struct {
 	QuotaCode    string
 	DisplayName  string
 	Scope        string
 	AppliedLimit int32
+	//The usage field is actually an integer, but this field is not a required one.
+	//Set to an empty string if it does not exist.
+	Usage        string
 	Organization string
 	Environment  string
 	KafkaCluster string
@@ -25,16 +29,16 @@ type quotaLimit struct {
 }
 
 var (
-	listFields           = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Organization", "Environment", "Network", "KafkaCluster", "User"}
-	listHumanLabels      = []string{"Quota Code", "Display Name", "Scope", "Applied Limit", "Organization", "Environment", "Network", "Kafka Cluster", "User"}
-	listStructuredLabels = []string{"quota_code", "display_name", "scope", "applied_limit", "organization", "environment", "network", "kafka_cluster", "user"}
+	listFields           = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Usage", "Organization", "Environment", "Network", "KafkaCluster", "User"}
+	listHumanLabels      = []string{"Quota Code", "Display Name", "Scope", "Applied Limit", "Usage", "Organization", "Environment", "Network", "Kafka Cluster", "User"}
+	listStructuredLabels = []string{"quota_code", "display_name", "scope", "applied_limit", "usage", "organization", "environment", "network", "kafka_cluster", "user"}
 )
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list <quota-scope>",
-		Short: "List Confluent Cloud service quota limits by a scope.",
-		Long:  "List Confluent Cloud service quota limits by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
+		Short: "List Confluent Cloud service quota values by a scope.",
+		Long:  "List Confluent Cloud service quota values by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.list,
 	}
@@ -49,7 +53,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) createContext() context.Context {
-	return context.WithValue(context.Background(), quotasv2.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
@@ -73,10 +77,10 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	token := ""
-	quotaList := []quotasv2.ServiceQuotaV2AppliedQuota{}
+	quotaList := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	// Since we use paginated results, get all results by iterating the list.
 	for {
-		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV2Api.ListServiceQuotaV2AppliedQuotas(c.createContext()).
+		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.createContext()).
 			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
 		lsResult, _, err := req.Execute()
 		if err != nil {
@@ -106,12 +110,17 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, quota := range quotaList {
-		outQt := &quotaLimit{
+		outQt := &quotaValue{
 			QuotaCode:    *quota.Id,
 			DisplayName:  *quota.DisplayName,
 			Scope:        *quota.Scope,
 			AppliedLimit: *quota.AppliedLimit,
 		}
+
+		if quota.Usage != nil {
+			outQt.Usage = strconv.Itoa(int(*quota.Usage))
+		}
+
 		if quota.Organization != nil {
 			outQt.Organization = quota.Organization.Id
 		}
@@ -134,8 +143,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 }
 
 // TODO: remove this filter func when service-quota api supports filtering by quota code.
-func filterQuotaResults(quotaList []quotasv2.ServiceQuotaV2AppliedQuota, quotaCode string) []quotasv2.ServiceQuotaV2AppliedQuota {
-	filteredQuotas := []quotasv2.ServiceQuotaV2AppliedQuota{}
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+	filteredQuotas := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if quotaCode != "" {
 		for _, quota := range quotaList {
 			if *quota.Id == quotaCode {

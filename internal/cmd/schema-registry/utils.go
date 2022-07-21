@@ -6,17 +6,27 @@ import (
 	"strings"
 
 	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
-	SubjectUsage            = "Subject of the schema."
-	OnPremAuthenticationMsg = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	SubjectUsage              = "Subject of the schema."
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	essentialsPackage         = "essentials"
+	advancedPackage           = "advanced"
+	essentialsPackageInternal = "free"
+	advancedPackageInternal   = "paid"
 )
 
 var packageDisplayNameMapping = map[string]string{
-	"free": "essentials",
-	"paid": "advanced",
+	essentialsPackageInternal: essentialsPackage,
+	advancedPackageInternal:   advancedPackage,
 }
+
+var packageDisplayNames = []string{essentialsPackage, advancedPackage}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
@@ -41,23 +51,22 @@ func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
 }
 
-func getPackageInternalName(packageDisplayName string) (packageInternalName string, isValid bool) {
-	packageDisplayName = strings.ToLower(packageDisplayName)
-	for k, v := range packageDisplayNameMapping {
-		if v == packageDisplayName {
-			packageInternalName = k
-			isValid = true
-			return
+func getPackageInternalName(inputPackageDisplayName string) (string, error) {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName, nil
 		}
 	}
-	return
+
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageType, inputPackageDisplayName),
+		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
 }
 
-func getAllPackageDisplayNames() []string {
-	packageDisplayNames := make([]string, 0, len(packageDisplayNameMapping))
-	for _, tx := range packageDisplayNameMapping {
-		packageDisplayNames = append(packageDisplayNames, tx)
-	}
+func getCommaDelimitedPackagesString() string {
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+}
 
-	return packageDisplayNames
+func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
+	cmd.Flags().String("package", defaultPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

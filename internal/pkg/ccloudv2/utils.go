@@ -53,6 +53,13 @@ func getServerUrl(baseURL string, isTest bool) string {
 	return "https://api.confluent.cloud"
 }
 
+func getMetricsServerUrl(isTest bool) string {
+	if isTest {
+		return testserver.TestV2CloudURL.String()
+	}
+	return "https://api.telemetry.confluent.cloud"
+}
+
 func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil

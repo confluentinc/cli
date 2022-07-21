@@ -63,7 +63,7 @@ func (c *CloudRouter) HandleCluster(t *testing.T) http.HandlerFunc {
 		case "lkc-update-dedicated-shrink":
 			c.HandleKafkaDedicatedClusterShrink(t)(w, r)
 		case "lkc-unknown":
-			err := writeResourceNotFoundError(w)
+			err := writeV1ResourceNotFoundError(w)
 			require.NoError(t, err)
 		case "lkc-update", "lkc-def963":
 			c.HandleClusterDefaultApiEndpoint(t)(w, r)

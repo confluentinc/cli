@@ -17,8 +17,10 @@ import (
 )
 
 var (
-	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	resourceNotFoundErrMsg      = `{"errors":[{"status":"403","detail":"resource not found"}]}`
+	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -252,8 +254,16 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
+	return err
+}
+
+func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusForbidden)
+	_, err := io.WriteString(w, v1ResourceNotFoundErrMsg)
 	return err
 }
 

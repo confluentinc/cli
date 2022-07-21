@@ -2,7 +2,7 @@ def config = jobConfig {
     nodeLabel = 'docker-debian-10-system-test-jdk8'
     properties = [
         parameters([
-            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/acl_cli_test.py muckrake/tests/cli_partitions_test.py muckrake/tests/cli_topics_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
+            string(name: 'TEST_PATH', defaultValue: 'muckrake/tests/cli_acls_test.py muckrake/tests/cli_brokers_test.py muckrake/tests/cli_partitions_test.py muckrake/tests/cli_topics_test.py muckrake/tests/password_protection_cli_test.py muckrake/tests/rbac_kafka_cli_test.py', description: 'Use this to specify a test or subset of tests to run.'),
             string(name: 'NUM_WORKERS', defaultValue: '15', description: 'Number of EC2 nodes to use when running the tests.'),
             string(name: 'INSTALL_TYPE', defaultValue: 'source', choices: ['distro', 'source', 'tarball'], description: 'Use tarball or source or distro'),
             string(name: 'RESOURCE_URL', defaultValue: '', description: 'If using tarball or distro [deb, rpm], specify S3 URL to download artifacts from'),
