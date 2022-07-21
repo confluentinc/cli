@@ -56,7 +56,8 @@ blocks:
             - make lint
             - ulimit -n 2048
             - make test
-            - ls $GOPATH
+            - echo $GOPATH
+            - ls $GOPATH/pkg
             - make lint-licenses
             
             # Cache Go dependencies
@@ -119,7 +120,8 @@ blocks:
             - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
             - Get-Content id_rsa.b64
             - mkdir .ssh\
-            - certutil -decode id_rsa.b64 .ssh\id_rsa
+            - $data = Get-Content id_rsa.b64
+            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
             - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 

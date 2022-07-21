@@ -1,6 +1,6 @@
---- cli/Makefile	2022-07-19 18:30:39.000000000 -0700
+--- cli/Makefile	2022-07-21 16:33:59.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,232 +1,130 @@
+@@ -1,233 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -123,6 +123,7 @@
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
+-	cat $(HOME)/.ssh/id_rsa && \
 -	binary="bin/confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
