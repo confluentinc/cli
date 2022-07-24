@@ -8,7 +8,6 @@ import (
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -37,6 +36,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -116,7 +116,8 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 
 	changeDefaults(cmd, cfg)
 	// deprecation
-	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil), v1.CliLaunchDarklyClient, true, []interface{}{})
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
 	commandsToFlags := make(map[string]string)
 	for _, val := range deprecatedCommands.([]interface{}) {
 		flags := ""
