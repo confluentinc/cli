@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -35,6 +36,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -64,7 +66,8 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator()
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), getCloudClient(cfg, ccloudClientFactory))
+	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(ver, isTest)
@@ -112,7 +115,24 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-
+	// deprecation
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	commandsToFlags := make(map[string]string)
+	for _, val := range deprecatedCommands.([]interface{}) {
+		flags := ""
+		var command = val.(map[string]interface{})["pattern"].(string)
+		if strings.Contains(command, "--") {
+			flags = command[strings.Index(command, "--"):]
+			command = command[:strings.Index(command, "--")]
+		}
+		commandsToFlags[command] = flags
+	}
+	for commandName, flags := range commandsToFlags {
+		if command, _, err := cmd.Find(strings.Split(commandName, " ")); err == nil {
+			deprecateCommandTree(command, strings.Split(flags, " "))
+		}
+	}
 	return cmd
 }
 
@@ -191,4 +211,12 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
+}
+
+func deprecateCommandTree(cmd *cobra.Command, flags []string) {
+	cmd.Short = "DEPRECATED: " + cmd.Short
+	cmd.Long = "DEPRECATED: " + cmd.Long
+	for _, subcommand := range cmd.Commands() {
+		deprecateCommandTree(subcommand, flags)
+	}
 }

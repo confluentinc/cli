@@ -778,8 +778,13 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		jsonVal := map[string]interface{}{"key": "val"}
-		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
+		flags := map[string]interface{}{
+			"testBool":                true,
+			"testString":              "string",
+			"testInt":                 1,
+			"testJson":                map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices": []map[string]interface{}{{"pattern": "ksql app"}},
+		}
 		err := json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}
