@@ -118,19 +118,14 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	// deprecation
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
 	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-	commandsToFlags := make(map[string]string)
-	for _, val := range deprecatedCommands.([]interface{}) {
-		flags := ""
-		var command = val.(map[string]interface{})["pattern"].(string)
-		if strings.Contains(command, "--") {
-			flags = command[strings.Index(command, "--"):]
-			command = command[:strings.Index(command, "--")]
-		}
-		commandsToFlags[command] = flags
-	}
-	for commandName, flags := range commandsToFlags {
+	commandsToFlagsAndMsg := featureflags.LDResponseToMap(deprecatedCommands)
+	for commandName, flagsAndMsg := range commandsToFlagsAndMsg {
 		if command, _, err := cmd.Find(strings.Split(commandName, " ")); err == nil {
-			deprecateCommandTree(command, strings.Split(flags, " "))
+			if flagsAndMsg.Flags == nil {
+				featureflags.DeprecateCommandTree(command)
+			} else {
+				featureflags.DeprecateFlags(command, flagsAndMsg.Flags)
+			}
 		}
 	}
 	return cmd
@@ -211,12 +206,4 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
-}
-
-func deprecateCommandTree(cmd *cobra.Command, flags []string) {
-	cmd.Short = "DEPRECATED: " + cmd.Short
-	cmd.Long = "DEPRECATED: " + cmd.Long
-	for _, subcommand := range cmd.Commands() {
-		deprecateCommandTree(subcommand, flags)
-	}
 }

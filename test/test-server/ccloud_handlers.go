@@ -769,11 +769,14 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":                true,
-			"testString":              "string",
-			"testInt":                 1,
-			"testJson":                map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{{"pattern": "ksql app"}},
+			"testBool":   true,
+			"testString": "string",
+			"testInt":    1,
+			"testJson":   map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices": []map[string]interface{}{
+				{"pattern": "ksql app", "message": "hello"},
+				{"pattern": "kafka cluster list --all", "message": "hello"},
+			},
 		}
 		err := json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
