@@ -31,7 +31,7 @@ var kafkaCluster = &schedv1.KafkaCluster{
 	AccountId: "env-asyncapi",
 }
 
-const BACKWARD = "BACKWARD"
+const BackwardCompatibilityLevel = "BACKWARD"
 
 var srClient = &srsdk.APIClient{
 	DefaultApi: &srMock.DefaultApi{
@@ -51,10 +51,10 @@ var srClient = &srsdk.APIClient{
 			}, nil, nil
 		},
 		GetSubjectLevelConfigFunc: func(ctx context.Context, subject string, localVarOptionals *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: BACKWARD}, nil, nil
+			return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
 		},
 		GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: BACKWARD}, nil, nil
+			return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
 		},
 	},
 }
@@ -144,9 +144,42 @@ func newCmd() *command {
 							},
 						},
 						Partitions: []*schedv1.TopicPartitionInfo{
-							{Partition: 0, Leader: &schedv1.KafkaNode{Id: 1001}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}},
-							{Partition: 1, Leader: &schedv1.KafkaNode{Id: 1002}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1002}, {Id: 1003}}},
-							{Partition: 2, Leader: &schedv1.KafkaNode{Id: 1003}, Replicas: []*schedv1.KafkaNode{{Id: 1001}, {Id: 1002}, {Id: 1003}}, Isr: []*schedv1.KafkaNode{{Id: 1003}}},
+							{Partition: 0,
+								Leader: &schedv1.KafkaNode{Id: 1001},
+								Replicas: []*schedv1.KafkaNode{
+									{Id: 1001},
+									{Id: 1002},
+									{Id: 1003},
+								},
+								Isr: []*schedv1.KafkaNode{
+									{Id: 1001},
+									{Id: 1002},
+									{Id: 1003},
+								},
+							},
+							{Partition: 1,
+								Leader: &schedv1.KafkaNode{Id: 1002},
+								Replicas: []*schedv1.KafkaNode{
+									{Id: 1001},
+									{Id: 1002},
+									{Id: 1003},
+								},
+								Isr: []*schedv1.KafkaNode{
+									{Id: 1002},
+									{Id: 1003},
+								},
+							},
+							{Partition: 2,
+								Leader: &schedv1.KafkaNode{Id: 1003},
+								Replicas: []*schedv1.KafkaNode{
+									{Id: 1001},
+									{Id: 1002},
+									{Id: 1003},
+								},
+								Isr: []*schedv1.KafkaNode{
+									{Id: 1003},
+								},
+							},
 						},
 					},
 				}, nil
@@ -174,12 +207,8 @@ func TestGetEnv(t *testing.T) {
 
 func TestGetClusterDetails(t *testing.T) {
 	c := newCmd()
-	_, _, _, err := c.getClusterDetails("lkc-test-failure")
-	require.EqualError(t, err, "failed to find Kafka cluster: unable to obtain Kafka cluster information for cluster \"lkc-test-failure\": no client")
-	_, _, _, err = c.getClusterDetails("")
-	if err != nil {
-		require.NoError(t, err)
-	}
+	_, _, _, err := c.getClusterDetails()
+	require.NoError(t, err)
 }
 
 func TestGetBroker(t *testing.T) {

@@ -87,7 +87,6 @@ type flags struct {
 	consumeExamples bool
 	apiKey          string
 	apiSecret       string
-	kafkaClusterId  string
 }
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -103,6 +102,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	return c.Command
 }
 
@@ -112,7 +112,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 	// Get Kafka cluster details and broker URL
-	cluster, topics, clusterCreds, err := c.getClusterDetails(flags.kafkaClusterId)
+	cluster, topics, clusterCreds, err := c.getClusterDetails()
 	if err != nil {
 		return err
 	}
@@ -289,11 +289,9 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 	return bindings, nil
 }
 
-func (c *command) getClusterDetails(kafkaClusterId string) (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
+func (c *command) getClusterDetails() (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
 	var ctx context.Context
-	if kafkaClusterId == "" {
-		kafkaClusterId = c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-	}
+	kafkaClusterId := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: kafkaClusterId}
 	// Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
@@ -375,17 +373,12 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	kafkaClusterId, err := cmd.Flags().GetString("cluster")
-	if err != nil {
-		return nil, err
-	}
 	return &flags{
 		file:            file,
 		groupId:         groupId,
 		consumeExamples: consumeExamples,
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
-		kafkaClusterId:  kafkaClusterId,
 	}, nil
 }
 
