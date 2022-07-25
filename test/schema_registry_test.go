@@ -16,21 +16,26 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 	tests := []CLITest{
 		{args: "schema-registry --help", fixture: "schema-registry/help.golden"},
 		{args: "schema-registry cluster --help", fixture: "schema-registry/cluster-help.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced -o json", fixture: "schema-registry/enable-json.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package essentials -o yaml", fixture: "schema-registry/enable-yaml.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced", fixture: "schema-registry/enable.golden"},
+		{args: "schema-registry cluster enable --cloud aws --region us-east-1 --package advanced -o json", fixture: "schema-registry/enable-json.golden"},
+		{args: "schema-registry cluster enable --cloud aws --region us-east-1 --package advanced -o yaml", fixture: "schema-registry/enable-yaml.golden"},
+		{args: "schema-registry cluster enable --cloud aws --region us-east-1 --package advanced", fixture: "schema-registry/enable.golden"},
 		{
-			args:        "schema-registry cluster enable --cloud gcp --geo somethingwrong --package advanced",
-			fixture:     "schema-registry/enable-invalid-geo.golden",
+			args:        "schema-registry cluster enable --cloud aws --region invalid-region --package advanced",
+			fixture:     "schema-registry/enable-invalid-region.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster enable --cloud aws --geo us --package invalid-package",
+			args:        "schema-registry cluster enable --cloud invalid-cloud --region us-east-1 --package advanced",
+			fixture:     "schema-registry/enable-invalid-cloud.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:        "schema-registry cluster enable --cloud aws --region us-east-1 --package invalid-package",
 			fixture:     "schema-registry/enable-invalid-package.golden",
 			wantErrCode: 1,
 		},
 		{
-			args:        "schema-registry cluster enable --geo us --package essentials",
+			args:        "schema-registry cluster enable --region us-east-2 --package essentials",
 			fixture:     "schema-registry/enable-missing-flag.golden",
 			wantErrCode: 1,
 		},
