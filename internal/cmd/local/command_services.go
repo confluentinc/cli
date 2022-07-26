@@ -362,12 +362,13 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 			return map[string]string{}, err
 		}
 
-		path := local.ExtractConfig(data)["plugin.path"].(string)
-		full, err := c.ch.GetFile("share", "java")
-		if err != nil {
-			return map[string]string{}, err
+		if path, ok := local.ExtractConfig(data)["plugin.path"].(string); ok {
+			full, err := c.ch.GetFile("share", "java")
+			if err != nil {
+				return map[string]string{}, err
+			}
+			config["plugin.path"] = strings.ReplaceAll(path, "share/java", full)
 		}
-		config["plugin.path"] = strings.ReplaceAll(path, "share/java", full)
 
 		matches, err := c.ch.FindFile("share/java/kafka-connect-replicator/replicator-rest-extension-*.jar")
 		if err != nil {
