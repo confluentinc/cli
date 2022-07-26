@@ -27,8 +27,7 @@ func (s *providerShareCommand) newDeleteCommand() *cobra.Command {
 func (s *providerShareCommand) delete(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	_, err := s.V2Client.DeleteProviderShare(shareId)
-	if err != nil {
+	if _, err := s.V2Client.DeleteProviderShare(shareId); err != nil {
 		return err
 	}
 
