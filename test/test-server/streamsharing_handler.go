@@ -22,19 +22,15 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 		ProviderUserName:         stringToPtr("provider"),
 		Status:                   stringToPtr("active"),
 		DeliveryMethod:           stringToPtr("email"),
-		ServiceAccount: &cdxv1.ObjectReference{
-			Id: "sa-123456",
-		},
-		SharedResource: &cdxv1.ObjectReference{
-			Id: "topic-12345",
-		},
-		RedeemedAt:      &redeemedAt,
-		InvitedAt:       &invitedAt,
-		InviteExpiresAt: &expiresAt,
+		ServiceAccount:           &cdxv1.ObjectReference{Id: "sa-123456"},
+		SharedResource:           &cdxv1.ObjectReference{Id: "sr-12345"},
+		RedeemedAt:               &redeemedAt,
+		InvitedAt:                &invitedAt,
+		InviteExpiresAt:          &expiresAt,
 	}
 }
 
-// Handler for: "/cdx/cdxv1/provider-shares"
+// Handler for: "/cdx/v1/provider-shares"
 func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -48,7 +44,7 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/cdx/cdxv1/provider-shares/{id}"
+// Handler for: "/cdx/v1/provider-shares/{id}"
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

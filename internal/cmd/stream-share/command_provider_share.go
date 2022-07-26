@@ -5,9 +5,6 @@ import (
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -83,32 +80,6 @@ func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return s.Command
 }
 
-func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
-	sharedResource, err := cmd.Flags().GetString("shared-resource")
-	if err != nil {
-		return err
-	}
-
-	providerShares, err := s.V2Client.ListProviderShares(sharedResource)
-	if err != nil {
-		return err
-	}
-
-	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels,
-		providerShareListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
-	for _, share := range providerShares {
-		element := s.buildProviderShare(share)
-
-		outputWriter.AddElement(element)
-	}
-
-	return outputWriter.Out()
-}
-
 func (s *providerShareCommand) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
 	serviceAccount := share.GetServiceAccount()
 	sharedResource := share.GetSharedResource()
@@ -131,26 +102,27 @@ func (s *providerShareCommand) buildProviderShare(share cdxv1.CdxV1ProviderShare
 	return element
 }
 
-func (s *providerShareCommand) describe(cmd *cobra.Command, args []string) error {
-	shareId := args[0]
-
-	provideShare, _, err := s.V2Client.DescribeProvideShare(shareId)
-	if err != nil {
-		return err
+func (s *providerShareCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
 	}
 
-	return output.DescribeObject(cmd, s.buildProviderShare(provideShare), providerShareListFields, humanLabelMap,
-		structuredLabelMap)
+	if err := s.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return s.autocompleteProviderShares()
 }
 
-func (s *providerShareCommand) delete(cmd *cobra.Command, args []string) error {
-	shareId := args[0]
-
-	_, err := s.V2Client.DeleteProviderShare(shareId)
+func (s *providerShareCommand) autocompleteProviderShares() []string {
+	providerShares, err := s.V2Client.ListProviderShares("")
 	if err != nil {
-		return err
+		return nil
 	}
 
-	utils.Printf(cmd, errors.DeletedProviderShareMsg, shareId)
-	return nil
+	suggestions := make([]string, len(providerShares))
+	for i, share := range providerShares {
+		suggestions[i] = *share.Id
+	}
+	return suggestions
 }
