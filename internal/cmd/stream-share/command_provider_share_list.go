@@ -15,7 +15,7 @@ func (s *providerShareCommand) newListCommand() *cobra.Command {
 		RunE:  s.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List provider shares",
+				Text: "List provider shares:",
 				Code: "confluent stream-share provider share list",
 			},
 		),
