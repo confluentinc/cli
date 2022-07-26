@@ -1,17 +1,17 @@
 package ksql
 
 import (
-	"context"
+	// "context"
 	"fmt"
-	"os"
+	// "os"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	// schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	// "github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
@@ -55,21 +55,27 @@ func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.KSQL.List(context.Background(), req)
-	if err != nil {
-		return err
-	}
+	resp, _, error := c.V2Client.ListKsqlClusters(c.EnvironmentId())
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-	for _, cluster := range clusters {
-		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(cluster))
-	}
-	return outputWriter.Out()
+	fmt.Println(resp)
+	return error
+
+
+	// req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+	// clusters, err := c.Client.KSQL.List(context.Background(), req)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// if isApp {
+	// 	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	// }
+	// outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	// if err != nil {
+	// 	return err
+	// }
+	// for _, cluster := range clusters {
+	// 	outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(cluster))
+	// }
+	// return outputWriter.Out()
 }
