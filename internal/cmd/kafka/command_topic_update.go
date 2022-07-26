@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -94,16 +95,39 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
+
 			// Kafka REST is available and there was no error
+			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+			if err != nil {
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			} else if configsResp.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+			}
+			configsReadOnly := set.New()
+			readOnlyValue := make(map[string]string)
+			for _, conf := range configsResp.Data {
+				if conf.IsReadOnly {
+					configsReadOnly.Add(conf.Name)
+					readOnlyValue[conf.Name] = *conf.Value
+				}
+			}
+
 			utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
-			tableLabels := []string{"Name", "Value"}
+			tableLabels := []string{"Name", "Value", "Read Only"}
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
+				valString := *config.Value
+				readOnlyString := "No"
+				if configsReadOnly[config.Name] {
+					valString = readOnlyValue[config.Name]
+					readOnlyString = "Yes"
+				}
 				tableEntries[i] = printer.ToRow(
 					&struct {
-						Name  string
-						Value string
-					}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+						Name     string
+						Value    string
+						ReadOnly string
+					}{Name: config.Name, Value: valString, ReadOnly: readOnlyString}, []string{"Name", "Value", "ReadOnly"})
 			}
 			sort.Slice(tableEntries, func(i int, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
