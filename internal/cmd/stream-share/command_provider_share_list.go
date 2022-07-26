@@ -39,8 +39,7 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels,
-		providerShareListStructuredLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels, providerShareListStructuredLabels)
 	if err != nil {
 		return err
 	}
