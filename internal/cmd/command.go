@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"os"
-	"os/exec"
+	"path/filepath"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -49,12 +48,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
-
-type pluginInfo struct {
-	args []string
-	name string
-	size int
-}
 
 func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
@@ -129,10 +122,36 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := findPlugin(cmd, args); err != nil {
+		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
 			return err
 		} else if plugin != nil {
-			return execPlugin(plugin)
+			pluginPath := plugin.Args[0]
+			if strings.HasSuffix(pluginPath, ".sh") {
+				dat, err := os.ReadFile(pluginPath)
+				if err != nil {
+					return err
+				}
+				if string(dat[:2]) != "#!" {
+					shebang := []byte("#!" + os.Getenv("SHELL") + "\n")
+					temp, err := os.CreateTemp(strings.TrimSuffix(pluginPath, filepath.Base(pluginPath)), plugin.Name)
+					defer func() {
+						_ = temp.Close()
+						_ = os.Remove(temp.Name())
+					}()
+					if err != nil {
+						return err
+					}
+					if _, err := temp.Write(append(shebang, dat...)); err != nil {
+						return err
+					}
+					err = temp.Chmod(0755)
+					if err != nil {
+						return err
+					}
+					plugin.Args[0] = temp.Name()
+				}
+			}
+			return pplugin.ExecPlugin(plugin)
 		}
 	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
@@ -154,62 +173,6 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 	}
 
 	return err
-}
-
-// findPlugin determines if the arguments passed in are meant for a plugin
-func findPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
-	pluginMap, err := pplugin.SearchPath()
-	if err != nil {
-		return nil, err
-	}
-
-	plugin := buildPluginInfo(args)
-
-	for len(plugin.name) > len(pversion.CLIName) {
-		if pluginPathList, ok := pluginMap[plugin.name]; ok {
-			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
-				log.CliLogger.Warnf("[WARN] User plugin %s is ignored because its command line invocation matches existing CLI command `%s`.\n", pluginPathList[0], cmd.CommandPath())
-				break
-			}
-			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
-			return &plugin, nil
-		}
-		plugin.args = append([]string{args[plugin.size-1]}, plugin.args...)
-		plugin.size--
-		plugin.name = plugin.name[:strings.LastIndex(plugin.name, "-")]
-	}
-	return nil, err
-}
-
-// buildPluginInfo initializes a pluginInfo struct from command line arguments
-func buildPluginInfo(args []string) pluginInfo {
-	infoArgs := make([]string, 0, len(args))
-	name := []string{pversion.CLIName}
-	for i, arg := range args {
-		if strings.HasPrefix(arg, "--") {
-			infoArgs = args[i:]
-			break
-		}
-		arg = strings.ReplaceAll(arg, "-", "_")
-		name = append(name, arg)
-	}
-	return pluginInfo{
-		args: infoArgs,
-		name: strings.Join(name, "-"),
-		size: len(name) - 1,
-	}
-}
-
-// execPlugin runs a plugin found by the above findPlugin function
-func execPlugin(info *pluginInfo) error {
-	plugin := &exec.Cmd{
-		Path:   info.args[0],
-		Args:   info.args,
-		Stdout: os.Stdout,
-		Stdin:  os.Stdin,
-		Stderr: os.Stderr,
-	}
-	return plugin.Run()
 }
 
 func getLongDescription(cfg *v1.Config) string {

@@ -1,9 +1,13 @@
 package plugin
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/log"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -11,6 +15,12 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type pluginInfo struct {
+	Args []string
+	Name string
+	Size int
+}
 
 func SearchPath() (map[string][]string, error) {
 	pluginMap := make(map[string][]string)
@@ -59,4 +69,60 @@ func isExecutable(entry fs.DirEntry) bool {
 func isExecutableWindows(name string) bool {
 	ext := strings.ToLower(filepath.Ext(name))
 	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, ext)
+}
+
+// FindPlugin determines if the arguments passed in are meant for a plugin
+func FindPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
+	pluginMap, err := SearchPath()
+	if err != nil {
+		return nil, err
+	}
+
+	plugin := buildPluginInfo(args)
+
+	for len(plugin.Name) > len(pversion.CLIName) {
+		if pluginPathList, ok := pluginMap[plugin.Name]; ok {
+			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.Name {
+				log.CliLogger.Warnf("[WARN] User plugin %s is ignored because its command line invocation matches existing CLI command `%s`.\n", pluginPathList[0], cmd.CommandPath())
+				break
+			}
+			plugin.Args = append([]string{pluginPathList[0]}, plugin.Args...)
+			return &plugin, nil
+		}
+		plugin.Args = append([]string{args[plugin.Size-1]}, plugin.Args...)
+		plugin.Size--
+		plugin.Name = plugin.Name[:strings.LastIndex(plugin.Name, "-")]
+	}
+	return nil, err
+}
+
+// buildPluginInfo initializes a pluginInfo struct from command line arguments
+func buildPluginInfo(args []string) pluginInfo {
+	infoArgs := make([]string, 0, len(args))
+	name := []string{pversion.CLIName}
+	for i, arg := range args {
+		if strings.HasPrefix(arg, "--") {
+			infoArgs = args[i:]
+			break
+		}
+		arg = strings.ReplaceAll(arg, "-", "_")
+		name = append(name, arg)
+	}
+	return pluginInfo{
+		Args: infoArgs,
+		Name: strings.Join(name, "-"),
+		Size: len(name) - 1,
+	}
+}
+
+// ExecPlugin runs a plugin found by the above findPlugin function
+func ExecPlugin(info *pluginInfo) error {
+	plugin := &exec.Cmd{
+		Path:   info.Args[0],
+		Args:   info.Args,
+		Stdout: os.Stdout,
+		Stdin:  os.Stdin,
+		Stderr: os.Stderr,
+	}
+	return plugin.Run()
 }

@@ -3,13 +3,27 @@ package test
 import (
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestPlugin() {
 	path := os.Getenv("PATH")
-	err := os.Setenv("PATH", "test/fixtures/input/plugin")
+	distEntries, err := os.ReadDir("dist")
+	var pathNames []string
+	for _, entry := range distEntries {
+		if entry.IsDir() {
+			pathNames = append(pathNames, "dist/"+entry.Name())
+		}
+	}
+	pathNames = append(pathNames, "test/fixtures/input/plugin")
+	require.NoError(s.T(), err)
+	delimiter := ":"
+	if runtime.GOOS == "windows" {
+		delimiter = ";"
+	}
+	err = os.Setenv("PATH", strings.Join(pathNames, delimiter))
 	require.NoError(s.T(), err)
 	defer func() {
 		err := os.Setenv("PATH", path)
@@ -26,6 +40,7 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "dash_test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "dash-test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "another_dash-test but-with two-args with dashes and-others_without them", fixture: "plugin/dash-test2.golden", pluginsEnabled: true},
+		{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", pluginsEnabled: true},
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 

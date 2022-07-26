@@ -6,6 +6,7 @@
   confluent dash-test            | test/fixtures/input/plugin/confluent-dash_test.sh                   
   confluent foo bar baz boo far  | test/fixtures/input/plugin/confluent-foo-bar-baz-boo-far.sh         
   confluent kafka something      | test/fixtures/input/plugin/confluent-kafka-something.sh             
+  confluent no-shebang commands  | test/fixtures/input/plugin/confluent-no_shebang-commands.sh         
   confluent plugin1              | test/fixtures/input/plugin/confluent-plugin1.sh                     
   confluent plugin2              | test/fixtures/input/plugin/confluent-plugin2.sh                     
   confluent print args           | test/fixtures/input/plugin/confluent-print-args.sh                  
