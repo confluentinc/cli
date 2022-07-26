@@ -25,6 +25,5 @@ func (c *Client) ksqlApiContext() context.Context {
 }
 
 func (c *Client) ListKsqlClusters(environmentId string) (ksql.KsqldbcmV2ClusterList, *_nethttp.Response, error) {
-	c.KsqlClient.ClustersKsqldbcmV2Api
 	return c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).Execute()
 }
