@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -65,6 +66,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
+		// num.partitions is read only but requires special handling
+		_, numPartChange := configMap["num.partitions"]
+		if numPartChange {
+			delete(configMap, "num.partitions")
+		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
@@ -128,6 +134,25 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 						Value    string
 						ReadOnly string
 					}{Name: config.Name, Value: valString, ReadOnly: readOnlyString}, []string{"Name", "Value", "ReadOnly"})
+			}
+			if numPartChange {
+				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
+				if err != nil && httpResp != nil {
+					restErr, parseErr := parseOpenAPIError(err)
+					if parseErr == nil {
+						if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+							return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+						}
+					}
+					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				}
+
+				tableEntries = append(tableEntries, printer.ToRow(
+					&struct {
+						Name     string
+						Value    string
+						ReadOnly string
+					}{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "Yes"}, []string{"Name", "Value", "ReadOnly"}))
 			}
 			sort.Slice(tableEntries, func(i int, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
