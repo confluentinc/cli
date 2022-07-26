@@ -17,12 +17,14 @@ import (
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.1.0"
 	"github.com/swaggest/go-asyncapi/spec-2.1.0"
 
+	kafka2 "github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -88,6 +90,8 @@ type flags struct {
 	apiKey          string
 	apiSecret       string
 }
+
+const messageOffset int = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
@@ -163,7 +167,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				}
 				var example interface{}
 				if flags.consumeExamples {
-					example, err = getMessageExamples(consumer, topic.Name)
+					example, err = c.getMessageExamples(consumer, topic.Name, contentType, srClient)
 					if err != nil {
 						log.CliLogger.Warn(err)
 					}
@@ -225,7 +229,27 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 	return tagsInSpec, nil
 }
 
-func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}, error) {
+func getValueFormat(contentType string) string {
+	switch contentType {
+	case "application/avro":
+		return "avro"
+	case "application/json":
+		return "jsonschema"
+	case "application/protobuf":
+		return "protobuf"
+	default:
+		return "string"
+	}
+}
+
+func handlePanic() {
+	if err := recover(); err != nil {
+		log.CliLogger.Warn("failed to get message example: ", err)
+	}
+}
+
+func (c command) getMessageExamples(consumer *kafka.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient) (interface{}, error) {
+	defer handlePanic()
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
@@ -234,20 +258,42 @@ func getMessageExamples(consumer *kafka.Consumer, topicName string) (interface{}
 	if err != nil {
 		return nil, fmt.Errorf(`no example received for topic "%s": %v`, topicName, err)
 	}
-	var example interface{}
-	val := string(message.Value)
-	val = val[strings.Index(val, "{"):]
-	err = json.Unmarshal([]byte(val), &example)
+	value := message.Value
+	valueFormat := getValueFormat(contentType)
+	deserializationProvider, err := serdes.GetDeserializationProvider(valueFormat)
 	if err != nil {
-		err = fmt.Errorf(`example received for topic "%s" is invalid JSON: %v`, topicName, err)
 		return nil, err
 	}
-	return example, nil
+	groupHandler := kafka2.GroupHandler{
+		SrClient:   srClient,
+		Ctx:        *new(context.Context),
+		Format:     valueFormat,
+		Out:        nil,
+		Subject:    topicName + "-value",
+		Properties: kafka2.ConsumerProperties{},
+	}
+	if valueFormat != "string" {
+		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
+		if err != nil {
+			return nil, err
+		}
+		// Message body is encoded after 5 bytes of meta information.
+		value = value[messageOffset:]
+		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
+		if err != nil {
+			return nil, err
+		}
+	}
+	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+	if err != nil {
+		return nil, err
+	}
+	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.TopicDescription, groupId string) (*bindings, error) {
-	topic1 := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topic.Name}}
-	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic1)
+func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription, groupId string) (*bindings, error) {
+	topic := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicDescription.Name}}
+	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get topic configs: %v", err)
 	}
@@ -265,8 +311,8 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topic *schedv1.Topi
 		}
 	}
 	channelBinding := ConfluentBinding{
-		Partitions: len(topic.GetPartitions()),
-		Replicas:   len(topic.GetPartitions()[0].Replicas),
+		Partitions: len(topicDescription.GetPartitions()),
+		Replicas:   len(topicDescription.GetPartitions()[0].Replicas),
 		Configs: Configs{
 			CleanupPolicy:                  cleanupPolicy,
 			DeleteRetentionMs:              deleteRetentionMsValue,
@@ -304,7 +350,7 @@ func (c *command) getClusterDetails() (*schedv1.KafkaCluster, []*schedv1.TopicDe
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
-		return nil, nil, nil, errors.NewErrorWithSuggestions("API Key not set for the Kafka cluster", "Set an API Key Pair for the kafka Cluster using `confluent api-key create`")
+		return nil, nil, nil, errors.NewErrorWithSuggestions("API key not set for the Kafka cluster", "Set an API key pair for the Kafka cluster using `confluent api-key create`")
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
@@ -318,7 +364,7 @@ func getBroker(cluster *schedv1.KafkaCluster) string {
 }
 
 func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, *schemaregistry.Schema, map[string]interface{}, error) {
-	log.CliLogger.Debugf("Adding operation: %s\n", topic.Name)
+	log.CliLogger.Debugf("Adding operation: %s", topic.Name)
 	schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
 	if err != nil {
 		return "", nil, nil, err
@@ -399,7 +445,7 @@ func getSchemaRegistry(c *command, cmd *cobra.Command, apiKey, apiSecret string)
 }
 
 func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
-	reflector := asyncapi.Reflector{
+	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.Server{
 				env + "-broker": {
@@ -431,7 +477,6 @@ func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluste
 			},
 		},
 	}
-	return reflector
 }
 
 func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]interface{}, error) {
@@ -512,8 +557,7 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 									"sasl.mechanisms":   "PLAIN",
 									"sasl.username":     "{{CLUSTER_API_KEY}}",
 									"sasl.password":     "{{CLUSTER_API_SECRET}}",
-								},
-								),
+								}),
 							},
 						},
 					},

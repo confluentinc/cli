@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"strings"
 
@@ -38,8 +37,6 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = strings.ReplaceAll(file1, "\r", "")
 	if strings.Compare(file1, testfile1) != 0 {
-		fmt.Println([]byte(testfile1))
-		fmt.Println([]byte(file1))
 		s.Error(nil, "spec generated does not match the template output file")
 	}
 	resetConfiguration(s.T())

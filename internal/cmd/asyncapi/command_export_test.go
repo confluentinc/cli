@@ -35,10 +35,10 @@ const BackwardCompatibilityLevel = "BACKWARD"
 
 var srClient = &srsdk.APIClient{
 	DefaultApi: &srMock.DefaultApi{
-		ListFunc: func(ctx context.Context, opts *srsdk.ListOpts) ([]string, *http.Response, error) {
+		ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
 			return []string{"subject 1", "subject 2"}, nil, nil
 		},
-		ListVersionsFunc: func(ctx context.Context, subject string, opts *srsdk.ListVersionsOpts) (int32s []int32, response *http.Response, e error) {
+		ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 			return []int32{1234, 4567}, nil, nil
 		},
 		GetSchemaByVersionFunc: func(ctx context.Context, subject string, version string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
@@ -105,8 +105,8 @@ func newCmd() *command {
 		CurrentContext: "asyncapi",
 	}
 	prerunner := &pcmd.PreRun{Config: cfg}
-	cmd := cobra.Command{}
-	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(&cmd, prerunner)}
+	cmd := new(cobra.Command)
+	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.State = cfg.Context().State
 	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
@@ -229,7 +229,7 @@ func TestGetSchemaRegistry(t *testing.T) {
 	c.Client.SchemaRegistry = &ccsdkmock.SchemaRegistry{GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
 		return nil, nil
 	}}
-	_, _, _, err = getSchemaRegistry(c, c.Command, "", "")
+	_, _, _, err = getSchemaRegistry(c, c.Command, "ASYNCAPIKEY", "ASYNCAPISECRET")
 	require.EqualError(t, err, "EOF")
 }
 
