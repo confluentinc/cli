@@ -47,7 +47,6 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 
 	for _, share := range providerShares {
 		element := s.buildProviderShare(share)
-
 		outputWriter.AddElement(element)
 	}
 
