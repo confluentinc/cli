@@ -216,8 +216,7 @@ func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.
 	for _, tags := range tagsFromId {
 		body, err := catalog.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
 		if err != nil {
-			err = fmt.Errorf("failed to get tag definitions: %v", err)
-			return nil, err
+			return nil, fmt.Errorf("failed to get tag definitions: %v", err)
 		}
 		var tagDef TagDef
 		err = json.Unmarshal(body, &tagDef)
@@ -262,7 +261,7 @@ func (c command) getMessageExamples(consumer *kafka.Consumer, topicName, content
 	valueFormat := getValueFormat(contentType)
 	deserializationProvider, err := serdes.GetDeserializationProvider(valueFormat)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 	groupHandler := kafka2.GroupHandler{
 		SrClient:   srClient,
@@ -286,7 +285,7 @@ func (c command) getMessageExamples(consumer *kafka.Consumer, topicName, content
 	}
 	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to deserialize example: %v", err)
 	}
 	return jsonMessage, nil
 }
