@@ -528,11 +528,11 @@ func (c *Config) CheckIsCloudLogin() error {
 }
 
 func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
-	if !c.isCloud() || !c.isContextStatePresent() {
+	if !c.isCloud() {
 		return RequireCloudLoginErr
 	}
 
-	if c.isLoginBlockedByOrgSuspension() {
+	if c.isContextStatePresent() && c.isLoginBlockedByOrgSuspension() {
 		return RequireCloudLoginOrgUnsuspendedErr
 	}
 
