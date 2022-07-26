@@ -110,22 +110,20 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
 			configsReadOnly := set.New()
-			readOnlyValue := make(map[string]string)
+			configsValues := make(map[string]string)
 			for _, conf := range configsResp.Data {
 				if conf.IsReadOnly {
 					configsReadOnly.Add(conf.Name)
-					readOnlyValue[conf.Name] = *conf.Value
 				}
+				configsValues[conf.Name] = *conf.Value
 			}
 
 			utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
 			tableLabels := []string{"Name", "Value", "Read Only"}
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
-				valString := *config.Value
 				readOnlyString := "No"
 				if configsReadOnly[config.Name] {
-					valString = readOnlyValue[config.Name]
 					readOnlyString = "Yes"
 				}
 				tableEntries[i] = printer.ToRow(
@@ -133,7 +131,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 						Name     string
 						Value    string
 						ReadOnly string
-					}{Name: config.Name, Value: valString, ReadOnly: readOnlyString}, []string{"Name", "Value", "ReadOnly"})
+					}{Name: config.Name, Value: configsValues[config.Name], ReadOnly: readOnlyString}, []string{"Name", "Value", "ReadOnly"})
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
