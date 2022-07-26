@@ -57,7 +57,7 @@ func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
 
-	clusters, _, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
+	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
 	if err != nil {
 		return err
 	}
