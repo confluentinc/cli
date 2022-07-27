@@ -48,8 +48,8 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 			Id:            *pool.Id,
 			DisplayName:   *pool.DisplayName,
 			Description:   *pool.Description,
-			IdentityClaim: *pool.SubjectClaim,
-			Filter:        *pool.Policy,
+			IdentityClaim: *pool.IdentityClaim,
+			Filter:        *pool.Filter,
 		}
 		outputWriter.AddElement(element)
 	}

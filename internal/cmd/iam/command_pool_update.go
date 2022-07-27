@@ -76,10 +76,10 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		updateIdentityPool.Description = &description
 	}
 	if identityClaim != "" {
-		updateIdentityPool.SubjectClaim = &identityClaim
+		updateIdentityPool.IdentityClaim = &identityClaim
 	}
 	if filter != "" {
-		updateIdentityPool.Policy = &filter
+		updateIdentityPool.Filter = &filter
 	}
 
 	resp, httpResp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
@@ -91,8 +91,8 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		Id:            *resp.Id,
 		DisplayName:   *resp.DisplayName,
 		Description:   *resp.Description,
-		IdentityClaim: *resp.SubjectClaim,
-		Filter:        *resp.Policy,
+		IdentityClaim: *resp.IdentityClaim,
+		Filter:        *resp.Filter,
 	}
 	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
 }

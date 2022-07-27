@@ -63,10 +63,10 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	createIdentityPool := identityproviderv2.IamV2IdentityPool{
-		DisplayName:  identityproviderv2.PtrString(name),
-		Description:  identityproviderv2.PtrString(description),
-		SubjectClaim: identityproviderv2.PtrString(identityClaim),
-		Policy:       identityproviderv2.PtrString(filter),
+		DisplayName:   identityproviderv2.PtrString(name),
+		Description:   identityproviderv2.PtrString(description),
+		IdentityClaim: identityproviderv2.PtrString(identityClaim),
+		Filter:        identityproviderv2.PtrString(filter),
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
@@ -77,8 +77,8 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		Id:            *resp.Id,
 		DisplayName:   *resp.DisplayName,
 		Description:   *resp.Description,
-		IdentityClaim: *resp.SubjectClaim,
-		Filter:        *resp.Policy,
+		IdentityClaim: *resp.IdentityClaim,
+		Filter:        *resp.Filter,
 	}
 
 	return output.DescribeObject(cmd, identityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)

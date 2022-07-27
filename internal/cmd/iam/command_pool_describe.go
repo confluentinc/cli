@@ -52,8 +52,8 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		Id:            *identityPoolProfile.Id,
 		DisplayName:   *identityPoolProfile.DisplayName,
 		Description:   *identityPoolProfile.Description,
-		IdentityClaim: *identityPoolProfile.SubjectClaim,
-		Filter:        *identityPoolProfile.Policy,
+		IdentityClaim: *identityPoolProfile.IdentityClaim,
+		Filter:        *identityPoolProfile.Filter,
 	}
 
 	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
