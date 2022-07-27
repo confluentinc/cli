@@ -56,10 +56,25 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 // Some helper functions for the ksql app/cluster commands
 
 func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
+
+
+	status := cluster.Status.Phase
+	if cluster.IsPaused {// TODO: Sort out this isPaused stuff
+		status = "PAUSED"
+	} else if status == "PROVISIONED" {
+		provisioningFailed, err := c.checkProvisioningFailed(cluster)
+		if err != nil {
+			status = "UNKNOWN"
+		} else if provisioningFailed {
+			status = "PROVISIONING FAILED"
+		}
+	}
+
 	detailedProcessingLog := true
 	if cluster.DetailedProcessingLog != nil {
 		detailedProcessingLog = cluster.DetailedProcessingLog.Value
 	}
+
 	return &ksqlCluster{
 		Id:                    *cluster.Id,
 		Name:                  *cluster.Spec.DisplayName,
@@ -67,24 +82,24 @@ func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.Ksqldbcm
 		KafkaClusterId:        cluster.Spec.KafkaCluster.Id,
 		Storage:               cluster.Storage, // TODO: doesn't exist in API
 		Endpoint:              *cluster.Status.HttpEndpoint,
-		Status:                cluster.Status.Phase,  // TODO: do isPaused stuff?
+		Status:                status,
 		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(cluster *schedv1.KSQLCluster) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(cluster *ksql.KsqldbcmV2Cluster) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, *cluster.Id)
 	if err != nil {
 		return false, err
 	}
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
 
-	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
+	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(*cluster.Status.HttpEndpoint)
 	var failure map[string]interface{}
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
 	if err != nil || response == nil {
