@@ -23,13 +23,14 @@ import (
 )
 
 type updateRow struct {
-	Name string
-	Value string
+	Name     string
+	Value    string
 	ReadOnly string
 }
+
 var (
-	listPrinterFields      = []string{"Name", "Value", "ReadOnly"}
-	listUpdateTableLabels  = []string{"Name", "Value", "Read-Only"}
+	listPrinterFields     = []string{"Name", "Value", "ReadOnly"}
+	listUpdateTableLabels = []string{"Name", "Value", "Read-Only"}
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
@@ -136,8 +137,8 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					isReadOnly = true
 				}
 				row := updateRow{
-					Name: config.Name,
-					Value: configsValues[config.Name],
+					Name:     config.Name,
+					Value:    configsValues[config.Name],
 					ReadOnly: strconv.FormatBool(isReadOnly),
 				}
 				tableEntries[i] = printer.ToRow(&row, listPrinterFields)
@@ -155,8 +156,8 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				}
 
 				row := updateRow{
-					Name: "num.partitions",
-					Value: strconv.Itoa(len(partitionsResp.Data)),
+					Name:     "num.partitions",
+					Value:    strconv.Itoa(len(partitionsResp.Data)),
 					ReadOnly: "true",
 				}
 				tableEntries = append(tableEntries, printer.ToRow(&row, listPrinterFields))
