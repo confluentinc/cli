@@ -17,6 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type displayStruct struct {
+	Principal   string
+	Email       string
+	ServiceName string
+	PoolName    string
+}
+
 func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -232,6 +239,24 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	return outputWriter.Out()
 }
 
+func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
+	providers, err := c.V2Client.ListIdentityProviders()
+	poolToNameMap := make(map[string]string)
+	if err != nil {
+		return nil, err
+	}
+	for _, provider := range providers {
+		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
+		if err != nil {
+			return nil, err
+		}
+		for _, pool := range pools {
+			poolToNameMap["User:"+*pool.Id] = *pool.DisplayName
+		}
+	}
+	return poolToNameMap, nil
+}
+
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
 	userToEmailMap := make(map[string]string)
 	users, err := c.Client.User.List(context.Background())
@@ -305,33 +330,37 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
+	poolToNameMap, err := c.getPoolToNameMap()
+	if err != nil {
+		return err
+	}
+
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName"}, []string{"Principal", "Email", "Service Name"}, []string{"principal", "email", "service_name"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
 		if email, ok := userToEmailMap[principal]; ok {
-			displayStruct := &struct {
-				Principal   string
-				Email       string
-				ServiceName string
-			}{
-				Principal:   principal,
-				Email:       email,
+			row := &displayStruct{
+				Principal: principal,
+				Email:     email,
 			}
-			outputWriter.AddElement(displayStruct)
+			outputWriter.AddElement(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
-			displayStruct := &struct {
-				Principal   string
-				Email       string
-				ServiceName string
-			}{
+			row := &displayStruct{
 				Principal:   principal,
 				ServiceName: name,
 			}
-			outputWriter.AddElement(displayStruct)
+			outputWriter.AddElement(row)
+		}
+		if name, ok := poolToNameMap[principal]; ok {
+			row := &displayStruct{
+				Principal: principal,
+				PoolName:  name,
+			}
+			outputWriter.AddElement(row)
 		}
 	}
 	return outputWriter.Out()
