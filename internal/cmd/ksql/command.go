@@ -5,13 +5,14 @@ import (
 	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -54,30 +55,19 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *schedv1.KSQLCluster) *ksqlCluster {
-	status := cluster.Status.String()
-	if cluster.IsPaused {
-		status = "PAUSED"
-	} else if status == "UP" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster)
-		if err != nil {
-			status = "UNKNOWN"
-		} else if provisioningFailed {
-			status = "PROVISIONING FAILED"
-		}
-	}
+func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
 	detailedProcessingLog := true
 	if cluster.DetailedProcessingLog != nil {
 		detailedProcessingLog = cluster.DetailedProcessingLog.Value
 	}
 	return &ksqlCluster{
-		Id:                    cluster.Id,
-		Name:                  cluster.Name,
-		OutputTopicPrefix:     cluster.OutputTopicPrefix,
-		KafkaClusterId:        cluster.KafkaClusterId,
-		Storage:               cluster.Storage,
-		Endpoint:              cluster.Endpoint,
-		Status:                status,
+		Id:                    *cluster.Id,
+		Name:                  *cluster.Spec.DisplayName,
+		OutputTopicPrefix:     *cluster.Status.TopicPrefix,
+		KafkaClusterId:        cluster.Spec.KafkaCluster.Id,
+		Storage:               cluster.Storage, // TODO: doesn't exist in API
+		Endpoint:              *cluster.Status.HttpEndpoint,
+		Status:                cluster.Status.Phase,  // TODO: do isPaused stuff?
 		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
@@ -123,19 +113,18 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return autocompleteClusters(c.EnvironmentId(), c.Client)
+	return autocompleteClusters(c.EnvironmentId(), c.V2Client)
 }
 
-func autocompleteClusters(environment string, client *ccloud.Client) []string {
-	req := &schedv1.KSQLCluster{AccountId: environment}
-	clusters, err := client.KSQL.List(context.Background(), req)
+func autocompleteClusters(environment string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKsqlClusters(environment)
 	if err != nil {
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	suggestions := make([]string, len(clusters.Data))
+	for i, cluster := range clusters.Data {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Spec.DisplayName)
 	}
 	return suggestions
 }
