@@ -54,12 +54,13 @@ const (
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
-	StartingProducerMsg  = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumer     = "Stopping Consumer."
-	StartingConsumerMsg  = "Starting Kafka Consumer. Use Ctrl-C to exit."
-	CreatedTopicMsg      = "Created topic \"%s\".\n"
-	DeletedTopicMsg      = "Deleted topic \"%s\".\n"
-	UpdateTopicConfigMsg = "Updated the following configs for topic \"%s\":\n"
+	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StoppingConsumer         = "Stopping Consumer."
+	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
+	CreatedTopicMsg          = "Created topic \"%s\".\n"
+	DeletedTopicMsg          = "Deleted topic \"%s\".\n"
+	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
+	UpdateTopicConfigRESTMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka link commands
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
