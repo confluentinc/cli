@@ -271,7 +271,58 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 				w.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(w, responseString)
 				require.NoError(t, err)
+			} else if topicName == "topic-exist-v3" {
+				responseString := `{
+					"kind": "KafkaTopicConfigList",
+					"metadata": {
+						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs",
+						"next": null
+					},
+					"data": [
+						{
+							"kind": "KafkaTopicConfig",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs/compression.type",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-v3/config=compression.type"
+							},
+							"cluster_id": "cluster-1",
+							"name": "compression.type",
+							"value": "gzip",
+							"is_read_only": false,
+							"is_sensitive": false,
+							"source": "DEFAULT_CONFIG",
+							"synonyms": [
+								{
+									"name": "compression.type",
+									"value": "gzip",
+									"source": "DEFAULT_CONFIG"
+								}
+							],
+							"topic_name": "topic-exist-v3",
+							"is_default": true
+						},
+						{
+							"kind": "KafkaTopicConfig",
+							"metadata": {
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs/retention.ms",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-v3/config=retention.ms"
+							},
+							"cluster_id": "cluster-1",
+							"name": "retention.ms",
+							"value": "1",
+							"is_read_only": false,
+							"is_sensitive": false,
+							"source": "DEFAULT_CONFIG",
+							"synonyms": [],
+							"topic_name": "topic-exist-v3",
+							"is_default": true
+						}
+					]
+				}`
 
+				w.Header().Set("Content-Type", "application/json")
+				_, err := io.WriteString(w, responseString)
+				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
@@ -446,7 +497,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		topicName := vars["topic"]
 		switch r.Method {
 		case http.MethodPost:
-			if topicName == "topic-exist" {
+			if topicName == "topic-exist" || topicName == "topic-exist-v3" {
 				// Parse Alter Args
 				requestBody, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
