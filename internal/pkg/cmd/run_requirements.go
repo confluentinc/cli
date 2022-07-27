@@ -4,19 +4,26 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const RunRequirement = "run-requirement"
-
 const (
+	RunRequirement = "run-requirement"
+
+	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
+	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireCloudLogin                       = "cloud-login"
 	RequireCloudLoginAllowFreeTrialEnded    = "cloud-login-allow-free-trial-ended"
 	RequireCloudLoginOrOnPremLogin          = "cloud-login-or-on-prem-login"
-	RequireNonAPIKeyCloudLogin              = "non-api-key-cloud-login"
-	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
-	RequireNonCloudLogin                    = "non-cloud-login"
 	RequireOnPremLogin                      = "on-prem-login"
 	RequireUpdatesEnabled                   = "updates-enabled"
+)
+
+var (
+	requireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
+	)
 )
 
 // ErrIfMissingRunRequirement returns an error when a command or its parent doesn't meet a requirement;
@@ -27,29 +34,35 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	}
 
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
-		var f func() error
-
 		switch requirement {
 		case RequireCloudLogin:
-			f = cfg.CheckIsCloudLogin
+			if err := cfg.CheckIsCloudLogin(); err != nil {
+				return err
+			}
 		case RequireCloudLoginAllowFreeTrialEnded:
-			f = cfg.CheckIsCloudLoginAllowFreeTrialEnded
+			if err := cfg.CheckIsCloudLoginAllowFreeTrialEnded(); err != nil {
+				return err
+			}
 		case RequireCloudLoginOrOnPremLogin:
-			f = cfg.CheckIsCloudLoginOrOnPremLogin
+			if err := cfg.CheckIsCloudLoginOrOnPremLogin(); err != nil {
+				return err
+			}
 		case RequireNonAPIKeyCloudLogin:
-			f = cfg.CheckIsNonAPIKeyCloudLogin
+			if err := cfg.CheckIsNonAPIKeyCloudLogin(); err != nil {
+				return err
+			}
 		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
-			f = cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin
-		case RequireNonCloudLogin:
-			f = cfg.CheckIsNonCloudLogin
+			if err := cfg.CheckIsNonAPIKeyCloudLoginOrOnPremLogin(); err != nil {
+				return err
+			}
 		case RequireOnPremLogin:
-			f = cfg.CheckIsOnPremLogin
+			if err := cfg.CheckIsOnPremLogin(); err != nil {
+				return err
+			}
 		case RequireUpdatesEnabled:
-			f = cfg.CheckAreUpdatesEnabled
-		}
-
-		if err := f(); err != nil {
-			return err
+			if cfg.DisableUpdates {
+				return requireUpdatesEnabledErr
+			}
 		}
 	}
 
@@ -59,10 +72,18 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
-		case RequireCloudLogin, RequireCloudLoginAllowFreeTrialEnded, RequireNonAPIKeyCloudLogin:
+		case RequireCloudLogin:
 			return true
-		case RequireCloudLoginOrOnPremLogin, RequireNonAPIKeyCloudLoginOrOnPremLogin:
+		case RequireCloudLoginAllowFreeTrialEnded:
+			return true
+		case RequireNonAPIKeyCloudLogin:
+			return true
+		case RequireCloudLoginOrOnPremLogin:
 			return cfg.IsCloudLogin()
+		case RequireNonAPIKeyCloudLoginOrOnPremLogin:
+			return cfg.IsCloudLogin()
+		case RequireOnPremLogin:
+			return false
 		}
 	}
 	return false
