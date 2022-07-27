@@ -119,7 +119,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			}
 
 			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
-			tableLabels := []string{"Name", "Value", "Read Only"}
+			tableLabels := []string{"Name", "Value", "Read-Only"}
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
 				readOnlyString := "No"
