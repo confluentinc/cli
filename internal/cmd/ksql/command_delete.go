@@ -7,11 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
