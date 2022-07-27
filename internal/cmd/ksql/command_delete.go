@@ -43,15 +43,12 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, false)
-}
-
 func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, true)
+	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.deleteCluster(cmd, args)
 }
 
-func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	environmentId := c.EnvironmentId()
 
@@ -96,9 +93,6 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	if isApp {
-		fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
 	return nil
 }
