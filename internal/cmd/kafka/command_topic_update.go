@@ -17,6 +17,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -29,8 +30,9 @@ type updateRow struct {
 }
 
 var (
-	listPrinterFields     = []string{"Name", "Value", "ReadOnly"}
-	listUpdateTableLabels = []string{"Name", "Value", "Read-Only"}
+	topicListLabels           = []string{"Name", "Value", "ReadOnly"}
+	topicListHumanLabels      = []string{"Name", "Value", "Read-Only"}
+	topicListStructuredLabels = []string{"name", "value", "read_only"}
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
@@ -54,6 +56,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -73,6 +76,14 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
+	}
+
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
+	if !output.IsValidOutputString(outputOption) {
+		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
 	kafkaREST, _ := c.GetKafkaREST()
@@ -129,19 +140,10 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				configsValues[conf.Name] = *conf.Value
 			}
 
-			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
-			tableEntries := make([][]string, len(kafkaRestConfigs))
-			for i, config := range kafkaRestConfigs {
-				isReadOnly := false
-				if readOnlyConfigs[config.Name] {
-					isReadOnly = true
-				}
-				row := updateRow{
-					Name:     config.Name,
-					Value:    configsValues[config.Name],
-					ReadOnly: strconv.FormatBool(isReadOnly),
-				}
-				tableEntries[i] = printer.ToRow(&row, listPrinterFields)
+			// Output writing preparation
+			outputWriter, err := output.NewListOutputWriter(cmd, topicListLabels, topicListHumanLabels, topicListStructuredLabels)
+			if err != nil {
+				return err
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
@@ -155,18 +157,35 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 				}
 
-				row := updateRow{
-					Name:     "num.partitions",
-					Value:    strconv.Itoa(len(partitionsResp.Data)),
-					ReadOnly: "true",
+				readOnlyConfigs.Add("num.partitions")
+				configsValues["num.partitions"] = strconv.Itoa(len(partitionsResp.Data))
+				// Add num.partitions back into kafkaRestConfig for sorting & output
+				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
+					Name:      "num.partitions",
+					Value:     nil,
+					Operation: nil,
 				}
-				tableEntries = append(tableEntries, printer.ToRow(&row, listPrinterFields))
+				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
 			}
-			sort.Slice(tableEntries, func(i, j int) bool {
-				return tableEntries[i][0] < tableEntries[j][0]
+			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
+				return kafkaRestConfigs[i].Name < kafkaRestConfigs[j].Name
 			})
-			printer.RenderCollectionTable(tableEntries, listUpdateTableLabels)
-			return nil
+
+			// Write current state of relevant config settings
+			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
+			for _, config := range kafkaRestConfigs {
+				isReadOnly := false
+				if readOnlyConfigs[config.Name] {
+					isReadOnly = true
+				}
+				row := updateRow{
+					Name:     config.Name,
+					Value:    configsValues[config.Name],
+					ReadOnly: strconv.FormatBool(isReadOnly),
+				}
+				outputWriter.AddElement(&row)
+			}
+			return outputWriter.Out()
 		}
 	}
 
