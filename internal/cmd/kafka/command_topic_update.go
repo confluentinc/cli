@@ -27,7 +27,10 @@ type printerOBJ struct {
 	Value string
 	ReadOnly string
 }
-var listPrinterFields = []string{"Name", "Value", "ReadOnly"}
+var (
+	listPrinterFields      = []string{"Name", "Value", "ReadOnly"}
+	listUpdateTableLabels  = []string{"Name", "Value", "Read-Only"}
+)
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -126,7 +129,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			}
 
 			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
-			tableLabels := []string{"Name", "Value", "Read-Only"}
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
 				isReadOnly := false
@@ -154,7 +156,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			sort.Slice(tableEntries, func(i, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
 			})
-			printer.RenderCollectionTable(tableEntries, tableLabels)
+			printer.RenderCollectionTable(tableEntries, listUpdateTableLabels)
 			return nil
 		}
 	}
