@@ -152,7 +152,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 						ReadOnly string
 					}{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "Yes"}, []string{"Name", "Value", "ReadOnly"}))
 			}
-			sort.Slice(tableEntries, func(i int, j int) bool {
+			sort.Slice(tableEntries, func(i, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
 			})
 			printer.RenderCollectionTable(tableEntries, tableLabels)
