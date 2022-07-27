@@ -36,6 +36,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	index2 := strings.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = strings.ReplaceAll(file1, "\r", "")
+	file1 = strings.ReplaceAll(file1, " ", "")
 	if strings.Compare(file1, testfile1) != 0 {
 		s.Error(nil, "spec generated does not match the template output file")
 	}
