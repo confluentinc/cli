@@ -1,11 +1,9 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -55,8 +53,7 @@ func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, _, err := c.V2Client.DescribeKsqlCluster(args[0])
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
@@ -64,5 +61,7 @@ func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) er
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	// TODO bring back formatting
+	//return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster)), describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
