@@ -135,8 +135,12 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				if readOnlyConfigs[config.Name] {
 					isReadOnly = true
 				}
-				tableEntries[i] = printer.ToRow(
-					&updateRow{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, listPrinterFields)
+				row := updateRow{
+					Name: config.Name,
+					Value: configsValues[config.Name],
+					ReadOnly: strconv.FormatBool(isReadOnly),
+				}
+				tableEntries[i] = printer.ToRow(&row, listPrinterFields)
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
@@ -150,8 +154,12 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 				}
 
-				tableEntries = append(tableEntries, printer.ToRow(
-					&updateRow{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "true"}, listPrinterFields))
+				row := updateRow{
+					Name: "num.partitions",
+					Value: strconv.Itoa(len(partitionsResp.Data)),
+					ReadOnly: "true",
+				}
+				tableEntries = append(tableEntries, printer.ToRow(&row, listPrinterFields))
 			}
 			sort.Slice(tableEntries, func(i, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
