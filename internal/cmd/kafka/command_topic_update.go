@@ -22,6 +22,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+var listPrinterFields = []string{"Name", "Value", "ReadOnly"}
+
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic>",
@@ -131,7 +133,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 						Name     string
 						Value    string
 						ReadOnly string
-					}{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, []string{"Name", "Value", "ReadOnly"})
+					}{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, listPrinterFields)
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
@@ -150,7 +152,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 						Name     string
 						Value    string
 						ReadOnly string
-					}{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "Yes"}, []string{"Name", "Value", "ReadOnly"}))
+					}{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "Yes"}, listPrinterFields))
 			}
 			sort.Slice(tableEntries, func(i, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
