@@ -20,46 +20,48 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-var kafkaCluster = &schedv1.KafkaCluster{
-	Id:        "lkc-asyncapi",
-	Name:      "AsyncAPI Cluster",
-	Endpoint:  "http://kafka-endpoint",
-	AccountId: "env-asyncapi",
-}
-
 const BackwardCompatibilityLevel = "BACKWARD"
 
-var srClient = &srsdk.APIClient{
-	DefaultApi: &srMock.DefaultApi{
-		ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
-			return []string{"subject 1", "subject 2"}, nil, nil
-		},
-		ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
-			return []int32{1234, 4567}, nil, nil
-		},
-		GetSchemaByVersionFunc: func(ctx context.Context, subject string, version string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
-			return srsdk.Schema{
-				Subject:    "subject1",
-				Version:    1,
-				Id:         1,
-				SchemaType: "avro",
-				Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
-			}, nil, nil
-		},
-		GetSubjectLevelConfigFunc: func(ctx context.Context, subject string, localVarOptionals *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
-		},
-		GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
-			return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
+var details = &accountDetails{
+	cluster: &schedv1.KafkaCluster{
+		Id:        "lkc-asyncapi",
+		Name:      "AsyncAPI Cluster",
+		Endpoint:  "http://kafka-endpoint",
+		AccountId: "env-asyncapi",
+	},
+	srClient: &srsdk.APIClient{
+		DefaultApi: &srMock.DefaultApi{
+			ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
+				return []string{"subject 1", "subject 2"}, nil, nil
+			},
+			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
+				return []int32{1234, 4567}, nil, nil
+			},
+			GetSchemaByVersionFunc: func(ctx context.Context, subject string, version string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+				return srsdk.Schema{
+					Subject:    "subject1",
+					Version:    1,
+					Id:         1,
+					SchemaType: "avro",
+					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
+				}, nil, nil
+			},
+			GetSubjectLevelConfigFunc: func(ctx context.Context, subject string, localVarOptionals *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
+				return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
+			},
+			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
+				return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
+			},
 		},
 	},
 }
 
-func newCmd() *command {
+func newCmd() (*command, error) {
 	cfg := &v1.Config{
 		BaseConfig: &config.BaseConfig{},
 		Contexts: map[string]*v1.Context{
@@ -107,6 +109,19 @@ func newCmd() *command {
 	prerunner := &pcmd.PreRun{Config: cfg}
 	cmd := new(cobra.Command)
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
+	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
+	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(c.Command)
+	err := c.Command.Flags().Set("api-key", "ASYNCAPIKEY")
+	if err != nil {
+		return nil, err
+	}
+	err = c.Command.Flags().Set("api-secret", "ASYNCAPISECRET")
+	if err != nil {
+		return nil, err
+	}
+	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
 	c.State = cfg.Context().State
 	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
@@ -122,12 +137,17 @@ func newCmd() *command {
 				return nil, nil
 			},
 		},
+		SchemaRegistry: &ccsdkmock.SchemaRegistry{
+			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+				return nil, nil
+			},
+		},
 		Kafka: &ccsdkmock.Kafka{
 			DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-				return kafkaCluster, nil
+				return details.cluster, nil
 			},
 			ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
-				return []*schedv1.KafkaCluster{kafkaCluster}, nil
+				return []*schedv1.KafkaCluster{details.cluster}, nil
 			},
 			ListTopicsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.TopicDescription, error) {
 				return []*schedv1.TopicDescription{
@@ -197,7 +217,8 @@ func newCmd() *command {
 				}}, nil
 			},
 		}}
-	return c
+	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
+	return c, nil
 }
 
 func TestGetEnv(t *testing.T) {
@@ -206,52 +227,62 @@ func TestGetEnv(t *testing.T) {
 }
 
 func TestGetClusterDetails(t *testing.T) {
-	c := newCmd()
-	_, _, _, err := c.getClusterDetails()
+	c, err := newCmd()
+	require.NoError(t, err)
+	err = c.getClusterDetails(details)
 	require.NoError(t, err)
 }
 
 func TestGetBroker(t *testing.T) {
-	require.Equal(t, "kafka-endpoint", getBroker(kafkaCluster))
+	require.Equal(t, "kafka-endpoint", getBroker(details.cluster))
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
-	c := newCmd()
-	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
-	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(c.Command)
-	err := c.Command.Flags().Set("api-key", "ASYNCAPIKEY")
+	c, err := newCmd()
 	require.NoError(t, err)
-	err = c.Command.Flags().Set("api-secret", "ASYNCAPISECRET")
+	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	err = c.getSchemaRegistry(details, flags)
+	utils.Println(c.Command, "")
+	require.Error(t, err)
+}
+
+func TestGetSchemaDetails(t *testing.T) {
+	c, err := newCmd()
 	require.NoError(t, err)
-	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
-	c.Client.SchemaRegistry = &ccsdkmock.SchemaRegistry{GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
-		return nil, nil
-	}}
-	_, _, _, err = getSchemaRegistry(c, c.Command, "ASYNCAPIKEY", "ASYNCAPISECRET")
-	require.EqualError(t, err, "EOF")
+	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.channelDetails.currentSubject = "subject1"
+	details.channelDetails.currentTopic = details.topics[0]
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	details.channelDetails.schema = &schema
+	err = getSchemaDetails(details)
+	require.NoError(t, err)
 }
 
 func TestGetChannelDetails(t *testing.T) {
-	c := newCmd()
-	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
-
-	contentType, _, _, err := getChannelDetails(topics[0], srClient, *new(context.Context), "subject1")
+	c, err := newCmd()
 	require.NoError(t, err)
-	require.Equal(t, "avro", contentType)
+	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.channelDetails.currentSubject = "subject1"
+	details.channelDetails.currentTopic = details.topics[0]
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	details.channelDetails.schema = &schema
+	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	err = c.getChannelDetails(details, flags)
+	require.NoError(t, err)
 }
 
 func TestGetBindings(t *testing.T) {
-	c := newCmd()
+	c, err := newCmd()
+	require.NoError(t, err)
 	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
-	_, err := c.getBindings(kafkaCluster, topics[0], "group1")
+	_, err = c.getBindings(details.cluster, topics[0], "group1")
 	require.NoError(t, err)
 }
 
 func TestGetTags(t *testing.T) {
-	c := newCmd()
-	schema, _, _ := srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	c, err := newCmd()
+	require.NoError(t, err)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	catalog := pasyncapi.Catalog{
 		GetSchemaLevelTagsRequest: func(srEndpoint, schemaClusterId, schemaId, apiKey, apiSecret string) ([]byte, error) {
 			return []byte(`[{"typeName":"trial","entityType":"sr_schema","entityName":"lsrc-asyncapi:.:100001"}]`), nil
@@ -260,11 +291,13 @@ func TestGetTags(t *testing.T) {
 			return []byte(`{"name":"trial","description":"Tag trial"}`), nil
 		},
 	}
-	_, err := getTags(c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"], schema, "ASYNCAPIKEY", "ASYNCAPISECRET", catalog)
+	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
+	details.channelDetails.schema = &schema
+	err = getTags(details, "ASYNCAPIKEY", "ASYNCAPISECRET", catalog)
 	require.NoError(t, err)
 }
 
-func TestAddMessageCompatibility(t *testing.T) {
-	_, err := addMessageCompatibility(srClient, *new(context.Context), "subject1")
+func TestGetMessageCompatibility(t *testing.T) {
+	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
 	require.NoError(t, err)
 }

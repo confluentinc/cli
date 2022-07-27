@@ -95,6 +95,31 @@ type flags struct {
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset int = 5
 
+type channelDetails struct {
+	currentTopic       *schedv1.TopicDescription
+	currentSubject     string
+	contentType        string
+	schema             *schemaregistry.Schema
+	unmarshalledSchema map[string]interface{}
+	mapOfMessageCompat map[string]interface{}
+	tags               []spec.Tag
+	bindings           *bindings
+	example            interface{}
+}
+
+type accountDetails struct {
+	cluster        *schedv1.KafkaCluster
+	topics         []*schedv1.TopicDescription
+	clusterCreds   *v1.APIKeyPair
+	consumer       *ckgo.Consumer
+	broker         string
+	srCluster      *v1.SchemaRegistryCluster
+	srClient       *schemaregistry.APIClient
+	srContext      context.Context
+	subjects       []string
+	channelDetails channelDetails
+}
+
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
@@ -118,76 +143,32 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	// Get Kafka cluster details and broker URL
-	cluster, topics, clusterCreds, err := c.getClusterDetails()
+	accountDetails := new(accountDetails)
+	err = c.getAccountDetails(accountDetails, flags)
 	if err != nil {
 		return err
 	}
-	broker := getBroker(cluster)
-	// Create Consumer
-	var consumer *ckgo.Consumer
-	if flags.consumeExamples {
-		consumer, err = createConsumer(broker, clusterCreds, flags.groupId)
-		if err != nil {
-			return err
-		}
-		defer consumer.Close()
-	}
-	srCluster, srClient, ctx, err := getSchemaRegistry(c, cmd, flags.apiKey, flags.apiSecret)
-	if err != nil {
-		return err
-	}
-	// environment type - local, devel or prod
-	env := getEnv(broker)
 	// Servers & Info Section
-	reflector := addServer(env, broker, srCluster)
-	// SR Client
-	subjects, _, err := srClient.DefaultApi.List(ctx, nil)
-	if err != nil {
-		return err
-	}
+	reflector := addServer(accountDetails.broker, accountDetails.srCluster)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
-	for _, topic := range topics {
-		// For a given topic
-		for _, subject := range subjects {
+	for _, topic := range accountDetails.topics {
+		for _, subject := range accountDetails.subjects {
 			if subject != topic.Name+"-value" || strings.HasPrefix(topic.Name, "_") {
-				// Avoid internal topics or if no schema is set for value.
+				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
 			} else {
 				// Subject and Topic matches
-				contentType, schema, producer, err := getChannelDetails(topic, srClient, ctx, subject)
-				if contentType == "PROTOBUF" {
-					continue
-				}
+				accountDetails.channelDetails.currentTopic = topic
+				accountDetails.channelDetails.currentSubject = subject
+				err := c.getChannelDetails(accountDetails, flags)
 				if err != nil {
 					return err
 				}
-				var catalog pasyncapi.Catalog
-				tags, err := getTags(srCluster, *schema, flags.apiKey, flags.apiSecret, catalog)
-				if err != nil {
-					log.CliLogger.Warnf("failed to get tags: %v", err)
+				messages[strcase.ToCamel(topic.Name)+"Message"] = spec.Message{
+					OneOf1: &spec.MessageOneOf1{MessageEntity: buildMessageEntity(accountDetails)},
 				}
-				var example interface{}
-				if flags.consumeExamples {
-					example, err = c.getMessageExamples(consumer, topic.Name, contentType, srClient, flags.valueFormat)
-					if err != nil {
-						log.CliLogger.Warn(err)
-					}
-				}
-				bindings, err := c.getBindings(cluster, topic, flags.groupId)
-				if err != nil {
-					return fmt.Errorf("bindings not found: %v", err)
-				}
-				// x-messageCompatibility
-				mapOfMessageCompat, err := addMessageCompatibility(srClient, ctx, subject)
-				if err != nil {
-					return err
-				}
-				messageEntity := buildMessageEntity(topic.Name, contentType, tags, example, producer, *bindings)
-				// Add message entity to map of messages
-				messages[strcase.ToCamel(topic.Name)+"Message"] = spec.Message{OneOf1: &spec.MessageOneOf1{MessageEntity: messageEntity}}
-				reflector, err = addChannel(reflector, topic.Name, *bindings, mapOfMessageCompat)
+				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat)
 				if err != nil {
 					return err
 				}
@@ -205,30 +186,87 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	return ioutil.WriteFile(flags.file, yaml, 0644)
 }
 
-func getTags(schemaCluster *v1.SchemaRegistryCluster, prodSchema schemaregistry.Schema, apiKey, apiSecret string, catalog pasyncapi.Catalog) ([]spec.Tag, error) {
-	body, err := catalog.GetSchemaLevelTags(schemaCluster.SchemaRegistryEndpoint, schemaCluster.Id, strconv.Itoa(int(prodSchema.Id)), apiKey, apiSecret)
+func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
+	err := getSchemaDetails(details)
+	if details.channelDetails.contentType == "PROTOBUF" {
+		return nil
+	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to get schema level tags: %v", err)
+		return err
+	}
+	err = getTags(details, flags.apiKey, flags.apiSecret, *new(pasyncapi.Catalog))
+	if err != nil {
+		log.CliLogger.Warnf("failed to get tags: %v", err)
+	}
+	details.channelDetails.example = nil
+	if flags.consumeExamples {
+		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.Name, details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		if err != nil {
+			log.CliLogger.Warn(err)
+		}
+	}
+	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic, flags.groupId)
+	if err != nil {
+		return fmt.Errorf("bindings not found: %v", err)
+	}
+	// x-messageCompatibility
+	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
+	if err != nil {
+		return fmt.Errorf("failed to get subject's compatibility type")
+	}
+	return nil
+}
+
+func (c *command) getAccountDetails(details *accountDetails, flags *flags) error {
+	err := c.getClusterDetails(details)
+	if err != nil {
+		return err
+	}
+	details.broker = getBroker(details.cluster)
+	err = c.getSchemaRegistry(details, flags)
+	if err != nil {
+		return err
+	}
+	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
+	if err != nil {
+		return err
+	}
+	// Create Consumer
+	if flags.consumeExamples {
+		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
+		if err != nil {
+			return err
+		}
+		defer details.consumer.Close()
+	}
+	return nil
+}
+
+func getTags(details *accountDetails, apiKey, apiSecret string, catalog pasyncapi.Catalog) error {
+	body, err := catalog.GetSchemaLevelTags(details.srCluster.SchemaRegistryEndpoint, details.srCluster.Id, strconv.Itoa(int(details.channelDetails.schema.Id)), apiKey, apiSecret)
+	if err != nil {
+		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
 	var tagsFromId []TagsFromId
 	err = json.Unmarshal(body, &tagsFromId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal tags: %v", err)
+		return fmt.Errorf("failed to unmarshal tags: %v", err)
 	}
 	var tagsInSpec []spec.Tag
 	for _, tags := range tagsFromId {
-		body, err := catalog.GetTagDefinitions(schemaCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
+		body, err := catalog.GetTagDefinitions(details.srCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get tag definitions: %v", err)
+			return fmt.Errorf("failed to get tag definitions: %v", err)
 		}
 		var tagDef TagDef
 		err = json.Unmarshal(body, &tagDef)
 		if err != nil {
-			return nil, fmt.Errorf("failed to unmarshal tag definitions: %v", err)
+			return fmt.Errorf("failed to unmarshal tag definitions: %v", err)
 		}
 		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tags.TypeName, Description: tagDef.Description})
 	}
-	return tagsInSpec, nil
+	details.channelDetails.tags = tagsInSpec
+	return nil
 }
 
 func getValueFormat(contentType string) string {
@@ -342,57 +380,62 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 	return bindings, nil
 }
 
-func (c *command) getClusterDetails() (*schedv1.KafkaCluster, []*schedv1.TopicDescription, *v1.APIKeyPair, error) {
+func (c *command) getClusterDetails(details *accountDetails) error {
 	var ctx context.Context
 	kafkaClusterId := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
 	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: kafkaClusterId}
 	// Get Kafka Cluster
 	cluster, err := c.Client.Kafka.Describe(ctx, req)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf(`failed to describe cluster: %v`, err)
+		return fmt.Errorf(`failed to describe cluster: %v`, err)
 	}
 	clusterConfig, err := c.Config.Context().FindKafkaCluster(kafkaClusterId)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf(`failed to find Kafka cluster: %v`, err)
+		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
-		return nil, nil, nil, errors.NewErrorWithSuggestions("API key not set for the Kafka cluster", "Set an API key pair for the Kafka cluster using `confluent api-key create`")
+		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster", "Set an API key pair for the Kafka cluster using `confluent api-key create`")
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to get topics: %v", err)
+		return fmt.Errorf("failed to get topics: %v", err)
 	}
-	return cluster, topics, clusterCreds, nil
+	details.cluster = cluster
+	details.topics = topics
+	details.clusterCreds = clusterCreds
+	return nil
 }
 
 func getBroker(cluster *schedv1.KafkaCluster) string {
 	return strings.Split(cluster.GetEndpoint(), "//")[1]
 }
 
-func getChannelDetails(topic *schedv1.TopicDescription, srClient *schemaregistry.APIClient, ctx context.Context, subject string) (string, *schemaregistry.Schema, map[string]interface{}, error) {
-	log.CliLogger.Debugf("Adding operation: %s", topic.Name)
-	schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, "latest", nil)
+func getSchemaDetails(details *accountDetails) error {
+	log.CliLogger.Debugf("Adding operation: %s", details.channelDetails.currentTopic.Name)
+	schema, _, err := details.srClient.DefaultApi.GetSchemaByVersion(details.srContext, details.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
-		return "", nil, nil, err
+		return err
 	}
-	contentType := schema.SchemaType
-	if contentType == "" {
-		contentType = "application/avro"
-	} else if contentType == "JSON" {
-		contentType = "application/json"
-	}
-	var producer map[string]interface{}
-	if contentType == "PROTOBUF" {
+	var unmarshalledSchema map[string]interface{}
+	if schema.SchemaType == "" {
+		details.channelDetails.contentType = "application/avro"
+	} else if schema.SchemaType == "JSON" {
+		details.channelDetails.contentType = "application/json"
+	} else if schema.SchemaType == "PROTOBUF" {
 		log.CliLogger.Warn("Protobuf not supported.")
-		return contentType, nil, nil, nil
-	} else { // JSON or Avro Format
-		err := json.Unmarshal([]byte(schema.Schema), &producer)
-		if err != nil {
-			return "", nil, nil, fmt.Errorf("failed to unmarshal schema: %v", err)
-		}
+		details.channelDetails.contentType = "PROTOBUF"
+		return nil
 	}
-	return contentType, &schema, producer, nil
+	// JSON or Avro Format
+	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal schema: %v", err)
+
+	}
+	details.channelDetails.unmarshalledSchema = unmarshalledSchema
+	details.channelDetails.schema = &schema
+	return nil
 }
 
 func getEnv(broker string) string {
@@ -427,6 +470,9 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		return nil, err
 	}
 	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:            file,
 		groupId:         groupId,
@@ -437,27 +483,30 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	}, nil
 }
 
-func getSchemaRegistry(c *command, cmd *cobra.Command, apiKey, apiSecret string) (*v1.SchemaRegistryCluster, *schemaregistry.APIClient, context.Context, error) {
-	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error {
+	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(c.Command)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("unable to get Schema Registry cluster: %v", err)
+		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
 	}
-	if apiKey == "" && apiSecret == "" && schemaCluster.SrCredentials != nil {
-		apiKey = schemaCluster.SrCredentials.Key
-		apiSecret = schemaCluster.SrCredentials.Secret
+	if flags.apiKey == "" && flags.apiSecret == "" && schemaCluster.SrCredentials != nil {
+		flags.apiKey = schemaCluster.SrCredentials.Key
+		flags.apiSecret = schemaCluster.SrCredentials.Secret
 	}
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, apiKey, apiSecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.apiKey, flags.apiSecret)
 	if err != nil {
-		return nil, nil, nil, err
+		return err
 	}
-	return schemaCluster, srClient, ctx, nil
+	details.srCluster = schemaCluster
+	details.srClient = srClient
+	details.srContext = ctx
+	return nil
 }
 
-func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
+func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.Server{
-				env + "-broker": {
+				getEnv(broker) + "-broker": {
 					URL:             broker,
 					Description:     "Confluent Kafka instance.",
 					ProtocolVersion: "2.6.0",
@@ -468,7 +517,7 @@ func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluste
 						},
 					},
 				},
-				env + "-schemaRegistry": {
+				getEnv(broker) + "-schemaRegistry": {
 					URL:             schemaCluster.SchemaRegistryEndpoint,
 					Description:     "Confluent Kafka Schema Registry Server",
 					ProtocolVersion: "2.6.0",
@@ -488,7 +537,7 @@ func addServer(env string, broker string, schemaCluster *v1.SchemaRegistryCluste
 	}
 }
 
-func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]interface{}, error) {
+func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]interface{}, error) {
 	var config schemaregistry.Config
 	mapOfMessageCompat := make(map[string]interface{})
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
@@ -503,23 +552,23 @@ func addMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func buildMessageEntity(topicName, contentType string, tags []spec.Tag, example interface{}, producer map[string]interface{}, bindings bindings) *spec.MessageEntity {
+func buildMessageEntity(details *accountDetails) *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, contentType)
-	if contentType == "application/avro" {
+	(*spec.MessageEntity).WithContentType(entityProducer, details.channelDetails.contentType)
+	if details.channelDetails.contentType == "application/avro" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
-	} else if contentType == "application/json" {
+	} else if details.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, tags...)
+	(*spec.MessageEntity).WithTags(entityProducer, details.channelDetails.tags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, strcase.ToCamel(topicName)+"Message")
+	(*spec.MessageEntity).WithName(entityProducer, strcase.ToCamel(details.channelDetails.currentTopic.Name)+"Message")
 	// Example
-	if example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &example})
+	if details.channelDetails.example != nil {
+		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &details.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &bindings.MessageBinding})
-	(*spec.MessageEntity).WithPayload(entityProducer, producer)
+	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &details.channelDetails.bindings.MessageBinding})
+	(*spec.MessageEntity).WithPayload(entityProducer, details.channelDetails.unmarshalledSchema)
 	return entityProducer
 }
 
