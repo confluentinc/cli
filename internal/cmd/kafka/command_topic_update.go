@@ -109,7 +109,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
-			configsReadOnly := set.New()
+			readOnlyConfigs := set.New()
 			configsValues := make(map[string]string)
 			for _, conf := range configsResp.Data {
 				if conf.IsReadOnly {
