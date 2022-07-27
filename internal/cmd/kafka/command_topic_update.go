@@ -122,16 +122,16 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			tableLabels := []string{"Name", "Value", "Read-Only"}
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
-				readOnlyString := "No"
+				isReadOnly := false
 				if readOnlyConfigs[config.Name] {
-					readOnlyString = "Yes"
+					isReadOnly = true
 				}
 				tableEntries[i] = printer.ToRow(
 					&struct {
 						Name     string
 						Value    string
 						ReadOnly string
-					}{Name: config.Name, Value: configsValues[config.Name], ReadOnly: readOnlyString}, []string{"Name", "Value", "ReadOnly"})
+					}{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, []string{"Name", "Value", "ReadOnly"})
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
