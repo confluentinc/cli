@@ -41,8 +41,7 @@ func TestHelp_NoContext(t *testing.T) {
 	require.NoError(t, err)
 
 	commands := []string{
-		"cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "secret", "update",
-		"version",
+		"cloud-signup", "completion", "context", "help", "kafka", "local", "login", "logout", "update", "version",
 	}
 	if runtime.GOOS == "windows" {
 		commands = utils.Remove(commands, "local")

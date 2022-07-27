@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -117,7 +116,7 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RequireOnPremLoginErr},
-		{RequireUpdatesEnabled, updatesDisabledCfg, v1.RequireUpdatesEnabledErr},
+		{RequireUpdatesEnabled, updatesDisabledCfg, requireUpdatesEnabledErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)
