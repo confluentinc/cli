@@ -10,14 +10,14 @@ import (
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.1.0"
 	"github.com/swaggest/go-asyncapi/spec-2.1.0"
 
-	kafka2 "github.com/confluentinc/cli/internal/cmd/kafka"
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -91,7 +91,8 @@ type flags struct {
 	apiSecret       string
 }
 
-const messageOffset int = 5 // Schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
+// messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
+const messageOffset int = 5
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
@@ -122,7 +123,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	}
 	broker := getBroker(cluster)
 	// Create Consumer
-	var consumer *kafka.Consumer
+	var consumer *ckgo.Consumer
 	if flags.consumeExamples {
 		consumer, err = createConsumer(broker, clusterCreds, flags.groupId)
 		if err != nil {
@@ -247,7 +248,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *kafka.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient) (interface{}, error) {
+func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient) (interface{}, error) {
 	defer handlePanic()
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
@@ -263,13 +264,13 @@ func (c command) getMessageExamples(consumer *kafka.Consumer, topicName, content
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
-	groupHandler := kafka2.GroupHandler{
+	groupHandler := kafka.GroupHandler{
 		SrClient:   srClient,
 		Ctx:        *new(context.Context),
 		Format:     valueFormat,
 		Out:        nil,
 		Subject:    topicName + "-value",
-		Properties: kafka2.ConsumerProperties{},
+		Properties: kafka.ConsumerProperties{},
 	}
 	if valueFormat != "string" {
 		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
@@ -567,8 +568,8 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 	return reflector
 }
 
-func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) (*kafka.Consumer, error) {
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) (*ckgo.Consumer, error) {
+	consumer, err := ckgo.NewConsumer(&ckgo.ConfigMap{
 		"bootstrap.servers":  broker,
 		"sasl.mechanisms":    "PLAIN",
 		"security.protocol":  "SASL_SSL",
