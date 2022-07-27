@@ -439,6 +439,10 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 		return prefix, suffix, nil
 	}
 
+	if resource.LookupType(suffix) == resource.IdentityPool {
+		return prefix, suffix, nil
+	}
+
 	// The principal may contain a numeric ID. Try to map it to a resource ID.
 	id, err := strconv.ParseInt(suffix, 10, 32)
 	if err != nil {
