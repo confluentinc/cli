@@ -74,13 +74,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	cluster, _, err := c.V2Client.CreateKsqlCluster(args[0], c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, logExcludeRows)
+	cluster, err := c.V2Client.CreateKsqlCluster(args[0], c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, logExcludeRows)
 
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	for cluster.Status.GetHttpEndpoint() == "" && count < 3 {
-		cluster, _, err = c.V2Client.DescribeKsqlCluster(*cluster.Id)
+		cluster, err = c.V2Client.DescribeKsqlCluster(*cluster.Id, c.EnvironmentId())
 		if err != nil {
 			return err
 		}

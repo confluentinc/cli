@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	"context"
-	_nethttp "net/http"
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 
@@ -23,11 +22,22 @@ func (c *Client) ksqlApiContext() context.Context {
 	return context.WithValue(context.Background(), ksql.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListKsqlClusters(environmentId string) (ksql.KsqldbcmV2ClusterList, *_nethttp.Response, error) {
-	return c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).Execute()
+func (c *Client) ListKsqlClusters(environmentId string) (ksql.KsqldbcmV2ClusterList, error) {
+	clusters, _, err := c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).Execute()
+	return clusters, err
 }
 
-func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, logExcludeRows bool) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+func (c *Client) DeleteKsqlCluster(clusterId, environmentId string) error {
+	_, err := c.KsqlClient.ClustersKsqldbcmV2Api.DeleteKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
+	return err
+}
+
+func (c *Client) DescribeKsqlCluster(clusterId, environmentId string) (ksql.KsqldbcmV2Cluster, error) {
+	cluster, _, err := c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
+	return cluster, err
+}
+
+func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, logExcludeRows bool) (ksql.KsqldbcmV2Cluster, error) {
 	cluster := ksql.KsqldbcmV2Cluster{
 		Spec: &ksql.KsqldbcmV2ClusterSpec{
 			DisplayName:        &displayName,
@@ -37,9 +47,6 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 			Environment:        &ksql.ObjectReference{Id: environmentId},
 		},
 	}
-	return c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
-}
-
-func (c *Client) DescribeKsqlCluster(ksqlClusterId string) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
-	return c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), ksqlClusterId).Execute()
+	newCluster, _, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
+	return newCluster, err
 }

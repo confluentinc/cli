@@ -53,7 +53,7 @@ func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
-	cluster, _, err := c.V2Client.DescribeKsqlCluster(args[0])
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
