@@ -89,6 +89,7 @@ type flags struct {
 	consumeExamples bool
 	apiKey          string
 	apiSecret       string
+	valueFormat     string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -108,6 +109,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddValueFormatFlag(cmd)
 	return c.Command
 }
 
@@ -168,7 +170,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				}
 				var example interface{}
 				if flags.consumeExamples {
-					example, err = c.getMessageExamples(consumer, topic.Name, contentType, srClient)
+					example, err = c.getMessageExamples(consumer, topic.Name, contentType, srClient, flags.valueFormat)
 					if err != nil {
 						log.CliLogger.Warn(err)
 					}
@@ -248,7 +250,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient) (interface{}, error) {
+func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (interface{}, error) {
 	defer handlePanic()
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
@@ -259,7 +261,12 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		return nil, fmt.Errorf(`no example received for topic "%s": %v`, topicName, err)
 	}
 	value := message.Value
-	valueFormat := getValueFormat(contentType)
+	var valueFormat string
+	if valueFormatFlag != "" {
+		valueFormat = valueFormatFlag
+	} else {
+		valueFormat = getValueFormat(contentType)
+	}
 	deserializationProvider, err := serdes.GetDeserializationProvider(valueFormat)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
@@ -419,12 +426,14 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	valueFormat, err := cmd.Flags().GetString("value-format")
 	return &flags{
 		file:            file,
 		groupId:         groupId,
 		consumeExamples: consumeExamples,
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
+		valueFormat:     valueFormat,
 	}, nil
 }
 
