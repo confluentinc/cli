@@ -59,7 +59,7 @@ const (
 	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	CreatedTopicMsg          = "Created topic \"%s\".\n"
 	DeletedTopicMsg          = "Deleted topic \"%s\".\n"
-	UpdateTopicConfigMsg     = "Updated the following configs for topic \"%s\":\n"
+	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRESTMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka link commands
