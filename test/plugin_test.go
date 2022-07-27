@@ -1,7 +1,9 @@
 package test
 
 import (
+	"fmt"
 	"os"
+	"os/exec"
 	"runtime"
 	"strings"
 
@@ -10,6 +12,9 @@ import (
 
 func (s *CLITestSuite) TestPlugin() {
 	path := os.Getenv("PATH")
+	out, err := exec.Command("ls").Output()
+	require.NoError(s.T(), err)
+	fmt.Println(string(out))
 	distEntries, err := os.ReadDir("dist")
 	var pathNames []string
 	for _, entry := range distEntries {
@@ -40,7 +45,7 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "dash_test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "dash-test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "another_dash-test but-with two-args with dashes and-others_without them", fixture: "plugin/dash-test2.golden", pluginsEnabled: true},
-		{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", pluginsEnabled: true},
+		{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", regex: true, pluginsEnabled: true},
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 
