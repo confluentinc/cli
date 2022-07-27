@@ -1,10 +1,6 @@
 package plugin
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/log"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/cobra"
 	"io/fs"
 	"os"
 	"os/exec"
@@ -13,7 +9,12 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type pluginInfo struct {

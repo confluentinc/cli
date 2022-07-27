@@ -1,9 +1,7 @@
 package test
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
 	"strings"
 
@@ -12,23 +10,11 @@ import (
 
 func (s *CLITestSuite) TestPlugin() {
 	path := os.Getenv("PATH")
-	out, err := exec.Command("ls").Output()
-	require.NoError(s.T(), err)
-	fmt.Println(string(out))
-	distEntries, err := os.ReadDir("dist")
-	var pathNames []string
-	for _, entry := range distEntries {
-		if entry.IsDir() {
-			pathNames = append(pathNames, "dist/"+entry.Name())
-		}
-	}
-	pathNames = append(pathNames, "test/fixtures/input/plugin")
-	require.NoError(s.T(), err)
-	delimiter := ":"
+	newPath := "bin:test/fixtures/input/plugin"
 	if runtime.GOOS == "windows" {
-		delimiter = ";"
+		newPath = strings.ReplaceAll(newPath, ":", ";")
 	}
-	err = os.Setenv("PATH", strings.Join(pathNames, delimiter))
+	err := os.Setenv("PATH", newPath)
 	require.NoError(s.T(), err)
 	defer func() {
 		err := os.Setenv("PATH", path)
