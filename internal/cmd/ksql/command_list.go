@@ -1,13 +1,11 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -46,30 +44,24 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, false)
-}
-
 func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, true)
+	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.listClusters(cmd, args)
 }
 
-func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.KSQL.List(context.Background(), req)
+func (c *ksqlCommand) listClusters(cmd *cobra.Command, _ []string) error {
+
+	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return err
 	}
-	for _, cluster := range clusters {
-		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(cluster))
+	for _, cluster := range clusters.Data {
+		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(&cluster))
 	}
 	return outputWriter.Out()
 }
