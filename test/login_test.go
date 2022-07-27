@@ -335,7 +335,7 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 }
 
 func (s *CLITestSuite) TestLogin_CaCertPath() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{
@@ -356,7 +356,7 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 }
 
 func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tt := CLITest{
 		env:         []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
