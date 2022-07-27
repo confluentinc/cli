@@ -1,0 +1,5 @@
+Updated the following configs for topic "topic-exist-v3" (Read Only configs were not updated):
+        Name       | Value | Read Only  
+-------------------+-------+------------
+  compression.type | gzip  | No         
+  retention.ms     |     1 | No         
