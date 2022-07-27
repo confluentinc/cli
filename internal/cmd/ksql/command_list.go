@@ -44,18 +44,12 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, false)
-}
-
 func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, true)
+	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.listClusters(cmd, args)
 }
 
-func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
+func (c *ksqlCommand) listClusters(cmd *cobra.Command, _ []string) error {
 
 	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
 	if err != nil {

@@ -44,23 +44,17 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, false)
-}
-
 func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, true)
+	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.describeCluster(cmd, args)
 }
 
-func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
-	cluster, _, err := c.V2Client.DescribeKsqlCluster(args[0])
+func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	// TODO bring back formatting
 	//return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster)), describeFields, describeHumanRenames, describeStructuredRenames)
 	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
