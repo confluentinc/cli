@@ -113,7 +113,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			configsValues := make(map[string]string)
 			for _, conf := range configsResp.Data {
 				if conf.IsReadOnly {
-					configsReadOnly.Add(conf.Name)
+					readOnlyConfigs.Add(conf.Name)
 				}
 				configsValues[conf.Name] = *conf.Value
 			}
@@ -123,7 +123,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			tableEntries := make([][]string, len(kafkaRestConfigs))
 			for i, config := range kafkaRestConfigs {
 				readOnlyString := "No"
-				if configsReadOnly[config.Name] {
+				if readOnlyConfigs[config.Name] {
 					readOnlyString = "Yes"
 				}
 				tableEntries[i] = printer.ToRow(
