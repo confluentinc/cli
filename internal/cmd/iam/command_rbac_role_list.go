@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -38,7 +37,6 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-
 	roles := []mdsv2alpha1.Role{}
 
 	// add public roles
@@ -57,7 +55,6 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 
 	// add ksql and datagovernance roles
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") == "1" {
-		fmt.Println("Hello World!")
 		ksqlRoles, err := c.ksqlRoles()
 		if err != nil {
 			return err
