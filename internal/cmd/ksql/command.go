@@ -56,8 +56,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 // Some helper functions for the ksql app/cluster commands
 
 func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
-
-
 	status := cluster.Status.Phase
 	if cluster.IsPaused {// TODO: Sort out this isPaused stuff
 		status = "PAUSED"
@@ -87,6 +85,14 @@ func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.Ksqldbcm
 	}
 }
 
+// checkProvisioningFailed checks if ACLs are misconfigured on the
+// cluster.
+//
+// Send a GET request to the cluster's /info endpoint using oauth
+// token from context. If the response contains status code 503 and a
+// 50321 error_code, return (true, nil)
+// Otherwise, return (false, err (or nil))
+//
 func (c *ksqlCommand) checkProvisioningFailed(cluster *ksql.KsqldbcmV2Cluster) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
