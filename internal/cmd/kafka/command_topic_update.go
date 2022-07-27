@@ -22,7 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type printerOBJ struct {
+type updateRow struct {
 	Name string
 	Value string
 	ReadOnly string
@@ -136,7 +136,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					isReadOnly = true
 				}
 				tableEntries[i] = printer.ToRow(
-					&printerOBJ{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, listPrinterFields)
+					&updateRow{Name: config.Name, Value: configsValues[config.Name], ReadOnly: strconv.FormatBool(isReadOnly)}, listPrinterFields)
 			}
 			if numPartChange {
 				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
@@ -151,7 +151,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				}
 
 				tableEntries = append(tableEntries, printer.ToRow(
-					&printerOBJ{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "true"}, listPrinterFields))
+					&updateRow{Name: "num.partitions", Value: strconv.Itoa(len(partitionsResp.Data)), ReadOnly: "true"}, listPrinterFields))
 			}
 			sort.Slice(tableEntries, func(i, j int) bool {
 				return tableEntries[i][0] < tableEntries[j][0]
