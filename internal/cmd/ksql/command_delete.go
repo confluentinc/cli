@@ -63,36 +63,36 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
 
-	// // Terminated cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
-	// if cluster.Status == schedv1.ClusterStatus_UP {
-	// 	ctx := c.Config.Context()
-	// 	state, err := ctx.AuthenticatedState()
-	// 	if err != nil {
-	// 		return err
-	// 	}
+	// Terminated cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
+	if cluster.Status.Phase == "PROVISIONED" {
+		ctx := c.Config.Context()
+		state, err := ctx.AuthenticatedState()
+		if err != nil {
+			return err
+		}
 
-	// 	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, *cluster.Id)
+		if err != nil {
+			return err
+		}
 
-	// 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
-	// 	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
-	// 	request := make(map[string][]string)
-	// 	request["deleteTopicList"] = []string{".*"}
-	// 	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
-	// 	if err != nil {
-	// 		return err
-	// 	}
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(*cluster.Status.HttpEndpoint)
+		request := make(map[string][]string)
+		request["deleteTopicList"] = []string{".*"}
+		response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
+		if err != nil {
+			return err
+		}
 
-	// 	if response.StatusCode != http.StatusOK {
-	// 		body, err := ioutil.ReadAll(response.Body)
-	// 		if err != nil {
-	// 			return err
-	// 		}
-	// 		return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
-	// 	}
-	// }
+		if response.StatusCode != http.StatusOK {
+			body, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return err
+			}
+			return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
+		}
+	}
 
 	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
 		return err
