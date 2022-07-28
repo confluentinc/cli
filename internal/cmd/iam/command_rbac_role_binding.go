@@ -48,6 +48,10 @@ var (
 	}
 
 	dataplaneNamespace = optional.NewString("dataplane")
+
+	ksqlNamespace = optional.NewString("ksql")
+
+	datagovernanceNamespace = optional.NewString("datagovernance")
 )
 
 type roleBindingOptions struct {
