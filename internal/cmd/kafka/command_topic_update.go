@@ -138,13 +138,13 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				return err
 			}
 			if numPartChange {
-				numPartitionsString, err := c.getNumPartitions(topicName)
+				numPartitions, err := c.getNumPartitions(topicName)
 				if err != nil {
 					return err
 				}
 
 				readOnlyConfigs.Add("num.partitions")
-				configsValues["num.partitions"] = numPartitionsString
+				configsValues["num.partitions"] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
 					Name: "num.partitions",

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -138,12 +137,12 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (string, error) {
+func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
-			return "", err
+			return 0, err
 		}
 
 		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
@@ -152,33 +151,33 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (string, 
 			restErr, parseErr := parseOpenAPIError(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-					return "", fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return "", kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return 0, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {
-				return "", errors.NewErrorWithSuggestions(
+				return 0, errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 
-			return strconv.Itoa(len(partitionsResp.Data)), nil
+			return len(partitionsResp.Data), nil
 		}
 	}
 
 	// Fallback to Kafka API
 	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
 	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return strconv.Itoa(len(resp.Partitions)), nil
+	return len(resp.Partitions), nil
 }

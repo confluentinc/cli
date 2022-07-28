@@ -90,11 +90,11 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			for _, config := range configsResp.Data {
 				topicData.Config[config.Name] = *config.Value
 			}
-			numPartitionsString, err := c.getNumPartitions(topicName)
+			numPartitions, err := c.getNumPartitions(topicName)
 			if err != nil {
 				return err
 			}
-			topicData.Config[partitionCount] = numPartitionsString
+			topicData.Config[partitionCount] = strconv.Itoa(numPartitions)
 
 			if outputOption == output.Human.String() {
 				return printHumanDescribe(topicData)
