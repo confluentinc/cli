@@ -1,12 +1,12 @@
 package ccloudv2
 
 import (
-	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"

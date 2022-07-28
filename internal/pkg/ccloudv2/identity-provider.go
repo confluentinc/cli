@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )

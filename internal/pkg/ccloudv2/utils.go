@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"strings"
 
-	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/hashicorp/go-retryablehttp"
 

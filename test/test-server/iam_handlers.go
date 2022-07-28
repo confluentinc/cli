@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )

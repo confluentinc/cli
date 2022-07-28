@@ -11,17 +11,18 @@ require (
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
-	github.com/confluentinc/cc-structs/kafka/org v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1238.0
-	github.com/confluentinc/cc-structs/kafka/util v0.1071.0
-	github.com/confluentinc/cc-structs/operator v0.1071.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105
+	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
+	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
+	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
@@ -78,8 +79,6 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
-
-require github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.6
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
@@ -415,6 +414,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider => ../ccloud-sdk-go-v2/identity-provider
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
