@@ -38,6 +38,6 @@ func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client
 		MetricsClient:      newMetricsClient(userAgent, isTest),
 		OrgClient:          newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient: newServiceQuotaClient(baseURL, userAgent, isTest),
-		StreamShareClient:  newStreamShareClient(baseURL, userAgent, isTest),
+		StreamShareClient:  newCdxClient(baseURL, userAgent, isTest),
 	}
 }

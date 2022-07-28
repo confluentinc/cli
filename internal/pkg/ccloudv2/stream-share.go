@@ -24,12 +24,12 @@ func (c *Client) cdxApiContext() context.Context {
 }
 
 func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.streamSharingApiContext(), shareId)
+	request := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
 	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(request)
 }
 
 func (c *Client) DescribeProvideShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.streamSharingApiContext(), shareId)
+	request := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
 	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(request)
 }
 
@@ -47,7 +47,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 
 		// nextPageUrlStringNullable is nil for the last page
 		nextPageUrlStringNullable := sharesList.GetMetadata().Next
-		pageToken, collectedAllShares, err = extractStreamShareNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, collectedAllShares, err = extractCdxNextPagePageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +57,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 }
 
 func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.streamSharingApiContext()).
+	request := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).
 		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		request = request.PageToken(pageToken)
