@@ -134,7 +134,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 				if string(dat[:2]) != "#!" {
 					shell := os.Getenv("SHELL")
 					if shell == "" {
-						shell = "/bin/sh"
+						shell = "/bin/bash"
 					}
 					shebang := []byte("#!" + shell + "\n")
 					temp, err := os.CreateTemp(strings.TrimSuffix(pluginPath, filepath.Base(pluginPath)), plugin.Name)
