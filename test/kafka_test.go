@@ -124,7 +124,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic2", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic update topic-exist-v3 --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-v3.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest-json.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest-yaml.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster-id lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/cluster-linking/create-link.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},

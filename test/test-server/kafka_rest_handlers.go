@@ -271,19 +271,19 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 				w.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(w, responseString)
 				require.NoError(t, err)
-			} else if topicName == "topic-exist-v3" {
+			} else if topicName == "topic-exist-rest" {
 				responseString := `{
 					"kind": "KafkaTopicConfigList",
 					"metadata": {
-						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs",
+						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs",
 						"next": null
 					},
 					"data": [
 						{
 							"kind": "KafkaTopicConfig",
 							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs/compression.type",
-								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-v3/config=compression.type"
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs/compression.type",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-rest/config=compression.type"
 							},
 							"cluster_id": "cluster-1",
 							"name": "compression.type",
@@ -298,14 +298,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 									"source": "DEFAULT_CONFIG"
 								}
 							],
-							"topic_name": "topic-exist-v3",
+							"topic_name": "topic-exist-rest",
 							"is_default": true
 						},
 						{
 							"kind": "KafkaTopicConfig",
 							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-v3/configs/retention.ms",
-								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-v3/config=retention.ms"
+								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs/retention.ms",
+								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-rest/config=retention.ms"
 							},
 							"cluster_id": "cluster-1",
 							"name": "retention.ms",
@@ -314,7 +314,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 							"is_sensitive": false,
 							"source": "DEFAULT_CONFIG",
 							"synonyms": [],
-							"topic_name": "topic-exist-v3",
+							"topic_name": "topic-exist-rest",
 							"is_default": true
 						}
 					]
@@ -497,7 +497,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		topicName := vars["topic"]
 		switch r.Method {
 		case http.MethodPost:
-			if topicName == "topic-exist" || topicName == "topic-exist-v3" {
+			if topicName == "topic-exist" || topicName == "topic-exist-rest" {
 				// Parse Alter Args
 				requestBody, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)

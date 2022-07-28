@@ -156,7 +156,13 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			})
 
 			// Write current state of relevant config settings
-			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
+			format, err := cmd.Flags().GetString(output.FlagName)
+			if err != nil {
+				return err
+			}
+			if format == output.Human.String() {
+				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
+			}
 			for _, config := range kafkaRestConfigs {
 				row := &updateRow{
 					Name:     config.Name,
