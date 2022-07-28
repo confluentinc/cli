@@ -140,7 +140,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (string, error) {
 	kafkaREST, _ := c.GetKafkaREST()
-	if (kafkaREST != nil) {
+	if kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return "", err
