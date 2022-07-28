@@ -71,7 +71,7 @@ func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, _, err := c.V2Client.CreateKsqlCluster(args[0], c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, logExcludeRows)
+	cluster, err := c.V2Client.CreateKsqlCluster(args[0], c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, !logExcludeRows)
 
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0

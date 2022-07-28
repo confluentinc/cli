@@ -37,10 +37,11 @@ func (c *Client) DescribeKsqlCluster(clusterId, environmentId string) (ksql.Ksql
 	return cluster, err
 }
 
-func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, logExcludeRows bool) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, useDetailedProcessingLog bool) (ksql.KsqldbcmV2Cluster, error) {
 	cluster := ksql.KsqldbcmV2Cluster{
 		Spec: &ksql.KsqldbcmV2ClusterSpec{
 			DisplayName:        &displayName,
+			UseDetailedProcessingLog: &useDetailedProcessingLog,
 			Csu:                &csus,
 			KafkaCluster:       &ksql.ObjectReference{Id: kafkaClusterId},
 			CredentialIdentity: &ksql.ObjectReference{Id: credentialIdentity},
