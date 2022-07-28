@@ -109,14 +109,10 @@ const (
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
 
 	// iam provider commands
-	IdentityProviderNotFoundErrorMsg    = `identity provider "%s" not found`
-	IdentityProviderNotFoundSuggestions = "List identity providers with `confluent iam provider list`."
-	IdentityProviderNoOpUpdateErrorMsg  = "One of the flags --description or --name must be set."
+	IdentityProviderNoOpUpdateErrorMsg = "One of `--description` or `--name` must be set."
 
 	// iam pool commands
-	IdentityPoolNotFoundErrorMsg    = `identity pool "%s" not found`
-	IdentityPoolNotFoundSuggestions = "List identity pools with `confluent iam pool list`."
-	IdentityPoolNoOpUpdateErrorMsg  = "One of the flags --description, --filter, --identity-claim, or --name must be set."
+	IdentityPoolNoOpUpdateErrorMsg = "One of `--description`, `--filter`, `--identity-claim`, or `--name` must be set."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"

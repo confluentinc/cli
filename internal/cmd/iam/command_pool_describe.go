@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -24,13 +25,14 @@ var (
 
 func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <id>",
-		Short: "Describe an identity pool.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		Use:               "describe <id>",
+		Short:             "Describe an identity pool.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.describe,
 	}
 
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")
@@ -43,9 +45,9 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityPoolProfile, _, err := c.V2Client.GetIdentityPool(args[0], provider)
+	identityPoolProfile, httpResp, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
-		return err
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	describeIdentityPool := &identityPool{

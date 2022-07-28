@@ -330,7 +330,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities"),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
-				Filter:        identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
+				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
 			}
 			err := json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)
@@ -349,7 +349,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
-				Filter:        identityproviderv2.PtrString("claims.iss=\"https://company.provider.com\""),
+				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
 			}
 			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
 			require.NoError(t, err)

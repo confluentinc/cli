@@ -241,32 +241,32 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	providers, err := c.V2Client.ListIdentityProviders()
-	poolToNameMap := make(map[string]string)
 	if err != nil {
 		return nil, err
 	}
+	poolToName := make(map[string]string)
 	for _, provider := range providers {
 		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
 		if err != nil {
 			return nil, err
 		}
 		for _, pool := range pools {
-			poolToNameMap["User:"+*pool.Id] = *pool.DisplayName
+			poolToName["User:"+*pool.Id] = *pool.DisplayName
 		}
 	}
-	return poolToNameMap, nil
+	return poolToName, nil
 }
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
-	userToEmailMap := make(map[string]string)
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
-		return userToEmailMap, err
+		return nil, err
 	}
+	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmailMap["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.ResourceId] = u.Email
 	}
-	return userToEmailMap, nil
+	return userToEmail, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
@@ -274,12 +274,11 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 	if err != nil {
 		return nil, err
 	}
-
-	serviceAccountToNameMap := make(map[string]string)
+	serviceAccountToName := make(map[string]string)
 	for _, u := range users {
-		serviceAccountToNameMap["User:"+u.ResourceId] = u.ServiceName
+		serviceAccountToName["User:"+u.ResourceId] = u.ServiceName
 	}
-	return serviceAccountToNameMap, nil
+	return serviceAccountToName, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -341,25 +340,17 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 	for _, principal := range principals {
+		row := &displayStruct{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
-			row := &displayStruct{
-				Principal: principal,
-				Email:     email,
-			}
+			row.Email = email
 			outputWriter.AddElement(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
-			row := &displayStruct{
-				Principal:   principal,
-				ServiceName: name,
-			}
+			row.ServiceName = name
 			outputWriter.AddElement(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
-			row := &displayStruct{
-				Principal: principal,
-				PoolName:  name,
-			}
+			row.PoolName = name
 			outputWriter.AddElement(row)
 		}
 	}

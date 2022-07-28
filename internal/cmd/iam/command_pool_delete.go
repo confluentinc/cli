@@ -19,12 +19,12 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete identity pool pool-12345.`,
-				Code: `confluent iam pool delete "pool-12345" --provider op-12345`,
+				Code: "confluent iam pool delete pool-12345 --provider op-12345",
 			},
 		),
 	}
 
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	_ = cmd.MarkFlagRequired("provider")
 
 	return cmd
@@ -36,8 +36,8 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err = c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
-		return errors.Errorf(`failed to delete identity pool "%s": %v`, args[0], err)
+	if httpResp, err := c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedIdentityPoolMsg, args[0])

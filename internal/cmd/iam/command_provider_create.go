@@ -26,7 +26,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the identity provider.")
-	cmd.Flags().String("issuer-uri", "", "URI (Uniform Resource Identifier) of the identity provider issuer.")
+	cmd.Flags().String("issuer-uri", "", "URI of the identity provider issuer.")
 	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -63,7 +63,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
-		return errors.CatchServiceNameInUseError(err, httpResp, name)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	identityProvider := &identityProvider{

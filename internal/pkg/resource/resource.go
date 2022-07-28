@@ -12,8 +12,8 @@ const (
 	SchemaRegistry   = "schema-registry"
 	ServiceAccount   = "service-account"
 	User             = "user"
-	IdentityProvider = "identity-provider"
 	IdentityPool     = "identity-pool"
+	IdentityProvider = "identity-provider"
 )
 
 const (

@@ -295,42 +295,6 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	return err
 }
 
-func CatchIdentityProviderNotFoundError(err error, r *http.Response, identityProviderId string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Identity Provider Not Found") {
-		errorMsg := fmt.Sprintf(IdentityProviderNotFoundErrorMsg, identityProviderId)
-		return NewErrorWithSuggestions(errorMsg, IdentityProviderNotFoundSuggestions)
-	}
-
-	return NewWrapErrorWithSuggestions(err, "identity provider not found or access forbidden", IdentityProviderNotFoundSuggestions)
-}
-
-func CatchIdentityPoolNotFoundError(err error, r *http.Response, identityPoolId string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Identity Pool Not Found") {
-		errorMsg := fmt.Sprintf(IdentityPoolNotFoundErrorMsg, identityPoolId)
-		return NewErrorWithSuggestions(errorMsg, IdentityPoolNotFoundSuggestions)
-	}
-
-	return NewWrapErrorWithSuggestions(err, "identity pool not found or access forbidden", IdentityPoolNotFoundSuggestions)
-}
-
 /*
 Error: 1 error occurred:
 	* error describing kafka cluster: resource not found

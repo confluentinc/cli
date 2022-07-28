@@ -21,7 +21,7 @@ func (c *identityPoolCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	_ = cmd.MarkFlagRequired("provider")
 	pcmd.AddOutputFlag(cmd)
 

@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	"strconv"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -13,6 +13,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -116,15 +117,14 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 			if err != nil {
 				return errors.Wrap(err, "failed to parse principal")
 			}
-			if resource.LookupType(resourceId) == resource.IdentityPool {
-				acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:" + resourceId)
-				return nil
+			if resource.LookupType(resourceId) == resource.User || resource.LookupType(resourceId) == resource.ServiceAccount {
+				userId, ok := idMap[resourceId]
+				if !ok {
+					return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
+				}
+				resourceId = strconv.Itoa(int(userId))
 			}
-			userId, ok := idMap[resourceId]
-			if !ok {
-				return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
-			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", userId) // translate into numeric ID
+			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%s", resourceId)
 		}
 	}
 	return nil

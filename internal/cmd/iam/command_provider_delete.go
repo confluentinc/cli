@@ -18,16 +18,16 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete identity provider op-12345.`,
-				Code: `confluent iam provider delete "op-12345"`,
+				Text: "Delete identity provider op-12345.",
+				Code: "confluent iam provider delete op-12345",
 			},
 		),
 	}
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	if resp, err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, resp)
+	if httpResp, err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedIdentityProviderMsg, args[0])

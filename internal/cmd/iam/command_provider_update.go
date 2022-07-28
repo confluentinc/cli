@@ -49,9 +49,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	}
 
 	identityProviderId := args[0]
-	update := identityproviderv2.IamV2IdentityProviderUpdate{
-		Id: &identityProviderId,
-	}
+	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: &identityProviderId}
 	if name != "" {
 		update.DisplayName = &name
 	}
@@ -61,7 +59,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	resp, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		return errors.CatchIdentityProviderNotFoundError(err, httpResp, identityProviderId)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	describeIdentityProvider := &identityProvider{

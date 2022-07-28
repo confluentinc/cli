@@ -624,8 +624,6 @@ github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105 h1:rJjoMIEEjChHHTAkp/bxxzFR2XnU4SCAz6bgRp3vqOw=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.105/go.mod h1:gFne0gmsbgH4GlpfmwadKrAMuSEvEB+mP4DfkEJ4Zi4=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5 h1:PP3ANQVUE/Gk1eKMJoSARxwHFvvYNGyvAS4gKIeU1Gw=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.5/go.mod h1:ZAC5xKUjsPR+DUBLX7PwjhgE99dJYeAMCR4PvhCUIUw=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.6 h1:bUJoGu/PJ0jC6C8yYcc8EpB4uhqRHdOazSc/MhkFmwA=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/identity-provider v0.0.6/go.mod h1:ZAC5xKUjsPR+DUBLX7PwjhgE99dJYeAMCR4PvhCUIUw=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=

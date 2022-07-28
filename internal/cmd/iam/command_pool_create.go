@@ -19,7 +19,7 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an identity pool named "DemoIdentityPool".`,
+				Text: `Create an identity pool named "DemoIdentityPool" with provider "op-12345":`,
 				Code: `confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
 			},
 		),
@@ -28,7 +28,7 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("description")
@@ -70,7 +70,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		return errors.CatchServiceNameInUseError(err, httpResp, name)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	identityPool := &identityPool{

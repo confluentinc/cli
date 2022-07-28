@@ -19,17 +19,17 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update the description of identity pool "op-123456".`,
-				Code: `confluent iam pool update op-123456 --description "new description."`,
+				Text: `Update the description of identity pool "pool-123456":`,
+				Code: `confluent iam pool update pool-123456 --description "new description."`,
 			},
 		),
 	}
 
-	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("name", "", "Name of the identity pool.")
+	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")
@@ -84,7 +84,7 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 
 	resp, httpResp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
-		return errors.CatchIdentityPoolNotFoundError(err, httpResp, identityPoolId)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	describeIdentityPool := &identityPool{

@@ -236,6 +236,18 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
+func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+
+	RegisterFlagCompletionFunc(cmd, "provider", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteIdentityProviders(command.V2Client)
+	})
+}
+
 func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	identityProviders, err := client.ListIdentityProviders()
 	if err != nil {
