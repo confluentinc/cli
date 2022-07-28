@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
@@ -57,7 +56,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
 	status := cluster.Status.Phase
-	if cluster.IsPaused {// TODO: Sort out this isPaused stuff
+	if cluster.Status.IsPaused {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
 		provisioningFailed, err := c.checkProvisioningFailed(cluster)
@@ -69,8 +68,8 @@ func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.Ksqldbcm
 	}
 
 	detailedProcessingLog := true
-	if cluster.DetailedProcessingLog != nil {
-		detailedProcessingLog = cluster.DetailedProcessingLog.Value
+	if cluster.Spec.UseDetailedProcessingLog != nil {
+		detailedProcessingLog = *cluster.Spec.UseDetailedProcessingLog
 	}
 
 	return &ksqlCluster{
@@ -78,7 +77,7 @@ func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.Ksqldbcm
 		Name:                  *cluster.Spec.DisplayName,
 		OutputTopicPrefix:     *cluster.Status.TopicPrefix,
 		KafkaClusterId:        cluster.Spec.KafkaCluster.Id,
-		Storage:               cluster.Storage, // TODO: doesn't exist in API
+		Storage:               cluster.Status.Storage,
 		Endpoint:              *cluster.Status.HttpEndpoint,
 		Status:                status,
 		DetailedProcessingLog: detailedProcessingLog,
