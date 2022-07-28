@@ -55,7 +55,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	roles = append(roles, dataplaneRoles...)
 
 	// add ksql and datagovernance roles
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") == "1" {
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 		ksqlRoles, err := c.ksqlRoles()
 		if err != nil {
 			return err
