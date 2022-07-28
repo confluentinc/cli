@@ -79,6 +79,8 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
+require github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.6
+
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
 	cloud.google.com/go v0.99.0 // indirect
