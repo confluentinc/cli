@@ -174,14 +174,10 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			// Write current state of relevant config settings
 			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
 			for _, config := range kafkaRestConfigs {
-				isReadOnly := false
-				if readOnlyConfigs[config.Name] {
-					isReadOnly = true
-				}
-				row := &updateRow{
+				row := updateRow{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
-					ReadOnly: strconv.FormatBool(isReadOnly),
+					ReadOnly: strconv.FormatBool(readOnlyConfigs[config.Name]),
 				}
 				outputWriter.AddElement(row)
 			}
