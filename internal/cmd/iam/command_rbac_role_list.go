@@ -138,5 +138,5 @@ func (c *roleCommand) ksqlRoles() ([]mdsv2alpha1.Role, error) {
 }
 
 func (c *roleCommand) dataGovernanceRoles() ([]mdsv2alpha1.Role, error) {
-	return c.namespaceRoles(datagovernanceNamespace)
+	return c.namespaceRoles(dataGovernanceNamespace)
 }
