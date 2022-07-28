@@ -9,7 +9,7 @@ import (
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newStreamShareClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
+func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
 	cfg := cdxv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
