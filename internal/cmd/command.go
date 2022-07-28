@@ -138,18 +138,21 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 					}
 					shebang := []byte("#!" + shell + "\n")
 					temp, err := os.CreateTemp(strings.TrimSuffix(pluginPath, filepath.Base(pluginPath)), plugin.Name)
+					if err != nil {
+						fmt.Println("error creating temp")
+						return err
+					}
 					defer func() {
 						_ = temp.Close()
 						_ = os.Remove(temp.Name())
 					}()
-					if err != nil {
-						return err
-					}
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
+						fmt.Println("error writing to temp")
 						return err
 					}
 					err = temp.Chmod(0755)
 					if err != nil {
+						fmt.Println("error chmod")
 						return err
 					}
 					plugin.Args[0] = temp.Name()
