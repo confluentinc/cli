@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sort"
+	"strconv"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -16,8 +17,22 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+type updateRow struct {
+	Name     string
+	Value    string
+	ReadOnly string
+}
+
+var (
+	topicListLabels           = []string{"Name", "Value", "ReadOnly"}
+	topicListHumanLabels      = []string{"Name", "Value", "Read-Only"}
+	topicListStructuredLabels = []string{"name", "value", "read_only"}
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
@@ -41,6 +56,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -62,8 +78,21 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
+	outputOption, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
+	if !output.IsValidOutputString(outputOption) {
+		return output.NewInvalidOutputFormatFlagError(outputOption)
+	}
+
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
+		// num.partitions is read only but requires special handling
+		_, numPartChange := configMap["num.partitions"]
+		if numPartChange {
+			delete(configMap, "num.partitions")
+		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
@@ -94,22 +123,69 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
+
 			// Kafka REST is available and there was no error
-			utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
-			tableLabels := []string{"Name", "Value"}
-			tableEntries := make([][]string, len(kafkaRestConfigs))
-			for i, config := range kafkaRestConfigs {
-				tableEntries[i] = printer.ToRow(
-					&struct {
-						Name  string
-						Value string
-					}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+			if err != nil {
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			} else if configsResp.Data == nil {
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
 			}
-			sort.Slice(tableEntries, func(i int, j int) bool {
-				return tableEntries[i][0] < tableEntries[j][0]
+			readOnlyConfigs := set.New()
+			configsValues := make(map[string]string)
+			for _, conf := range configsResp.Data {
+				if conf.IsReadOnly {
+					readOnlyConfigs.Add(conf.Name)
+				}
+				configsValues[conf.Name] = *conf.Value
+			}
+
+			// Output writing preparation
+			outputWriter, err := output.NewListOutputWriter(cmd, topicListLabels, topicListHumanLabels, topicListStructuredLabels)
+			if err != nil {
+				return err
+			}
+			if numPartChange {
+				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
+				if err != nil && httpResp != nil {
+					restErr, parseErr := parseOpenAPIError(err)
+					if parseErr == nil {
+						if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+							return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+						}
+					}
+					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				}
+
+				readOnlyConfigs.Add("num.partitions")
+				configsValues["num.partitions"] = strconv.Itoa(len(partitionsResp.Data))
+				// Add num.partitions back into kafkaRestConfig for sorting & output
+				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
+					Name:      "num.partitions",
+					Value:     nil,
+					Operation: nil,
+				}
+				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
+			}
+			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
+				return kafkaRestConfigs[i].Name < kafkaRestConfigs[j].Name
 			})
-			printer.RenderCollectionTable(tableEntries, tableLabels)
-			return nil
+
+			// Write current state of relevant config settings
+			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
+			for _, config := range kafkaRestConfigs {
+				isReadOnly := false
+				if readOnlyConfigs[config.Name] {
+					isReadOnly = true
+				}
+				row := &updateRow{
+					Name:     config.Name,
+					Value:    configsValues[config.Name],
+					ReadOnly: strconv.FormatBool(isReadOnly),
+				}
+				outputWriter.AddElement(row)
+			}
+			return outputWriter.Out()
 		}
 	}
 
