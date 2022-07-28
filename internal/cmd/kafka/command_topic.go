@@ -146,8 +146,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (string, 
 			return "", err
 		}
 
-		lkc := kafkaClusterConfig.ID
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
 			restErr, parseErr := parseOpenAPIError(err)
