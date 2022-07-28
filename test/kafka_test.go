@@ -154,7 +154,7 @@ func (s *CLITestSuite) TestKafka() {
 		tests = append(tests, noSchemaTest)
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -202,7 +202,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -216,7 +216,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create", fixture: "kafka/client-config/onprem-help.golden", wantErrCode: 1},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "platform"
