@@ -100,6 +100,8 @@ func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRep
 			require.NoError(t, err)
 		})
 	}
+
+	c.HandleFunc(base, c.HandleAllRolesRoute(t))
 }
 
 func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {

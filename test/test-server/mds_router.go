@@ -53,6 +53,7 @@ func (m MdsRouter) addDefaultHandler(t *testing.T) {
 
 func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
 	addRoles(base, routesAndReplies, rbacRoles)
+	addAllPublicRoles(base, routesAndReplies, rbacRoles)
 	for route, reply := range routesAndReplies {
 		s := reply
 		m.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
@@ -63,18 +64,31 @@ func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRepli
 	}
 }
 
-func addRoles(base string, routesAndReplies, rbacRoles map[string]string) {
+func findAllPublicRolesSorted(rbacRoles map[string]string) []string {
 	var roleNameList []string
-	for roleName, roleInfo := range rbacRoles {
-		routesAndReplies[path.Join(base, roleName)] = roleInfo
+	for roleName, _ := range rbacRoles {
 		roleNameList = append(roleNameList, roleName)
 	}
 
 	sort.Strings(roleNameList)
 
 	var allRoles []string
-	for _, roleName := range roleNameList {
-		allRoles = append(allRoles, rbacRoles[roleName])
+	for _, name := range roleNameList {
+		allRoles = append(allRoles, rbacRoles[name])
 	}
+
+	return allRoles
+}
+
+func addRoles(base string, routesAndReplies, rbacRoles map[string]string) {
+	var roleNameList []string
+	for roleName, roleInfo := range rbacRoles {
+		routesAndReplies[path.Join(base, roleName)] = roleInfo
+		roleNameList = append(roleNameList, roleName)
+	}
+}
+
+func addAllPublicRoles(base string, routesAndReplies, rbacRoles map[string]string) {
+	var allRoles []string = findAllPublicRolesSorted(rbacRoles)
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }

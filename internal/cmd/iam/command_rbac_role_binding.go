@@ -47,7 +47,11 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
+	dataGovernanceNamespace = optional.NewString("datagovernance")
+
 	dataplaneNamespace = optional.NewString("dataplane")
+
+	ksqlNamespace = optional.NewString("ksql")
 )
 
 type roleBindingOptions struct {
