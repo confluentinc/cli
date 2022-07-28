@@ -178,12 +178,12 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				if readOnlyConfigs[config.Name] {
 					isReadOnly = true
 				}
-				row := updateRow{
+				row := &updateRow{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
 					ReadOnly: strconv.FormatBool(isReadOnly),
 				}
-				outputWriter.AddElement(&row)
+				outputWriter.AddElement(row)
 			}
 			return outputWriter.Out()
 		}
