@@ -78,11 +78,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
