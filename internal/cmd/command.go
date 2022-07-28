@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -135,31 +134,22 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 				if string(dat[:2]) != "#!" {
 					shell := os.Getenv("SHELL")
 					if shell == "" {
-						utils.ErrPrintln(cmd, "SHELL env variable is empty")
+						shell = "/bin/sh"
 					}
 					shebang := []byte("#!" + shell + "\n")
 					temp, err := os.CreateTemp(strings.TrimSuffix(pluginPath, filepath.Base(pluginPath)), plugin.Name)
 					defer func() {
-						err = temp.Close()
-						if err != nil {
-							fmt.Println(err)
-						}
-						err = os.Remove(temp.Name())
-						if err != nil {
-							fmt.Println(err)
-						}
+						_ = temp.Close()
+						_ = os.Remove(temp.Name())
 					}()
 					if err != nil {
-						fmt.Println(err)
 						return err
 					}
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
-						fmt.Println(err)
 						return err
 					}
 					err = temp.Chmod(0755)
 					if err != nil {
-						fmt.Println(err)
 						return err
 					}
 					plugin.Args[0] = temp.Name()
