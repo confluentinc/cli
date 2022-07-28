@@ -144,7 +144,7 @@ func autocompleteClusters(environment string, client *ccloudv2.Client) []string 
 
 	suggestions := make([]string, len(clusters.Data))
 	for i, cluster := range clusters.Data {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Spec.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
 	}
 	return suggestions
 }
