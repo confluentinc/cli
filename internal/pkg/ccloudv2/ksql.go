@@ -2,6 +2,8 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 
@@ -40,17 +42,20 @@ func (c *Client) DescribeKsqlCluster(clusterId, environmentId string) (ksql.Ksql
 func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, useDetailedProcessingLog bool) (ksql.KsqldbcmV2Cluster, error) {
 	cluster := ksql.KsqldbcmV2Cluster{
 		Spec: &ksql.KsqldbcmV2ClusterSpec{
-			DisplayName:        &displayName,
+			DisplayName:              &displayName,
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
-			Csu:                &csus,
-			KafkaCluster:       &ksql.ObjectReference{Id: kafkaClusterId},
-			CredentialIdentity: &ksql.ObjectReference{Id: credentialIdentity},
-			Environment:        &ksql.ObjectReference{Id: environmentId},
+			Csu:                      &csus,
+			KafkaCluster:             &ksql.ObjectReference{Id: kafkaClusterId, Related: "cat", ResourceName: "cat"},
+			CredentialIdentity:       &ksql.ObjectReference{Id: credentialIdentity, Related: "cat", ResourceName: "cat"},
+			Environment:              &ksql.ObjectReference{Id: environmentId, Related: "cat", ResourceName: "cat"},
 		},
 	}
-	return c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
-}
-
-func (c *Client) DescribeKsqlCluster(ksqlClusterId string) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
-	return c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), ksqlClusterId).Execute()
+	res, net, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
+	if err != nil {
+		fmt.Println(err)
+		body, _ := ioutil.ReadAll(net.Body)
+		fmt.Println(string(body))
+		fmt.Println(res)
+	}
+	return res, err
 }

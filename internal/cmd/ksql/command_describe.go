@@ -56,6 +56,5 @@ func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
 	}
 
 	// TODO bring back formatting
-	//return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster)), describeFields, describeHumanRenames, describeStructuredRenames)
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(&cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

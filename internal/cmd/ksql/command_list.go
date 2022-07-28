@@ -61,7 +61,7 @@ func (c *ksqlCommand) listClusters(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, cluster := range clusters.Data {
-		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(&cluster))
+		outputWriter.AddElement(c.formatClusterForDisplayAndList(&cluster))
 	}
 	return outputWriter.Out()
 }

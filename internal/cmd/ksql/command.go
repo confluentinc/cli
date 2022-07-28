@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/dghubble/sling"
@@ -10,8 +11,8 @@ import (
 	"golang.org/x/oauth2"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -54,12 +55,32 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
+func (c *ksqlCommand) convertV1ToSchedV2Subset(cluster *schedv1.KSQLCluster) *ksql.KsqldbcmV2Cluster {
+	return &ksql.KsqldbcmV2Cluster{
+		Spec: &ksql.KsqldbcmV2ClusterSpec{
+			DisplayName: &cluster.Name,
+			KafkaCluster: &ksql.ObjectReference{
+				Id:          cluster.KafkaClusterId,
+				Environment: &cluster.AccountId,
+			},
+			Environment: &ksql.ObjectReference{
+				Id: cluster.AccountId,
+			},
+		},
+		Status: &ksql.KsqldbcmV2ClusterStatus{
+			HttpEndpoint: &cluster.Endpoint,
+			Phase:        cluster.Status.String(),
+			TopicPrefix:  &cluster.OutputTopicPrefix,
+		},
+	}
+}
+
+func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
 	status := cluster.Status.Phase
 	if cluster.Status.IsPaused {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster)
+		provisioningFailed, err := c.checkProvisioningFailed(*cluster.Id, cluster.Status.GetHttpEndpoint())
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -92,19 +113,19 @@ func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *ksql.Ksqldbcm
 // 50321 error_code, return (true, nil)
 // Otherwise, return (false, err (or nil))
 //
-func (c *ksqlCommand) checkProvisioningFailed(cluster *ksql.KsqldbcmV2Cluster) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, *cluster.Id)
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
 	if err != nil {
 		return false, err
 	}
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
 
-	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(*cluster.Status.HttpEndpoint)
+	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	var failure map[string]interface{}
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
 	if err != nil || response == nil {
