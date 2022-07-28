@@ -31,6 +31,8 @@ const (
 	KSQLAppDeprecateWarning    = "In the next major release, the `confluent ksql app` commands will be removed. " +
 		"Use the equivalent `confluent ksql cluster` commands instead."
 
+	KSQLApiSecretDeprecateWarning = "(DEPRECATED) In the next major release, the `confluent ksql create with a --api-secret and --api-key will be deprecated. Provide a --credential-identity instead"
+
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
 		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +
