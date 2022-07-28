@@ -1,5 +1,113 @@
 package testserver
 
+var v2RbacDataplaneRoles = `[
+  {
+    "name": "DeveloperManage",
+    "policies": [
+      {
+        "bindingScope": "cloud-cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "CloudCluster",
+            "operations": ["Describe"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "Cluster",
+            "operations": ["View", "AccessWithToken"]
+          },
+          {
+            "resourceType": "OwnKafkaClusterApiKey",
+            "operations": ["Describe", "Alter", "Delete", "Create"]
+          },
+          {
+            "resourceType": "OwnClusterApiKey",
+            "operations": ["Describe", "Alter", "Delete", "Create"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "Topic",
+            "operations": ["Delete", "Describe", "Create", "DescribeConfigs"]
+          },
+          {
+            "resourceType": "Cluster",
+            "operations": ["Create", "DescribeConfigs"]
+          },
+          {
+            "resourceType": "TransactionalId",
+            "operations": ["Describe"]
+          },
+          {
+            "resourceType": "Group",
+            "operations": ["Describe", "Delete"]
+          }
+        ]
+      }
+    ]
+  }
+]`
+
+var v2RbacKsqlRoles = `[
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "ksql-cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "KsqlCluster",
+            "operations": [
+              "Describe",
+              "AlterAccess",
+              "Contribute",
+              "DescribeAccess",
+              "Terminate"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]`
+
+var v2RbacSRRoles = `[
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "schema-registry-cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "Subject",
+            "operations": [
+              "Delete",
+              "Read",
+              "Write",
+              "ReadCompatibility",
+              "AlterAccess",
+              "WriteCompatibility",
+              "DescribeAccess"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]`
+
 var v2RbacRoles = map[string]string{
 	"CCloudRoleBindingAdmin": `{
 			"name": "CCloudRoleBindingAdmin",
