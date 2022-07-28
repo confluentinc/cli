@@ -1,11 +1,12 @@
 package iam
 
 import (
+	"os"
+
 	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
-	"os"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -37,7 +38,7 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	roles := []mdsv2alpha1.Role{}
+	var roles []mdsv2alpha1.Role
 
 	// add public roles
 	publicRoles, err := c.publicRoles()
@@ -61,11 +62,11 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		}
 		roles = append(roles, ksqlRoles...)
 
-		datagovernanceRoles, err := c.datagovernanceRoles()
+		dataGovernanceRoles, err := c.dataGovernanceRoles()
 		if err != nil {
 			return err
 		}
-		roles = append(roles, datagovernanceRoles...)
+		roles = append(roles, dataGovernanceRoles...)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -136,6 +137,6 @@ func (c *roleCommand) ksqlRoles() ([]mdsv2alpha1.Role, error) {
 	return c.namespaceRoles(ksqlNamespace)
 }
 
-func (c *roleCommand) datagovernanceRoles() ([]mdsv2alpha1.Role, error) {
+func (c *roleCommand) dataGovernanceRoles() ([]mdsv2alpha1.Role, error) {
 	return c.namespaceRoles(datagovernanceNamespace)
 }
