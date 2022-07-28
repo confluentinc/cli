@@ -82,9 +82,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	if !output.IsValidOutputString(outputOption) {
-		return output.NewInvalidOutputFormatFlagError(outputOption)
-	}
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
