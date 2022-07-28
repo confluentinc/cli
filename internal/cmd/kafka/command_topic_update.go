@@ -138,19 +138,13 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				return err
 			}
 			if numPartChange {
-				partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
-				if err != nil && httpResp != nil {
-					restErr, parseErr := parseOpenAPIError(err)
-					if parseErr == nil {
-						if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
-							return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-						}
-					}
-					return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				numPartitionsString, err := c.getNumPartitions(topicName)
+				if err != nil {
+					return err
 				}
 
 				readOnlyConfigs.Add("num.partitions")
-				configsValues["num.partitions"] = strconv.Itoa(len(partitionsResp.Data))
+				configsValues["num.partitions"] = numPartitionsString
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
 					Name:      "num.partitions",
@@ -164,7 +158,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			// Write current state of relevant config settings
 			utils.Printf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
 			for _, config := range kafkaRestConfigs {
-				row := updateRow{
+				row := &updateRow{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
 					ReadOnly: strconv.FormatBool(readOnlyConfigs[config.Name]),
