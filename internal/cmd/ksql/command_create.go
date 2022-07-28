@@ -1,12 +1,9 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -34,8 +31,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		RunE:  runCommand,
 	}
 
-	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
-	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
+	cmd.Flags().String("credential-identity", "", `user account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with kafka`)
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
@@ -44,22 +40,18 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("api-key")
-	_ = cmd.MarkFlagRequired("api-secret")
+	_ = cmd.MarkFlagRequired("credential-identity")
 	_ = cmd.Flags().MarkHidden("image")
 
 	return cmd
 }
 
-func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, false)
-}
-
 func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, true)
+	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.createCluster(cmd, args)
 }
 
-func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -69,11 +61,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	cfg := &schedv1.KSQLClusterConfig{
-		AccountId:      c.EnvironmentId(),
-		Name:           args[0],
-		TotalNumCsu:    uint32(csus),
-		KafkaClusterId: kafkaCluster.ID,
+	credentialIdentity, err := cmd.Flags().GetString("credential-identity")
+	if err != nil {
+		return err
 	}
 
 	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
@@ -81,51 +71,24 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
-
-	kafkaApiKey, err := cmd.Flags().GetString("api-key")
-	if err != nil {
-		return err
-	}
-
-	kafkaApiKeySecret, err := cmd.Flags().GetString("api-secret")
-	if err != nil {
-		return err
-	}
-
-	cfg.KafkaApiKey = &schedv1.ApiKey{
-		Key:    kafkaApiKey,
-		Secret: kafkaApiKeySecret,
-	}
-
-	image, err := cmd.Flags().GetString("image")
-	if err == nil && len(image) > 0 {
-		cfg.Image = image
-	}
-
-	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
-	if err != nil {
-		return err
-	}
+	cluster, err := c.V2Client.CreateKsqlCluster(args[0], c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, !logExcludeRows)
 
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
-	for cluster.Endpoint == "" && count < 3 {
-		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
-		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+	for cluster.Status.GetHttpEndpoint() == "" && count < 3 {
+		cluster, err = c.V2Client.DescribeKsqlCluster(*cluster.Id, c.EnvironmentId())
 		if err != nil {
 			return err
 		}
 		count++
 	}
 
-	if cluster.Endpoint == "" {
+	if cluster.Status.GetHttpEndpoint() == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	//todo bring back formatting
+	//return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
 }
