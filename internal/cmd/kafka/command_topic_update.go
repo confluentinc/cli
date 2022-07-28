@@ -162,8 +162,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
 					Name:      "num.partitions",
-					Value:     nil,
-					Operation: nil,
 				}
 				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
 			}
