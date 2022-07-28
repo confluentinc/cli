@@ -19,7 +19,7 @@ func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
 	return cdxv1.NewAPIClient(cfg)
 }
 
-func (c *Client) streamSharingApiContext() context.Context {
+func (c *Client) cdxApiContext() context.Context {
 	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
 }
 
