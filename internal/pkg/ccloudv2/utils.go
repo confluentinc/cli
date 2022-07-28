@@ -97,7 +97,7 @@ func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString)
 	return pageToken, false, err
 }
 
-func extractStreamShareNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
+func extractCdxNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}

@@ -9,7 +9,7 @@ import (
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newStreamShareClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
+func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
 	cfg := cdxv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
@@ -19,7 +19,7 @@ func newStreamShareClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClie
 	return cdxv1.NewAPIClient(cfg)
 }
 
-func (c *Client) streamSharingApiContext() context.Context {
+func (c *Client) cdxApiContext() context.Context {
 	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
 }
 
