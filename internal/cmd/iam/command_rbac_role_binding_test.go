@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"net/http"
 	"os"
 	"testing"
@@ -11,6 +13,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccv2sdkmock "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	mds2mock "github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
 	"github.com/spf13/cobra"
@@ -113,10 +116,36 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 			}}, nil
 		},
 	}
+	providerMock := &ccv2sdkmock.IdentityProvidersIamV2Api{
+		ListIamV2IdentityProvidersFunc: func(ctx context.Context) identityproviderv2.ApiListIamV2IdentityProvidersRequest {
+			return identityproviderv2.ApiListIamV2IdentityProvidersRequest{}
+		},
+		ListIamV2IdentityProvidersExecuteFunc: func(r identityproviderv2.ApiListIamV2IdentityProvidersRequest) (identityproviderv2.IamV2IdentityProviderList, *http.Response, error) {
+			id := "op-01"
+			prov := identityproviderv2.IamV2IdentityProvider{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{prov}}, nil, nil
+		},
+	}
+	poolMock := &ccv2sdkmock.IdentityPoolsIamV2Api{
+		ListIamV2IdentityPoolsFunc: func(ctx context.Context, providerId string) identityproviderv2.ApiListIamV2IdentityPoolsRequest {
+			return identityproviderv2.ApiListIamV2IdentityPoolsRequest{}
+		},
+		ListIamV2IdentityPoolsExecuteFunc: func(r identityproviderv2.ApiListIamV2IdentityPoolsRequest) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
+			id := "pool-01"
+			pool := identityproviderv2.IamV2IdentityPool{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{pool}}, nil, nil
+		},
+	}
 	client := &ccloud.Client{
 		User: userMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, nil, mdsClient, suite.conf))
+	v2client := &ccloudv2.Client{
+		IdentityProviderClient: &identityproviderv2.APIClient{
+			IdentityPoolsIamV2Api:     poolMock,
+			IdentityProvidersIamV2Api: providerMock,
+		},
+	}
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, v2client, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {

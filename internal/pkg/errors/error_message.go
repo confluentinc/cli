@@ -9,7 +9,7 @@ const (
 	prefixFormat = "%s: %s"
 
 	// admin commands
-	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
@@ -68,17 +68,16 @@ const (
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
 
 	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg        = "unable to %s ACLs: %s"
-	UnableToPerformAclSuggestions     = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg        = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg        = "only --allow or --deny may be set when adding or deleting an ACL"
-	MustSetResourceTypeErrorMsg       = "exactly one resource type (%v) must be set"
-	InvalidOperationValueErrorMsg     = "invalid operation value: %s"
-	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
-	UserIdNotValidErrorMsg            = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg              = `ensure principal begins with "User:"`
-	BadServiceAccountOrUserIDErrorMsg = `ensure service account id begins with "sa-", or user resource id begins with "u-"`
-	PrincipalNotFoundErrorMsg         = `user or service account "%s" not found`
+	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
+	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
+	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
+	InvalidOperationValueErrorMsg = "invalid operation value: %s"
+	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
+	BadPrincipalErrorMsg          = `ensure principal begins with "User:"`
+	PrincipalNotFoundErrorMsg     = `user or service account "%s" not found`
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -108,6 +107,12 @@ const (
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
+	// iam provider commands
+	IdentityProviderNoOpUpdateErrorMsg = "One of `--description` or `--name` must be set."
+
+	// iam pool commands
+	IdentityPoolNoOpUpdateErrorMsg = "One of `--description`, `--filter`, `--identity-claim`, or `--name` must be set."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
