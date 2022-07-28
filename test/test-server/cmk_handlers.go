@@ -145,6 +145,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
 			handleCmkKafkaDedicatedClusterShrink(t)(w, r)
+		case "lkc-update-dedicated-shrink-multi":
+			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
 		case "lkc-unknown":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -297,6 +299,24 @@ func handleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 			cluster := getCmkDedicatedDescribeCluster(*req.Id, *req.Spec.DisplayName, req.Spec.Config.CmkV2Dedicated.Cku)
 			cluster.Status.Cku = cmkv2.PtrInt32(2)
 			err = json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for GET/PATCH "/cmk/v2/clusters/lkc-update-dedicated-shrink-multi"
+func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			id := r.URL.Query().Get("id")
+			cluster := getCmkDedicatedDescribeCluster(id, "lkc-update-dedicated-shrink-multi", 3)
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			w.WriteHeader(http.StatusBadRequest)
+			_, err := io.WriteString(w, badRequestErrMsg)
 			require.NoError(t, err)
 		}
 	}

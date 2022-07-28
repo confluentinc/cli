@@ -158,6 +158,8 @@ const (
 	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
 	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
 	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
+	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
@@ -228,6 +230,7 @@ const (
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 	SRInvalidPackageType         = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
+	SRInvalidPackageUpgrade      = `Schema Registry already uses "%s" package`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

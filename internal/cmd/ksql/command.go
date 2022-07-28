@@ -27,13 +27,14 @@ type ksqlCommand struct {
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
 // in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
-	Id                string `json:"id,omitempty"`
-	Name              string `json:"name,omitempty"`
-	OutputTopicPrefix string `json:"output_topic_prefix,omitempty"`
-	KafkaClusterId    string `json:"kafka_cluster_id,omitempty"`
-	Storage           int32  `json:"storage,omitempty"`
-	Endpoint          string `json:"endpoint,omitempty"`
-	Status            string `json:"status,omitempty"`
+	Id                    string `json:"id,omitempty"`
+	Name                  string `json:"name,omitempty"`
+	OutputTopicPrefix     string `json:"output_topic_prefix,omitempty"`
+	KafkaClusterId        string `json:"kafka_cluster_id,omitempty"`
+	Storage               int32  `json:"storage,omitempty"`
+	Endpoint              string `json:"endpoint,omitempty"`
+	Status                string `json:"status,omitempty"`
+	DetailedProcessingLog bool   `json:"detailed_processing_log,omitempty"`
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -53,7 +54,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksqlCluster {
+func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *schedv1.KSQLCluster) *ksqlCluster {
 	status := cluster.Status.String()
 	if cluster.IsPaused {
 		status = "PAUSED"
@@ -65,15 +66,19 @@ func (c *ksqlCommand) updateKsqlClusterStatus(cluster *schedv1.KSQLCluster) *ksq
 			status = "PROVISIONING FAILED"
 		}
 	}
-
+	detailedProcessingLog := true
+	if cluster.DetailedProcessingLog != nil {
+		detailedProcessingLog = cluster.DetailedProcessingLog.Value
+	}
 	return &ksqlCluster{
-		Id:                cluster.Id,
-		Name:              cluster.Name,
-		OutputTopicPrefix: cluster.OutputTopicPrefix,
-		KafkaClusterId:    cluster.KafkaClusterId,
-		Storage:           cluster.Storage,
-		Endpoint:          cluster.Endpoint,
-		Status:            status,
+		Id:                    cluster.Id,
+		Name:                  cluster.Name,
+		OutputTopicPrefix:     cluster.OutputTopicPrefix,
+		KafkaClusterId:        cluster.KafkaClusterId,
+		Storage:               cluster.Storage,
+		Endpoint:              cluster.Endpoint,
+		Status:                status,
+		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 

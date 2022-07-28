@@ -54,9 +54,17 @@ var (
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
 		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
 	)
+	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
+		"you must log out of Confluent Cloud to use this command",
+		"Log out with \"confluent logout\".\n",
+	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
 		`Log in with "confluent login --url <mds-url>".`,
+	)
+	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
 	)
 )
 
@@ -504,11 +512,11 @@ func (c *Config) CheckIsOnPremLogin() error {
 }
 
 func (c *Config) CheckIsCloudLogin() error {
-	if !c.isCloud() || !c.isContextStatePresent() {
+	if !c.isCloud() {
 		return RequireCloudLoginErr
 	}
 
-	if c.IsOrgSuspended() {
+	if c.isContextStatePresent() && c.isOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
 			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
@@ -520,11 +528,11 @@ func (c *Config) CheckIsCloudLogin() error {
 }
 
 func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
-	if !c.isCloud() || !c.isContextStatePresent() {
+	if !c.isCloud() {
 		return RequireCloudLoginErr
 	}
 
-	if c.isLoginBlockedByOrgSuspension() {
+	if c.isContextStatePresent() && c.isLoginBlockedByOrgSuspension() {
 		return RequireCloudLoginOrgUnsuspendedErr
 	}
 
@@ -575,6 +583,20 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
+func (c *Config) CheckIsNonCloudLogin() error {
+	if c.isCloud() {
+		return RequireNonCloudLogin
+	}
+	return nil
+}
+
+func (c *Config) CheckAreUpdatesEnabled() error {
+	if c.DisableUpdates {
+		return RequireUpdatesEnabledErr
+	}
+	return nil
+}
+
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
@@ -606,7 +628,7 @@ func (c *Config) isContextStatePresent() bool {
 	return true
 }
 
-func (c *Config) IsOrgSuspended() bool {
+func (c *Config) isOrgSuspended() bool {
 	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
 }
 
