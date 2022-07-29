@@ -196,6 +196,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			if err := checkCliDisable(command, r.Config); err != nil {
 				return err
 			}
+			// announcement check
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
