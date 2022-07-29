@@ -148,7 +148,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						fmt.Println("error writing to temp")
 						return err
 					}
-					err = temp.Chmod(0755)
+					err = temp.Chmod(0777)
 					if err != nil {
 						fmt.Println("error chmod")
 						return err
