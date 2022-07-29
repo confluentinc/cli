@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -127,6 +128,15 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 		} else if plugin != nil {
 			pluginPath := plugin.Args[0]
 			if strings.HasSuffix(pluginPath, ".sh") {
+				shells := []string{"bash", "zsh", "sh"}
+				for _, s := range shells {
+					out, err := exec.Command("which", s).Output()
+					if err != nil {
+						fmt.Println(err)
+						return err
+					}
+					fmt.Println(string(out))
+				}
 				dat, err := os.ReadFile(pluginPath)
 				if err != nil {
 					return err
@@ -155,7 +165,10 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						fmt.Println("error chmod")
 						return err
 					}
+					dat, err = os.ReadFile(temp.Name())
+					fmt.Println(string(dat))
 					plugin.Args[0] = temp.Name()
+					fmt.Println(*plugin)
 				}
 			}
 			return pplugin.ExecPlugin(plugin)
