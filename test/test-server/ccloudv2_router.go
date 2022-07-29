@@ -32,6 +32,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 	"/service-quota/v1/applied-quotas":                                                              handleAppliedQuotas,
 	"/v2/metrics/cloud/query":                                                                       handleMetricsQuery,
+	"/cdx/v1/provider-shares":          handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}":     handleStreamSharingProviderShare,
 }
 
 type V2Router struct {

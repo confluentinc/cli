@@ -156,4 +156,7 @@ const (
 
 	// General
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// Stream Sharing commands
+	DeletedProviderShareMsg = `Successfully deleted provider share "%s".`
 )

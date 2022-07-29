@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -107,6 +108,15 @@ func extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable identityprov
 }
 
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
+func extractCdxNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
