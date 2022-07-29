@@ -61,7 +61,8 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		}
 		lkc := kafkaClusterConfig.ID
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, lkc, topicName)
+		// Get topic config
+		configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -82,21 +83,18 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-
 			topicData := &topicData{}
 			topicData.TopicName = topicName
-			// Get topic config
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
-			if err != nil {
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
-			} else if configsResp.Data == nil {
-				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
-			}
+
 			topicData.Config = make(map[string]string)
 			for _, config := range configsResp.Data {
 				topicData.Config[config.Name] = *config.Value
 			}
-			topicData.Config[partitionCount] = strconv.Itoa(len(partitionsResp.Data))
+			numPartitions, err := c.getNumPartitions(topicName)
+			if err != nil {
+				return err
+			}
+			topicData.Config[partitionCount] = strconv.Itoa(numPartitions)
 
 			if outputOption == output.Human.String() {
 				return printHumanDescribe(topicData)
