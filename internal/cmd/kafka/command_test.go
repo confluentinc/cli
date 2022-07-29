@@ -1302,6 +1302,18 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 						CreateKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
 							return nil, nil
 						},
+						DeleteKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiDeleteKafkaAclsRequest {
+							return kafkarestv3.ApiDeleteKafkaAclsRequest{}
+						},
+						DeleteKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaAclsRequest) (kafkarestv3.InlineResponse200, *http.Response, error) {
+							return kafkarestv3.InlineResponse200{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+						GetKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiGetKafkaAclsRequest {
+							return kafkarestv3.ApiGetKafkaAclsRequest{}
+						},
+						GetKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiGetKafkaAclsRequest) (kafkarestv3.AclDataList, *http.Response, error) {
+							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
 					},
 				},
 			}
