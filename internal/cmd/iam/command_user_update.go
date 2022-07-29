@@ -32,7 +32,7 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 
 	resourceId := args[0]
 	if resource.LookupType(resourceId) != resource.User {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return errors.Errorf(errors.BadResourceIDErrorMsg, "u")
 	}
 
 	update := iamv2.IamV2UserUpdate{FullName: &fullName}
