@@ -166,6 +166,10 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						return err
 					}
 					dat, err = os.ReadFile(temp.Name())
+					if err != nil {
+						fmt.Println("error chmod")
+						return err
+					}
 					fmt.Println(string(dat))
 					plugin.Args[0] = temp.Name()
 					fmt.Println(*plugin)
