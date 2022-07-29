@@ -1,3 +1,4 @@
+Kafka API has been replaced by Kafka REST.
      Id     | Name | Type  | Provider |   Region    | Availability |    Status     
 ------------+------+-------+----------+-------------+--------------+---------------
     lkc-123 | abc  | BASIC | gcp      | us-central1 | single-zone  | PROVISIONING  

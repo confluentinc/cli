@@ -19,7 +19,7 @@ func LDResponseToMap(ld interface{}) map[string]*FlagsAndMsg {
 		var msg = val.(map[string]interface{})["message"].(string)
 		var command = val.(map[string]interface{})["pattern"].(string)
 		if strings.Contains(command, "--") {
-			flag = command[strings.Index(command, "--"):]
+			flag = command[strings.Index(command, "--")+2:]
 			command = command[:strings.Index(command, "--")-1]
 		}
 		if flag == "" {
@@ -46,7 +46,6 @@ func DeprecateCommandTree(cmd *cobra.Command) {
 
 func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	for _, flag := range flags {
-		flag = strings.TrimPrefix(flag, "--")
 		if cmd.Flag(flag) != nil {
 			cmd.Flag(flag).Usage = "DEPRECATED: " + cmd.Flag(flag).Usage
 		}

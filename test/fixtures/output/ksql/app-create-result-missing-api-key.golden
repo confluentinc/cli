@@ -1,3 +1,4 @@
+`ksql app` has been replaced by `ksql cluster`.
 Error: required flag(s) "api-key", "api-secret" not set
 Usage:
   confluent ksql app create <name> [flags]

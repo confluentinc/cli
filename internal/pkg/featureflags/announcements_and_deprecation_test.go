@@ -1,7 +1,6 @@
 package featureflags
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -14,11 +13,19 @@ func TestLDResponseToMap(t *testing.T) {
 		ld[i] = ldResp[i]
 	}
 	cmdToFlagsAndMsg := LDResponseToMap(ld)
-	var actual string
-	for cmd, flagsAndMsg := range cmdToFlagsAndMsg {
-		actual += fmt.Sprintln(cmd, flagsAndMsg.Flags, flagsAndMsg.FlagMessages, flagsAndMsg.CmdMessage)
+	expected := map[string]*FlagsAndMsg{}
+	expected["ksql app"] = &FlagsAndMsg{
+		CmdMessage: "DEPRECATED",
 	}
-	require.Equal(t, "ksql app [] [] DEPRECATED\nkafka cluster list [--all --context] [DEPRECATED DEPRECATED] \n", actual)
+	expected["kafka cluster list"] = &FlagsAndMsg{
+		Flags:        []string{"all", "context"},
+		FlagMessages: []string{"DEPRECATED", "DEPRECATED"},
+	}
+	for cmd, flagsAndMsg := range cmdToFlagsAndMsg {
+		require.Equal(t, flagsAndMsg.Flags, expected[cmd].Flags)
+		require.Equal(t, flagsAndMsg.FlagMessages, expected[cmd].FlagMessages)
+		require.Equal(t, flagsAndMsg.CmdMessage, expected[cmd].CmdMessage)
+	}
 }
 
 func TestDeprecateCommandTree(t *testing.T) {
@@ -32,7 +39,7 @@ func TestDeprecateCommandTree(t *testing.T) {
 
 func TestDeprecateFlags(t *testing.T) {
 	cmds := dummyCmds()
-	DeprecateFlags(cmds[0], []string{"--meaningless_flag"})
+	DeprecateFlags(cmds[0], []string{"meaningless_flag"})
 	for _, cmd := range cmds {
 		require.Equal(t, "DEPRECATED: testing purposes", cmd.Flag("meaningless_flag").Usage)
 	}

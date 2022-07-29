@@ -197,18 +197,22 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			//ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
-			//deprecatedCmds := launchdarkly.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-			//cmdToFlagsAndMsg := launchdarkly.LDResponseToMap(deprecatedCmds)
-			//for name, flagsAndMsg := range cmdToFlagsAndMsg {
-			//	if strings.HasPrefix(command.CommandPath(), "confluent "+name) {
-			//		if len(flagsAndMsg.Flags) == 0 {
-			//			utils.ErrPrintln(cmd, flagsAndMsg.Message)
-			//		} else {
-			//
-			//		}
-			//	}
-			//}
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			deprecatedCmds := launchdarkly.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+			cmdToFlagsAndMsg := launchdarkly.LDResponseToMap(deprecatedCmds)
+			for name, flagsAndMsg := range cmdToFlagsAndMsg {
+				if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
+					if len(flagsAndMsg.Flags) == 0 {
+						utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+					} else {
+						for i, flag := range flagsAndMsg.Flags {
+							if cmd.Flags().Changed(flag) {
+								utils.ErrPrintln(cmd, flagsAndMsg.FlagMessages[i])
+							}
+						}
+					}
+				}
+			}
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
