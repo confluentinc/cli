@@ -287,7 +287,6 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	if r == nil {
 		return err
 	}
-
 	body, _ := io.ReadAll(r.Body)
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
