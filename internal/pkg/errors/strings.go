@@ -60,7 +60,7 @@ const (
 	CreatedTopicMsg          = "Created topic \"%s\".\n"
 	DeletedTopicMsg          = "Deleted topic \"%s\".\n"
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
-	UpdateTopicConfigRESTMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
+	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka link commands
 	DeletedLinkMsg = "Deleted cluster link \"%s\".\n"
