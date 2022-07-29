@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -137,7 +136,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						shell = "/bin/bash"
 					}
 					shebang := []byte("#!" + shell + "\n")
-					temp, err := os.CreateTemp(strings.TrimSuffix(pluginPath, filepath.Base(pluginPath)), plugin.Name)
+					temp, err := os.CreateTemp("", plugin.Name)
 					if err != nil {
 						fmt.Println("error creating temp")
 						return err
@@ -155,6 +154,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						return err
 					}
 					plugin.Args[0] = temp.Name()
+					fmt.Println(temp.Name())
 				}
 			}
 			return pplugin.ExecPlugin(plugin)
