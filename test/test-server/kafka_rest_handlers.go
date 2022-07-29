@@ -272,56 +272,24 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 				_, err := io.WriteString(w, responseString)
 				require.NoError(t, err)
 			} else if topicName == "topic-exist-rest" {
-				responseString := `{
-					"kind": "KafkaTopicConfigList",
-					"metadata": {
-						"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs",
-						"next": null
-					},
-					"data": [
-						{
-							"kind": "KafkaTopicConfig",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs/compression.type",
-								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-rest/config=compression.type"
-							},
-							"cluster_id": "cluster-1",
-							"name": "compression.type",
-							"value": "gzip",
-							"is_read_only": false,
-							"is_sensitive": false,
-							"source": "DEFAULT_CONFIG",
-							"synonyms": [
-								{
-									"name": "compression.type",
-									"value": "gzip",
-									"source": "DEFAULT_CONFIG"
-								}
-							],
-							"topic_name": "topic-exist-rest",
-							"is_default": true
+				compressionTypeVal := "gzip"
+				retentionMsVal := "1"
+				topicConfigList := kafkarestv3.TopicConfigDataList{
+					Data: []kafkarestv3.TopicConfigData{
+						kafkarestv3.TopicConfigData{
+							Name:  "compression.type",
+							Value: &compressionTypeVal,
 						},
-						{
-							"kind": "KafkaTopicConfig",
-							"metadata": {
-								"self": "http://localhost:8082/v3/clusters/cluster-1/topics/topic-exist-rest/configs/retention.ms",
-								"resource_name": "crn:///kafka=cluster-1/topic=topic-exist-rest/config=retention.ms"
-							},
-							"cluster_id": "cluster-1",
-							"name": "retention.ms",
-							"value": "1",
-							"is_read_only": false,
-							"is_sensitive": false,
-							"source": "DEFAULT_CONFIG",
-							"synonyms": [],
-							"topic_name": "topic-exist-rest",
-							"is_default": true
-						}
-					]
-				}`
-
+						kafkarestv3.TopicConfigData{
+							Name:  "retention.ms",
+							Value: &retentionMsVal,
+						},
+					},
+				}
+				reply, err := json.Marshal(topicConfigList)
+				require.NoError(t, err)
 				w.Header().Set("Content-Type", "application/json")
-				_, err := io.WriteString(w, responseString)
+				_, err = io.WriteString(w, string(reply))
 				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
