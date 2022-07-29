@@ -301,7 +301,8 @@ var v2RoutesAndReplies = map[string]string{
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/OrganizationAdmin": `[
 			"User:u-11aaa",
-			"User:sa-12345"
+			"User:sa-12345",
+			"User:pool-12345"
 		]`,
 	"/api/metadata/security/v2alpha1/lookup/role/EnvironmentAdmin": `[
 			"User:u-22bbb"

@@ -435,7 +435,7 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 	prefix := x[0]
 	suffix := x[1]
 
-	if resource.LookupType(suffix) == resource.ServiceAccount {
+	if resource.LookupType(suffix) == resource.ServiceAccount || resource.LookupType(suffix) == resource.IdentityPool {
 		return prefix, suffix, nil
 	}
 
