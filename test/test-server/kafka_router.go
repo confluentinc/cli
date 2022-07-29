@@ -23,6 +23,7 @@ const (
 	topicConfig     = "/2.0/kafka/{cluster}/topics/{topic}/config"
 
 	//kafka rest urls
+	rpAcls                     = "/kafka/v3/clusters/{cluster}/acls"
 	rpTopics                   = "/kafka/v3/clusters/{cluster}/topics"
 	rpReplicaStatus            = "/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status"
 	rpTopicConfigs             = "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
@@ -107,6 +108,7 @@ func (k *KafkaApiRouter) buildKafkaApiHandler(t *testing.T) {
 }
 
 func (r KafkaRestProxyRouter) buildKafkaRPHandler(t *testing.T) {
+	r.HandleFunc(rpAcls, r.HandleKafkaRPACLs(t))
 	r.HandleFunc(rpTopics, r.HandleKafkaRPTopics(t))
 	r.HandleFunc(rpTopicConfigs, r.HandleKafkaRPTopicConfigs(t))
 	r.HandleFunc(rpPartitionReplicas, r.HandleKafkaRPPartitionReplicas(t))
