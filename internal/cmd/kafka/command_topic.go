@@ -1,14 +1,18 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -131,4 +135,49 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
+}
+
+func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST != nil {
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+		if err != nil {
+			return 0, err
+		}
+
+		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
+		if err != nil && httpResp != nil {
+			// Kafka REST is available, but there was an error
+			restErr, parseErr := parseOpenAPIError(err)
+			if parseErr == nil {
+				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+				}
+			}
+			return 0, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		}
+		if err == nil && httpResp != nil {
+			if httpResp.StatusCode != http.StatusOK {
+				return 0, errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+
+			return len(partitionsResp.Data), nil
+		}
+	}
+
+	// Fallback to Kafka API
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	if err != nil {
+		return 0, err
+	}
+
+	topic := &schedv1.TopicSpecification{Name: topicName}
+	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	if err != nil {
+		return 0, err
+	}
+
+	return len(resp.Partitions), nil
 }
