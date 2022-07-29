@@ -133,7 +133,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 				if string(dat[:2]) != "#!" {
 					shell := os.Getenv("SHELL")
 					if shell == "" {
-						shell = "/bin/bash"
+						shell = "/bin/sh"
 					}
 					shebang := []byte("#!" + shell + "\n")
 					temp, err := os.CreateTemp("", plugin.Name)
@@ -145,16 +145,13 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						_ = os.Remove(temp.Name())
 					}()
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
-						fmt.Println("error writing to temp")
 						return err
 					}
 					err = temp.Chmod(0777)
 					if err != nil {
-						fmt.Println("error chmod")
 						return err
 					}
 					plugin.Args[0] = temp.Name()
-					fmt.Println(temp.Name())
 				}
 			}
 			return pplugin.ExecPlugin(plugin)
