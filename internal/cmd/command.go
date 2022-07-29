@@ -143,7 +143,6 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						return err
 					}
 					defer func() {
-						_ = temp.Close()
 						_ = os.Remove(temp.Name())
 					}()
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
@@ -160,9 +159,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 						fmt.Println("error reading temp file")
 						return err
 					}
-					fmt.Println(string(dat))
 					plugin.Args[0] = temp.Name()
-					fmt.Println(*plugin)
 				}
 			}
 			return pplugin.ExecPlugin(plugin)
