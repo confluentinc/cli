@@ -12,7 +12,7 @@ type FlagsAndMsg struct {
 }
 
 func LDResponseToMap(ld interface{}) map[string]FlagsAndMsg {
-	commandsToFlagsAndMsg := make(map[string]FlagsAndMsg)
+	cmdToFlagsAndMsg := make(map[string]FlagsAndMsg)
 	for _, val := range ld.([]interface{}) {
 		flags := ""
 		var flagNames []string
@@ -26,9 +26,9 @@ func LDResponseToMap(ld interface{}) map[string]FlagsAndMsg {
 			}
 			command = command[:strings.Index(command, "--")]
 		}
-		commandsToFlagsAndMsg[command] = FlagsAndMsg{Flags: flagNames, Message: msg}
+		cmdToFlagsAndMsg[command] = FlagsAndMsg{Flags: flagNames, Message: msg}
 	}
-	return commandsToFlagsAndMsg
+	return cmdToFlagsAndMsg
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
