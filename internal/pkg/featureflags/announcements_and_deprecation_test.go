@@ -18,18 +18,32 @@ func TestLDResponseToMap(t *testing.T) {
 }
 
 func TestDeprecateCommandTree(t *testing.T) {
+	cmds := dummyCmds()
+	DeprecateCommandTree(cmds[0])
+	for _, cmd := range cmds {
+		require.Equal(t, "DEPRECATED: short", cmd.Short)
+		require.Equal(t, "DEPRECATED: long description", cmd.Long)
+	}
+}
+
+func TestDeprecateFlags(t *testing.T) {
+	cmds := dummyCmds()
+	DeprecateFlags(cmds[0], []string{"meaningless_flag"})
+	for _, cmd := range cmds {
+		require.Equal(t, "DEPRECATED: testing purposes", cmd.Flag("meaningless_flag").Usage)
+	}
+}
+
+func dummyCmds() []*cobra.Command {
 	cmds := make([]*cobra.Command, 4)
 	for i := 0; i < 4; i++ {
 		cmds[i] = &cobra.Command{
 			Short: "short",
 			Long:  "long description",
 		}
+		cmds[i].Flags().String("meaningless_flag", "true", "testing purposes")
 	}
 	cmds[0].AddCommand(cmds[1], cmds[2])
 	cmds[1].AddCommand(cmds[3])
-	DeprecateCommandTree(cmds[0])
-	for _, cmd := range cmds {
-		require.Equal(t, "DEPRECATED: short", cmd.Short)
-		require.Equal(t, "DEPRECATED: long description", cmd.Long)
-	}
+	return cmds
 }
