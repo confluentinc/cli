@@ -161,7 +161,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				return err
 			}
 			if format == output.Human.String() {
-				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRESTMsg, topicName)
+				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRestMsg, topicName)
 			}
 			for _, config := range kafkaRestConfigs {
 				row := &updateRow{
