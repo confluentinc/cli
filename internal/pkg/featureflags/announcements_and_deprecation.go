@@ -7,26 +7,31 @@ import (
 )
 
 type FlagsAndMsg struct {
-	Flags   []string
-	Message string
+	Flags        []string
+	FlagMessages []string
+	CmdMessage   string
 }
 
-func LDResponseToMap(ld interface{}) map[string]FlagsAndMsg {
-	cmdToFlagsAndMsg := make(map[string]FlagsAndMsg)
+func LDResponseToMap(ld interface{}) map[string]*FlagsAndMsg {
+	cmdToFlagsAndMsg := make(map[string]*FlagsAndMsg)
 	for _, val := range ld.([]interface{}) {
-		flags := ""
-		var flagNames []string
+		var flag string
 		var msg = val.(map[string]interface{})["message"].(string)
 		var command = val.(map[string]interface{})["pattern"].(string)
 		if strings.Contains(command, "--") {
-			flags = command[strings.Index(command, "--"):]
-			flagNames = strings.Split(flags, " ")
-			for i, flag := range flagNames {
-				flagNames[i] = strings.TrimPrefix(flag, "--")
-			}
-			command = command[:strings.Index(command, "--")]
+			flag = command[strings.Index(command, "--"):]
+			command = command[:strings.Index(command, "--")-1]
 		}
-		cmdToFlagsAndMsg[command] = FlagsAndMsg{Flags: flagNames, Message: msg}
+		if flag == "" {
+			cmdToFlagsAndMsg[command] = &FlagsAndMsg{CmdMessage: msg}
+		} else {
+			if flagsAndMsg, ok := cmdToFlagsAndMsg[command]; ok {
+				flagsAndMsg.Flags = append(flagsAndMsg.Flags, flag)
+				flagsAndMsg.FlagMessages = append(flagsAndMsg.FlagMessages, msg)
+			} else {
+				cmdToFlagsAndMsg[command] = &FlagsAndMsg{Flags: []string{flag}, FlagMessages: []string{msg}}
+			}
+		}
 	}
 	return cmdToFlagsAndMsg
 }
@@ -41,6 +46,7 @@ func DeprecateCommandTree(cmd *cobra.Command) {
 
 func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	for _, flag := range flags {
+		flag = strings.TrimPrefix(flag, "--")
 		if cmd.Flag(flag) != nil {
 			cmd.Flag(flag).Usage = "DEPRECATED: " + cmd.Flag(flag).Usage
 		}
