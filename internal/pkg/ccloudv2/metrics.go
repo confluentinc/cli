@@ -25,7 +25,7 @@ func newMetricsClient(userAgent string, isTest bool) *metricsv2.APIClient {
 	cfg := metricsv2.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = metricsv2.ServerConfigurations{{URL: getMetricsServerUrl(isTest), Description: "Confluent Cloud Metrics"}}
+	cfg.Servers = metricsv2.ServerConfigurations{{URL: getMetricsServerUrl(isTest)}}
 	cfg.UserAgent = userAgent
 
 	return metricsv2.NewAPIClient(cfg)
