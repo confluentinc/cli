@@ -271,7 +271,26 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 				w.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(w, responseString)
 				require.NoError(t, err)
-
+			} else if topicName == "topic-exist-rest" {
+				compressionTypeVal := "gzip"
+				retentionMsVal := "1"
+				topicConfigList := kafkarestv3.TopicConfigDataList{
+					Data: []kafkarestv3.TopicConfigData{
+						kafkarestv3.TopicConfigData{
+							Name:  "compression.type",
+							Value: &compressionTypeVal,
+						},
+						kafkarestv3.TopicConfigData{
+							Name:  "retention.ms",
+							Value: &retentionMsVal,
+						},
+					},
+				}
+				reply, err := json.Marshal(topicConfigList)
+				require.NoError(t, err)
+				w.Header().Set("Content-Type", "application/json")
+				_, err = io.WriteString(w, string(reply))
+				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
@@ -446,7 +465,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		topicName := vars["topic"]
 		switch r.Method {
 		case http.MethodPost:
-			if topicName == "topic-exist" {
+			if topicName == "topic-exist" || topicName == "topic-exist-rest" {
 				// Parse Alter Args
 				requestBody, err := ioutil.ReadAll(r.Body)
 				require.NoError(t, err)
