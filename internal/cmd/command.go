@@ -115,16 +115,15 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-	// deprecation
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
-	deprecatedCommands := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-	commandsToFlagsAndMsg := featureflags.LDResponseToMap(deprecatedCommands)
-	for commandName, flagsAndMsg := range commandsToFlagsAndMsg {
-		if command, _, err := cmd.Find(strings.Split(commandName, " ")); err == nil {
+	deprecatedCmds := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	cmdToFlagsAndMsg := featureflags.LDResponseToMap(deprecatedCmds)
+	for name, flagsAndMsg := range cmdToFlagsAndMsg {
+		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
 			if flagsAndMsg.Flags == nil {
-				featureflags.DeprecateCommandTree(command)
+				featureflags.DeprecateCommandTree(cmd)
 			} else {
-				featureflags.DeprecateFlags(command, flagsAndMsg.Flags)
+				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
 			}
 		}
 	}
