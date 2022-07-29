@@ -82,7 +82,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	if kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
 		_, hasNumPartitionsChanged := configMap["num.partitions"]
-		if numPartChange {
+		if hasNumPartitionsChanged {
 			delete(configMap, "num.partitions")
 		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
@@ -137,7 +137,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			if err != nil {
 				return err
 			}
-			if numPartChange {
+			if hasNumPartitionsChanged {
 				numPartitions, err := c.getNumPartitions(topicName)
 				if err != nil {
 					return err
