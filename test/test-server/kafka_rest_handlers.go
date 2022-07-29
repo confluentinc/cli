@@ -45,50 +45,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPClusters(t *testing.T) http.HandlerFu
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster}/acls"
-func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
-			vars := mux.Vars(r)
-			err := json.NewEncoder(w).Encode(kafkarestv3.AclDataList{Data: []kafkarestv3.AclData{{
-				Kind:         "",
-				Metadata:     kafkarestv3.ResourceMetadata{},
-				ClusterId:    vars["cluster"],
-				ResourceType: "TOPIC",
-				ResourceName: "test-topic",
-				Operation:    "READ",
-				Permission:   "ALLOW",
-				Host:         "*",
-				Principal:    "User:12345",
-				PatternType:  "LITERAL",
-			}}})
-			require.NoError(t, err)
-		case http.MethodPost:
-			w.WriteHeader(http.StatusCreated)
-			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.CreateKafkaAclsOpts
-			err := json.NewDecoder(r.Body).Decode(&req)
-			require.NoError(t, err)
-			err = json.NewEncoder(w).Encode(kafkarestv3.CreateKafkaAclsOpts{})
-			require.NoError(t, err)
-		case http.MethodDelete:
-			w.Header().Set("Content-Type", "application/json")
-			var req kafkarestv3.DeleteKafkaAclsOpts
-			_ = json.NewDecoder(r.Body).Decode(&req)
-			err := json.NewEncoder(w).Encode(kafkarestv3.InlineResponse200{Data: []kafkarestv3.AclData{
-				{
-					ResourceName: req.ResourceName.Value(),
-					Principal:    req.Principal.Value(),
-					Host:         req.Host.Value(),
-				},
-			}})
-			require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
