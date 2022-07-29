@@ -129,7 +129,7 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		ctx := cfg.Context()
-		client := ccloudv2.NewClient(ctx.GetPlatformServer(), ver.UserAgent, isTest, ctx.GetAuthToken())
+		client := ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), ver.UserAgent, isTest)
 
 		u.Error = cliv1.PtrBool(err != nil)
 		u.Report(client)
