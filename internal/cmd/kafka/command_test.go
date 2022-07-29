@@ -1293,13 +1293,15 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		if enableREST {
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 
-			mockApiClient := &kafkarestv3.APIClient{
-				ACLV3Api: &kafkarestmock.ACLV3Api{
-					CreateKafkaAclsFunc: func(ctx context.Context, clusterId string) kafkarestv3.ApiCreateKafkaAclsRequest {
-						return kafkarestv3.ApiCreateKafkaAclsRequest{}
-					},
-					CreateKafkaAclsExecuteFunc: func(req kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
-						return nil, nil
+			client := &ccloudv2.Client{
+				KafkaRestClient: &kafkarestv3.APIClient{
+					ACLV3Api: &kafkarestmock.ACLV3Api{
+						CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
+							return kafkarestv3.ApiCreateKafkaAclsRequest{}
+						},
+						CreateKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
+							return nil, nil
+						},
 					},
 				},
 			}
@@ -1314,7 +1316,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock.ConsumerGroupV3Api = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			restMock.ReplicaStatusApi = cliMock.NewReplicaStatusMock()
 
-			return pcmd.NewKafkaREST(ctx, mockApiClient, restMock), nil
+			return pcmd.NewKafkaREST(ctx, client, restMock), nil
 		}
 		return nil, nil
 	})
