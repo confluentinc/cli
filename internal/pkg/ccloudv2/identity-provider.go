@@ -13,7 +13,7 @@ func newIdentityProviderClient(baseURL, userAgent string, isTest bool) *identity
 	cfg := identityproviderv2.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Identity Provider"}}
+	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return identityproviderv2.NewAPIClient(cfg)

@@ -13,7 +13,7 @@ func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud IAM"}}
+	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return iamv2.NewAPIClient(cfg)
