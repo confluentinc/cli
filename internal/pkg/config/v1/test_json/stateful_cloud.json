@@ -2,6 +2,7 @@
   "version": "1.0.0",
   "disable_update_check": false,
   "disable_updates": false,
+  "disable_plugins": false,
   "no_browser": false,
   "platforms": {
     "http://127.0.0.1:1024": {
