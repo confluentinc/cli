@@ -146,9 +146,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				readOnlyConfigs.Add("num.partitions")
 				configsValues["num.partitions"] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
-				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{
-					Name: "num.partitions",
-				}
+				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
 				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
 			}
 			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
