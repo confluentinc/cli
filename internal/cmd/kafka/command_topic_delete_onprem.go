@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -42,6 +43,6 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	utils.Printf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully deleted
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

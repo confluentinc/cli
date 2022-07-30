@@ -24,6 +24,13 @@ var (
 	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
 )
 
+var resourceTypeToKind = map[string]string{
+	resource.KafkaCluster:          "Cluster",
+	resource.KsqlCluster:           "ksqlDB",
+	resource.SchemaRegistryCluster: "SchemaRegistry",
+	resource.Cloud:                 "Cloud",
+}
+
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -73,7 +80,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	var userKey *v1.APIKeyPair
-	if resourceType == resource.Ksql || resourceType == resource.SchemaRegistry {
+	if resourceType == resource.KsqlCluster || resourceType == resource.SchemaRegistryCluster {
 		userKey, err = c.createV1(ownerResourceId, clusterId, resourceType, description)
 		if err != nil {
 			return err
@@ -126,7 +133,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if resourceType == resource.Kafka {
+	if resourceType == resource.KafkaCluster {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}

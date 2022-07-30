@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/resource"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -106,6 +108,6 @@ func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Created", name)
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }
