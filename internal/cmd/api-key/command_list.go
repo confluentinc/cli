@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
