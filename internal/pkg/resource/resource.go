@@ -5,41 +5,58 @@ import (
 )
 
 const (
-	Unknown          = "unknown"
-	Cloud            = "cloud"
-	Kafka            = "kafka"
-	Ksql             = "ksql"
-	SchemaRegistry   = "schema-registry"
-	ServiceAccount   = "service-account"
-	User             = "user"
-	IdentityPool     = "identity-pool"
-	IdentityProvider = "identity-provider"
+	Unknown               = "unknown"
+	ApiKey                = "API key"
+	Cloud                 = "cloud"
+	ClusterLink           = "cluster link"
+	Connector             = "connector"
+	Context               = "context"
+	Environment           = "environment"
+	IdentityPool          = "identity pool"
+	IdentityProvider      = "identity provider"
+	KafkaCluster          = "Kafka cluster"
+	KsqlCluster           = "kSQL cluster"
+	MirrorTopic           = "mirror topic"
+	SchemaExporter        = "schema exporter"
+	SchemaRegistryCluster = "Schema Registry cluster"
+	ServiceAccount        = "service account"
+	Topic                 = "topic"
+	User                  = "user"
 )
 
 const (
-	IdentityPoolPrefix     = "pool"
-	IdentityProviderPrefix = "op"
-	UserPrefix             = "u"
+	ClusterLinkPrefix           = "link"
+	EnvironmentPrefix           = "env"
+	IdentityPoolPrefix          = "pool"
+	IdentityProviderPrefix      = "op"
+	KafkaClusterPrefix          = "lkc"
+	KsqlClusterPrefix           = "lksqlc"
+	SchemaRegistryClusterPrefix = "lsrc"
+	ServiceAccountPrefix        = "sa"
+	UserPrefix                  = "u"
 )
+
+var prefixToResource = map[string]string{
+	ClusterLinkPrefix:           ClusterLink,
+	EnvironmentPrefix:           Environment,
+	IdentityPoolPrefix:          IdentityPool,
+	IdentityProviderPrefix:      IdentityProvider,
+	KafkaClusterPrefix:          KafkaCluster,
+	KsqlClusterPrefix:           KsqlCluster,
+	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
+	ServiceAccountPrefix:        ServiceAccount,
+	UserPrefix:                  User,
+}
 
 func LookupType(resourceId string) string {
 	if resourceId == "cloud" {
 		return Cloud
 	}
 
-	prefixToType := map[string]string{
-		IdentityPoolPrefix:     IdentityPool,
-		IdentityProviderPrefix: IdentityProvider,
-		"lkc":                  Kafka,
-		"lksqlc":               Ksql,
-		"lsrc":                 SchemaRegistry,
-		"sa":                   ServiceAccount,
-		"u":                    User,
-	}
-
-	for prefix, resourceType := range prefixToType {
-		if strings.HasPrefix(resourceId, prefix+"-") {
-			return resourceType
+	if x := strings.SplitN(resourceId, "-", 2); len(x) == 2 {
+		prefix := x[0]
+		if resource, ok := prefixToResource[prefix]; ok {
+			return resource
 		}
 	}
 

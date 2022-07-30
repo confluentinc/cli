@@ -316,7 +316,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 		},
 		{
 			input:                        "create topic-X --url http://localhost:8082 --config retention.ms=1,compression.type=gzip --replication-factor 2 --partitions 4",
-			expectedOutput:               fmt.Sprintf(errors.CreatedTopicMsg, "topic-X"),
+			expectedOutput:               "Created topic \"topic-X\".\n",
 			createTopicName:              "topic-X",
 			createTopicPartitionsCount:   4,
 			createTopicReplicationFactor: 2,
