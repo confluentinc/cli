@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -112,10 +113,10 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		),
 	}
 
-	httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt)
-	if err == nil {
-		utils.Printf(cmd, errors.CreatedMirrorMsg, sourceTopicName)
+	if httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt); err != nil {
+		return handleOpenApiError(httpResp, err, kafkaREST.Client)
 	}
 
-	return handleOpenApiError(httpResp, err, kafkaREST.Client)
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.MirrorTopic, sourceTopicName)
+	return nil
 }
