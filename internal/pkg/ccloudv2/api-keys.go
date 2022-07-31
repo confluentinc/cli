@@ -15,7 +15,7 @@ func newApiKeysClient(baseURL, userAgent string, isTest bool) *apikeysv2.APIClie
 	cfg := apikeysv2.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = apikeysv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud IAM"}}
+	cfg.Servers = apikeysv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return apikeysv2.NewAPIClient(cfg)
