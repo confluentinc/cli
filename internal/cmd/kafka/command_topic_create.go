@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -121,7 +122,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			utils.Printf(cmd, errors.CreatedTopicMsg, topicName)
+			utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
 			return nil
 		}
 	}
@@ -134,8 +135,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	topic := &schedv1.Topic{
-		Spec: &schedv1.TopicSpecification{
-			Configs: make(map[string]string)},
+		Spec:     &schedv1.TopicSpecification{Configs: make(map[string]string)},
 		Validate: false,
 	}
 
@@ -150,6 +150,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	utils.Printf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topic.Spec.Name)
 	return nil
 }

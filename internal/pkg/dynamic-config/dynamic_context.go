@@ -174,7 +174,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
-	if resourceType == resource.SchemaRegistry {
+	if resourceType == resource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
 			if srCluster.Id == resourceId {
 				cluster = srCluster
