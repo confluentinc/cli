@@ -9,6 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -78,6 +79,6 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)
+	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

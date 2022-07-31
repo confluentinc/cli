@@ -30,6 +30,6 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(`failed to delete user "%s": %v`, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
 	}
 
-	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.User, resourceId)
 	return nil
 }
