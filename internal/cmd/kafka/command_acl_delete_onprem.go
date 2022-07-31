@@ -51,7 +51,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToDeleteAclReqest(acl)
+	opts := aclutil.AclRequestToDeleteAclRequest(acl)
 	aclDeleteResp, httpResp, err := restClient.ACLV3Api.DeleteKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
