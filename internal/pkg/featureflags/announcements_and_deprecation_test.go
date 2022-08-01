@@ -6,13 +6,17 @@ import (
 	"testing"
 )
 
-func TestLDResponseToMap(t *testing.T) {
-	ldResp := []map[string]interface{}{{"message": "DEPRECATED", "pattern": "ksql app"}, {"message": "DEPRECATED", "pattern": "kafka cluster list --all"}, {"message": "DEPRECATED", "pattern": "kafka cluster list --context"}}
+func TestGetAnnouncementsAndDeprecation(t *testing.T) {
+	ldResp := []map[string]interface{}{
+		{"message": "DEPRECATED", "pattern": "ksql app"},
+		{"message": "DEPRECATED", "pattern": "kafka cluster list --all"},
+		{"message": "DEPRECATED", "pattern": "kafka cluster list --context"},
+	}
 	ld := make([]interface{}, len(ldResp))
 	for i := range ldResp {
 		ld[i] = ldResp[i]
 	}
-	cmdToFlagsAndMsg := LDResponseToMap(ld)
+	cmdToFlagsAndMsg := GetAnnouncementsAndDeprecation(ld)
 	expected := map[string]*FlagsAndMsg{}
 	expected["ksql app"] = &FlagsAndMsg{
 		CmdMessage: "DEPRECATED",
@@ -39,22 +43,22 @@ func TestDeprecateCommandTree(t *testing.T) {
 
 func TestDeprecateFlags(t *testing.T) {
 	cmds := dummyCmds()
-	DeprecateFlags(cmds[0], []string{"meaningless_flag"})
+	DeprecateFlags(cmds[0], []string{"meaningless-flag"})
 	for _, cmd := range cmds {
-		require.Equal(t, "DEPRECATED: testing purposes", cmd.Flag("meaningless_flag").Usage)
+		require.Equal(t, "DEPRECATED: testing purposes", cmd.Flag("meaningless-flag").Usage)
 	}
 }
 
 func dummyCmds() []*cobra.Command {
-	cmds := make([]*cobra.Command, 4)
-	for i := 0; i < 4; i++ {
+	cmds := make([]*cobra.Command, 3)
+	for i := 0; i < 3; i++ {
 		cmds[i] = &cobra.Command{
 			Short: "short",
 			Long:  "long description",
 		}
-		cmds[i].Flags().String("meaningless_flag", "true", "testing purposes")
+		cmds[i].Flags().String("meaningless-flag", "true", "testing purposes")
 	}
-	cmds[0].AddCommand(cmds[1], cmds[2])
-	cmds[1].AddCommand(cmds[3])
+	cmds[0].AddCommand(cmds[1])
+	cmds[1].AddCommand(cmds[2])
 	return cmds
 }

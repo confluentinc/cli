@@ -198,11 +198,11 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			}
 			// announcement and deprecation check, print out msg
 			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
-			deprecatedCmds := launchdarkly.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-			cmdToFlagsAndMsg := launchdarkly.LDResponseToMap(deprecatedCmds)
-			launchdarkly.PrintCmdMessages(cmd, cmdToFlagsAndMsg)
 			announcements := launchdarkly.Manager.JsonVariation("cli.announcements", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-			cmdToFlagsAndMsg = launchdarkly.LDResponseToMap(announcements)
+			cmdToFlagsAndMsg := launchdarkly.GetAnnouncementsAndDeprecation(announcements)
+			launchdarkly.PrintCmdMessages(cmd, cmdToFlagsAndMsg)
+			deprecatedCmds := launchdarkly.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+			cmdToFlagsAndMsg = launchdarkly.GetAnnouncementsAndDeprecation(deprecatedCmds)
 			launchdarkly.PrintCmdMessages(cmd, cmdToFlagsAndMsg)
 		}
 

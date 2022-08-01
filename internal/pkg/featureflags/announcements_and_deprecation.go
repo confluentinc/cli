@@ -13,15 +13,15 @@ type FlagsAndMsg struct {
 	CmdMessage   string
 }
 
-func LDResponseToMap(ld interface{}) map[string]*FlagsAndMsg {
+func GetAnnouncementsAndDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 	cmdToFlagsAndMsg := make(map[string]*FlagsAndMsg)
 	for _, val := range ld.([]interface{}) {
 		var flag string
 		var msg = val.(map[string]interface{})["message"].(string)
 		var command = val.(map[string]interface{})["pattern"].(string)
-		if strings.Contains(command, "--") {
-			flag = command[strings.Index(command, "--")+2:]
-			command = command[:strings.Index(command, "--")-1]
+		if ind := strings.Index(command, "--"); ind != -1 {
+			flag = command[ind+2:]
+			command = command[:ind-1]
 		}
 		if flag == "" {
 			cmdToFlagsAndMsg[command] = &FlagsAndMsg{CmdMessage: msg}

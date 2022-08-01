@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
+	"os"
+	"strings"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -36,7 +36,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -115,18 +114,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
-	deprecatedCmds := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-	cmdToFlagsAndMsg := featureflags.LDResponseToMap(deprecatedCmds)
-	for name, flagsAndMsg := range cmdToFlagsAndMsg {
-		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
-			if flagsAndMsg.Flags == nil {
-				featureflags.DeprecateCommandTree(cmd)
-			} else {
-				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
-			}
-		}
-	}
+	checkDeprecation(cmd, cfg)
 	return cmd
 }
 
@@ -205,4 +193,19 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
+}
+
+func checkDeprecation(cmd *cobra.Command, cfg *v1.Config) {
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	deprecatedCmds := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	cmdToFlagsAndMsg := featureflags.GetAnnouncementsAndDeprecation(deprecatedCmds)
+	for name, flagsAndMsg := range cmdToFlagsAndMsg {
+		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
+			if flagsAndMsg.Flags == nil {
+				featureflags.DeprecateCommandTree(cmd)
+			} else {
+				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
+			}
+		}
+	}
 }
