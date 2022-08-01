@@ -31,8 +31,10 @@ func (s *CLITestSuite) TestPlugin() {
 		{args: "dash_test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "dash-test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
 		{args: "another_dash-test but-with two-args with dashes and-others_without them", fixture: "plugin/dash-test2.golden", pluginsEnabled: true},
-		{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", regex: true, pluginsEnabled: true},
 		{args: "plugin list", fixture: "plugin/list.golden"},
+	}
+	if runtime.GOOS != "linux" {
+		tests = append(tests, CLITest{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", regex: true, pluginsEnabled: true})
 	}
 
 	resetConfiguration(s.T(), true)
