@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -24,6 +25,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -40,6 +42,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -102,6 +105,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(plugin.New(prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -112,11 +116,46 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
+	if !cfg.DisablePlugins {
+		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
+			return err
+		} else if plugin != nil {
+			pluginPath := plugin.Args[0]
+			if strings.HasSuffix(pluginPath, ".sh") {
+				dat, err := os.ReadFile(pluginPath)
+				if err != nil {
+					return err
+				}
+				if string(dat[:2]) != "#!" {
+					shell := os.Getenv("SHELL")
+					if shell == "" {
+						shell = "/bin/bash"
+					}
+					shebang := []byte("#!" + shell + "\n")
+					temp, err := os.CreateTemp("", plugin.Name)
+					if err != nil {
+						return err
+					}
+					//defer func() {
+					//	_ = os.Remove(temp.Name())
+					//}()
+					if _, err := temp.Write(append(shebang, dat...)); err != nil {
+						return err
+					}
+					err = temp.Chmod(0755)
+					if err != nil {
+						return err
+					}
+					plugin.Args[0] = temp.Name()
+				}
+			}
+			return pplugin.ExecPlugin(plugin)
+		}
+	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New(ver.Version)
 
