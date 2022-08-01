@@ -146,11 +146,12 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
 						return err
 					}
-					err = os.Chmod(temp.Name(), 0755)
+					err = os.Chmod(temp.Name(), 0777)
 					if err != nil {
 						return err
 					}
 					plugin.Args[0] = temp.Name()
+					fmt.Println(plugin.Args)
 				}
 			}
 			return pplugin.ExecPlugin(plugin)
