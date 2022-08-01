@@ -26,7 +26,7 @@ type Client struct {
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
-	StreamShareClient  *cdxv1.APIClient
+	CdxClient  *cdxv1.APIClient
 }
 
 func NewClient(baseURL, userAgent string, isTest bool, authToken string) *Client {
