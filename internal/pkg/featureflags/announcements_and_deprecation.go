@@ -1,6 +1,7 @@
 package featureflags
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -52,5 +53,21 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	}
 	for _, subcommand := range cmd.Commands() {
 		DeprecateFlags(subcommand, flags)
+	}
+}
+
+func PrintCmdMessages(cmd *cobra.Command, cmdToFlagsAndMsg map[string]*FlagsAndMsg) {
+	for name, flagsAndMsg := range cmdToFlagsAndMsg {
+		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
+			if len(flagsAndMsg.Flags) == 0 {
+				utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+			} else {
+				for i, flag := range flagsAndMsg.Flags {
+					if cmd.Flags().Changed(flag) {
+						utils.ErrPrintln(cmd, flagsAndMsg.FlagMessages[i])
+					}
+				}
+			}
+		}
 	}
 }
