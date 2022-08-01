@@ -1,1 +1,1 @@
-Error: failed to update user "u-1": Forbidden: 403 Forbidden
+Error: failed to update user "u-1": resource not found: 403 Forbidden

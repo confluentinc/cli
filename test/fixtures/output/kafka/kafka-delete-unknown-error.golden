@@ -1,6 +1,7 @@
 Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
-Error: Kafka cluster not found or access forbidden: 403 Forbidden
+Error: Kafka cluster not found or access forbidden: resource not found: 403 Forbidden
 
 Suggestions:
     Ensure the cluster ID you entered is valid.
     Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`.
+    Ensure the cluster is not associated with any active Connect clusters.

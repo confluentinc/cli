@@ -67,6 +67,6 @@ func getCommaDelimitedPackagesString() string {
 	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
 }
 
-func addPackageFlag(cmd *cobra.Command) {
-	cmd.Flags().String("package", essentialsPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
+func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
+	cmd.Flags().String("package", defaultPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

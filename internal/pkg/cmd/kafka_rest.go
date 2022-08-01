@@ -4,16 +4,20 @@ import (
 	"context"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 type KafkaREST struct {
-	Client  *kafkarestv3.APIClient
-	Context context.Context
+	Context     context.Context
+	CloudClient *ccloudv2.Client
+	Client      *kafkarestv3.APIClient // TODO: Rename to PlatformClient
 }
 
-func NewKafkaREST(client *kafkarestv3.APIClient, context context.Context) *KafkaREST {
+func NewKafkaREST(ctx context.Context, cloudClient *ccloudv2.Client, client *kafkarestv3.APIClient) *KafkaREST {
 	return &KafkaREST{
-		Client:  client,
-		Context: context,
+		Context:     ctx,
+		CloudClient: cloudClient,
+		Client:      client,
 	}
 }
