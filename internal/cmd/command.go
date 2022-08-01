@@ -133,21 +133,20 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 				if string(dat[:2]) != "#!" {
 					shell := os.Getenv("SHELL")
 					if shell == "" {
-						shell = "/bin/sh"
+						shell = "/bin/bash"
 					}
 					shebang := []byte("#!" + shell + "\n")
 					temp, err := os.CreateTemp("", plugin.Name)
 					if err != nil {
-						fmt.Println("error creating temp")
 						return err
 					}
-					defer func() {
-						_ = os.Remove(temp.Name())
-					}()
+					//defer func() {
+					//	_ = os.Remove(temp.Name())
+					//}()
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
 						return err
 					}
-					err = temp.Chmod(0777)
+					err = temp.Chmod(0755)
 					if err != nil {
 						return err
 					}
