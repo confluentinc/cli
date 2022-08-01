@@ -1,3 +1,4 @@
+Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Error: failed to update Kafka cluster: Bad Request: 400 Bad Request
 
 Suggestions:

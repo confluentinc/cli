@@ -1,3 +1,5 @@
+Kafka API has been replaced by Kafka REST.
+Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
      Id     | Name | Type  | Provider |   Region    | Availability |    Status     
 ------------+------+-------+----------+-------------+--------------+---------------
     lkc-123 | abc  | BASIC | gcp      | us-central1 | single-zone  | PROVISIONING  
