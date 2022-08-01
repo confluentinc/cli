@@ -10,7 +10,7 @@ func newServiceQuotaClient(baseURL, userAgent string, isTest bool) *servicequota
 	cfg := servicequotav1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = servicequotav1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Service Quota"}}
+	cfg.Servers = servicequotav1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return servicequotav1.NewAPIClient(cfg)

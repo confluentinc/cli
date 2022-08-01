@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -66,8 +67,8 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
-			// Topic succesfully deleted
-			utils.Printf(cmd, errors.DeletedTopicMsg, topicName)
+			// Topic successfully deleted
+			utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 			return nil
 		}
 	}
@@ -84,6 +85,6 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	utils.Printf(cmd, errors.DeletedTopicMsg, topicName)
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

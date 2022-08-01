@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -109,7 +110,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		}
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	// no error if topic is created successfully.
-	utils.Printf(cmd, errors.CreatedTopicMsg, topicName)
+
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

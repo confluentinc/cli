@@ -42,9 +42,6 @@ const (
 	updateOperation = "updating"
 )
 
-var resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
-var resourceKindToType = map[string]string{"Cluster": resource.Kafka, "ksqlDB": resource.Ksql, "SchemaRegistry": resource.SchemaRegistry, "Cloud": resource.Cloud}
-
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
@@ -134,21 +131,21 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (
 	switch resourceType {
 	case resource.Cloud:
 		break
-	case resource.Kafka:
+	case resource.KafkaCluster:
 		cluster, err := c.Context.FindKafkaCluster(resourceId)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
-	case resource.Ksql:
+	case resource.KsqlCluster:
 		cluster := &schedv1.KSQLCluster{Id: resourceId, AccountId: c.EnvironmentId()}
 		cluster, err := client.KSQL.Describe(context.Background(), cluster)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
 		clusterId = cluster.Id
-	case resource.SchemaRegistry:
+	case resource.SchemaRegistryCluster:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)

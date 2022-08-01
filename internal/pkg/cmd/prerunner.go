@@ -406,6 +406,7 @@ func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgR
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
+
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
@@ -414,6 +415,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Context.Client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
 	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
@@ -422,21 +424,28 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 			return nil, err
 		}
 		if restEndpoint != "" {
-			result := &KafkaREST{}
-			result.Client, err = createKafkaRESTClient(restEndpoint)
-			if err != nil {
-				return nil, err
-			}
 			state, err := ctx.AuthenticatedState()
 			if err != nil {
 				return nil, err
 			}
+
 			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
 			if err != nil {
 				return nil, err
 			}
-			result.Context = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken)
-			return result, nil
+
+			client, err := createKafkaRESTClient(restEndpoint)
+			if err != nil {
+				return nil, err
+			}
+
+			kafkaRest := &KafkaREST{
+				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
+				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, r.IsTest),
+				Client:      client,
+			}
+
+			return kafkaRest, nil
 		}
 		return nil, nil
 	})
@@ -450,7 +459,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return new(errors.NotLoggedInError)
 	}
 
-	v2Client := ccloudv2.NewClient(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
+	v2Client := ccloudv2.NewClient(cliCmd.AuthToken(), ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest)
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
@@ -777,7 +786,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClient(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, ctx.State.AuthToken)
+			v2Client := ccloudv2.NewClient(ctx.State.AuthToken, ctx.Platform.Server, command.Version.UserAgent, r.IsTest)
 
 			ctx.Client = client
 			command.Config.Client = client
