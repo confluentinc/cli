@@ -187,6 +187,9 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		IsCloud: true,
 		URL:     url,
 	}
+	if (c.Config.Config.Context() != nil) {
+		netrcFilterParams.Name = c.Config.Config.Context().NetrcMachineName
+	}
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
