@@ -140,13 +140,13 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 					if err != nil {
 						return err
 					}
-					//defer func() {
-					//	_ = os.Remove(temp.Name())
-					//}()
+					defer func() {
+						_ = os.Remove(temp.Name())
+					}()
 					if _, err := temp.Write(append(shebang, dat...)); err != nil {
 						return err
 					}
-					err = temp.Chmod(0755)
+					err = os.Chmod(temp.Name(), 0755)
 					if err != nil {
 						return err
 					}
