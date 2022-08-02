@@ -780,8 +780,20 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		jsonVal := map[string]interface{}{"key": "val"}
-		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
+		flags := map[string]interface{}{
+			"testBool":   true,
+			"testString": "string",
+			"testInt":    1,
+			"testJson":   map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices": []map[string]interface{}{
+				{"pattern": "ksql app", "message": "`ksql app` has been replaced by `ksql cluster`."},
+				{"pattern": "kafka cluster list --all", "message": "Kafka API has been replaced by Kafka REST."},
+			},
+			"cli.announcements": []map[string]interface{}{
+				{"pattern": "login", "message": "Auth0 is experiencing higher-than-normal latency. Please run `confluent update` or log in to https://confluent.cloud until this incident is mitigated."},
+				{"pattern": "kafka cluster", "message": "Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region \"us-west-2\"."},
+			},
+		}
 		err := json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}

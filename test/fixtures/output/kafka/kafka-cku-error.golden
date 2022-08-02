@@ -1,1 +1,2 @@
+Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Error: `--cku` value must be greater than 0
