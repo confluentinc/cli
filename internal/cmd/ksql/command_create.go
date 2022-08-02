@@ -33,9 +33,9 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  runCommand,
 	}
-
-	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
-	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
+	cmd.Flags().String("api-key", "", `(DEPRECETED, use credential-identity instead) Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
+	cmd.Flags().String("api-secret", "", "(DEPRECATED, use credential-identity instead) Secret for the Kafka API key.")
+	cmd.Flags().String("credential-identity", "", `user account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with kafka`)
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
@@ -44,22 +44,24 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("api-key")
-	_ = cmd.MarkFlagRequired("api-secret")
+	cmd.MarkFlagsMutuallyExclusive("credential-identity",
+		"api-key")
+	cmd.MarkFlagsMutuallyExclusive("credential-identity",
+		"api-secret")
+
+	cmd.MarkFlagsRequiredTogether("api-key", "api-secret")
+
 	_ = cmd.Flags().MarkHidden("image")
 
 	return cmd
 }
 
-func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, false)
-}
-
 func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, true)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.createCluster(cmd, args)
 }
 
-func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -69,19 +71,29 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	cfg := &schedv1.KSQLClusterConfig{
-		AccountId:      c.EnvironmentId(),
-		Name:           args[0],
-		TotalNumCsu:    uint32(csus),
-		KafkaClusterId: kafkaCluster.ID,
-	}
-
 	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
 	if err != nil {
 		return err
 	}
 
-	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
+	name := args[0]
+	kafkaClusterId := kafkaCluster.ID
+
+	credentialIdentity, err := cmd.Flags().GetString("credential-identity")
+	if err != nil {
+		return err
+	}
+
+	if credentialIdentity != "" {
+		return c.createClusterV2(cmd, name, kafkaClusterId, credentialIdentity, csus, logExcludeRows)
+	} else {
+		return c.createClusterDeprecated(cmd, name, csus, kafkaClusterId, logExcludeRows)
+	}
+
+}
+
+func (c *ksqlCommand) createClusterDeprecated(cmd *cobra.Command, name string, csus int32, kafkaClusterId string, logExcludeRows bool) error {
+	utils.ErrPrintln(cmd, errors.KSQLApiSecretDeprecateWarning)
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
@@ -93,39 +105,64 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	cfg.KafkaApiKey = &schedv1.ApiKey{
-		Key:    kafkaApiKey,
-		Secret: kafkaApiKeySecret,
+	cfg := &schedv1.KSQLClusterConfig{
+		AccountId:             c.EnvironmentId(),
+		Name:                  name,
+		TotalNumCsu:           uint32(csus),
+		KafkaClusterId:        kafkaClusterId,
+		DetailedProcessingLog: &types.BoolValue{Value: !logExcludeRows},
+		KafkaApiKey: &schedv1.ApiKey{
+			Key:    kafkaApiKey,
+			Secret: kafkaApiKeySecret,
+		},
 	}
-
-	image, err := cmd.Flags().GetString("image")
-	if err == nil && len(image) > 0 {
-		cfg.Image = image
-	}
-
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {
 		return err
 	}
 
+	err = c.checkClusterHasEndpoint(cmd, cluster.Endpoint, cluster.Id)
+	if err != nil {
+		return err
+	}
+
+	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(c.convertV1ToSchedV2Subset(cluster)), describeFields, describeHumanRenames, describeStructuredRenames)
+}
+
+func (c *ksqlCommand) createClusterV2(cmd *cobra.Command, name, kafkaClusterId, credentialIdentity string, csus int32, logExcludeRows bool) error {
+	if credentialIdentity == "" {
+		utils.ErrPrintln(cmd, "You need to provide credential-identity when using the v2 api")
+	}
+	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaClusterId, credentialIdentity, csus, !logExcludeRows)
+	if err != nil {
+		return err
+	}
+	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
+	endpoint := cluster.Status.GetHttpEndpoint()
+	clusterId := *cluster.Id
+
+	err = c.checkClusterHasEndpoint(cmd, endpoint, clusterId)
+	if err != nil {
+		return err
+	}
+
+	//todo bring back formatting
+	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(&cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+}
+
+func (c *ksqlCommand) checkClusterHasEndpoint(cmd *cobra.Command, endpoint string, clusterId string) error {
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
-	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
-	for cluster.Endpoint == "" && count < 3 {
-		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
-		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+	for endpoint == "" && count < 3 {
+		res, err := c.V2Client.DescribeKsqlCluster(clusterId, c.EnvironmentId())
 		if err != nil {
 			return err
 		}
+		endpoint = res.Status.GetHttpEndpoint()
 		count++
 	}
-
-	if cluster.Endpoint == "" {
+	if endpoint == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
-
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	return nil
 }
