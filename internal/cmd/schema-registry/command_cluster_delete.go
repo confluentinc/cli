@@ -36,6 +36,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+		_ = cmd.MarkFlagRequired("environment")
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -72,8 +73,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 func confirmDeletion(cmd *cobra.Command, environmentId string, prompt form.Prompt) (bool, error) {
 	f := form.New(
 		form.Field{
-			ID:        "confirmation",
-			Prompt:    fmt.Sprintf(`Are you sure you want to delete the Schema Registry cluster for environment "%s"?`, environmentId),
+			ID: "confirmation",
+			Prompt: fmt.Sprintf("Are you sure you want to permanently delete the Schema Registry cluster for environment \"%s\"?\n"+
+				"The environment and all the data on this cluster will be permanently deleted.", environmentId),
 			IsYesOrNo: true,
 		},
 	)
