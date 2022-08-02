@@ -11,6 +11,7 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
@@ -25,6 +26,7 @@ type Client struct {
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
 	KafkaRestClient        *kafkarestv3.APIClient
+	KsqlClient             *ksql.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
@@ -41,6 +43,7 @@ func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
 		IamClient:              newIamClient(baseURL, userAgent, isTest),
 		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
 		KafkaRestClient:        newKafkaRestClient(baseURL, userAgent, isTest),
+		KsqlClient:             newKsqlClient(baseURL, userAgent, isTest),
 		MetricsClient:          newMetricsClient(userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
