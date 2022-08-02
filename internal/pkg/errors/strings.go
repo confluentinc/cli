@@ -55,7 +55,7 @@ const (
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only support with kafka rest proxy."
+	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"
