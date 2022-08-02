@@ -45,7 +45,7 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
-	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	return c.listClusters(cmd, args)
 }
 

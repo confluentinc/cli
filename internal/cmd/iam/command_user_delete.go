@@ -22,7 +22,7 @@ func (c userCommand) newDeleteCommand() *cobra.Command {
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	resourceId := args[0]
 	if resource.LookupType(resourceId) != resource.User {
-		return errors.New(errors.BadResourceIDErrorMsg)
+		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
 	httpResp, err := c.V2Client.DeleteIamUser(resourceId)
@@ -30,6 +30,6 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(`failed to delete user "%s": %v`, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
 	}
 
-	utils.Println(cmd, fmt.Sprintf(errors.DeletedUserMsg, resourceId))
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.User, resourceId)
 	return nil
 }

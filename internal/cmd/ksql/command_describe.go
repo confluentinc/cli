@@ -45,7 +45,7 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	return c.describeCluster(cmd, args)
 }
 

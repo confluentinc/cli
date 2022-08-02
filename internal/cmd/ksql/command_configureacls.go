@@ -9,10 +9,9 @@ import (
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -48,7 +47,7 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
-	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	return c.configureACLs(cmd, args)
 }
 
@@ -73,7 +72,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
- 	if !strings.HasPrefix("sa", credentialIdentity) {
+	if !strings.HasPrefix("sa", credentialIdentity) {
 		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, clusterId)
 	}
 

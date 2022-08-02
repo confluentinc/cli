@@ -14,6 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -44,7 +45,7 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	return c.deleteCluster(cmd, args)
 }
 
@@ -93,6 +94,6 @@ func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.KsqlDBDeletedMsg, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, id)
 	return nil
 }

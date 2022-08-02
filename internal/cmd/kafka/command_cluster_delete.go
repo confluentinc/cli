@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -37,6 +38,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
 	return nil
 }

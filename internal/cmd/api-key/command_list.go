@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -21,6 +23,13 @@ var (
 	listHumanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
 	listStructuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
+
+var resourceKindToType = map[string]string{
+	"Cluster":        "kafka",
+	"ksqlDB":         "ksql",
+	"SchemaRegistry": "schema-registry",
+	"Cloud":          "cloud",
+}
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{

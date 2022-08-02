@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -116,11 +117,14 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 			if err != nil {
 				return errors.Wrap(err, "failed to parse principal")
 			}
-			userId, ok := idMap[resourceId]
-			if !ok {
-				return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
+			if resource.LookupType(resourceId) == resource.User || resource.LookupType(resourceId) == resource.ServiceAccount {
+				userId, ok := idMap[resourceId]
+				if !ok {
+					return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
+				}
+				resourceId = strconv.Itoa(int(userId))
 			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", userId) // translate into numeric ID
+			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%s", resourceId)
 		}
 	}
 	return nil
@@ -131,10 +135,6 @@ func parsePrincipal(principal string) (string, error) {
 		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
 	}
 	resourceId := strings.SplitN(principal, ":", 2)[1]
-	resourceType := resource.LookupType(resourceId)
-	if resourceType != resource.ServiceAccount && resourceType != resource.User {
-		return "", fmt.Errorf(errors.BadServiceAccountOrUserIDErrorMsg)
-	}
 	return resourceId, nil
 }
 

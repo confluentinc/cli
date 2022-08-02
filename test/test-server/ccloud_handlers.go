@@ -35,7 +35,7 @@ var (
 	keyIndex           = int32(1)
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
-	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+	resourceTypeToKind = map[string]string{resource.KafkaCluster: "Cluster", resource.KsqlCluster: "ksqlDB", resource.SchemaRegistryCluster: "SchemaRegistry", resource.Cloud: "Cloud"}
 
 	RegularOrg = &orgv1.Organization{
 		Id:   321,
@@ -63,10 +63,12 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	serviceAccountID         = int32(12345)
-	serviceAccountResourceID = "sa-12345"
-	deactivatedUserID        = int32(6666)
-	deactivatedResourceID    = "sa-6666"
+	serviceAccountID           = int32(12345)
+	serviceAccountResourceID   = "sa-12345"
+	identityProviderResourceID = "op-12345"
+	identityPoolResourceID     = "pool-12345"
+	deactivatedUserID          = int32(6666)
+	deactivatedResourceID      = "sa-6666"
 
 	auditLogServiceAccountID         = int32(1337)
 	auditLogServiceAccountResourceID = "sa-1337"

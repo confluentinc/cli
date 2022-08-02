@@ -12,15 +12,17 @@ import (
 	"strings"
 	"testing"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-
+	kafkarestmock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -1254,7 +1256,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 					Email: "csreesangkom@confluent.io",
 				}, nil
 			},
-			GetServiceAccountsFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
+			GetServiceAccountsFunc: func(_ context.Context) ([]*orgv1.User, error) {
 				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
@@ -1278,7 +1280,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			},
 		},
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
-			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
+			GetFunc: func(_ context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
 					Id:       "aws",
 					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
@@ -1289,6 +1291,33 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	}
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
+			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+
+			client := &ccloudv2.Client{
+				KafkaRestClient: &kafkarestv3.APIClient{
+					ACLV3Api: &kafkarestmock.ACLV3Api{
+						CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
+							return kafkarestv3.ApiCreateKafkaAclsRequest{}
+						},
+						CreateKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						DeleteKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiDeleteKafkaAclsRequest {
+							return kafkarestv3.ApiDeleteKafkaAclsRequest{}
+						},
+						DeleteKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaAclsRequest) (kafkarestv3.InlineResponse200, *http.Response, error) {
+							return kafkarestv3.InlineResponse200{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+						GetKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiGetKafkaAclsRequest {
+							return kafkarestv3.ApiGetKafkaAclsRequest{}
+						},
+						GetKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiGetKafkaAclsRequest) (kafkarestv3.AclDataList, *http.Response, error) {
+							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+					},
+				},
+			}
+
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
 			restMock.ACLV3Api = cliMock.NewACLMock()
 			restMock.TopicV3Api = cliMock.NewTopicMock()
@@ -1298,9 +1327,8 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock.ClusterLinkingV3Api = cliMock.NewClusterLinkingMock(kafkaRestExpect)
 			restMock.ConsumerGroupV3Api = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			restMock.ReplicaStatusApi = cliMock.NewReplicaStatusMock()
-			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
-			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
-			return kafkaREST, nil
+
+			return pcmd.NewKafkaREST(ctx, client, restMock), nil
 		}
 		return nil, nil
 	})

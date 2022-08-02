@@ -2,6 +2,9 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+	"os"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
@@ -54,7 +57,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	utils.ErrPrintln(cmd, errors.KSQLAppDeprecateWarning)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	return c.createCluster(cmd, args)
 }
 

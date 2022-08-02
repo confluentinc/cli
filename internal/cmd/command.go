@@ -107,7 +107,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
-	cmd.AddCommand(shell.New(cmd))
+	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg, ver, isTest) }))
 	cmd.AddCommand(update.New(prerunner, ver, updateClient))
 	cmd.AddCommand(version.New(prerunner, ver))
 
@@ -129,7 +129,7 @@ func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest b
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		ctx := cfg.Context()
-		client := ccloudv2.NewClient(ctx.GetPlatformServer(), ver.UserAgent, isTest, ctx.GetAuthToken())
+		client := ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), ver.UserAgent, isTest)
 
 		u.Error = cliv1.PtrBool(err != nil)
 		u.Report(client)

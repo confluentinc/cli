@@ -9,7 +9,7 @@ const (
 	prefixFormat = "%s: %s"
 
 	// admin commands
-	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
@@ -68,17 +68,16 @@ const (
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
 
 	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg        = "unable to %s ACLs: %s"
-	UnableToPerformAclSuggestions     = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg        = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg        = "only --allow or --deny may be set when adding or deleting an ACL"
-	MustSetResourceTypeErrorMsg       = "exactly one resource type (%v) must be set"
-	InvalidOperationValueErrorMsg     = "invalid operation value: %s"
-	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
-	UserIdNotValidErrorMsg            = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg              = `ensure principal begins with "User:"`
-	BadServiceAccountOrUserIDErrorMsg = `ensure service account id begins with "sa-", or user resource id begins with "u-"`
-	PrincipalNotFoundErrorMsg         = `user or service account "%s" not found`
+	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
+	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
+	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
+	InvalidOperationValueErrorMsg = "invalid operation value: %s"
+	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
+	BadPrincipalErrorMsg          = `ensure principal begins with "User:"`
+	PrincipalNotFoundErrorMsg     = `user or service account "%s" not found`
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -108,6 +107,12 @@ const (
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
+	// iam provider commands
+	IdentityProviderNoOpUpdateErrorMsg = "One of `--description` or `--name` must be set."
+
+	// iam pool commands
+	IdentityPoolNoOpUpdateErrorMsg = "One of `--description`, `--filter`, `--identity-claim`, or `--name` must be set."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
@@ -155,7 +160,7 @@ const (
 	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
-	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
+	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
 	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
@@ -424,7 +429,7 @@ const (
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_PLATFORM_CA_CERT_PATH\""
 	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
-	KafkaRestUrlNotFoundSuggestions   = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
+	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
 	NoClustersFoundErrorMsg           = "No clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
 	NeedClientCertAndKeyPathsErrorMsg = "Must set \"client-cert-path\" and \"client-key-path\" flags together"
