@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -60,20 +62,22 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	clusterId := args[0]
+	cluster, err := c.V2Client.DescribeKsqlCluster(clusterId, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
-	if cluster.KafkaClusterId != kafkaCluster.Id {
-		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.KafkaClusterId, kafkaCluster.Id, cluster.KafkaClusterId)
+
+	if ksqlKafkaClusterId := cluster.Spec.KafkaCluster.Id; ksqlKafkaClusterId != kafkaCluster.Id {
+		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, clusterId, ksqlKafkaClusterId, kafkaCluster.Id, ksqlKafkaClusterId)
 	}
 
-	if cluster.ServiceAccountId == 0 {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
+	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
+ 	if !strings.HasPrefix("sa", credentialIdentity) {
+		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, clusterId)
 	}
 
-	serviceAccountId, err := c.getServiceAccount(cluster)
+	serviceAccountId, err := c.getServiceAccount(&cluster)
 	if err != nil {
 		return err
 	}
@@ -84,7 +88,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
+	bindings := c.buildACLBindings(serviceAccountId, &cluster, args[1:])
 	if aclsDryRun {
 		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
@@ -92,21 +96,23 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 }
 
-func (c *ksqlCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, error) {
+func (c *ksqlCommand) getServiceAccount(cluster *ksql.KsqldbcmV2Cluster) (string, error) {
 	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}
 
+	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
+
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (cluster.KafkaApiKey != nil && user.Id == cluster.KafkaApiKey.UserId) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.Id) || (credentialIdentity != "" && user.ResourceId == credentialIdentity) {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.Id)
+	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, *cluster.Id)
 }
 
-func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1.KSQLCluster, topics []string) []*schedv1.ACLBinding {
+func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *ksql.KsqldbcmV2Cluster, topics []string) []*schedv1.ACLBinding {
 	bindings := make([]*schedv1.ACLBinding, 0)
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
@@ -114,6 +120,7 @@ func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1
 	} {
 		bindings = append(bindings, c.createClusterAcl(op, serviceAccountId))
 	}
+	topicPrefix := cluster.Status.GetTopicPrefix()
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_CREATE,
 		schedv1.ACLOperations_DESCRIBE,
@@ -124,9 +131,9 @@ func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1
 		schedv1.ACLOperations_WRITE,
 		schedv1.ACLOperations_DELETE,
 	} {
-		bindings = append(bindings, c.createACL(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, c.createACL(topicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+topicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		bindings = append(bindings, c.createACL("_confluent-ksql-"+topicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
 	}
 	for _, op := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
@@ -149,7 +156,7 @@ func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_WRITE,
 	} {
-		bindings = append(bindings, c.createACL(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+		bindings = append(bindings, c.createACL(topicPrefix, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
 	}
 	return bindings
 }
