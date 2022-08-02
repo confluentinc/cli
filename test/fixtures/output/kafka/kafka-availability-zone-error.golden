@@ -1,4 +1,3 @@
-Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Error: invalid value "oops-zone" for `--availability` flag
 
 Suggestions:

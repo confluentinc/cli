@@ -1,2 +1,1 @@
-Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Set Kafka cluster "a-595" as the active cluster for environment "a-595".

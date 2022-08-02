@@ -1,2 +1,1 @@
-Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Error: must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer

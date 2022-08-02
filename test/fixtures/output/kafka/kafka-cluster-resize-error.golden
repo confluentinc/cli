@@ -1,2 +1,1 @@
-Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region "us-west-2".
 Error: failed to update kafka cluster: cluster resize is only supported on dedicated clusters

@@ -789,10 +789,6 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 				{"pattern": "ksql app", "message": "`ksql app` has been replaced by `ksql cluster`."},
 				{"pattern": "kafka cluster list --all", "message": "Kafka API has been replaced by Kafka REST."},
 			},
-			"cli.announcements": []map[string]interface{}{
-				{"pattern": "login", "message": "Auth0 is experiencing higher-than-normal latency. Please run `confluent update` or log in to https://confluent.cloud until this incident is mitigated."},
-				{"pattern": "kafka cluster", "message": "Dedicated clusters may take several minutes to be created due to higher-than-normal latency in AWS region \"us-west-2\"."},
-			},
 		}
 		err := json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)

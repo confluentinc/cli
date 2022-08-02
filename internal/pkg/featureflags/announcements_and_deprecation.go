@@ -1,11 +1,16 @@
 package featureflags
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+const deprecate = "DEPRECATED: "
 
 type FlagsAndMsg struct {
 	Flags        []string
@@ -38,8 +43,8 @@ func GetAnnouncementsAndDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
-	cmd.Short = "DEPRECATED: " + cmd.Short
-	cmd.Long = "DEPRECATED: " + cmd.Long
+	cmd.Short = deprecate + cmd.Short
+	cmd.Long = deprecate + cmd.Long
 	for _, subcommand := range cmd.Commands() {
 		DeprecateCommandTree(subcommand)
 	}
@@ -48,7 +53,7 @@ func DeprecateCommandTree(cmd *cobra.Command) {
 func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	for _, flag := range flags {
 		if cmd.Flag(flag) != nil {
-			cmd.Flag(flag).Usage = "DEPRECATED: " + cmd.Flag(flag).Usage
+			cmd.Flag(flag).Usage = deprecate + cmd.Flag(flag).Usage
 		}
 	}
 	for _, subcommand := range cmd.Commands() {
@@ -56,7 +61,9 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 	}
 }
 
-func PrintCmdMessages(cmd *cobra.Command, cmdToFlagsAndMsg map[string]*FlagsAndMsg) {
+func PrintCmdMessages(featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
+	flagResponse := Manager.JsonVariation(featureFlag, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	cmdToFlagsAndMsg := GetAnnouncementsAndDeprecation(flagResponse)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {

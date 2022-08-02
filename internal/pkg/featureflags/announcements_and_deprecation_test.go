@@ -1,9 +1,10 @@
 package featureflags
 
 import (
+	"testing"
+
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGetAnnouncementsAndDeprecation(t *testing.T) {
@@ -18,9 +19,7 @@ func TestGetAnnouncementsAndDeprecation(t *testing.T) {
 	}
 	cmdToFlagsAndMsg := GetAnnouncementsAndDeprecation(ld)
 	expected := map[string]*FlagsAndMsg{}
-	expected["ksql app"] = &FlagsAndMsg{
-		CmdMessage: "DEPRECATED",
-	}
+	expected["ksql app"] = &FlagsAndMsg{CmdMessage: "DEPRECATED"}
 	expected["kafka cluster list"] = &FlagsAndMsg{
 		Flags:        []string{"all", "context"},
 		FlagMessages: []string{"DEPRECATED", "DEPRECATED"},
