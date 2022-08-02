@@ -33,9 +33,9 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  runCommand,
 	}
-	cmd.Flags().String("api-key", "", `(DEPRECETED, use credential-identity instead) Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
-	cmd.Flags().String("api-secret", "", "(DEPRECATED, use credential-identity instead) Secret for the Kafka API key.")
-	cmd.Flags().String("credential-identity", "", `user account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with kafka`)
+	cmd.Flags().String("api-key", "", `DEPRECATED, use credential-identity instead. Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
+	cmd.Flags().String("api-secret", "", "DEPRECATED, use credential-identity instead. Secret for the Kafka API key.")
+	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with kafka.`)
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
