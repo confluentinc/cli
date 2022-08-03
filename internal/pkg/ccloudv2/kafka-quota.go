@@ -76,6 +76,7 @@ func (c *Client) UpdateKafkaQuota(quotaId string, displayName string, descriptio
 	environment *kafkaquotas.ObjectReference) (kafkaquotas.KafkaQuotasV1ClientQuota, error) {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.UpdateKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
 	req = req.KafkaQuotasV1ClientQuota(kafkaquotas.KafkaQuotasV1ClientQuota{
+		Id:          &quotaId,
 		DisplayName: &displayName,
 		Description: &description,
 		Throughput:  throughput,

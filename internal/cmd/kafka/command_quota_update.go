@@ -35,8 +35,7 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	quotaId := args[0]
 
-	getReq := c.V2Client.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.GetKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
-	quota, _, err := getReq.Execute()
+	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
 		return quotaErr(err)
 	}
@@ -58,7 +57,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatedQuota, err := c.V2Client.CreateKafkaQuota(updateName, updateDescription, updateThroughput,
+	updatedQuota, err := c.V2Client.UpdateKafkaQuota(quotaId, updateName, updateDescription, updateThroughput,
 		&kafkaquotas.ObjectReference{Id: quota.Cluster.Id}, updatePrincipals,
 		&kafkaquotas.ObjectReference{Id: quota.Environment.Id},
 	)

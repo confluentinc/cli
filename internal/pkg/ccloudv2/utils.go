@@ -64,6 +64,9 @@ func extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable kafkaquotas.N
 	if nextPageUrlStringNullable.IsSet() {
 		nextPageUrlString := *nextPageUrlStringNullable.Get()
 		pageToken, err := extractPageToken(nextPageUrlString)
+		if err != nil {
+			return "", true, nil
+		}
 		return pageToken, false, err
 	} else {
 		return "", true, nil
