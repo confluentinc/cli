@@ -71,7 +71,7 @@ LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam 
 return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 ```
 
-3. If you know that your error will be used in many places, or need to be caught donwstream and process later, you can define typed error by implenting the `CLITypedError` interface
+3. If you know that your error will be used in many places, or needs to be caught downstream and processed later, you can define a typed error by implenting the `CLITypedError` interface
 ```
 type CLITypedError interface {
 	error
