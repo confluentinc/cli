@@ -166,9 +166,9 @@ const (
 	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
 
 	// kafka topic commands
-	FailedToCreateProducerMsg            = "failed to create producer: %v"
-	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
-	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
+	FailedToCreateConsumerErrorMsg       = "failed to create consumer: %v"
+	FailedToCreateAdminClientErrorMsg    = "failed to create confluent-kafka-go admin client: %v"
 	InvalidOffsetErrorMsg                = "offset value must be a non-negative integer"
 	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
@@ -179,7 +179,7 @@ const (
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = "topic \"%s\" already exists for Kafka cluster \"%s\""
 	TopicExistsSuggestions               = ListTopicSuggestions
-	NoAPISecretStoredOrPassedMsg         = "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
+	NoAPISecretStoredOrPassedErrorMsg    = "no API secret for API key \"%s\" of resource \"%s\" passed via flag or stored in local CLI state"
 	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
 	PassedSecretButNotKeySuggestions     = "Use the \"api-key\" flag to specify an API key."
@@ -200,7 +200,7 @@ const (
 
 	// ksql commands
 	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
-	KsqlDBTerminateClusterMsg      = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
+	KsqlDBTerminateClusterErrorMsg = "failed to terminate ksqlDB app \"%s\" due to \"%s\""
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -422,12 +422,11 @@ const (
 	InternalServerErrorMsg            = "internal server error"
 	UnknownErrorMsg                   = "unknown error"
 	InternalServerErrorSuggestions    = "Please check the status of your Kafka cluster or submit a support ticket."
-	EmptyResponseMsg                  = "Empty server response"
+	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
-	KafkaRestConnectionMsg            = "Unable to establish Kafka REST connection: %s: %s"
-	KafkaRestUnexpectedStatusMsg      = "Kafka REST request failed: %s: Unexpected HTTP Status: %d"
+	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
+	KafkaRestUnexpectedStatusErrorMsg = "Kafka REST request failed: %s: unexpected HTTP Status: %d"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_PLATFORM_CA_CERT_PATH\"."
-	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
 	NoClustersFoundErrorMsg           = "no clusters found"
@@ -456,7 +455,7 @@ const (
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		AvoidTimeoutSuggestion
 	InvalidEmailErrorMsg             = "user \"%s\" not found"
-	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
+	InvalidLoginURLErrorMsg          = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg             = "incorrect email or password"
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""

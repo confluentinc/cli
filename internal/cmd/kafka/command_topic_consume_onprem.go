@@ -92,7 +92,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
@@ -103,7 +103,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
 	defer adminClient.Close()
 
