@@ -228,7 +228,7 @@ const (
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
-	SRInvalidPackageType         = `"%s" is an invalid package type`
+	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
 	SRInvalidPackageUpgrade      = `Schema Registry already uses "%s" package`
 
@@ -432,7 +432,7 @@ const (
 	NoClustersFoundErrorMsg           = "no clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration."
 	NeedClientCertAndKeyPathsErrorMsg = "must set \"client-cert-path\" and \"client-key-path\" flags together"
-	InvalidMDSToken                   = "Invalid MDS token"
+	InvalidMDSTokenErrorMsg           = "Invalid MDS token"
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
