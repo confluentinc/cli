@@ -68,7 +68,6 @@ func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "share",
 		Short:       "Manage provider shares.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	s := &providerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
