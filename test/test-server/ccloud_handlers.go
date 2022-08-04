@@ -787,7 +787,6 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 			"testJson":   map[string]interface{}{"key": "val"},
 			"cli.deprecation_notices": []map[string]interface{}{
 				{"pattern": "ksql app", "message": "`ksql app` has been replaced by `ksql cluster`."},
-				{"pattern": "kafka cluster list --all", "message": "Kafka API has been replaced by Kafka REST."},
 			},
 		}
 		err := json.NewEncoder(w).Encode(&flags)

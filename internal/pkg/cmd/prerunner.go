@@ -198,8 +198,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			}
 			// announcement and deprecation check, print out msg
 			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
-			launchdarkly.PrintCmdMessages("cli.announcements", ctx, cmd)
-			launchdarkly.PrintCmdMessages("cli.deprecation_notices", ctx, cmd)
+			launchdarkly.PrintAnnouncements("cli.announcements", ctx, cmd)
+			launchdarkly.PrintAnnouncements("cli.deprecation_notices", ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
