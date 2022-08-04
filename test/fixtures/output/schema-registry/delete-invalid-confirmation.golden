@@ -1,2 +1,1 @@
-All the data on this cluster will be permanently deleted.
-Are you sure you want to permanently delete the Schema Registry cluster for environment "env-srUpdate"? (y/n): Error: failed to read your deletion confirmation
+Are you sure you want to permanently delete the Schema Registry cluster for environment "env-srUpdate", along with all of its data? (y/n): Error: failed to read your deletion confirmation
