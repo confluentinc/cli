@@ -66,7 +66,7 @@ func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRepli
 
 func findAllPublicRolesSorted(rbacRoles map[string]string) []string {
 	var roleNameList []string
-	for roleName, _ := range rbacRoles {
+	for roleName := range rbacRoles {
 		roleNameList = append(roleNameList, roleName)
 	}
 

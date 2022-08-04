@@ -21,19 +21,14 @@ func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 			switch ns {
 			case "ksql":
 				allRoles = append(allRoles, rbacKsqlRoles()...)
-				break
 			case "datagovernance":
 				allRoles = append(allRoles, rbacSRRoles()...)
-				break
 			case "dataplane":
 				allRoles = append(allRoles, rbacDataPlaneRoles()...)
-				break
 			case "public":
 				allRoles = append(allRoles, rbacPublicRoles()...)
-				break
 			default:
 				allRoles = append(allRoles, rbacPublicRoles()...)
-				break
 			}
 		}
 
@@ -45,32 +40,30 @@ func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 
 func rbacDataPlaneRoles() []mdsv2alpha1.Role {
 	developerManageRole := mdsv2alpha1.Role{
-		"DeveloperManage",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "DeveloperManage",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"cloud-cluster",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"CloudCluster", []string{"Describe"}},
+				BindingScope: "cloud-cluster",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "CloudCluster", Operations: []string{"Describe"}},
 				},
 			},
 			{
-				"cluster",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"Cluster", []string{"View", "AccessWithToken"}},
-					{"OwnKafkaClusterApiKey", []string{"Describe", "Alter", "Delete", "Create"}},
-					{"OwnClusterApiKey", []string{"Describe", "Alter", "Delete", "Create"}},
+				BindingScope: "cluster",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Cluster", Operations: []string{"View", "AccessWithToken"}},
+					{ResourceType: "OwnKafkaClusterApiKey", Operations: []string{"Describe", "Alter", "Delete", "Create"}},
+					{ResourceType: "OwnClusterApiKey", Operations: []string{"Describe", "Alter", "Delete", "Create"}},
 				},
 			},
 			{
-				"cluster",
-				true,
-				[]mdsv2alpha1.Operation{
-					{"Topic", []string{"Delete", "Describe", "Create", "DescribeConfigs"}},
-					{"Cluster", []string{"Create", "DescribeConfigs"}},
-					{"TransactionalId", []string{"Describe"}},
-					{"Group", []string{"Describe", "Delete"}},
+				BindingScope:     "cluster",
+				BindWithResource: true,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Topic", Operations: []string{"Delete", "Describe", "Create", "DescribeConfigs"}},
+					{ResourceType: "Cluster", Operations: []string{"Create", "DescribeConfigs"}},
+					{ResourceType: "TransactionalId", Operations: []string{"Describe"}},
+					{ResourceType: "Group", Operations: []string{"Describe", "Delete"}},
 				},
 			},
 		},
@@ -81,13 +74,13 @@ func rbacDataPlaneRoles() []mdsv2alpha1.Role {
 
 func rbacKsqlRoles() []mdsv2alpha1.Role {
 	resourceOwnerRole := mdsv2alpha1.Role{
-		"ResourceOwner",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "ResourceOwner",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"ksql-cluster",
-				true,
-				[]mdsv2alpha1.Operation{
-					{"KsqlCluster", []string{"Describe", "AlterAccess", "Contribute", "DescribeAccess", "Terminate"}},
+				BindingScope:     "ksql-cluster",
+				BindWithResource: true,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "KsqlCluster", Operations: []string{"Describe", "AlterAccess", "Contribute", "DescribeAccess", "Terminate"}},
 				},
 			},
 		},
@@ -98,13 +91,13 @@ func rbacKsqlRoles() []mdsv2alpha1.Role {
 
 func rbacSRRoles() []mdsv2alpha1.Role {
 	resourceOwnerRole := mdsv2alpha1.Role{
-		"ResourceOwner",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "ResourceOwner",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"schema-registry-cluster",
-				true,
-				[]mdsv2alpha1.Operation{
-					{"Subject", []string{"Delete", "Read", "Write", "ReadCompatibility", "AlterAccess", "WriteCompatibility", "DescribeAccess"}},
+				BindingScope:     "schema-registry-cluster",
+				BindWithResource: true,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Subject", Operations: []string{"Delete", "Read", "Write", "ReadCompatibility", "AlterAccess", "WriteCompatibility", "DescribeAccess"}},
 				},
 			},
 		},
@@ -115,133 +108,126 @@ func rbacSRRoles() []mdsv2alpha1.Role {
 
 func rbacPublicRoles() []mdsv2alpha1.Role {
 	ccloudRoleBindingAdminRole := mdsv2alpha1.Role{
-		"CCloudRoleBindingAdmin",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "CCloudRoleBindingAdmin",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"root",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"SecurityMetadata", []string{"Describe", "Alter"}},
-					{"Organization", []string{"AlterAccess", "DescribeAccess"}},
+				BindingScope: "root",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "SecurityMetadata", Operations: []string{"Describe", "Alter"}},
+					{ResourceType: "Organization", Operations: []string{"AlterAccess", "DescribeAccess"}},
 				},
 			},
 		},
 	}
 
 	cloudClusterAdminRole := mdsv2alpha1.Role{
-		"CloudClusterAdmin",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "CloudClusterAdmin",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"cluster",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"Topic", []string{"All"}},
-					{"KsqlCluster", []string{"All"}},
-					{"Subject", []string{"All"}},
-					{"Connector", []string{"All"}},
-					{"NetworkAccess", []string{"All"}},
-					{"ClusterMetric", []string{"All"}},
-					{"Cluster", []string{"All"}},
-					{"ClusterApiKey", []string{"All"}},
-					{"SecurityMetadata", []string{"Describe", "Alter"}},
+				BindingScope: "cluster",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Topic", Operations: []string{"All"}},
+					{ResourceType: "KsqlCluster", Operations: []string{"All"}},
+					{ResourceType: "Subject", Operations: []string{"All"}},
+					{ResourceType: "Connector", Operations: []string{"All"}},
+					{ResourceType: "NetworkAccess", Operations: []string{"All"}},
+					{ResourceType: "ClusterMetric", Operations: []string{"All"}},
+					{ResourceType: "Cluster", Operations: []string{"All"}},
+					{ResourceType: "ClusterApiKey", Operations: []string{"All"}},
+					{ResourceType: "SecurityMetadata", Operations: []string{"Describe", "Alter"}},
 				},
 			},
 			{
-				"organization",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"SupportPlan", []string{"Describe"}},
-					{"User", []string{"Describe", "Invite"}},
-					{"ServiceAccount", []string{"Describe"}},
+				BindingScope: "organization",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "SupportPlan", Operations: []string{"Describe"}},
+					{ResourceType: "User", Operations: []string{"Describe", "Invite"}},
+					{ResourceType: "ServiceAccount", Operations: []string{"Describe"}},
 				},
 			},
 		},
 	}
 
 	environmentAdminRole := mdsv2alpha1.Role{
-		"EnvironmentAdmin",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "EnvironmentAdmin",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"ENVIRONMENT",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"SecurityMetadata", []string{"Describe", "Alter"}},
-					{"ClusterApiKey", []string{"All"}},
-					{"Connector", []string{"All"}},
-					{"NetworkAccess", []string{"All"}},
-					{"KsqlCluster", []string{"All"}},
-					{"Environment", []string{"Alter", "Delete", "AlterAccess", "CreateKafkaCluster", "DescribeAccess"}},
-					{"Subject", []string{"All"}},
-					{"NetworkConfig", []string{"All"}},
-					{"ClusterMetric", []string{"All"}},
-					{"Cluster", []string{"All"}},
-					{"SchemaRegistry", []string{"All"}},
-					{"NetworkRegion", []string{"All"}},
-					{"Deployment", []string{"All"}},
-					{"Topic", []string{"All"}},
+				BindingScope: "ENVIRONMENT",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "SecurityMetadata", Operations: []string{"Describe", "Alter"}},
+					{ResourceType: "ClusterApiKey", Operations: []string{"All"}},
+					{ResourceType: "Connector", Operations: []string{"All"}},
+					{ResourceType: "NetworkAccess", Operations: []string{"All"}},
+					{ResourceType: "KsqlCluster", Operations: []string{"All"}},
+					{ResourceType: "Environment", Operations: []string{"Alter", "Delete", "AlterAccess", "CreateKafkaCluster", "DescribeAccess"}},
+					{ResourceType: "Subject", Operations: []string{"All"}},
+					{ResourceType: "NetworkConfig", Operations: []string{"All"}},
+					{ResourceType: "ClusterMetric", Operations: []string{"All"}},
+					{ResourceType: "Cluster", Operations: []string{"All"}},
+					{ResourceType: "SchemaRegistry", Operations: []string{"All"}},
+					{ResourceType: "NetworkRegion", Operations: []string{"All"}},
+					{ResourceType: "Deployment", Operations: []string{"All"}},
+					{ResourceType: "Topic", Operations: []string{"All"}},
 				},
 			},
 			{
-				"organization",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"User", []string{"Describe", "Invite"}},
-					{"ServiceAccount", []string{"Describe"}},
-					{"SupportPlan", []string{"Describe"}},
+				BindingScope: "organization",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "User", Operations: []string{"Describe", "Invite"}},
+					{ResourceType: "ServiceAccount", Operations: []string{"Describe"}},
+					{ResourceType: "SupportPlan", Operations: []string{"Describe"}},
 				},
 			},
 		},
 	}
 
 	organizationAdminRole := mdsv2alpha1.Role{
-		"OrganizationAdmin",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "OrganizationAdmin",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"organization",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"Topic", []string{"All"}},
-					{"NetworkConfig", []string{"All"}},
-					{"SecurityMetadata", []string{"Describe", "Alter"}},
-					{"Billing", []string{"All"}},
-					{"ClusterApiKey", []string{"All"}},
-					{"Deployment", []string{"All"}},
-					{"SchemaRegistry", []string{"All"}},
-					{"KsqlCluster", []string{"All"}},
-					{"CloudApiKey", []string{"All"}},
-					{"NetworkAccess", []string{"All"}},
-					{"SecuritySSO", []string{"All"}},
-					{"SupportPlan", []string{"All"}},
-					{"Connector", []string{"All"}},
-					{"ClusterMetric", []string{"All"}},
-					{"ServiceAccount", []string{"All"}},
-					{"Subject", []string{"All"}},
-					{"Cluster", []string{"All"}},
-					{"Environment", []string{"All"}},
-					{"NetworkRegion", []string{"All"}},
-					{"Organization", []string{"Alter", "CreateEnvironment", "AlterAccess", "DescribeAccess"}},
-					{"User", []string{"All"}},
+				BindingScope: "organization",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Topic", Operations: []string{"All"}},
+					{ResourceType: "NetworkConfig", Operations: []string{"All"}},
+					{ResourceType: "SecurityMetadata", Operations: []string{"Describe", "Alter"}},
+					{ResourceType: "Billing", Operations: []string{"All"}},
+					{ResourceType: "ClusterApiKey", Operations: []string{"All"}},
+					{ResourceType: "Deployment", Operations: []string{"All"}},
+					{ResourceType: "SchemaRegistry", Operations: []string{"All"}},
+					{ResourceType: "KsqlCluster", Operations: []string{"All"}},
+					{ResourceType: "CloudApiKey", Operations: []string{"All"}},
+					{ResourceType: "NetworkAccess", Operations: []string{"All"}},
+					{ResourceType: "SecuritySSO", Operations: []string{"All"}},
+					{ResourceType: "SupportPlan", Operations: []string{"All"}},
+					{ResourceType: "Connector", Operations: []string{"All"}},
+					{ResourceType: "ClusterMetric", Operations: []string{"All"}},
+					{ResourceType: "ServiceAccount", Operations: []string{"All"}},
+					{ResourceType: "Subject", Operations: []string{"All"}},
+					{ResourceType: "Cluster", Operations: []string{"All"}},
+					{ResourceType: "Environment", Operations: []string{"All"}},
+					{ResourceType: "NetworkRegion", Operations: []string{"All"}},
+					{ResourceType: "Organization", Operations: []string{"Alter", "CreateEnvironment", "AlterAccess", "DescribeAccess"}},
+					{ResourceType: "User", Operations: []string{"All"}},
 				},
 			},
 		},
 	}
 
 	resourceOwnerRole := mdsv2alpha1.Role{
-		"ResourceOwner",
-		[]mdsv2alpha1.AccessPolicy{
+		Name: "ResourceOwner",
+		Policies: []mdsv2alpha1.AccessPolicy{
 			{
-				"cloud-cluster",
-				false,
-				[]mdsv2alpha1.Operation{
-					{"CloudCluster", []string{"Describe"}},
+				BindingScope: "cloud-cluster",
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "CloudCluster", Operations: []string{"Describe"}},
 				},
 			},
 			{
-				"cluster",
-				true,
-				[]mdsv2alpha1.Operation{
-					{"Topic", []string{"Create", "Delete", "Read", "Write", "Describe", "DescribeConfigs", "Alter", "AlterConfigs", "DescribeAccess", "AlterAccess"}},
-					{"Group", []string{"Read", "Describe", "Delete", "DescribeAccess", "AlterAccess"}},
+				BindingScope:     "cluster",
+				BindWithResource: true,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "Topic", Operations: []string{"Create", "Delete", "Read", "Write", "Describe", "DescribeConfigs", "Alter", "AlterConfigs", "DescribeAccess", "AlterAccess"}},
+					{ResourceType: "Group", Operations: []string{"Read", "Describe", "Delete", "DescribeAccess", "AlterAccess"}},
 				},
 			},
 		},
