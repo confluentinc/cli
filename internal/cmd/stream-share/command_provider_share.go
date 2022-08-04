@@ -47,7 +47,7 @@ var (
 	}
 	structuredLabelMap = map[string]string{
 		"Id":                       "id",
-		"ConsumerUserName":         "consumer_user_name",
+		"ConsumerUserName":         "consumer_name",
 		"ConsumerOrganizationName": "consumer_organization_name",
 		"ProviderUserName":         "provider_user_name",
 		"Status":                   "status",
