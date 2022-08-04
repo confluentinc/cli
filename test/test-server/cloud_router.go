@@ -87,11 +87,13 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
 	c.HandleFunc(v2alphaAuthenticate, c.HandleV2Authenticate(t))
-	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies, v2RbacRoles)
+	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies)
 }
 
-func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
-	addRoles(base, routesAndReplies, rbacRoles)
+func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies map[string]string) {
+	jsonRolesMap := rolesListToJsonMap(rbacPublicRoles())
+	addRoles(base, routesAndReplies, jsonRolesMap)
+
 	for route, reply := range routesAndReplies {
 		s := reply
 		c.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {

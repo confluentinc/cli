@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -46,12 +45,6 @@ var (
 	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
-
-	dataGovernanceNamespace = optional.NewString("datagovernance")
-
-	dataplaneNamespace = optional.NewString("dataplane")
-
-	ksqlNamespace = optional.NewString("ksql")
 )
 
 type roleBindingOptions struct {

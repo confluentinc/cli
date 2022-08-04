@@ -2,6 +2,7 @@ package iam
 
 import (
 	"os"
+	"strings"
 
 	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
@@ -40,33 +41,24 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	var roles []mdsv2alpha1.Role
 
-	// add public roles
-	publicRoles, err := c.publicRoles()
+	// add public and dataplane roles
+	publicAndDataplaneNamespace := []string{publicNamespace.Value(), dataplaneNamespace.Value()}
+	publicAndDataplaneNamespaceOpt := optional.NewString(strings.Join(publicAndDataplaneNamespace, ","))
+	publicAndDataplaneRoles, err := c.namespaceRoles(publicAndDataplaneNamespaceOpt)
 	if err != nil {
 		return err
 	}
-	roles = append(roles, publicRoles...)
-
-	// add dataplane roles
-	dataplaneRoles, err := c.dataplaneRoles()
-	if err != nil {
-		return err
-	}
-	roles = append(roles, dataplaneRoles...)
+	roles = append(roles, publicAndDataplaneRoles...)
 
 	// add ksql and datagovernance roles
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		ksqlRoles, err := c.ksqlRoles()
+		ksqlAndDataGovernanceNamespace := []string{ksqlNamespace.Value(), dataGovernanceNamespace.Value()}
+		ksqlAndDataGovernanceNamespaceOpt := optional.NewString(strings.Join(ksqlAndDataGovernanceNamespace, ","))
+		ksqlAndDataGovernanceRoles, err := c.namespaceRoles(ksqlAndDataGovernanceNamespaceOpt)
 		if err != nil {
 			return err
 		}
-		roles = append(roles, ksqlRoles...)
-
-		dataGovernanceRoles, err := c.dataGovernanceRoles()
-		if err != nil {
-			return err
-		}
-		roles = append(roles, dataGovernanceRoles...)
+		roles = append(roles, ksqlAndDataGovernanceRoles...)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -116,27 +108,4 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 		return output.StructuredOutput(format, roles)
 	}
 	return nil
-}
-
-func (c *roleCommand) namespaceRoles(namespace optional.String) ([]mdsv2alpha1.Role, error) {
-	opts := &mdsv2alpha1.RolesOpts{Namespace: namespace}
-	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
-	return roles, err
-}
-
-func (c *roleCommand) publicRoles() ([]mdsv2alpha1.Role, error) {
-	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
-	return roles, err
-}
-
-func (c *roleCommand) dataplaneRoles() ([]mdsv2alpha1.Role, error) {
-	return c.namespaceRoles(dataplaneNamespace)
-}
-
-func (c *roleCommand) ksqlRoles() ([]mdsv2alpha1.Role, error) {
-	return c.namespaceRoles(ksqlNamespace)
-}
-
-func (c *roleCommand) dataGovernanceRoles() ([]mdsv2alpha1.Role, error) {
-	return c.namespaceRoles(dataGovernanceNamespace)
 }
