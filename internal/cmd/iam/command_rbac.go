@@ -10,13 +10,10 @@ import (
 )
 
 var (
-	publicNamespace = optional.NewString("public")
-
+	publicNamespace         = optional.NewString("public")
 	dataGovernanceNamespace = optional.NewString("datagovernance")
-
-	dataplaneNamespace = optional.NewString("dataplane")
-
-	ksqlNamespace = optional.NewString("ksql")
+	dataplaneNamespace      = optional.NewString("dataplane")
+	ksqlNamespace           = optional.NewString("ksql")
 )
 
 func newRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
