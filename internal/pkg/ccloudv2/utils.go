@@ -54,9 +54,14 @@ func getServerUrl(baseURL string, isTest bool) string {
 	return "https://api.confluent.cloud"
 }
 
-func getMetricsServerUrl(isTest bool) string {
+func getMetricsServerUrl(baseURL string, isTest bool) string {
 	if isTest {
 		return testserver.TestV2CloudURL.String()
+	}
+	if strings.Contains(baseURL, "devel") {
+		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
 	}
 	return "https://api.telemetry.confluent.cloud"
 }
