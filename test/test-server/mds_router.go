@@ -81,14 +81,12 @@ func findAllPublicRolesSorted(rbacRoles map[string]string) []string {
 }
 
 func addRoles(base string, routesAndReplies, rbacRoles map[string]string) {
-	var roleNameList []string
 	for roleName, roleInfo := range rbacRoles {
 		routesAndReplies[path.Join(base, roleName)] = roleInfo
-		roleNameList = append(roleNameList, roleName)
 	}
 }
 
 func addAllPublicRoles(base string, routesAndReplies, rbacRoles map[string]string) {
-	var allRoles []string = findAllPublicRolesSorted(rbacRoles)
+	var allRoles = findAllPublicRolesSorted(rbacRoles)
 	routesAndReplies[base] = "[" + strings.Join(allRoles, ",") + "]"
 }
