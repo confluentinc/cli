@@ -26,8 +26,6 @@ const (
 	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
-	InvalidOperationOnApiKeyErrorMsg    = "Cannot perform this API key operation on a KSQL or Schema Registry key. Please use Confluent UI"
-	APIKeyAccessForbiddenErrorMsg       = "API key not found or access forbidden"
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -53,14 +51,12 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
-	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
-	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
-	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
-	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
-	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization"
+	UnknownConnectorIdErrorMsg         = `unknown connector ID "%s"`
+	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions            = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -120,7 +116,6 @@ const (
 
 	// kafka client-config package
 	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
-	WriteConfigFileErrorMsg               = "failed to write config file"
 	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
 	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
 		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
@@ -157,7 +152,6 @@ const (
 	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
 	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
-	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
