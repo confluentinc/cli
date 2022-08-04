@@ -3,9 +3,10 @@ package streamshare
 import (
 	"time"
 
+	"github.com/spf13/cobra"
+
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/spf13/cobra"
 )
 
 var (
@@ -66,8 +67,8 @@ type providerShareCommand struct {
 
 func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "share",
-		Short:       "Manage provider shares.",
+		Use:   "share",
+		Short: "Manage provider shares.",
 	}
 
 	s := &providerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
