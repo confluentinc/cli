@@ -78,7 +78,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		case output.JSON.String(), output.YAML.String():
 			w.AddElement(&structuredRow{
 				code:       code.Code,
-				balance:    convertToUSD(code.Balance),
+				balance:    ConvertToUSD(code.Balance),
 				expiration: code.CreditExpirationDate.Seconds,
 			})
 		}
@@ -89,10 +89,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func formatBalance(balance int64, amount int64) string {
-	return fmt.Sprintf("$%.2f/%.2f USD", convertToUSD(balance), convertToUSD(amount))
+	return fmt.Sprintf("$%.2f/%.2f USD", ConvertToUSD(balance), ConvertToUSD(amount))
 }
 
-func convertToUSD(balance int64) float64 {
+func ConvertToUSD(balance int64) float64 {
 	// The backend represents money in hundredths of cents
 	return float64(balance) / 10000
 }

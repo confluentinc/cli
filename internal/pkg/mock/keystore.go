@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_cc_structs_kafka_scheduler_v1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	github_com_confluentinc_cli_internal_pkg_config_v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 // KeyStore is a mock of KeyStore interface
@@ -16,7 +16,7 @@ type KeyStore struct {
 	HasAPIKeyFunc func(key, clusterId string) (bool, error)
 
 	lockStoreAPIKey sync.Mutex
-	StoreAPIKeyFunc func(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string) error
+	StoreAPIKeyFunc func(key *github_com_confluentinc_cli_internal_pkg_config_v1.APIKeyPair, clusterId string) error
 
 	lockDeleteAPIKey sync.Mutex
 	DeleteAPIKeyFunc func(key string) error
@@ -27,7 +27,7 @@ type KeyStore struct {
 			ClusterId string
 		}
 		StoreAPIKey []struct {
-			Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
+			Key       *github_com_confluentinc_cli_internal_pkg_config_v1.APIKeyPair
 			ClusterId string
 		}
 		DeleteAPIKey []struct {
@@ -78,7 +78,7 @@ func (m *KeyStore) HasAPIKeyCalls() []struct {
 }
 
 // StoreAPIKey mocks base method by wrapping the associated func.
-func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey, clusterId string) error {
+func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cli_internal_pkg_config_v1.APIKeyPair, clusterId string) error {
 	m.lockStoreAPIKey.Lock()
 	defer m.lockStoreAPIKey.Unlock()
 
@@ -87,7 +87,7 @@ func (m *KeyStore) StoreAPIKey(key *github_com_confluentinc_cc_structs_kafka_sch
 	}
 
 	call := struct {
-		Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
+		Key       *github_com_confluentinc_cli_internal_pkg_config_v1.APIKeyPair
 		ClusterId string
 	}{
 		Key:       key,
@@ -109,7 +109,7 @@ func (m *KeyStore) StoreAPIKeyCalled() bool {
 
 // StoreAPIKeyCalls returns the calls made to StoreAPIKey.
 func (m *KeyStore) StoreAPIKeyCalls() []struct {
-	Key       *github_com_confluentinc_cc_structs_kafka_scheduler_v1.ApiKey
+	Key       *github_com_confluentinc_cli_internal_pkg_config_v1.APIKeyPair
 	ClusterId string
 } {
 	m.lockStoreAPIKey.Lock()

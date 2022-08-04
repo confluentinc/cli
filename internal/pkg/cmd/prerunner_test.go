@@ -21,6 +21,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
@@ -114,6 +115,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+	featureflags.Init(nil, true)
+
 	tests := map[string]log.Level{
 		"":      log.ERROR,
 		"-v":    log.WARN,
@@ -132,7 +135,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
 		require.NoError(t, err)
 
-		require.Equal(t, level, log.CliLogger.GetLevel())
+		require.Equal(t, level, log.CliLogger.Level)
 	}
 }
 
@@ -550,6 +553,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
+			cfg.Context().Platform.Server = "https://confluent.cloud"
 
 			var envVarCalled bool
 			var netrcCalled bool

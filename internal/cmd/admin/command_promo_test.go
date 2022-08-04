@@ -57,7 +57,7 @@ func TestFormatBalance(t *testing.T) {
 }
 
 func TestConvertToUSD(t *testing.T) {
-	require.Equal(t, 1.23, convertToUSD(12300))
+	require.Equal(t, 1.23, ConvertToUSD(12300))
 }
 
 func TestFormatExpiration(t *testing.T) {

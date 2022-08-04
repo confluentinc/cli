@@ -76,6 +76,11 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		return "", "", err
 	}
 
+	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
+		log.CliLogger.Debugf(errors.EndOfFreeTrialErrorMsg, res.GetOrganization().GetSuspensionStatus())
+		return res.Token, res.RefreshToken, &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
+	}
+
 	return res.Token, res.RefreshToken, nil
 }
 

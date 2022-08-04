@@ -132,7 +132,7 @@ adjust_os() {
     amd64) OS=x86_64 ;;
     darwin) OS=darwin ;;
     linux) OS=linux ;;
-    alpine) OS=linux ;;
+    alpine) OS=alpine ;;
     windows) OS=windows ;;
   esac
   true
@@ -221,7 +221,7 @@ uname_os() {
     cygwin*) os="windows" ;;
   esac
   case "$osid" in
-    alpine*) os="linux" ;;
+    alpine*) os="alpine" ;;
   esac
   echo "$os"
 }

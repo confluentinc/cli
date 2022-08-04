@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -21,6 +21,7 @@ var (
 	enableLabels            = []string{"Id", "SchemaRegistryEndpoint"}
 	enableHumanRenames      = map[string]string{"ID": "Cluster ID", "SchemaRegistryEndpoint": "Endpoint URL"}
 	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
+	availableGeos           = []string{"us", "eu", "apac"}
 )
 
 func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
@@ -32,14 +33,15 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Enable Schema Registry, using Google Cloud Platform in the US.",
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us", version.CLIName),
+				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.`,
+				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced", version.CLIName),
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("geo", "", "Either 'us', 'eu', or 'apac'.")
+	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos)))
+	addPackageFlag(cmd, essentialsPackage)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -49,7 +51,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	_ = cmd.MarkFlagRequired("cloud")
 	_ = cmd.MarkFlagRequired("geo")
 
-	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return []string{"apac", "eu", "us"} })
+	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return availableGeos })
 
 	return cmd
 }
@@ -74,11 +76,22 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	packageDisplayName, err := cmd.Flags().GetString("package")
+	if err != nil {
+		return err
+	}
+
+	packageInternalName, err := getPackageInternalName(packageDisplayName)
+	if err != nil {
+		return err
+	}
+
 	// Build the SR instance
 	clusterConfig := &schedv1.SchemaRegistryClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Location:        location,
 		ServiceProvider: serviceProvider,
+		Package:         packageInternalName,
 		// Name is a special string that everyone expects. Originally, this field was added to support
 		// multiple SR instances, but for now there's a contract between our services that it will be
 		// this hardcoded string constant
@@ -86,23 +99,27 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	}
 
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	var clusterOutput *v1.SchemaRegistryCluster
 	if err != nil {
 		// If it already exists, return the existing one
-		cluster, getExistingErr := c.Context.SchemaRegistryCluster(cmd)
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
 		}
-		_ = output.DescribeObject(cmd, cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
+
+		clusterOutput = &v1.SchemaRegistryCluster{
+			Id:                     existingCluster.Id,
+			SchemaRegistryEndpoint: existingCluster.Endpoint,
+		}
 	} else {
-		v2Cluster := &v1.SchemaRegistryCluster{
+		clusterOutput = &v1.SchemaRegistryCluster{
 			Id:                     newCluster.Id,
 			SchemaRegistryEndpoint: newCluster.Endpoint,
 		}
-		_ = output.DescribeObject(cmd, v2Cluster, enableLabels, enableHumanRenames, enableStructuredRenames)
 	}
 
-	return nil
+	return output.DescribeObject(cmd, clusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
 }
 
 func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {

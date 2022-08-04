@@ -7,6 +7,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -24,6 +25,7 @@ type Context struct {
 	State                  *ContextState                     `json:"-" hcl:"-"`
 	Config                 *Config                           `json:"-" hcl:"-"`
 	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -138,12 +140,26 @@ func (c *Context) IsCloud(isTest bool) bool {
 		return true
 	}
 
-	for _, hostname := range CCloudHostnames {
+	for _, hostname := range ccloudv2.Hostnames {
 		if strings.Contains(c.PlatformName, hostname) {
 			return true
 		}
 	}
 	return false
+}
+
+func (c *Context) GetPlatform() *Platform {
+	if c != nil {
+		return c.Platform
+	}
+	return nil
+}
+
+func (c *Context) GetPlatformServer() string {
+	if platform := c.GetPlatform(); platform != nil {
+		return platform.Server
+	}
+	return ""
 }
 
 func (c *Context) GetAuth() *AuthConfig {
@@ -160,20 +176,6 @@ func (c *Context) GetUser() *orgv1.User {
 	return nil
 }
 
-func (c *Context) GetEmail() string {
-	if user := c.GetUser(); user != nil {
-		return user.Email
-	}
-	return ""
-}
-
-func (c *Context) GetUserSso() *orgv1.Sso {
-	if user := c.GetUser(); user != nil {
-		return user.Sso
-	}
-	return nil
-}
-
 func (c *Context) GetOrganization() *orgv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
@@ -181,18 +183,8 @@ func (c *Context) GetOrganization() *orgv1.Organization {
 	return nil
 }
 
-func (c *Context) GetOrganizationResourceId() string {
-	if org := c.GetOrganization(); org != nil {
-		return org.ResourceId
-	}
-	return ""
-}
-
-func (c *Context) IsUserSsoEnabled() bool {
-	if sso := c.GetUserSso(); sso != nil {
-		return sso.Enabled
-	}
-	return false
+func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+	return c.GetOrganization().GetSuspensionStatus()
 }
 
 func (c *Context) GetEnvironment() *orgv1.Account {
@@ -202,9 +194,16 @@ func (c *Context) GetEnvironment() *orgv1.Account {
 	return nil
 }
 
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
-	if c.State != nil {
-		return c.State.AuthToken
+	if state := c.GetState(); state != nil {
+		return state.AuthToken
 	}
 	return ""
 }
@@ -214,6 +213,19 @@ func (c *Context) GetAuthRefreshToken() string {
 		return c.State.AuthRefreshToken
 	}
 	return ""
+}
+
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+	if c.FeatureFlags == nil {
+		return map[string]interface{}{}
+	}
+
+	switch client {
+	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
+		return c.FeatureFlags.CcloudValues
+	default:
+		return c.FeatureFlags.Values
+	}
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

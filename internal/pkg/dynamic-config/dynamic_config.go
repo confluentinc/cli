@@ -15,7 +15,7 @@ type DynamicConfig struct {
 	V2Client *ccloudv2.Client
 }
 
-func NewDynamicConfig(config *v1.Config, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicConfig {
+func New(config *v1.Config, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicConfig {
 	return &DynamicConfig{
 		Config:   config,
 		Client:   client,
@@ -49,7 +49,7 @@ func (d *DynamicConfig) FindContext(name string) (*DynamicContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	return New(ctx, d.Client, d.V2Client), nil
+	return NewDynamicContext(ctx, d.Client, d.V2Client), nil
 }
 
 // Context returns the active context as a DynamicContext object.
@@ -58,5 +58,5 @@ func (d *DynamicConfig) Context() *DynamicContext {
 	if ctx == nil {
 		return nil
 	}
-	return New(ctx, d.Client, d.V2Client)
+	return NewDynamicContext(ctx, d.Client, d.V2Client)
 }

@@ -40,7 +40,7 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
-	plugins, err := c.getPlugins()
+	plugins, _, err := c.getPlugins()
 	if err != nil {
 		return err
 	}
@@ -50,8 +50,12 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	for _, conn := range plugins {
-		outputWriter.AddElement(conn)
+	for _, plugin := range plugins {
+		pluginListDisplay := &pluginListDisplay{
+			Class: plugin.Class,
+			Type:  plugin.Type,
+		}
+		outputWriter.AddElement(pluginListDisplay)
 	}
 	outputWriter.StableSort()
 

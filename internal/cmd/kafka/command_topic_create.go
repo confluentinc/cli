@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -54,7 +55,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	topicConfigsMap, err := properties.ToMap(configs)
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
@@ -71,9 +72,9 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	kafkaREST, _ := c.GetKafkaREST()
 	if kafkaREST != nil && !dryRun {
-		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 		i := 0
-		for k, v := range topicConfigsMap {
+		for k, v := range configMap {
 			val := v
 			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 				Name:  k,
@@ -121,7 +122,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			utils.Printf(cmd, errors.CreatedTopicMsg, topicName)
+			utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
 			return nil
 		}
 	}
@@ -134,8 +135,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	topic := &schedv1.Topic{
-		Spec: &schedv1.TopicSpecification{
-			Configs: make(map[string]string)},
+		Spec:     &schedv1.TopicSpecification{Configs: make(map[string]string)},
 		Validate: false,
 	}
 
@@ -143,13 +143,14 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	topic.Spec.NumPartitions = numPartitions
 	topic.Spec.ReplicationFactor = defaultReplicationFactor
 	topic.Validate = dryRun
-	topic.Spec.Configs = topicConfigsMap
+	topic.Spec.Configs = configMap
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	utils.Printf(cmd, errors.CreatedTopicMsg, topic.Spec.Name)
+
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topic.Spec.Name)
 	return nil
 }

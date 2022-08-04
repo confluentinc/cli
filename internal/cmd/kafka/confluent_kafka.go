@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -127,8 +128,8 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, beginning bool, configPath string, configStrings []string) (*ckafka.Consumer, error) {
-	configMap, err := getConsumerConfigMap(group, kafka, clientID, beginning)
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -152,6 +153,37 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 	}
 
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
+}
+
+// example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
+func getRebalanceCallback(cmd *cobra.Command, offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
+	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
+		switch ev := event.(type) { // ev is of type ckafka.Event
+		case kafka.AssignedPartitions:
+			partitions := make([]ckafka.TopicPartition,
+				len(ev.Partitions))
+			for i, partition := range ev.Partitions {
+				partition.Offset = offset
+				partitions[i] = partition
+			}
+			partitions = getPartitionsByIndex(partitions, partitionFilter)
+
+			err := consumer.IncrementalAssign(partitions)
+			if err != nil {
+				return err
+			}
+		case kafka.RevokedPartitions:
+			if consumer.AssignmentLost() {
+				utils.ErrPrintln(cmd, "%% Current assignment lost.")
+			}
+			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
+			err := consumer.IncrementalUnassign(parts)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {

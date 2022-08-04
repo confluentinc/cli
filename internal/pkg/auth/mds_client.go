@@ -15,11 +15,10 @@ type MDSClientManager interface {
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(url string, caCertPath string) (*mds.APIClient, error) {
+func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string) (*mds.APIClient, error) {
 	mdsConfig := mds.NewConfiguration()
-	if log.CliLogger.GetLevel() == log.DEBUG || log.CliLogger.GetLevel() == log.TRACE {
-		mdsConfig.Debug = true
-	}
+	mdsConfig.Debug = log.CliLogger.Level == log.DEBUG || log.CliLogger.Level == log.TRACE
+
 	if caCertPath != "" {
 		log.CliLogger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")
 		var err error

@@ -50,7 +50,7 @@ publish-release-notes-to-docs-repos:
 	git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 	git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 	git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
-	hub pull-request -b $(DOCS_BASE_BRANCH) -m "New release notes for $(BUMPED_VERSION)"
+	gh pr create -B $(DOCS_BASE_BRANCH) --title "New release notes for $(BUMPED_VERSION)" --body ""
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:

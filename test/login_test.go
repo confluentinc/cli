@@ -31,6 +31,73 @@ func (s *CLITestSuite) TestLogin_Help() {
 	s.runIntegrationTest(CLITest{args: "login -h", fixture: "login/help.golden"})
 }
 
+func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
+	s.T().Run("good organization with payment method and has codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "true")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+	})
+
+	s.T().Run("good organization with payment method and no codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "true")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+	})
+
+	s.T().Run("good organization without payment method and has codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "false")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+	})
+
+	s.T().Run("good organization without payment method and no codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "false")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+	})
+
+	s.T().Run("suspended organization login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+	})
+
+	s.T().Run("end of free trial suspended organization", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
+	})
+}
+
 func (s *CLITestSuite) TestCcloudErrors() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
@@ -38,14 +105,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
-	})
-
-	s.T().Run("suspended organization", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
-		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestion))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {

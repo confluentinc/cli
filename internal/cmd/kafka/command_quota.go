@@ -2,7 +2,10 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -22,6 +25,11 @@ func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &quotaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	clientQuotasEnable := launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", c.Context, v1.CliLaunchDarklyClient, true, false)
+	fmt.Println(cmd.Context())
+	fmt.Println("THIS IS THE FLAG ")
+	fmt.Println(clientQuotasEnable)
+	c.Hidden = !clientQuotasEnable
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())

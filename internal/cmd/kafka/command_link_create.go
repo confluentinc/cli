@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -99,8 +100,8 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		authHelperMsg)
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
 		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-	cmd.Flags().Bool(dryrunFlagName, false, "DEPRECATED: Validate a link, but do not create it (this flag is no longer active).")
-	cmd.Flags().Bool(noValidateFlagName, false, "DEPRECATED: Create a link even if the source cluster cannot be reached (this flag is no longer active).")
+	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
+	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
 
 	if c.cfg.IsCloudLogin() {
 		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -122,6 +123,16 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
+
+	dryRun, err := cmd.Flags().GetBool(dryrunFlagName)
+	if err != nil {
+		return err
+	}
+
+	noValidate, err := cmd.Flags().GetBool(noValidateFlagName)
 	if err != nil {
 		return err
 	}
@@ -162,7 +173,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	opts := &kafkarestv3.CreateKafkaLinkOpts{CreateLinkRequestData: optional.NewInterface(data)}
+	opts := &kafkarestv3.CreateKafkaLinkOpts{
+		ValidateOnly:          optional.NewBool(dryRun),
+		ValidateLink:          optional.NewBool(!noValidate),
+		CreateLinkRequestData: optional.NewInterface(data),
+	}
 
 	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
 	if err != nil {
@@ -173,7 +188,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	utils.Printf(cmd, errors.CreatedLinkMsg, linkName)
+	msg := errors.CreatedResourceMsg
+	if dryRun {
+		msg = "[DRY RUN]: " + msg
+	}
+	utils.Printf(cmd, msg, resource.ClusterLink, linkName)
 	return nil
 }
 

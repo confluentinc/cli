@@ -9,7 +9,7 @@ const (
 	prefixFormat = "%s: %s"
 
 	// admin commands
-	BadResourceIDErrorMsg  = "failed parsing resource id: please ensure resource id begins with \"u-\""
+	BadResourceIDErrorMsg  = `failed parsing resource ID: missing prefix "%s-" is required`
 	BadEmailFormatErrorMsg = "invalid email structure"
 
 	// api-key commands
@@ -22,9 +22,12 @@ const (
 	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "The provided API key does not belong to the target cluster."
 	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
-	APIKeyNotFoundSuggestions           = "Ensure the API key you are trying to store exists and has not been deleted, or create a new API key via `confluent api-key create`."
+	APIKeyNotFoundErrorMsg              = "Unknown API key %s"
+	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = "service account \"%s\" not found"
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
+	InvalidOperationOnApiKeyErrorMsg    = "Cannot perform this api key operation on a KSQL or a Schema Registry key. Please use Confluent UI"
+	APIKeyAccessForbiddenErrorMsg       = "API key not found or access forbidden"
 
 	// audit-log command
 	EnsureCPSixPlusSuggestions        = "Ensure that you are running against MDS with CP 6.0+."
@@ -39,6 +42,8 @@ const (
 	UnneccessaryUrlFlagForCloudLoginSuggestions = "Log in to Confluent Cloud with `confluent login`"
 	SSOCredentialsDoNotMatchLoginCredentials    = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions         = "Please re-login and use the same email at the prompt and in the SSO portal."
+	EndOfFreeTrialErrorMsg                      = "organization \"%s\" has been suspended because your free trial has ended"
+	EndOfFreeTrialSuggestions                   = "To continue using Confluent Cloud, please enter a credit card with \"confluent admin payment update\" or claim a promo code with \"confluent admin promo add\". To enter payment via the UI, please go to confluent.cloud/login."
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -48,10 +53,14 @@ const (
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
 
 	// connect and connector-catalog commands
-	EmptyConfigFileErrorMsg            = "connector config file \"%s\" is empty"
-	MissingRequiredConfigsErrorMsg     = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
-	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
-	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization."
+	UnknownConnectorIdErrorMsg          = `unknown connector ID "%s"`
+	UnknownConnectorNameErrorMsg        = `unknown connector name "%s"`
+	UnknownConnectorPluginClassErrorMsg = `unknown connector plugin class "%s"`
+	EmptyConfigFileErrorMsg             = "connector config file \"%s\" is empty"
+	MissingRequiredConfigsErrorMsg      = "required configs \"name\" and \"connector.class\" missing from connector config file \"%s\""
+	InvalidCloudErrorMsg                = "error defining plugin on given Kafka cluster"
+	InvalidCloudSuggestions             = "To list available connector plugin types, use `confluent connect plugin list`."
+	ConnectLogEventsNotEnabledErrorMsg  = "Connect Log Events are not enabled for this organization."
 
 	// environment command
 	EnvNotFoundErrorMsg    = "environment \"%s\" not found"
@@ -59,17 +68,16 @@ const (
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
 
 	// iam acl & kafka acl commands
-	UnableToPerformAclErrorMsg        = "unable to %s ACLs: %s"
-	UnableToPerformAclSuggestions     = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg        = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg        = "only --allow or --deny may be set when adding or deleting an ACL"
-	MustSetResourceTypeErrorMsg       = "exactly one resource type (%v) must be set"
-	InvalidOperationValueErrorMsg     = "invalid operation value: %s"
-	ExactlyOneSetErrorMsg             = "exactly one of %v must be set"
-	UserIdNotValidErrorMsg            = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg              = `ensure principal begins with "User:"`
-	BadServiceAccountOrUserIDErrorMsg = `ensure service account id begins with "sa-", or user resource id begins with "u-"`
-	PrincipalNotFoundErrorMsg         = `user or service account "%s" not found`
+	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
+	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
+	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
+	InvalidOperationValueErrorMsg = "invalid operation value: %s"
+	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
+	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
+	BadPrincipalErrorMsg          = `ensure principal begins with "User:"`
+	PrincipalNotFoundErrorMsg     = `user or service account "%s" not found`
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = "unknown role \"%s\""
@@ -99,6 +107,12 @@ const (
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
+
+	// iam provider commands
+	IdentityProviderNoOpUpdateErrorMsg = "One of `--description` or `--name` must be set."
+
+	// iam pool commands
+	IdentityPoolNoOpUpdateErrorMsg = "One of `--description`, `--filter`, `--identity-claim`, or `--name` must be set."
 
 	// init command
 	CannotBeEmptyErrorMsg         = "%s cannot be empty"
@@ -144,7 +158,9 @@ const (
 	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
 	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
 	KafkaClusterDeletingErrorMsg                  = "Your cluster is in the process of being deleted. Cannot initiate cluster resize."
-	ChooseRightEnvironmentSuggestions             = "Ensure the cluster ID you entered is valid.\n" +
+	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+		"Ensure the cluster is not associated with any active Connect clusters."
+	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
 	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
@@ -153,6 +169,7 @@ const (
 	FailedToCreateProducerMsg            = "failed to create producer: %v"
 	FailedToCreateConsumerMsg            = "failed to create consumer: %v"
 	FailedToCreateAdminClientMsg         = "failed to create confluent-kafka-go admin client: %v"
+	InvalidOffsetErrorMsg                = "offset value must be a non-negative integer"
 	InvalidSecurityProtocolErrorMsg      = "security protocol not supported: %v"
 	TopicExistsOnPremErrorMsg            = "topic \"%s\" already exists for the Kafka cluster"
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
@@ -169,6 +186,7 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
+	FailedToLoadSchemaSuggestions = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 
 	// Cluster Link commands
 	EmptyConfigErrorMsg = "Config file name is empty or config file is empty."
@@ -210,6 +228,9 @@ const (
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`"
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
+	SRInvalidPackageType         = `"%s" is an invalid package type`
+	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
+	SRInvalidPackageUpgrade      = `Schema Registry already uses "%s" package`
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
@@ -284,6 +305,7 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
+	NoOrganizationContextErrorMsg      = "unable to check organization from context"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
 
 	// local package
@@ -389,7 +411,7 @@ const (
 	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions    = "You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` or `--resource` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
@@ -407,7 +429,7 @@ const (
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the \"ca-cert-path\" flag or set \"CONFLUENT_PLATFORM_CA_CERT_PATH\""
 	MDSTokenNotFoundMsg               = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
-	KafkaRestUrlNotFoundSuggestions   = "Pass \"url\" flag or set CONFLUENT_REST_URL environment variable."
+	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
 	NoClustersFoundErrorMsg           = "No clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration"
 	NeedClientCertAndKeyPathsErrorMsg = "Must set \"client-cert-path\" and \"client-key-path\" flags together"
@@ -415,37 +437,34 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	avoidTimeoutSuggestion      = "To avoid session timeouts, you can save credentials to netrc file with `confluent login --save`."
+	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
+	AvoidTimeoutSuggestion      = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg         = "not logged in"
 	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
 	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
 	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token."
 	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
-		avoidTimeoutSuggestion
-	InvalidEmailErrorMsg    = "user \"%s\" not found"
-	InvalidEmailSuggestions = "Check the email credential.\n" +
-		"If the email is correct, check that you have successfully verified your email.\n" +
-		"If the problem persists, please submit a support ticket.\n" +
-		avoidTimeoutSuggestion
+		AvoidTimeoutSuggestion
+	InvalidEmailErrorMsg             = "user \"%s\" not found"
 	InvalidLoginURLMsg               = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.\n"
 	InvalidLoginErrorMsg             = "incorrect email or password"
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
-	CCloudInvalidLoginSuggestions    = avoidTimeoutSuggestion
 	NoAPIKeySelectedErrorMsg         = "no API key selected for resource \"%s\""
 	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
+	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = "\"environment\" flag should not be passed for API key context"
@@ -472,6 +491,6 @@ const (
 	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
 	ParsedGenericOpenAPIErrorMsg = "metadata service backend error: %s"
 
-	// LaunchDarkly errors
-	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported LaunchDarkly targeting values`
+	// FeatureFlags errors
+	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 )

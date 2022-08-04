@@ -14,10 +14,10 @@ import (
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 	config := v1.AuthenticatedCloudConfigMock()
-	dynamicConfigBase := NewDynamicConfig(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
+	dynamicConfigBase := New(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
 
 	config = v1.AuthenticatedCloudConfigMock()
-	dynamicConfigFlag := NewDynamicConfig(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
+	dynamicConfigFlag := New(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
 	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
 		Name: "test-context",
 	}

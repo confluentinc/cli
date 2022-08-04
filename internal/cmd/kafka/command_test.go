@@ -5,12 +5,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	logger "log"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -18,9 +22,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-
+	kafkarestmock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -888,10 +890,11 @@ func configMapWithJsonConfigValues() map[string]string {
 func TestBatchAlterLink(t *testing.T) {
 	const configFileName = "link-config.in"
 	configs := configMapWithJsonConfigValues()
-	dir, err := createTestConfigFile(configFileName, configs)
+	path, err := createTestConfigFile(configFileName, configs)
 	if err != nil {
-		logger.Fatal("Cannot create the test config file")
+		log.Fatalf("failed to create test config file: %v", err)
 	}
+	defer os.Remove(path)
 
 	linkTestHelper(
 		t,
@@ -905,8 +908,6 @@ func TestBatchAlterLink(t *testing.T) {
 			}
 		},
 	)
-
-	defer os.Remove(dir + "/" + configFileName)
 }
 
 func TestCreateLink(t *testing.T) {
@@ -929,51 +930,51 @@ func TestCreateLink(t *testing.T) {
 func TestCreateMirror(t *testing.T) {
 	const configFileName = "mirror-topic-config.in"
 	configs := configMapWithJsonConfigValues()
-	dir, err := createTestConfigFile(configFileName, configs)
+	path, err := createTestConfigFile(configFileName, configs)
 	if err != nil {
-		logger.Fatal("Cannot create the test config file")
+		log.Fatalf("failed to create test config file: %v", err)
 	}
+	defer os.Remove(path)
 
 	linkTestHelper(
 		t,
 		func(link testLink) []string {
-			return []string{"mirror", "create", "src-topic-1", "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName}
+			return []string{"mirror", "create", "topic-1", "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName}
 		},
 		func(expect chan interface{}, link testLink) {
 			expect <- cliMock.CreateMirrorMatcher{
 				LinkName:        "link-1",
-				SourceTopicName: "src-topic-1",
+				SourceTopicName: "topic-1",
 				Configs:         configs,
 			}
 		},
 	)
-	defer os.Remove(dir + "/" + configFileName)
 }
 
-//func TestCreateMirrorWithLinkPrefix(t *testing.T) {
-//	const configFileName, topicName, clusterLinkPrefix = "prefixed-mirror-topic-config.in", "topic-1", "src_"
-//	configs := configMapWithJsonConfigValues()
-//	dir, err := createTestConfigFile(configFileName, configs)
-//	if err != nil {
-//		logger.Fatal("Cannot create the test config file")
-//	}
-//
-//	linkTestHelper(
-//		t,
-//		func(link testLink) []string {
-//			return []string{"mirror", "create", clusterLinkPrefix + topicName, "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName, "--source-topic", topicName}
-//		},
-//		func(expect chan interface{}, link testLink) {
-//			expect <- cliMock.CreateMirrorMatcher{
-//				LinkName:        "link-1",
-//				SourceTopicName: clusterLinkPrefix + topicName,
-//				Configs:         configs,
-//				MirrorTopicName: topicName,
-//			}
-//		},
-//	)
-//	defer os.Remove(dir + "/" + configFileName)
-//}
+func TestCreateMirrorWithLinkPrefix(t *testing.T) {
+	const configFileName, topicName, clusterLinkPrefix = "prefixed-mirror-topic-config.in", "topic-1", "src_"
+	configs := configMapWithJsonConfigValues()
+	path, err := createTestConfigFile(configFileName, configs)
+	if err != nil {
+		log.Fatalf("failed to create test config file: %v", err)
+	}
+	defer os.Remove(path)
+
+	linkTestHelper(
+		t,
+		func(link testLink) []string {
+			return []string{"mirror", "create", clusterLinkPrefix + topicName, "--link", "link-1", "--replication-factor", "2", "--config-file", configFileName, "--source-topic", topicName}
+		},
+		func(expect chan interface{}, link testLink) {
+			expect <- cliMock.CreateMirrorMatcher{
+				LinkName:        "link-1",
+				SourceTopicName: topicName,
+				MirrorTopicName: clusterLinkPrefix + topicName,
+				Configs:         configs,
+			}
+		},
+	)
+}
 
 func TestListAllMirror(t *testing.T) {
 	linkTestHelper(
@@ -1255,7 +1256,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 					Email: "csreesangkom@confluent.io",
 				}, nil
 			},
-			GetServiceAccountsFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
+			GetServiceAccountsFunc: func(_ context.Context) ([]*orgv1.User, error) {
 				return []*orgv1.User{
 					{
 						Id:          serviceAccountId,
@@ -1279,7 +1280,7 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			},
 		},
 		EnvironmentMetadata: &mock.EnvironmentMetadata{
-			GetFunc: func(ctx context.Context) ([]*schedv1.CloudMetadata, error) {
+			GetFunc: func(_ context.Context) ([]*schedv1.CloudMetadata, error) {
 				return []*schedv1.CloudMetadata{{
 					Id:       "aws",
 					Accounts: []*schedv1.AccountMetadata{{Id: "account-xyz"}},
@@ -1290,6 +1291,33 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 	}
 	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
 		if enableREST {
+			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+
+			client := &ccloudv2.Client{
+				KafkaRestClient: &kafkarestv3.APIClient{
+					ACLV3Api: &kafkarestmock.ACLV3Api{
+						CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
+							return kafkarestv3.ApiCreateKafkaAclsRequest{}
+						},
+						CreateKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						DeleteKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiDeleteKafkaAclsRequest {
+							return kafkarestv3.ApiDeleteKafkaAclsRequest{}
+						},
+						DeleteKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaAclsRequest) (kafkarestv3.InlineResponse200, *http.Response, error) {
+							return kafkarestv3.InlineResponse200{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+						GetKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiGetKafkaAclsRequest {
+							return kafkarestv3.ApiGetKafkaAclsRequest{}
+						},
+						GetKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiGetKafkaAclsRequest) (kafkarestv3.AclDataList, *http.Response, error) {
+							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+					},
+				},
+			}
+
 			restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
 			restMock.ACLV3Api = cliMock.NewACLMock()
 			restMock.TopicV3Api = cliMock.NewTopicMock()
@@ -1299,9 +1327,8 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 			restMock.ClusterLinkingV3Api = cliMock.NewClusterLinkingMock(kafkaRestExpect)
 			restMock.ConsumerGroupV3Api = cliMock.NewConsumerGroupMock(kafkaRestExpect)
 			restMock.ReplicaStatusApi = cliMock.NewReplicaStatusMock()
-			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
-			kafkaREST := pcmd.NewKafkaREST(restMock, ctx)
-			return kafkaREST, nil
+
+			return pcmd.NewKafkaREST(ctx, client, restMock), nil
 		}
 		return nil, nil
 	})

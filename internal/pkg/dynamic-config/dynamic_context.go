@@ -3,12 +3,11 @@ package dynamicconfig
 import (
 	"context"
 	"fmt"
-	"strings"
+	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -23,7 +22,7 @@ type DynamicContext struct {
 	V2Client *ccloudv2.Client
 }
 
-func New(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	return &DynamicContext{
 		Context:  context,
 		Client:   client,
@@ -44,7 +43,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, environment, d.Name)
 			}
 
-			accounts, err := client.Account.List(context.Background(), &orgv1.Account{})
+			accounts, err := d.getAllEnvironments(client)
 			if err != nil {
 				return err
 			}
@@ -70,6 +69,22 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	return nil
 }
 
+// getAllEnvironments retrives all environments listed by ccloud v1 client.
+// It also includes the audit-log environment when that's enabled
+func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Account, error) {
+	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+	if err != nil {
+		return environments, err
+	}
+
+	if d.State.Auth == nil || d.State.Auth.Organization == nil || d.State.Auth.Organization.GetAuditLog() == nil || d.State.Auth.Organization.AuditLog.ServiceAccountId == 0 {
+		return environments, nil
+	}
+	auditLogAccountId := d.State.Auth.Organization.GetAuditLog().GetAccountId()
+	auditLogEnvironment, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	return append(environments, auditLogEnvironment), err
+}
+
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
@@ -82,18 +97,25 @@ func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1
 }
 
 func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, error) {
+	if d.KafkaClusterContext == nil {
+		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
+	}
+
 	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	return cluster, errors.CatchKafkaNotFoundError(err, clusterId)
+	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
-	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
-		return cluster, nil
+	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil {
+		const week = 7 * 24 * time.Hour
+		if time.Now().Before(config.LastUpdate.Add(week)) {
+			return config, nil
+		}
 	}
 
 	if d.Client == nil {
@@ -101,27 +123,16 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Resolve cluster details if not found locally.
-	kcc, err := NewContextClient(d).FetchCluster(clusterId)
+	cluster, err := d.FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	cluster := KafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
-	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+	config := v1.NewKafkaClusterConfig(cluster)
+	d.KafkaClusterContext.AddKafkaClusterConfig(config)
 	err = d.Save()
 
-	return cluster, err
-}
-
-func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
-	return &v1.KafkaClusterConfig{
-		ID:           kcc.Id,
-		Name:         kcc.Name,
-		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
-		APIEndpoint:  kcc.ApiEndpoint,
-		APIKeys:      apiKeys,
-		RestEndpoint: kcc.RestEndpoint,
-	}
+	return config, err
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
@@ -143,9 +154,7 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 		return err
 	}
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
-		// Fetch API key error.
-		ctxClient := NewContextClient(d)
-		return ctxClient.FetchAPIKeyError(apiKey, clusterId)
+		return d.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
 	return d.Save()
@@ -163,17 +172,16 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 		return nil, err
 	}
 
-	ctxClient := NewContextClient(d)
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
-	if resourceType == resource.SchemaRegistry {
+	if resourceType == resource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
 			if srCluster.Id == resourceId {
 				cluster = srCluster
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, envId)
+			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resourceId, envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
@@ -183,7 +191,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByAccountId(context.Background(), envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}

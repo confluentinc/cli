@@ -16,10 +16,58 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 	tests := []CLITest{
 		{args: "schema-registry --help", fixture: "schema-registry/help.golden"},
 		{args: "schema-registry cluster --help", fixture: "schema-registry/cluster-help.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us -o json", fixture: "schema-registry/enable-json.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us -o yaml", fixture: "schema-registry/enable-yaml.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo us", fixture: "schema-registry/enable.golden"},
-		{args: "schema-registry cluster enable --cloud gcp --geo somethingwrong", fixture: "schema-registry/enable-invalid-geo.golden", wantErrCode: 1},
+		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced -o json", fixture: "schema-registry/enable-json.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --geo us --package essentials -o yaml", fixture: "schema-registry/enable-yaml.golden"},
+		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced", fixture: "schema-registry/enable.golden"},
+		{
+			args:        "schema-registry cluster enable --cloud gcp --geo somethingwrong --package advanced",
+			fixture:     "schema-registry/enable-invalid-geo.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:        "schema-registry cluster enable --cloud aws --geo us --package invalid-package",
+			fixture:     "schema-registry/enable-invalid-package.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:        "schema-registry cluster enable --geo us --package essentials",
+			fixture:     "schema-registry/enable-missing-flag.golden",
+			wantErrCode: 1,
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-terminated.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("invalid_confirmation\n"))},
+			args:        "schema-registry cluster delete --environment=" + testserver.SRApiEnvId,
+			fixture:     "schema-registry/delete-invalid-confirmation.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:        "schema-registry cluster upgrade",
+			fixture:     "schema-registry/upgrade-missing-flag.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:        "schema-registry cluster upgrade --package invalid-package",
+			fixture:     "schema-registry/upgrade-invalid-package.golden",
+			wantErrCode: 1,
+		},
+		{
+			args:    "schema-registry cluster upgrade --package essentials",
+			fixture: "schema-registry/upgrade-current-package.golden",
+		},
+		{
+			args:    "schema-registry cluster upgrade --package advanced --environment=" + testserver.SRApiEnvId,
+			fixture: "schema-registry/upgrade.golden",
+		},
 		{args: "schema-registry schema --help", fixture: "schema-registry/schema-help.golden"},
 		{args: "schema-registry subject --help", fixture: "schema-registry/subject-help.golden"},
 		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter-help.golden"},

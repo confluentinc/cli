@@ -173,6 +173,10 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
+		{args: "iam service-account describe sa-12345 -o json", fixture: "iam/service-account/describe-json.golden"},
+		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
+		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},
+		{args: "iam service-account describe sa-6789", fixture: "iam/service-account/service-account-not-found.golden", wantErrCode: 1},
 		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update.golden"},
 		{args: "iam service-account update sa-12345 --description new-description-2", fixture: "iam/service-account/update-2.golden"},
 		{args: "iam service-account delete sa-12345", fixture: "iam/service-account/delete.golden"},
@@ -221,6 +225,19 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 }
 
+func (s *CLITestSuite) TestIAMUserUpdate() {
+	tests := []CLITest{
+		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
+		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
+		{args: "iam user update u-1 --full-name Test", fixture: "iam/user/update-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	tests := []CLITest{
 		{args: "iam user invitation create miles@confluent.io", fixture: "iam/user/invite.golden"},
@@ -237,6 +254,118 @@ func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 func (s *CLITestSuite) TestIAMUserListInvitation() {
 	tests := []CLITest{
 		{args: "iam user invitation list", fixture: "iam/user/invitation_list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMProviderCreate() {
+	tests := []CLITest{
+		{args: "iam provider create Okta --description new-description --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMProviderDelete() {
+	tests := []CLITest{
+		{args: "iam provider delete op-55555", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam provider delete op-1", fixture: "iam/identity-provider/delete-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMProviderDescribe() {
+	tests := []CLITest{
+		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMProviderUpdate() {
+	tests := []CLITest{
+		{args: "iam provider update op-12345 --name new-name --description new-description", fixture: "iam/identity-provider/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMProviderList() {
+	tests := []CLITest{
+		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolCreate() {
+	tests := []CLITest{
+		{args: "iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter claims.iss=\"https://company.provider.com\"", fixture: "iam/identity-pool/create.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolDelete() {
+	tests := []CLITest{
+		{args: "iam pool delete pool-55555 --provider op-12345 ", fixture: "iam/identity-pool/delete.golden"},
+		{args: "iam pool delete pool-1 --provider op-12345 ", fixture: "iam/identity-pool/delete-dne.golden", wantErrCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolDescribe() {
+	tests := []CLITest{
+		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolUpdate() {
+	tests := []CLITest{
+		{args: "iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter claims.iss=\"https://new-company.new-provider.com\"", fixture: "iam/identity-pool/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMPoolList() {
+	tests := []CLITest{
+		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
 	}
 
 	for _, test := range tests {

@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -173,12 +173,13 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.IsUserSsoEnabled(),
-			Username:         ctx.GetEmail(),
+			IsSSO:            ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
-			OrgResourceId:    ctx.GetOrganizationResourceId(),
+			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
 		}
+		log.CliLogger.Tracef("credentials: %#v", credentials)
 
 		return credentials, nil
 	}
@@ -191,7 +192,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		if log.CliLogger.GetLevel() >= log.WARN {
+		if log.CliLogger.Level >= log.WARN {
 			utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		}
 
@@ -271,7 +272,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	res, err := h.client.User.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
-	return err == nil && res.IsSso
+	return err == nil && res.GetIsSso()
 }
 
 // Prerun login for Confluent has two extra environment variables settings: CONFLUENT_MDS_URL (required), CONFLUNET_CA_CERT_PATH (optional)

@@ -10,5 +10,5 @@ func AuthenticatedDynamicConfigMock() *dynamicconfig.DynamicConfig {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	client := mock.NewClientMock()
 	v2Client := mock.NewV2ClientMock()
-	return dynamicconfig.NewDynamicConfig(cfg, client, v2Client)
+	return dynamicconfig.New(cfg, client, v2Client)
 }

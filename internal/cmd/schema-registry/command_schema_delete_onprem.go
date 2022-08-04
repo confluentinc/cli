@@ -39,7 +39,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *schemaCommand) onPremDelete(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetSrApiClientWithToken(cmd, nil, c.Version, c.AuthToken())
+	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}

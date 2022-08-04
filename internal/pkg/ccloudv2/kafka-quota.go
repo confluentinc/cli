@@ -14,7 +14,7 @@ func newKafkaQuotasClient(baseURL, userAgent string, isTest bool) *kafkaquotas.A
 		{URL: quotasServer, Description: "Confluent Cloud servicequota"},
 	}
 	cfg.UserAgent = userAgent
-	cfg.Debug = plog.CliLogger.GetLevel() >= plog.DEBUG
+	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	return kafkaquotas.NewAPIClient(cfg)
 }
 

@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -24,8 +24,48 @@ const (
 )
 
 var (
-	ver, _          = version.NewVersion("1.0.0")
-	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
+	ver, _ = version.NewVersion("1.0.0")
+)
+
+const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+
+var (
+	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.SuspendedOrganizationSuggestions,
+	)
+	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.EndOfFreeTrialSuggestions,
+	)
+	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
+		"you must log in to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud with a username and password to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
+		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
+	)
+	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
+		"you must log out of Confluent Cloud to use this command",
+		"Log out with \"confluent logout\".\n",
+	)
+	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Platform to use this command",
+		`Log in with "confluent login --url <mds-url>".`,
+	)
+	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
+	)
 )
 
 // Config represents the CLI configuration.
@@ -263,7 +303,7 @@ func (c *Config) Validate() error {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			log.CliLogger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
+			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
@@ -463,7 +503,109 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
+func (c *Config) CheckIsOnPremLogin() error {
+	ctx := c.Context()
+	if ctx != nil && ctx.PlatformName != "" && !c.isCloud() {
+		return nil
+	}
+	return RequireOnPremLoginErr
+}
+
+func (c *Config) CheckIsCloudLogin() error {
+	if !c.isCloud() {
+		return RequireCloudLoginErr
+	}
+
+	if c.isContextStatePresent() && c.isOrgSuspended() {
+		if c.isLoginBlockedByOrgSuspension() {
+			return RequireCloudLoginOrgUnsuspendedErr
+		} else {
+			return RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
+		}
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
+	if !c.isCloud() {
+		return RequireCloudLoginErr
+	}
+
+	if c.isContextStatePresent() && c.isLoginBlockedByOrgSuspension() {
+		return RequireCloudLoginOrgUnsuspendedErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsCloudLoginOrOnPremLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
+
+	if !(isCloudLoginErr == nil || isOnPremLoginErr == nil) {
+		// return org suspension errors
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
+		}
+		return RequireCloudLoginOrOnPremErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonAPIKeyCloudLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
+
+	if !(c.CredentialType() != APIKey && isCloudLoginErr == nil) {
+		// return org suspension errors
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
+		}
+		return RequireNonAPIKeyCloudLoginErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
+	isNonAPIKeyCloudLoginErr := c.CheckIsNonAPIKeyCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
+
+	if !(isNonAPIKeyCloudLoginErr == nil || isOnPremLoginErr == nil) {
+		// return org suspension errors
+		if isNonAPIKeyCloudLoginErr != nil && isNonAPIKeyCloudLoginErr != RequireCloudLoginErr && isNonAPIKeyCloudLoginErr != RequireNonAPIKeyCloudLoginErr {
+			return isNonAPIKeyCloudLoginErr
+		}
+		return RequireNonAPIKeyCloudLoginOrOnPremLoginErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonCloudLogin() error {
+	if c.isCloud() {
+		return RequireNonCloudLogin
+	}
+	return nil
+}
+
+func (c *Config) CheckAreUpdatesEnabled() error {
+	if c.DisableUpdates {
+		return RequireUpdatesEnabledErr
+	}
+	return nil
+}
+
 func (c *Config) IsCloudLogin() bool {
+	return c.CheckIsCloudLogin() == nil
+}
+
+func (c *Config) IsOnPremLogin() bool {
+	return c.CheckIsOnPremLogin() == nil
+}
+
+func (c *Config) isCloud() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
@@ -472,9 +614,26 @@ func (c *Config) IsCloudLogin() bool {
 	return ctx.IsCloud(c.IsTest)
 }
 
-func (c *Config) IsOnPremLogin() bool {
+func (c *Config) isContextStatePresent() bool {
 	ctx := c.Context()
-	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+	if ctx == nil {
+		return false
+	}
+
+	if ctx.GetOrganization() == nil {
+		log.CliLogger.Trace("current context state is not set up properly for checking org suspension status")
+		return false
+	}
+
+	return true
+}
+
+func (c *Config) isOrgSuspended() bool {
+	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
+}
+
+func (c *Config) isLoginBlockedByOrgSuspension() bool {
+	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) GetLastUsedOrgId() string {

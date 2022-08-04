@@ -316,3 +316,8 @@ func binaryPath(t *testing.T, binaryName string) string {
 	require.NoError(t, err)
 	return path.Join(dir, binaryName)
 }
+
+func unsetPaymentAndPromoEnvs() {
+	os.Unsetenv("HAS_PAYMENT_METHOD")
+	os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
+}

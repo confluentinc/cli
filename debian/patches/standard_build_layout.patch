@@ -1,6 +1,6 @@
---- cli/Makefile	2022-04-15 13:14:20.000000000 -0500
-+++ debian/Makefile	2022-04-15 12:35:47.000000000 -0500
-@@ -1,260 +1,130 @@
+--- cli/Makefile	2022-06-22 13:54:59.000000000 -0700
++++ debian/Makefile	2022-05-20 17:00:21.000000000 -0700
+@@ -1,261 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -61,6 +61,7 @@
 -include ./mk-files/release-test.mk
 -include ./mk-files/release-notes.mk
 -include ./mk-files/unrelease.mk
+-include ./mk-files/usage.mk
 -include ./mk-files/utils.mk
 -
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")

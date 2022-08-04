@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -60,22 +61,22 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
-	topicConfigStrings, err := cmd.Flags().GetStringSlice("config")
-	if err != nil {
-		return err
-	}
 	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
 	}
 
-	topicConfigsMap, err := properties.ToMap(topicConfigStrings)
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(topicConfigsMap))
+	configMap, err := properties.ConfigFlagToMap(configs)
+	if err != nil {
+		return err
+	}
+	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 	i := 0
-	for k, v := range topicConfigsMap {
+	for k, v := range configMap {
 		v2 := v // create a local copy to use pointer
 		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 			Name:  k,
@@ -109,7 +110,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		}
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	// no error if topic is created successfully.
-	utils.Printf(cmd, errors.CreatedTopicMsg, topicName)
+
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

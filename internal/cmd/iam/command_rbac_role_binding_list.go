@@ -17,6 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type displayStruct struct {
+	Principal   string
+	Email       string
+	ServiceName string
+	PoolName    string
+}
+
 func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -139,7 +146,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
@@ -232,16 +239,46 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
-	userToEmailMap := make(map[string]string)
+func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
+	providers, err := c.V2Client.ListIdentityProviders()
+	if err != nil {
+		return nil, err
+	}
+	poolToName := make(map[string]string)
+	for _, provider := range providers {
+		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
+		if err != nil {
+			return nil, err
+		}
+		for _, pool := range pools {
+			poolToName["User:"+*pool.Id] = *pool.DisplayName
+		}
+	}
+	return poolToName, nil
+}
+
+func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
 	users, err := c.Client.User.List(context.Background())
 	if err != nil {
-		return userToEmailMap, err
+		return nil, err
 	}
+	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmailMap["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.ResourceId] = u.Email
 	}
-	return userToEmailMap, nil
+	return userToEmail, nil
+}
+
+func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	serviceAccountToName := make(map[string]string)
+	for _, u := range users {
+		serviceAccountToName["User:"+u.ResourceId] = u.ServiceName
+	}
+	return serviceAccountToName, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -282,26 +319,39 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
+	if err != nil {
+		return err
+	}
+
+	poolToNameMap, err := c.getPoolToNameMap()
 	if err != nil {
 		return err
 	}
 
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
+		row := &displayStruct{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
-			displayStruct := &struct {
-				Principal string
-				Email     string
-			}{
-				Principal: principal,
-				Email:     email,
-			}
-			outputWriter.AddElement(displayStruct)
+			row.Email = email
+			outputWriter.AddElement(row)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			row.ServiceName = name
+			outputWriter.AddElement(row)
+		}
+		if name, ok := poolToNameMap[principal]; ok {
+			row.PoolName = name
+			outputWriter.AddElement(row)
 		}
 	}
 	return outputWriter.Out()
