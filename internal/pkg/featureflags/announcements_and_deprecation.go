@@ -1,6 +1,7 @@
 package featureflags
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,6 +12,7 @@ import (
 )
 
 const deprecate = "DEPRECATED: "
+const DeprecationFlag = "cli.deprecation_notices"
 
 type FlagsAndMsg struct {
 	Flags        []string
@@ -27,8 +29,7 @@ func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 		if idx := strings.Index(command, "-"); idx != -1 {
 			flags = strings.Split(command[idx:], " ")
 			for i := range flags {
-				flags[i] = strings.TrimPrefix(flags[i], "--")
-				flags[i] = strings.TrimPrefix(flags[i], "-")
+				flags[i] = strings.TrimLeft(flags[i], "-")
 			}
 			command = command[:idx-1]
 		}
@@ -86,10 +87,14 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 						flag = cmd.Flags().ShorthandLookup(flag).Name
 					}
 					if cmd.Flags().Changed(flag) {
-						if featureFlag == "cli.deprecation_notices" {
-							msg = "The --" + flag + " is deprecated: "
+						if featureFlag == DeprecationFlag {
+							msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
 						}
-						utils.ErrPrintln(cmd, msg+flagsAndMsg.FlagMessages[i])
+						if flagsAndMsg.FlagMessages[i] == "" {
+							utils.ErrPrintln(cmd, msg+".")
+						} else {
+							utils.ErrPrintln(cmd, msg+": "+flagsAndMsg.FlagMessages[i])
+						}
 					}
 				}
 			}

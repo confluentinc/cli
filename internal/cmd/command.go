@@ -198,7 +198,7 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 
 func checkDeprecation(cmd *cobra.Command, cfg *v1.Config) {
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
-	deprecatedCmds := featureflags.Manager.JsonVariation("cli.deprecation_notices", ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationFlag, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
