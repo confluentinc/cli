@@ -14,7 +14,6 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "provider",
 		Short:       "Manage provider actions.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &providerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
