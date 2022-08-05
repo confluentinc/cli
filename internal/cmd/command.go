@@ -2,13 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
@@ -24,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
 	"github.com/confluentinc/cli/internal/cmd/prompt"
 	schemaregistry "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -40,9 +37,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/spf13/cobra"
+	"os"
 )
 
 func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
@@ -102,6 +102,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(plugin.New(prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -112,11 +113,17 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
+	if !cfg.DisablePlugins {
+		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
+			return err
+		} else if plugin != nil {
+			return pplugin.SetupExecPlugin(plugin)
+		}
+	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
 	u := usage.New(ver.Version)
 
