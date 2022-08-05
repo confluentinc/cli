@@ -10,7 +10,7 @@ import (
 func (s *providerShareCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe provider share.",
+		Short:             "Describe a provider share.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(s.validArgs),
 		RunE:              s.describe,
