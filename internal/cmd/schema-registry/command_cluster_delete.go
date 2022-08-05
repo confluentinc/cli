@@ -35,7 +35,6 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-		_ = cmd.MarkFlagRequired("environment")
 	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
