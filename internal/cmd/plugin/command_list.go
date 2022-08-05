@@ -41,7 +41,11 @@ func list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if len(pluginMap) == 0 && cmd.Flag("output").Value.String() == "human" {
+	output, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return err
+	}
+	if len(pluginMap) == 0 && output == "human" {
 		utils.ErrPrintln(cmd, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 	var pluginList, overshadowedPlugins, nameConflictPlugins []row
@@ -79,11 +83,8 @@ func printTable(cmd *cobra.Command, rows []row) error {
 		return err
 	}
 
-	for _, r := range rows {
-		w.AddElement(&row{
-			pluginName: r.pluginName,
-			filePath:   r.filePath,
-		})
+	for _, row := range rows {
+		w.AddElement(&row)
 	}
 
 	w.StableSort()

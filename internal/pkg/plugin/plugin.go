@@ -19,7 +19,6 @@ import (
 
 type pluginInfo struct {
 	args []string
-	idx  int
 	name string
 }
 
@@ -79,8 +78,7 @@ func FindPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
 		return nil, err
 	}
 
-	plugin := newPluginInfo(args)
-
+	plugin, nameSize := newPluginInfo(args)
 	for len(plugin.name) > len(pversion.CLIName) {
 		if pluginPathList, ok := pluginMap[plugin.name]; ok {
 			if cmd, _, _ := cmd.Find(args); strings.ReplaceAll(cmd.CommandPath(), " ", "-") == plugin.name {
@@ -90,15 +88,15 @@ func FindPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
 			return plugin, nil
 		}
-		plugin.args = append([]string{args[plugin.idx-1]}, plugin.args...)
-		plugin.idx--
+		plugin.args = append([]string{args[nameSize-1]}, plugin.args...)
+		nameSize--
 		plugin.name = plugin.name[:strings.LastIndex(plugin.name, "-")]
 	}
 	return nil, err
 }
 
-// newPluginInfo initializes a pluginInfo struct from command line arguments
-func newPluginInfo(args []string) *pluginInfo {
+// newPluginInfo initializes a pluginInfo struct from command line arguments and returns the starting size of the plugin's command path
+func newPluginInfo(args []string) (*pluginInfo, int) {
 	infoArgs := make([]string, 0, len(args))
 	name := []string{pversion.CLIName}
 	for i, arg := range args {
@@ -112,8 +110,7 @@ func newPluginInfo(args []string) *pluginInfo {
 	return &pluginInfo{
 		args: infoArgs,
 		name: strings.Join(name, "-"),
-		idx:  len(name) - 1,
-	}
+	}, len(name) - 1
 }
 
 func SetupExecPlugin(plugin *pluginInfo) error {
