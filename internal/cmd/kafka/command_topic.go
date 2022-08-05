@@ -14,6 +14,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -148,13 +149,13 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == kafkarest.UnknownTopicOrPartitionErrorCode {
 					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return 0, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return 0, kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {

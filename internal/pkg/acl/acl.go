@@ -450,3 +450,29 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 
 	return prefix, resourceId, nil
 }
+
+func GetCreateAclRequestData(acl *schedv1.ACLBinding) cckafkarestv3.CreateAclRequestData {
+	data := cckafkarestv3.CreateAclRequestData{
+		Host:         acl.Entry.Host,
+		Principal:    acl.Entry.Principal,
+		ResourceName: acl.Pattern.Name,
+	}
+
+	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+		data.ResourceType = cckafkarestv3.AclResourceType(acl.Pattern.ResourceType.String())
+	}
+
+	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
+		data.PatternType = acl.Pattern.PatternType.String()
+	}
+
+	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
+		data.Operation = acl.Entry.Operation.String()
+	}
+
+	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
+		data.Permission = acl.Entry.PermissionType.String()
+	}
+
+	return data
+}

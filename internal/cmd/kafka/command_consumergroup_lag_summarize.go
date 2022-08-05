@@ -6,6 +6,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -67,7 +68,7 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 
 	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, convertLagSummaryToStruct(lagSummaryResp), lagSummaryFields, lagSummaryHumanRenames, lagSummaryStructuredRenames)

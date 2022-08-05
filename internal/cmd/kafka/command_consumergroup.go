@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 var (
@@ -137,7 +138,7 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 
 	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
 	if err != nil {
-		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return nil, kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return &groupCmdResp, nil
