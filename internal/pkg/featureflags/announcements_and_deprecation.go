@@ -55,8 +55,12 @@ func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
+	if cmd.Long == "" {
+		cmd.Long = deprecationPrefix + cmd.Short
+	} else {
+		cmd.Long = deprecationPrefix + cmd.Long
+	}
 	cmd.Short = deprecationPrefix + cmd.Short
-	cmd.Long = deprecationPrefix + cmd.Long
 	for _, subcommand := range cmd.Commands() {
 		DeprecateCommandTree(subcommand)
 	}
@@ -82,7 +86,7 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
-				utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+				utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CmdMessage))
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
 					var msg string

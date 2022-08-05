@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -24,7 +23,6 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Configure ACLs for a ksqlDB app."
-		longText = "Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.configureACLsApp
 	}
 
@@ -92,9 +90,6 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp boo
 		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 }
 

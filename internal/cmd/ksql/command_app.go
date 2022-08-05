@@ -4,14 +4,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newAppCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "app",
 		Short:       "Manage ksqlDB apps.",
-		Long:        "Manage ksqlDB apps. " + errors.KSQLAppDeprecateWarning,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 

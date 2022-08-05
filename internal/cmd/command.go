@@ -115,7 +115,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.AddCommand(version.New(prerunner, ver))
 
 	changeDefaults(cmd, cfg)
-	checkDeprecation(cmd, cfg)
+	deprecateCommandsAndFlagsprecation(cmd, cfg)
 	return cmd
 }
 
@@ -196,7 +196,7 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 	return nil
 }
 
-func checkDeprecation(cmd *cobra.Command, cfg *v1.Config) {
+func deprecateCommandsAndFlagsprecation(cmd *cobra.Command, cfg *v1.Config) {
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
