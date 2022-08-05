@@ -26,8 +26,8 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	runCommand := c.listClusters
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: List ksqlDB apps."
-		longText = "DEPRECATED: List ksqlDB apps. " + errors.KSQLAppDeprecateWarning
+		shortText = "List ksqlDB apps."
+		longText = "List ksqlDB apps. " + errors.KSQLAppDeprecateWarning
 		runCommand = c.listApps
 	}
 
