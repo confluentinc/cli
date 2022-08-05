@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -57,7 +58,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)

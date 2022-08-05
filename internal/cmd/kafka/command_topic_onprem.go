@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -32,7 +33,7 @@ type TopicData struct {
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
 	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {
-		return "", kafkaRestError(client.GetConfig().BasePath, err, resp)
+		return "", kafkarest.NewError(client.GetConfig().BasePath, err, resp)
 	}
 	if clusters.Data == nil || len(clusters.Data) == 0 {
 		return "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)

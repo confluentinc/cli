@@ -10,6 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -55,12 +56,12 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 
 	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroup(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumers(kafkaREST.Context, lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)

@@ -4,17 +4,22 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkarestmock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
+	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -74,6 +79,7 @@ type KSQLTestSuite struct {
 	ksqlc        *mock.KSQL
 	kafkac       *mock.Kafka
 	userc        *mock.User
+	aclc         *kafkarestmock.ACLV3Api
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
@@ -99,33 +105,41 @@ func (suite *KSQLTestSuite) SetupTest() {
 		ServiceAccountId:  serviceAcctID,
 	}
 	suite.kafkac = &mock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+		DescribeFunc: func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 			return suite.kafkaCluster, nil
 		},
-		CreateACLsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, binding []*schedv1.ACLBinding) error {
+		CreateACLsFunc: func(_ context.Context, _ *schedv1.KafkaCluster, binding []*schedv1.ACLBinding) error {
 			return nil
 		},
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
+		ListFunc: func(_ context.Context, _ *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
 			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
 	suite.ksqlc = &mock.KSQL{
-		DescribeFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (*schedv1.KSQLCluster, error) {
+		DescribeFunc: func(_ context.Context, _ *schedv1.KSQLCluster) (*schedv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		CreateFunc: func(arg0 context.Context, arg1 *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
+		CreateFunc: func(_ context.Context, _ *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
 			return suite.ksqlCluster, nil
 		},
-		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, error) {
+		ListFunc: func(_ context.Context, _ *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, error) {
 			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
 		},
-		DeleteFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) error {
+		DeleteFunc: func(_ context.Context, _ *schedv1.KSQLCluster) error {
 			return nil
 		},
 	}
 	suite.userc = &mock.User{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
+		GetServiceAccountsFunc: func(_ context.Context) ([]*orgv1.User, error) {
 			return []*orgv1.User{suite.serviceAcct}, nil
+		},
+	}
+	suite.aclc = &kafkarestmock.ACLV3Api{
+		CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
+			return kafkarestv3.ApiCreateKafkaAclsRequest{}
+		},
+		CreateKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaAclsRequest) (*http.Response, error) {
+			return nil, nil
 		},
 	}
 }
@@ -136,7 +150,17 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf))
+
+	provider := (pcmd.KafkaRESTProvider)(func() (*pcmd.KafkaREST, error) {
+		ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
+		client := &ccloudv2.Client{KafkaRestClient: &kafkarestv3.APIClient{ACLV3Api: suite.aclc}}
+		restMock := krsdk.NewAPIClient(&krsdk.Configuration{BasePath: "/dummy-base-path"})
+		restMock.ACLV3Api = cliMock.NewACLMock()
+
+		return pcmd.NewKafkaREST(ctx, client, restMock), nil
+	})
+
+	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, &provider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -159,11 +183,7 @@ func (suite *KSQLTestSuite) testShouldConfigureACLs(isApp bool) {
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
-	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
-	buf := new(bytes.Buffer)
-	req.NoError(acl.PrintACLs(cmd, bindings, buf))
-	req.Equal(expectedACLs, buf.String())
+	req.Equal(32, len(suite.aclc.CreateKafkaAclsCalls()))
 }
 
 func (suite *KSQLTestSuite) TestAppShouldNotConfigureAclsWhenUser() {
@@ -201,19 +221,15 @@ func (suite *KSQLTestSuite) testShouldAlsoConfigureForPro(isApp bool) {
 
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
-	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (cluster2 *schedv1.KafkaCluster, e error) {
-		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
+	suite.kafkac.DescribeFunc = func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId()}, nil
 	}
 
 	err := cmd.Execute()
 
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.Equal(1, len(suite.kafkac.CreateACLsCalls()))
-	bindings := suite.kafkac.CreateACLsCalls()[0].Bindings
-	buf := new(bytes.Buffer)
-	req.NoError(acl.PrintACLs(cmd, bindings, buf))
-	req.Equal(expectedACLs, buf.String())
+	req.Equal(32, len(suite.aclc.CreateKafkaAclsCalls()))
 }
 
 func (suite *KSQLTestSuite) TestAppShouldNotConfigureOnDryRun() {

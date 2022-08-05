@@ -1,20 +1,17 @@
 package kafka
 
 import (
-	"fmt"
-	"net/http"
-	neturl "net/url"
 	"testing"
 
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/cli/internal/pkg/acl"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type KafkaRestTestSuite struct {
@@ -82,64 +79,13 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts()
 		XXX_sizecache:        0,
 	}
 
-	r := getCreateAclRequestData(&binding)
+	r := acl.GetCreateAclRequestData(&binding)
 	req.True(r.Host == "myhost")
 	req.True(r.Operation == "READ")
 	req.True(r.ResourceName == "mycluster")
 	req.True(r.Principal == "myprincipal")
 	req.True(r.Permission == "DENY")
 	req.True(r.PatternType == "LITERAL")
-}
-
-func (suite *KafkaRestTestSuite) TestKafkaRestError() {
-	req := suite.Require()
-	url := "http://my-url"
-	neturlMsg := "net-error"
-
-	neturlError := neturl.Error{
-		Op:  "my-op",
-		URL: url,
-		Err: fmt.Errorf(neturlMsg),
-	}
-
-	r := kafkaRestError(url, &neturlError, nil)
-	req.NotNil(r)
-	req.Contains(r.Error(), "establish")
-	req.Contains(r.Error(), url)
-	req.Contains(r.Error(), neturlMsg)
-
-	neturlError.Err = fmt.Errorf(SelfSignedCertError)
-	r = kafkaRestError(url, &neturlError, nil)
-	req.NotNil(r)
-	req.Contains(r.Error(), "establish")
-	req.Contains(r.Error(), url)
-	e, ok := r.(errors.ErrorWithSuggestions)
-	req.True(ok)
-	req.Contains(e.GetSuggestionsMsg(), "CONFLUENT_PLATFORM_CA_CERT_PATH")
-
-	openAPIError := kafkarestv3.GenericOpenAPIError{}
-
-	r = kafkaRestError(url, openAPIError, nil)
-	req.NotNil(r)
-	req.Contains(r.Error(), "Unknown")
-
-	httpResp := http.Response{
-		Status:     "Code: 400",
-		StatusCode: 400,
-		Request: &http.Request{
-			Method: http.MethodGet,
-			URL: &neturl.URL{
-				Host: "myhost",
-				Path: "/my-path",
-			},
-		},
-	}
-	r = kafkaRestError(url, openAPIError, &httpResp)
-	req.NotNil(r)
-	req.Contains(r.Error(), "failed")
-	req.Contains(r.Error(), http.MethodGet)
-	req.Contains(r.Error(), "myhost")
-	req.Contains(r.Error(), "my-path")
 }
 
 func (suite *KafkaRestTestSuite) TestSetServerURL() {

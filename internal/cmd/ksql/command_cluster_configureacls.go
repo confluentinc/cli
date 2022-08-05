@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"strconv"
 
@@ -14,6 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -95,6 +97,41 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp boo
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
+
+	kafkaREST, _ := c.GetKafkaREST()
+	if kafkaREST != nil {
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+		if err != nil {
+			return err
+		}
+
+		kafkaRestExists := true
+		for i, binding := range bindings {
+			data := acl.GetCreateAclRequestData(binding)
+			httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data)
+			if err != nil && httpResp == nil {
+				if i == 0 {
+					// assume Kafka REST is not available, fallback to KafkaAPI
+					kafkaRestExists = false
+					break
+				}
+				return kafkarest.NewError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+			}
+			if err != nil {
+				return kafkarest.NewError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+			}
+			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+		}
+
+		if kafkaRestExists {
+			return nil
+		}
+	}
+
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 }
 
@@ -161,33 +198,33 @@ func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1
 }
 
 func (c *ksqlCommand) createClusterAcl(operation schedv1.ACLOperations_ACLOperation, serviceAccountId string) *schedv1.ACLBinding {
-	binding := &schedv1.ACLBinding{
+	return &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
-			Host: "*",
+			Host:           "*",
+			Operation:      operation,
+			PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+			Principal:      "User:" + serviceAccountId,
 		},
-		Pattern: &schedv1.ResourcePatternConfig{},
+		Pattern: &schedv1.ResourcePatternConfig{
+			Name:         "kafka-cluster",
+			PatternType:  schedv1.PatternTypes_LITERAL,
+			ResourceType: schedv1.ResourceTypes_CLUSTER,
+		},
 	}
-	binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
-	binding.Entry.Operation = operation
-	binding.Entry.Principal = "User:" + serviceAccountId
-	binding.Pattern.PatternType = schedv1.PatternTypes_LITERAL
-	binding.Pattern.ResourceType = schedv1.ResourceTypes_CLUSTER
-	binding.Pattern.Name = "kafka-cluster"
-	return binding
 }
 
 func (c *ksqlCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
-	binding := &schedv1.ACLBinding{
+	return &schedv1.ACLBinding{
 		Entry: &schedv1.AccessControlEntryConfig{
-			Host: "*",
+			Host:           "*",
+			Operation:      operation,
+			PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+			Principal:      "User:" + serviceAccountId,
 		},
-		Pattern: &schedv1.ResourcePatternConfig{},
+		Pattern: &schedv1.ResourcePatternConfig{
+			Name:         prefix,
+			PatternType:  patternType,
+			ResourceType: resource,
+		},
 	}
-	binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
-	binding.Entry.Operation = operation
-	binding.Entry.Principal = "User:" + serviceAccountId
-	binding.Pattern.PatternType = patternType
-	binding.Pattern.ResourceType = resource
-	binding.Pattern.Name = prefix
-	return binding
 }

@@ -7,7 +7,6 @@ import (
 	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
@@ -15,6 +14,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newCreateCommand() *cobra.Command {
@@ -81,7 +81,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 		kafkaRestExists := true
 		for i, binding := range bindings {
-			data := getCreateAclRequestData(binding)
+			data := aclutil.GetCreateAclRequestData(binding)
 			httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data)
 			if err != nil && httpResp == nil {
 				if i == 0 {
@@ -91,7 +91,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
 			}
 
 			if err != nil {
@@ -99,7 +99,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
 				}
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
@@ -128,30 +128,4 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
-}
-
-func getCreateAclRequestData(acl *schedv1.ACLBinding) kafkarestv3.CreateAclRequestData {
-	data := kafkarestv3.CreateAclRequestData{
-		Host:         acl.Entry.Host,
-		Principal:    acl.Entry.Principal,
-		ResourceName: acl.Pattern.Name,
-	}
-
-	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		data.ResourceType = kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String())
-	}
-
-	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		data.PatternType = acl.Pattern.PatternType.String()
-	}
-
-	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		data.Operation = acl.Entry.Operation.String()
-	}
-
-	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		data.Permission = acl.Entry.PermissionType.String()
-	}
-
-	return data
 }

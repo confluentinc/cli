@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -52,13 +53,13 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIError(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == kafkarest.UnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkarest.NewError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
