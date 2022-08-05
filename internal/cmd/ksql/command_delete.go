@@ -2,15 +2,12 @@ package ksql
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"net/http"
-	"os"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
+	"io/ioutil"
+	"net/http"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -25,8 +22,7 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	runCommand := c.deleteCluster
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Delete a ksqlDB app."
-		longText = "DEPRECATED: Delete a ksqlDB app. " + errors.KSQLAppDeprecateWarning
+		shortText = "Delete a ksqlDB app."
 		runCommand = c.deleteApp
 	}
 
@@ -102,9 +98,6 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, args[0])
 	return nil
 }

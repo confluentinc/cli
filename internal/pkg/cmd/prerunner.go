@@ -196,6 +196,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			if err := checkCliDisable(command, r.Config); err != nil {
 				return err
 			}
+			// announcement and deprecation check, print out msg
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			launchdarkly.PrintAnnouncements(launchdarkly.Announcements, ctx, cmd)
+			launchdarkly.PrintAnnouncements(launchdarkly.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
