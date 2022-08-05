@@ -2,14 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
@@ -46,6 +41,8 @@ import (
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/spf13/cobra"
+	"os"
 )
 
 func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
@@ -124,37 +121,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
 			return err
 		} else if plugin != nil {
-			pluginPath := plugin.Args[0]
-			if strings.HasSuffix(pluginPath, ".sh") {
-				dat, err := os.ReadFile(pluginPath)
-				if err != nil {
-					return err
-				}
-				if string(dat[:2]) != "#!" {
-					shell := os.Getenv("SHELL")
-					if shell == "" {
-						shell = "/bin/bash"
-					}
-					shebang := []byte("#!" + shell + "\n")
-					temp, err := os.CreateTemp("", plugin.Name)
-					if err != nil {
-						return err
-					}
-					defer func() {
-						_ = os.Remove(temp.Name())
-					}()
-					if _, err := temp.Write(append(shebang, dat...)); err != nil {
-						return err
-					}
-					err = os.Chmod(temp.Name(), 0777)
-					if err != nil {
-						return err
-					}
-					plugin.Args[0] = temp.Name()
-					fmt.Println(plugin.Args)
-				}
-			}
-			return pplugin.ExecPlugin(plugin)
+			return pplugin.SetupExecPlugin(plugin)
 		}
 	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.

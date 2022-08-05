@@ -22,19 +22,19 @@ func (s *CLITestSuite) TestPlugin() {
 	}()
 
 	tests := []CLITest{
-		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden", pluginsEnabled: true},
-		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden", pluginsEnabled: true},
-		{args: "version", fixture: "plugin/exact-name-overlap.golden", regex: true, pluginsEnabled: true},
-		{args: "kafka something kafkaesque", fixture: "plugin/partial-name-overlap.golden", pluginsEnabled: true},
-		{args: "foo bar baz boo far foo bar baz --flag=true", fixture: "plugin/long-plugin-name.golden", pluginsEnabled: true},
-		{args: "can print to stderr --meaningless-flag=false and stdout", fixture: "plugin/print-stderr.golden", pluginsEnabled: true},
-		{args: "dash_test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
-		{args: "dash-test", fixture: "plugin/dash-test1.golden", pluginsEnabled: true},
-		{args: "another_dash-test but-with two-args with dashes and-others_without them", fixture: "plugin/dash-test2.golden", pluginsEnabled: true},
+		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden", arePluginsEnabled: true},
+		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden", arePluginsEnabled: true},
+		{args: "version", fixture: "plugin/exact-name-overlap.golden", regex: true, arePluginsEnabled: true},
+		{args: "kafka something kafkaesque", fixture: "plugin/partial-name-overlap.golden", arePluginsEnabled: true},
+		{args: "foo bar baz boo far foo bar baz --flag=true", fixture: "plugin/long-plugin-name.golden", arePluginsEnabled: true},
+		{args: "can print to stderr --meaningless-flag=false and stdout", fixture: "plugin/print-stderr.golden", arePluginsEnabled: true},
+		{args: "dash_test", fixture: "plugin/dash-test1.golden", arePluginsEnabled: true},
+		{args: "dash-test", fixture: "plugin/dash-test1.golden", arePluginsEnabled: true},
+		{args: "another_dash-test but-with two-args with dashes and-others_without them", fixture: "plugin/dash-test2.golden", arePluginsEnabled: true},
 		{args: "plugin list", fixture: "plugin/list.golden"},
 	}
 	if runtime.GOOS != "linux" {
-		tests = append(tests, CLITest{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", regex: true, pluginsEnabled: true})
+		tests = append(tests, CLITest{args: "no-shebang commands", fixture: "plugin/cli-commands.golden", regex: true, arePluginsEnabled: true})
 	}
 
 	resetConfiguration(s.T(), true)

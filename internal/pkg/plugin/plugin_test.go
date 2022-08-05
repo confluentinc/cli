@@ -101,9 +101,7 @@ func TestSearchPath(t *testing.T) {
 
 	pluginMap, err := SearchPath()
 	require.NoError(t, err)
-	var pluginPaths []string
-	var ok bool
-	pluginPaths, ok = pluginMap[pluginName]
+	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
 }

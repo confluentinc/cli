@@ -62,7 +62,7 @@ type CLITest struct {
 	// True iff fixture represents a regex
 	regex bool
 	// True iff testing plugins
-	pluginsEnabled bool
+	arePluginsEnabled bool
 	// Fixed string to check if output contains
 	contains string
 	// Fixed string to check that output does not contain
@@ -159,7 +159,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if !tt.workflow {
-			resetConfiguration(t, tt.pluginsEnabled)
+			resetConfiguration(t, tt.arePluginsEnabled)
 		}
 
 		// Executes login command if test specifies
