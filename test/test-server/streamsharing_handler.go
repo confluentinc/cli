@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
+
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
 func getTestProviderShare() cdxv1.CdxV1ProviderShare {

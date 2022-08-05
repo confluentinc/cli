@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )

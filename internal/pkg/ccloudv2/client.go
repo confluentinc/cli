@@ -1,8 +1,8 @@
 package ccloudv2
 
 import (
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/cdx/v1"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
