@@ -41,7 +41,7 @@ func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
 		IamClient:              newIamClient(baseURL, userAgent, isTest),
 		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
 		KafkaRestClient:        newKafkaRestClient(baseURL, userAgent, isTest),
-		MetricsClient:          newMetricsClient(userAgent, isTest),
+		MetricsClient:          newMetricsClient(baseURL, userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
 	}
