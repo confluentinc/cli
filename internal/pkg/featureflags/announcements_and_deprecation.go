@@ -12,8 +12,10 @@ import (
 )
 
 const deprecationPrefix = "DEPRECATED: "
-const DeprecationNotices = "cli.deprecation_notices"
-const Announcements = "cli.announcements"
+const (
+	Announcements      = "cli.announcements"
+	DeprecationNotices = "cli.deprecation_notices"
+)
 
 type FlagsAndMsg struct {
 	Flags        []string
