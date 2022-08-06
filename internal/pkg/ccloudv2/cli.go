@@ -14,7 +14,7 @@ func newCliClient(baseURL, userAgent string, isTest bool) *cliv1.APIClient {
 
 	cfg := cliv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.Servers = cliv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CLI"}}
+	cfg.Servers = cliv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return cliv1.NewAPIClient(cfg)

@@ -3,7 +3,7 @@ module github.com/confluentinc/cli
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.42.47
-	github.com/brianstrauch/cobra-shell v0.2.4
+	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
@@ -18,11 +18,13 @@ require (
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0

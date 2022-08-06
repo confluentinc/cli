@@ -14,7 +14,7 @@ func newConnectClient(baseURL, userAgent string, isTest bool) *connectv1.APIClie
 	cfg := connectv1.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = connectv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Connect"}}
+	cfg.Servers = connectv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return connectv1.NewAPIClient(cfg)
