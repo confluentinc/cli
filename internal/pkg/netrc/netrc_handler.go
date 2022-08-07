@@ -230,7 +230,7 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 
 func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
-	if questionMarkIndex := strings.Index(params.Name, "?"); params.Name != ""  && questionMarkIndex == -1 {
+	if questionMarkIndex := strings.Index(params.Name, "?cacertpath="); params.Name != ""  && questionMarkIndex == -1 {
 		contextNameRegex = escapeSpecialRegexChars(params.Name)
 	} else if params.Name != "" {
 		contextNameRegex = escapeSpecialRegexChars(prefixToIndex(params.Name, questionMarkIndex)) + ".*"
