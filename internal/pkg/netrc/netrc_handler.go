@@ -230,13 +230,10 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 
 func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	var contextNameRegex string
-	if params.Name != "" {
-		questionMarkIndex := strings.Index(params.Name, "?")
-		if questionMarkIndex == -1 {
-			contextNameRegex = escapeSpecialRegexChars(params.Name)
-		} else {
-			contextNameRegex = escapeSpecialRegexChars(prefixToIndex(params.Name, questionMarkIndex)) + ".*"
-		}
+	if questionMarkIndex := strings.Index(params.Name, "?"); params.Name != ""  && questionMarkIndex == -1 {
+		contextNameRegex = escapeSpecialRegexChars(params.Name)
+	} else if params.Name != "" {
+		contextNameRegex = escapeSpecialRegexChars(prefixToIndex(params.Name, questionMarkIndex)) + ".*"
 	} else if params.URL != "" {
 		url := strings.ReplaceAll(params.URL, ".", `\.`)
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
