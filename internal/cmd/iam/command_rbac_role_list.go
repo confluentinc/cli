@@ -35,14 +35,14 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	publicRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
-	if err != nil {
-		return err
-	}
+	//publicRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+	//if err != nil {
+	//	return err
+	//}
 
-	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
-	dataplaneRoles, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
-	roles := append(publicRoles, dataplaneRoles...)
+	opts := &mdsv2alpha1.RolesOpts{Namespace: dataGovernanceNamespace}
+	roles, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
+	//roles := append(publicRoles, dataplaneRoles...)
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

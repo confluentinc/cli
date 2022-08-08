@@ -47,7 +47,10 @@ var (
 		"EnvironmentAdmin": true,
 	}
 
-	dataplaneNamespace = optional.NewString("dataplane")
+	publicNamespace         = optional.NewString("public")
+	dataGovernanceNamespace = optional.NewString("datagovernance")
+	dataplaneNamespace      = optional.NewString("dataplane")
+	ksqlNamespace           = optional.NewString("ksql")
 )
 
 type roleBindingOptions struct {
@@ -388,8 +391,11 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
 
+
+	//publicAndDataplaneNamespace := []string{publicNamespace.Value(), 		dataGovernanceNamespace.Value()}
+//	publicAndDataplaneNamespaceOpt := optional.NewString(strings.Join( publicAndDataplaneNamespace, ","))
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataGovernanceNamespace}
 	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
 	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
