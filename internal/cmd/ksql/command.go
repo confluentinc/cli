@@ -94,12 +94,12 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Clu
 	}
 
 	return &ksqlCluster{
-		Id:                    *cluster.Id,
-		Name:                  *cluster.Spec.DisplayName,
-		OutputTopicPrefix:     *cluster.Status.TopicPrefix,
-		KafkaClusterId:        cluster.Spec.KafkaCluster.Id,
+		Id:                    cluster.GetId(),
+		Name:                  cluster.Spec.GetDisplayName(),
+		OutputTopicPrefix:     cluster.Status.GetTopicPrefix(),
+		KafkaClusterId:        cluster.Spec.KafkaCluster.GetId(),
 		Storage:               cluster.Status.Storage,
-		Endpoint:              *cluster.Status.HttpEndpoint,
+		Endpoint:              cluster.Status.GetHttpEndpoint(),
 		Status:                status,
 		DetailedProcessingLog: detailedProcessingLog,
 	}
