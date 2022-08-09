@@ -18,6 +18,7 @@ require (
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
@@ -81,7 +82,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
-require github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.6
+require github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.7-0.20220808111849-8a15ac335bba
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
