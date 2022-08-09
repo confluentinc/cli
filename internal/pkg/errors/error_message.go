@@ -248,7 +248,6 @@ const (
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
 	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
-	SSLCaCertSuggestion              = "Please specify `--ca-location` to enable SSL verification.\n"
 	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
@@ -299,7 +298,6 @@ const (
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
 	ContextStateMismatchErrorMsg       = "context state mismatch for context \"%s\""
 	ContextStateNotMappedErrorMsg      = "context state mapping error for context \"%s\""
-	NoOrganizationContextErrorMsg      = "unable to check organization from context"
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
 
 	// local package
@@ -401,7 +399,6 @@ const (
 	KafkaNotFoundErrorMsg         = "Kafka cluster \"%s\" not found"
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql app list`."
-	SRNotFoundSuggestions         = "Check the schema-registry cluster ID with `confluent schema-registry cluster describe`."
 	KafkaNotReadyErrorMsg         = "Kafka cluster \"%s\" not ready"
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
@@ -410,7 +407,6 @@ const (
 	NoAPISecretStoredErrorMsg     = "no API secret for API key \"%s\" of resource \"%s\" stored in local CLI state"
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
-	InvalidClusterConfigErrorMsg  = "cluster configuration is invalid"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "internal server error"
@@ -471,11 +467,6 @@ const (
 	OnlySpecifyAllOrBrokerIDErrorMsg = "only specify broker ID argument OR `--all` flag"
 	InvalidBrokerTaskTypeErrorMsg    = "invalid broker task type"
 	InvalidBrokerTaskTypeSuggestions = "Valid broker task types are `remove-broker` and `add-broker`."
-
-	// Replica commands
-	MustEnterValidFlagComboErrorMsg      = "must pass a valid flag combination"
-	ValidReplicaFlagsSuggestions         = "Valid flag combinations are: `--broker`, or `--topic` and `--partition`, or all three flags."
-	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
 
 	// Special error types
 	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"
