@@ -73,7 +73,7 @@ func confirmDeletion(cmd *cobra.Command, environmentId string, prompt form.Promp
 	f := form.New(
 		form.Field{
 			ID:        "confirmation",
-			Prompt:    fmt.Sprintf(`Are you sure you want to delete the Schema Registry cluster for environment "%s"?`, environmentId),
+			Prompt:    fmt.Sprintf(`Are you sure you want to permanently delete the Schema Registry cluster for environment "%s", along with all of its data?`, environmentId),
 			IsYesOrNo: true,
 		},
 	)
