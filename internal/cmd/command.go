@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/spf13/cobra"
-	
+
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
@@ -123,7 +123,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
 			return err
 		} else if plugin != nil {
-			return pplugin.SetupExecPlugin(plugin)
+			return pplugin.ExecPlugin(plugin)
 		}
 	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.

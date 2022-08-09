@@ -115,39 +115,6 @@ func newPluginInfo(args []string) *pluginInfo {
 	}
 }
 
-func SetupExecPlugin(plugin *pluginInfo) error {
-	pluginPath := plugin.args[0]
-	if strings.HasSuffix(pluginPath, ".sh") {
-		dat, err := os.ReadFile(pluginPath)
-		if err != nil {
-			return err
-		}
-		if string(dat[:2]) != "#!" {
-			shell := os.Getenv("SHELL")
-			if shell == "" {
-				shell = "/bin/bash"
-			}
-			shebang := []byte("#!" + shell + "\n")
-			temp, err := os.CreateTemp("", plugin.name)
-			if err != nil {
-				return err
-			}
-			defer func() {
-				_ = os.Remove(temp.Name())
-			}()
-			if _, err := temp.Write(append(shebang, dat...)); err != nil {
-				return err
-			}
-			err = os.Chmod(temp.Name(), 0777)
-			if err != nil {
-				return err
-			}
-			plugin.args[0] = temp.Name()
-		}
-	}
-	return ExecPlugin(plugin)
-}
-
 // ExecPlugin runs a plugin found by the above findPlugin function
 func ExecPlugin(info *pluginInfo) error {
 	plugin := &exec.Cmd{
