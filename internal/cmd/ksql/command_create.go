@@ -105,6 +105,10 @@ func (c *ksqlCommand) createClusterDeprecated(cmd *cobra.Command, name string, c
 		return err
 	}
 
+	if kafkaApiKey == "" || kafkaApiKeySecret == "" {
+		return errors.New("Either credential-identity or [api-key, api-secret] need to be provided in order to create a KSQL cluster")
+	}
+
 	cfg := &schedv1.KSQLClusterConfig{
 		AccountId:             c.EnvironmentId(),
 		Name:                  name,
