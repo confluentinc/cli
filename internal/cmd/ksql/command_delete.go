@@ -94,7 +94,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 			if err != nil {
 				return err
 			}
-			return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
+			return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, args[0], string(body))
 		}
 	}
 

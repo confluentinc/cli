@@ -118,7 +118,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusCreated {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error

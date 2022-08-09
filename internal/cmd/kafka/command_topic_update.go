@@ -112,7 +112,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusNoContent {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 
@@ -121,7 +121,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			if err != nil {
 				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			} else if configsResp.Data == nil {
-				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 			}
 			readOnlyConfigs := set.New()
 			configsValues := make(map[string]string)
