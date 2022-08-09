@@ -133,7 +133,6 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	var flagVals map[string]interface{}
 	var err error
 	if !areCachedFlagsAvailable(ctx, user, client) {
-		fmt.Println("FETCHING FLAGS")
 		flagVals, err = ld.fetchFlags(user, client)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
@@ -189,8 +188,6 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 	if !flags.User.Equal(user) {
 		return false
 	}
-	fmt.Println("users are equal ")
-	fmt.Println(user)
 
 	switch client {
 	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:

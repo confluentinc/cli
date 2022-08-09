@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"fmt"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -37,7 +36,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c.AddCommand(newACLCommand(c.prerunner))
-	fmt.Println("chceking identity ")
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", c.Context, v1.CliLaunchDarklyClient, true, false) {
 		c.AddCommand(newPoolCommand(c.prerunner))
 		c.AddCommand(newProviderCommand(c.prerunner))
