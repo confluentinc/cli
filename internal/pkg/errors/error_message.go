@@ -248,7 +248,7 @@ const (
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
 	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
-	SRCaCertSuggestion               = "Please specify `--ca-location` to enable schema registry client.\n"
+	SRCaCertSuggestions              = "Please specify `--ca-location` to enable schema registry client.\n"
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = "unable to write to netrc file \"%s\""
 	NetrcCredentialsNotFoundErrorMsg = "login credentials not found in netrc file \"%s\""
@@ -426,24 +426,24 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	QuotaExceededSuggestions    = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
-	AvoidTimeoutSuggestion      = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
-	NotLoggedInErrorMsg         = "not logged in"
-	AuthTokenSuggestion         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
-	OnPremConfigGuideSuggestion = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
-	NotLoggedInSuggestions      = "You must be logged in to run this command.\n" +
-		AvoidTimeoutSuggestion
+	QuotaExceededSuggestions     = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
+	AvoidTimeoutSuggestions      = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg          = "not logged in"
+	AuthTokenSuggestions         = "You must be logged in to retrieve an oauthbearer token.\n" + "An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry.\n"
+	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n"
+	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
+		AvoidTimeoutSuggestions
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token"
 	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
-		AvoidTimeoutSuggestion
+		AvoidTimeoutSuggestions
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
-		AvoidTimeoutSuggestion
+		AvoidTimeoutSuggestions
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
-		AvoidTimeoutSuggestion
+		AvoidTimeoutSuggestions
 	InvalidEmailErrorMsg             = "user \"%s\" not found"
 	InvalidLoginURLErrorMsg          = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
 	InvalidLoginErrorMsg             = "incorrect email or password"
