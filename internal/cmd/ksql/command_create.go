@@ -116,6 +116,12 @@ func (c *ksqlCommand) createClusterDeprecated(cmd *cobra.Command, name string, c
 			Secret: kafkaApiKeySecret,
 		},
 	}
+
+	image, err := cmd.Flags().GetString("image")
+	if err == nil && len(image) > 0 {
+		cfg.Image = image
+	}
+
 	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
 	if err != nil {
 		return err
