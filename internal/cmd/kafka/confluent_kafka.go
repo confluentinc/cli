@@ -249,7 +249,7 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			utils.ErrPrintln(cmd, errors.StoppingConsumerMsg)
 			consumer.Close()
 			run = false
 		default:
