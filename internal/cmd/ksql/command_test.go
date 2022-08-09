@@ -28,7 +28,6 @@ import (
 
 const (
 	ksqlClusterID         = "lksqlc-12345"
-	ksqlClusterName       = "my-ksql-cluster"
 	outputTopicPrefix     = "pksqlc-abcde"
 	keyString             = "key"
 	keySecretString       = "secret"
