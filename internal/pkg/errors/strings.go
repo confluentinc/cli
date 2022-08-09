@@ -144,4 +144,7 @@ const (
 	UpdatedResourceMsg = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// Stream Sharing commands
+	DeletedProviderShareMsg = `Deleted provider share "%s".`
 )

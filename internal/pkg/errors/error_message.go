@@ -224,7 +224,7 @@ const (
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
-	SRInvalidPackageUpgrade      = `Schema Registry already uses "%s" package`
+	SRInvalidPackageUpgrade      = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"
