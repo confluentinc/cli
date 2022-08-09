@@ -1,11 +1,9 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -46,23 +44,17 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, false)
-}
-
 func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, true)
+	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
+	return c.describeCluster(cmd, args)
 }
 
-func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	// TODO bring back formatting
+	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(&cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
