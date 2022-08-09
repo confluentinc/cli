@@ -22,7 +22,7 @@ Suggestions format
 - full sentence
 - capitalize first letter
 - end with a full stop 
-- separate sentences using a newline; do not add a newline at the end of the last sentence
+- separate suggestions using a newline; do not add a newline at the end of the last sentence
 - for sentences ending in a url, put a space between the url and the fullstop
 - the variable name must end with *Suggestions*
 

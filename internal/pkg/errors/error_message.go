@@ -148,10 +148,10 @@ const (
 	NameOrCKUFlagErrorMsg                         = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                          = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                  = "Kafka cluster \"%s\" not found"
-	KafkaClusterStillProvisioningErrorMsg         = "Your cluster is still provisioning, so it can't be updated yet. Please retry in a few minutes."
+	KafkaClusterStillProvisioningErrorMsg         = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
 	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
-	KafkaClusterExpandingErrorMsg                 = "Your cluster is expanding. Please wait for that operation to complete before updating again."
-	KafkaClusterShrinkingErrorMsg                 = "Your cluster is shrinking. Please wait for that operation to complete before updating again."
+	KafkaClusterExpandingErrorMsg                 = "your cluster is expanding; please wait for that operation to complete before updating again"
+	KafkaClusterShrinkingErrorMsg                 = "your cluster is shrinking; Please wait for that operation to complete before updating again"
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
