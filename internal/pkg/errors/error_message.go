@@ -426,10 +426,10 @@ const (
 	InvalidMDSTokenSuggestions        = "Re-login with \"confluent login\"."
 
 	// Special error handling
-	QuotaExceededSuggestions     = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
-	AvoidTimeoutSuggestions      = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
-	NotLoggedInErrorMsg          = "not logged in"
-	AuthTokenSuggestions         = "You must be logged in to retrieve an oauthbearer token.\n" +
+	QuotaExceededSuggestions = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
+	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
+	NotLoggedInErrorMsg      = "not logged in"
+	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry."
 	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
