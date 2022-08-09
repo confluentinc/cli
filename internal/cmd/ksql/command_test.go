@@ -394,7 +394,8 @@ func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bo
 	req.False(suite.v1ksqlc.CreateCalled())
 	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
 	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-	req.Equal("Either credential-identity or [api-key, api-secret] need to be provided in order to create a KSQL cluster", err.Error())
+
+	req.EqualError(err, errors.KsqlCreateRequiresCredentials)
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLAppWithImage() {
