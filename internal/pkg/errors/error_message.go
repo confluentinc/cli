@@ -201,6 +201,8 @@ const (
 	// ksql commands
 	KsqlDBNoServiceAccountErrorMsg = "ACLs do not need to be configured for the ksqlDB app, \"%s\", because it was created with user-level access to the Kafka cluster"
 	KsqlDBTerminateClusterMsg      = "Failed to terminate ksqlDB app \"%s\" due to \"%s\".\n"
+	KsqlCreateRequiresCredentials  = "Either credential-identity or [api-key, api-secret] need to be provided in order to create a KSQL cluster"
+
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
