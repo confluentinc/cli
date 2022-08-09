@@ -203,7 +203,7 @@ const (
 	FailedToStartErrorMsg     = "%s failed to start"
 	FailedToStopErrorMsg      = "%s failed to stop"
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
-		"See https://docs.confluent.io/current/installation/versions-interoperability.html\n" +
+		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
 	NoLogFoundErrorMsg       = "no log found: to run %s, use \"confluent local services %s start\""
 	MacVersionErrorMsg       = "macOS version >= %s is required (detected: %s)"
@@ -236,7 +236,7 @@ const (
 	UpdateClientFailurePrefix      = "update client failure"
 	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
 		"In the meantime, see link for other ways to download the latest CLI version:\n" +
-		"https://docs.confluent.io/current/cli/installing.html"
+		"https://docs.confluent.io/current/cli/installing.html ."
 	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
 	CheckingForUpdateErrorMsg           = "error checking for updates"
 	UpdateBinaryErrorMsg                = "error updating CLI binary"
@@ -431,7 +431,7 @@ const (
 	NotLoggedInErrorMsg          = "not logged in"
 	AuthTokenSuggestions         = "You must be logged in to retrieve an oauthbearer token.\n" +
 		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry."
-	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html."
+	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
 		AvoidTimeoutSuggestions
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
