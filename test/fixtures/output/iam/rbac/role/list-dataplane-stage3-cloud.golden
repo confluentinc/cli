@@ -364,3 +364,43 @@
                          |   }                                                                        
                          | ]                                                                          
                          |                                                                            
+  ResourceOwner          | [                                                                          
+                         |   {                                                                        
+                         |     "bindingScope": "ksql-cluster",                                        
+                         |     "bindWithResource": true,                                              
+                         |     "allowedOperations": [                                                 
+                         |       {                                                                    
+                         |         "resourceType": "KsqlCluster",                                     
+                         |         "operations": [                                                    
+                         |           "Describe",                                                      
+                         |           "AlterAccess",                                                   
+                         |           "Contribute",                                                    
+                         |           "DescribeAccess",                                                
+                         |           "Terminate"                                                      
+                         |         ]                                                                  
+                         |       }                                                                    
+                         |     ]                                                                      
+                         |   }                                                                        
+                         | ]                                                                          
+                         |                                                                            
+  ResourceOwner          | [                                                                          
+                         |   {                                                                        
+                         |     "bindingScope": "schema-registry-cluster",                             
+                         |     "bindWithResource": true,                                              
+                         |     "allowedOperations": [                                                 
+                         |       {                                                                    
+                         |         "resourceType": "Subject",                                         
+                         |         "operations": [                                                    
+                         |           "Delete",                                                        
+                         |           "Read",                                                          
+                         |           "Write",                                                         
+                         |           "ReadCompatibility",                                             
+                         |           "AlterAccess",                                                   
+                         |           "WriteCompatibility",                                            
+                         |           "DescribeAccess"                                                 
+                         |         ]                                                                  
+                         |       }                                                                    
+                         |     ]                                                                      
+                         |   }                                                                        
+                         | ]                                                                          
+                         |                                                                            
