@@ -126,7 +126,6 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 
 func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
 	c.HandleFunc(ksqls, c.HandleKsqls(t))
-	c.HandleFunc(ksql, c.HandleKsql(t))
 }
 
 func (c *CloudRouter) addClusterRoutes(t *testing.T) {

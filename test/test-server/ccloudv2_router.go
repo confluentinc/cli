@@ -35,6 +35,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
 	"/cdx/v1/provider-shares":          handleStreamSharingProviderShares,
 	"/cdx/v1/provider-shares/{id}":     handleStreamSharingProviderShare,
+	"/ksqldbcm/v2/clusters/{id}":       handleKsqlCluster,
+	"/ksqldbcm/v2/clusters":            handleKsqlClusters,
 }
 
 type V2Router struct {
