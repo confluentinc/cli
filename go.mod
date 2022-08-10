@@ -17,6 +17,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas v0.0.3
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -54,7 +55,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.1
+	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/go-version v1.4.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
@@ -416,6 +417,7 @@ require (
 )
 
 replace (
+	//github.com/confluentinc/ccloud-sdk-go-v2 => /Users/mtodzo/git/go/src/github.com/confluentinc/ccloud-sdk-go-v2-internal
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0

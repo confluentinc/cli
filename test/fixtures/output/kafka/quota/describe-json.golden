@@ -1,0 +1,9 @@
+{
+  "id": "cq-1234",
+  "display_name": "quotaName",
+  "description": "quota description",
+  "Ingress": "2000",
+  "Egress": "5000",
+  "principals": "sa-1234,sa-5678",
+  "cluster": "lkc-1234"
+}

@@ -1,0 +1,7 @@
+Egress: "100"
+Ingress: "500"
+cluster: lkc-1234
+description: ""
+display_name: clientQuota
+id: cq-1234
+principals: <default>

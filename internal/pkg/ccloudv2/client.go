@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
@@ -25,6 +26,7 @@ type Client struct {
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
+	KafkaQuotasClient      *kafkaquotas.APIClient
 	KafkaRestClient        *kafkarestv3.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
@@ -42,6 +44,7 @@ func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
 		ConnectClient:          newConnectClient(baseURL, userAgent, isTest),
 		IamClient:              newIamClient(baseURL, userAgent, isTest),
 		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
+		KafkaQuotasClient:      newKafkaQuotasClient(baseURL, userAgent, isTest),
 		KafkaRestClient:        newKafkaRestClient(baseURL, userAgent, isTest),
 		MetricsClient:          newMetricsClient(baseURL, userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
