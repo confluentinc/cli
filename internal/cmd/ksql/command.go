@@ -56,7 +56,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 // Some helper functions for the ksql app/cluster commands
 
 func (c *ksqlCommand) convertV1ToSchedV2Subset(cluster *schedv1.KSQLCluster) *ksql.KsqldbcmV2Cluster {
-	return &ksql.KsqldbcmV2Cluster{
+	out := ksql.KsqldbcmV2Cluster{
+		Id: &cluster.Id,
 		Spec: &ksql.KsqldbcmV2ClusterSpec{
 			DisplayName: &cluster.Name,
 			KafkaCluster: &ksql.ObjectReference{
@@ -71,8 +72,14 @@ func (c *ksqlCommand) convertV1ToSchedV2Subset(cluster *schedv1.KSQLCluster) *ks
 			HttpEndpoint: &cluster.Endpoint,
 			Phase:        cluster.Status.String(),
 			TopicPrefix:  &cluster.OutputTopicPrefix,
+			Storage: cluster.Storage,
 		},
 	}
+	if cluster.DetailedProcessingLog != nil {
+		out.Spec.UseDetailedProcessingLog = &cluster.DetailedProcessingLog.Value
+	}
+
+	return &out
 }
 
 func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
