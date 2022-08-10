@@ -36,5 +36,5 @@ func (s *consumerShareCommand) describe(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	return output.DescribeObject(cmd, buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+	return output.DescribeObject(cmd, s.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
 }

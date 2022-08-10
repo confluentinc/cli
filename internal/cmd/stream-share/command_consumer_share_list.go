@@ -46,8 +46,7 @@ func (s *consumerShareCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, share := range consumerShares {
-		element := buildConsumerShare(share)
-
+		element := s.buildConsumerShare(share)
 		outputWriter.AddElement(element)
 	}
 
