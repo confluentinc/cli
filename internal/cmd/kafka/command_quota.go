@@ -2,15 +2,18 @@ package kafka
 
 import (
 	"context"
+
+	"github.com/hashicorp/go-multierror"
+	"github.com/spf13/cobra"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/hashicorp/go-multierror"
-	"github.com/spf13/cobra"
 
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 

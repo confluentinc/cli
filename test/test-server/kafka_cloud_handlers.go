@@ -2,11 +2,12 @@ package testserver
 
 import (
 	"encoding/json"
+	"net/http"
+	"testing"
+
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"testing"
 )
 
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {

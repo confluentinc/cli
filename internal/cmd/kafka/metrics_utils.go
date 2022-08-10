@@ -6,6 +6,7 @@ import (
 	"time"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
