@@ -90,7 +90,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			} else {
 				printAclsDeleted(cmd, matchingBindingCount)
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 		}

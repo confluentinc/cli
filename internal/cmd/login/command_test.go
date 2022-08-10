@@ -842,7 +842,7 @@ func TestValidateUrl(t *testing.T) {
 			urlIn:      "https:///test.com",
 			urlOut:     "",
 			warningMsg: "default MDS port 8090",
-			errMsg:     errors.InvalidLoginURLMsg,
+			errMsg:     errors.InvalidLoginURLErrorMsg,
 		},
 		{
 			urlIn:      "test.com",
