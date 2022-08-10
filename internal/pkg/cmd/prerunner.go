@@ -813,7 +813,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 					cluster.APIKeys[key] = &v1.APIKeyPair{Key: key, Secret: secret}
 				} else if cluster.APIKeys[key] == nil {
 					return errors.NewErrorWithSuggestions(
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, key, clusterId),
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, key, clusterId),
 						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}

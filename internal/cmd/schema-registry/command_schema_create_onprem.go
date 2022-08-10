@@ -85,7 +85,7 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 
 func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	if c.State == nil { // require log-in to use oauthbearer token
-		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 	}
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {

@@ -217,7 +217,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
 	err := cmd.Execute()
-	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
+	req.Contains(err.Error(), "cluster resize error: failed to read your confirmation")
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }

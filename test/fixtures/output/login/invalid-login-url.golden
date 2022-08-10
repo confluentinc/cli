@@ -1,2 +1,1 @@
-Error: invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/.
-
+Error: invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/

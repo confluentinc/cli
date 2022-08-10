@@ -49,18 +49,21 @@ const (
 
 	// kafka topic commands
 	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumer         = "Stopping Consumer."
+	StoppingConsumerMsg      = "Stopping Consumer."
 	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only support with kafka rest proxy."
+	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"
 	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
+
+	// kafka REST proxy
+	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
@@ -143,5 +146,5 @@ const (
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
 	// Stream Sharing commands
-	DeletedProviderShareMsg = `Deleted provider share "%s".`
+	DeletedProviderShareMsg = "Deleted provider share \"%s\"."
 )
