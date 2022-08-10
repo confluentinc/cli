@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"context"
-
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -31,7 +29,7 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	c := &quotaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	dc := dynamicconfig.New(config, nil, nil)
-	dc.ParseFlagsIntoConfig(cmd)
+	_ = dc.ParseFlagsIntoConfig(cmd)
 
 	clientQuotasEnable := launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 	c.Hidden = !clientQuotasEnable
@@ -43,10 +41,6 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	c.AddCommand(c.newDescribeCommand())
 
 	return c.Command
-}
-
-func (c *quotaCommand) quotaContext() context.Context {
-	return context.WithValue(context.Background(), kafkaquotas.ContextAccessToken, c.AuthToken)
 }
 
 func quotaErr(err error) error {
