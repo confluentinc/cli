@@ -8,7 +8,7 @@ import (
 
 func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe",
+		Use:   "describe <id>",
 		Short: "Describe a client quota.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
@@ -27,6 +27,7 @@ func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return quotaErr(err)
 	}
-	printableQuota := quotaToPrintable(quota)
+	format, _ := cmd.Flags().GetString(output.FlagName)
+	printableQuota := quotaToPrintable(quota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }

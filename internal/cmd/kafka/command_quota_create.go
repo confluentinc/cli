@@ -26,7 +26,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		},
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
-				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<defualt>" --cluster lkc-1234"`,
+				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234"`,
 			}),
 	}
 
@@ -76,7 +76,8 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return quotaErr(err)
 	}
-	printableQuota := quotaToPrintable(quota)
+	format, _ := cmd.Flags().GetString(output.FlagName)
+	printableQuota := quotaToPrintable(quota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 

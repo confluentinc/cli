@@ -6,6 +6,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
@@ -60,7 +61,7 @@ func quotaErr(err error) error {
 	return err
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota) interface{} {
+func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) interface{} {
 	s := struct {
 		Id          string
 		DisplayName string
@@ -74,11 +75,15 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota) interface{} {
 		Id:          *quota.Id,
 		DisplayName: *quota.DisplayName,
 		Description: *quota.Description,
-		Ingress:     *quota.Throughput.IngressByteRate + " B/s",
-		Egress:      *quota.Throughput.EgressByteRate + " B/s",
+		Ingress:     *quota.Throughput.IngressByteRate,
+		Egress:      *quota.Throughput.EgressByteRate,
 		Principals:  principalsToString(*quota.Principals),
 		Cluster:     quota.Cluster.Id,
 		Environment: quota.Environment.Id,
+	}
+	if format == output.Human.String() {
+		s.Ingress = s.Ingress + " B/s"
+		s.Egress = s.Egress + " B/s"
 	}
 	return &s
 }

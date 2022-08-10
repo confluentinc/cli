@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -59,9 +58,9 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		quotas = getQuotasForPrincipal(quotas, principal)
 	}
-
+	format, _ := cmd.Flags().GetString(output.FlagName)
 	for _, quota := range quotas {
-		w.AddElement(quotaToPrintable(quota))
+		w.AddElement(quotaToPrintable(quota, format))
 	}
 
 	return w.Out()
@@ -71,17 +70,13 @@ func getQuotasForPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal strin
 	var filteredQuotaData []v1.KafkaQuotasV1ClientQuota
 out:
 	for _, quota := range quotas {
-		fmt.Println("q loop")
 		for _, p := range *quota.Principals {
-			fmt.Println("p loop")
 			if p.Id == principal {
 				filteredQuotaData = append(filteredQuotaData, quota)
-				fmt.Println("found quota")
 				// principals can only belong to one quota so break after finding it
 				break out
 			}
 		}
 	}
-	fmt.Println("out of for loops")
 	return filteredQuotaData
 }

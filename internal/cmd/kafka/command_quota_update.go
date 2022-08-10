@@ -64,7 +64,8 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return quotaErr(err)
 	}
-	printableQuota := quotaToPrintable(updatedQuota)
+	format, _ := cmd.Flags().GetString(output.FlagName)
+	printableQuota := quotaToPrintable(updatedQuota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
