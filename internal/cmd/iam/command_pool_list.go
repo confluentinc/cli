@@ -47,9 +47,11 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		element := &identityPool{
 			Id:            *pool.Id,
 			DisplayName:   *pool.DisplayName,
-			Description:   *pool.Description,
 			IdentityClaim: *pool.IdentityClaim,
 			Filter:        *pool.Filter,
+		}
+		if pool.Description != nil {
+			element.Description = *pool.Description
 		}
 		outputWriter.AddElement(element)
 	}
