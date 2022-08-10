@@ -136,17 +136,8 @@ func (suite *KSQLTestSuite) SetupTest() {
 	}
 
 	suite.v1ksqlc = &mock.KSQL{
-		DescribeFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (*schedv1.KSQLCluster, error) {
-			return suite.v1ksqlCluster, nil
-		},
 		CreateFunc: func(arg0 context.Context, arg1 *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
 			return suite.v1ksqlCluster, nil
-		},
-		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) ([]*schedv1.KSQLCluster, error) {
-			return []*schedv1.KSQLCluster{suite.v1ksqlCluster}, nil
-		},
-		DeleteFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) error {
-			return nil
 		},
 	}
 
