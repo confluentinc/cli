@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
@@ -56,9 +57,14 @@ func getServerUrl(baseURL string, isTest bool) string {
 	return "https://api.confluent.cloud"
 }
 
-func getMetricsServerUrl(isTest bool) string {
+func getMetricsServerUrl(baseURL string, isTest bool) string {
 	if isTest {
 		return testserver.TestV2CloudURL.String()
+	}
+	if strings.Contains(baseURL, "devel") {
+		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
 	}
 	return "https://api.telemetry.confluent.cloud"
 }
@@ -128,6 +134,15 @@ func extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable kafkaquotas.N
 	} else {
 		return "", true, nil
 	}
+}
+
+func extractCdxNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {

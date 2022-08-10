@@ -56,7 +56,7 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if packageInternalName == cluster.Package {
-		utils.ErrPrintf(cmd, errors.SRInvalidPackageUpgrade, packageDisplayName)
+		utils.ErrPrintf(cmd, errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
 		return nil
 	}
 
