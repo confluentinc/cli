@@ -1,3 +1,4 @@
+(DEPRECATED) In the next major release, the `confluent ksql create with a --api-secret and --api-key will be deprecated. Provide a --credential-identity instead
 {
   "id": "lksqlc-ksql5",
   "name": "account ksql",
