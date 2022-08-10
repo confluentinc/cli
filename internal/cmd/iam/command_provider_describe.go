@@ -43,11 +43,13 @@ func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) err
 	}
 
 	describeIdentityProvider := &identityProvider{
-		Id:          *identityProviderProfile.Id,
-		Name:        *identityProviderProfile.DisplayName,
-		Description: *identityProviderProfile.Description,
-		IssuerUri:   *identityProviderProfile.Issuer,
-		JwksUri:     *identityProviderProfile.JwksUri,
+		Id:        *identityProviderProfile.Id,
+		Name:      *identityProviderProfile.DisplayName,
+		IssuerUri: *identityProviderProfile.Issuer,
+		JwksUri:   *identityProviderProfile.JwksUri,
+	}
+	if identityProviderProfile.Description != nil {
+		describeIdentityProvider.Description = *identityProviderProfile.Description
 	}
 
 	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
