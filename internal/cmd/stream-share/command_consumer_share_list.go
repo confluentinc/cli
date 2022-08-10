@@ -8,16 +8,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (s *providerShareCommand) newListCommand() *cobra.Command {
+func (s *consumerShareCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List shares for provider.",
+		Short: "List shares for consumer.",
 		Args:  cobra.NoArgs,
 		RunE:  s.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List provider shares:",
-				Code: "confluent stream-share provider share list",
+				Text: "List consumer shares:",
+				Code: "confluent stream-share consumer share list",
 			},
 		),
 	}
@@ -29,24 +29,24 @@ func (s *providerShareCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
+func (s *consumerShareCommand) list(cmd *cobra.Command, _ []string) error {
 	sharedResource, err := cmd.Flags().GetString("shared-resource")
 	if err != nil {
 		return err
 	}
 
-	providerShares, err := s.V2Client.ListProviderShares(sharedResource)
+	consumerShares, err := s.V2Client.ListConsumerShares(sharedResource)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels, providerShareListStructuredLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, consumerShareListFields, consumerShareListHumanLabels, consumerShareListStructuredLabels)
 	if err != nil {
 		return err
 	}
 
-	for _, share := range providerShares {
-		element := buildProviderShare(share)
+	for _, share := range consumerShares {
+		element := s.buildConsumerShare(share)
 		outputWriter.AddElement(element)
 	}
 

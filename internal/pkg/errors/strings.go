@@ -144,4 +144,6 @@ const (
 
 	// Stream Sharing commands
 	DeletedProviderShareMsg = `Deleted provider share "%s".`
+	DeletedConsumerShareMsg = `Deleted consumer share "%s".`
+	ResendInviteMsg         = `Sent invitation for "%s".`
 )

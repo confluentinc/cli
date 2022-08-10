@@ -1,0 +1,5 @@
+     ID    | Cloud | Display Name |          Description           | Organization Name |      Organization Details      | Organization Contact | Network Connection Types |      Labels       
+-----------+-------+--------------+--------------------------------+-------------------+--------------------------------+----------------------+--------------------------+-------------------
+  sr-12345 | AWS   | Stock Trades | This topic provides realtime   | Nasdaq            | The Nasdaq Stock Market is an  | jane.doe@example.com | [PRIVATELINK]            | [recent pending]  
+           |       |              | data for the orders placed     |                   | American stock exchange based  |                      |                          |                   
+           |       |              | through website                |                   | in New York City               |                      |                          |                   
