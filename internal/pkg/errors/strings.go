@@ -146,5 +146,7 @@ const (
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
 	// Stream Sharing commands
-	DeletedProviderShareMsg = "Deleted provider share \"%s\"."
+	DeletedProviderShareMsg = `Deleted provider share "%s".`
+	DeletedConsumerShareMsg = `Deleted consumer share "%s".`
+	ResendInviteMsg         = `Sent invitation for "%s".`
 )
