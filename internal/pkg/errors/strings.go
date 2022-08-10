@@ -62,6 +62,9 @@ const (
 	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
 
+	// kafka quota commands
+	DeletedClientQuotaMessage = "Deleted client quota \"%s\".\n"
+
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"

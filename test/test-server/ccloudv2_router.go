@@ -33,8 +33,10 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
-	"/cdx/v1/provider-shares":          handleStreamSharingProviderShares,
-	"/cdx/v1/provider-shares/{id}":     handleStreamSharingProviderShare,
+	"/kafka-quotas/v1/client-quotas/{id}":                          handleKafkaClientQuota,
+	"/kafka-quotas/v1/client-quotas":                               handleKafkaClientQuotas,
+	"/cdx/v1/provider-shares":                                      handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}":                                 handleStreamSharingProviderShare,
 }
 
 type V2Router struct {

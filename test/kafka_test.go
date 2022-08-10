@@ -501,3 +501,24 @@ func (s *CLITestSuite) TestKafkaACL() {
 		s.runIntegrationTest(clitest)
 	}
 }
+
+func (s *CLITestSuite) TestKafkaClientQuotas() {
+	tests := []CLITest{
+		// Client Quotas
+		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},
+		{args: "kafka quota create --name clientQuota --description description --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", wantErrCode: 1, fixture: "kafka/quota/create-no-ingress.golden"},
+		{args: "kafka quota create --name clientQuota --ingress 500 --egress 100 --principals \"<default>\" --cluster lkc-1234 -o yaml", fixture: "kafka/quota/create-default-yaml.golden"},
+		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
+		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
+		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
+		{args: "kafka quota describe cq-123 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
+		{args: "kafka quota describe cq-123 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
+		{args: "kafka quota delete cq-123", fixture: "kafka/quota/delete.golden"},
+		{args: "kafka quota update cq-123 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

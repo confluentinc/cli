@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -147,6 +148,17 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		return AutocompleteEnvironments(command.Client, command.V2Client, command.State)
+	})
+}
+
+func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("principal", "", "Principal ID.")
+	RegisterFlagCompletionFunc(cmd, "principal", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteServiceAccounts(command.V2Client)
 	})
 }
 

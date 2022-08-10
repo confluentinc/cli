@@ -1,0 +1,9 @@
++--------------+-------------------+
+| ID           | cq-123            |
+| Display Name | newName           |
+| Description  | quota description |
+| Ingress      | 100 B/s           |
+| Egress       | 100 B/s           |
+| Cluster      | lkc-1234          |
+| Principals   | sa-5678,sa-4321   |
++--------------+-------------------+

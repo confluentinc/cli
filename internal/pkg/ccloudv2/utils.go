@@ -6,13 +6,15 @@ import (
 	"net/url"
 	"strings"
 
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
+	"github.com/hashicorp/go-retryablehttp"
+
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -119,6 +121,19 @@ func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString)
 	nextPageUrlString := *nextPageUrlStringNullable.Get()
 	pageToken, err := extractPageToken(nextPageUrlString)
 	return pageToken, false, err
+}
+
+func extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable kafkaquotas.NullableString) (string, bool, error) {
+	if nextPageUrlStringNullable.IsSet() {
+		nextPageUrlString := *nextPageUrlStringNullable.Get()
+		pageToken, err := extractPageToken(nextPageUrlString)
+		if err != nil {
+			return "", true, nil
+		}
+		return pageToken, false, err
+	} else {
+		return "", true, nil
+	}
 }
 
 func extractCdxNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
