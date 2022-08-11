@@ -114,7 +114,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					}
 
 					// Print partition limit error w/ suggestion
-					if strings.Contains(restErr.Message, "total topic partitions") {
+					if strings.Contains(restErr.Message, "partitions will exceed") {
 						return errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
 					}
 				}
