@@ -16,6 +16,8 @@ import (
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iamMock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksqlMock "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/mock"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
@@ -131,11 +133,10 @@ type APITestSuite struct {
 	iamServiceAccountMock *iamMock.ServiceAccountsIamV2Api
 	keystore              *mock.KeyStore
 	kafkaCluster          *schedv1.KafkaCluster
-	ksqlCluster           *schedv1.KSQLCluster
 	srCluster             *schedv1.SchemaRegistryCluster
 	srMothershipMock      *ccsdkmock.SchemaRegistry
 	kafkaMock             *ccsdkmock.Kafka
-	ksqlMock              *ccsdkmock.KSQL
+	ksqlMock              ksql.ClustersKsqldbcmV2Api
 	isPromptPipe          bool
 	userMock              *ccsdkmock.User
 }
@@ -162,10 +163,6 @@ func (suite *APITestSuite) SetupTest() {
 		Enterprise: true,
 		AccountId:  environment,
 	}
-	suite.ksqlCluster = &schedv1.KSQLCluster{
-		Id:   "ksql-123",
-		Name: "ksql",
-	}
 	suite.srCluster = &schedv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
@@ -177,9 +174,19 @@ func (suite *APITestSuite) SetupTest() {
 			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
-	suite.ksqlMock = &ccsdkmock.KSQL{
-		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, e error) {
-			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
+	suite.ksqlMock = &ksqlMock.ClustersKsqldbcmV2Api{
+		GetKsqldbcmV2ClusterFunc: func(_ context.Context, id string) ksql.ApiGetKsqldbcmV2ClusterRequest {
+			return ksql.ApiGetKsqldbcmV2ClusterRequest{}
+		},
+		GetKsqldbcmV2ClusterExecuteFunc: func(r ksql.ApiGetKsqldbcmV2ClusterRequest) (ksql.KsqldbcmV2Cluster, *http.Response, error) {
+			ksqlId := "ksql-123"
+			ksqlName := "ksql"
+			return ksql.KsqldbcmV2Cluster{
+				Id:   &ksqlId,
+				Spec: &ksql.KsqldbcmV2ClusterSpec{
+					DisplayName: &ksqlName,
+				},
+			}, nil, nil
 		},
 	}
 	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
@@ -299,7 +306,6 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		Connect:        &ccsdkmock.Connect{},
 		User:           suite.userMock,
 		APIKey:         suite.apiMock,
-		KSQL:           suite.ksqlMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
 	apiKeyClient := &apikeysv2.APIClient{
@@ -311,6 +317,10 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 	v2Client := &ccloudv2.Client{
 		ApiKeysClient: apiKeyClient,
 		IamClient:     iamClient,
+		KsqlClient:    &ksql.APIClient{
+			ClustersKsqldbcmV2Api: suite.ksqlMock,
+		},
+
 	}
 	resolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &mock.Prompt{
