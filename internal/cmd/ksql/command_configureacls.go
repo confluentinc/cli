@@ -72,7 +72,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
-	if !strings.HasPrefix("sa", credentialIdentity) {
+	if !strings.HasPrefix(credentialIdentity, "sa") {
 		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, clusterId)
 	}
 
