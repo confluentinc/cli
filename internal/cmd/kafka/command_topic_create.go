@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -104,12 +105,18 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			if parseErr == nil {
 				if restErr.Code == KafkaRestBadRequestErrorCode {
 					// Ignore or pretty print topic exists error
-					if !ifNotExistsFlag {
+					if strings.Contains(restErr.Message, "already exists") && !ifNotExistsFlag {
 						return errors.NewErrorWithSuggestions(
 							fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, lkc),
 							fmt.Sprintf(errors.TopicExistsSuggestions, lkc, lkc))
+					} else if strings.Contains(restErr.Message, "already exists") {
+						return nil
 					}
-					return nil
+
+					// Print partition limit error w/ suggestion
+					if strings.Contains(restErr.Message, "total topic partitions") {
+						return errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
+					}
 				}
 			}
 			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
