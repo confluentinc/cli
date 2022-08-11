@@ -115,6 +115,9 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
 	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil {
+		if clusterId == "anonymous-id" {
+			return config, nil
+		}
 		const week = 7 * 24 * time.Hour
 		if time.Now().Before(config.LastUpdate.Add(week)) {
 			return config, nil
