@@ -66,7 +66,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe --all", fixture: "kafka/48.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
+		{args: "kafka cluster describe lkc-describe --all -o json", fixture: "kafka/49.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
+		{args: "kafka cluster describe lkc-describe --all -o yaml", fixture: "kafka/50.golden"},
 
 		{args: "kafka cluster describe lkc-describe-dedicated", fixture: "kafka/30.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o json", fixture: "kafka/31.golden"},

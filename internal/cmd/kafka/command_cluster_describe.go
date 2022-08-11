@@ -18,6 +18,7 @@ import (
 var (
 	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
+	basicDescribeFieldsWithKAPI        = append(basicDescribeFields, "KAPI")
 
 	describeHumanRenames = map[string]string{
 		"ApiEndpoint":        "API Endpoint",
@@ -47,6 +48,7 @@ var (
 		"ApiEndpoint":        "api_endpoint",
 		"EncryptionKeyId":    "encryption_key_id",
 		"RestEndpoint":       "rest_endpoint",
+		"KAPI":               "kapi",
 	}
 )
 
@@ -65,24 +67,6 @@ type describeStruct struct {
 	Status             string
 	Endpoint           string
 	ApiEndpoint        string
-	EncryptionKeyId    string
-	RestEndpoint       string
-}
-
-type describeStructWithKAPI struct {
-	Id                 string
-	Name               string
-	Type               string
-	ClusterSize        int32
-	PendingClusterSize int32
-	NetworkIngress     int32
-	NetworkEgress      int32
-	Storage            string
-	ServiceProvider    string
-	Region             string
-	Availability       string
-	Status             string
-	Endpoint           string
 	EncryptionKeyId    string
 	RestEndpoint       string
 	KAPI               string
@@ -141,45 +125,17 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
-	fields := basicDescribeFields
-	structureRenames := describeStructuredRenames
-	delete(structureRenames, "ApiEndpoint")
-	var kAPI string
-	var err error
+	describeStruct := convertClusterToDescribeStruct(cluster)
 	if all { // expose KAPI when --all flag is set
-		fields = append(fields, "KAPI")
-		structureRenames["KAPI"] = "kapi"
-		kAPI, err = c.getCmkClusterApiEndpoint(cluster)
+		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 		if err != nil {
 			return err
 		}
+		describeStruct.KAPI = kAPI
+		return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithKAPI), describeHumanRenames, describeStructuredRenames)
 	}
-	describeStruct := convertClusterToDescribeStructWithKAPI(cluster)
-	describeStruct.KAPI = kAPI
-	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, fields), describeHumanRenames, structureRenames)
-}
 
-func convertClusterToDescribeStructWithKAPI(cluster *cmkv2.CmkV2Cluster) *describeStructWithKAPI {
-	clusterStorage := getKafkaClusterStorage(cluster)
-	ingress, egress := getCmkClusterIngressAndEgress(cluster)
-
-	return &describeStructWithKAPI{
-		Id:                 *cluster.Id,
-		Name:               *cluster.Spec.DisplayName,
-		Type:               getCmkClusterType(cluster),
-		ClusterSize:        getCmkClusterSize(cluster),
-		PendingClusterSize: getCmkClusterPendingSize(cluster),
-		NetworkIngress:     ingress,
-		NetworkEgress:      egress,
-		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(*cluster.Spec.Cloud),
-		Region:             *cluster.Spec.Region,
-		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
-		Status:             getCmkClusterStatus(cluster),
-		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
-		EncryptionKeyId:    getCmkEncryptionKey(cluster),
-		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
-	}
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields), describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
