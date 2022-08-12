@@ -105,11 +105,12 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 			if parseErr == nil {
 				if restErr.Code == KafkaRestBadRequestErrorCode {
 					// Ignore or pretty print topic exists error
-					if strings.Contains(restErr.Message, "already exists") && !ifNotExistsFlag {
-						return errors.NewErrorWithSuggestions(
-							fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, lkc),
-							fmt.Sprintf(errors.TopicExistsSuggestions, lkc, lkc))
-					} else if strings.Contains(restErr.Message, "already exists") {
+					if strings.Contains(restErr.Message, "already exists") {
+						if !ifNotExistsFlag {
+							return errors.NewErrorWithSuggestions(
+								fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, lkc),
+								fmt.Sprintf(errors.TopicExistsSuggestions, lkc, lkc))
+						}
 						return nil
 					}
 
