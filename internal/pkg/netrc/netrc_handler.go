@@ -47,10 +47,11 @@ type NetrcHandler interface {
 }
 
 type NetrcMachineParams struct {
-	IsCloud bool
-	IsSSO   bool
-	Name    string
-	URL     string
+	IgnoreCert bool
+	IsCloud    bool
+	IsSSO      bool
+	Name       string
+	URL        string
 }
 
 type Machine struct {
@@ -237,6 +238,10 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
 	} else {
 		contextNameRegex = ".*"
+	}
+
+	if idx := strings.Index(contextNameRegex, `\?cacertpath=`); params.IgnoreCert && idx != -1 {
+		contextNameRegex = prefixToIndex(contextNameRegex, questionMarkIndex) + ".*"
 	}
 
 	var regexString string
