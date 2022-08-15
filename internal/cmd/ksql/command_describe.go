@@ -43,14 +43,14 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, false)
+	return c.describe(cmd, args)
 }
 
 func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, true)
+	return c.describe(cmd, args)
 }
 
-func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {

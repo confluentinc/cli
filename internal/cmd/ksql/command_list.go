@@ -41,14 +41,14 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, false)
+	return c.list(cmd, args)
 }
 
 func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args, true)
+	return c.list(cmd, args)
 }
 
-func (c *ksqlCommand) list(cmd *cobra.Command, _ []string, isApp bool) error {
+func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
 	clusters, err := c.Client.KSQL.List(context.Background(), req)
 	if err != nil {

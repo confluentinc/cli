@@ -48,14 +48,14 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, false)
+	return c.create(cmd, args)
 }
 
 func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, true)
+	return c.create(cmd, args)
 }
 
-func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

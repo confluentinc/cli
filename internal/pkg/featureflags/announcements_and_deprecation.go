@@ -12,6 +12,7 @@ import (
 )
 
 const deprecationPrefix = "DEPRECATED: "
+
 const (
 	Announcements      = "cli.announcements"
 	DeprecationNotices = "cli.deprecation_notices"
@@ -43,24 +44,23 @@ func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 			for i := range msgs {
 				msgs[i] = msg
 			}
-			if flagsAndMsg, ok := cmdToFlagsAndMsg[command]; ok {
-				flagsAndMsg.Flags = append(flagsAndMsg.Flags, flags...)
-				flagsAndMsg.FlagMessages = append(flagsAndMsg.FlagMessages, msgs...)
-			} else {
-				cmdToFlagsAndMsg[command] = &FlagsAndMsg{Flags: flags, FlagMessages: msgs}
+			if _, ok := cmdToFlagsAndMsg[command]; !ok {
+				cmdToFlagsAndMsg[command] = &FlagsAndMsg{Flags: []string{}, FlagMessages: []string{}}
 			}
+			cmdToFlagsAndMsg[command].Flags = append(cmdToFlagsAndMsg[command].Flags, flags...)
+			cmdToFlagsAndMsg[command].FlagMessages = append(cmdToFlagsAndMsg[command].FlagMessages, msgs...)
 		}
 	}
 	return cmdToFlagsAndMsg
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
-	if cmd.Long == "" {
-		cmd.Long = deprecationPrefix + cmd.Short
-	} else {
+	if cmd.Long != "" {
 		cmd.Long = deprecationPrefix + cmd.Long
 	}
-	cmd.Short = deprecationPrefix + cmd.Short
+	if cmd.Short != "" {
+		cmd.Short = deprecationPrefix + cmd.Short
+	}
 	for _, subcommand := range cmd.Commands() {
 		DeprecateCommandTree(subcommand)
 	}
@@ -86,7 +86,11 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
-				utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CmdMessage))
+				if featureFlag == DeprecationNotices {
+					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CmdMessage))
+				} else {
+					utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
 					var msg string
@@ -98,10 +102,11 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 							msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
 						}
 						if flagsAndMsg.FlagMessages[i] == "" {
-							utils.ErrPrintln(cmd, fmt.Sprintf("%s.", msg))
+							msg = fmt.Sprintf("%s.", msg)
 						} else {
-							utils.ErrPrintln(cmd, fmt.Sprintf("%s: %s", msg, flagsAndMsg.FlagMessages[i]))
+							msg = fmt.Sprintf("%s: %s", msg, flagsAndMsg.FlagMessages[i])
 						}
+						utils.ErrPrintln(cmd, msg)
 					}
 				}
 			}

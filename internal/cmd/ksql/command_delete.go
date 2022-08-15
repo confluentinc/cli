@@ -42,14 +42,14 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, false)
+	return c.delete(cmd, args)
 }
 
 func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, true)
+	return c.delete(cmd, args)
 }
 
-func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	req := &schedv1.KSQLCluster{

@@ -44,14 +44,14 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 }
 
 func (c *ksqlCommand) configureACLsCluster(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args, false)
+	return c.configureACLs(cmd, args)
 }
 
 func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args, true)
+	return c.configureACLs(cmd, args)
 }
 
-func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
