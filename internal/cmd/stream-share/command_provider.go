@@ -2,23 +2,15 @@ package streamshare
 
 import (
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type providerCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newProviderCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "provider",
 		Short: "Manage provider actions.",
 	}
 
-	c := &providerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newProviderShareCommand())
 
-	c.AddCommand(newProviderShareCommand(prerunner))
-
-	return c.Command
+	return cmd
 }
