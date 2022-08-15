@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -20,17 +20,17 @@ func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
 }
 
 func (c *Client) cdxApiContext() context.Context {
-	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), cdxv1.ContextAccessToken, c.AuthToken)
 }
 
 func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(request)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DescribeProvideShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(request)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
@@ -57,10 +57,9 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 }
 
 func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).
-		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		request = request.PageToken(pageToken)
+		req = req.PageToken(pageToken)
 	}
-	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(request)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
 }
