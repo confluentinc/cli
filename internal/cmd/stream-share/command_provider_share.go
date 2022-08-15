@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var (
@@ -61,26 +60,20 @@ var (
 	}
 )
 
-type providerShareCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newProviderShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "share",
 		Short: "Manage provider shares.",
 	}
 
-	s := &providerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	s.AddCommand(s.newDeleteCommand())
-	s.AddCommand(s.newDescribeCommand())
-	s.AddCommand(s.newListCommand())
-
-	return s.Command
+	return cmd
 }
 
-func (s *providerShareCommand) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
+func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
 	serviceAccount := share.GetServiceAccount()
 	sharedResource := share.GetSharedResource()
 	element := &providerShare{
@@ -102,20 +95,20 @@ func (s *providerShareCommand) buildProviderShare(share cdxv1.CdxV1ProviderShare
 	return element
 }
 
-func (s *providerShareCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
-	if err := s.PersistentPreRunE(cmd, args); err != nil {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
 
-	return s.autocompleteProviderShares()
+	return c.autocompleteProviderShares()
 }
 
-func (s *providerShareCommand) autocompleteProviderShares() []string {
-	providerShares, err := s.V2Client.ListProviderShares("")
+func (c *command) autocompleteProviderShares() []string {
+	providerShares, err := c.V2Client.ListProviderShares("")
 	if err != nil {
 		return nil
 	}
