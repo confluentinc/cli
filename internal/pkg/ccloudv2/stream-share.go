@@ -6,14 +6,13 @@ import (
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
+func newCdxClient(url, userAgent string, unsafeTrace bool) *cdxv1.APIClient {
 	cfg := cdxv1.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = cdxv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = cdxv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return cdxv1.NewAPIClient(cfg)
