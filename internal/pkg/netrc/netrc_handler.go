@@ -240,8 +240,10 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 		contextNameRegex = ".*"
 	}
 
-	if idx := strings.Index(contextNameRegex, `\?cacertpath=`); params.IgnoreCert && idx != -1 {
-		contextNameRegex = prefixToIndex(contextNameRegex, questionMarkIndex) + ".*"
+	if params.IgnoreCert {
+		if strings.Index(contextNameRegex, `\?cacertpath=`) != -1 {
+			contextNameRegex = prefixToIndex(contextNameRegex, questionMarkIndex) + ".*"
+		}
 	}
 
 	var regexString string
