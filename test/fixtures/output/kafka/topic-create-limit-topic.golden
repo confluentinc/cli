@@ -1,0 +1,4 @@
+Error: Adding the requested number of partitions will exceed 9000 total partitions.
+
+Suggestions:
+    The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`.
