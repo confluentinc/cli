@@ -134,6 +134,9 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 			if requestData.TopicName == "topic-exist" { // check topic
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Topic 'topic-exist' already exists."))
 				return
+			} else if requestData.TopicName == "topic-exceed-limit" {
+				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Adding the requested number of partitions will exceed 9000 total partitions."))
+				return
 			} else if requestData.PartitionsCount < -1 || requestData.PartitionsCount == 0 { // check partition
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Number of partitions must be larger than 0."))
 				return
