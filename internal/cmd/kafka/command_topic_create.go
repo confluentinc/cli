@@ -66,7 +66,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	ifNotExistsFlag, err := cmd.Flags().GetBool("if-not-exists")
+	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	topic.Spec.Configs = configMap
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
-		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExistsFlag)
+		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExists)
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
