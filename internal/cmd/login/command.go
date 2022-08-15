@@ -187,8 +187,9 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		IsCloud: true,
 		URL:     url,
 	}
-	if c.Config.Config.Context() != nil && strings.Contains(c.Config.Config.Context().NetrcMachineName, url) {
-		netrcFilterParams.Name = c.Config.Config.Context().NetrcMachineName
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
@@ -281,8 +282,9 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		IsCloud:    false,
 		URL:        url,
 	}
-	if c.Config.Config.Context() != nil && strings.Contains(c.Config.Config.Context().NetrcMachineName, url) {
-		netrcFilterParams.Name = c.Config.Config.Context().NetrcMachineName
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
