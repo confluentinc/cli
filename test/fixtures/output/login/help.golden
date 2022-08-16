@@ -23,6 +23,23 @@ Even with the environment variables set, you can force an interactive login usin
 Usage:
   confluent login [flags]
 
+Examples:
+Log in to Confluent Cloud.
+
+  $ confluent login
+
+Log in to a specific org in Confluent Cloud.
+
+  $ confluent login --organization-id 12345678-1234-1234-1234-123456789012
+
+Log in to Confluent Platform with a MDS URL.
+
+  $ confluent login --url http://localhost:8090
+
+Log in to Confluent Platform with a MDS URL and CA certificate path.
+
+  $ confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt
+
 Flags:
       --url string               Metadata Service (MDS) URL, for on-prem deployments.
       --ca-cert-path string      Self-signed certificate chain in PEM format, for on-prem deployments.
