@@ -162,7 +162,7 @@ func CatchV2ErrorWithResponseBody(err error, body []byte) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(resBody.Error[0].Detail, "\n"))
+			return Wrap(err, strings.TrimSuffix(detail, "\n"))
 		}
 	}
 	if resBody.Message != "" {
