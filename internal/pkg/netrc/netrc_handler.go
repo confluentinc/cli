@@ -220,7 +220,9 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 	}
 
 	regex := getMachineNameRegex(params)
-	for _, machine := range machines {
+	// Look for the most recent entry matching the regex
+	for i := len(machines) - 1; i >= 0; i-- {
+		machine := machines[i]
 		if regex.Match([]byte(machine.Name)) {
 			return &Machine{Name: machine.Name, User: machine.Login, Password: machine.Password, IsSSO: isSSOMachine(machine.Name)}, nil
 		}
