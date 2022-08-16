@@ -14,17 +14,14 @@ type command struct {
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
-	dynamicCtx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
 
 	cmd := &cobra.Command{
 		Use:         "stream-share",
 		Aliases:     []string{"ss"},
 		Short:       "Manage stream shares.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-	}
-
-	if !featureflags.Manager.BoolVariation("cli.cdx", dynamicCtx, v1.CliLaunchDarklyClient, true, false) {
-		cmd.Hidden = true
+		Hidden:      !cfg.IsTest && !featureflags.Manager.BoolVariation("cli.cdx", ctx, v1.CliLaunchDarklyClient, true, false),
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
