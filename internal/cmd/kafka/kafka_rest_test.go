@@ -121,7 +121,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 
 	r = kafkaRestError(url, openAPIError, nil)
 	req.NotNil(r)
-	req.Contains(r.Error(), "Unknown")
+	req.Contains(r.Error(), "unknown")
 
 	httpResp := http.Response{
 		Status:     "Code: 400",

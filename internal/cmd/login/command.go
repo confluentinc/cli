@@ -372,7 +372,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 	matched, _ := regexp.MatchString(pattern, url)
 	if !matched {
-		return url, "", errors.New(errors.InvalidLoginURLMsg)
+		return url, "", errors.New(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil
