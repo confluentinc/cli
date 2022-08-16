@@ -1,4 +1,4 @@
-**Confluent Cloud:**
+Confluent Cloud:
 
 Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.
 
@@ -10,7 +10,7 @@ SSO login can be accomplished headlessly using the `--no-browser` flag, but non-
 
 Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `CONFLUENT_CLOUD_ORGANIZATION_ID`.
 
-**Confluent Platform:**
+Confluent Platform:
 
 Log in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.
 
