@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newResendCommand() *cobra.Command {
+func (c *command) newResendEmailInviteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resend",
 		Short: "Resend email invite.",

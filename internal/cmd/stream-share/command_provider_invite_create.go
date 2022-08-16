@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newCreateCommand() *cobra.Command {
+func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a consumer invite based on email.",
