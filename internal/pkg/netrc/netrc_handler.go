@@ -47,10 +47,11 @@ type NetrcHandler interface {
 }
 
 type NetrcMachineParams struct {
-	IsCloud bool
-	IsSSO   bool
-	Name    string
-	URL     string
+	IgnoreCert bool
+	IsCloud    bool
+	IsSSO      bool
+	Name       string
+	URL        string
 }
 
 type Machine struct {
@@ -219,7 +220,9 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 	}
 
 	regex := getMachineNameRegex(params)
-	for _, machine := range machines {
+	// Look for the most recent entry matching the regex
+	for i := len(machines) - 1; i >= 0; i-- {
+		machine := machines[i]
 		if regex.Match([]byte(machine.Name)) {
 			return &Machine{Name: machine.Name, User: machine.Login, Password: machine.Password, IsSSO: isSSOMachine(machine.Name)}, nil
 		}
@@ -237,6 +240,12 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
 	} else {
 		contextNameRegex = ".*"
+	}
+
+	if params.IgnoreCert {
+		if idx := strings.Index(contextNameRegex, `\?cacertpath=`); idx != -1 {
+			contextNameRegex = prefixToIndex(contextNameRegex, idx) + ".*"
+		}
 	}
 
 	var regexString string
