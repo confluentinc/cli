@@ -1,7 +1,7 @@
 +---------------------+---------------------------------------------+
 | ID                  | ss-12345                                    |
-| API Key             | 53C1LMK57JR9KBLF3CS6                        |
-| Secret              | 4MECG51LZO2ILQTG6RO0                        |
+| API Key             |                        00000000000000000000 |
+| Secret              |                        00000000000000000000 |
 | Kafka Bootstrap URL | pkc-00000.us-east1.gcp.confluent.cloud:9092 |
 | Resources           | [Topic:topic-12345]                         |
 +---------------------+---------------------------------------------+
