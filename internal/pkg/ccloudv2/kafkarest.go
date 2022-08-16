@@ -6,15 +6,13 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newKafkaRestClient(baseURL, userAgent string, isTest bool) *kafkarestv3.APIClient {
+func newKafkaRestClient(url, userAgent string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud Kafka REST"}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return kafkarestv3.NewAPIClient(cfg)

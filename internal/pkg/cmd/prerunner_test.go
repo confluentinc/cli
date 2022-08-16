@@ -130,6 +130,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
+		cmd.Flags().Bool("unsafe-trace", false, "")
 		c := pcmd.NewAnonymousCLICommand(cmd, r)
 
 		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
@@ -152,6 +153,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	args := strings.Split("help", " ")
 	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
@@ -174,6 +176,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	}
 	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err := pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
@@ -258,6 +261,7 @@ func Test_UpdateToken(t *testing.T) {
 			}
 			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
@@ -443,6 +447,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
 			}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
@@ -526,6 +531,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err = pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
@@ -587,6 +593,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			}
 
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
@@ -674,6 +681,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			}
 			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 			root.Flags().String("api-key", "", "Kafka cluster API key.")
 			root.Flags().String("api-secret", "", "API key secret.")
 			root.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -699,6 +707,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	r.Config = cfg
 	cobraCmd := &cobra.Command{Use: "test"}
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
+	cobraCmd.Flags().Bool("unsafe-trace", false, "")
 	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})

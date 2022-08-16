@@ -32,20 +32,22 @@ type Client struct {
 	StreamShareClient      *cdxv1.APIClient
 }
 
-func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
+func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *Client {
+	url := getServerUrl(baseUrl, isTest)
+
 	return &Client{
 		AuthToken: authToken,
 
-		ApiKeysClient:          newApiKeysClient(baseURL, userAgent, isTest),
-		CliClient:              newCliClient(baseURL, userAgent, isTest),
-		CmkClient:              newCmkClient(baseURL, userAgent, isTest),
-		ConnectClient:          newConnectClient(baseURL, userAgent, isTest),
-		IamClient:              newIamClient(baseURL, userAgent, isTest),
-		IdentityProviderClient: newIdentityProviderClient(baseURL, userAgent, isTest),
-		KafkaRestClient:        newKafkaRestClient(baseURL, userAgent, isTest),
-		MetricsClient:          newMetricsClient(baseURL, userAgent, isTest),
-		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
-		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
-		StreamShareClient:      newCdxClient(baseURL, userAgent, isTest),
+		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		CliClient:              newCliClient(url, userAgent, unsafeTrace),
+		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
+		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
+		IamClient:              newIamClient(url, userAgent, unsafeTrace),
+		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
+		KafkaRestClient:        newKafkaRestClient(url, userAgent, unsafeTrace),
+		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
+		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
+		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
+		StreamShareClient:      newCdxClient(url, userAgent, unsafeTrace),
 	}
 }
