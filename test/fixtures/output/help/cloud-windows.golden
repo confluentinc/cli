@@ -23,6 +23,7 @@ Available Commands:
   schema-registry Manage Schema Registry.
   service-quota   Look up Confluent Cloud service quota limits.
   shell           Start an interactive shell.
+  stream-share    Manage stream shares.
   update          Update the Confluent CLI.
   version         Show version of the Confluent CLI.
 
