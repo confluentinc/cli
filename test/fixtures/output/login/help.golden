@@ -1,4 +1,4 @@
-Confluent Cloud:
+**Confluent Cloud:**
 
 Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.
 
@@ -10,7 +10,7 @@ SSO login can be accomplished headlessly using the `--no-browser` flag, but non-
 
 Log in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `CONFLUENT_CLOUD_ORGANIZATION_ID`.
 
-Confluent Platform:
+**Confluent Platform:**
 
 Log in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.
 
@@ -22,6 +22,23 @@ Even with the environment variables set, you can force an interactive login usin
 
 Usage:
   confluent login [flags]
+
+Examples:
+Log in to Confluent Cloud.
+
+  $ confluent login
+
+Log in to a specific org in Confluent Cloud.
+
+  $ confluent login --organization-id 12345678-1234-1234-1234-123456789012
+
+Log in to Confluent Platform with a MDS URL.
+
+  $ confluent login --url http://localhost:8090
+
+Log in to Confluent Platform with a MDS URL and CA certificate path.
+
+  $ confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt
 
 Flags:
       --url string               Metadata Service (MDS) URL, for on-prem deployments.
