@@ -11,67 +11,47 @@ import (
 )
 
 var (
-	redeemTokenFields        = []string{"Id", "APIKey", "Secret", "KafkaBootstrapURL", "Resources"}
+	redeemTokenFields        = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "Resources"}
 	redeemTokenHumanLabelMap = map[string]string{
 		"Id":                "ID",
-		"APIKey":            "API Key",
+		"ApiKey":            "API Key",
 		"Secret":            "Secret",
-		"KafkaBootstrapURL": "Kafka Bootstrap URL",
+		"KafkaBootstrapUrl": "Kafka Bootstrap URL",
 		"Resources":         "Resources",
 	}
 	redeemTokenStructuredLabelMap = map[string]string{
 		"Id":                "id",
-		"APIKey":            "apikey",
+		"ApiKey":            "apikey",
 		"Secret":            "secret",
-		"KafkaBootstrapURL": "kafka_bootstrap_url",
+		"KafkaBootstrapUrl": "kafka_bootstrap_url",
 		"Resources":         "resources",
 	}
-
-	redeemPreviewFields = []string{"Id", "Cloud", "DisplayName", "Description", "OrganizationName", "OrganizationDetails",
-		"OrganizationContact", "NetworkConnectionTypes", "Labels"}
-	redeemPreviewHumanLabels = []string{"ID", "Cloud", "Display Name", "Description", "Organization Name", "Organization Details",
-		"Organization Contact", "Network Connection Types", "Labels"}
-	redeemPreviewStructuredLabels = []string{"id", "cloud", "display_name", "description", "organization_name",
-		"organization_details", "organization_contact", "network_connection_types", "labels"}
 )
 
 type redeemToken struct {
 	Id                string
-	APIKey            string
+	ApiKey            string
 	Secret            string
-	KafkaBootstrapURL string
+	KafkaBootstrapUrl string
 	Resources         []string
-}
-
-type redeemPreview struct {
-	Id                     string
-	Cloud                  string
-	DisplayName            string
-	Description            string
-	OrganizationName       string
-	OrganizationDetails    string
-	OrganizationContact    string
-	NetworkConnectionTypes []string
-	Labels                 []string
 }
 
 func (c *command) newRedeemShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redeem <stream-share-token>",
-		Short: "Redeem stream share token.",
+		Short: "Redeem a stream share token.",
 		RunE:  c.redeemShare,
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Redeem stream share token "stream-share-token":`,
-				Code: "confluent stream-share consumer redeem stream-share-token",
+				Text: `Redeem stream share token "DBBG8xGRfh85ePuk4x5BaENvb25vaGsydXdhejRVNp-pOzCWOLF85LzqcZCq1lVe8OQxSJqQo8XgUMRbtVs5fqbpM5BUKhnHAUcd3C5ip_yWfd3BFRlMVxGQwYo75aSQDb44ACdoAcgjwLH_9YVbk4GJoK-BtZtlpjYSTAIBbhvbFWWOU1bcFyW3HetlyzTIlIjG_UkSKFfDZ_5YNNuw0CBLZQf14J36b4QpSLe05jx9s695tINCm-dyPLX8_pUIqA2ekEZyf86pE7Azh7NBZz00uGZ0FrRl_ir9UvHF1uZ9sID6aZc=":`,
+				Code: "confluent stream-share consumer redeem DBBG8xGRfh85ePuk4x5BaENvb25vaGsydXdhejRVNp-pOzCWOLF85LzqcZCq1lVe8OQxSJqQo8XgUMRbtVs5fqbpM5BUKhnHAUcd3C5ip_yWfd3BFRlMVxGQwYo75aSQDb44ACdoAcgjwLH_9YVbk4GJoK-BtZtlpjYSTAIBbhvbFWWOU1bcFyW3HetlyzTIlIjG_UkSKFfDZ_5YNNuw0CBLZQf14J36b4QpSLe05jx9s695tINCm-dyPLX8_pUIqA2ekEZyf86pE7Azh7NBZz00uGZ0FrRl_ir9UvHF1uZ9sID6aZc=",
 			},
 		),
 	}
 
-	cmd.Flags().Bool("preview", false, "Preview shared resources without redeeming the token.")
-	cmd.Flags().String("aws-account", "", "The AWS account id for the consumer network.")
-	cmd.Flags().String("azure-subscription", "", "The Azure subscription for the consumer network.")
+	cmd.Flags().String("aws-account", "", "The AWS account ID for the consumer network.")
+	cmd.Flags().String("azure-subscription", "", "The Azure subscription ID for the consumer network.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -79,21 +59,8 @@ func (c *command) newRedeemShareCommand() *cobra.Command {
 }
 
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
-	isPreview, err := cmd.Flags().GetBool("preview")
-	if err != nil {
-		return err
-	}
-
 	token := args[0]
 
-	if isPreview {
-		return c.handleRedeemSharePreview(cmd, token)
-	}
-
-	return c.handleRedeemShare(cmd, token)
-}
-
-func (c *command) handleRedeemShare(cmd *cobra.Command, token string) error {
 	awsAccount, err := cmd.Flags().GetString("aws-account")
 	if err != nil {
 		return err
@@ -117,39 +84,9 @@ func (c *command) handleRedeemShare(cmd *cobra.Command, token string) error {
 
 	return output.DescribeObject(cmd, &redeemToken{
 		Id:                redeemResponse.GetId(),
-		APIKey:            redeemResponse.GetApikey(),
+		ApiKey:            redeemResponse.GetApikey(),
 		Secret:            redeemResponse.GetSecret(),
-		KafkaBootstrapURL: redeemResponse.GetKafkaBootstrapUrl(),
+		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
 		Resources:         resources,
 	}, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
-}
-
-func (c *command) handleRedeemSharePreview(cmd *cobra.Command, token string) error {
-	tokenPreview, _, err := c.V2Client.PreviewSharedToken(token)
-	if err != nil {
-		return err
-	}
-
-	outputWriter, err := output.NewListOutputWriter(cmd, redeemPreviewFields, redeemPreviewHumanLabels, redeemPreviewStructuredLabels)
-	if err != nil {
-		return err
-	}
-
-	for _, resource := range *tokenPreview.ConsumerResources {
-		element := &redeemPreview{
-			Id:                     resource.GetId(),
-			Cloud:                  resource.GetCloud(),
-			DisplayName:            resource.GetDisplayName(),
-			Description:            resource.GetDescription(),
-			OrganizationName:       resource.GetOrganizationName(),
-			OrganizationDetails:    resource.GetOrganizationDetails(),
-			OrganizationContact:    resource.GetOrganizationContact(),
-			NetworkConnectionTypes: resource.GetNetworkConnectionTypes().Items,
-			Labels:                 resource.GetLabels(),
-		}
-
-		outputWriter.AddElement(element)
-	}
-
-	return outputWriter.Out()
 }

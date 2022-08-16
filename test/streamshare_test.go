@@ -12,7 +12,6 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share consumer share delete ss-12345", fixture: "stream-share/delete-consumer-share.golden"},
 		{args: "stream-share consumer share describe ss-12345", fixture: "stream-share/describe-consumer-share.golden"},
 		{args: "stream-share consumer redeem stream-share-token", fixture: "stream-share/redeem-share.golden"},
-		{args: "stream-share consumer redeem stream-share-token --preview", fixture: "stream-share/redeem-preview.golden"},
 	}
 
 	for _, tt := range tests {

@@ -118,42 +118,14 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/cdx/v1/shared-tokens:resources"
-func handleStreamSharingRedeemPreview(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		response := cdxv1.InlineResponse200{
-			ConsumerResources: &[]cdxv1.CdxV1ConsumerSharedResource{
-				{
-					Id:    stringPtr("sr-12345"),
-					Cloud: stringPtr("AWS"),
-					NetworkConnectionTypes: &cdxv1.CdxV1ConnectionTypes{
-						Items: []string{"PRIVATELINK"},
-					},
-					DisplayName:         stringPtr("Stock Trades"),
-					Description:         stringPtr("This topic provides realtime data for the orders placed through website"),
-					Labels:              &[]string{"recent", "pending"},
-					OrganizationName:    stringPtr("Nasdaq"),
-					OrganizationDetails: stringPtr("The Nasdaq Stock Market is an American stock exchange based in New York City"),
-					OrganizationContact: stringPtr("jane.doe@example.com"),
-				},
-			},
-		}
-		b, err := json.Marshal(&response)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-}
-
 // Handler for: "/cdx/v1/shared-tokens:redeem"
 func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		response := cdxv1.CdxV1RedeemTokenResponse{
 			Id:                stringPtr("ss-12345"),
-			Apikey:            stringPtr("53C1LMK57JR9KBLF3CS6"),
-			Secret:            stringPtr("4MECG51LZO2ILQTG6RO0"),
+			Apikey:            stringPtr("00000000000000000000"),
+			Secret:            stringPtr("00000000000000000000"),
 			KafkaBootstrapUrl: stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
 				{

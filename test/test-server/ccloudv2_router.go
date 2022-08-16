@@ -39,7 +39,6 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/cdx/v1/consumer-shares":                                      handleStreamSharingConsumerShares,
 	"/cdx/v1/consumer-shares/{id}":                                 handleStreamSharingConsumerShare,
 	"/cdx/v1/shared-tokens:redeem":                                 handleStreamSharingRedeemToken,
-	"/cdx/v1/shared-tokens:resources":                              handleStreamSharingRedeemPreview,
 }
 
 type V2Router struct {
