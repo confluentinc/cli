@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -21,37 +20,37 @@ func newCdxClient(baseURL, userAgent string, isTest bool) *cdxv1.APIClient {
 }
 
 func (c *Client) cdxApiContext() context.Context {
-	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), cdxv1.ContextAccessToken, c.AuthToken)
 }
 
 func (c *Client) ResendInvite(shareId string) (*http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(request)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(request)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(request)
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DeleteConsumerShare(shareId string) (*http.Response, error) {
-	request := c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(request)
+	req := c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(req)
 }
 
 func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare, *http.Response, error) {
-	request := c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(request)
+	req := c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
+	return c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
 }
 
 func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
 	deliveryMethod := "Email"
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
 		CdxV1CreateShareRequest(cdxv1.CdxV1CreateShareRequest{
 			Environment:  &environment,
 			KafkaCluster: &kafkaCluster,
@@ -64,7 +63,7 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (c
 			DeliveryMethod: &deliveryMethod,
 			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s", kafkaCluster, topic)},
 		})
-	return c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(request)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
@@ -114,27 +113,27 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 }
 
 func (c *Client) executeListConsumerShares(sharedResource, pageToken string) (cdxv1.CdxV1ConsumerShareList, *http.Response, error) {
-	request := c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerShares(c.cdxApiContext()).
+	req := c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerShares(c.cdxApiContext()).
 		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		request = request.PageToken(pageToken)
+		req = req.PageToken(pageToken)
 	}
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerSharesExecute(request)
+	return c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerSharesExecute(req)
 }
 
 func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
-	request := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).
+	req := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).
 		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		request = request.PageToken(pageToken)
+		req = req.PageToken(pageToken)
 	}
-	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(request)
+	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
 }
 
 func (c *Client) PreviewSharedToken(token string) (cdxv1.InlineResponse200, *http.Response, error) {
-	request := c.StreamShareClient.SharedTokensCdxV1Api.ResourcesCdxV1SharedToken(c.cdxApiContext()).
+	req := c.StreamShareClient.SharedTokensCdxV1Api.ResourcesCdxV1SharedToken(c.cdxApiContext()).
 		CdxV1SharedToken(cdxv1.CdxV1SharedToken{Token: &token})
-	return c.StreamShareClient.SharedTokensCdxV1Api.ResourcesCdxV1SharedTokenExecute(request)
+	return c.StreamShareClient.SharedTokensCdxV1Api.ResourcesCdxV1SharedTokenExecute(req)
 }
 
 func (c *Client) RedeemSharedToken(token, awsAccount, azureSubscription string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
@@ -143,7 +142,7 @@ func (c *Client) RedeemSharedToken(token, awsAccount, azureSubscription string) 
 		AwsAccount:        &awsAccount,
 		AzureSubscription: &azureSubscription,
 	}
-	request := c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).
+	req := c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).
 		CdxV1RedeemTokenRequest(redeemTokenRequest)
-	return c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(request)
+	return c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
 }

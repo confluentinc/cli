@@ -8,13 +8,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (s *consumerShareCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newDescribeConsumerShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a consumer share.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(s.validArgs),
-		RunE:              s.describe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConsumerShareArgs),
+		RunE:              c.describeConsumerShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe consumer share "ss-12345":`,
@@ -28,13 +28,13 @@ func (s *consumerShareCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (s *consumerShareCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	consumerShare, _, err := s.V2Client.DescribeConsumerShare(shareId)
+	consumerShare, _, err := c.V2Client.DescribeConsumerShare(shareId)
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, s.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+	return output.DescribeObject(cmd, c.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
 }

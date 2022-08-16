@@ -55,11 +55,11 @@ type redeemPreview struct {
 	Labels                 []string
 }
 
-func (c *consumerCommand) newRedeemCommand() *cobra.Command {
+func (c *command) newRedeemShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redeem <stream-share-token>",
 		Short: "Redeem stream share token.",
-		RunE:  c.redeem,
+		RunE:  c.redeemShare,
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -78,7 +78,7 @@ func (c *consumerCommand) newRedeemCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *consumerCommand) redeem(cmd *cobra.Command, args []string) error {
+func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	isPreview, err := cmd.Flags().GetBool("preview")
 	if err != nil {
 		return err
@@ -87,13 +87,13 @@ func (c *consumerCommand) redeem(cmd *cobra.Command, args []string) error {
 	token := args[0]
 
 	if isPreview {
-		return c.handleRedeemPreview(cmd, token)
+		return c.handleRedeemSharePreview(cmd, token)
 	}
 
-	return c.handleRedeem(cmd, token)
+	return c.handleRedeemShare(cmd, token)
 }
 
-func (c *consumerCommand) handleRedeem(cmd *cobra.Command, token string) error {
+func (c *command) handleRedeemShare(cmd *cobra.Command, token string) error {
 	awsAccount, err := cmd.Flags().GetString("aws-account")
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func (c *consumerCommand) handleRedeem(cmd *cobra.Command, token string) error {
 	}, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
 }
 
-func (c *consumerCommand) handleRedeemPreview(cmd *cobra.Command, token string) error {
+func (c *command) handleRedeemSharePreview(cmd *cobra.Command, token string) error {
 	tokenPreview, _, err := c.V2Client.PreviewSharedToken(token)
 	if err != nil {
 		return err

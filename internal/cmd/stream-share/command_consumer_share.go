@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var (
@@ -40,39 +39,33 @@ type consumerShare struct {
 	InviteExpiresAt  time.Time
 }
 
-type consumerShareCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newConsumerShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newConsumerShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "share",
 		Short: "Manage consumer shares.",
 	}
 
-	c := &consumerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newDeleteConsumerShareCommand())
+	cmd.AddCommand(c.newDescribeConsumerShareCommand())
+	cmd.AddCommand(c.newListConsumerSharesCommand())
 
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-
-	return c.Command
+	return cmd
 }
 
-func (s *consumerShareCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validConsumerShareArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
-	if err := s.PersistentPreRunE(cmd, args); err != nil {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
 
-	return s.autocompleteConsumerShares()
+	return c.autocompleteConsumerShares()
 }
 
-func (s *consumerShareCommand) autocompleteConsumerShares() []string {
-	consumerShares, err := s.V2Client.ListConsumerShares("")
+func (c *command) autocompleteConsumerShares() []string {
+	consumerShares, err := c.V2Client.ListConsumerShares("")
 	if err != nil {
 		return nil
 	}
@@ -84,7 +77,7 @@ func (s *consumerShareCommand) autocompleteConsumerShares() []string {
 	return suggestions
 }
 
-func (s *consumerShareCommand) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
+func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
 	sharedResource := share.GetSharedResource()
 	return &consumerShare{
 		Id:               share.GetId(),

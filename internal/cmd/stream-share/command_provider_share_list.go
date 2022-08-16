@@ -8,12 +8,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (s *providerShareCommand) newListCommand() *cobra.Command {
+func (c *command) newListProviderShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List shares for provider.",
 		Args:  cobra.NoArgs,
-		RunE:  s.list,
+		RunE:  c.listProviderShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List provider shares:",
@@ -29,13 +29,13 @@ func (s *providerShareCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) listProviderShare(cmd *cobra.Command, _ []string) error {
 	sharedResource, err := cmd.Flags().GetString("shared-resource")
 	if err != nil {
 		return err
 	}
 
-	providerShares, err := s.V2Client.ListProviderShares(sharedResource)
+	providerShares, err := c.V2Client.ListProviderShares(sharedResource)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (s *providerShareCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, share := range providerShares {
-		element := buildProviderShare(share)
+		element := c.buildProviderShare(share)
 		outputWriter.AddElement(element)
 	}
 

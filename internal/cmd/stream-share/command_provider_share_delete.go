@@ -9,13 +9,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (s *providerShareCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newDeleteProviderShareCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a provider share.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(s.validArgs),
-		RunE:              s.delete,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgs),
+		RunE:              c.deleteProviderShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete provider share "ss-12345":`,
@@ -25,10 +25,10 @@ func (s *providerShareCommand) newDeleteCommand() *cobra.Command {
 	}
 }
 
-func (s *providerShareCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	if _, err := s.V2Client.DeleteProviderShare(shareId); err != nil {
+	if _, err := c.V2Client.DeleteProviderShare(shareId); err != nil {
 		return err
 	}
 

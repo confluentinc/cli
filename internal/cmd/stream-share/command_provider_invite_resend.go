@@ -9,11 +9,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (s *inviteCommand) newResendCommand() *cobra.Command {
+func (c *command) newResendCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resend",
 		Short: "Resend email invite.",
-		RunE:  s.resend,
+		RunE:  c.resendEmailInvite,
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -28,10 +28,10 @@ func (s *inviteCommand) newResendCommand() *cobra.Command {
 	return cmd
 }
 
-func (s *inviteCommand) resend(cmd *cobra.Command, args []string) error {
+func (c *command) resendEmailInvite(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	if _, err := s.V2Client.ResendInvite(shareId); err != nil {
+	if _, err := c.V2Client.ResendInvite(shareId); err != nil {
 		return err
 	}
 

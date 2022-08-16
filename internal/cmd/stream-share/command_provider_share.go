@@ -3,42 +3,36 @@ package streamshare
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-type providerShareCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newProviderShareCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newProviderShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "share",
 		Short: "Manage provider shares.",
 	}
 
-	c := &providerShareCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newDeleteProviderShareCommand())
+	cmd.AddCommand(c.newDescribeProviderShareCommand())
+	cmd.AddCommand(c.newListProviderShareCommand())
 
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-
-	return c.Command
+	return cmd
 }
 
-func (s *providerShareCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validProviderShareArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
 
-	if err := s.PersistentPreRunE(cmd, args); err != nil {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
 
-	return s.autocompleteProviderShares()
+	return c.autocompleteProviderShares()
 }
 
-func (s *providerShareCommand) autocompleteProviderShares() []string {
-	providerShares, err := s.V2Client.ListProviderShares("")
+func (c *command) autocompleteProviderShares() []string {
+	providerShares, err := c.V2Client.ListProviderShares("")
 	if err != nil {
 		return nil
 	}
@@ -48,4 +42,26 @@ func (s *providerShareCommand) autocompleteProviderShares() []string {
 		suggestions[i] = *share.Id
 	}
 	return suggestions
+}
+
+func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
+	serviceAccount := share.GetServiceAccount()
+	sharedResource := share.GetSharedResource()
+	element := &providerShare{
+		Id:                       share.GetId(),
+		ConsumerUserName:         share.GetConsumerUserName(),
+		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
+		ProviderUserName:         share.GetProviderUserName(),
+		Status:                   share.GetStatus(),
+		DeliveryMethod:           share.GetDeliveryMethod(),
+		ServiceAccountId:         serviceAccount.GetId(),
+		SharedResourceId:         sharedResource.GetId(),
+		InvitedAt:                share.GetInvitedAt(),
+		InviteExpiresAt:          share.GetInviteExpiresAt(),
+	}
+
+	if val, ok := share.GetRedeemedAtOk(); ok && !val.IsZero() {
+		element.RedeemedAt = val.String()
+	}
+	return element
 }

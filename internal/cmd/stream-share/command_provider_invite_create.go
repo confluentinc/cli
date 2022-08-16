@@ -8,12 +8,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (s *inviteCommand) newCreateCommand() *cobra.Command {
+func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a consumer invite based on email.",
 		Args:  cobra.NoArgs,
-		RunE:  s.create,
+		RunE:  c.createEmailInvite,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an email invite for user with email user@example.com:",
@@ -37,7 +37,7 @@ func (s *inviteCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (s *inviteCommand) create(cmd *cobra.Command, _ []string) error {
+func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	environment, err := cmd.Flags().GetString("environment")
 	if err != nil {
 		return err
@@ -58,10 +58,10 @@ func (s *inviteCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	invite, _, err := s.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
+	invite, _, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	return output.DescribeObject(cmd, c.buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }

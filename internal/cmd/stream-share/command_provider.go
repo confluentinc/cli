@@ -4,9 +4,6 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 var (
@@ -61,42 +58,14 @@ var (
 	}
 )
 
-type providerCommand struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newProviderCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "provider",
 		Short: "Manage provider actions.",
 	}
 
-	c := &providerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	cmd.AddCommand(c.newInviteCommand())
+	cmd.AddCommand(c.newProviderShareCommand())
 
-	c.AddCommand(newInviteCommand(prerunner))
-	c.AddCommand(newProviderShareCommand(prerunner))
-
-	return c.Command
-}
-
-func buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
-	serviceAccount := share.GetServiceAccount()
-	sharedResource := share.GetSharedResource()
-	element := &providerShare{
-		Id:                       share.GetId(),
-		ConsumerUserName:         share.GetConsumerUserName(),
-		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
-		ProviderUserName:         share.GetProviderUserName(),
-		Status:                   share.GetStatus(),
-		DeliveryMethod:           share.GetDeliveryMethod(),
-		ServiceAccountId:         serviceAccount.GetId(),
-		SharedResourceId:         sharedResource.GetId(),
-		InvitedAt:                share.GetInvitedAt(),
-		InviteExpiresAt:          share.GetInviteExpiresAt(),
-	}
-
-	if val, ok := share.GetRedeemedAtOk(); ok && !val.IsZero() {
-		element.RedeemedAt = val.String()
-	}
-	return element
+	return cmd
 }
