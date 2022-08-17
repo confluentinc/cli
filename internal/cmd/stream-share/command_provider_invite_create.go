@@ -23,16 +23,15 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("email", "", "Email of the user with whom the topic is shared")
-	cmd.Flags().String("environment", "", "ID of ccloud environment")
-	cmd.Flags().String("kafka-cluster", "", "ID of the Kafka cluster")
 	cmd.Flags().String("topic", "", "Topic to be shared")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("email")
 	_ = cmd.MarkFlagRequired("environment")
-	_ = cmd.MarkFlagRequired("kafka-cluster")
+	_ = cmd.MarkFlagRequired("cluster")
 	_ = cmd.MarkFlagRequired("topic")
-
-	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -43,7 +42,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
+	kafkaCluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}

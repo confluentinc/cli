@@ -21,7 +21,7 @@ var (
 	}
 	redeemTokenStructuredLabelMap = map[string]string{
 		"Id":                "id",
-		"ApiKey":            "apikey",
+		"ApiKey":            "api_key",
 		"Secret":            "secret",
 		"KafkaBootstrapUrl": "kafka_bootstrap_url",
 		"Resources":         "resources",
@@ -50,8 +50,8 @@ func (c *command) newRedeemCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("aws-account", "", "The AWS account ID for the consumer network.")
-	cmd.Flags().String("azure-subscription", "", "The Azure subscription ID for the consumer network.")
+	cmd.Flags().String("aws-account-id", "", "The AWS account ID for the consumer network.")
+	cmd.Flags().String("azure-subscription-id", "", "The Azure subscription ID for the consumer network.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -82,11 +82,13 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedTopic.Kind, resource.CdxV1SharedTopic.Topic))
 	}
 
-	return output.DescribeObject(cmd, &redeemToken{
+	tokenObj := &redeemToken{
 		Id:                redeemResponse.GetId(),
 		ApiKey:            redeemResponse.GetApikey(),
 		Secret:            redeemResponse.GetSecret(),
 		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
 		Resources:         resources,
-	}, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
+	}
+
+	return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
 }

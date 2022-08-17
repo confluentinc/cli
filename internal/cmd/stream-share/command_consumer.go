@@ -11,7 +11,7 @@ func (c *command) newConsumerCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newConsumerShareCommand())
-	cmd.AddCommand(c.newRedeemShareCommand())
+	cmd.AddCommand(c.newRedeemCommand())
 
 	return cmd
 }

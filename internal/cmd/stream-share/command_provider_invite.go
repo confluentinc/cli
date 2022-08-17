@@ -11,8 +11,8 @@ func (c *command) newInviteCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 	}
 
-	cmd.AddCommand(c.newProviderInviteCreateCommand())
-	cmd.AddCommand(c.newProviderInviteResendCommand())
+	cmd.AddCommand(c.newCreateEmailInviteCommand())
+	cmd.AddCommand(c.newResendEmailInviteCommand())
 
 	return cmd
 }
