@@ -1,0 +1,14 @@
+           Plugin Name           |                             File Path                               
+---------------------------------+---------------------------------------------------------------------
+  confluent another-dash-test    | test/fixtures/input/plugin/confluent-another_dash_test-but_with.sh  
+  but-with                       |                                                                     
+  confluent can print to stderr  | test/fixtures/input/plugin/dummy/confluent-can-print-to-stderr.sh   
+  confluent cli command          | test/fixtures/input/plugin/confluent-cli-command                    
+  confluent dash-test            | test/fixtures/input/plugin/confluent-dash_test.sh                   
+  confluent foo bar baz boo far  | test/fixtures/input/plugin/confluent-foo-bar-baz-boo-far.sh         
+  confluent kafka something      | test/fixtures/input/plugin/confluent-kafka-something.sh             
+  confluent plugin1              | test/fixtures/input/plugin/confluent-plugin1.sh                     
+  confluent plugin2              | test/fixtures/input/plugin/confluent-plugin2.sh                     
+  confluent print args           | test/fixtures/input/plugin/confluent-print-args.sh                  
+[WARN] The built-in command `confluent version` will be run instead of the duplicate plugin at test/fixtures/input/plugin/confluent-version.
+[WARN] The command `confluent plugin2` will run the plugin listed above instead of the duplicate plugin at test/fixtures/input/plugin/dummy/confluent-plugin2.

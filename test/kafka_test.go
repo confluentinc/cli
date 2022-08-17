@@ -126,7 +126,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic/delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic delete topic2", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", wantErrCode: 1},
 
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic/update-success.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
@@ -159,7 +158,7 @@ func (s *CLITestSuite) TestKafka() {
 		tests = append(tests, noSchemaTest)
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -207,7 +206,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -221,7 +220,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create", fixture: "kafka/client-config/onprem-help.golden", wantErrCode: 1},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "platform"
