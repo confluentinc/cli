@@ -1,5 +1,0 @@
-Updated the following configuration values for topic "topic-exist" (read-only configs were not updated):
-        Name       |   Value   | Read-Only  
--------------------+-----------+------------
-  compression.type | producer  | false      
-  retention.ms     | 604800000 | false      
