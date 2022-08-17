@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -57,9 +58,9 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	invite, _, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
+	invite, httpResp, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
 	if err != nil {
-		return err
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, c.buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)

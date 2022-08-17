@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -72,9 +73,9 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 	collectedAllShares := false
 	pageToken := ""
 	for !collectedAllShares {
-		sharesList, _, err := c.executeListProviderShares(sharedResource, pageToken)
+		sharesList, httpResp, err := c.executeListProviderShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 		}
 		providerShares = append(providerShares, sharesList.GetData()...)
 
@@ -95,9 +96,9 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 	collectedAllShares := false
 	pageToken := ""
 	for !collectedAllShares {
-		sharesList, _, err := c.executeListConsumerShares(sharedResource, pageToken)
+		sharesList, httpResp, err := c.executeListConsumerShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 		}
 		consumerShares = append(consumerShares, sharesList.GetData()...)
 
