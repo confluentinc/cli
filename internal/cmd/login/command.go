@@ -49,8 +49,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 				Code: "confluent login",
 			},
 			examples.Example{
-				Text: "Log in to a specific org in Confluent Cloud.",
-				Code: "confluent login --organization-id 12345678-1234-1234-1234-123456789012",
+				Text: "Log in to a specific organization in Confluent Cloud.",
+				Code: "confluent login --organization-id 00000000-0000-0000-0000-000000000000",
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL.",
