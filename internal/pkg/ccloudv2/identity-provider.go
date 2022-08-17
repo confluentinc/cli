@@ -48,25 +48,25 @@ func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityP
 }
 
 func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProvider, error) {
-	var identityProviders []identityproviderv2.IamV2IdentityProvider
+	var list []identityproviderv2.IamV2IdentityProvider
 
-	collectedAllIdentityProviders := false
+	done := false
 	pageToken := ""
-	for !collectedAllIdentityProviders {
-		identityProviderList, _, err := c.executeListIdentityProviders(pageToken)
+	for !done {
+		page, _, err := c.executeListIdentityProviders(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		identityProviders = append(identityProviders, identityProviderList.GetData()...)
+		list = append(list, page.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := identityProviderList.GetMetadata().Next
-		pageToken, collectedAllIdentityProviders, err = extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable)
+		nextPageUrlStringNullable := page.GetMetadata().Next
+		pageToken, done, err = extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return identityProviders, nil
+	return list, nil
 }
 
 func (c *Client) executeListIdentityProviders(pageToken string) (identityproviderv2.IamV2IdentityProviderList, *http.Response, error) {
@@ -75,6 +75,15 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 		req = req.PageToken(pageToken)
 	}
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.ListIamV2IdentityProvidersExecute(req)
+}
+
+func extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
@@ -98,25 +107,23 @@ func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2Identit
 }
 
 func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV2IdentityPool, error) {
-	var identityPools []identityproviderv2.IamV2IdentityPool
+	var list []identityproviderv2.IamV2IdentityPool
 
-	collectedAllIdentityPools := false
+	done := false
 	pageToken := ""
-	for !collectedAllIdentityPools {
-		identityPoolList, _, err := c.executeListIdentityPools(providerId, pageToken)
+	for !done {
+		page, _, err := c.executeListIdentityPools(providerId, pageToken)
 		if err != nil {
 			return nil, err
 		}
-		identityPools = append(identityPools, identityPoolList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := identityPoolList.GetMetadata().Next
-		pageToken, collectedAllIdentityPools, err = extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIdentityPoolNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return identityPools, nil
+	return list, nil
 }
 
 func (c *Client) executeListIdentityPools(providerID string, pageToken string) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
@@ -125,4 +132,13 @@ func (c *Client) executeListIdentityPools(providerID string, pageToken string) (
 		req = req.PageToken(pageToken)
 	}
 	return c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPoolsExecute(req)
+}
+
+func extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
