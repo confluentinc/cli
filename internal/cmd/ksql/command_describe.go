@@ -2,9 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
-	"os"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -22,12 +19,10 @@ var (
 func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	shortText := "Describe a ksqlDB cluster."
 	var longText string
-	runCommand := c.describeCluster
+	runCommand := c.describe
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Describe a ksqlDB app."
-		longText = "DEPRECATED: Describe a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.describeApp
+		shortText = "Describe a ksqlDB app."
 	}
 
 	cmd := &cobra.Command{
@@ -46,23 +41,12 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, false)
-}
-
-func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args, true)
-}
-
-func (c *ksqlCommand) describe(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
