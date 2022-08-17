@@ -115,23 +115,21 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
 	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil {
+		if clusterId == "anonymous-id" {
+			return config, nil
+		}
 		const week = 7 * 24 * time.Hour
 		if time.Now().Before(config.LastUpdate.Add(week)) {
 			return config, nil
 		}
 	}
 
-	if d.Client == nil {
-		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
-	}
-
 	// Resolve cluster details if not found locally.
-	cluster, err := d.FetchCluster(clusterId)
+	config, err := d.FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	config := v1.NewKafkaClusterConfig(cluster)
 	d.KafkaClusterContext.AddKafkaClusterConfig(config)
 	err = d.Save()
 

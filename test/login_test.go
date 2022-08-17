@@ -105,7 +105,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestion))
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestions))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
@@ -335,7 +335,7 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 }
 
 func (s *CLITestSuite) TestLogin_CaCertPath() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{
@@ -356,7 +356,7 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 }
 
 func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tt := CLITest{
 		env:         []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},

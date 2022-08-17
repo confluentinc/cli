@@ -114,14 +114,14 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	producer, err := newProducer(cluster, c.clientID, configFile, config)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateProducerMsg, err)
+		return fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
 	defer adminClient.Close()
 
