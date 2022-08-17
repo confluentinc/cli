@@ -17,17 +17,17 @@ func (s *CLITestSuite) TestAuditLogConfig() {
 		{
 			name:    "confluent audit-log config describe --help",
 			args:    "audit-log config describe --help",
-			fixture: "audit-log/config-describe-help.golden",
+			fixture: "audit-log/config/describe-help.golden",
 		},
 		{
 			name:    "confluent audit-log config edit --help",
 			args:    "audit-log config edit --help",
-			fixture: "audit-log/config-edit-help.golden",
+			fixture: "audit-log/config/edit-help.golden",
 		},
 		{
 			name:    "confluent audit-log config update --help",
 			args:    "audit-log config update --help",
-			fixture: "audit-log/config-update-help.golden",
+			fixture: "audit-log/config/update-help.golden",
 		},
 	}
 
@@ -38,7 +38,7 @@ func (s *CLITestSuite) TestAuditLogConfig() {
 }
 
 func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
-	original := LoadFixture(s.T(), "audit-log/config-roundtrip-fixedpoint.golden")
+	original := LoadFixture(s.T(), "audit-log/config/roundtrip-fixedpoint.golden")
 	originalBytes := []byte(original)
 	spec := mds.AuditLogConfigSpec{}
 	if err := json.Unmarshal(originalBytes, &spec); err != nil {
@@ -62,12 +62,12 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 		{
 			name:    "confluent audit-log route list --help",
 			args:    "audit-log route list --help",
-			fixture: "audit-log/route-list-help.golden",
+			fixture: "audit-log/route/list-help.golden",
 		},
 		{
 			name:    "confluent audit-log route lookup --help",
 			args:    "audit-log route lookup --help",
-			fixture: "audit-log/route-lookup-help.golden",
+			fixture: "audit-log/route/lookup-help.golden",
 		},
 	}
 
@@ -88,7 +88,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		{
 			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2 --bootstrap-servers new_bootstrap_1 --authority NEW.CRN.AUTHORITY.COM", migration1, migration2),
-			fixture: "audit-log/migration-result-with-warnings.golden",
+			fixture: "audit-log/migrate/result-with-warnings.golden",
 		},
 		{
 			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
@@ -97,7 +97,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		},
 		{
 			args:    fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s", nullFields, nullFields),
-			fixture: "audit-log/empty-migration-result.golden",
+			fixture: "audit-log/migrate/empty-result.golden",
 		},
 	}
 
