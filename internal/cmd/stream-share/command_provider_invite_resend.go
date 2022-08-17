@@ -17,7 +17,7 @@ func (c *command) newResendEmailInviteCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Resend previously sent email invite "ss-12345":`,
+				Text: `Resend the previously sent email invite for stream share "ss-12345":`,
 				Code: "confluent stream-share provider invite resend ss-12345",
 			},
 		),
