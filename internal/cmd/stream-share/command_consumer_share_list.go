@@ -11,7 +11,7 @@ import (
 func (c *command) newListConsumerSharesCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List shares for consumer.",
+		Short: "List consumer shares.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listConsumerShares,
 		Example: examples.BuildExampleString(
