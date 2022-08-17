@@ -45,9 +45,9 @@ func (c *command) newConsumerShareCommand() *cobra.Command {
 		Short: "Manage consumer shares.",
 	}
 
-	cmd.AddCommand(c.newDeleteConsumerShareCommand())
-	cmd.AddCommand(c.newDescribeConsumerShareCommand())
-	cmd.AddCommand(c.newListConsumerSharesCommand())
+	cmd.AddCommand(c.newConsumerShareDeleteCommand())
+	cmd.AddCommand(c.newConsumerShareDescribeCommand())
+	cmd.AddCommand(c.newConsumerShareListCommand())
 
 	return cmd
 }
