@@ -22,7 +22,7 @@ func (c *command) newListConsumerSharesCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("shared-resource", "", "Filter the results by exact match for shared resource.")
+	cmd.Flags().String("shared-resource", "", "Filter the results by a shared resource.")
 
 	pcmd.AddOutputFlag(cmd)
 

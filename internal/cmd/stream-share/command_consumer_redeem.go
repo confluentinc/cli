@@ -39,7 +39,7 @@ type redeemToken struct {
 
 func (c *command) newRedeemCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "redeem <stream-share-token>",
+		Use:   "redeem <token>",
 		Short: "Redeem a stream share token.",
 		RunE:  c.redeemShare,
 		Args:  cobra.ExactArgs(1),
