@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -17,24 +16,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
-	shortText := "Configure ACLs for a ksqlDB cluster."
-	var longText string
-	runCommand := c.configureACLsCluster
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Configure ACLs for a ksqlDB app."
-		longText = "DEPRECATED: Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.configureACLsApp
-	}
-
+func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
-		Short:             shortText,
-		Long:              longText,
+		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              runCommand,
+		RunE:              c.configureACLs,
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
@@ -45,15 +33,7 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) configureACLsCluster(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args, false)
-}
-
-func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args, true)
-}
-
-func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	// Get the Kafka Cluster
@@ -92,9 +72,6 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string, isApp boo
 		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
 }
 
