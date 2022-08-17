@@ -133,6 +133,8 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 						Kind:  "Topic",
 						Topic: "topic-12345",
 					},
+				},
+				{
 					CdxV1SharedGroup: &cdxv1.CdxV1SharedGroup{
 						Kind:        "Group",
 						GroupPrefix: "stream-share.ss-12345",

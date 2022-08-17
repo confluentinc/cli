@@ -3,5 +3,6 @@
 | API Key             |                        00000000000000000000 |
 | Secret              |                        00000000000000000000 |
 | Kafka Bootstrap URL | pkc-00000.us-east1.gcp.confluent.cloud:9092 |
-| Resources           | [Topic:topic-12345]                         |
+| Resources           | [Topic:topic-12345                          |
+|                     | Group:stream-share.ss-12345]                |
 +---------------------+---------------------------------------------+
