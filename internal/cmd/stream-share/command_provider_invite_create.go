@@ -24,12 +24,14 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 
 	cmd.Flags().String("email", "", "Email of the user with whom the topic is shared")
 	cmd.Flags().String("topic", "", "Topic to be shared")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("environment", "", "ID of ccloud environment")
+	cmd.Flags().String("cluster", "", "ID of the Kafka cluster")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("email")
 	_ = cmd.MarkFlagRequired("topic")
+	_ = cmd.MarkFlagRequired("environment")
+	_ = cmd.MarkFlagRequired("cluster")
 
 	return cmd
 }

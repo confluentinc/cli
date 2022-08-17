@@ -5,9 +5,7 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share provider share list --shared-resource sr-12345", fixture: "stream-share/list-provider-shares.golden"},
 		{args: "stream-share provider share describe ss-12345", fixture: "stream-share/describe-provider-share.golden"},
 		{args: "stream-share provider share delete ss-12345", fixture: "stream-share/delete-provider-share.golden"},
-		{args: "kafka cluster use a-595", fixture: "kafka/40.golden"},
-		{args: "environment use env-123", fixture: "kafka/46.golden"},
-		{args: "stream-share provider invite create --email user@example.com --topic topic-12345", fixture: "stream-share/create-invite.golden"},
+		{args: "stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-12345 --cluster lkc-12345", fixture: "stream-share/create-invite.golden"},
 		{args: "stream-share provider invite resend ss-12345", fixture: "stream-share/resend-invite.golden"},
 
 		{args: "stream-share consumer share list --shared-resource sr-12345", fixture: "stream-share/list-consumer-shares.golden"},
