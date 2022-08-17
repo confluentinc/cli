@@ -279,7 +279,6 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IgnoreCert: true,
-		IsCloud:    false,
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
