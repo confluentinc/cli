@@ -6,20 +6,22 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+const app = "app"
+
 func newAppCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "app",
+		Use:         app,
 		Short:       "Manage ksqlDB apps.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &ksqlCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newConfigureAclsCommand(true))
-	cmd.AddCommand(c.newCreateCommand(true))
-	cmd.AddCommand(c.newDeleteCommand(true))
-	cmd.AddCommand(c.newDescribeCommand(true))
-	cmd.AddCommand(c.newListCommand(true))
+	cmd.AddCommand(c.newConfigureAclsCommand(app))
+	cmd.AddCommand(c.newCreateCommand(app))
+	cmd.AddCommand(c.newDeleteCommand(app))
+	cmd.AddCommand(c.newDescribeCommand(app))
+	cmd.AddCommand(c.newListCommand(app))
 
 	return cmd
 }

@@ -2,6 +2,8 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -15,14 +17,11 @@ var (
 	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status", "detailed_processing_log"}
 )
 
-func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
-	shortText := "List ksqlDB clusters."
+func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
 	var longText string
 	runCommand := c.list
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "List ksqlDB apps."
-	}
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("List ksqlDB %ss.", resource)
 
 	cmd := &cobra.Command{
 		Use:   "list",

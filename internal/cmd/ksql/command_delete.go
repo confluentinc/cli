@@ -2,12 +2,14 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
-	"io/ioutil"
-	"net/http"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,14 +18,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
-	shortText := "Delete a ksqlDB cluster."
+func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 	var longText string
 	runCommand := c.delete
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Delete a ksqlDB app."
-	}
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Delete a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:               "delete <id>",

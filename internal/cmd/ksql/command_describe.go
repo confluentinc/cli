@@ -2,6 +2,8 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
@@ -16,14 +18,11 @@ var (
 	describeStructuredRenames = map[string]string{"KafkaClusterId": "kafka", "OutputTopicPrefix": "topic_prefix", "DetailedProcessingLog": "detailed_processing_log"}
 )
 
-func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
-	shortText := "Describe a ksqlDB cluster."
+func (c *ksqlCommand) newDescribeCommand(resource string) *cobra.Command {
 	var longText string
 	runCommand := c.describe
-	if isApp {
-		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Describe a ksqlDB app."
-	}
+	// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Describe a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:               "describe <id>",

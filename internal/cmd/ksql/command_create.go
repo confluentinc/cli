@@ -2,6 +2,8 @@ package ksql
 
 import (
 	"context"
+	"fmt"
+
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
@@ -12,14 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
-	shortText := "Create a ksqlDB cluster."
+func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
 	var longText string
 	runCommand := c.create
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Create a ksqlDB app."
-	}
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Create a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",

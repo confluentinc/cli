@@ -16,14 +16,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
-	shortText := "Configure ACLs for a ksqlDB cluster."
+func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	var longText string
 	runCommand := c.configureACLs
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "Configure ACLs for a ksqlDB app."
-	}
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
