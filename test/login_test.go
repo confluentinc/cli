@@ -150,15 +150,6 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			wantErrCode: 1,
 		},
 		{
-			name:        "error if topic already exists",
-			args:        "kafka topic create topic-exist",
-			fixture:     "login/topic-exists.golden",
-			wantErrCode: 1,
-			useKafka:    "lkc-create-topic",
-			authKafka:   "true",
-			env:         []string{"XX_CCLOUD_USE_KAFKA_REST=true"},
-		},
-		{
 			name:        "error if no api key used",
 			args:        "kafka topic produce integ",
 			fixture:     "login/err-no-api-key.golden",
