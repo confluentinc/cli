@@ -18,17 +18,11 @@ var (
 )
 
 func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
-	var longText string
-	runCommand := c.list
-	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-	shortText := fmt.Sprintf("List ksqlDB %ss.", resource)
-
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: shortText,
-		Long:  longText,
+		Short: fmt.Sprintf("List ksqlDB %ss.", resource),
 		Args:  cobra.NoArgs,
-		RunE:  runCommand,
+		RunE:  c.list,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

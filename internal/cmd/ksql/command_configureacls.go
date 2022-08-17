@@ -17,18 +17,12 @@ import (
 )
 
 func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
-	var longText string
-	runCommand := c.configureACLs
-	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-	shortText := fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource)
-
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
-		Short:             shortText,
-		Long:              longText,
+		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              runCommand,
+		RunE:              c.configureACLs,
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")

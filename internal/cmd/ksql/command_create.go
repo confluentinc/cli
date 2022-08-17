@@ -15,17 +15,11 @@ import (
 )
 
 func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
-	var longText string
-	runCommand := c.create
-	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-	shortText := fmt.Sprintf("Create a ksqlDB %s.", resource)
-
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: shortText,
-		Long:  longText,
+		Short: fmt.Sprintf("Create a ksqlDB %s.", resource),
 		Args:  cobra.ExactArgs(1),
-		RunE:  runCommand,
+		RunE:  c.create,
 	}
 
 	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)

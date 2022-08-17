@@ -19,18 +19,12 @@ import (
 )
 
 func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
-	var longText string
-	runCommand := c.delete
-	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-	shortText := fmt.Sprintf("Delete a ksqlDB %s.", resource)
-
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
-		Short:             shortText,
-		Long:              longText,
+		Short:             fmt.Sprintf("Delete a ksqlDB %s.", resource),
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              runCommand,
+		RunE:              c.delete,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
