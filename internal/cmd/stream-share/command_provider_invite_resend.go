@@ -12,7 +12,7 @@ import (
 func (c *command) newResendEmailInviteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resend",
-		Short: "Resend email invite.",
+		Short: "Resend an email invite.",
 		RunE:  c.resendEmailInvite,
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
