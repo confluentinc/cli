@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
@@ -15,16 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
-	shortText := "Create a ksqlDB cluster."
+func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
 	var longText string
-	runCommand := c.createCluster
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Create a ksqlDB app."
-		longText = "DEPRECATED: Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.createApp
-	}
+	runCommand := c.create
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Create a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -51,15 +45,7 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, false)
-}
-
-func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, true)
-}
-
-func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -124,8 +110,5 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
@@ -19,16 +18,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
-	shortText := "Delete a ksqlDB cluster."
+func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 	var longText string
-	runCommand := c.deleteCluster
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Delete a ksqlDB app."
-		longText = "DEPRECATED: Delete a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.deleteApp
-	}
+	runCommand := c.delete
+	// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
+	shortText := fmt.Sprintf("Delete a ksqlDB %s.", resource)
 
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
@@ -45,15 +39,7 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, false)
-}
-
-func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args, true)
-}
-
-func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	req := &schedv1.KSQLCluster{
@@ -102,9 +88,6 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string, isApp bool) erro
 		return err
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, args[0])
 	return nil
 }
