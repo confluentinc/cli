@@ -36,7 +36,7 @@ type redeemToken struct {
 	Resources         []string
 }
 
-func (c *command) newRedeemShareCommand() *cobra.Command {
+func (c *command) newRedeemCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redeem <stream-share-token>",
 		Short: "Redeem a stream share token.",
