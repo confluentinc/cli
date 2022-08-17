@@ -8,8 +8,8 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters":      handleCmkClusters,
-	"/cmk/v2/clusters/{id}": handleCmkCluster,
+	"/cmk/v2/clusters":             handleCmkClusters,
+	"/cmk/v2/clusters/{id}":        handleCmkCluster,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                                 handleConnectors,
@@ -41,18 +41,10 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/cdx/v1/shared-tokens:redeem":                                 handleStreamSharingRedeemToken,
 }
 
-type V2Router struct {
-	*mux.Router
-}
-
-func NewV2Router(t *testing.T) *V2Router {
-	router := &V2Router{Router: mux.NewRouter()}
-	router.buildV2Handler(t)
-	return router
-}
-
-func (c *V2Router) buildV2Handler(t *testing.T) {
+func NewV2Router(t *testing.T) *mux.Router {
+	router := mux.NewRouter()
 	for route, handler := range ccloudv2Handlers {
-		c.HandleFunc(route, handler(t))
+		router.HandleFunc(route, handler(t))
 	}
+	return router
 }
