@@ -33,22 +33,14 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
-	"/cdx/v1/provider-shares":          handleStreamSharingProviderShares,
-	"/cdx/v1/provider-shares/{id}":     handleStreamSharingProviderShare,
+	"/cdx/v1/provider-shares":                                      handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}":                                 handleStreamSharingProviderShare,
 }
 
-type V2Router struct {
-	*mux.Router
-}
-
-func NewV2Router(t *testing.T) *V2Router {
-	router := &V2Router{Router: mux.NewRouter()}
-	router.buildV2Handler(t)
-	return router
-}
-
-func (c *V2Router) buildV2Handler(t *testing.T) {
+func NewV2Router(t *testing.T) *mux.Router {
+	router := mux.NewRouter()
 	for route, handler := range ccloudv2Handlers {
-		c.HandleFunc(route, handler(t))
+		router.HandleFunc(route, handler(t))
 	}
+	return router
 }
