@@ -131,7 +131,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 			var requestData kafkarestv3.CreateTopicRequestData
 			err := json.Unmarshal(reqBody, &requestData)
 			require.NoError(t, err)
-			fmt.Println(requestData.TopicName, "!")
 			if requestData.TopicName == "topic-exist" { // check topic
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Topic 'topic-exist' already exists."))
 				return

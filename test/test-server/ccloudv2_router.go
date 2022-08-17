@@ -8,8 +8,10 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters":      handleCmkClusters,
-	"/cmk/v2/clusters/{id}": handleCmkCluster,
+	"/cdx/v1/provider-shares":      handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}": handleStreamSharingProviderShare,
+	"/cmk/v2/clusters":             handleCmkClusters,
+	"/cmk/v2/clusters/{id}":        handleCmkCluster,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                                 handleConnectors,
@@ -33,8 +35,6 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
-	"/cdx/v1/provider-shares":                                      handleStreamSharingProviderShares,
-	"/cdx/v1/provider-shares/{id}":                                 handleStreamSharingProviderShare,
 }
 
 func NewV2Router(t *testing.T) *mux.Router {
