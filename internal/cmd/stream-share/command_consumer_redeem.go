@@ -79,7 +79,13 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	var resources []string
 
 	for _, resource := range redeemResponse.GetResources() {
-		resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedTopic.Kind, resource.CdxV1SharedTopic.Topic))
+		if resource.CdxV1SharedTopic != nil {
+			resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedTopic.GetKind(), resource.CdxV1SharedTopic.GetTopic()))
+		}
+
+		if resource.CdxV1SharedGroup != nil {
+			resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
+		}
 	}
 
 	tokenObj := &redeemToken{
