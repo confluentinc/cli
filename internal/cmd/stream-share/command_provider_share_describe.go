@@ -4,17 +4,18 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDescribeCommand() *cobra.Command {
+func (c *command) newProviderShareDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a provider share.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describe,
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgs),
+		RunE:              c.describeProviderShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe provider share "ss-12345":`,
@@ -28,13 +29,13 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describeProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	provideShare, _, err := c.V2Client.DescribeProvideShare(shareId)
+	provideShare, httpResp, err := c.V2Client.DescribeProviderShare(shareId)
 	if err != nil {
-		return err
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 
-	return output.DescribeObject(cmd, c.buildProviderShare(provideShare), providerShareListFields, humanLabelMap, structuredLabelMap)
+	return output.DescribeObject(cmd, c.buildProviderShare(provideShare), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
 }
