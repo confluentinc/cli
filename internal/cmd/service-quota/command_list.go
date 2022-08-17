@@ -1,7 +1,6 @@
 package servicequota
 
 import (
-	"context"
 	"strconv"
 
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
@@ -49,10 +48,6 @@ func (c *command) newListCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
-}
-
-func (c *command) createContext() context.Context {
-	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.State.AuthToken)
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
