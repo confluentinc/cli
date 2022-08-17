@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDescribeProviderShareCommand() *cobra.Command {
+func (c *command) newProviderShareDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a provider share.",

@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	providerShareListFields = []string{"Id", "ConsumerUserName", "ConsumerOrganizationName", "ProviderUserName",
+	providerShareListFields = []string{"Id", "ConsumerName", "ConsumerOrganizationName", "ProviderName",
 		"Status", "DeliveryMethod", "ServiceAccountId", "SharedResourceId", "InvitedAt", "RedeemedAt", "InviteExpiresAt"}
 	providerShareListHumanLabels = []string{"ID", "Consumer Name", "Consumer Organization Name", "Provider Name",
 		"Status", "Delivery Method", "Service Account ID", "Shared Resource ID", "Invited At", "Redeemed At", "Invite Expiration"}
@@ -17,9 +17,9 @@ var (
 
 type providerShare struct {
 	Id                       string
-	ConsumerUserName         string
+	ConsumerName             string
 	ConsumerOrganizationName string
-	ProviderUserName         string
+	ProviderName             string
 	Status                   string
 	DeliveryMethod           string
 	ServiceAccountId         string
@@ -32,22 +32,22 @@ type providerShare struct {
 var (
 	providerHumanLabelMap = map[string]string{
 		"Id":                       "ID",
-		"ConsumerUserName":         "Consumer Name",
+		"ConsumerName":             "Consumer Name",
 		"ConsumerOrganizationName": "Consumer Organization Name",
-		"ProviderUserName":         "Provider Name",
+		"ProviderName":             "Provider Name",
 		"Status":                   "Status",
 		"DeliveryMethod":           "Delivery Method",
-		"ServiceAccount":         "Service Account",
-		"SharedResource":         "Shared Resource",
+		"ServiceAccount":           "Service Account",
+		"SharedResource":           "Shared Resource",
 		"RedeemedAt":               "Redeemed At",
 		"InvitedAt":                "Invited At",
 		"InviteExpiresAt":          "Invite Expiration",
 	}
 	providerStructuredLabelMap = map[string]string{
 		"Id":                       "id",
-		"ConsumerUserName":         "consumer_name",
+		"ConsumerName":             "consumer_name",
 		"ConsumerOrganizationName": "consumer_organization_name",
-		"ProviderUserName":         "provider_name",
+		"ProviderName":             "provider_name",
 		"Status":                   "status",
 		"DeliveryMethod":           "delivery_method",
 		"ServiceAccountId":         "service_account_id",

@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newListConsumerSharesCommand() *cobra.Command {
+func (c *command) newConsumerShareListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List consumer shares.",

@@ -12,9 +12,9 @@ func (c *command) newProviderShareCommand() *cobra.Command {
 		Short: "Manage provider shares.",
 	}
 
-	cmd.AddCommand(c.newDeleteProviderShareCommand())
-	cmd.AddCommand(c.newDescribeProviderShareCommand())
-	cmd.AddCommand(c.newListProviderShareCommand())
+	cmd.AddCommand(c.newProviderShareDeleteCommand())
+	cmd.AddCommand(c.newProviderShareDescribeCommand())
+	cmd.AddCommand(c.newProviderShareListCommand())
 
 	return cmd
 }
@@ -49,9 +49,9 @@ func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerSh
 	sharedResource := share.GetSharedResource()
 	element := &providerShare{
 		Id:                       share.GetId(),
-		ConsumerUserName:         share.GetConsumerUserName(),
+		ConsumerName:             share.GetConsumerUserName(),
 		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
-		ProviderUserName:         share.GetProviderUserName(),
+		ProviderName:             share.GetProviderUserName(),
 		Status:                   share.GetStatus(),
 		DeliveryMethod:           share.GetDeliveryMethod(),
 		ServiceAccountId:         serviceAccount.GetId(),

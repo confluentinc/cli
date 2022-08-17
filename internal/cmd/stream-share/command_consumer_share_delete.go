@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newDeleteConsumerShareCommand() *cobra.Command {
+func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a consumer share.",

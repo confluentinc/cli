@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newListProviderShareCommand() *cobra.Command {
+func (c *command) newProviderShareListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List shares for provider.",
