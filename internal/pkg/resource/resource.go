@@ -22,6 +22,8 @@ const (
 	ServiceAccount        = "service account"
 	Topic                 = "topic"
 	User                  = "user"
+	ProviderShare         = "provider share"
+	ConsumerShare         = "consumer share"
 )
 
 const (
