@@ -88,25 +88,23 @@ func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.I
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
-	users := make([]iamv2.IamV2User, 0)
+	var list []iamv2.IamV2User
 
-	collectedAllUsers := false
+	done := false
 	pageToken := ""
-	for !collectedAllUsers {
-		userList, _, err := c.executeListUsers(pageToken)
+	for !done {
+		page, _, err := c.executeListUsers(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, userList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := userList.GetMetadata().Next
-		pageToken, collectedAllUsers, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIamNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return users, nil
+	return list, nil
 }
 
 func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.Response, error) {
@@ -115,4 +113,13 @@ func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.
 		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+}
+
+func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

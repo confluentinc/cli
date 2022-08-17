@@ -20,6 +20,7 @@ type Client struct {
 	JwtToken  string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
 	ConnectClient          *connectv1.APIClient
@@ -29,7 +30,6 @@ type Client struct {
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
-	StreamShareClient      *cdxv1.APIClient
 }
 
 func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
@@ -37,6 +37,7 @@ func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(baseURL, userAgent, isTest),
+		CdxClient:              newCdxClient(baseURL, userAgent, isTest),
 		CliClient:              newCliClient(baseURL, userAgent, isTest),
 		CmkClient:              newCmkClient(baseURL, userAgent, isTest),
 		ConnectClient:          newConnectClient(baseURL, userAgent, isTest),
@@ -46,6 +47,5 @@ func NewClient(authToken, baseURL, userAgent string, isTest bool) *Client {
 		MetricsClient:          newMetricsClient(baseURL, userAgent, isTest),
 		OrgClient:              newOrgClient(baseURL, userAgent, isTest),
 		ServiceQuotaClient:     newServiceQuotaClient(baseURL, userAgent, isTest),
-		StreamShareClient:      newCdxClient(baseURL, userAgent, isTest),
 	}
 }
