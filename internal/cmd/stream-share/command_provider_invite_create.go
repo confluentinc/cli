@@ -29,8 +29,6 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("email")
-	_ = cmd.MarkFlagRequired("environment")
-	_ = cmd.MarkFlagRequired("cluster")
 	_ = cmd.MarkFlagRequired("topic")
 
 	return cmd

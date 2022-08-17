@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	consumerShareListFields           = []string{"Id", "ProviderUserName", "Status", "SharedResourceId", "InviteExpiration"}
+	consumerShareListFields           = []string{"Id", "ProviderUserName", "Status", "SharedResourceId", "InviteExpiresAt"}
 	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expiration"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expiration"}
+	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 		"ProviderUserName": "Provider Name",
 		"Status":           "Status",
 		"SharedResourceId": "Shared Resource ID",
-		"InviteExpiresAt":  "Invite Expires At",
+		"InviteExpiresAt":  "Invite Expiration",
 	}
 	consumerStructuredLabelMap = map[string]string{
 		"Id":               "id",
@@ -45,9 +45,9 @@ func (c *command) newConsumerShareCommand() *cobra.Command {
 		Short: "Manage consumer shares.",
 	}
 
-	cmd.AddCommand(c.newConsumerShareDeleteCommand())
-	cmd.AddCommand(c.newConsumerShareDescribeCommand())
-	cmd.AddCommand(c.newConsumerShareListCommand())
+	cmd.AddCommand(c.newDeleteConsumerShareCommand())
+	cmd.AddCommand(c.newDescribeConsumerShareCommand())
+	cmd.AddCommand(c.newListConsumerSharesCommand())
 
 	return cmd
 }

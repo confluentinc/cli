@@ -61,12 +61,12 @@ func (c *command) newRedeemCommand() *cobra.Command {
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	token := args[0]
 
-	awsAccount, err := cmd.Flags().GetString("aws-account")
+	awsAccount, err := cmd.Flags().GetString("aws-account-id")
 	if err != nil {
 		return err
 	}
 
-	azureSubscription, err := cmd.Flags().GetString("azure-subscription")
+	azureSubscription, err := cmd.Flags().GetString("azure-subscription-id")
 	if err != nil {
 		return err
 	}
