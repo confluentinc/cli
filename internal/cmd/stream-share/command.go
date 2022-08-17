@@ -10,7 +10,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedCLICommand
+	*pcmd.AuthenticatedStateFlagCommand
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -24,8 +24,9 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Hidden:      !cfg.IsTest && !featureflags.Manager.BoolVariation("cli.cdx", ctx, v1.CliLaunchDarklyClient, true, false),
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
+	c.AddCommand(c.newConsumerCommand())
 	c.AddCommand(c.newProviderCommand())
 
 	return c.Command
