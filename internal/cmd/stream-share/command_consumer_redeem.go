@@ -77,7 +77,6 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	}
 
 	var resources []string
-
 	for _, resource := range redeemResponse.GetResources() {
 		if resource.CdxV1SharedTopic != nil {
 			resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedTopic.GetKind(), resource.CdxV1SharedTopic.GetTopic()))
