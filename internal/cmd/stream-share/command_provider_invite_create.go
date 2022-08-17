@@ -11,7 +11,7 @@ import (
 func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a consumer invite based on email.",
+		Short: "Invite a consumer with email.",
 		Args:  cobra.NoArgs,
 		RunE:  c.createEmailInvite,
 		Example: examples.BuildExampleString(
