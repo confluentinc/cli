@@ -9,9 +9,9 @@ import (
 )
 
 var (
-	consumerShareListFields           = []string{"Id", "ProviderUserName", "Status", "SharedResourceId", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expires At"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
+	consumerShareListFields           = []string{"Id", "ProviderUserName", "Status", "SharedResourceId", "InviteExpiration"}
+	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expiration"}
+	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expiration"}
 )
 
 var (
