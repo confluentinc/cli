@@ -28,15 +28,15 @@ Log in to Confluent Cloud.
 
   $ confluent login
 
-Log in to a specific org in Confluent Cloud.
+Log in to a specific organization in Confluent Cloud.
 
-  $ confluent login --organization-id 12345678-1234-1234-1234-123456789012
+  $ confluent login --organization-id 00000000-0000-0000-0000-000000000000
 
 Log in to Confluent Platform with a MDS URL.
 
   $ confluent login --url http://localhost:8090
 
-Log in to Confluent Platform with a MDS URL and CA certificate path.
+Log in to Confluent Platform with a MDS URL and CA certificate.
 
   $ confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt
 
