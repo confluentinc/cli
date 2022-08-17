@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type flatQueryResponse struct {
@@ -29,6 +31,18 @@ func newMetricsClient(baseURL, userAgent string, isTest bool) *metricsv2.APIClie
 	cfg.UserAgent = userAgent
 
 	return metricsv2.NewAPIClient(cfg)
+}
+
+func getMetricsServerUrl(baseURL string, isTest bool) string {
+	if isTest {
+		return testserver.TestV2CloudURL.String()
+	}
+	if strings.Contains(baseURL, "devel") {
+		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
+	}
+	return "https://api.telemetry.confluent.cloud"
 }
 
 func (c *Client) metricsApiContext() context.Context {
