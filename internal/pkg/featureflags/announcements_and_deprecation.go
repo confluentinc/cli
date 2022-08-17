@@ -27,6 +27,9 @@ type FlagsAndMsg struct {
 func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
 	cmdToFlagsAndMsg := make(map[string]*FlagsAndMsg)
 	for _, val := range ld.([]interface{}) {
+		if len(val.(map[string]interface{})) == 0 {
+			break
+		}
 		var flags []string
 		var msg = val.(map[string]interface{})["message"].(string)
 		var command = val.(map[string]interface{})["pattern"].(string)
