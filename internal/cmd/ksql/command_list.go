@@ -18,11 +18,10 @@ var (
 func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	shortText := "List ksqlDB clusters."
 	var longText string
-	runCommand := c.listClusters
+	runCommand := c.list
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "List ksqlDB apps."
-		runCommand = c.listApps
 	}
 
 	cmd := &cobra.Command{
@@ -38,14 +37,6 @@ func (c *ksqlCommand) newListCommand(isApp bool) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
-}
-
-func (c *ksqlCommand) listClusters(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args)
-}
-
-func (c *ksqlCommand) listApps(cmd *cobra.Command, args []string) error {
-	return c.list(cmd, args)
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {

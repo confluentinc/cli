@@ -19,11 +19,10 @@ import (
 func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	shortText := "Delete a ksqlDB cluster."
 	var longText string
-	runCommand := c.deleteCluster
+	runCommand := c.delete
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Delete a ksqlDB app."
-		runCommand = c.deleteApp
 	}
 
 	cmd := &cobra.Command{
@@ -39,14 +38,6 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
-}
-
-func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args)
-}
-
-func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	return c.delete(cmd, args)
 }
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {

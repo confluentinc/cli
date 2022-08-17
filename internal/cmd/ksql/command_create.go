@@ -15,11 +15,10 @@ import (
 func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	shortText := "Create a ksqlDB cluster."
 	var longText string
-	runCommand := c.createCluster
+	runCommand := c.create
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Create a ksqlDB app."
-		runCommand = c.createApp
 	}
 
 	cmd := &cobra.Command{
@@ -45,14 +44,6 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	_ = cmd.Flags().MarkHidden("image")
 
 	return cmd
-}
-
-func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args)
-}
-
-func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args)
 }
 
 func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {

@@ -19,11 +19,10 @@ var (
 func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	shortText := "Describe a ksqlDB cluster."
 	var longText string
-	runCommand := c.describeCluster
+	runCommand := c.describe
 	if isApp {
 		// DEPRECATED: this line should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Describe a ksqlDB app."
-		runCommand = c.describeApp
 	}
 
 	cmd := &cobra.Command{
@@ -40,14 +39,6 @@ func (c *ksqlCommand) newDescribeCommand(isApp bool) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
-}
-
-func (c *ksqlCommand) describeCluster(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args)
-}
-
-func (c *ksqlCommand) describeApp(cmd *cobra.Command, args []string) error {
-	return c.describe(cmd, args)
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {

@@ -19,11 +19,10 @@ import (
 func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	shortText := "Configure ACLs for a ksqlDB cluster."
 	var longText string
-	runCommand := c.configureACLsCluster
+	runCommand := c.configureACLs
 	if isApp {
 		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
 		shortText = "Configure ACLs for a ksqlDB app."
-		runCommand = c.configureACLsApp
 	}
 
 	cmd := &cobra.Command{
@@ -41,14 +40,6 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
-}
-
-func (c *ksqlCommand) configureACLsCluster(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args)
-}
-
-func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
-	return c.configureACLs(cmd, args)
 }
 
 func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
