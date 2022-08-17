@@ -21,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 type command struct {
@@ -42,6 +43,24 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 		Args: cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Log in to Confluent Cloud.",
+				Code: "confluent login",
+			},
+			examples.Example{
+				Text: "Log in to a specific organization in Confluent Cloud.",
+				Code: "confluent login --organization-id 00000000-0000-0000-0000-000000000000",
+			},
+			examples.Example{
+				Text: "Log in to Confluent Platform with a MDS URL.",
+				Code: "confluent login --url http://localhost:8090",
+			},
+			examples.Example{
+				Text: "Log in to Confluent Platform with a MDS URL and CA certificate path.",
+				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+			},
+		),
 	}
 
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
