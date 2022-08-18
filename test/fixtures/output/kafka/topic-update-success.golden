@@ -1,5 +1,0 @@
-Updated the following configuration values for topic "topic-exist":
-        Name       | Value  
--------------------+--------
-  compression.type | gzip   
-  retention.ms     |     1  

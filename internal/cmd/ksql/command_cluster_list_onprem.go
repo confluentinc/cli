@@ -7,7 +7,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cluster"
+	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -35,7 +35,7 @@ func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
 	if err != nil {
-		return cluster.HandleClusterError(err, response)
+		return pcluster.HandleClusterError(err, response)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -43,5 +43,5 @@ func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return cluster.PrintCluster(clusterInfos, format)
+	return pcluster.PrintCluster(clusterInfos, format)
 }

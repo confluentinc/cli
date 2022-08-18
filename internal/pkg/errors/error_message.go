@@ -180,7 +180,7 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
-	FailedToLoadSchemaSuggestions = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
+	FailedToLoadSchemaSuggestions   = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
 	// Cluster Link commands
@@ -261,9 +261,8 @@ const (
 	InvalidInputFormatErrorMsg       = "\"%s\" is not of valid format for field \"%s\""
 
 	// cmd package
-	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
-	InvalidAPIKeyErrorMsg     = "invalid API key \"%s\" for resource \"%s\""
-	InvalidAPIKeySuggestions  = "To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n" +
+	InvalidAPIKeyErrorMsg    = "invalid API key \"%s\" for resource \"%s\""
+	InvalidAPIKeySuggestions = "To list API key that belongs to resource \"%s\", use `confluent api-key list --resource %s`.\n" +
 		"To create new API key for resource \"%s\", use `confluent api-key create --resource %s`."
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
