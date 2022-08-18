@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestQuotaLimits() {
+func (s *CLITestSuite) TestQuotaValues() {
 	tests := []CLITest{
 		{args: "service-quota list kafka_cluster", fixture: "service-quota/1.golden", login: "cloud"},
 		{args: "service-quota list kafka_cluster --environment env-1", fixture: "service-quota/2.golden"},
@@ -10,7 +10,7 @@ func (s *CLITestSuite) TestQuotaLimits() {
 		{args: "service-quota list kafka_cluster --quota-code quota_a -o yaml", fixture: "service-quota/6.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.workflow = true

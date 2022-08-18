@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -23,15 +23,17 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommandContains("local services"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("ksql app")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
 	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
+		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
-		linter.ExcludeCommandContains("kafka client-config create")),
+		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -109,6 +111,7 @@ var flagRules = []linter.FlagRule{
 			"destination-api-secret",
 			"destination-cluster-id",
 			"enable-systest-events",
+			"log-exclude-rows",
 			"if-not-exists",
 			"kafka-cluster-id",
 			"ksql-cluster-id",
@@ -168,6 +171,7 @@ var properNouns = []string{
 	"Kotlin",
 	"Ktor",
 	"Node.js",
+	"PATH",
 	"Python",
 	"Ruby",
 	"Rust",
@@ -215,6 +219,7 @@ var vocabWords = []string{
 	"kafka",
 	"ksql",
 	"lifecycle",
+	"lkc",
 	"lz4",
 	"mds",
 	"netrc",
@@ -289,17 +294,9 @@ func main() {
 
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
-		{
-			CurrentContext: "No Context",
-		},
-		{
-			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: ccloudv2.Hostnames[0]}},
-			CurrentContext: "Cloud",
-		},
-		{
-			Contexts:       map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
-			CurrentContext: "On-Prem",
-		},
+		{CurrentContext: "No Context"},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &orgv1.Organization{}}}}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
 	code := 0

@@ -7,8 +7,10 @@ import (
 	"strings"
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/hashicorp/go-retryablehttp"
 
@@ -53,6 +55,18 @@ func getServerUrl(baseURL string, isTest bool) string {
 	return "https://api.confluent.cloud"
 }
 
+func getMetricsServerUrl(baseURL string, isTest bool) string {
+	if isTest {
+		return testserver.TestV2CloudURL.String()
+	}
+	if strings.Contains(baseURL, "devel") {
+		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
+	} else if strings.Contains(baseURL, "stag") {
+		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
+	}
+	return "https://api.telemetry.confluent.cloud"
+}
+
 func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
@@ -80,7 +94,34 @@ func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString)
 	return pageToken, false, err
 }
 
+func extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
+func extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
 func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
+}
+
+func extractCdxNextPagePageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}

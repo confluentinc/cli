@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -44,9 +45,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, httpResp, err := c.V2Client.CreateOrUpdateConnectorConfig(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID, *userConfigs); err != nil {
-		return errors.CatchConnectorConfigurationNotValidError(err, httpResp)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.UpdatedConnectorMsg, args[0])
+	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Connector, args[0])
 	return nil
 }

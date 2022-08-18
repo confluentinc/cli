@@ -6,6 +6,7 @@ import (
 	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -33,10 +34,11 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 		RunE:  runCommand,
 	}
 
-	cmd.Flags().String("api-key", "", "Kafka API key for the ksqlDB cluster to use (use \"confluent api-key create --resource lkc-abc123\" to create one if none exist).")
+	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
+	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -62,7 +64,6 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 	if err != nil {
 		return err
 	}
-
 	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return err
@@ -74,6 +75,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
+	if err != nil {
+		return err
+	}
+
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
@@ -119,5 +127,5 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 	if isApp {
 		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
 	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

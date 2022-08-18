@@ -71,7 +71,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	producer, err := newOnPremProducer(cmd, c.clientID, configFile, config)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
@@ -83,7 +83,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 
 	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
 	defer adminClient.Close()
 
@@ -205,7 +205,7 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg
 	referencePathMap := map[string]string{}
 	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
 		if c.State == nil { // require log-in to use oauthbearer token
-			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 		if err != nil {

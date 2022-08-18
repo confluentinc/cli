@@ -17,8 +17,10 @@ import (
 )
 
 var (
-	resourceNotFoundErrMsg      = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
-	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	serviceAccountInvalidErrMsg = `{"errors":[{"detail":"service account is not valid"}]}`
+	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
+	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -252,8 +254,16 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
+	return err
+}
+
+func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusForbidden)
+	_, err := io.WriteString(w, v1ResourceNotFoundErrMsg)
 	return err
 }
 
@@ -283,7 +293,7 @@ func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),

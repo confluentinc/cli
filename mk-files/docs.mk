@@ -49,7 +49,7 @@ publish-docs-internal:
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
 	git commit -m "[ci skip] chore: update CLI docs for $(VERSION)" || exit 1; \
 	git push origin cli-$(VERSION) || exit 1; \
-	hub pull-request -b $(DOCS_BASE_BRANCH) -m "chore: update CLI docs for $(VERSION)" || exit 1
+	gh pr create -B $(DOCS_BASE_BRANCH) --title "chore: update CLI docs for $(VERSION)" --body "" || exit 1
 
 .PHONY: clean-docs
 clean-docs:

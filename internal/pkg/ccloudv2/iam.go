@@ -13,7 +13,7 @@ func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
 	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud IAM"}}
+	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return iamv2.NewAPIClient(cfg)
@@ -80,6 +80,11 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
 	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
 	return c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+}
+
+func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, *http.Response, error) {
+	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
+	return c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

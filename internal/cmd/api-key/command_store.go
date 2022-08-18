@@ -72,7 +72,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	// attempt to fall back to the currently active Kafka cluster
 	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err == nil && clusterId != "" {
-		if resourceType != resource.Kafka {
+		if resourceType != resource.KafkaCluster {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)
@@ -114,9 +114,9 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	apiKey, _, err := c.V2Client.GetApiKey(key)
+	apiKey, httpResp, err := c.V2Client.GetApiKey(key)
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
 	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)

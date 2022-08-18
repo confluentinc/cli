@@ -58,7 +58,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	connectorInfo, httpResp, err := c.V2Client.CreateConnector(c.EnvironmentId(), kafkaCluster.ID, connectConfig)
 	if err != nil {
-		return errors.CatchConnectorConfigurationNotValidError(err, httpResp)
+		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
 	}
 
 	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
@@ -74,7 +74,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	trace := connectorExpansion.Status.Connector.GetTrace()
 
 	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorInfo.GetName(), connectorExpansion.Id.GetId())
+		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorExpansion.Id.GetId(), connectorInfo.GetName())
 		if trace != "" {
 			utils.Printf(cmd, "Error Trace: %s\n", trace)
 		}

@@ -17,7 +17,6 @@ import (
 
 func NewClientMock() *ccloud.Client {
 	return &ccloud.Client{
-		Params:         nil,
 		Auth:           &mock.Auth{},
 		Account:        &mock.Account{},
 		Kafka:          &mock.Kafka{},
@@ -26,14 +25,14 @@ func NewClientMock() *ccloud.Client {
 		User:           &mock.User{},
 		APIKey:         &mock.APIKey{},
 		KSQL:           &mock.KSQL{},
-		MetricsApi:     &mock.MetricsApi{},
 		UsageLimits:    &mock.UsageLimits{},
 	}
 }
 
 func NewV2ClientMock() *ccloudv2.Client {
 	return &ccloudv2.Client{
-		AuthToken:          "auth-token",
+		AuthToken: "auth-token",
+
 		CmkClient:          newCmkClientMock(),
 		IamClient:          newIamClientMock(),
 		OrgClient:          newOrgClientMock(),
@@ -45,15 +44,15 @@ func newCmkClientMock() *cmkv2.APIClient {
 	return &cmkv2.APIClient{ClustersCmkV2Api: &cmkmock.ClustersCmkV2Api{}}
 }
 
-func newOrgClientMock() *orgv2.APIClient {
-	return &orgv2.APIClient{EnvironmentsOrgV2Api: &orgmock.EnvironmentsOrgV2Api{}}
-}
-
 func newIamClientMock() *iamv2.APIClient {
 	return &iamv2.APIClient{
 		ServiceAccountsIamV2Api: &iammock.ServiceAccountsIamV2Api{},
 		UsersIamV2Api:           &iammock.UsersIamV2Api{},
 	}
+}
+
+func newOrgClientMock() *orgv2.APIClient {
+	return &orgv2.APIClient{EnvironmentsOrgV2Api: &orgmock.EnvironmentsOrgV2Api{}}
 }
 
 func newQuotasClientMock() *servicequotav1.APIClient {

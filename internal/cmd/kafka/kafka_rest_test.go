@@ -82,47 +82,13 @@ func (suite *KafkaRestTestSuite) TestAclBindingToClustersClusterIdAclsPostOpts()
 		XXX_sizecache:        0,
 	}
 
-	r := aclBindingToClustersClusterIdAclsPostOpts(&binding).CreateAclRequestData.Value().(kafkarestv3.CreateAclRequestData)
+	r := getCreateAclRequestData(&binding)
 	req.True(r.Host == "myhost")
 	req.True(r.Operation == "READ")
 	req.True(r.ResourceName == "mycluster")
 	req.True(r.Principal == "myprincipal")
 	req.True(r.Permission == "DENY")
 	req.True(r.PatternType == "LITERAL")
-}
-
-func (suite *KafkaRestTestSuite) TestAclFilterToClustersClusterIdAclsDeleteOpts() {
-	req := suite.Require()
-
-	filter := schedv1.ACLFilter{
-		PatternFilter: &schedv1.ResourcePatternConfig{
-			ResourceType:         schedv1.ResourceTypes_TOPIC,
-			Name:                 "mytopic",
-			PatternType:          schedv1.PatternTypes_LITERAL,
-			XXX_NoUnkeyedLiteral: struct{}{},
-			XXX_unrecognized:     []byte{},
-			XXX_sizecache:        0},
-		EntryFilter: &schedv1.AccessControlEntryConfig{
-			Principal:            "myprincipal",
-			Operation:            schedv1.ACLOperations_WRITE,
-			Host:                 "myhost",
-			PermissionType:       schedv1.ACLPermissionTypes_ALLOW,
-			XXX_NoUnkeyedLiteral: struct{}{},
-			XXX_unrecognized:     []byte{},
-			XXX_sizecache:        0,
-		},
-		XXX_NoUnkeyedLiteral: struct{}{},
-		XXX_unrecognized:     []byte{},
-		XXX_sizecache:        0,
-	}
-
-	r := aclFilterToClustersClusterIdAclsDeleteOpts(&filter)
-	req.Equal(r.Host, optional.NewString("myhost"))
-	req.Equal(r.Operation, optional.NewString("WRITE"))
-	req.Equal(r.ResourceName, optional.NewString("mytopic"))
-	req.Equal(r.Principal, optional.NewString("myprincipal"))
-	req.Equal(r.Permission, optional.NewString("ALLOW"))
-	req.Equal(r.PatternType, optional.NewString("LITERAL"))
 }
 
 func (suite *KafkaRestTestSuite) TestKafkaRestError() {
@@ -155,7 +121,7 @@ func (suite *KafkaRestTestSuite) TestKafkaRestError() {
 
 	r = kafkaRestError(url, openAPIError, nil)
 	req.NotNil(r)
-	req.Contains(r.Error(), "Unknown")
+	req.Contains(r.Error(), "unknown")
 
 	httpResp := http.Response{
 		Status:     "Code: 400",

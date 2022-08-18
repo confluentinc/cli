@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -28,15 +29,15 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	_, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
+	httpResp, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0])
+		return errors.CatchKafkaNotFoundError(err, args[0], httpResp)
 	}
 
 	if err := c.Context.RemoveKafkaClusterConfig(args[0]); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.KafkaClusterDeletedMsg, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
 	return nil
 }

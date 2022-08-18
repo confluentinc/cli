@@ -47,6 +47,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update --cku 2", fixture: "kafka/kafka-cluster-resize-error.golden", wantErrCode: 1},
 		{args: "kafka cluster update lkc-update-dedicated-shrink --name lkc-update-dedicated-name --cku 1", fixture: "kafka/44.golden"},
 		{args: "kafka cluster update lkc-update-dedicated-shrink --cku 1", fixture: "kafka/45.golden"},
+		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/kafka-cluster-dedicated-shrink-error.golden", wantErrCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/kafka-cluster-resize-error.golden", wantErrCode: 1},
 
 		{args: "kafka cluster delete", fixture: "kafka/3.golden", wantErrCode: 1},
@@ -65,7 +66,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe --all", fixture: "kafka/48.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
+		{args: "kafka cluster describe lkc-describe --all -o json", fixture: "kafka/49.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
+		{args: "kafka cluster describe lkc-describe --all -o yaml", fixture: "kafka/50.golden"},
 
 		{args: "kafka cluster describe lkc-describe-dedicated", fixture: "kafka/30.golden"},
 		{args: "kafka cluster describe lkc-describe-dedicated -o json", fixture: "kafka/31.golden"},
@@ -108,6 +111,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create topic1", login: "cloud", useKafka: "lkc-create-topic-kafka-api", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-dup-topic.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic-create-limit-topic.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic-describe.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 		{args: "kafka topic describe topic-exist", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
@@ -122,8 +126,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic delete topic2", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic2-delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
-		{args: "kafka topic update topic-exist --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest-json.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic-update-success-rest-yaml.golden", env: []string{"XX_CCLOUD_USE_KAFKA_REST=true"}},
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster-id lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/cluster-linking/create-link.golden", wantErrCode: 0, useKafka: "lkc-describe-topic"},
@@ -153,7 +158,7 @@ func (s *CLITestSuite) TestKafka() {
 		tests = append(tests, noSchemaTest)
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -201,7 +206,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create csharp", useKafka: "lkc-cool1", fixture: "kafka/client-config/csharp.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "cloud"
@@ -215,7 +220,7 @@ func (s *CLITestSuite) TestClientConfig() {
 		{args: "kafka client-config create", fixture: "kafka/client-config/onprem-help.golden", wantErrCode: 1},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.login = "platform"
