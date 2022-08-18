@@ -19,7 +19,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -30,16 +29,6 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type TagsFromId struct {
-	TypeName string `json:"typeName"`
-}
-
-type TagDef struct {
-	Category    string `json:"category"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
 
 type TopicConfigs struct {
@@ -194,7 +183,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
-	err = getTags(details, flags.apiKey, flags.apiSecret, *new(pasyncapi.Catalog))
+	err = getTags(details)
 	if err != nil {
 		log.CliLogger.Warnf("failed to get tags: %v", err)
 	}
@@ -242,28 +231,14 @@ func (c *command) getAccountDetails(details *accountDetails, flags *flags) error
 	return nil
 }
 
-func getTags(details *accountDetails, apiKey, apiSecret string, catalog pasyncapi.Catalog) error {
-	body, err := catalog.GetSchemaLevelTags(details.srCluster.SchemaRegistryEndpoint, details.srCluster.Id, strconv.Itoa(int(details.channelDetails.schema.Id)), apiKey, apiSecret)
+func getTags(details *accountDetails) error {
+	tags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "sr_schema", strconv.Itoa(int(details.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
-	var tagsFromId []TagsFromId
-	err = json.Unmarshal(body, &tagsFromId)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal tags: %v", err)
-	}
 	var tagsInSpec []spec.Tag
-	for _, tags := range tagsFromId {
-		body, err := catalog.GetTagDefinitions(details.srCluster.SchemaRegistryEndpoint, tags.TypeName, apiKey, apiSecret)
-		if err != nil {
-			return fmt.Errorf("failed to get tag definitions: %v", err)
-		}
-		var tagDef TagDef
-		err = json.Unmarshal(body, &tagDef)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal tag definitions: %v", err)
-		}
-		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tags.TypeName, Description: tagDef.Description})
+	for _, tag := range tags {
+		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tag.TypeName})
 	}
 	details.channelDetails.tags = tagsInSpec
 	return nil

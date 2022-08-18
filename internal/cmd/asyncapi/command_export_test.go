@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	pasyncapi "github.com/confluentinc/cli/internal/pkg/asyncapi"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -42,7 +41,7 @@ var details = &accountDetails{
 			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(ctx context.Context, subject string, version string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+			GetSchemaByVersionFunc: func(_ context.Context, _ string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
 				return srsdk.Schema{
 					Subject:    "subject1",
 					Version:    1,
@@ -51,11 +50,21 @@ var details = &accountDetails{
 					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
 				}, nil, nil
 			},
-			GetSubjectLevelConfigFunc: func(ctx context.Context, subject string, localVarOptionals *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
+			GetSubjectLevelConfigFunc: func(_ context.Context, _ string, _ *srsdk.GetSubjectLevelConfigOpts) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
 			},
 			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
+			},
+			GetTagsFunc: func(_ context.Context, _, _ string) ([]srsdk.TagResponse, *http.Response, error) {
+				return []srsdk.TagResponse{
+					{
+						TypeName: "Public",
+					},
+				}, nil, nil
+			},
+			GetTagDefByNameFunc: func(_ context.Context, _ string) (srsdk.TagDef, *http.Response, error) {
+				return srsdk.TagDef{Name: "Public", Description: "Public tag"}, nil, nil
 			},
 		},
 	},
@@ -283,17 +292,9 @@ func TestGetTags(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
-	catalog := pasyncapi.Catalog{
-		GetSchemaLevelTagsRequest: func(srEndpoint, schemaClusterId, schemaId, apiKey, apiSecret string) ([]byte, error) {
-			return []byte(`[{"typeName":"trial","entityType":"sr_schema","entityName":"lsrc-asyncapi:.:100001"}]`), nil
-		},
-		GetTagDefinitionsRequest: func(srEndpoint, tagName, apiKey, apiSecret string) ([]byte, error) {
-			return []byte(`{"name":"trial","description":"Tag trial"}`), nil
-		},
-	}
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	details.channelDetails.schema = &schema
-	err = getTags(details, "ASYNCAPIKEY", "ASYNCAPISECRET", catalog)
+	err = getTags(details)
 	require.NoError(t, err)
 }
 
