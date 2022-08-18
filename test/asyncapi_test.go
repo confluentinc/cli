@@ -16,8 +16,6 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		{args: "environment use " + testserver.SRApiEnvId, wantErrCode: 0, workflow: true},
 		// Spec Generated
 		{args: "asyncapi export --api-key ASYNCAPIKEY --api-secret ASYNCAPISECRET", fixture: "asyncapi/1.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		// With examples - connection fails with Consumer
-		{args: "asyncapi export --api-key ASYNCAPIKEY --api-secret ASYNCAPISECRET --consume-examples true --file asyncapi-withExamples.yaml", wantErrCode: 0, useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 
 	resetConfiguration(s.T(), false)
