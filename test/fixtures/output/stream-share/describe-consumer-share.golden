@@ -3,5 +3,5 @@
 | Provider Name      | provider                      |
 | Status             | active                        |
 | Shared Resource ID | sr-12345                      |
-| Invite Expiration  | 2022-07-22 22:08:41 +0000 UTC |
+| Invite Expires At  | 2022-07-22 22:08:41 +0000 UTC |
 +--------------------+-------------------------------+

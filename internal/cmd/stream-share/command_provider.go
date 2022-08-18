@@ -10,7 +10,7 @@ var (
 	providerShareListFields = []string{"Id", "ConsumerName", "ConsumerOrganizationName", "ProviderName",
 		"Status", "DeliveryMethod", "ServiceAccountId", "SharedResourceId", "InvitedAt", "RedeemedAt", "InviteExpiresAt"}
 	providerShareListHumanLabels = []string{"ID", "Consumer Name", "Consumer Organization Name", "Provider Name",
-		"Status", "Delivery Method", "Service Account ID", "Shared Resource ID", "Invited At", "Redeemed At", "Invite Expiration"}
+		"Status", "Delivery Method", "Service Account ID", "Shared Resource ID", "Invited At", "Redeemed At", "Invite Expires At"}
 	providerShareListStructuredLabels = []string{"id", "consumer_name", "consumer_organization_name", "provider_name",
 		"status", "delivery_method", "service_account_id", "shared_resource_id", "invited_at", "redeemed_at", "invite_expires_at"}
 )
@@ -41,7 +41,7 @@ var (
 		"SharedResource":           "Shared Resource",
 		"RedeemedAt":               "Redeemed At",
 		"InvitedAt":                "Invited At",
-		"InviteExpiresAt":          "Invite Expiration",
+		"InviteExpiresAt":          "Invite Expires At",
 	}
 	providerStructuredLabelMap = map[string]string{
 		"Id":                       "id",

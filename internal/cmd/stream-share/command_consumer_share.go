@@ -10,7 +10,7 @@ import (
 
 var (
 	consumerShareListFields           = []string{"Id", "ProviderName", "Status", "SharedResourceId", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expiration"}
+	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expires At"}
 	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
 )
 
@@ -20,7 +20,7 @@ var (
 		"ProviderName":     "Provider Name",
 		"Status":           "Status",
 		"SharedResourceId": "Shared Resource ID",
-		"InviteExpiresAt":  "Invite Expiration",
+		"InviteExpiresAt":  "Invite Expires At",
 	}
 	consumerStructuredLabelMap = map[string]string{
 		"Id":               "id",
