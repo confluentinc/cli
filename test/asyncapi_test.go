@@ -20,7 +20,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		{args: "asyncapi export --api-key ASYNCAPIKEY --api-secret ASYNCAPISECRET --consume-examples true --file asyncapi-withExamples.yaml", wantErrCode: 0, useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
@@ -40,5 +40,5 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	if strings.Compare(file1, testfile1) != 0 {
 		s.Error(nil, "spec generated does not match the template output file")
 	}
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 }
