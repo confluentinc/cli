@@ -131,11 +131,11 @@ func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cd
 	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
 }
 
-func (c *Client) RedeemSharedToken(token, awsAccount, azureSubscription string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
+func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
 	redeemTokenRequest := cdxv1.CdxV1RedeemTokenRequest{
 		Token:             &token,
-		AwsAccount:        &awsAccount,
-		AzureSubscription: &azureSubscription,
+		AwsAccount:        &awsAccountId,
+		AzureSubscription: &azureSubscriptionId,
 	}
 	req := c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).
 		CdxV1RedeemTokenRequest(redeemTokenRequest)

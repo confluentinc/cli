@@ -62,17 +62,17 @@ func (c *command) newRedeemCommand() *cobra.Command {
 func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	token := args[0]
 
-	awsAccount, err := cmd.Flags().GetString("aws-account-id")
+	awsAccountId, err := cmd.Flags().GetString("aws-account-id")
 	if err != nil {
 		return err
 	}
 
-	azureSubscription, err := cmd.Flags().GetString("azure-subscription-id")
+	azureSubscriptionId, err := cmd.Flags().GetString("azure-subscription-id")
 	if err != nil {
 		return err
 	}
 
-	redeemResponse, httpResp, err := c.V2Client.RedeemSharedToken(token, awsAccount, azureSubscription)
+	redeemResponse, httpResp, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId)
 	if err != nil {
 		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
