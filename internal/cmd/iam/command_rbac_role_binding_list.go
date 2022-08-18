@@ -203,7 +203,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 						if err != nil {
 							return err
 						}
-						if resource != resourcePattern.ResourceType {
+						if resource != resourcePattern.ResourceType + ":" + resourcePattern.Name {
 							continue
 						}
 					}
