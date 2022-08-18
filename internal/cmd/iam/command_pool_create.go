@@ -31,7 +31,6 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("description")
 	_ = cmd.MarkFlagRequired("filter")
 	_ = cmd.MarkFlagRequired("identity-claim")
 	_ = cmd.MarkFlagRequired("provider")
@@ -76,9 +75,11 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	identityPool := &identityPool{
 		Id:            *resp.Id,
 		DisplayName:   *resp.DisplayName,
-		Description:   *resp.Description,
 		IdentityClaim: *resp.IdentityClaim,
 		Filter:        *resp.Filter,
+	}
+	if resp.Description != nil {
+		identityPool.Description = *resp.Description
 	}
 
 	return output.DescribeObject(cmd, identityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)

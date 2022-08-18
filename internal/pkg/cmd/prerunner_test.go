@@ -652,7 +652,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v1.MockKafkaClusterId()),
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, "miles", v1.MockKafkaClusterId()),
 			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v1.MockKafkaClusterId()),
 			config:         usernameClusterWithoutSecret,
 		},

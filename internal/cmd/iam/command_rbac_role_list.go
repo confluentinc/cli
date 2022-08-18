@@ -1,6 +1,10 @@
 package iam
 
 import (
+	"os"
+	"strings"
+
+	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -35,14 +39,27 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	publicRoles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+	var roles []mdsv2alpha1.Role
+
+	// add public and dataplane roles
+	publicAndDataplaneNamespace := []string{publicNamespace.Value(), dataplaneNamespace.Value()}
+	publicAndDataplaneNamespaceOpt := optional.NewString(strings.Join(publicAndDataplaneNamespace, ","))
+	publicAndDataplaneRoles, err := c.namespaceRoles(publicAndDataplaneNamespaceOpt)
 	if err != nil {
 		return err
 	}
+	roles = append(roles, publicAndDataplaneRoles...)
 
-	opts := &mdsv2alpha1.RolesOpts{Namespace: dataplaneNamespace}
-	dataplaneRoles, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
-	roles := append(publicRoles, dataplaneRoles...)
+	// add ksql and datagovernance roles
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+		ksqlAndDataGovernanceNamespace := []string{ksqlNamespace.Value(), dataGovernanceNamespace.Value()}
+		ksqlAndDataGovernanceNamespaceOpt := optional.NewString(strings.Join(ksqlAndDataGovernanceNamespace, ","))
+		ksqlAndDataGovernanceRoles, err := c.namespaceRoles(ksqlAndDataGovernanceNamespaceOpt)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, ksqlAndDataGovernanceRoles...)
+	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

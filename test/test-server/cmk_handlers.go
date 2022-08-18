@@ -128,10 +128,8 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 // Handler for "/cmk/v2/clusters/{id}"
 func handleCmkCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		clusterId := vars["id"]
-		switch clusterId {
-		case "lkc-describe":
+		switch mux.Vars(r)["id"] {
+		case "lkc-create-topic", "lkc-describe", "lkc-describe-topic":
 			handleCmkKafkaClusterDescribe(t)(w, r)
 		case "lkc-describe-dedicated":
 			handleCmkKafkaClusterDescribeDedicated(t)(w, r)
@@ -139,6 +137,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeDedicatedPending(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
 			handleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
+		case "lkc-describe-infinite":
+			handleCmkKafkaClusterDescribeInfinite(t)(w, r)
 		case "lkc-update":
 			handleCmkKafkaClusterUpdateRequest(t)(w, r)
 		case "lkc-update-dedicated-expand":
@@ -148,10 +148,7 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 		case "lkc-update-dedicated-shrink-multi":
 			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
 		case "lkc-unknown":
-			err := writeResourceNotFoundError(w)
-			require.NoError(t, err)
-		case "lkc-describe-infinite":
-			handleCmkKafkaClusterDescribeInfinite(t)(w, r)
+			handleCmkKafkaUnknown(t)(w, r)
 		default:
 			handleCmkKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -319,5 +316,12 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 			_, err := io.WriteString(w, badRequestErrMsg)
 			require.NoError(t, err)
 		}
+	}
+}
+
+func handleCmkKafkaUnknown(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, _ *http.Request) {
+		err := writeResourceNotFoundError(w)
+		require.NoError(t, err)
 	}
 }

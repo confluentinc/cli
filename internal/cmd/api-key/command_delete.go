@@ -6,8 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -39,7 +41,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedAPIKeyMsg, apiKey)
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ApiKey, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey)
 }
 

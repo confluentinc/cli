@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -187,11 +188,11 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := errors.CreatedLinkMsg
+	msg := errors.CreatedResourceMsg
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Printf(cmd, msg, linkName)
+	utils.Printf(cmd, msg, resource.ClusterLink, linkName)
 	return nil
 }
 

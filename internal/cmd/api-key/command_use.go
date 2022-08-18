@@ -34,7 +34,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if resourceType != resource.Kafka {
+	if resourceType != resource.KafkaCluster {
 		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 	}
 	cluster, err := c.Context.FindKafkaCluster(clusterId)
