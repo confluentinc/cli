@@ -61,6 +61,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
+	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.")
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
@@ -143,8 +144,13 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Ve
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+
 		ctx := cfg.Context()
-		client := ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), ver.UserAgent, isTest)
+		client := ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), ver.UserAgent, unsafeTrace, isTest)
 
 		u.Error = cliv1.PtrBool(err != nil)
 		u.Report(client)
