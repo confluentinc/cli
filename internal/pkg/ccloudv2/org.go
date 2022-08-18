@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
+func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 	cfg := orgv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = orgv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = orgv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return orgv2.NewAPIClient(cfg)
