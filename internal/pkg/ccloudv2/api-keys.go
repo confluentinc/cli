@@ -62,7 +62,7 @@ func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKey
 }
 
 func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, error) {
-	list := make([]apikeysv2.IamV2ApiKey, 0)
+	var list []apikeysv2.IamV2ApiKey
 
 	done := false
 	pageToken := ""

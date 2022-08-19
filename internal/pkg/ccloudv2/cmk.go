@@ -42,7 +42,7 @@ func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Respon
 }
 
 func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
-	list := make([]cmkv2.CmkV2Cluster, 0)
+	var list []cmkv2.CmkV2Cluster
 
 	done := false
 	pageToken := ""

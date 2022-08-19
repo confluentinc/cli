@@ -68,7 +68,7 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (c
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
-	list := make([]cdxv1.CdxV1ProviderShare, 0)
+	var list []cdxv1.CdxV1ProviderShare
 
 	done := false
 	pageToken := ""
@@ -79,9 +79,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 		}
 		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := page.GetMetadata().Next
-		pageToken, done, err = extractCdxNextPageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -91,26 +89,24 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 }
 
 func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1ConsumerShare, error) {
-	consumerShares := make([]cdxv1.CdxV1ConsumerShare, 0)
+	var list []cdxv1.CdxV1ConsumerShare
 
-	collectedAllShares := false
+	done := false
 	pageToken := ""
-	for !collectedAllShares {
-		sharesList, httpResp, err := c.executeListConsumerShares(sharedResource, pageToken)
+	for !done {
+		page, r, err := c.executeListConsumerShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+			return nil, errors.CatchV2ErrorDetailWithResponse(err, r)
 		}
-		consumerShares = append(consumerShares, sharesList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := sharesList.GetMetadata().Next
-		pageToken, collectedAllShares, err = extractCdxNextPageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return consumerShares, nil
+	return list, nil
 }
 
 func (c *Client) executeListConsumerShares(sharedResource, pageToken string) (cdxv1.CdxV1ConsumerShareList, *http.Response, error) {

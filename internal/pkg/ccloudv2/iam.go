@@ -44,25 +44,23 @@ func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAcc
 }
 
 func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
-	serviceAccounts := make([]iamv2.IamV2ServiceAccount, 0)
+	var list []iamv2.IamV2ServiceAccount
 
-	collectedAllServiceAccounts := false
+	done := false
 	pageToken := ""
-	for !collectedAllServiceAccounts {
-		serviceAccountList, _, err := c.executeListServiceAccounts(pageToken)
+	for !done {
+		page, _, err := c.executeListServiceAccounts(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		serviceAccounts = append(serviceAccounts, serviceAccountList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := serviceAccountList.GetMetadata().Next
-		pageToken, collectedAllServiceAccounts, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIamNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return serviceAccounts, nil
+	return list, nil
 }
 
 func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {

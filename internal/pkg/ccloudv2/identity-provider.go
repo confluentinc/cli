@@ -57,9 +57,7 @@ func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProv
 		}
 		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := page.GetMetadata().Next
-		pageToken, done, err = extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIdentityProviderNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
