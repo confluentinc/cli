@@ -151,10 +151,10 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	body, _ := io.ReadAll(r.Body)
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
-func CatchV2ErrorDetailWithResponseBody(err error, body []byte) error {
+func CatchCCloudV2ErrorResponseBody(err error, body []byte) error {
 	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
 	if len(resBody.Error) > 0 {
@@ -230,7 +230,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
@@ -266,7 +266,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
