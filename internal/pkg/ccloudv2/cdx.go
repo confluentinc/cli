@@ -34,7 +34,7 @@ func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
 	return c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
 }
 
-func (c *Client) DescribeProvideShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
+func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
 	req := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
 	return c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
 }
