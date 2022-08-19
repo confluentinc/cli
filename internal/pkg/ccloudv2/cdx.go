@@ -25,33 +25,33 @@ func (c *Client) cdxApiContext() context.Context {
 }
 
 func (c *Client) ResendInvite(shareId string) (*http.Response, error) {
-	req := c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(req)
+	req := c.CdxClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.CdxClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
-	req := c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
+	req := c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
-	req := c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
+	req := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
+	return c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) DeleteConsumerShare(shareId string) (*http.Response, error) {
-	req := c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(req)
+	req := c.CdxClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShare(c.cdxApiContext(), shareId)
+	return c.CdxClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(req)
 }
 
 func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare, *http.Response, error) {
-	req := c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
+	req := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
+	return c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
 }
 
 func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
 	deliveryMethod := "Email"
-	req := c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
+	req := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
 		CdxV1CreateShareRequest(cdxv1.CdxV1CreateShareRequest{
 			Environment:  &environment,
 			KafkaCluster: &kafkaCluster,
@@ -64,30 +64,30 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (c
 			DeliveryMethod: &deliveryMethod,
 			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s", kafkaCluster, topic)},
 		})
-	return c.StreamShareClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
+	return c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
-	providerShares := make([]cdxv1.CdxV1ProviderShare, 0)
+	list := make([]cdxv1.CdxV1ProviderShare, 0)
 
-	collectedAllShares := false
+	done := false
 	pageToken := ""
-	for !collectedAllShares {
-		sharesList, httpResp, err := c.executeListProviderShares(sharedResource, pageToken)
+	for !done {
+		page, r, err := c.executeListProviderShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+			return nil, errors.CatchV2ErrorDetailWithResponse(err, r)
 		}
-		providerShares = append(providerShares, sharesList.GetData()...)
+		list = append(list, page.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := sharesList.GetMetadata().Next
-		pageToken, collectedAllShares, err = extractCdxNextPagePageToken(nextPageUrlStringNullable)
+		nextPageUrlStringNullable := page.GetMetadata().Next
+		pageToken, done, err = extractCdxNextPageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return providerShares, nil
+	return list, nil
 }
 
 func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1ConsumerShare, error) {
@@ -104,7 +104,7 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 
 		// nextPageUrlStringNullable is nil for the last page
 		nextPageUrlStringNullable := sharesList.GetMetadata().Next
-		pageToken, collectedAllShares, err = extractCdxNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, collectedAllShares, err = extractCdxNextPageToken(nextPageUrlStringNullable)
 		if err != nil {
 			return nil, err
 		}
@@ -114,21 +114,29 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 }
 
 func (c *Client) executeListConsumerShares(sharedResource, pageToken string) (cdxv1.CdxV1ConsumerShareList, *http.Response, error) {
-	req := c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerShares(c.cdxApiContext()).
+	req := c.CdxClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerShares(c.cdxApiContext()).
 		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.StreamShareClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerSharesExecute(req)
+	return c.CdxClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerSharesExecute(req)
 }
 
 func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cdxv1.CdxV1ProviderShareList, *http.Response, error) {
-	req := c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).
-		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
+	req := c.CdxClient.ProviderSharesCdxV1Api.ListCdxV1ProviderShares(c.cdxApiContext()).SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.StreamShareClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
+	return c.CdxClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
+}
+
+func extractCdxNextPageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
 
 func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
@@ -137,7 +145,6 @@ func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId stri
 		AwsAccount:        &awsAccountId,
 		AzureSubscription: &azureSubscriptionId,
 	}
-	req := c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).
-		CdxV1RedeemTokenRequest(redeemTokenRequest)
-	return c.StreamShareClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
+	req := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).CdxV1RedeemTokenRequest(redeemTokenRequest)
+	return c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
 }
