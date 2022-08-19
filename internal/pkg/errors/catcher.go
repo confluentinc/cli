@@ -142,6 +142,10 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 */
 
 func CatchV2ErrorDetailWithResponse(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
 	if r == nil {
 		return err
 	}
@@ -158,8 +162,11 @@ func CatchV2ErrorDetailWithResponseBody(err error, body []byte) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(resBody.Error[0].Detail, "\n"))
+			return Wrap(err, strings.TrimSuffix(detail, "\n"))
 		}
+	}
+	if resBody.Message != "" {
+		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
 	}
 	return err
 }
@@ -278,26 +285,6 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
-}
-
-func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-	body, _ := io.ReadAll(r.Body)
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if resBody.Message != "" {
-		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
-		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
-		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
-	}
-
-	return err
 }
 
 func isResourceNotFoundError(err error) bool {
