@@ -53,7 +53,7 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractOrgNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractOrgNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -69,7 +69,7 @@ func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2Environme
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }
 
-func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
+func extractOrgNextPageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}

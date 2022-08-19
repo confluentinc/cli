@@ -57,7 +57,7 @@ func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProv
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIdentityProviderNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractIdentityProviderNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -71,15 +71,6 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 		req = req.PageToken(pageToken)
 	}
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.ListIamV2IdentityProvidersExecute(req)
-}
-
-func extractIdentityProviderNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
 
 func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
@@ -114,7 +105,7 @@ func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIdentityPoolNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractIdentityProviderNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -130,7 +121,7 @@ func (c *Client) executeListIdentityPools(providerID string, pageToken string) (
 	return c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPoolsExecute(req)
 }
 
-func extractIdentityPoolNextPagePageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
+func extractIdentityProviderNextPageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}

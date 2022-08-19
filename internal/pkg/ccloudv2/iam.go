@@ -55,7 +55,7 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIamNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +95,7 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIamNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +111,7 @@ func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
 }
 
-func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
+func extractIamNextPageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}
