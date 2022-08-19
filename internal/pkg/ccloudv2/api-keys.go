@@ -62,25 +62,23 @@ func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKey
 }
 
 func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, error) {
-	keys := make([]apikeysv2.IamV2ApiKey, 0)
+	var list []apikeysv2.IamV2ApiKey
 
-	collectedAllKeys := false
+	done := false
 	pageToken := ""
-	for !collectedAllKeys {
-		keyList, _, err := c.executeListApiKeys(owner, resource, pageToken)
+	for !done {
+		page, _, err := c.executeListApiKeys(owner, resource, pageToken)
 		if err != nil {
 			return nil, err
 		}
-		keys = append(keys, keyList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := keyList.GetMetadata().Next
-		pageToken, collectedAllKeys, err = extractApiKeysNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractApiKeysNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return keys, nil
+	return list, nil
 }
 
 func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv2.IamV2ApiKeyList, *http.Response, error) {
@@ -89,4 +87,13 @@ func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv
 		req = req.PageToken(pageToken)
 	}
 	return c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeysExecute(req)
+}
+
+func extractApiKeysNextPageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
