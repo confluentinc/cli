@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
+func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 	cfg := cmkv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = cmkv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CMK"}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = cmkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return cmkv2.NewAPIClient(cfg)
@@ -44,25 +42,23 @@ func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Respon
 }
 
 func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
-	clusters := make([]cmkv2.CmkV2Cluster, 0)
+	var list []cmkv2.CmkV2Cluster
 
-	collectedAllClusters := false
+	done := false
 	pageToken := ""
-	for !collectedAllClusters {
-		clusterList, _, err := c.executeListClusters(pageToken, environment)
+	for !done {
+		page, _, err := c.executeListClusters(pageToken, environment)
 		if err != nil {
 			return nil, err
 		}
-		clusters = append(clusters, clusterList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := clusterList.GetMetadata().Next
-		pageToken, collectedAllClusters, err = extractCmkNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractCmkNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return clusters, nil
+	return list, nil
 }
 
 func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
@@ -71,4 +67,13 @@ func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2
 		req = req.PageToken(pageToken)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
+}
+
+func extractCmkNextPageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

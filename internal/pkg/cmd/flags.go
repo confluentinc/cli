@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -13,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -76,7 +76,7 @@ func autocompleteMechanisms(protocol string) []string {
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Cloud provider (%s).", strings.Join(kafka.Clouds, ", ")))
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds)))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
@@ -232,6 +232,46 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 	for i, serviceAccount := range serviceAccounts {
 		description := fmt.Sprintf("%s: %s", *serviceAccount.DisplayName, *serviceAccount.Description)
 		suggestions[i] = fmt.Sprintf("%s\t%s", *serviceAccount.Id, description)
+	}
+	return suggestions
+}
+
+func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+
+	RegisterFlagCompletionFunc(cmd, "provider", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteIdentityProviders(command.V2Client)
+	})
+}
+
+func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
+	identityProviders, err := client.ListIdentityProviders()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(identityProviders))
+	for i, identityProvider := range identityProviders {
+		description := fmt.Sprintf("%s: %s", *identityProvider.DisplayName, *identityProvider.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *identityProvider.Id, description)
+	}
+	return suggestions
+}
+
+func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []string {
+	identityPools, err := client.ListIdentityPools(providerID)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(identityPools))
+	for i, identityPool := range identityPools {
+		description := fmt.Sprintf("%s: %s", *identityPool.DisplayName, *identityPool.Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", *identityPool.Id, description)
 	}
 	return suggestions
 }

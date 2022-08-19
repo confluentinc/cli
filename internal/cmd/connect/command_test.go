@@ -3,6 +3,7 @@ package connect
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -263,7 +264,7 @@ func (suite *ConnectTestSuite) TestUpdateConnector() {
 	req.Nil(err)
 	req.True(suite.connectorsMock.CreateOrUpdateConnectv1ConnectorConfigCalled())
 	req.True(suite.connectorsMock.CreateOrUpdateConnectv1ConnectorConfigExecuteCalled())
-	req.Contains(buf.String(), "Updated connector "+connectorID)
+	req.Contains(buf.String(), fmt.Sprintf(`Updated connector "%s"`, connectorID))
 }
 
 func (suite *ConnectTestSuite) TestPluginList() {

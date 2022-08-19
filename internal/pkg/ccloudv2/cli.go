@@ -5,16 +5,14 @@ import (
 	"net/http"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newCliClient(baseURL, userAgent string, isTest bool) *cliv1.APIClient {
+func newCliClient(url, userAgent string, unsafeTrace bool) *cliv1.APIClient {
 	// We do not use a retryable HTTP client so the CLI does not hang if there is a problem with the usage service.
 
 	cfg := cliv1.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.Servers = cliv1.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud CLI"}}
+	cfg.Debug = unsafeTrace
+	cfg.Servers = cliv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return cliv1.NewAPIClient(cfg)

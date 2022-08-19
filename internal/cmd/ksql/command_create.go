@@ -3,9 +3,9 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -14,29 +14,19 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
-	shortText := "Create a ksqlDB cluster."
-	var longText string
-	runCommand := c.createCluster
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Create a ksqlDB app."
-		longText = "DEPRECATED: Create a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.createApp
-	}
-
+func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: shortText,
-		Long:  longText,
+		Short: fmt.Sprintf("Create a ksqlDB %s.", resource),
 		Args:  cobra.ExactArgs(1),
-		RunE:  runCommand,
+		RunE:  c.create,
 	}
 
 	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
 	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
 	cmd.Flags().String("image", "", "Image to run (internal).")
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
+	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -49,20 +39,11 @@ func (c *ksqlCommand) newCreateCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) createCluster(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, false)
-}
-
-func (c *ksqlCommand) createApp(cmd *cobra.Command, args []string) error {
-	return c.create(cmd, args, true)
-}
-
-func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) error {
+func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
-
 	csus, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return err
@@ -74,6 +55,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		TotalNumCsu:    uint32(csus),
 		KafkaClusterId: kafkaCluster.ID,
 	}
+
+	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
+	if err != nil {
+		return err
+	}
+
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
 
 	kafkaApiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
@@ -116,8 +104,5 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string, isApp bool) erro
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if isApp {
-		_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	}
-	return output.DescribeObject(cmd, cluster, describeFields, describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }

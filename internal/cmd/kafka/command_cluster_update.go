@@ -89,7 +89,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 
 	updatedCluster, httpResp, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
 	if err != nil {
-		return errors.Wrap(errors.CatchV2ErrorDetailWithResponse(err, httpResp), errors.KafkaClusterUpdateFailedSuggestions)
+		return errors.NewWrapErrorWithSuggestions(errors.CatchV2ErrorDetailWithResponse(err, httpResp), "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster)
@@ -104,7 +104,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv
 		}
 		// Ensure the cluster is a Dedicated Cluster
 		if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-			return -1, errors.Errorf("failed to update kafka cluster: %v", errors.ClusterResizeNotSupported)
+			return -1, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 		}
 		// Durability Checks
 		if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {

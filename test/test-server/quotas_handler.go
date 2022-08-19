@@ -25,6 +25,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
+			Usage:        int32ToPtr(10),
 			AppliedLimit: int32ToPtr(15),
 		}
 
@@ -35,6 +36,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
+			Usage:        int32ToPtr(11),
 			AppliedLimit: int32ToPtr(16),
 		}
 

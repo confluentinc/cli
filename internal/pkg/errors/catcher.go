@@ -106,7 +106,7 @@ func catchCoreV1Errors(err error) error {
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestion)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestions)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
@@ -168,12 +168,13 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
 	}
-	_, isKafkaNotFound := err.(*KafkaClusterNotFoundError)
-	if isResourceNotFoundError(err) || isKafkaNotFound {
+
+	if _, ok := err.(*KafkaClusterNotFoundError); ok || isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
 		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, resourceId)
 		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
+
 	return err
 }
 
@@ -183,7 +184,7 @@ func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
@@ -198,7 +199,11 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+		suggestions := ChooseRightEnvironmentSuggestions
+		if r.Request.Method == http.MethodDelete {
+			suggestions = KafkaClusterDeletingSuggestions
+		}
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Kafka cluster not found or access forbidden", suggestions)
 	}
 
 	return CatchV2ErrorDetailWithResponse(err, r)
@@ -223,7 +228,7 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
 	return CatchV2ErrorDetailWithResponse(err, r)
 }
@@ -268,7 +273,7 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 		case http.StatusForbidden:
-			return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+			return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 		}
 	}
 
@@ -283,7 +288,6 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	if r == nil {
 		return err
 	}
-
 	body, _ := io.ReadAll(r.Body)
 	var resBody responseBody
 	_ = json.Unmarshal(body, &resBody)
@@ -296,19 +300,8 @@ func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
 	return err
 }
 
-/*
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error listing schema-registry cluster: resource not found
-Error: 1 error occurred:
-	* error describing ksql cluster: resource not found
-*/
 func isResourceNotFoundError(err error) bool {
-	resourceNotFoundRegex := regexp.MustCompile(`error .* cluster: resource not found`)
-	return resourceNotFoundRegex.MatchString(err.Error())
+	return strings.Contains(err.Error(), "resource not found")
 }
 
 /*

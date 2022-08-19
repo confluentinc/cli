@@ -35,7 +35,7 @@ var (
 	keyIndex           = int32(1)
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
-	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+	resourceTypeToKind = map[string]string{resource.KafkaCluster: "Cluster", resource.KsqlCluster: "ksqlDB", resource.SchemaRegistryCluster: "SchemaRegistry", resource.Cloud: "Cloud"}
 
 	RegularOrg = &orgv1.Organization{
 		Id:   321,
@@ -63,10 +63,12 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	serviceAccountID         = int32(12345)
-	serviceAccountResourceID = "sa-12345"
-	deactivatedUserID        = int32(6666)
-	deactivatedResourceID    = "sa-6666"
+	serviceAccountID           = int32(12345)
+	serviceAccountResourceID   = "sa-12345"
+	identityProviderResourceID = "op-12345"
+	identityPoolResourceID     = "pool-12345"
+	deactivatedUserID          = int32(6666)
+	deactivatedResourceID      = "sa-6666"
 
 	auditLogServiceAccountID         = int32(1337)
 	auditLogServiceAccountResourceID = "sa-1337"
@@ -220,24 +222,15 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			var res orgv1.GetPaymentInfoReply
-
-			hasPaymentMethod := os.Getenv("HAS_PAYMENT_METHOD")
-			switch hasPaymentMethod {
-			case "false":
-				res = orgv1.GetPaymentInfoReply{}
-			default:
-				res = orgv1.GetPaymentInfoReply{
-					Card: &orgv1.Card{
-						Cardholder: "Miles Todzo",
-						Brand:      "Visa",
-						Last4:      "4242",
-						ExpMonth:   "01",
-						ExpYear:    "99",
-					},
-					Organization: &orgv1.Organization{Id: 0},
-					Error:        nil,
-				}
+			res := orgv1.GetPaymentInfoReply{
+				Card: &orgv1.Card{
+					Cardholder: "Miles Todzo",
+					Brand:      "Visa",
+					Last4:      "4242",
+					ExpMonth:   "01",
+					ExpYear:    "99",
+				},
+				Organization: &orgv1.Organization{Id: 0},
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -490,10 +483,29 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
+		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
+			Id:                    "lksqlc-woooo",
+			AccountId:             "25",
+			KafkaClusterId:        "lkc-zxcvb",
+			OutputTopicPrefix:     "pksqlc-ghjkl",
+			Name:                  "kay cee queue elle",
+			Storage:               123,
+			Endpoint:              "SASL_SSL://ksql-endpoint",
+			DetailedProcessingLog: &types.BoolValue{Value: false},
+		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
+			require.NoError(t, err)
+			req := &schedv1.CreateKSQLClusterRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if !req.Config.DetailedProcessingLog.Value {
+				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+					Cluster: ksqlClusterForDetailedProcessingLogFalse,
+				})
+			}
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
@@ -768,8 +780,15 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		jsonVal := map[string]interface{}{"key": "val"}
-		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
+		flags := map[string]interface{}{
+			"testBool":   true,
+			"testString": "string",
+			"testInt":    1,
+			"testJson":   map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices": []map[string]interface{}{
+				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
+			},
+		}
 		err := json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}

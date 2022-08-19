@@ -6,10 +6,6 @@ import (
 	"net/url"
 	"strings"
 
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
@@ -35,9 +31,9 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func newRetryableHttpClient() *http.Client {
+func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
-	client.Logger = new(plog.LeveledLogger)
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	return client.StandardClient()
 }
 
@@ -51,49 +47,6 @@ func getServerUrl(baseURL string, isTest bool) string {
 		return "https://api.stag.cpdev.cloud"
 	}
 	return "https://api.confluent.cloud"
-}
-
-func getMetricsServerUrl(isTest bool) string {
-	if isTest {
-		return testserver.TestV2CloudURL.String()
-	}
-	return "https://api.telemetry.confluent.cloud"
-}
-
-func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
-}
-
-func extractCmkNextPagePageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
-}
-
-func extractIamNextPagePageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
-}
-
-func extractOrgNextPagePageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {
