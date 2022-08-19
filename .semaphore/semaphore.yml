@@ -43,6 +43,8 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
+            - pwd
+            - echo $HOME
             - cache restore
             
             # Set up Git
@@ -55,6 +57,8 @@ blocks:
             - make deps
             - make lint
             - ulimit -n 2048
+            - pwd
+            - echo $HOME
             - make test
             - echo $GOPATH
             - ls $GOPATH/pkg
