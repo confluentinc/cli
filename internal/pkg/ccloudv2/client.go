@@ -20,6 +20,7 @@ type Client struct {
 	JwtToken  string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
 	ConnectClient          *connectv1.APIClient
@@ -29,7 +30,6 @@ type Client struct {
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
-	StreamShareClient      *cdxv1.APIClient
 }
 
 func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *Client {
@@ -39,6 +39,7 @@ func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
@@ -48,6 +49,5 @@ func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
-		StreamShareClient:      newCdxClient(url, userAgent, unsafeTrace),
 	}
 }
