@@ -31,7 +31,10 @@ blocks:
             - unzip vault_1.11.0_linux_amd64.zip
             - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - cat script.sh
             - source script.sh
+            - pwd
+            - echo $HOME
             
             # Set up Go
             - sem-version go 1.17.6
@@ -116,8 +119,9 @@ blocks:
             - Get-Content script.sh
             - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
             - Get-Content id_rsa.b64
-            - mkdir .ssh\
+            - New-Item -Name ".ssh" -ItemType "directory"
             - $data = Get-Content id_rsa.b64
+            - echo $data
             #- [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
