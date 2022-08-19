@@ -225,5 +225,5 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		return err
 	}
 
-	return errors.CatchV2ErrorWithResponse(err, r)
+	return errors.CatchV2ErrorDetailWithResponse(err, r)
 }

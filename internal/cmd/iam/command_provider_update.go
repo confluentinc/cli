@@ -59,7 +59,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	resp, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		return errors.CatchV2ErrorWithResponse(err, httpResp)
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 
 	describeIdentityProvider := &identityProvider{

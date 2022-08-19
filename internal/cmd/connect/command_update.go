@@ -45,7 +45,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, httpResp, err := c.V2Client.CreateOrUpdateConnectorConfig(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID, *userConfigs); err != nil {
-		return errors.CatchV2ErrorWithResponse(err, httpResp)
+		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Connector, args[0])
