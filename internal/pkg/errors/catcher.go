@@ -24,7 +24,7 @@ import (
 
 const quotaExceededRegex = ".* is currently limited to .*"
 
-type responseBody struct {
+type errorResponseBody struct {
 	Error   []errorDetail `json:"errors"`
 	Message string        `json:"message"`
 }
@@ -155,7 +155,7 @@ func CatchV2ErrorDetailWithResponse(err error, r *http.Response) error {
 }
 
 func CatchV2ErrorDetailWithResponseBody(err error, body []byte) error {
-	var resBody responseBody
+	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
 	if len(resBody.Error) > 0 {
 		detail := resBody.Error[0].Detail
