@@ -42,25 +42,23 @@ func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Respon
 }
 
 func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
-	clusters := make([]cmkv2.CmkV2Cluster, 0)
+	list := make([]cmkv2.CmkV2Cluster, 0)
 
-	collectedAllClusters := false
+	done := false
 	pageToken := ""
-	for !collectedAllClusters {
-		clusterList, _, err := c.executeListClusters(pageToken, environment)
+	for !done {
+		page, _, err := c.executeListClusters(pageToken, environment)
 		if err != nil {
 			return nil, err
 		}
-		clusters = append(clusters, clusterList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := clusterList.GetMetadata().Next
-		pageToken, collectedAllClusters, err = extractCmkNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractCmkNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return clusters, nil
+	return list, nil
 }
 
 func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2ClusterList, *http.Response, error) {
@@ -69,4 +67,13 @@ func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2
 		req = req.PageToken(pageToken)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
+}
+
+func extractCmkNextPageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }
