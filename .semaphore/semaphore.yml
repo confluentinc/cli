@@ -26,9 +26,6 @@ blocks:
       jobs:
         - name: Test
           commands:
-            # https://confluentinc.atlassian.net/wiki/spaces/TOOLS/pages/1342058645/Semaphore+FAQ#Semaphore-job-is-stuck-(no-new-log-lines)-and-eventually-times-Out-OR-job-log-on-the-UI-is-stuck-on-'Fetching...'
-            - sudo rm -rf ~/.phpbrew ~/.kerl ~/.sbt ~/.nvm ~/.npm ~/.kiex /usr/local/golang/ /usr/lib/jvm /opt/* /opt/az
-
             # Get GitHub SSH key from Vault
             - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_linux_amd64.zip
             - unzip vault_1.11.0_linux_amd64.zip
@@ -121,7 +118,7 @@ blocks:
             - Get-Content id_rsa.b64
             - mkdir .ssh\
             - $data = Get-Content id_rsa.b64
-            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
+            #- [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
             - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
