@@ -23,7 +23,7 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("email", "", "Email of the user with whom the topic is shared.")
+	cmd.Flags().String("email", "", "Email of the user with whom to share the topic.")
 	cmd.Flags().String("topic", "", "Topic to be shared.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
