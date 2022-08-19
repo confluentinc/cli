@@ -34,7 +34,7 @@ func (s *CLITestSuite) TestLocalConfluentCommunitySoftware() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services list", fixture: "local/services-list-ccs.golden"},
+		{args: "local services list", fixture: "local/services/list-ccs.golden"},
 		{args: "local version", fixture: "local/version-ccs.golden"},
 	}
 
@@ -68,7 +68,7 @@ func (s *CLITestSuite) TestLocalServicesList() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services list", fixture: "local/services-list-cp.golden"},
+		{args: "local services list", fixture: "local/services/list-cp.golden"},
 	}
 
 	for _, tt := range tests {
@@ -84,9 +84,9 @@ func (s *CLITestSuite) TestLocalServicesLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services status", fixture: "local/services-status-all-stopped.golden", regex: true},
-		{args: "local services stop", fixture: "local/services-stop-already-stopped.golden", regex: true},
-		{args: "local services top", fixture: "local/services-top-no-services-running.golden", wantErrCode: 1},
+		{args: "local services status", fixture: "local/services/status-all-stopped.golden", regex: true},
+		{args: "local services stop", fixture: "local/services/stop-already-stopped.golden", regex: true},
+		{args: "local services top", fixture: "local/services/top-no-services-running.golden", wantErrCode: 1},
 	}
 
 	for _, tt := range tests {
@@ -102,11 +102,11 @@ func (s *CLITestSuite) TestLocalZookeeperLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local services zookeeper log", fixture: "local/zookeeper-log-error.golden", wantErrCode: 1},
-		{args: "local services zookeeper status", fixture: "local/zookeeper-status-stopped.golden", regex: true},
-		{args: "local services zookeeper stop", fixture: "local/zookeeper-stop-already-stopped.golden", regex: true},
-		{args: "local services zookeeper top", fixture: "local/zookeeper-top-stopped.golden"},
-		{args: "local services zookeeper version", fixture: "local/zookeeper-version.golden"},
+		{args: "local services zookeeper log", fixture: "local/zookeeper/log-error.golden", wantErrCode: 1},
+		{args: "local services zookeeper status", fixture: "local/zookeeper/status-stopped.golden", regex: true},
+		{args: "local services zookeeper stop", fixture: "local/zookeeper/stop-already-stopped.golden", regex: true},
+		{args: "local services zookeeper top", fixture: "local/zookeeper/top-stopped.golden"},
+		{args: "local services zookeeper version", fixture: "local/zookeeper/version.golden"},
 	}
 
 	for _, tt := range tests {
