@@ -144,6 +144,10 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	calledAnonymous := false
 
 	r := getPreRunBase()
+
+	// HACK: Checking for updates is intentionally skipped when testing
+	r.Config.IsTest = false
+
 	r.UpdateClient = &mock.Client{
 		CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 			calledAnonymous = true
