@@ -21,7 +21,7 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig,
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return nil, errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	apiEndpoint, err := getKafkaApiEndpoint(d.Client, clusterId, environmentId)
@@ -60,7 +60,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	// check if this is API key exists server-side
 	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	// check if the key is for the right cluster
 	ok := key.Spec.Resource.Id == clusterID
