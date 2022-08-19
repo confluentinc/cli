@@ -1,0 +1,147 @@
+version: v1.0
+name: Confluent CLI
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-2
+
+auto_cancel:
+  running:
+    when: "true"
+
+global_job_config:
+  env_vars:
+    - name: CI
+      value: "true"
+  secrets:
+    - name: vault_sem2_approle
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: linux/amd64
+    dependencies: []
+    task:
+      jobs:
+        - name: Test
+          commands:
+            # Get GitHub SSH key from Vault
+            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_linux_amd64.zip
+            - unzip vault_1.11.0_linux_amd64.zip
+            - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            
+            # Set up Go
+            - sem-version go 1.17.6
+            - export "GOPATH=$(go env GOPATH)"
+            - export "PATH=${GOPATH}/bin:${PATH}"
+            
+            # Try to restore cached dependencies
+            - checkout
+            - cache restore
+            
+            # Set up Git
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
+            # Run tests
+            - make generate-packaging-patch
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
+            - make deps
+            - make lint
+            - ulimit -n 2048
+            - make test
+            - echo $GOPATH
+            - ls $GOPATH/pkg
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
+
+  - name: darwin/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: a1-standard-4 # TODO: Use s1-prod-macos
+          os_image: macos-xcode13
+      jobs:
+        - name: Test
+          commands:
+            # Get GitHub SSH key from Vault
+            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
+            - unzip vault_1.11.0_darwin_amd64.zip
+            - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+            - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            
+            # Set up Go
+            - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
+            - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
+            - export "PATH=/usr/local/go/bin:${PATH}"
+            - export "PATH=$(go env GOPATH)/bin:${PATH}"
+            
+            # Try to restore cached dependencies
+            - checkout
+            - cache restore
+            
+            # Set up Git
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
+            # Run tests
+            - make deps
+            - make test
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
+
+  - name: windows/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
+      jobs:
+        - name: Test
+          commands:
+            # Get GitHub SSH key from Vault
+            - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
+            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
+            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
+            - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - Get-Content script.sh
+            - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
+            - Get-Content id_rsa.b64
+            - mkdir .ssh\
+            - $data = Get-Content id_rsa.b64
+            #- [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
+            
+            # Set up Go
+            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
+            - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
+            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
+            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
+            
+            # Try to restore cached dependencies
+            - checkout
+            - cache restore
+            
+            # Set up Git
+            - $Env:GOPRIVATE = "github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
+            # Run tests
+            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            - choco install make
+            - make deps
+            - make test
+            - make lint-licenses
+            
+            # Cache Go dependencies
+            - cache store
+
+# TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
