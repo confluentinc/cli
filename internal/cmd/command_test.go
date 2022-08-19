@@ -17,8 +17,7 @@ import (
 )
 
 var (
-	mockBaseConfig = &config.BaseConfig{}
-	mockVersion    = new(pversion.Version)
+	mockVersion = new(pversion.Version)
 
 	regularOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
@@ -35,7 +34,7 @@ var (
 )
 
 func TestHelp_NoContext(t *testing.T) {
-	cfg := &v1.Config{BaseConfig: mockBaseConfig}
+	cfg := new(v1.Config)
 
 	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
@@ -55,7 +54,6 @@ func TestHelp_NoContext(t *testing.T) {
 
 func TestHelp_CloudSuspendedOrg(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
@@ -80,7 +78,6 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 
 func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
@@ -88,8 +85,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		CurrentContext: "cloud",
 	}
 
-	cmd := NewConfluentCommand(cfg, mockVersion, true)
-	out, err := pcmd.ExecuteCommand(cmd, "help")
+	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
 
 	// note users can still run "confluent admin payment update" or "confluent admin promo add" if the org is suspended
@@ -112,6 +108,8 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		require.NotContains(t, out, command)
 	}
 
+	cmd := NewConfluentCommand(cfg, mockVersion)
+
 	out, err = pcmd.ExecuteCommand(cmd, "admin", "payment", "--help")
 	require.NoError(t, err)
 	require.Contains(t, out, "update")
@@ -125,7 +123,6 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 
 func TestHelp_Cloud(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        regularOrgContextState,
@@ -148,7 +145,6 @@ func TestHelp_Cloud(t *testing.T) {
 
 func TestHelp_CloudWithAPIKey(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig: mockBaseConfig,
 		Contexts: map[string]*v1.Context{
 			"cloud-with-api-key": {
 				PlatformName: "confluent.cloud",
@@ -174,7 +170,6 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 
 func TestHelp_OnPrem(t *testing.T) {
 	cfg := &v1.Config{
-		BaseConfig:     mockBaseConfig,
 		Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
 		CurrentContext: "on-prem",
 	}
@@ -196,6 +191,9 @@ func TestHelp_OnPrem(t *testing.T) {
 }
 
 func runWithConfig(cfg *v1.Config) (string, error) {
-	cmd := NewConfluentCommand(cfg, mockVersion, true)
+	cfg.BaseConfig = new(config.BaseConfig)
+	cfg.IsTest = true
+
+	cmd := NewConfluentCommand(cfg, mockVersion)
 	return pcmd.ExecuteCommand(cmd, "help")
 }
