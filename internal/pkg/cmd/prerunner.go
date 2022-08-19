@@ -196,11 +196,22 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			if err := checkCliDisable(command, r.Config); err != nil {
 				return err
 			}
+			// announcement and deprecation check, print out msg
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			launchdarkly.PrintAnnouncements(launchdarkly.Announcements, ctx, cmd)
+			launchdarkly.PrintAnnouncements(launchdarkly.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
 		if err != nil {
 			return err
+		}
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+		if unsafeTrace {
+			verbosity = int(log.TRACE)
 		}
 		log.CliLogger.SetVerbosity(verbosity)
 		log.CliLogger.Flush()
@@ -434,6 +445,11 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
+			unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+
 			client, err := createKafkaRESTClient(restEndpoint)
 			if err != nil {
 				return nil, err
@@ -441,7 +457,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, r.IsTest),
+				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, unsafeTrace, r.IsTest),
 				Client:      client,
 			}
 
@@ -459,7 +475,12 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return new(errors.NotLoggedInError)
 	}
 
-	v2Client := ccloudv2.NewClient(cliCmd.AuthToken(), ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest)
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	v2Client := ccloudv2.NewClient(cliCmd.AuthToken(), ctx.Platform.Server, cliCmd.Version.UserAgent, unsafeTrace, r.IsTest)
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
@@ -786,7 +807,13 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClient(ctx.State.AuthToken, ctx.Platform.Server, command.Version.UserAgent, r.IsTest)
+		
+			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return err
+			}
+
+			v2Client := ccloudv2.NewClient(ctx.State.AuthToken, ctx.Platform.Server, command.Version.UserAgent, unsafeTrace, r.IsTest)
 
 			ctx.Client = client
 			command.Config.Client = client

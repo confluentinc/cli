@@ -10,7 +10,6 @@ import (
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -23,11 +22,11 @@ type responseDataPoint struct {
 	Value     float32   `json:"value"`
 }
 
-func newMetricsClient(baseURL, userAgent string, isTest bool) *metricsv2.APIClient {
+func newMetricsClient(baseUrl, userAgent string, unsafeTrace, isTest bool) *metricsv2.APIClient {
 	cfg := metricsv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = metricsv2.ServerConfigurations{{URL: getMetricsServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = metricsv2.ServerConfigurations{{URL: getMetricsServerUrl(baseUrl, isTest)}}
 	cfg.UserAgent = userAgent
 
 	return metricsv2.NewAPIClient(cfg)

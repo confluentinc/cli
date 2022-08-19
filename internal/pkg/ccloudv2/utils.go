@@ -31,9 +31,9 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func newRetryableHttpClient() *http.Client {
+func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
-	client.Logger = new(plog.LeveledLogger)
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	return client.StandardClient()
 }
 

@@ -8,10 +8,14 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cdx/v1/provider-shares":      handleStreamSharingProviderShares,
-	"/cdx/v1/provider-shares/{id}": handleStreamSharingProviderShare,
-	"/cmk/v2/clusters":             handleCmkClusters,
-	"/cmk/v2/clusters/{id}":        handleCmkCluster,
+	"/cdx/v1/consumer-shares":             handleStreamSharingConsumerShares,
+	"/cdx/v1/consumer-shares/{id}":        handleStreamSharingConsumerShare,
+	"/cdx/v1/provider-shares":             handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}":        handleStreamSharingProviderShare,
+	"/cdx/v1/provider-shares/{id}:resend": handleStreamSharingResendInvite,
+	"/cdx/v1/shared-tokens:redeem":        handleStreamSharingRedeemToken,
+	"/cmk/v2/clusters":                    handleCmkClusters,
+	"/cmk/v2/clusters/{id}":               handleCmkCluster,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                                 handleConnectors,

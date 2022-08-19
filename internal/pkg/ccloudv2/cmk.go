@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newCmkClient(baseURL, userAgent string, isTest bool) *cmkv2.APIClient {
+func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 	cfg := cmkv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = cmkv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = cmkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return cmkv2.NewAPIClient(cfg)

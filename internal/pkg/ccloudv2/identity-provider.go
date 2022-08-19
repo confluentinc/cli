@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newIdentityProviderClient(baseURL, userAgent string, isTest bool) *identityproviderv2.APIClient {
+func newIdentityProviderClient(url, userAgent string, unsafeTrace bool) *identityproviderv2.APIClient {
 	cfg := identityproviderv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return identityproviderv2.NewAPIClient(cfg)

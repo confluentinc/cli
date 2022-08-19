@@ -1,3 +1,4 @@
+`confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
 Error: required flag(s) "api-key", "api-secret" not set
 Usage:
   confluent ksql app create <name> [flags]
@@ -14,5 +15,6 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

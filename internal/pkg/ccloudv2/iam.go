@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
+func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = iamv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return iamv2.NewAPIClient(cfg)
