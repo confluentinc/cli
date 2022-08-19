@@ -21,6 +21,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
@@ -31,24 +32,19 @@ type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-type TopicConfigs struct {
-	Name  string `json:"name"`
-	Value string `json:"value"`
-}
-
 type Configs struct {
 	CleanupPolicy                  string `json:"cleanup.policy"`
 	DeleteRetentionMs              int    `json:"delete.retention.ms"`
 	ConfluentValueSchemaValidation string `json:"confluent.value.schema.validation"`
 }
 
-type ConfluentBinding struct {
+type confluentBinding struct {
 	Partitions int     `json:"x-partitions"`
 	Replicas   int     `json:"x-replicas"`
 	Configs    Configs `json:"x-configs"`
 }
 
-type OperationBinding struct {
+type operationBinding struct {
 	GroupId  string `json:"groupId"`
 	ClientId string `json:"clientId"`
 }
@@ -57,19 +53,15 @@ type Key struct {
 	Type string `json:"type"`
 }
 
-type MessageBinding struct {
+type messageBinding struct {
 	Key            interface{} `json:"key"`
 	BindingVersion string      `json:"bindingVersion"`
 }
 
 type bindings struct {
-	ChannelBindings  interface{}
-	MessageBinding   interface{}
-	OperationBinding interface{}
-}
-
-type SecurityConfigsSR struct {
-	BasicAuthInfo string `json:"basic.auth.user.info:"`
+	channelBindings  interface{}
+	messageBinding   interface{}
+	operationBinding interface{}
 }
 
 type flags struct {
@@ -121,9 +113,9 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddValueFormatFlag(cmd)
 	return c.Command
 }
 
@@ -132,8 +124,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	accountDetails := new(accountDetails)
-	err = c.getAccountDetails(accountDetails, flags)
+	accountDetails, err := c.getAccountDetails(flags)
 	if err != nil {
 		return err
 	}
@@ -154,8 +145,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				messages[strcase.ToCamel(topic.Name)+"Message"] = spec.Message{
-					OneOf1: &spec.MessageOneOf1{MessageEntity: buildMessageEntity(accountDetails)},
+				messages[toCamelCase(topic.Name)+"Message"] = spec.Message{
+					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
 				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat)
 				if err != nil {
@@ -176,14 +167,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	err := getSchemaDetails(details)
+	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
-	err = getTags(details)
+	err = details.getTags()
 	if err != nil {
 		log.CliLogger.Warnf("failed to get tags: %v", err)
 	}
@@ -206,32 +197,33 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	return nil
 }
 
-func (c *command) getAccountDetails(details *accountDetails, flags *flags) error {
+func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
+	details := new(accountDetails)
 	err := c.getClusterDetails(details)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	details.broker = getBroker(details.cluster)
+	details.broker = details.cluster.GetEndpoint()
 	err = c.getSchemaRegistry(details, flags)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	// Create Consumer
 	if flags.consumeExamples {
 		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
 		if err != nil {
-			return err
+			return nil, err
 		}
 		defer details.consumer.Close()
 	}
-	return nil
+	return details, nil
 }
 
-func getTags(details *accountDetails) error {
+func (details *accountDetails) getTags() error {
 	tags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "sr_schema", strconv.Itoa(int(details.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
@@ -286,9 +278,8 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	}
 	groupHandler := kafka.GroupHandler{
 		SrClient:   srClient,
-		Ctx:        *new(context.Context),
+		Ctx:        context.Background(),
 		Format:     valueFormat,
-		Out:        nil,
 		Subject:    topicName + "-value",
 		Properties: kafka.ConsumerProperties{},
 	}
@@ -330,7 +321,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 			}
 		}
 	}
-	channelBinding := ConfluentBinding{
+	channelBinding := confluentBinding{
 		Partitions: len(topicDescription.GetPartitions()),
 		Replicas:   len(topicDescription.GetPartitions()[0].Replicas),
 		Configs: Configs{
@@ -340,31 +331,30 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 		},
 	}
 	bindings := &bindings{
-		MessageBinding: MessageBinding{
+		messageBinding: messageBinding{
 			Key:            Key{Type: "string"},
 			BindingVersion: "0.1.0",
 		},
-		OperationBinding: OperationBinding{
+		operationBinding: operationBinding{
 			GroupId:  groupId,
 			ClientId: "client1",
 		},
 	}
 	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
-		bindings.ChannelBindings = channelBinding
+		bindings.channelBindings = channelBinding
 	}
 	return bindings, nil
 }
 
 func (c *command) getClusterDetails(details *accountDetails) error {
-	var ctx context.Context
-	kafkaClusterId := c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: kafkaClusterId}
-	// Get Kafka Cluster
-	cluster, err := c.Client.Kafka.Describe(ctx, req)
+	clusterConfig, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
-		return fmt.Errorf(`failed to describe cluster: %v`, err)
+		return fmt.Errorf(`failed to find Kafka cluster config: %v`, err)
 	}
-	clusterConfig, err := c.Config.Context().FindKafkaCluster(kafkaClusterId)
+	cluster, err := dynamicconfig.KafkaCluster(c.Config.Context())
+	if cluster.Endpoint == "" {
+		cluster.Endpoint = cluster.ApiEndpoint
+	}
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
@@ -382,11 +372,7 @@ func (c *command) getClusterDetails(details *accountDetails) error {
 	return nil
 }
 
-func getBroker(cluster *schedv1.KafkaCluster) string {
-	return strings.Split(cluster.GetEndpoint(), "//")[1]
-}
-
-func getSchemaDetails(details *accountDetails) error {
+func (details *accountDetails) getSchemaDetails() error {
 	log.CliLogger.Debugf("Adding operation: %s", details.channelDetails.currentTopic.Name)
 	schema, _, err := details.srClient.DefaultApi.GetSchemaByVersion(details.srContext, details.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
@@ -477,6 +463,9 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 	return nil
 }
 
+func toCamelCase(s string) string {
+	return strcase.ToCamel(s)
+}
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
@@ -527,7 +516,7 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func buildMessageEntity(details *accountDetails) *spec.MessageEntity {
+func (details *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
 	(*spec.MessageEntity).WithContentType(entityProducer, details.channelDetails.contentType)
 	if details.channelDetails.contentType == "application/avro" {
@@ -537,12 +526,12 @@ func buildMessageEntity(details *accountDetails) *spec.MessageEntity {
 	}
 	(*spec.MessageEntity).WithTags(entityProducer, details.channelDetails.tags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, strcase.ToCamel(details.channelDetails.currentTopic.Name)+"Message")
+	(*spec.MessageEntity).WithName(entityProducer, toCamelCase(details.channelDetails.currentTopic.Name)+"Message")
 	// Example
 	if details.channelDetails.example != nil {
 		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &details.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &details.channelDetails.bindings.MessageBinding})
+	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &details.channelDetails.bindings.messageBinding})
 	(*spec.MessageEntity).WithPayload(entityProducer, details.channelDetails.unmarshalledSchema)
 	return entityProducer
 }
@@ -553,14 +542,14 @@ func addChannel(reflector asyncapi.Reflector, topicName string, bindings binding
 		BaseChannelItem: &spec.ChannelItem{
 			MapOfAnything: mapOfMessageCompat,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(topicName) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + strcase.ToCamel(topicName) + "Message"}},
-				Bindings: &spec.OperationBindingsObject{Kafka: &bindings.OperationBinding},
+				ID:       toCamelCase(topicName) + "Subscribe",
+				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + toCamelCase(topicName) + "Message"}},
+				Bindings: &spec.OperationBindingsObject{Kafka: &bindings.operationBinding},
 			},
 		},
 	}
-	if bindings.ChannelBindings != nil {
-		channel.BaseChannelItem.Bindings = &spec.ChannelBindingsObject{Kafka: &bindings.ChannelBindings}
+	if bindings.channelBindings != nil {
+		channel.BaseChannelItem.Bindings = &spec.ChannelBindingsObject{Kafka: &bindings.channelBindings}
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err

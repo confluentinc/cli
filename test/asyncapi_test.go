@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
 	testfile1 := strings.ReplaceAll(string(testfile), "\r", "")
-	index1 := strings.Index(string(file), "prod-schemaRegistry:")
+	index1 := strings.Index(string(file), "prod-broker:")
 	index2 := strings.Index(string(file), "confluentSchemaRegistry")
 	file1 := string(file[:index1]) + string(file[index2:])
 	file1 = strings.ReplaceAll(file1, "\r", "")

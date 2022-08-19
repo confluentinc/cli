@@ -28,10 +28,11 @@ const BackwardCompatibilityLevel = "BACKWARD"
 
 var details = &accountDetails{
 	cluster: &schedv1.KafkaCluster{
-		Id:        "lkc-asyncapi",
-		Name:      "AsyncAPI Cluster",
-		Endpoint:  "http://kafka-endpoint",
-		AccountId: "env-asyncapi",
+		Id:          "lkc-asyncapi",
+		Name:        "AsyncAPI Cluster",
+		Endpoint:    "http://kafka-endpoint",
+		ApiEndpoint: "http://kafka-endpoint",
+		AccountId:   "env-asyncapi",
 	},
 	srClient: &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
@@ -242,10 +243,6 @@ func TestGetClusterDetails(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestGetBroker(t *testing.T) {
-	require.Equal(t, "kafka-endpoint", getBroker(details.cluster))
-}
-
 func TestGetSchemaRegistry(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
@@ -263,7 +260,7 @@ func TestGetSchemaDetails(t *testing.T) {
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
-	err = getSchemaDetails(details)
+	err = details.getSchemaDetails()
 	require.NoError(t, err)
 }
 
@@ -294,11 +291,15 @@ func TestGetTags(t *testing.T) {
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	details.channelDetails.schema = &schema
-	err = getTags(details)
+	err = details.getTags()
 	require.NoError(t, err)
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
 	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
 	require.NoError(t, err)
+}
+
+func TestToCamelCase(t *testing.T) {
+	require.Equal(t, "TopicName", toCamelCase("topic name"))
 }

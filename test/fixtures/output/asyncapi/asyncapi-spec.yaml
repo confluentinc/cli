@@ -3,13 +3,6 @@ info:
 title:APIDocumentforConfluentCluster
 version:1.0.0
 servers:
-prod-broker:
-url:kafka-endpoint
-description:ConfluentKafkainstance.
-protocol:kafka
-protocolVersion:2.6.0
-security:
--confluentBroker:[]
 confluentSchemaRegistry:[]
 channels:
 topic1:
