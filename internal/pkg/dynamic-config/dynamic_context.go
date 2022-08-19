@@ -124,17 +124,12 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 		}
 	}
 
-	if d.Client == nil {
-		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
-	}
-
 	// Resolve cluster details if not found locally.
-	cluster, err := d.FetchCluster(clusterId)
+	config, err := d.FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	config := v1.NewKafkaClusterConfig(cluster)
 	d.KafkaClusterContext.AddKafkaClusterConfig(config)
 	err = d.Save()
 

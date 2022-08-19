@@ -177,12 +177,13 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
 	}
-	_, isKafkaNotFound := err.(*KafkaClusterNotFoundError)
-	if isResourceNotFoundError(err) || isKafkaNotFound {
+
+	if _, ok := err.(*KafkaClusterNotFoundError); ok || isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
 		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, resourceId)
 		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
+
 	return err
 }
 
@@ -288,19 +289,8 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 	return CatchV2ErrorWithResponse(err, r)
 }
 
-/*
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error listing schema-registry cluster: resource not found
-Error: 1 error occurred:
-	* error describing ksql cluster: resource not found
-*/
 func isResourceNotFoundError(err error) bool {
-	resourceNotFoundRegex := regexp.MustCompile(`error .* cluster: resource not found`)
-	return resourceNotFoundRegex.MatchString(err.Error())
+	return strings.Contains(err.Error(), "resource not found")
 }
 
 /*
