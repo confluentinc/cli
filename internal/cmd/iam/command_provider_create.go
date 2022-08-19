@@ -62,7 +62,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	identityProvider := &identityProvider{

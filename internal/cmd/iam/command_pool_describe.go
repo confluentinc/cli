@@ -47,7 +47,7 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 
 	identityPoolProfile, httpResp, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	describeIdentityPool := &identityPool{

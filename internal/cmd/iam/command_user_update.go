@@ -39,7 +39,7 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 
 	_, httpResp, err := c.V2Client.UpdateIamUser(resourceId, update)
 	if err != nil {
-		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
+		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, errors.CatchCCloudV2Error(err, httpResp))
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)

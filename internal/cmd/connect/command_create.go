@@ -58,7 +58,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	connectorInfo, httpResp, err := c.V2Client.CreateConnector(c.EnvironmentId(), kafkaCluster.ID, connectConfig)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)

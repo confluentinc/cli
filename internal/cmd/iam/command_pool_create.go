@@ -69,7 +69,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	identityPool := &identityPool{
