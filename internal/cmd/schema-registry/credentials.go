@@ -64,7 +64,13 @@ func GetSrApiClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken 
 
 func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
-	srConfig.Debug = log.CliLogger.Level >= log.DEBUG
+
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	srConfig.Debug = unsafeTrace
 
 	ctx := cfg.Context()
 
@@ -182,6 +188,13 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 
 	srConfig.BasePath = endpoint
 	srConfig.UserAgent = ver.UserAgent
+
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	srConfig.Debug = unsafeTrace
 	srConfig.HTTPClient, err = utils.GetCAClient(caCertPath)
 	if err != nil {
 		return nil, nil, err
