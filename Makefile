@@ -116,7 +116,6 @@ run:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	cat $(HOME)/.ssh/id_rsa && \
 	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
