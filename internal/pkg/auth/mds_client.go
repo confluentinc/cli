@@ -10,14 +10,14 @@ import (
 
 // Made it an interface so that we can inject MDS client for testing through GetMDSClient
 type MDSClientManager interface {
-	GetMDSClient(url string, caCertPath string) (*mds.APIClient, error)
+	GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mds.APIClient, error)
 }
 
 type MDSClientManagerImpl struct{}
 
-func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string) (*mds.APIClient, error) {
+func (m *MDSClientManagerImpl) GetMDSClient(url, caCertPath string, unsafeTrace bool) (*mds.APIClient, error) {
 	mdsConfig := mds.NewConfiguration()
-	mdsConfig.Debug = log.CliLogger.Level == log.DEBUG || log.CliLogger.Level == log.TRACE
+	mdsConfig.Debug = unsafeTrace
 
 	if caCertPath != "" {
 		log.CliLogger.Debugf("CA certificate path was specified.  Note, the set of supported ciphers for the CLI can be found at https://golang.org/pkg/crypto/tls/#pkg-constants")

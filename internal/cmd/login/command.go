@@ -18,10 +18,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 type command struct {
@@ -254,7 +254,12 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		}
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
