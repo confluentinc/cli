@@ -222,7 +222,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
-			err := r.ValidateToken(command.Config)
+			err := r.ValidateToken(command.Config, unsafeTrace)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
@@ -324,7 +324,12 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return setContextErr
 		}
 
-		if err := r.ValidateToken(command.Config); err != nil {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+
+		if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
 			return err
 		}
 
@@ -425,7 +430,13 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Client = ccloudClient
 	cliCmd.Context.Client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
-	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version, unsafeTrace)
 
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
@@ -445,12 +456,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
-			if err != nil {
-				return nil, err
-			}
-
-			client, err := createKafkaRESTClient(restEndpoint)
+			client, err := createKafkaRESTClient(restEndpoint, unsafeTrace)
 			if err != nil {
 				return nil, err
 			}
@@ -577,7 +583,12 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return setContextErr
 		}
 
-		return r.ValidateToken(command.Config)
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+
+		return r.ValidateToken(command.Config, unsafeTrace)
 	}
 }
 
@@ -588,7 +599,13 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
-	r.setConfluentClient(cliCommand)
+
+	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	r.setConfluentClient(cliCommand, unsafeTrace)
 	return nil
 }
 
@@ -624,7 +641,12 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 		return "", nil, err
 	}
 
-	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return "", nil, err
+	}
+
+	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, unsafeTrace)
 	if err != nil {
 		return "", nil, err
 	}
@@ -636,17 +658,15 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	return token, credentials, err
 }
 
-func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
+func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace bool) {
 	ctx := cliCmd.Config.Context()
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version, unsafeTrace)
 }
 
-func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mds.APIClient {
+func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.Level >= log.DEBUG {
-		mdsConfig.Debug = true
-	}
+	mdsConfig.Debug = unsafeTrace
 	if ctx == nil {
 		return mds.NewAPIClient(mdsConfig)
 	}
@@ -678,6 +698,13 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := kafkarestv3.NewConfiguration()
+
+			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+			cfg.Debug = unsafeTrace
+
 			restFlags, err := resolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
@@ -799,16 +826,16 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		case v1.APIKey:
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
-			if err := r.ValidateToken(command.Config); err != nil {
+			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return err
+			}
+
+			if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
 				return err
 			}
 
 			client, err := r.createCCloudClient(ctx, command.Version)
-			if err != nil {
-				return err
-			}
-		
-			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 			if err != nil {
 				return err
 			}
@@ -860,7 +887,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 	}
 }
 
-func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
+func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace bool) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -874,24 +901,24 @@ func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx, unsafeTrace)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx, unsafeTrace)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx, unsafeTrace)
 	} else {
-		return r.updateToken(err, ctx)
+		return r.updateToken(err, ctx, unsafeTrace)
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
 	if ctx == nil {
 		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
 	log.CliLogger.Debug("Updating auth tokens")
-	token, refreshToken, err := r.getUpdatedAuthToken(ctx)
+	token, refreshToken, err := r.getUpdatedAuthToken(ctx, unsafeTrace)
 	if err != nil || token == "" {
 		log.CliLogger.Debug("Failed to update auth tokens")
 		return tokenError
@@ -903,7 +930,7 @@ func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext) (string, string, error) {
+func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.NetrcMachineName,
@@ -921,7 +948,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext) (string,
 		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath)
+		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}
@@ -981,10 +1008,10 @@ func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	}
 }
 
-func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
+func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
-	mdsv2Config.Debug = log.CliLogger.Level >= log.DEBUG
+	mdsv2Config.Debug = unsafeTrace
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
@@ -1005,10 +1032,10 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) (*kafkarestv3.APIClient, error) {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
-	cfg.Debug = log.CliLogger.Level >= log.DEBUG
+	cfg.Debug = unsafeTrace
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
 	return kafkarestv3.NewAPIClient(cfg), nil
 }
