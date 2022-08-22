@@ -9,11 +9,11 @@ build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
 	CC=gcc CXX=g++ make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-	ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
+    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
 		CC=gcc CXX=g++ TAGS=musl make cli-builder
-	else # build for glibc Linux
+    else # build for glibc Linux
 		CC=gcc CXX=g++ make cli-builder
-	endif
+    endif
 else # build for Darwin amd64 or arm64 from a matching host
 	make cli-builder 
 endif
@@ -25,30 +25,36 @@ ifeq ($(GOOS),windows)
 else ifeq ($(GOOS),linux) 
 	CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
 else # build target is Darwin
-	ifeq ($(GOARCH),arm64) # build target is arm64
-		ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
+    ifeq ($(GOARCH),arm64) # build target is arm64
+        ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
 			make build-darwin-arm64
-		else # build host is arm64
+        else # build host is arm64
 			CGO_ENABLED=1 make cli-builder
-		endif
-	else # build target is amd64
-		ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
+        endif
+    else # build target is amd64
+        ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
 			CGO_ENABLED=1 make cli-builder
-		else # build host is arm64
-			# TODO!
-		endif
-	endif
+        else # build host is arm64
+			make build-darwin-amd64
+        endif
+    endif
 endif
 
 .PHONY: build-darwin-arm64
 build-darwin-arm64:
 	make switch-librdkafka-arm64
-	CGO_ENABLED=1 make cli-builder || true 
+	CGO_ENABLED=1 make cli-builder || true
 	make restore-librdkafka-amd64
+
+.PHONY: build-darwin-amd64
+build-darwin-amd64:
+	make switch-librdkafka-amd64
+	CGO_ENABLED=1 make cli-builder || true
+	make restore-librdkafka-arm64
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) GOPATH=$(GOPATH) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
