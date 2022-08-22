@@ -33,13 +33,6 @@ docs: clean-docs
 
 .PHONY: publish-docs
 publish-docs: docs clone-docs-repos
-	echo -n "Publish docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then \
-		CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-docs-internal; \
-    fi
-
-.PHONY: publish-docs-internal
-publish-docs-internal:
 	@cd $(CONFLUENT_DOCS_DIR); \
 	git checkout -b cli-$(VERSION) origin/$(DOCS_BASE_BRANCH) || exit 1; \
 	rm -rf command-reference; \
