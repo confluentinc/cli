@@ -252,7 +252,12 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		}
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
