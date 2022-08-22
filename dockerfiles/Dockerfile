@@ -13,7 +13,6 @@ RUN adduser \
     --disabled-password \
     --gecos "" \
     --ingroup "$USER" \
-    --no-create-home \
     --uid "$UID" \
     "$USER"
 
@@ -25,6 +24,7 @@ RUN apk update --no-cache && \
 RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
 
 RUN chmod +x /bin/confluent
+RUN chown $USER:$USER /bin/confluent
 
 # This symbolic link exists for backwards compatibility reasons
 RUN ln -s /bin/confluent /confluent
