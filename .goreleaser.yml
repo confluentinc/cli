@@ -77,7 +77,10 @@ builds:
     goarch:
       - amd64
     hooks:
+      pre:
+        cmd: make switch-librdkafka-amd64
       post:
+        - cmd: make restore-librdkafka-arm64
         - cmd: make download-licenses
           env:
             - LICENSE_BIN=confluent
