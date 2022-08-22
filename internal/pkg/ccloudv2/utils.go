@@ -37,9 +37,9 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func newRetryableHttpClient() *http.Client {
+func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
-	client.Logger = new(plog.LeveledLogger)
+	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	return client.StandardClient()
 }
 
@@ -53,18 +53,6 @@ func getServerUrl(baseURL string, isTest bool) string {
 		return "https://api.stag.cpdev.cloud"
 	}
 	return "https://api.confluent.cloud"
-}
-
-func getMetricsServerUrl(baseURL string, isTest bool) string {
-	if isTest {
-		return testserver.TestV2CloudURL.String()
-	}
-	if strings.Contains(baseURL, "devel") {
-		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
-	} else if strings.Contains(baseURL, "stag") {
-		return "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
-	}
-	return "https://api.telemetry.confluent.cloud"
 }
 
 func extractApiKeysNextPagePageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
