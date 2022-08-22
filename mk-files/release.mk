@@ -50,14 +50,29 @@ switch-librdkafka-arm64:
 	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
 		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
 		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
-		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+		sudo cp lib/librdkafka_darwin_arm64.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+	fi
+
+.PHONY: switch-librdkafka-amd64
+switch-librdkafka-amd64:
+	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_arm64.a ]; then \
+		echo "Attempting to replace librdkafka with Darwin/amd64 version (sudo required)" ;\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_arm64.a ;\
+		sudo cp lib/librdkafka_darwin_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
 	fi
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
 	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
         echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
-		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+	fi
+
+.PHONY: restore-librdkafka-arm64
+restore-librdkafka-arm64:
+	@if [ -f $(RDKAFKA_PATH)/librdkafka_arm64.a ]; then \
+        echo "Attempting to restore librdkafka to Darwin/arm64 version (sudo required)";\
+		sudo mv $(RDKAFKA_PATH)/librdkafka_arm64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
 	fi
 
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
