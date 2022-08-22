@@ -221,7 +221,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
-			err := r.ValidateToken(cmd, command.Config)
+			err := r.ValidateToken(command.Config)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
@@ -304,7 +304,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 					netrcMachineName = ctx.NetrcMachineName
 				}
 
-				if err := r.ccloudAutoLogin(cmd, netrcMachineName); err != nil {
+				if err := r.ccloudAutoLogin(netrcMachineName); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
@@ -323,7 +323,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return setContextErr
 		}
 
-		if err := r.ValidateToken(cmd, command.Config); err != nil {
+		if err := r.ValidateToken(command.Config); err != nil {
 			return err
 		}
 
@@ -364,9 +364,9 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 	return nil
 }
 
-func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
+func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	credentials, err := r.getCCloudCredentials(cmd, netrcMachineName, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -389,7 +389,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
@@ -397,7 +397,7 @@ func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgR
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
@@ -576,7 +576,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return setContextErr
 		}
 
-		return r.ValidateToken(cmd, command.Config)
+		return r.ValidateToken(command.Config)
 	}
 }
 
@@ -798,7 +798,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		case v1.APIKey:
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
-			if err := r.ValidateToken(cmd, command.Config); err != nil {
+			if err := r.ValidateToken(command.Config); err != nil {
 				return err
 			}
 
@@ -859,7 +859,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 	}
 }
 
-func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamicconfig.DynamicConfig) error {
+func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -873,24 +873,24 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamicconfig.Dynamic
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx)
 	} else {
-		return r.updateToken(err, cmd, ctx)
+		return r.updateToken(err, ctx)
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext) error {
 	if ctx == nil {
 		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
 	log.CliLogger.Debug("Updating auth tokens")
-	token, refreshToken, err := r.getUpdatedAuthToken(cmd, ctx)
+	token, refreshToken, err := r.getUpdatedAuthToken(ctx)
 	if err != nil || token == "" {
 		log.CliLogger.Debug("Failed to update auth tokens")
 		return tokenError
@@ -902,14 +902,14 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicc
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, string, error) {
+func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.NetrcMachineName,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(params),
 	)
 	if err != nil {
 		return "", "", err

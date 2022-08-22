@@ -156,7 +156,6 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			wantErrCode: 1,
 			useKafka:    "lkc-create-topic",
 			authKafka:   "true",
-			env:         []string{"XX_CCLOUD_USE_KAFKA_REST=true"},
 		},
 		{
 			name:        "error if no api key used",
