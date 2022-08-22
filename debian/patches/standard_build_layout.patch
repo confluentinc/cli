@@ -1,4 +1,4 @@
---- cli/Makefile	2022-08-22 00:49:56.000000000 -0500
+--- cli/Makefile	2022-08-22 12:40:53.000000000 -0500
 +++ debian/Makefile	2022-06-15 00:05:26.000000000 -0500
 @@ -1,269 +1,130 @@
 -SHELL           := /bin/bash
@@ -111,14 +111,14 @@
 -	go get github.com/goreleaser/goreleaser@v1.4.1
 -
 -ifeq ($(shell uname),Darwin)
--	SHASUM ?= gsha256sum
+-    SHASUM ?= gsha256sum
 -else ifneq (,$(findstring NT,$(shell uname)))
 -# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
--	SHASUM ?= CertUtil SHA256 -hashfile
+-    SHASUM ?= CertUtil SHA256 -hashfile
 -else ifneq (,$(findstring Windows,$(shell systeminfo)))
--	SHASUM ?= CertUtil SHA256 -hashfile
+-    SHASUM ?= CertUtil SHA256 -hashfile
 -else
--	SHASUM ?= sha256sum
+-    SHASUM ?= sha256sum
 -endif
 +APPLY_PATCHES?=yes
  

@@ -99,14 +99,14 @@ jenkins-deps:
 	go get github.com/goreleaser/goreleaser@v1.4.1
 
 ifeq ($(shell uname),Darwin)
-	SHASUM ?= gsha256sum
+    SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-	SHASUM ?= CertUtil SHA256 -hashfile
+    SHASUM ?= CertUtil SHA256 -hashfile
 else ifneq (,$(findstring Windows,$(shell systeminfo)))
-	SHASUM ?= CertUtil SHA256 -hashfile
+    SHASUM ?= CertUtil SHA256 -hashfile
 else
-	SHASUM ?= sha256sum
+    SHASUM ?= sha256sum
 endif
 
 show-args:
