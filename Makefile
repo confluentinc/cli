@@ -15,7 +15,7 @@ else ifneq (,$(findstring Linux,$(shell uname)))
 		CC=gcc CXX=g++ make cli-builder
     endif
 else # build for Darwin amd64 or arm64 from a matching host
-	make cli-builder 
+	make cli-builder
 endif
 
 .PHONY: cross-build # cross-compilation; requires special care due to confluent-kafka-go's librdkafka (C) dependency
