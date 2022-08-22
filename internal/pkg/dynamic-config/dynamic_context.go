@@ -114,6 +114,11 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
+	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
+	if d.Client == nil || d.V2Client == nil {
+		return nil, nil
+	}
+
 	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil {
 		if clusterId == "anonymous-id" {
 			return config, nil
