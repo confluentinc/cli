@@ -135,6 +135,7 @@ func newCmd() (*command, error) {
 	c.State = cfg.Context().State
 	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
+	c.Context = c.Config.Context()
 	c.Client = &ccloud.Client{
 		Account: &ccsdkmock.Account{
 			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
@@ -300,6 +301,6 @@ func TestGetMessageCompatibility(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestToCamelCase(t *testing.T) {
-	require.Equal(t, "TopicName", toCamelCase("topic name"))
+func TestMsgName(t *testing.T) {
+	require.Equal(t, "TopicNameMessage", msgName("topic name"))
 }

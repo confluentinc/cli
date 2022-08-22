@@ -76,31 +76,6 @@ type flags struct {
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset int = 5
 
-type channelDetails struct {
-	currentTopic       *schedv1.TopicDescription
-	currentSubject     string
-	contentType        string
-	schema             *schemaregistry.Schema
-	unmarshalledSchema map[string]interface{}
-	mapOfMessageCompat map[string]interface{}
-	tags               []spec.Tag
-	bindings           *bindings
-	example            interface{}
-}
-
-type accountDetails struct {
-	cluster        *schedv1.KafkaCluster
-	topics         []*schedv1.TopicDescription
-	clusterCreds   *v1.APIKeyPair
-	consumer       *ckgo.Consumer
-	broker         string
-	srCluster      *v1.SchemaRegistryCluster
-	srClient       *schemaregistry.APIClient
-	srContext      context.Context
-	subjects       []string
-	channelDetails channelDetails
-}
-
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
@@ -145,7 +120,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				messages[toCamelCase(topic.Name)+"Message"] = spec.Message{
+				messages[msgName(topic.Name)] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
 				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat)
@@ -223,8 +198,8 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	return details, nil
 }
 
-func (details *accountDetails) getTags() error {
-	tags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "sr_schema", strconv.Itoa(int(details.channelDetails.schema.Id)))
+func (d *accountDetails) getTags() error {
+	tags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
@@ -232,7 +207,7 @@ func (details *accountDetails) getTags() error {
 	for _, tag := range tags {
 		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tag.TypeName})
 	}
-	details.channelDetails.tags = tagsInSpec
+	d.channelDetails.tags = tagsInSpec
 	return nil
 }
 
@@ -347,11 +322,11 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 }
 
 func (c *command) getClusterDetails(details *accountDetails) error {
-	clusterConfig, err := c.Config.Context().GetKafkaClusterForCommand()
+	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster config: %v`, err)
 	}
-	cluster, err := dynamicconfig.KafkaCluster(c.Config.Context())
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if cluster.Endpoint == "" {
 		cluster.Endpoint = cluster.ApiEndpoint
 	}
@@ -372,20 +347,20 @@ func (c *command) getClusterDetails(details *accountDetails) error {
 	return nil
 }
 
-func (details *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", details.channelDetails.currentTopic.Name)
-	schema, _, err := details.srClient.DefaultApi.GetSchemaByVersion(details.srContext, details.channelDetails.currentSubject, "latest", nil)
+func (d *accountDetails) getSchemaDetails() error {
+	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
+	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
 	}
 	var unmarshalledSchema map[string]interface{}
 	if schema.SchemaType == "" {
-		details.channelDetails.contentType = "application/avro"
+		d.channelDetails.contentType = "application/avro"
 	} else if schema.SchemaType == "JSON" {
-		details.channelDetails.contentType = "application/json"
+		d.channelDetails.contentType = "application/json"
 	} else if schema.SchemaType == "PROTOBUF" {
 		log.CliLogger.Warn("Protobuf not supported.")
-		details.channelDetails.contentType = "PROTOBUF"
+		d.channelDetails.contentType = "PROTOBUF"
 		return nil
 	}
 	// JSON or Avro Format
@@ -394,8 +369,8 @@ func (details *accountDetails) getSchemaDetails() error {
 		return fmt.Errorf("failed to unmarshal schema: %v", err)
 
 	}
-	details.channelDetails.unmarshalledSchema = unmarshalledSchema
-	details.channelDetails.schema = &schema
+	d.channelDetails.unmarshalledSchema = unmarshalledSchema
+	d.channelDetails.schema = &schema
 	return nil
 }
 
@@ -463,8 +438,8 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 	return nil
 }
 
-func toCamelCase(s string) string {
-	return strcase.ToCamel(s)
+func msgName(s string) string {
+	return strcase.ToCamel(s) + "Message"
 }
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
 	return asyncapi.Reflector{
@@ -516,23 +491,23 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func (details *accountDetails) buildMessageEntity() *spec.MessageEntity {
+func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, details.channelDetails.contentType)
-	if details.channelDetails.contentType == "application/avro" {
+	(*spec.MessageEntity).WithContentType(entityProducer, d.channelDetails.contentType)
+	if d.channelDetails.contentType == "application/avro" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
-	} else if details.channelDetails.contentType == "application/json" {
+	} else if d.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, details.channelDetails.tags...)
+	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.tags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, toCamelCase(details.channelDetails.currentTopic.Name)+"Message")
+	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.Name))
 	// Example
-	if details.channelDetails.example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &details.channelDetails.example})
+	if d.channelDetails.example != nil {
+		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &details.channelDetails.bindings.messageBinding})
-	(*spec.MessageEntity).WithPayload(entityProducer, details.channelDetails.unmarshalledSchema)
+	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &d.channelDetails.bindings.messageBinding})
+	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
 	return entityProducer
 }
 
@@ -542,8 +517,8 @@ func addChannel(reflector asyncapi.Reflector, topicName string, bindings binding
 		BaseChannelItem: &spec.ChannelItem{
 			MapOfAnything: mapOfMessageCompat,
 			Subscribe: &spec.Operation{
-				ID:       toCamelCase(topicName) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + toCamelCase(topicName) + "Message"}},
+				ID:       strcase.ToCamel(topicName) + "Subscribe",
+				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(topicName)}},
 				Bindings: &spec.OperationBindingsObject{Kafka: &bindings.operationBinding},
 			},
 		},
