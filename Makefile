@@ -9,33 +9,35 @@ build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
 	CC=gcc CXX=g++ make cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
+	ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
 		CC=gcc CXX=g++ TAGS=musl make cli-builder
-    else # build for glibc Linux
+	else # build for glibc Linux
 		CC=gcc CXX=g++ make cli-builder
-    endif
-else
-    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
-		make cli-builder
-    else # build for Darwin/arm64
-		make switch-librdkafka-arm64
-		make cli-builder || true 
-		make restore-librdkafka-amd64
-    endif
+	endif
+else # build for Darwin amd64 or arm64 from a matching host
+	make cli-builder 
 endif
 
-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+.PHONY: cross-build # cross-compilation; requires special care due to confluent-kafka-go's librdkafka (C) dependency
 cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
-	make build-darwin-arm64
-else # build for amd64 arch
-    ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
-    else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else # build for Darwin/amd64
-		CGO_ENABLED=1 make cli-builder
-    endif
+ifeq ($(GOOS),windows)
+	CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+else ifeq ($(GOOS),linux) 
+	CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+else # build target is Darwin
+	ifeq ($(GOARCH),arm64) # build target is arm64
+		ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
+			make build-darwin-arm64
+		else # build host is arm64
+			CGO_ENABLED=1 make cli-builder
+		endif
+	else # build target is amd64
+		ifneq (,$(findstring x86_64,$(shell uname -m))) # build host is amd64
+			CGO_ENABLED=1 make cli-builder
+		else # build host is arm64
+			# TODO!
+		endif
+	endif
 endif
 
 .PHONY: build-darwin-arm64
@@ -91,14 +93,14 @@ jenkins-deps:
 	go get github.com/goreleaser/goreleaser@v1.4.1
 
 ifeq ($(shell uname),Darwin)
-    SHASUM ?= gsha256sum
+	SHASUM ?= gsha256sum
 else ifneq (,$(findstring NT,$(shell uname)))
 # TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-    SHASUM ?= CertUtil SHA256 -hashfile
+	SHASUM ?= CertUtil SHA256 -hashfile
 else ifneq (,$(findstring Windows,$(shell systeminfo)))
-    SHASUM ?= CertUtil SHA256 -hashfile
+	SHASUM ?= CertUtil SHA256 -hashfile
 else
-    SHASUM ?= sha256sum
+	SHASUM ?= sha256sum
 endif
 
 show-args:
