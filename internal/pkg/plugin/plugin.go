@@ -25,6 +25,8 @@ type pluginInfo struct {
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath() (map[string][]string, error) {
+	log.CliLogger.Debug("Recursively searching $PATH for plugins.")
+
 	pluginMap := make(map[string][]string)
 	re := regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+(\.[a-z]+)?$`)
 	delimiter := ":"
