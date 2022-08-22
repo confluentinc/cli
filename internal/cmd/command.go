@@ -108,7 +108,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version) *cobra.Command {
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
-	cmd.AddCommand(plugin.New(prerunner))
+	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
@@ -126,7 +126,7 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version) *cobra.Command {
 
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
+		if plugin, err := pplugin.FindPlugin(cmd, args, cfg); err != nil {
 			return err
 		} else if plugin != nil {
 			return pplugin.ExecPlugin(plugin)
