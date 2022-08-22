@@ -81,8 +81,8 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 		kafkaRestExists := true
 		for i, binding := range bindings {
-			data := getCreateAclRequestData(binding)
-			httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data)
+			opts := aclBindingToClustersClusterIdAclsPostOpts(binding)
+			httpResp, err := kafkaREST.Client.ACLV3Api.CreateKafkaAcls(kafkaREST.Context, kafkaClusterConfig.ID, &opts)
 			if err != nil && httpResp == nil {
 				if i == 0 {
 					// assume Kafka REST is not available, fallback to KafkaAPI
@@ -91,7 +91,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if err != nil {
@@ -99,7 +99,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
 				}
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
