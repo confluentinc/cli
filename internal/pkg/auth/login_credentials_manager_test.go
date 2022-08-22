@@ -257,7 +257,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromEn
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCredentialsFromNetrc() {
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   false,
 	})()
@@ -266,7 +266,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCred
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudSSOGetCCloudCredentialsFromNetrc() {
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   true,
 	})()
@@ -275,7 +275,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestCCloudSSOGetCCloudCredentials
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestConfluentGetCredentialsFromNetrc() {
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 		IsCloud: false,
 		IsSSO:   false,
 		URL:     "http://hi",
@@ -378,7 +378,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	loginCredentialsManager := NewLoginCredentialsManager(noCredentialsNetrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),
@@ -391,7 +391,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),
@@ -405,7 +405,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
-		loginCredentialsManager.GetCredentialsFromNetrc(&cobra.Command{}, netrc.NetrcMachineParams{
+		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 			IsCloud: true,
 			IsSSO:   false,
 		}),

@@ -86,6 +86,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
+			"azure-subscription-id",
 			"destination-bootstrap-server",
 			"destination-cluster-id",
 			"destination-api-key",
@@ -102,6 +103,8 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
+			"aws-account-id",
+			"azure-subscription-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
@@ -216,6 +219,7 @@ var vocabWords = []string{
 	"iam",
 	"json",
 	"jsonschema",
+	"jwks",
 	"kafka",
 	"ksql",
 	"lifecycle",
@@ -244,6 +248,7 @@ var vocabWords = []string{
 	"txt",
 	"unregister",
 	"url",
+	"uri",
 	"us",
 	"v2",
 	"vpc",
@@ -301,7 +306,8 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version), true)
+		cfg.IsTest = true
+		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version))
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1
