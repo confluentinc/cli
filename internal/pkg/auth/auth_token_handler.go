@@ -161,7 +161,7 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, 
 		return err
 	}
 	if getMeReply.User.Email != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentials, loginEmail, getMeReply.User.Email), errors.SSOCredentialsDoNotMatchSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.User.Email), errors.SSOCredentialsDoNotMatchSuggestions)
 	}
 	return nil
 }

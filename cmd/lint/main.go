@@ -23,15 +23,17 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommandContains("local services"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("ksql app")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
 	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
+		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
-		linter.ExcludeCommandContains("kafka client-config create")),
+		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -84,6 +86,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
+			"azure-subscription-id",
 			"destination-bootstrap-server",
 			"destination-cluster-id",
 			"destination-api-key",
@@ -100,6 +103,8 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
+			"aws-account-id",
+			"azure-subscription-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
@@ -167,6 +172,7 @@ var properNouns = []string{
 	"Kotlin",
 	"Ktor",
 	"Node.js",
+	"PATH",
 	"Python",
 	"Ruby",
 	"Rust",
@@ -210,6 +216,7 @@ var vocabWords = []string{
 	"iam",
 	"json",
 	"jsonschema",
+	"jwks",
 	"kafka",
 	"ksql",
 	"lifecycle",
@@ -238,6 +245,7 @@ var vocabWords = []string{
 	"txt",
 	"unregister",
 	"url",
+	"uri",
 	"us",
 	"v2",
 	"vpc",
@@ -295,7 +303,8 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version), true)
+		cfg.IsTest = true
+		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version))
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1

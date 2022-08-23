@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/dghubble/sling"
@@ -25,8 +24,6 @@ type ksqlCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-// Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
-// in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
 	Id                    string `json:"id,omitempty"`
 	Name                  string `json:"name,omitempty"`
@@ -54,33 +51,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 // Some helper functions for the ksql app/cluster commands
-
-func (c *ksqlCommand) convertV1ToSchedV2Subset(cluster *schedv1.KSQLCluster) *ksql.KsqldbcmV2Cluster {
-	out := ksql.KsqldbcmV2Cluster{
-		Id: &cluster.Id,
-		Spec: &ksql.KsqldbcmV2ClusterSpec{
-			DisplayName: &cluster.Name,
-			KafkaCluster: &ksql.ObjectReference{
-				Id:          cluster.KafkaClusterId,
-				Environment: &cluster.AccountId,
-			},
-			Environment: &ksql.ObjectReference{
-				Id: cluster.AccountId,
-			},
-		},
-		Status: &ksql.KsqldbcmV2ClusterStatus{
-			HttpEndpoint: &cluster.Endpoint,
-			Phase:        cluster.Status.String(),
-			TopicPrefix:  &cluster.OutputTopicPrefix,
-			Storage: cluster.Storage,
-		},
-	}
-	if cluster.DetailedProcessingLog != nil {
-		out.Spec.UseDetailedProcessingLog = &cluster.DetailedProcessingLog.Value
-	}
-
-	return &out
-}
 
 func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
 	status := cluster.Status.Phase

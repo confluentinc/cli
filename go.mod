@@ -18,7 +18,7 @@ require (
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.1
+	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.2
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
@@ -83,6 +83,7 @@ require (
 )
 
 require github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.7
+require github.com/mitchellh/go-homedir v1.1.0
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
@@ -297,7 +298,6 @@ require (
 	github.com/mgechev/dots v0.0.0-20210922191527-e955255bf517 // indirect
 	github.com/mgechev/revive v1.1.3 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
-	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/go-spdx v0.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect

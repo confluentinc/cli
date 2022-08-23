@@ -29,8 +29,6 @@ import (
 const (
 	ksqlClusterID         = "lksqlc-12345"
 	outputTopicPrefix     = "pksqlc-abcde"
-	keyString             = "key"
-	keySecretString       = "secret"
 	serviceAcctID         = int32(123)
 	serviceAcctResourceID = "sa-12345"
 	expectedACLs          = `  Principal | Permission |    Operation     |  Resource Type   |        Resource Name         | Pattern Type  
@@ -298,82 +296,15 @@ func (suite *KSQLTestSuite) testShouldNotConfigureOnDryRun(isApp bool) {
 	req.Equal(expectedACLs, buf.String())
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKey() {
-	suite.testCreateKSQLWithApiKey(true)
+func (suite *KSQLTestSuite) TestCreateKSQLAppWithMissingCredentialIdentity() {
+	suite.testCreateKSQLWithMissingCredentialIdentity(true)
 }
 
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKey() {
-	suite.testCreateKSQLWithApiKey(false)
+func (suite *KSQLTestSuite) TestCreateKSQLClusterWithMissingCredentialIdentity() {
+	suite.testCreateKSQLWithMissingCredentialIdentity(false)
 }
 
-func (suite *KSQLTestSuite) testCreateKSQLWithApiKey(isApp bool) {
-	commandName := getCommandName(isApp)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.v1ksqlc.CreateCalled())
-	cfg := suite.v1ksqlc.CreateCalls()[0].Arg1
-	req.Equal("", cfg.Image)
-	req.Equal(uint32(4), cfg.TotalNumCsu)
-	req.Equal(keyString, cfg.KafkaApiKey.Key)
-	req.Equal(keySecretString, cfg.KafkaApiKey.Secret)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKey() {
-	suite.testCreateKSQLWithApiKeyMissingKey(true)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKey() {
-	suite.testCreateKSQLWithApiKeyMissingKey(false)
-}
-
-func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKey(isApp bool) {
-	commandName := getCommandName(isApp)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-secret", keySecretString})
-
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Error(err)
-	req.False(suite.v1ksqlc.CreateCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-	req.Equal("if any flags in the group [api-key api-secret] are set they must all be set; missing [api-key]", err.Error())
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingSecret() {
-	suite.testCreateKSQLWithApiKeyMissingSecret(true)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingSecret() {
-	suite.testCreateKSQLWithApiKeyMissingSecret(false)
-}
-
-func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingSecret(isApp bool) {
-	commandName := getCommandName(isApp)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString})
-
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Error(err)
-	req.False(suite.v1ksqlc.CreateCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-	req.Equal("if any flags in the group [api-key api-secret] are set they must all be set; missing [api-secret]", err.Error())
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithApiKeyMissingKeyAndSecret() {
-	suite.testCreateKSQLWithApiKeyMissingKeyAndSecret(true)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithApiKeyMissingKeyAndSecret() {
-	suite.testCreateKSQLWithApiKeyMissingKeyAndSecret(false)
-}
-
-func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bool) {
+func (suite *KSQLTestSuite) testCreateKSQLWithMissingCredentialIdentity(isApp bool) {
 	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandName, "create", ksqlClusterID})
@@ -384,27 +315,7 @@ func (suite *KSQLTestSuite) testCreateKSQLWithApiKeyMissingKeyAndSecret(isApp bo
 	req.False(suite.v1ksqlc.CreateCalled())
 	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
 	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-
-	req.EqualError(err, errors.KsqlCreateRequiresCredentials)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithImage() {
-	suite.testCreateKSQLWithImage(true)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithImage() {
-	suite.testCreateKSQLWithImage(false)
-}
-
-func (suite *KSQLTestSuite) testCreateKSQLWithImage(isApp bool) {
-	commandName := getCommandName(isApp)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--api-key", keyString, "--api-secret", keySecretString, "--image", "foo"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	cfg := suite.v1ksqlc.CreateCalls()[0].Arg1
-	req.Equal("foo", cfg.Image)
+	req.Equal("required flag(s) \"credential-identity\" not set", err.Error())
 }
 
 func (suite *KSQLTestSuite) TestCreateKSQLClusterWithCredentialIdentity() {

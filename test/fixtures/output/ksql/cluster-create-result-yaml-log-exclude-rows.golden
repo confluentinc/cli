@@ -1,9 +1,0 @@
-(DEPRECATED) In the next major release, the `confluent ksql create with a --api-secret and --api-key will be deprecated. Provide a --credential-identity instead
-detailed_processing_log: false
-endpoint: SASL_SSL://ksql-endpoint
-id: lksqlc-woooo
-kafka: lkc-zxcvb
-name: kay cee queue elle
-status: PROVISIONING
-storage: 123
-topic_prefix: pksqlc-ghjkl

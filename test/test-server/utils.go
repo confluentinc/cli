@@ -293,7 +293,7 @@ func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 				CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),

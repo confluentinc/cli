@@ -31,9 +31,10 @@ func main() {
 
 	tabs := make([]docs.Tab, len(configs))
 	for i, cfg := range configs {
+		cfg.IsTest = true
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg, new(version.Version), false),
+			Command: cmd.NewConfluentCommand(cfg, new(version.Version)),
 		}
 	}
 

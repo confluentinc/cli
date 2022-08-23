@@ -64,15 +64,16 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		aclGetResp, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
+		opts := aclBindingToClustersClusterIdAclsGetOpts(acl[0].ACLBinding)
+		aclGetResp, httpResp, err := kafkaREST.Client.ACLV3Api.GetKafkaAcls(kafkaREST.Context, kafkaClusterConfig.ID, &opts)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error

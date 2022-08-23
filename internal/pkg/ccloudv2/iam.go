@@ -5,15 +5,13 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newIamClient(baseURL, userAgent string, isTest bool) *iamv2.APIClient {
+func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = iamv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = iamv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return iamv2.NewAPIClient(cfg)
@@ -46,25 +44,23 @@ func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAcc
 }
 
 func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
-	serviceAccounts := make([]iamv2.IamV2ServiceAccount, 0)
+	var list []iamv2.IamV2ServiceAccount
 
-	collectedAllServiceAccounts := false
+	done := false
 	pageToken := ""
-	for !collectedAllServiceAccounts {
-		serviceAccountList, _, err := c.executeListServiceAccounts(pageToken)
+	for !done {
+		page, _, err := c.executeListServiceAccounts(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		serviceAccounts = append(serviceAccounts, serviceAccountList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := serviceAccountList.GetMetadata().Next
-		pageToken, collectedAllServiceAccounts, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return serviceAccounts, nil
+	return list, nil
 }
 
 func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
@@ -88,25 +84,23 @@ func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.I
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
-	users := make([]iamv2.IamV2User, 0)
+	var list []iamv2.IamV2User
 
-	collectedAllUsers := false
+	done := false
 	pageToken := ""
-	for !collectedAllUsers {
-		userList, _, err := c.executeListUsers(pageToken)
+	for !done {
+		page, _, err := c.executeListUsers(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		users = append(users, userList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := userList.GetMetadata().Next
-		pageToken, collectedAllUsers, err = extractIamNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return users, nil
+	return list, nil
 }
 
 func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.Response, error) {
@@ -115,4 +109,13 @@ func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.
 		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+}
+
+func extractIamNextPageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

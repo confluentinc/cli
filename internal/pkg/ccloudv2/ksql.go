@@ -10,10 +10,10 @@ import (
 	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newKsqlClient(baseURL, userAgent string, isTest bool) *ksql.APIClient {
+func newKsqlClient(baseURL, userAgent string, isTest, unsafeTrace bool) *ksql.APIClient {
 	cfg := ksql.NewConfiguration()
 	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
 	cfg.Servers = ksql.ServerConfigurations{{URL: getServerUrl(baseURL, isTest), Description: "Confluent Cloud KSQL"}}
 	cfg.UserAgent = userAgent
 

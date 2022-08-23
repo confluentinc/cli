@@ -5,23 +5,20 @@ import (
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
-
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newOrgClient(baseURL, userAgent string, isTest bool) *orgv2.APIClient {
+func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 	cfg := orgv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
-	cfg.HTTPClient = newRetryableHttpClient()
-	cfg.Servers = orgv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.Servers = orgv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return orgv2.NewAPIClient(cfg)
 }
 
 func (c *Client) orgApiContext() context.Context {
-	auth := context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken)
-	return auth
+	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken)
 }
 
 func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
@@ -45,25 +42,23 @@ func (c *Client) DeleteOrgEnvironment(envId string) (*http.Response, error) {
 }
 
 func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
-	environments := make([]orgv2.OrgV2Environment, 0)
+	var list []orgv2.OrgV2Environment
 
-	collectedAllEnvironments := false
+	done := false
 	pageToken := ""
-	for !collectedAllEnvironments {
-		environmentList, _, err := c.executeListEnvironments(pageToken)
+	for !done {
+		page, _, err := c.executeListEnvironments(pageToken)
 		if err != nil {
 			return nil, err
 		}
-		environments = append(environments, environmentList.GetData()...)
+		list = append(list, page.GetData()...)
 
-		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := environmentList.GetMetadata().Next
-		pageToken, collectedAllEnvironments, err = extractOrgNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractOrgNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return environments, nil
+	return list, nil
 }
 
 func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
@@ -72,4 +67,13 @@ func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2Environme
 		req = req.PageToken(pageToken)
 	}
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
+}
+
+func extractOrgNextPageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
+	if !nextPageUrlStringNullable.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrlStringNullable.Get()
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

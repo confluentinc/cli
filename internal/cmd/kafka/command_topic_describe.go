@@ -78,7 +78,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 

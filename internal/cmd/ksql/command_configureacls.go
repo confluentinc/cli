@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -18,24 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
-	shortText := "Configure ACLs for a ksqlDB cluster."
-	var longText string
-	runCommand := c.configureACLs
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Configure ACLs for a ksqlDB app."
-		longText = "DEPRECATED: Configure ACLs for a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.configureACLsApp
-	}
-
+func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> TOPICS...",
-		Short:             shortText,
-		Long:              longText,
+		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              runCommand,
+		RunE:              c.configureACLs,
 	}
 
 	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
@@ -44,11 +32,6 @@ func (c *ksqlCommand) newConfigureAclsCommand(isApp bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
-}
-
-func (c *ksqlCommand) configureACLsApp(cmd *cobra.Command, args []string) error {
-	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	return c.configureACLs(cmd, args)
 }
 
 func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {

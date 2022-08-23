@@ -34,13 +34,13 @@ func (s *CLITestSuite) TestConnect() {
 func (s *CLITestSuite) TestConnectPlugin() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "connect plugin --help", fixture: "connect/plugin-help.golden"},
-		{args: "connect plugin describe GcsSink --cluster lkc-123 -o json", fixture: "connect/plugin-describe-json.golden"},
-		{args: "connect plugin describe GcsSink --cluster lkc-123 -o yaml", fixture: "connect/plugin-describe-yaml.golden"},
-		{args: "connect plugin describe GcsSink --cluster lkc-123", fixture: "connect/plugin-describe.golden"},
-		{args: "connect plugin list --cluster lkc-123 -o json", fixture: "connect/plugin-list-json.golden"},
-		{args: "connect plugin list --cluster lkc-123 -o yaml", fixture: "connect/plugin-list-yaml.golden"},
-		{args: "connect plugin list --cluster lkc-123", fixture: "connect/plugin-list.golden"},
+		{args: "connect plugin --help", fixture: "connect/plugin/help.golden"},
+		{args: "connect plugin describe GcsSink --cluster lkc-123 -o json", fixture: "connect/plugin/describe-json.golden"},
+		{args: "connect plugin describe GcsSink --cluster lkc-123 -o yaml", fixture: "connect/plugin/describe-yaml.golden"},
+		{args: "connect plugin describe GcsSink --cluster lkc-123", fixture: "connect/plugin/describe.golden"},
+		{args: "connect plugin list --cluster lkc-123 -o json", fixture: "connect/plugin/list-json.golden"},
+		{args: "connect plugin list --cluster lkc-123 -o yaml", fixture: "connect/plugin/list-yaml.golden"},
+		{args: "connect plugin list --cluster lkc-123", fixture: "connect/plugin/list.golden"},
 	}
 
 	for _, tt := range tests {

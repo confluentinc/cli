@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
@@ -18,24 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
-	shortText := "Delete a ksqlDB cluster."
-	var longText string
-	runCommand := c.deleteCluster
-	if isApp {
-		// DEPRECATED: this should be removed before CLI v3, this work is tracked in https://confluentinc.atlassian.net/browse/KCI-1411
-		shortText = "DEPRECATED: Delete a ksqlDB app."
-		longText = "DEPRECATED: Delete a ksqlDB app. " + errors.KSQLAppDeprecateWarning
-		runCommand = c.deleteApp
-	}
-
+func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
-		Short:             shortText,
-		Long:              longText,
+		Short:             fmt.Sprintf("Delete a ksqlDB %s.", resource),
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              runCommand,
+		RunE:              c.delete,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -44,12 +32,7 @@ func (c *ksqlCommand) newDeleteCommand(isApp bool) *cobra.Command {
 	return cmd
 }
 
-func (c *ksqlCommand) deleteApp(cmd *cobra.Command, args []string) error {
-	_, _ = fmt.Fprintln(os.Stderr, errors.KSQLAppDeprecateWarning)
-	return c.deleteCluster(cmd, args)
-}
-
-func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
+func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	environmentId := c.EnvironmentId()
 
@@ -86,7 +69,7 @@ func (c *ksqlCommand) deleteCluster(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			return errors.Errorf(errors.KsqlDBTerminateClusterMsg, args[0], string(body))
+			return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, args[0], string(body))
 		}
 	}
 
