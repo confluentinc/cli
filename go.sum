@@ -658,8 +658,6 @@ github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108 h1:XVbx4yuLLM2jPjepdvmOY1X1y8ti7GcTBUZmuXGHjHs=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108/go.mod h1:AAVdbxtQfR0gJkrADk+cyA3u8fTxsofg6l73n901nWo=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.6 h1:6DhHATwPH9fc1hL3vFRdFGa/tlQTHDhmTChvx5uePek=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.6/go.mod h1:XZQg600DbbfGIs8yu1AlqyYf0VI98VyhKxG30d+1+QA=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.7 h1:G2sC3fOdIv9HHkFXqwC3raGz/8PVi4jqyBtgAZDHpRU=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql v0.0.7/go.mod h1:XZQg600DbbfGIs8yu1AlqyYf0VI98VyhKxG30d+1+QA=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
