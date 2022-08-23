@@ -115,6 +115,7 @@ func (s *CLITestSuite) SetupSuite() {
 	req.NoError(err)
 
 	// Temporarily change $HOME, so the current config file isn't altered.
+	fmt.Println(os.TempDir())
 	err = os.Setenv("HOME", os.TempDir())
 	req.NoError(err)
 
