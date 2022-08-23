@@ -42,7 +42,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum)
+            - cache restore linux-$(checksum go.sum)
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
@@ -58,7 +58,7 @@ blocks:
             - make lint-licenses
             
             # Cache Go dependencies
-            - cache store $(checksum go.sum) $GOPATH/pkg/mod
+            - cache store linux-$(checksum go.sum) $GOPATH/pkg/mod
 
   - name: darwin/amd64
     dependencies: []
@@ -85,7 +85,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore $(checksum go.sum)
+            - cache restore darwin-$(checksum go.sum)
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
@@ -95,6 +95,9 @@ blocks:
             - make deps
             - ulimit -n 2048
             - make test
+            
+            # Cache Go dependencies
+            - cache store darwin-$(checksum go.sum) $GOPATH/pkg/mod
 
   - name: windows/amd64
     dependencies: []
@@ -123,7 +126,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-#            - cache restore $(checksum go.sum)
+#            - cache restore windows-$(checksum go.sum)
             
             # Set up Git
             - $Env:GOPRIVATE = "github.com/confluentinc"
@@ -135,5 +138,8 @@ blocks:
             - make -h
             - make deps
             - make test
+            
+            # Cache Go dependencies
+#            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
 
 # TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
