@@ -62,7 +62,7 @@ blocks:
       epilogue:
         always:
           commands:
-            - test-results publish junit.xml
+            - '[[ -f report.xml ]] && test-results publish report.xml'
 
   - name: darwin/amd64
     dependencies: []
@@ -145,3 +145,10 @@ blocks:
           
             # Cache Go dependencies
 #            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
+
+after_pipeline:
+  task:
+    jobs:
+      - name: Publish Results
+        commands:
+          - test-results gen-pipeline-report
