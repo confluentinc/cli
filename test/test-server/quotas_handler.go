@@ -82,7 +82,7 @@ func int32ToPtr(i int32) *int32 {
 	return &i
 }
 
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
 
 	//filter by environment id
 	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
@@ -111,6 +111,17 @@ func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, e
 	if network != "" {
 		for _, quota := range quotaList {
 			if quota.Network != nil && quota.Network.Id == network {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	//filter by quota code (id)
+	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if quotaCode != "" {
+		for _, quota := range quotaList {
+			if quota.Id != nil && *quota.Id == quotaCode {
 				filtered = append(filtered, quota)
 			}
 		}
