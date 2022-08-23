@@ -92,3 +92,61 @@ func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarest
 
 	return opts
 }
+
+// Converts ACLBinding to Kafka REST ClustersClusterIdAclsPostOpts
+func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.CreateKafkaAclsOpts {
+	var aclRequestData kafkarestv3.CreateAclRequestData
+
+	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+		aclRequestData.ResourceType = kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String())
+	}
+
+	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
+		aclRequestData.PatternType = acl.Pattern.PatternType.String()
+	}
+
+	aclRequestData.ResourceName = acl.Pattern.Name
+	aclRequestData.Principal = acl.Entry.Principal
+	aclRequestData.Host = acl.Entry.Host
+
+	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
+		aclRequestData.Operation = acl.Entry.Operation.String()
+	}
+
+	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
+		aclRequestData.Permission = acl.Entry.PermissionType.String()
+	}
+
+	var opts kafkarestv3.CreateKafkaAclsOpts
+	opts.CreateAclRequestData = optional.NewInterface(aclRequestData)
+
+	return opts
+}
+
+// Converts ACLFilter to Kafka REST ClustersClusterIdAclsDeleteOpts
+func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.DeleteKafkaAclsOpts {
+	var opts kafkarestv3.DeleteKafkaAclsOpts
+
+	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
+	}
+
+	opts.ResourceName = optional.NewString(acl.PatternFilter.Name)
+
+	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
+		opts.PatternType = optional.NewString(acl.PatternFilter.PatternType.String())
+	}
+
+	opts.Principal = optional.NewString(acl.EntryFilter.Principal)
+	opts.Host = optional.NewString(acl.EntryFilter.Host)
+
+	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
+		opts.Operation = optional.NewString(acl.EntryFilter.Operation.String())
+	}
+
+	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
+		opts.Permission = optional.NewString(acl.EntryFilter.PermissionType.String())
+	}
+
+	return opts
+}

@@ -13,18 +13,19 @@ import (
 // MockMDSClientManager is a mock of MDSClientManager interface
 type MockMDSClientManager struct {
 	lockGetMDSClient sync.Mutex
-	GetMDSClientFunc func(url, caCertPath string) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error)
+	GetMDSClientFunc func(url, caCertPath string, unsafeTrace bool) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error)
 
 	calls struct {
 		GetMDSClient []struct {
-			Url        string
-			CaCertPath string
+			Url         string
+			CaCertPath  string
+			UnsafeTrace bool
 		}
 	}
 }
 
 // GetMDSClient mocks base method by wrapping the associated func.
-func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error) {
+func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string, unsafeTrace bool) (*github_com_confluentinc_mds_sdk_go_mdsv1.APIClient, error) {
 	m.lockGetMDSClient.Lock()
 	defer m.lockGetMDSClient.Unlock()
 
@@ -33,16 +34,18 @@ func (m *MockMDSClientManager) GetMDSClient(url, caCertPath string) (*github_com
 	}
 
 	call := struct {
-		Url        string
-		CaCertPath string
+		Url         string
+		CaCertPath  string
+		UnsafeTrace bool
 	}{
-		Url:        url,
-		CaCertPath: caCertPath,
+		Url:         url,
+		CaCertPath:  caCertPath,
+		UnsafeTrace: unsafeTrace,
 	}
 
 	m.calls.GetMDSClient = append(m.calls.GetMDSClient, call)
 
-	return m.GetMDSClientFunc(url, caCertPath)
+	return m.GetMDSClientFunc(url, caCertPath, unsafeTrace)
 }
 
 // GetMDSClientCalled returns true if GetMDSClient was called at least once.
@@ -55,8 +58,9 @@ func (m *MockMDSClientManager) GetMDSClientCalled() bool {
 
 // GetMDSClientCalls returns the calls made to GetMDSClient.
 func (m *MockMDSClientManager) GetMDSClientCalls() []struct {
-	Url        string
-	CaCertPath string
+	Url         string
+	CaCertPath  string
+	UnsafeTrace bool
 } {
 	m.lockGetMDSClient.Lock()
 	defer m.lockGetMDSClient.Unlock()

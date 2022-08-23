@@ -18,10 +18,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 type command struct {
@@ -33,10 +33,9 @@ type command struct {
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
-	isTest                   bool
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -79,7 +78,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
-		isTest:                   isTest,
 	}
 	cmd.RunE = c.login
 
@@ -92,7 +90,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.cfg.IsTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -165,7 +163,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 }
 
 func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
+	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
 		return
 	}
 
@@ -254,7 +252,12 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		}
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
