@@ -82,7 +82,8 @@ generate:
 deps:
 	go install github.com/goreleaser/goreleaser@v1.4.1 && \
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
-	go install github.com/mitchellh/golicense@v0.2.0
+	go install github.com/mitchellh/golicense@v0.2.0 && \
+	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
 # Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
@@ -118,7 +119,7 @@ run:
 build-integ-nonrace:
 	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc gotestsum --junitfile junit.xml ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -130,7 +131,7 @@ build-integ-nonrace:
 build-integ-race:
 	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc gotestsum --junitfile junit.xml ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -198,9 +199,9 @@ endif
 unit-test:
 ifdef CI
   ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile junit.xml -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   else
-	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile junit.xml -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   endif
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
@@ -214,7 +215,7 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile junit.xml -v $$(go list ./... | grep cli/test) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
