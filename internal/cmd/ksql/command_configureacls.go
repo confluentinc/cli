@@ -4,16 +4,16 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -55,7 +55,8 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
-	if !strings.HasPrefix(credentialIdentity, "sa") {
+	fmt.Println("CredentialIdentity", credentialIdentity)
+	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
 		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, clusterId)
 	}
 
@@ -86,7 +87,9 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksql.KsqldbcmV2Cluster) (string
 
 	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
 
+	fmt.Println("got users", len(users))
 	for _, user := range users {
+		fmt.Println("User.ResourceId", user.ResourceId)
 		if user.ServiceName == fmt.Sprintf("KSQL.%s", *cluster.Id) || (credentialIdentity != "" && user.ResourceId == credentialIdentity) {
 			return strconv.Itoa(int(user.Id)), nil
 		}

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -52,19 +52,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 // Some helper functions for the ksql app/cluster commands
 
-func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Cluster) *ksqlCluster {
-	status := cluster.Status.Phase
-	if cluster.Status.IsPaused {
-		status = "PAUSED"
-	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(*cluster.Id, cluster.Status.GetHttpEndpoint())
-		if err != nil {
-			status = "UNKNOWN"
-		} else if provisioningFailed {
-			status = "PROVISIONING FAILED"
-		}
-	}
-
+func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2Cluster) *ksqlCluster {
 	detailedProcessingLog := true
 	if cluster.Spec.UseDetailedProcessingLog != nil {
 		detailedProcessingLog = *cluster.Spec.UseDetailedProcessingLog
@@ -77,19 +65,26 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksql.KsqldbcmV2Clu
 		KafkaClusterId:        cluster.Spec.KafkaCluster.GetId(),
 		Storage:               cluster.Status.Storage,
 		Endpoint:              cluster.Status.GetHttpEndpoint(),
-		Status:                status,
+		Status:                c.getClusterStatus(cluster),
 		DetailedProcessingLog: detailedProcessingLog,
 	}
 }
 
-// checkProvisioningFailed checks if ACLs are misconfigured on the
-// cluster.
-//
-// Send a GET request to the cluster's /info endpoint using oauth
-// token from context. If the response contains status code 503 and a
-// 50321 error_code, return (true, nil)
-// Otherwise, return (false, err (or nil))
-//
+func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string {
+	status := cluster.Status.Phase
+	if cluster.Status.IsPaused {
+		status = "PAUSED"
+	} else if status == "PROVISIONED" {
+		provisioningFailed, err := c.checkProvisioningFailed(*cluster.Id, cluster.Status.GetHttpEndpoint())
+		if err != nil {
+			status = "UNKNOWN"
+		} else if provisioningFailed {
+			status = "PROVISIONING FAILED"
+		}
+	}
+	return status
+}
+
 func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()

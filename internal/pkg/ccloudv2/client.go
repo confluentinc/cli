@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
@@ -12,7 +13,6 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2

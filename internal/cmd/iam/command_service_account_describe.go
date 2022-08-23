@@ -31,7 +31,7 @@ func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error
 
 	saOut := &serviceAccount{
 		ResourceId:  *sa.Id,
-		Name:		 *sa.DisplayName,
+		Name:        *sa.DisplayName,
 		Description: *sa.Description,
 	}
 	return output.DescribeObject(cmd, saOut, describeFields, describeHumanRenames, describeStructuredRenames)

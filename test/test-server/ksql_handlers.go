@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func ptrTo(s string) *string{
+func ptrTo(s string) *string {
 	return &s
 }
 
@@ -18,11 +18,11 @@ var _false = false
 var _true = true
 
 var ksqlCluster1 = ksqlv2.KsqldbcmV2Cluster{
-	Id:                ptrTo("lksqlc-ksql5"),
-	Spec:  &ksqlv2.KsqldbcmV2ClusterSpec{
+	Id: ptrTo("lksqlc-ksql5"),
+	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ptrTo("account ksql"),
 		KafkaCluster: &ksqlv2.ObjectReference{
-			Id: "lkc-qwert",
+			Id:          "lkc-qwert",
 			Environment: ptrTo("25"),
 		},
 		Environment: &ksqlv2.ObjectReference{
@@ -32,18 +32,18 @@ var ksqlCluster1 = ksqlv2.KsqldbcmV2Cluster{
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 		HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
-		TopicPrefix: ptrTo("pksqlc-abcde"),
-		Storage: 101,
-		Phase: "PROVISIONING",
+		TopicPrefix:  ptrTo("pksqlc-abcde"),
+		Storage:      101,
+		Phase:        "PROVISIONING",
 	},
 }
 
 var ksqlCluster2 = ksqlv2.KsqldbcmV2Cluster{
-	Id:                ptrTo("lksqlc-woooo"),
-	Spec:  &ksqlv2.KsqldbcmV2ClusterSpec{
+	Id: ptrTo("lksqlc-woooo"),
+	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ptrTo("kay cee queue elle"),
 		KafkaCluster: &ksqlv2.ObjectReference{
-			Id: "lkc-zxcvb",
+			Id:          "lkc-zxcvb",
 			Environment: ptrTo("25"),
 		},
 		Environment: &ksqlv2.ObjectReference{
@@ -52,17 +52,17 @@ var ksqlCluster2 = ksqlv2.KsqldbcmV2Cluster{
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 		HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
-		TopicPrefix: ptrTo("pksqlc-ghjkl"),
-		Storage: 123,
-		Phase: "PROVISIONING",
+		TopicPrefix:  ptrTo("pksqlc-ghjkl"),
+		Storage:      123,
+		Phase:        "PROVISIONING",
 	},
 }
 var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
-	Id:                ptrTo("lksqlc-woooo"),
-	Spec:  &ksqlv2.KsqldbcmV2ClusterSpec{
+	Id: ptrTo("lksqlc-woooo"),
+	Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 		DisplayName: ptrTo("kay cee queue elle"),
 		KafkaCluster: &ksqlv2.ObjectReference{
-			Id: "lkc-zxcvb",
+			Id:          "lkc-zxcvb",
 			Environment: ptrTo("25"),
 		},
 		Environment: &ksqlv2.ObjectReference{
@@ -72,9 +72,9 @@ var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
 	},
 	Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 		HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
-		TopicPrefix: ptrTo("pksqlc-ghjkl"),
-		Storage: 123,
-		Phase: "PROVISIONING",
+		TopicPrefix:  ptrTo("pksqlc-ghjkl"),
+		Storage:      123,
+		Phase:        "PROVISIONING",
 	},
 }
 
@@ -128,10 +128,10 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 			case "lksqlc-ksql1":
 				cluster = ksqlv2.KsqldbcmV2Cluster{
 					Id: ptrTo("lksqlc-ksql1"),
-					Spec:  &ksqlv2.KsqldbcmV2ClusterSpec{
+					Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 						DisplayName: ptrTo("account ksql"),
 						KafkaCluster: &ksqlv2.ObjectReference{
-							Id: "lkc-12345",
+							Id:          "lkc-12345",
 							Environment: ptrTo("25"),
 						},
 						Environment: &ksqlv2.ObjectReference{
@@ -140,18 +140,18 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
-						TopicPrefix: ptrTo("pksqlc-abcde"),
-						Storage: 101,
-						Phase: "PROVISIONING",
+						TopicPrefix:  ptrTo("pksqlc-abcde"),
+						Storage:      101,
+						Phase:        "PROVISIONING",
 					},
 				}
 			case "lksqlc-12345":
 				cluster = ksqlv2.KsqldbcmV2Cluster{
 					Id: ptrTo("lksqlc-12345"),
-					Spec:  &ksqlv2.KsqldbcmV2ClusterSpec{
+					Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
 						DisplayName: ptrTo("account ksql"),
 						KafkaCluster: &ksqlv2.ObjectReference{
-							Id: "lkc-abcde",
+							Id:          "lkc-abcde",
 							Environment: ptrTo("25"),
 						},
 						Environment: &ksqlv2.ObjectReference{
@@ -160,9 +160,9 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
-						TopicPrefix: ptrTo("pksqlc-zxcvb"),
-						Storage: 130,
-						Phase: "PROVISIONING",
+						TopicPrefix:  ptrTo("pksqlc-zxcvb"),
+						Storage:      130,
+						Phase:        "PROVISIONING",
 					},
 				}
 			}

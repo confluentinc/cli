@@ -47,14 +47,13 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	name := args[0]
-	kafkaClusterId := kafkaCluster.ID
 
 	credentialIdentity, err := cmd.Flags().GetString("credential-identity")
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaClusterId, credentialIdentity, csus, !logExcludeRows)
+	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, !logExcludeRows)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(&cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
 
-func (c *ksqlCommand) checkClusterHasEndpoint(cmd *cobra.Command, endpoint string, clusterId string) error {
+func (c *ksqlCommand) checkClusterHasEndpoint(cmd *cobra.Command, endpoint, clusterId string) error {
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
 	for endpoint == "" && count < 3 {

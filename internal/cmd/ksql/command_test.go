@@ -13,8 +13,8 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	ksqlMock "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/mock"
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/mock"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -23,7 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -73,12 +73,14 @@ type KSQLTestSuite struct {
 	conf          *v1.Config
 	kafkaCluster  *schedv1.KafkaCluster
 	v1ksqlCluster *schedv1.KSQLCluster
-	ksqlCluster   *ksql.KsqldbcmV2Cluster
+	ksqlCluster   *ksqlv2.KsqldbcmV2Cluster
 	serviceAcct   *orgv1.User
 	v1ksqlc       *mock.KSQL
-	ksqlc         *ksqlMock.ClustersKsqldbcmV2Api
+	ksqlc         *ksqlmock.ClustersKsqldbcmV2Api
 	kafkac        *mock.Kafka
 	userc         *mock.User
+	client        *ccloud.Client
+	v2Client      *ccloudv2.Client
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
@@ -106,18 +108,18 @@ func (suite *KSQLTestSuite) SetupTest() {
 	ksqlClusterId := ksqlClusterID
 	outputTopicPrefix := "pksqlc-abcde"
 	useDetailedProcessingLog := true
-	suite.ksqlCluster = &ksql.KsqldbcmV2Cluster{
+	suite.ksqlCluster = &ksqlv2.KsqldbcmV2Cluster{
 		Id: &ksqlClusterId,
-		Spec: &ksql.KsqldbcmV2ClusterSpec{
-			KafkaCluster: &ksql.ObjectReference{
+		Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
+			KafkaCluster: &ksqlv2.ObjectReference{
 				Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
 			},
-			CredentialIdentity: &ksql.ObjectReference{
+			CredentialIdentity: &ksqlv2.ObjectReference{
 				Id: serviceAcctResourceID,
 			},
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
 		},
-		Status: &ksql.KsqldbcmV2ClusterStatus{
+		Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 			TopicPrefix: &outputTopicPrefix,
 		},
 	}
@@ -139,38 +141,38 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 
-	suite.ksqlc = &ksqlMock.ClustersKsqldbcmV2Api{
-		GetKsqldbcmV2ClusterFunc: func(_ context.Context, _ string) ksql.ApiGetKsqldbcmV2ClusterRequest {
-			return ksql.ApiGetKsqldbcmV2ClusterRequest{
+	suite.ksqlc = &ksqlmock.ClustersKsqldbcmV2Api{
+		GetKsqldbcmV2ClusterFunc: func(_ context.Context, _ string) ksqlv2.ApiGetKsqldbcmV2ClusterRequest {
+			return ksqlv2.ApiGetKsqldbcmV2ClusterRequest{
 				ApiService: suite.ksqlc,
 			}
 		},
-		CreateKsqldbcmV2ClusterFunc: func(_ context.Context) ksql.ApiCreateKsqldbcmV2ClusterRequest {
-			return ksql.ApiCreateKsqldbcmV2ClusterRequest{
+		CreateKsqldbcmV2ClusterFunc: func(_ context.Context) ksqlv2.ApiCreateKsqldbcmV2ClusterRequest {
+			return ksqlv2.ApiCreateKsqldbcmV2ClusterRequest{
 				ApiService: suite.ksqlc,
 			}
 		},
-		ListKsqldbcmV2ClustersFunc: func(_ context.Context) ksql.ApiListKsqldbcmV2ClustersRequest {
-			return ksql.ApiListKsqldbcmV2ClustersRequest{
+		ListKsqldbcmV2ClustersFunc: func(_ context.Context) ksqlv2.ApiListKsqldbcmV2ClustersRequest {
+			return ksqlv2.ApiListKsqldbcmV2ClustersRequest{
 				ApiService: suite.ksqlc,
 			}
 		},
-		DeleteKsqldbcmV2ClusterFunc: func(_ context.Context, _ string) ksql.ApiDeleteKsqldbcmV2ClusterRequest {
-			return ksql.ApiDeleteKsqldbcmV2ClusterRequest{
+		DeleteKsqldbcmV2ClusterFunc: func(_ context.Context, _ string) ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest {
+			return ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest{
 				ApiService: suite.ksqlc,
 			}
 		},
-		GetKsqldbcmV2ClusterExecuteFunc: func(_ ksql.ApiGetKsqldbcmV2ClusterRequest) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+		GetKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiGetKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *_nethttp.Response, error) {
 			return *suite.ksqlCluster, nil, nil
 		},
-		CreateKsqldbcmV2ClusterExecuteFunc: func(_ ksql.ApiCreateKsqldbcmV2ClusterRequest) (ksql.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+		CreateKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiCreateKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *_nethttp.Response, error) {
 			return *suite.ksqlCluster, nil, nil
 		},
-		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksql.ApiListKsqldbcmV2ClustersRequest) (ksql.KsqldbcmV2ClusterList, *_nethttp.Response, error) {
-			return ksql.KsqldbcmV2ClusterList{
-				Data: []ksql.KsqldbcmV2Cluster{*suite.ksqlCluster}}, nil, nil
+		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksqlv2.ApiListKsqldbcmV2ClustersRequest) (ksqlv2.KsqldbcmV2ClusterList, *_nethttp.Response, error) {
+			return ksqlv2.KsqldbcmV2ClusterList{
+				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster}}, nil, nil
 		},
-		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksql.ApiDeleteKsqldbcmV2ClusterRequest) (*_nethttp.Response, error) {
+		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest) (*_nethttp.Response, error) {
 			return nil, nil
 		},
 	}
@@ -179,20 +181,20 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
-}
-
-func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	suite.client = &ccloud.Client{
 		Kafka: suite.kafkac,
 		User:  suite.userc,
 		KSQL:  suite.v1ksqlc,
 	}
-	v2Client := &ccloudv2.Client{
-		KsqlClient: &ksql.APIClient{
+	suite.v2Client = &ccloudv2.Client{
+		KsqlClient: &ksqlv2.APIClient{
 			ClustersKsqldbcmV2Api: suite.ksqlc,
 		},
 	}
-	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, v2Client, nil, nil, suite.conf))
+}
+
+func (suite *KSQLTestSuite) newCMD() *cobra.Command {
+	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(suite.client, suite.v2Client, nil, nil, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -294,49 +296,6 @@ func (suite *KSQLTestSuite) testShouldNotConfigureOnDryRun(isApp bool) {
 	req.Nil(err)
 	req.False(suite.kafkac.CreateACLsCalled())
 	req.Equal(expectedACLs, buf.String())
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLAppWithMissingCredentialIdentity() {
-	suite.testCreateKSQLWithMissingCredentialIdentity(true)
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithMissingCredentialIdentity() {
-	suite.testCreateKSQLWithMissingCredentialIdentity(false)
-}
-
-func (suite *KSQLTestSuite) testCreateKSQLWithMissingCredentialIdentity(isApp bool) {
-	commandName := getCommandName(isApp)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID})
-
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Error(err)
-	req.False(suite.v1ksqlc.CreateCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
-	req.False(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-	req.Equal("required flag(s) \"credential-identity\" not set", err.Error())
-}
-
-func (suite *KSQLTestSuite) TestCreateKSQLClusterWithCredentialIdentity() {
-	commandName := getCommandName(false)
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "create", ksqlClusterID, "--credential-identity", serviceAcctResourceID})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.ksqlc.CreateKsqldbcmV2ClusterCalled())
-	req.True(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalled())
-
-	// call.R.ksqldbcmV2Cluster.Spec.CredentialIdentity.Id
-	credentialIdentityOnRequest := reflect.Indirect(reflect.Indirect(reflect.Indirect(
-		reflect.ValueOf(suite.ksqlc.CreateKsqldbcmV2ClusterExecuteCalls()[0].R,
-		).FieldByName("ksqldbcmV2Cluster"),
-	).FieldByName("Spec"),
-	).FieldByName("CredentialIdentity"),
-	).FieldByName("Id").String()
-
-	req.Equal(serviceAcctResourceID, credentialIdentityOnRequest)
 }
 
 func (suite *KSQLTestSuite) TestDescribeKSQLApp() {
