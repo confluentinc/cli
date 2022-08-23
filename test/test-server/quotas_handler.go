@@ -17,6 +17,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 		environment := r.URL.Query().Get("environment")
 		kafkaCluster := r.URL.Query().Get("kafka_cluster")
 		network := r.URL.Query().Get("network")
+		quotaCode := r.URL.Query().Get("id")
 
 		quota1 := servicequotav1.ServiceQuotaV1AppliedQuota{
 			Id:           stringToPtr("quota_a"),
@@ -60,7 +61,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 			AppliedLimit: int32ToPtr(18),
 		}
 
-		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster)
+		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster, quotaCode)
 		quotaList := &servicequotav1.ServiceQuotaV1AppliedQuotaList{
 			ApiVersion: "service-quota/v1",
 			Kind:       "AppliedQuotaList",
