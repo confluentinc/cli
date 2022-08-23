@@ -197,7 +197,6 @@ endif
 ## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 unit-test:
 ifdef CI
-	@# Run unit tests with coverage.
   ifeq "$(OS)" "Windows_NT"
 	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   else
@@ -205,7 +204,6 @@ ifdef CI
   endif
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
-	@# Run unit tests.
   ifeq "$(OS)" "Windows_NT"
 	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
   else
@@ -216,11 +214,9 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@# Run integration tests with coverage.
 	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
-	@# Run integration tests.
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 endif
 

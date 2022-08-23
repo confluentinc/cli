@@ -1,6 +1,6 @@
---- cli/Makefile	2022-07-21 16:33:59.000000000 -0700
+--- cli/Makefile	2022-08-23 10:30:07.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,233 +1,130 @@
+@@ -1,228 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -123,7 +123,6 @@
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
--	cat $(HOME)/.ssh/id_rsa && \
 -	binary="bin/confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 -	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
@@ -218,7 +217,6 @@
 -## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 -unit-test:
 -ifdef CI
--	@# Run unit tests with coverage.
 -  ifeq "$(OS)" "Windows_NT"
 -	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  else
@@ -229,7 +227,6 @@
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	@# Run unit tests.
 -  ifeq "$(OS)" "Windows_NT"
 -	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  else
@@ -254,7 +251,6 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
--	@# Run integration tests with coverage.
 -	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) -timeout 45m
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 +BINPATH=$(PREFIX)/bin
@@ -312,7 +308,6 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	@# Run integration tests.
 -	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 +	RPM_RELEASE_ID=$(REVISION)
  endif
