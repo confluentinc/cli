@@ -35,12 +35,12 @@ blocks:
             
             # Set up Go
             - sem-version go 1.17.6
-            - export "GOPATH=$HOME/go"
+            - export "GOPATH=$(go env GOPATH)"
             - export "PATH=$GOPATH/bin:$PATH"
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore
+            - cache restore $(checksum go.sum)
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
@@ -58,7 +58,7 @@ blocks:
             - make lint-licenses
             
             # Cache Go dependencies
-            - cache store
+            - cache store $(checksum go.sum) $GOPATH/pkg/mod
 
   - name: darwin/amd64
     dependencies: []
@@ -82,12 +82,11 @@ blocks:
             - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
             - export "PATH=/usr/local/go/bin:$PATH"
             - export "GOPATH=$(go env GOPATH)"
-            - echo $GOPATH
             - export "PATH=$GOPATH/bin:$PATH"
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore
+            - cache restore $(checksum go.sum)
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
@@ -99,7 +98,7 @@ blocks:
             - make lint-licenses
             
             # Cache Go dependencies
-            - cache store
+            - cache store $(checksum go.sum) $GOPATH/pkg/mod
 
   - name: windows/amd64
     dependencies: []
@@ -110,7 +109,9 @@ blocks:
       jobs:
         - name: Test
           commands:
-            - wsl --install
+            - git --help
+            - choco install git.install
+            - git --help
             
             # Get GitHub SSH key from Vault
             - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
@@ -130,7 +131,7 @@ blocks:
             
             # Try to restore cached dependencies
             - checkout
-            - cache restore
+            - cache restore $(checksum go.sum)
             
             # Set up Git
             - $Env:GOPRIVATE = "github.com/confluentinc"
@@ -145,6 +146,6 @@ blocks:
             - make lint-licenses
             
             # Cache Go dependencies
-            - cache store
+            - cache store $(checksum go.sum) $GOPATH/pkg/mod
 
 # TODO: Publish test results https://docs.semaphoreci.com/essentials/test-summary/#setting-up-test-reports
