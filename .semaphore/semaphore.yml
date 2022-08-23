@@ -69,7 +69,9 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-macos
+#          type: s1-prod-macos
+          type: a1-standard-4
+          os_image: macos-xcode13
       jobs:
         - name: Test
           commands:
