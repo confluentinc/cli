@@ -60,7 +60,6 @@ blocks:
       epilogue:
         always:
           commands:
-            - ls *.xml
             - test-results publish . -N "linux/amd64"
 
   - name: darwin/amd64
@@ -96,7 +95,6 @@ blocks:
       epilogue:
         always:
           commands:
-            - ls *.xml
             - test-results publish . -N "darwin/amd64"
             - rm *.xml
 
