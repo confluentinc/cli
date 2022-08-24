@@ -27,7 +27,7 @@ func handleKafkaRestAcls(t *testing.T) http.HandlerFunc {
 		}
 
 		var res interface{}
-	
+
 		switch r.Method {
 		case http.MethodGet:
 			res = &kafkarestv3.AclDataList{Data: []kafkarestv3.AclData{data}}
