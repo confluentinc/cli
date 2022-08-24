@@ -60,8 +60,10 @@ blocks:
       epilogue:
         always:
           commands:
+            - ls *.xml
             - npm install -g junit-report-merger
             - jrm report.xml *.xml
+            - cat report.xml
             - test-results publish report.xml
 
   - name: darwin/amd64
