@@ -119,7 +119,7 @@ run:
 build-integ-nonrace:
 	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -131,7 +131,7 @@ build-integ-nonrace:
 build-integ-race:
 	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -215,7 +215,7 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
