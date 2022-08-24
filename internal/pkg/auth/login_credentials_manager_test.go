@@ -181,11 +181,9 @@ func (suite *LoginCredentialsManagerTestSuite) SetupTest() {
 	suite.clearCCEnvVars()
 	suite.clearCPEnvVars()
 	suite.loginCredentialsManager = NewLoginCredentialsManager(suite.netrcHandler, suite.prompt, suite.ccloudClient)
-	fmt.Println("SETUP")
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVar() {
-	fmt.Println("A")
 	// incomplete credentials, setting on username but not password
 	suite.require.NoError(os.Setenv(ConfluentCloudEmail, envUsername))
 	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
@@ -201,7 +199,6 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromEnvVa
 	creds, err = suite.loginCredentialsManager.GetCloudCredentialsFromEnvVar("")()
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)
-	fmt.Println("B")
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromDeprecatedEnvVar() {

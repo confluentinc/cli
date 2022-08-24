@@ -26,7 +26,6 @@ blocks:
       jobs:
         - name: Test
           commands:
-            - test-results publish -h
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
@@ -62,10 +61,7 @@ blocks:
         always:
           commands:
             - ls *.xml
-            - npm install -g junit-report-merger
-            - jrm report.xml *.xml
-            - cat report.xml
-            - test-results publish report.xml
+            - test-results publish . -N "linux/amd64"
 
   - name: darwin/amd64
     dependencies: []
@@ -100,11 +96,8 @@ blocks:
       epilogue:
         always:
           commands:
-            - brew install node
-            - npm install -g junit-report-merger
-            - jrm report.xml *.xml
-            - test-results publish -h
-            - test-results publish report.xml
+            - ls *.xml
+            - test-results publish . -N "darwin/amd64"
             - rm *.xml
 
 #  - name: windows/amd64
