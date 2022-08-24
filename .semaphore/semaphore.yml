@@ -60,9 +60,9 @@ blocks:
       epilogue:
         always:
           commands:
-            - '[[ -f unit-test-report.xml ]] && cat unit-test-report.xml >> report.xml'
-            - '[[ -f integration-test-report.xml ]] && cat integration-test-report.xml >> report.xml'
-            - '[[ -f report.xml ]] && test-results publish report.xml'
+            - npm install -g junit-report-merger
+            - jrm report.xml *.xml
+            - test-results publish report.xml
 
   - name: darwin/amd64
     dependencies: []
@@ -97,9 +97,10 @@ blocks:
       epilogue:
         always:
           commands:
-            - '[[ -f unit-test-report.xml ]] && cat unit-test-report.xml >> report.xml'
-            - '[[ -f integration-test-report.xml ]] && cat integration-test-report.xml >> report.xml'
-            - '[[ -f report.xml ]] && cat report.xml && test-results publish report.xml'
+            - npm install -g junit-report-merger
+            - jrm report.xml *.xml
+            - test-results publish report.xml
+            - rm *.xml
 
 #  - name: windows/amd64
 #    dependencies: []
