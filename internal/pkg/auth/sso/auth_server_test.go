@@ -11,7 +11,6 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
-	t.Skip("Temporarily skip")
 	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
