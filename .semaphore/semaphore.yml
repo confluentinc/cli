@@ -39,10 +39,10 @@ blocks:
             - export "PATH=$GOPATH/bin:$PATH"
             
             # Try to restore cached dependencies
-            - checkout
             - cache restore linux-$(checksum go.sum)
             
             # Set up Git
+            - checkout
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
@@ -84,11 +84,8 @@ blocks:
             - export "GOPATH=$(go env GOPATH)"
             - export "PATH=$GOPATH/bin:$PATH"
             
-            # Try to restore cached dependencies
-            - checkout
-            - cache restore darwin-$(checksum go.sum)
-            
             # Set up Git
+            - checkout
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
@@ -96,9 +93,6 @@ blocks:
             - make deps
             - ulimit -n 2048
             - make test
-            
-            # Cache Go dependencies
-            - cache store darwin-$(checksum go.sum) $GOPATH/pkg/mod
       epilogue:
         always:
           commands:
@@ -131,10 +125,10 @@ blocks:
 #            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Try to restore cached dependencies
-#            - checkout
 #            - cache restore windows-$(checksum go.sum)
           
             # Set up Git
+#            - checkout
 #            - $Env:GOPRIVATE = "github.com/confluentinc"
 #            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
