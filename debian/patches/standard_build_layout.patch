@@ -1,4 +1,4 @@
---- cli/Makefile	2022-08-23 14:45:02.000000000 -0700
+--- cli/Makefile	2022-08-24 09:53:26.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,229 +1,130 @@
 -SHELL           := /bin/bash
@@ -126,7 +126,7 @@
 -build-integ-nonrace:
 -	binary="bin/confluent_test" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- ./cmd/confluent -ldflags="-s -w \
+-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \
 -		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 -		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -138,7 +138,7 @@
 -build-integ-race:
 -	binary="bin/confluent_test_race" ; \
 -	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
--	GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- ./cmd/confluent -ldflags="-s -w \
+-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
 -		-X $(RESOLVED_PATH).commit=$(REF) \
 -		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 -		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -219,9 +219,9 @@
 -unit-test:
 -ifdef CI
 -  ifeq "$(OS)" "Windows_NT"
--	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  else
--	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 +ifeq ($(PACKAGE_TYPE),archive)
