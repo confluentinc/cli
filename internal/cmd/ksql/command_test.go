@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
-	_nethttp "net/http"
+	"net/http"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -162,17 +161,17 @@ func (suite *KSQLTestSuite) SetupTest() {
 				ApiService: suite.ksqlc,
 			}
 		},
-		GetKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiGetKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+		GetKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiGetKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *http.Response, error) {
 			return *suite.ksqlCluster, nil, nil
 		},
-		CreateKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiCreateKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *_nethttp.Response, error) {
+		CreateKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiCreateKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *http.Response, error) {
 			return *suite.ksqlCluster, nil, nil
 		},
-		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksqlv2.ApiListKsqldbcmV2ClustersRequest) (ksqlv2.KsqldbcmV2ClusterList, *_nethttp.Response, error) {
+		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksqlv2.ApiListKsqldbcmV2ClustersRequest) (ksqlv2.KsqldbcmV2ClusterList, *http.Response, error) {
 			return ksqlv2.KsqldbcmV2ClusterList{
 				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster}}, nil, nil
 		},
-		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest) (*_nethttp.Response, error) {
+		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest) (*http.Response, error) {
 			return nil, nil
 		},
 	}
