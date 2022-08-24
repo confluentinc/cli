@@ -99,6 +99,7 @@ blocks:
       epilogue:
         always:
           commands:
+            - brew install node
             - npm install -g junit-report-merger
             - jrm report.xml *.xml
             - test-results publish report.xml
