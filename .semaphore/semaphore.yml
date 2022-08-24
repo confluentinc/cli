@@ -77,9 +77,7 @@ blocks:
           commands:
             # Get GitHub SSH key from Vault
             - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
-            - which unzip
-            - unzip -h
-            - unzip vault_1.11.0_darwin_amd64.zip
+            - ls
             - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
