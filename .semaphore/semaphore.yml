@@ -60,8 +60,9 @@ blocks:
       epilogue:
         always:
           commands:
-            - '[[ -f unit-test-report.xml ]] && test-results publish unit-test-report.xml -S "linux/amd64" -N "Unit Tests"'
-            - '[[ -f integration-test-report.xml ]] && test-results publish integration-test-report.xml -S "linux/amd64" -N "Integration Tests"'
+            - '[[ -f unit-test-report.xml ]] && cat unit-test-report.xml >> report.xml'
+            - '[[ -f integration-test-report.xml ]] && cat integration-test-report.xml >> report.xml'
+            - '[[ -f report.xml ]] && test-results publish report.xml'
 
   - name: darwin/amd64
     dependencies: []
@@ -96,8 +97,9 @@ blocks:
       epilogue:
         always:
           commands:
-            - '[[ -f unit-test-report.xml ]] && test-results publish unit-test-report.xml -S "darwin/amd64" -N "Unit Tests"'
-            - '[[ -f integration-test-report.xml ]] && test-results publish integration-test-report.xml -S "darwin/amd64" -N "Integration Tests"'
+            - '[[ -f unit-test-report.xml ]] && cat unit-test-report.xml >> report.xml'
+            - '[[ -f integration-test-report.xml ]] && cat integration-test-report.xml >> report.xml'
+            - '[[ -f report.xml ]] && test-results publish report.xml'
 
 #  - name: windows/amd64
 #    dependencies: []
