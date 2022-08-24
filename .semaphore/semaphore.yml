@@ -62,7 +62,8 @@ blocks:
       epilogue:
         always:
           commands:
-            - '[[ -f report.xml ]] && test-results publish report.xml'
+            - '[[ -f unit-test-report.xml ]] && test-results publish unit-test-report.xml'
+            - '[[ -f integration-test-report.xml ]] && test-results publish integration-test-report.xml'
 
   - name: darwin/amd64
     dependencies: []
@@ -70,14 +71,12 @@ blocks:
       agent:
         machine:
           type: s1-prod-macos
-#          type: a1-standard-4
-#          os_image: macos-xcode13
       jobs:
         - name: Test
           commands:
             # Get GitHub SSH key from Vault
-            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
-            - ls
+#            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
+#            - unzip vault_1.11.0_darwin_amd64.zip
             - ./vault login -no-print token="$(./vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - ./vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
@@ -104,6 +103,11 @@ blocks:
             
             # Cache Go dependencies
             - cache store darwin-$(checksum go.sum) $GOPATH/pkg/mod
+      epilogue:
+        always:
+          commands:
+            - '[[ -f unit-test-report.xml ]] && test-results publish unit-test-report.xml'
+            - '[[ -f integration-test-report.xml ]] && test-results publish integration-test-report.xml'
 
   - name: windows/amd64
     dependencies: []
@@ -115,35 +119,34 @@ blocks:
         - name: Test
           commands:
             # Get GitHub SSH key from Vault
-            - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
-            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
-            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
-            - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Get-Content script.sh
-            - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
-            - New-Item -Name ".ssh" -ItemType "directory"
-            #- [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
+#            - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
+#            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
+#            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
+#            - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+#            - Get-Content script.sh
+#            - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
+#            - New-Item -Name ".ssh" -ItemType "directory"
+#            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
-            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
-            - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
-            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
-            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
+#            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
+#            - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
+#            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
+#            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Try to restore cached dependencies
-            - checkout
+#            - checkout
 #            - cache restore windows-$(checksum go.sum)
           
             # Set up Git
-            - $Env:GOPRIVATE = "github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+#            - $Env:GOPRIVATE = "github.com/confluentinc"
+#            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-            - choco install make
-            - make -h
-            - make deps
-            - make test
+#            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+#            - choco install make
+#            - make deps
+#            - make test
           
             # Cache Go dependencies
 #            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod

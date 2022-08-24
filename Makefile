@@ -119,7 +119,7 @@ run:
 build-integ-nonrace:
 	binary="bin/confluent_test" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -131,7 +131,7 @@ build-integ-nonrace:
 build-integ-race:
 	binary="bin/confluent_test_race" ; \
 	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
-	GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- ./cmd/confluent -ldflags="-s -w \
+	GOPRIVATE=github.com/confluentinc gotestsum --junitfile integration-test-report.xml -- ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
 		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
@@ -199,9 +199,9 @@ endif
 unit-test:
 ifdef CI
   ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   else
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   endif
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
