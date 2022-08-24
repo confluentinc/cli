@@ -90,7 +90,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksql.KsqldbcmV2Cluster) (string
 	fmt.Println("got users", len(users))
 	for _, user := range users {
 		fmt.Println("User.ResourceId", user.ResourceId)
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", *cluster.Id) || (credentialIdentity != "" && user.ResourceId == credentialIdentity) {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", *cluster.Id) || user.ResourceId == credentialIdentity {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
