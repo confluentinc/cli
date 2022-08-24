@@ -69,7 +69,9 @@ func buildWhitelist() []string {
 	}
 	for _, cfg := range configs {
 		cfg.IsTest = true
-		cmd := pcmd.NewConfluentCommand(cfg, new(pversion.Version))
+		cfg.Version = new(pversion.Version)
+	
+		cmd := pcmd.NewConfluentCommand(cfg)
 		usage.WhitelistCommandsAndFlags(cmd, whitelist)
 	}
 
