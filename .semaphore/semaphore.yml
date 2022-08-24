@@ -26,6 +26,7 @@ blocks:
       jobs:
         - name: Test
           commands:
+            - which vault
             # Get GitHub SSH key from Vault
             - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_linux_amd64.zip
             - unzip vault_1.11.0_linux_amd64.zip
@@ -74,6 +75,7 @@ blocks:
       jobs:
         - name: Test
           commands:
+            - which vault
             # Get GitHub SSH key from Vault
 #            - wget https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_darwin_amd64.zip
 #            - unzip vault_1.11.0_darwin_amd64.zip
@@ -109,15 +111,15 @@ blocks:
             - '[[ -f unit-test-report.xml ]] && test-results publish unit-test-report.xml'
             - '[[ -f integration-test-report.xml ]] && test-results publish integration-test-report.xml'
 
-  - name: windows/amd64
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-windows
-      jobs:
-        - name: Test
-          commands:
+#  - name: windows/amd64
+#    dependencies: []
+#    task:
+#      agent:
+#        machine:
+#          type: s1-prod-windows
+#      jobs:
+#        - name: Test
+#          commands:
             # Get GitHub SSH key from Vault
 #            - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
 #            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
