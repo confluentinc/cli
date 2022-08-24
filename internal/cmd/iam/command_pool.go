@@ -44,7 +44,7 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
-	
+
 	provider, _ := cmd.Flags().GetString("provider")
 	return pcmd.AutocompleteIdentityPools(c.V2Client, provider)
 }
