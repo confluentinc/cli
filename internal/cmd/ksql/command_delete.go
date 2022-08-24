@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"io/ioutil"
 	"net/http"
 
@@ -15,6 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
