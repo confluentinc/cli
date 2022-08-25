@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"

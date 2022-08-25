@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"

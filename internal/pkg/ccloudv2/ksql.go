@@ -3,7 +3,7 @@ package ccloudv2
 import (
 	"context"
 
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	plog "github.com/confluentinc/cli/internal/pkg/log"

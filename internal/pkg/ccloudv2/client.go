@@ -1,7 +1,7 @@
 package ccloudv2
 
 import (
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2-internal/ksql/v2"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
