@@ -73,4 +73,3 @@ steps:
 - script: |
     git checkout go.*
   displayName: 'Reset go.* just in case'
-
