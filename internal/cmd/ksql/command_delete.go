@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
@@ -35,33 +34,29 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-
-	req := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(),
-		Id:        id,
-	}
+	environmentId := c.EnvironmentId()
 
 	// Check KSQL exists
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
 
 	// Terminated cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
-	if cluster.Status == schedv1.ClusterStatus_UP {
+	if cluster.Status.Phase == "PROVISIONED" {
 		ctx := c.Config.Context()
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
 		}
 
-		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
+		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, *cluster.Id)
 		if err != nil {
 			return err
 		}
 
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
-		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
+		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(*cluster.Status.HttpEndpoint)
 		request := make(map[string][]string)
 		request["deleteTopicList"] = []string{".*"}
 		response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
@@ -78,10 +73,10 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := c.Client.KSQL.Delete(context.Background(), req); err != nil {
+	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, id)
 	return nil
 }

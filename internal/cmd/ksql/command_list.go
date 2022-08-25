@@ -1,10 +1,8 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -33,8 +31,7 @@ func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -43,8 +40,8 @@ func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	for _, cluster := range clusters {
-		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(cluster))
+	for _, cluster := range clusters.Data {
+		outputWriter.AddElement(c.formatClusterForDisplayAndList(&cluster))
 	}
 	return outputWriter.Out()
 }
