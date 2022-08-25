@@ -8,31 +8,39 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
-func newKafkaRestClient(url, userAgent string, unsafeTrace bool) *kafkarestv3.APIClient {
+type KafkaRestClient struct {
+	*kafkarestv3.APIClient
+	AuthToken string
+}
+
+func NewKafkaRestClient(url, userAgent string, unsafeTrace bool, authToken string) *KafkaRestClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
 	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
-	return kafkarestv3.NewAPIClient(cfg)
+	return &KafkaRestClient{
+		APIClient: kafkarestv3.NewAPIClient(cfg),
+		AuthToken: authToken,
+	}
 }
 
-func (c *Client) GetKafkaRestUrl() string {
-	return c.KafkaRestClient.GetConfig().Servers[0].URL
+func (c *KafkaRestClient) GetUrl() string {
+	return c.GetConfig().Servers[0].URL
 }
 
-func (c *Client) kafkaRestApiContext() context.Context {
+func (c *KafkaRestClient) kafkaRestApiContext() context.Context {
 	return context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateKafkaAcls(clusterId string, data kafkarestv3.CreateAclRequestData) (*http.Response, error) {
-	req := c.KafkaRestClient.ACLV3Api.CreateKafkaAcls(c.kafkaRestApiContext(), clusterId).CreateAclRequestData(data)
-	return c.KafkaRestClient.ACLV3Api.CreateKafkaAclsExecute(req)
+func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.CreateAclRequestData) (*http.Response, error) {
+	req := c.ACLV3Api.CreateKafkaAcls(c.kafkaRestApiContext(), clusterId).CreateAclRequestData(data)
+	return c.ACLV3Api.CreateKafkaAclsExecute(req)
 }
 
-func (c *Client) GetKafkaAcls(clusterId string, acl *schedv1.ACLBinding) (kafkarestv3.AclDataList, *http.Response, error) {
-	req := c.KafkaRestClient.ACLV3Api.GetKafkaAcls(c.kafkaRestApiContext(), clusterId).Host(acl.Entry.Host).Principal(acl.Entry.Principal).ResourceName(acl.Pattern.Name)
+func (c *KafkaRestClient) GetKafkaAcls(clusterId string, acl *schedv1.ACLBinding) (kafkarestv3.AclDataList, *http.Response, error) {
+	req := c.ACLV3Api.GetKafkaAcls(c.kafkaRestApiContext(), clusterId).Host(acl.Entry.Host).Principal(acl.Entry.Principal).ResourceName(acl.Pattern.Name)
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
 		req.Operation(acl.Entry.Operation.String())
@@ -50,11 +58,11 @@ func (c *Client) GetKafkaAcls(clusterId string, acl *schedv1.ACLBinding) (kafkar
 		req.ResourceType(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
 	}
 
-	return c.KafkaRestClient.ACLV3Api.GetKafkaAclsExecute(req)
+	return c.ACLV3Api.GetKafkaAclsExecute(req)
 }
 
-func (c *Client) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilter) (kafkarestv3.InlineResponse200, *http.Response, error) {
-	req := c.KafkaRestClient.ACLV3Api.DeleteKafkaAcls(c.kafkaRestApiContext(), clusterId).Host(acl.EntryFilter.Host).Principal(acl.EntryFilter.Principal).ResourceName(acl.PatternFilter.Name)
+func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilter) (kafkarestv3.InlineResponse200, *http.Response, error) {
+	req := c.ACLV3Api.DeleteKafkaAcls(c.kafkaRestApiContext(), clusterId).Host(acl.EntryFilter.Host).Principal(acl.EntryFilter.Principal).ResourceName(acl.PatternFilter.Name)
 
 	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
 		req.Operation(acl.EntryFilter.Operation.String())
@@ -72,5 +80,5 @@ func (c *Client) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilter) (kafk
 		req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
 	}
 
-	return c.KafkaRestClient.ACLV3Api.DeleteKafkaAclsExecute(req)
+	return c.ACLV3Api.DeleteKafkaAclsExecute(req)
 }

@@ -1293,8 +1293,8 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		if enableREST {
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 
-			client := &ccloudv2.Client{
-				KafkaRestClient: &kafkarestv3.APIClient{
+			client := &ccloudv2.KafkaRestClient{
+				APIClient: &kafkarestv3.APIClient{
 					ACLV3Api: &kafkarestmock.ACLV3Api{
 						CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
 							return kafkarestv3.ApiCreateKafkaAclsRequest{}
