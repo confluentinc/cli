@@ -1315,6 +1315,40 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
 						},
 					},
+					ConfigsV3Api: &kafkarestmock.ConfigsV3Api{
+						ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
+							return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
+						},
+						ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+							return kafkarestv3.TopicConfigDataList{}, nil, nil
+						},
+						UpdateKafkaTopicConfigBatchFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest {
+							return kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest{}
+						},
+						UpdateKafkaTopicConfigBatchExecuteFunc: func(_ kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest) (*http.Response, error) {
+							return nil, nil
+						},
+					},
+					TopicV3Api: &kafkarestmock.TopicV3Api{
+						CreateKafkaTopicFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaTopicRequest {
+							return kafkarestv3.ApiCreateKafkaTopicRequest{}
+						},
+						CreateKafkaTopicExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaTopicRequest) (kafkarestv3.TopicData, *http.Response, error) {
+							return kafkarestv3.TopicData{}, nil, nil
+						},
+						DeleteKafkaTopicFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiDeleteKafkaTopicRequest {
+							return kafkarestv3.ApiDeleteKafkaTopicRequest{}
+						},
+						DeleteKafkaTopicExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaTopicRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
+							return kafkarestv3.ApiListKafkaTopicsRequest{}
+						},
+						ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
+							return kafkarestv3.TopicDataList{}, nil, nil
+						},
+					},
 				},
 			}
 

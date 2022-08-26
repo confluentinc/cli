@@ -6,9 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -71,15 +70,13 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil && !dryRun {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 		i := 0
-		for k, v := range configMap {
-			val := v
+		for key, val := range configMap {
 			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
-				Name:  k,
-				Value: &val,
+				Name:  key,
+				Value: *kafkarestv3.NewNullableString(&val),
 			}
 			i++
 		}
@@ -88,16 +85,15 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		lkc := kafkaClusterConfig.ID
 
-		_, httpResp, err := kafkaREST.Client.TopicV3Api.CreateKafkaTopic(kafkaREST.Context, lkc, &kafkarestv3.CreateKafkaTopicOpts{
-			CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
-				TopicName:         topicName,
-				PartitionsCount:   numPartitions,
-				ReplicationFactor: defaultReplicationFactor,
-				Configs:           topicConfigs,
-			}),
-		})
+		data := kafkarestv3.CreateTopicRequestData{
+			TopicName:         topicName,
+			PartitionsCount:   &numPartitions,
+			ReplicationFactor: utils.Int32Ptr(defaultReplicationFactor),
+			Configs:           &topicConfigs,
+		}
+
+		_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
@@ -108,8 +104,8 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					if strings.Contains(restErr.Message, "already exists") {
 						if !ifNotExists {
 							return errors.NewErrorWithSuggestions(
-								fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, lkc),
-								fmt.Sprintf(errors.TopicExistsSuggestions, lkc, lkc))
+								fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
+								fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
 						}
 						return nil
 					}
@@ -120,7 +116,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					}
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -143,15 +139,14 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	}
 
 	topic := &schedv1.Topic{
-		Spec:     &schedv1.TopicSpecification{Configs: make(map[string]string)},
-		Validate: false,
+		Spec: &schedv1.TopicSpecification{
+			Name:              topicName,
+			NumPartitions:     numPartitions,
+			ReplicationFactor: defaultReplicationFactor,
+			Configs:           configMap,
+		},
+		Validate: dryRun,
 	}
-
-	topic.Spec.Name = topicName
-	topic.Spec.NumPartitions = numPartitions
-	topic.Spec.ReplicationFactor = defaultReplicationFactor
-	topic.Validate = dryRun
-	topic.Spec.Configs = configMap
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExists)
