@@ -39,6 +39,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
+	"/ksqldbcm/v2/clusters/{id}":                                   handleKsqlCluster,
+	"/ksqldbcm/v2/clusters":                                        handleKsqlClusters,
 }
 
 func NewV2Router(t *testing.T) *mux.Router {

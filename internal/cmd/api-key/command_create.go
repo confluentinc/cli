@@ -64,7 +64,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client, c.V2Client)
 	if err != nil {
 		return err
 	}
