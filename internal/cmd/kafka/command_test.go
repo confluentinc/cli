@@ -1293,8 +1293,8 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 		if enableREST {
 			ctx := context.WithValue(context.Background(), krsdk.ContextAccessToken, "dummy-bearer-token")
 
-			client := &ccloudv2.Client{
-				KafkaRestClient: &kafkarestv3.APIClient{
+			client := &ccloudv2.KafkaRestClient{
+				APIClient: &kafkarestv3.APIClient{
 					ACLV3Api: &kafkarestmock.ACLV3Api{
 						CreateKafkaAclsFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaAclsRequest {
 							return kafkarestv3.ApiCreateKafkaAclsRequest{}
@@ -1313,6 +1313,48 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 						},
 						GetKafkaAclsExecuteFunc: func(_ kafkarestv3.ApiGetKafkaAclsRequest) (kafkarestv3.AclDataList, *http.Response, error) {
 							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
+						},
+					},
+					ConfigsV3Api: &kafkarestmock.ConfigsV3Api{
+						ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
+							return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
+						},
+						ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+							return kafkarestv3.TopicConfigDataList{}, nil, nil
+						},
+						UpdateKafkaTopicConfigBatchFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest {
+							return kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest{}
+						},
+						UpdateKafkaTopicConfigBatchExecuteFunc: func(_ kafkarestv3.ApiUpdateKafkaTopicConfigBatchRequest) (*http.Response, error) {
+							return nil, nil
+						},
+					},
+					ConsumerGroupV3Api: &kafkarestmock.ConsumerGroupV3Api{
+						ListKafkaConsumerGroupsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaConsumerGroupsRequest {
+							return kafkarestv3.ApiListKafkaConsumerGroupsRequest{}
+						},
+						ListKafkaConsumerGroupsExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumerGroupsRequest) (kafkarestv3.ConsumerGroupDataList, *http.Response, error) {
+							return kafkarestv3.ConsumerGroupDataList{}, nil, nil
+						},
+					},
+					TopicV3Api: &kafkarestmock.TopicV3Api{
+						CreateKafkaTopicFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaTopicRequest {
+							return kafkarestv3.ApiCreateKafkaTopicRequest{}
+						},
+						CreateKafkaTopicExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaTopicRequest) (kafkarestv3.TopicData, *http.Response, error) {
+							return kafkarestv3.TopicData{}, nil, nil
+						},
+						DeleteKafkaTopicFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiDeleteKafkaTopicRequest {
+							return kafkarestv3.ApiDeleteKafkaTopicRequest{}
+						},
+						DeleteKafkaTopicExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaTopicRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
+							return kafkarestv3.ApiListKafkaTopicsRequest{}
+						},
+						ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
+							return kafkarestv3.TopicDataList{}, nil, nil
 						},
 					},
 				},

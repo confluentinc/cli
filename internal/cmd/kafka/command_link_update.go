@@ -70,9 +70,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
-			Data: toAlterConfigBatchRequestData(configMap),
-		}),
+		AlterConfigBatchRequestData: optional.NewInterface(toAlterConfigBatchRequestData(configMap)),
 	}
 
 	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
