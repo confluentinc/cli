@@ -485,7 +485,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 
-	v2Client := ccloudv2.NewClient(cliCmd.AuthToken(), ctx.Platform.Server, cliCmd.Version.UserAgent, unsafeTrace, r.Config.IsTest)
+	v2Client := cliCmd.Config.GetCloudClientV2(unsafeTrace)
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
@@ -839,7 +839,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			v2Client := ccloudv2.NewClient(ctx.State.AuthToken, ctx.Platform.Server, command.Version.UserAgent, unsafeTrace, r.Config.IsTest)
+			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
 			ctx.Client = client
 			command.Config.Client = client
