@@ -12,6 +12,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -24,7 +25,9 @@ type pluginInfo struct {
 }
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
-func SearchPath() (map[string][]string, error) {
+func SearchPath(cfg *v1.Config) (map[string][]string, error) {
+	log.CliLogger.Debugf("Recursively searching $PATH for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+
 	pluginMap := make(map[string][]string)
 	re := regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+(\.[a-z]+)?$`)
 	delimiter := ":"
@@ -74,8 +77,8 @@ func isExecutableWindows(name string) bool {
 }
 
 // FindPlugin determines if the arguments passed in are meant for a plugin
-func FindPlugin(cmd *cobra.Command, args []string) (*pluginInfo, error) {
-	pluginMap, err := SearchPath()
+func FindPlugin(cmd *cobra.Command, args []string, cfg *v1.Config) (*pluginInfo, error) {
+	pluginMap, err := SearchPath(cfg)
 	if err != nil {
 		return nil, err
 	}
