@@ -50,7 +50,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)

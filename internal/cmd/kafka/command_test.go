@@ -1329,6 +1329,14 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 							return nil, nil
 						},
 					},
+					ConsumerGroupV3Api: &kafkarestmock.ConsumerGroupV3Api{
+						ListKafkaConsumerGroupsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaConsumerGroupsRequest {
+							return kafkarestv3.ApiListKafkaConsumerGroupsRequest{}
+						},
+						ListKafkaConsumerGroupsExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumerGroupsRequest) (kafkarestv3.ConsumerGroupDataList, *http.Response, error) {
+							return kafkarestv3.ConsumerGroupDataList{}, nil, nil
+						},
+					},
 					TopicV3Api: &kafkarestmock.TopicV3Api{
 						CreateKafkaTopicFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaTopicRequest {
 							return kafkarestv3.ApiCreateKafkaTopicRequest{}

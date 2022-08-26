@@ -147,7 +147,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 		partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)

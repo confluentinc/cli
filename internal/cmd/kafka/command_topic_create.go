@@ -74,9 +74,10 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 		i := 0
 		for key, val := range configMap {
+			v := val
 			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
 				Name:  key,
-				Value: *kafkarestv3.NewNullableString(&val),
+				Value: *kafkarestv3.NewNullableString(&v),
 			}
 			i++
 		}
@@ -97,7 +98,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestBadRequestErrorCode {
 					// Ignore or pretty print topic exists error

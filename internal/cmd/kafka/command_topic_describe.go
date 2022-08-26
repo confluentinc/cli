@@ -64,7 +64,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)

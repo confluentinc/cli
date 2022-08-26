@@ -95,7 +95,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
@@ -144,7 +144,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
 				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
-			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
+			sort.Slice(kafkaRestConfigs.Data, func(i, j int) bool {
 				return kafkaRestConfigs.Data[i].Name < kafkaRestConfigs.Data[j].Name
 			})
 

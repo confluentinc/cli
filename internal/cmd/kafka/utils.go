@@ -46,9 +46,10 @@ func toAlterConfigBatchRequestDataCloud(configsMap map[string]string) cckafkares
 	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
+		v := val
 		kafkaRestConfigs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: *cckafkarestv3.NewNullableString(&val),
+			Value: *cckafkarestv3.NewNullableString(&v),
 		}
 		i++
 	}
@@ -59,9 +60,10 @@ func toAlterConfigBatchRequestData(configsMap map[string]string) cpkafkarestv3.A
 	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
+		v := val
 		kafkaRestConfigs[i] = cpkafkarestv3.AlterConfigBatchRequestDataData{
 			Name:  key,
-			Value: &val,
+			Value: &v,
 		}
 		i++
 	}
