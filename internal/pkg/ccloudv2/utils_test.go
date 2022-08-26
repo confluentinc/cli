@@ -1,8 +1,10 @@
 package ccloudv2
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsCCloudURL_True(t *testing.T) {
@@ -27,5 +29,18 @@ func TestIsCCloudURL_False(t *testing.T) {
 	} {
 		isCCloud := IsCCloudURL(url, false)
 		require.False(t, isCCloud, url+" should return false")
+	}
+}
+
+func TestGetServerUrl(t *testing.T) {
+	m := map[string]string{
+		"https://confluent.cloud":                  "https://api.confluent.cloud",
+		"https://devel.cpdev.cloud":                "https://api.devel.cpdev.cloud",
+		"https://stag.cpdev.cloud":                 "https://api.stag.cpdev.cloud",
+		"https://healthy-fox.gcp.priv.cpdev.cloud": "https://healthy-fox.gcp.priv.cpdev.cloud/api",
+	}
+
+	for baseUrl, serverUrl := range m {
+		assert.Equal(t, serverUrl, getServerUrl(baseUrl))
 	}
 }
