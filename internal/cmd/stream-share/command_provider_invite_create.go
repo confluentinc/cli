@@ -60,7 +60,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 
 	invite, httpResp, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, c.buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)

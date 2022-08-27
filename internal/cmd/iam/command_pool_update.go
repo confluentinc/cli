@@ -85,7 +85,7 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 
 	resp, httpResp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	describeIdentityPool := &identityPool{
