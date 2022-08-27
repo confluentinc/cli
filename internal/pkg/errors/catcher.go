@@ -24,7 +24,7 @@ import (
 
 const quotaExceededRegex = ".* is currently limited to .*"
 
-type responseBody struct {
+type errorResponseBody struct {
 	Error   []errorDetail `json:"errors"`
 	Message string        `json:"message"`
 }
@@ -141,25 +141,32 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-func CatchV2ErrorDetailWithResponse(err error, r *http.Response) error {
+func CatchCCloudV2Error(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
 	if r == nil {
 		return err
 	}
 
 	body, _ := io.ReadAll(r.Body)
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
-func CatchV2ErrorDetailWithResponseBody(err error, body []byte) error {
-	var resBody responseBody
+func CatchCCloudV2ErrorResponseBody(err error, body []byte) error {
+	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
 	if len(resBody.Error) > 0 {
 		detail := resBody.Error[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(resBody.Error[0].Detail, "\n"))
+			return Wrap(err, strings.TrimSuffix(detail, "\n"))
 		}
+	}
+	if resBody.Message != "" {
+		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
 	}
 	return err
 }
@@ -184,10 +191,10 @@ func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponse(err, r)
+	return CatchCCloudV2Error(err, r)
 }
 
 func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) error {
@@ -203,10 +210,10 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 		if r.Request.Method == http.MethodDelete {
 			suggestions = KafkaClusterDeletingSuggestions
 		}
-		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "Kafka cluster not found or access forbidden", suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Kafka cluster not found or access forbidden", suggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponse(err, r)
+	return CatchCCloudV2Error(err, r)
 }
 
 func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
@@ -223,14 +230,14 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
-	return CatchV2ErrorDetailWithResponse(err, r)
+	return CatchCCloudV2Error(err, r)
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
@@ -259,7 +266,7 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	return CatchV2ErrorDetailWithResponseBody(err, body)
+	return CatchCCloudV2ErrorResponseBody(err, body)
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
@@ -273,31 +280,11 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
 			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
 		case http.StatusForbidden:
-			return NewWrapErrorWithSuggestions(CatchV2ErrorDetailWithResponse(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+			return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
 		}
 	}
 
-	return CatchV2ErrorDetailWithResponse(err, r)
-}
-
-func CatchV2ErrorMessageWithResponse(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-	body, _ := io.ReadAll(r.Body)
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if resBody.Message != "" {
-		// {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
-		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
-		return Wrap(err, strings.TrimSuffix(resBody.Message, "\n"))
-	}
-
-	return err
+	return CatchCCloudV2Error(err, r)
 }
 
 func isResourceNotFoundError(err error) bool {
