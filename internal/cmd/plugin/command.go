@@ -4,13 +4,15 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
 	*pcmd.CLICommand
+	cfg *v1.Config
 }
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plugin",
 		Short: "Manage Confluent plugins.",
@@ -52,7 +54,12 @@ Naming collisions with existing CLI commands and other plugins:
 	with the same name will be ignored.`,
 	}
 
-	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
-	cmd.AddCommand(newListCommand())
+	c := &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:        cfg,
+	}
+
+	cmd.AddCommand(c.newListCommand())
+
 	return c.Command
 }
