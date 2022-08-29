@@ -34,7 +34,7 @@ func (c *command) describeProviderShare(cmd *cobra.Command, args []string) error
 
 	provideShare, httpResp, err := c.V2Client.DescribeProviderShare(shareId)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, c.buildProviderShare(provideShare), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
