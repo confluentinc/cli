@@ -18,7 +18,6 @@ func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 		Id:               stringToPtr("ss-12345"),
 		ProviderUserName: stringToPtr("provider"),
 		Status:           stringToPtr("active"),
-		SharedResource:   &cdxv1.ObjectReference{Id: "sr-12345"},
 		InviteExpiresAt:  &expiresAt,
 	}
 }
@@ -34,8 +33,6 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 		ProviderUserName:         stringToPtr("provider"),
 		Status:                   stringToPtr("active"),
 		DeliveryMethod:           stringToPtr("email"),
-		ServiceAccount:           &cdxv1.ObjectReference{Id: "sa-123456"},
-		SharedResource:           &cdxv1.ObjectReference{Id: "sr-12345"},
 		RedeemedAt:               &redeemedAt,
 		InvitedAt:                &invitedAt,
 		InviteExpiresAt:          &expiresAt,
