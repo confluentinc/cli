@@ -27,7 +27,7 @@ import (
 
 var (
 	noRebuild    = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update       = flag.Bool("update", true, "update golden files")
+	update       = flag.Bool("update", false, "update golden files")
 	debug        = flag.Bool("debug", true, "enable verbose output")
 	cover        = false
 	testBin      = "bin/confluent_test"
