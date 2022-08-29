@@ -9,6 +9,7 @@ import (
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -30,6 +31,18 @@ func kafkaRestHttpError(httpResp *http.Response) error {
 		errors.InternalServerErrorSuggestions)
 }
 
+func parseOpenAPIErrorCloud(err error) (*kafkaRestV3Error, error) {
+	if openAPIError, ok := err.(cckafkarestv3.GenericOpenAPIError); ok {
+		var decodedError kafkaRestV3Error
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
 func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
 	if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 		var decodedError kafkaRestV3Error
@@ -49,6 +62,18 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionErrorMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 		}
 		return errors.Errorf(errors.KafkaRestConnectionErrorMsg, url, e.Err)
+	case cckafkarestv3.GenericOpenAPIError:
+		openAPIError, parseErr := parseOpenAPIErrorCloud(err)
+		if parseErr == nil {
+			if strings.Contains(openAPIError.Message, "invalid_token") {
+				return errors.NewErrorWithSuggestions(errors.InvalidMDSTokenErrorMsg, errors.InvalidMDSTokenSuggestions)
+			}
+			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
+		}
+		if httpResp != nil && httpResp.StatusCode >= 400 {
+			return kafkaRestHttpError(httpResp)
+		}
+		return errors.NewErrorWithSuggestions(errors.UnknownErrorMsg, errors.InternalServerErrorSuggestions)
 	case kafkarestv3.GenericOpenAPIError:
 		openAPIError, parseErr := parseOpenAPIError(err)
 		if parseErr == nil {
@@ -88,64 +113,6 @@ func aclBindingToClustersClusterIdAclsGetOpts(acl *schedv1.ACLBinding) kafkarest
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
 		opts.Permission = optional.NewString(acl.Entry.PermissionType.String())
-	}
-
-	return opts
-}
-
-// Converts ACLBinding to Kafka REST ClustersClusterIdAclsPostOpts
-func aclBindingToClustersClusterIdAclsPostOpts(acl *schedv1.ACLBinding) kafkarestv3.CreateKafkaAclsOpts {
-	var aclRequestData kafkarestv3.CreateAclRequestData
-
-	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		aclRequestData.ResourceType = kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String())
-	}
-
-	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		aclRequestData.PatternType = acl.Pattern.PatternType.String()
-	}
-
-	aclRequestData.ResourceName = acl.Pattern.Name
-	aclRequestData.Principal = acl.Entry.Principal
-	aclRequestData.Host = acl.Entry.Host
-
-	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		aclRequestData.Operation = acl.Entry.Operation.String()
-	}
-
-	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		aclRequestData.Permission = acl.Entry.PermissionType.String()
-	}
-
-	var opts kafkarestv3.CreateKafkaAclsOpts
-	opts.CreateAclRequestData = optional.NewInterface(aclRequestData)
-
-	return opts
-}
-
-// Converts ACLFilter to Kafka REST ClustersClusterIdAclsDeleteOpts
-func aclFilterToClustersClusterIdAclsDeleteOpts(acl *schedv1.ACLFilter) kafkarestv3.DeleteKafkaAclsOpts {
-	var opts kafkarestv3.DeleteKafkaAclsOpts
-
-	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		opts.ResourceType = optional.NewInterface(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
-	}
-
-	opts.ResourceName = optional.NewString(acl.PatternFilter.Name)
-
-	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
-		opts.PatternType = optional.NewString(acl.PatternFilter.PatternType.String())
-	}
-
-	opts.Principal = optional.NewString(acl.EntryFilter.Principal)
-	opts.Host = optional.NewString(acl.EntryFilter.Host)
-
-	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
-		opts.Operation = optional.NewString(acl.EntryFilter.Operation.String())
-	}
-
-	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		opts.Permission = optional.NewString(acl.EntryFilter.PermissionType.String())
 	}
 
 	return opts

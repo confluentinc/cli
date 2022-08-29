@@ -655,5 +655,5 @@ func (c *Config) GetLastUsedOrgId() string {
 
 func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
 	ctx := c.Context()
-	return ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), c.Version.UserAgent, unsafeTrace, c.IsTest)
+	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
 }
