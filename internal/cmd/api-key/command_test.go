@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"bytes"
 	"context"
 	"net/http"
 	"os"
@@ -377,8 +376,7 @@ func (suite *APITestSuite) TestDeleteApiKey() {
 
 func (suite *APITestSuite) TestListSrApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"list", "--resource", srClusterID})
-	err := cmd.Execute()
+	_, err := pcmd.ExecuteCommand(cmd, "list", "--resource", srClusterID)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
@@ -386,8 +384,7 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"list", "--resource", suite.kafkaCluster.Id})
-	err := cmd.Execute()
+	_, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.Id)
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
@@ -396,21 +393,18 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 // Audit Log Destination Clusters are kafka clusters, however their API keys are created by internal service accounts
 func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 	cmd := suite.newCmd()
-	buf := new(bytes.Buffer)
-	cmd.SetArgs([]string{"list", "--resource", suite.kafkaCluster.Id})
-	cmd.SetOut(buf)
+	out, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.Id)
 
-	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
-	req.Contains(buf.String(), "auditlog service account")
+	req.Contains(out, "auditlog service account")
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
 	cmd := suite.newCmd()
 	cmd.SetArgs([]string{"list", "--resource", "cloud"})
-	err := cmd.Execute()
+	_, err := pcmd.ExecuteCommand(cmd, "list", "--resource", "cloud")
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
@@ -418,17 +412,13 @@ func (suite *APITestSuite) TestListCloudAPIKey() {
 
 func (suite *APITestSuite) TestListEmails() {
 	cmd := suite.newCmd()
-	buf := new(bytes.Buffer)
-	cmd.SetArgs([]string{"list"})
-	cmd.SetOut(buf)
-
-	err := cmd.Execute()
+	out, err := pcmd.ExecuteCommand(cmd, "list")
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
-	req.Contains(buf.String(), "<auditlog service account>")
-	req.Contains(buf.String(), "<service account>")
-	req.Contains(buf.String(), "csreesangkom@confluent.io")
+	req.Contains(out, "<auditlog service account>")
+	req.Contains(out, "<service account>")
+	req.Contains(out, "csreesangkom@confluent.io")
 }
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {
