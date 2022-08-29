@@ -151,10 +151,6 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	body, _ := io.ReadAll(r.Body)
-	return CatchCCloudV2ErrorResponseBody(err, body)
-}
-
-func CatchCCloudV2ErrorResponseBody(err error, body []byte) error {
 	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
 	if len(resBody.Error) > 0 {
@@ -168,6 +164,7 @@ func CatchCCloudV2ErrorResponseBody(err error, body []byte) error {
 	if resBody.Message != "" {
 		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
 	}
+
 	return err
 }
 
@@ -225,12 +222,12 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 		return err
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "CKU must be greater") {
+	err = CatchCCloudV2Error(err, r)
+	if strings.Contains(err.Error(), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	return CatchCCloudV2ErrorResponseBody(err, body)
+	return err
 }
 
 func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
@@ -260,13 +257,13 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 		return err
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Service name is already in use") {
+	err = CatchCCloudV2Error(err, r)
+	if strings.Contains(err.Error(), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	return CatchCCloudV2ErrorResponseBody(err, body)
+	return err
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
