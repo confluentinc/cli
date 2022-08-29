@@ -1336,17 +1336,37 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 						GetKafkaConsumerGroupExecuteFunc: func(_ kafkarestv3.ApiGetKafkaConsumerGroupRequest) (kafkarestv3.ConsumerGroupData, *http.Response, error) {
 							return kafkarestv3.ConsumerGroupData{}, nil, nil
 						},
+						GetKafkaConsumerGroupLagSummaryFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiGetKafkaConsumerGroupLagSummaryRequest {
+							return kafkarestv3.ApiGetKafkaConsumerGroupLagSummaryRequest{}
+						},
+						GetKafkaConsumerGroupLagSummaryExecuteFunc: func(_ kafkarestv3.ApiGetKafkaConsumerGroupLagSummaryRequest) (kafkarestv3.ConsumerGroupLagSummaryData, *http.Response, error) {
+							return kafkarestv3.ConsumerGroupLagSummaryData{}, nil, nil
+						},
 						ListKafkaConsumerGroupsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaConsumerGroupsRequest {
 							return kafkarestv3.ApiListKafkaConsumerGroupsRequest{}
 						},
 						ListKafkaConsumerGroupsExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumerGroupsRequest) (kafkarestv3.ConsumerGroupDataList, *http.Response, error) {
 							return kafkarestv3.ConsumerGroupDataList{}, nil, nil
 						},
+						ListKafkaConsumerLagsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaConsumerLagsRequest {
+							return kafkarestv3.ApiListKafkaConsumerLagsRequest{}
+						},
+						ListKafkaConsumerLagsExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumerLagsRequest) (kafkarestv3.ConsumerLagDataList, *http.Response, error) {
+							return kafkarestv3.ConsumerLagDataList{}, nil, nil
+						},
 						ListKafkaConsumersFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaConsumersRequest {
 							return kafkarestv3.ApiListKafkaConsumersRequest{}
 						},
 						ListKafkaConsumersExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumersRequest) (kafkarestv3.ConsumerDataList, *http.Response, error) {
 							return kafkarestv3.ConsumerDataList{}, nil, nil
+						},
+					},
+					PartitionV3Api: &kafkarestmock.PartitionV3Api{
+						GetKafkaConsumerLagFunc: func(_ context.Context, _, _, _ string, _ int32) kafkarestv3.ApiGetKafkaConsumerLagRequest {
+							return kafkarestv3.ApiGetKafkaConsumerLagRequest{}
+						},
+						GetKafkaConsumerLagExecuteFunc: func(_ kafkarestv3.ApiGetKafkaConsumerLagRequest) (kafkarestv3.ConsumerLagData, *http.Response, error) {
+							return kafkarestv3.ConsumerLagData{}, nil, nil
 						},
 					},
 					TopicV3Api: &kafkarestmock.TopicV3Api{
