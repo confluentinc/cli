@@ -8,7 +8,6 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
@@ -28,13 +27,12 @@ type Client struct {
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
-	KafkaRestClient        *kafkarestv3.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
 }
 
-func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *Client {
+func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
 	url := getServerUrl(baseUrl)
 	if isTest {
 		url = testserver.TestV2CloudURL.String()
@@ -50,7 +48,6 @@ func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KafkaRestClient:        newKafkaRestClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
