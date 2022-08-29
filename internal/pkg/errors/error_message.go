@@ -475,4 +475,8 @@ const (
 
 	// FeatureFlags errors
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
+
+	// General
+	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
+	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
 )
