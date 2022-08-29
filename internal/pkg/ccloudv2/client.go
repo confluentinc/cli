@@ -12,6 +12,8 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
@@ -33,7 +35,10 @@ type Client struct {
 }
 
 func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *Client {
-	url := getServerUrl(baseUrl, isTest)
+	url := getServerUrl(baseUrl)
+	if isTest {
+		url = testserver.TestV2CloudURL.String()
+	}
 
 	return &Client{
 		AuthToken: authToken,
