@@ -27,7 +27,7 @@ import (
 
 var (
 	noRebuild    = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update       = flag.Bool("update", false, "update golden files")
+	update       = flag.Bool("update", true, "update golden files")
 	debug        = flag.Bool("debug", true, "enable verbose output")
 	cover        = false
 	testBin      = "bin/confluent_test"
@@ -49,6 +49,8 @@ type CLITest struct {
 	env []string
 	// The login context; either "cloud" or "platform"
 	login string
+	// Optional organization id to log in as
+	organizationId string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
 	// The kafka cluster ID to "use"
@@ -167,7 +169,15 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		case "cloud":
 			loginURL := s.getLoginURL(true, tt)
 			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
+			loginString := "login --url " + loginURL
+			if tt.organizationId != "" {
+				loginString += fmt.Sprintf(" --organization-id %s", tt.organizationId)
+				env = append(env, fmt.Sprintf("%s=%s", pauth.ConfluentCloudOrganizationId, tt.organizationId))
+				os.Setenv(pauth.ConfluentCloudOrganizationId, tt.organizationId)
+				defer os.Unsetenv(pauth.ConfluentCloudOrganizationId)
+			}
+
+			output := runCommand(t, testBin, env, loginString, 0)
 			if *debug {
 				fmt.Println(output)
 			}
