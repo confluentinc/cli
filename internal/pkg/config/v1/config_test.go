@@ -312,6 +312,7 @@ func TestConfig_Load(t *testing.T) {
 			// Get around automatically assigned anonymous id and IsTest check
 			tt.want.AnonymousId = cfg.AnonymousId
 			tt.want.IsTest = cfg.IsTest
+			tt.want.Version = cfg.Version
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)

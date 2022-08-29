@@ -25,10 +25,10 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("description", "", "Description of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("filter")

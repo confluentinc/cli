@@ -22,13 +22,13 @@ type row struct {
 	filePath   string
 }
 
-func newListCommand() *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Confluent CLI plugins in $PATH.",
 		Long:  `List Confluent CLI plugins in $PATH. Plugins are executable files that begin with "confluent-".`,
 		Args:  cobra.NoArgs,
-		RunE:  list,
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -36,8 +36,8 @@ func newListCommand() *cobra.Command {
 	return cmd
 }
 
-func list(cmd *cobra.Command, _ []string) error {
-	pluginMap, err := plugin.SearchPath()
+func (c *command) list(cmd *cobra.Command, _ []string) error {
+	pluginMap, err := plugin.SearchPath(c.cfg)
 	if err != nil {
 		return err
 	}

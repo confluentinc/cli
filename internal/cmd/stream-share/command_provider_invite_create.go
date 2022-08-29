@@ -18,13 +18,13 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Invite a user with email "user@example.com":`,
-				Code: "confluent stream-share provider invite create --email user@example.com --environment env-12345 --kafka-cluster lkc-12345 --topic topic-12345",
+				Code: "confluent stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-12345 --cluster lkc-12345",
 			},
 		),
 	}
 
-	cmd.Flags().String("email", "", "Email of the user with whom the topic is shared")
-	cmd.Flags().String("topic", "", "Topic to be shared")
+	cmd.Flags().String("email", "", "Email of the user with whom to share the topic.")
+	cmd.Flags().String("topic", "", "Topic to be shared.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

@@ -68,7 +68,10 @@ func buildWhitelist() []string {
 		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, new(pversion.Version), true)
+		cfg.IsTest = true
+		cfg.Version = new(pversion.Version)
+	
+		cmd := pcmd.NewConfluentCommand(cfg)
 		usage.WhitelistCommandsAndFlags(cmd, whitelist)
 	}
 

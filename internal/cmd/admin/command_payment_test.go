@@ -131,12 +131,8 @@ func TestPaymentRegexValidation(t *testing.T) {
 func getCommand() (c *command) {
 	c = &command{
 		AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{
-			CLICommand: &pcmd.CLICommand{
-				Command: mockAdminCommand(),
-				Config:  nil,
-				Version: nil,
-			},
-			Client: mockClient(),
+			CLICommand: &pcmd.CLICommand{Command: mockAdminCommand()},
+			Client:     mockClient(),
 			State: &v1.ContextState{
 				Auth: &v1.AuthConfig{
 					User: &orgv1.User{},

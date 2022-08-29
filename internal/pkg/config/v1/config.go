@@ -12,10 +12,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -71,17 +73,23 @@ var (
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck     bool                     `json:"disable_update_check"`
-	DisableUpdates         bool                     `json:"disable_updates"`
-	DisablePlugins         bool                     `json:"disable_plugins"`
-	NoBrowser              bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms              map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials            map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts               map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates          map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext         string                   `json:"current_context"`
-	AnonymousId            string                   `json:"anonymous_id,omitempty"`
-	IsTest                 bool                     `json:"-"`
+
+	DisableUpdateCheck bool                     `json:"disable_update_check"`
+	DisableUpdates     bool                     `json:"disable_updates"`
+	DisablePlugins     bool                     `json:"disable_plugins"`
+	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts           map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
+	CurrentContext     string                   `json:"current_context"`
+	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+
+	// The following configurations are not persisted between runs
+
+	IsTest  bool              `json:"-"`
+	Version *pversion.Version `json:"-"`
+
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -119,6 +127,7 @@ func New() *Config {
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
+		Version:       new(pversion.Version),
 	}
 }
 
@@ -642,4 +651,9 @@ func (c *Config) GetLastUsedOrgId() string {
 		return ctx.LastOrgId
 	}
 	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+}
+
+func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
+	ctx := c.Context()
+	return ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), c.Version.UserAgent, unsafeTrace, c.IsTest)
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -20,16 +21,16 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity pool "pool-123456":`,
-				Code: `confluent iam pool update pool-123456 --description "new description."`,
+				Code: `confluent iam pool update pool-123456 --provider op-12345 --description "New description."`,
 			},
 		),
 	}
 
+	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
-	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")

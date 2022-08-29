@@ -8,7 +8,6 @@ import (
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -36,9 +35,9 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/update"
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -50,12 +49,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *cobra.Command {
+func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
 		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
 		Long:    getLongDescription(cfg),
-		Version: ver.Version,
+		Version: cfg.Version.Version,
 	}
 
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
@@ -66,15 +65,15 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 	authTokenHandler := pauth.NewAuthTokenHandler()
-	ccloudClientFactory := pauth.NewCCloudClientFactory(ver.UserAgent)
+	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator()
-	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(isTest))
+	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(ver, isTest)
+	featureflags.Init(cfg.Version, cfg.IsTest)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
@@ -82,78 +81,73 @@ func NewConfluentCommand(cfg *v1.Config, ver *pversion.Version, isTest bool) *co
 	})
 
 	prerunner := &pcmd.PreRun{
+		Config:                  cfg,
 		AuthTokenHandler:        authTokenHandler,
 		CCloudClientFactory:     ccloudClientFactory,
-		Config:                  cfg,
 		FlagResolver:            flagResolver,
-		IsTest:                  isTest,
 		JWTValidator:            jwtValidator,
 		LoginCredentialsManager: loginCredentialsManager,
 		MDSClientManager:        mdsClientManager,
 		UpdateClient:            updateClient,
-		Version:                 ver,
+		Version:                 cfg.Version,
 	}
 
-	cmd.AddCommand(admin.New(prerunner, isTest))
+	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(auditlog.New(prerunner))
-	cmd.AddCommand(cluster.New(prerunner, ver.UserAgent))
-	cmd.AddCommand(cloudsignup.New(prerunner, ver.UserAgent, ccloudClientFactory, isTest))
+	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
+	cmd.AddCommand(cloudsignup.New(prerunner, cfg.Version.UserAgent, ccloudClientFactory, cfg.IsTest))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
-	cmd.AddCommand(kafka.New(cfg, prerunner, ver.ClientID))
+	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
-	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler, isTest))
+	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
-	cmd.AddCommand(plugin.New(prerunner))
+	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
-	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg, ver, isTest) }))
+	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(cfg, prerunner))
-	cmd.AddCommand(update.New(prerunner, ver, updateClient))
-	cmd.AddCommand(version.New(prerunner, ver))
+	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
+	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, args []string, cfg *v1.Config, ver *pversion.Version, isTest bool) error {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := pplugin.FindPlugin(cmd, args); err != nil {
+		if plugin, err := pplugin.FindPlugin(cmd, args, cfg); err != nil {
 			return err
 		} else if plugin != nil {
 			return pplugin.ExecPlugin(plugin)
 		}
 	}
 	// Usage collection is a wrapper around Execute() instead of a post-run function so we can collect the error status.
-	u := usage.New(ver.Version)
+	u := usage.New(cfg.Version.Version)
 
-	if !isTest && ver.IsReleased() {
+	if !cfg.IsTest && cfg.Version.IsReleased() {
 		cmd.PersistentPostRun = u.Collect
 	}
 
 	err := cmd.Execute()
 	errors.DisplaySuggestionsMessage(err, os.Stderr)
+	u.Error = cliv1.PtrBool(err != nil)
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
 		}
-
-		ctx := cfg.Context()
-		client := ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), ver.UserAgent, unsafeTrace, isTest)
-
-		u.Error = cliv1.PtrBool(err != nil)
-		u.Report(client)
+		u.Report(cfg.GetCloudClientV2(unsafeTrace))
 	}
 
 	return err
