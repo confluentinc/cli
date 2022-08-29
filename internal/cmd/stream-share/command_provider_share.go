@@ -45,8 +45,6 @@ func (c *command) autocompleteProviderShares() []string {
 }
 
 func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
-	serviceAccount := share.GetServiceAccount()
-	sharedResource := share.GetSharedResource()
 	element := &providerShare{
 		Id:                       share.GetId(),
 		ConsumerName:             share.GetConsumerUserName(),
@@ -54,8 +52,6 @@ func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerSh
 		ProviderName:             share.GetProviderUserName(),
 		Status:                   share.GetStatus(),
 		DeliveryMethod:           share.GetDeliveryMethod(),
-		ServiceAccountId:         serviceAccount.GetId(),
-		SharedResourceId:         sharedResource.GetId(),
 		InvitedAt:                share.GetInvitedAt(),
 		InviteExpiresAt:          share.GetInviteExpiresAt(),
 	}
