@@ -23,9 +23,9 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	root.SetOut(buf)
 	root.SetArgs(args)
 
-	c, err = root.ExecuteC()
-
 	launchdarkly.Init(nil, true)
+
+	c, err = root.ExecuteC()
 
 	return c, buf.String(), err
 }
