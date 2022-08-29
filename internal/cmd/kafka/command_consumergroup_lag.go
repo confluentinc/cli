@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,11 +28,6 @@ func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
-	instanceId := ""
-	if lagData.InstanceId != nil {
-		instanceId = *lagData.InstanceId
-	}
-
 	return &lagDataStruct{
 		ClusterId:       lagData.ClusterId,
 		ConsumerGroupId: lagData.ConsumerGroupId,
@@ -40,7 +35,7 @@ func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
 		LogEndOffset:    lagData.LogEndOffset,
 		CurrentOffset:   lagData.CurrentOffset,
 		ConsumerId:      lagData.ConsumerId,
-		InstanceId:      instanceId,
+		InstanceId:      lagData.GetInstanceId(),
 		ClientId:        lagData.ClientId,
 		TopicName:       lagData.TopicName,
 		PartitionId:     lagData.PartitionId,

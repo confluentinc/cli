@@ -138,23 +138,22 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 }
 
 func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return 0, err
 		}
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
+		partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return 0, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return 0, kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {

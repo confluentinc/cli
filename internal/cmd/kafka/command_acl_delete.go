@@ -55,8 +55,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
@@ -65,8 +64,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
-			opts := aclFilterToClustersClusterIdAclsDeleteOpts(filter)
-			deleteResp, httpResp, err := kafkaREST.Client.ACLV3Api.DeleteKafkaAcls(kafkaREST.Context, kafkaClusterConfig.ID, &opts)
+			deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 			if err != nil && httpResp == nil {
 				if i == 0 {
 					// Kafka REST is not available, fallback to KafkaAPI
@@ -75,7 +73,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				printAclsDeleted(cmd, matchingBindingCount)
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if err != nil {
@@ -83,7 +81,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					printAclsDeleted(cmd, matchingBindingCount)
 				}
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if httpResp.StatusCode == http.StatusOK {
