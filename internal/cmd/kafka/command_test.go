@@ -1330,11 +1330,23 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 						},
 					},
 					ConsumerGroupV3Api: &kafkarestmock.ConsumerGroupV3Api{
+						GetKafkaConsumerGroupFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiGetKafkaConsumerGroupRequest {
+							return kafkarestv3.ApiGetKafkaConsumerGroupRequest{}
+						},
+						GetKafkaConsumerGroupExecuteFunc: func(_ kafkarestv3.ApiGetKafkaConsumerGroupRequest) (kafkarestv3.ConsumerGroupData, *http.Response, error) {
+							return kafkarestv3.ConsumerGroupData{}, nil, nil
+						},
 						ListKafkaConsumerGroupsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaConsumerGroupsRequest {
 							return kafkarestv3.ApiListKafkaConsumerGroupsRequest{}
 						},
 						ListKafkaConsumerGroupsExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumerGroupsRequest) (kafkarestv3.ConsumerGroupDataList, *http.Response, error) {
 							return kafkarestv3.ConsumerGroupDataList{}, nil, nil
+						},
+						ListKafkaConsumersFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaConsumersRequest {
+							return kafkarestv3.ApiListKafkaConsumersRequest{}
+						},
+						ListKafkaConsumersExecuteFunc: func(_ kafkarestv3.ApiListKafkaConsumersRequest) (kafkarestv3.ConsumerDataList, *http.Response, error) {
+							return kafkarestv3.ConsumerDataList{}, nil, nil
 						},
 					},
 					TopicV3Api: &kafkarestmock.TopicV3Api{
