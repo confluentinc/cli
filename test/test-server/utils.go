@@ -164,6 +164,45 @@ func fillKeyStoreV2() {
 		},
 	}
 
+	keyStoreV2["MULTICLUSTERKEY1"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY1"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
+			Description: apikeysv2.PtrString("works for two clusters"),
+		},
+	}
+
+	keyStoreV2["MULTICLUSTERKEY2"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY2"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc123", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
+			Description: apikeysv2.PtrString("works for two clusters but on a different sr cluster"),
+		},
+	}
+
+	keyStoreV2["MULTICLUSTERKEY3"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY2"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "sa-12345"},
+			Description: apikeysv2.PtrString("works for two clusters and owned by service account"),
+		},
+	}
+
 	keyStoreV2["UIAPIKEY100"] = &apikeysv2.IamV2ApiKey{
 		Id: apikeysv2.PtrString("UIAPIKEY100"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
@@ -225,13 +264,26 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 
 	for _, key := range keyStoreV2 {
 		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
-		clusterFilter := (resourceId == "") || (resourceId == key.Spec.Resource.Id)
+		clusterFilter := (resourceId == "") || containsResourceId(key, resourceId)
 		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, *key)
 		}
 	}
 	sort.Sort(ApiKeyListV2(apiKeys))
 	return &apikeysv2.IamV2ApiKeyList{Data: apiKeys}
+}
+
+func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
+	if len(key.Spec.GetResources()) == 0 {
+		return key.Spec.Resource.Id == resourceId
+	}
+
+	for _, resource := range key.Spec.GetResources() {
+		if resource.Id == resourceId {
+			return true
+		}
+	}
+	return false
 }
 
 func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
