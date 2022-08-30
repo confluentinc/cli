@@ -134,8 +134,8 @@ func (s *CLITestSuite) TestAPIKey() {
 		// test multicluster keys
 		{name: "listing multicluster api keys", args: "api-key list", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/56.golden"},
 		{name: "listing multicluster api keys with --resource field", args: "api-key list --resource lsrc-abc", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/57.golden"},
-		{name: "listing multicluster api keys with --current-user field", args: "api-key list --current-user", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/57.golden"},
-		{name: "listing multicluster api keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/58.golden"},
+		{name: "listing multicluster api keys with --current-user field", args: "api-key list --current-user", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/58.golden"},
+		{name: "listing multicluster api keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", organizationId: "multicluster-key-org", fixture: "api-key/59.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
