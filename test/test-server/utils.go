@@ -191,7 +191,7 @@ func fillKeyStoreV2() {
 	}
 
 	keyStoreV2["MULTICLUSTERKEY3"] = &apikeysv2.IamV2ApiKey{
-		Id: apikeysv2.PtrString("MULTICLUSTERKEY2"),
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY3"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Resources: &[]apikeysv2.ObjectReference{
