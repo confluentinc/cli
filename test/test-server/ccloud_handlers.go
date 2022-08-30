@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"

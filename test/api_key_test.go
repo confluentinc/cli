@@ -1,10 +1,11 @@
 package test
 
 import (
+	"testing"
+
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func (s *CLITestSuite) TestAPIKey() {
