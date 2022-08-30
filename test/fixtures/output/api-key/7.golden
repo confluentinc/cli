@@ -10,6 +10,33 @@
   },
   {
     "created": "1999-02-24T00:00:00Z",
+    "description": "works for two clusters",
+    "key": "MULTICLUSTERKEY1",
+    "owner_email": "mhe@confluent.io",
+    "owner_resource_id": "u-44ddd",
+    "resource_id": "lkc-abc",
+    "resource_type": "kafka"
+  },
+  {
+    "created": "1999-02-24T00:00:00Z",
+    "description": "works for two clusters but on a different sr cluster",
+    "key": "MULTICLUSTERKEY2",
+    "owner_email": "mhe@confluent.io",
+    "owner_resource_id": "u-44ddd",
+    "resource_id": "lkc-abc",
+    "resource_type": "kafka"
+  },
+  {
+    "created": "1999-02-24T00:00:00Z",
+    "description": "works for two clusters and owned by service account",
+    "key": "MULTICLUSTERKEY3",
+    "owner_email": "\u003cservice account\u003e",
+    "owner_resource_id": "sa-12345",
+    "resource_id": "lkc-abc",
+    "resource_type": "kafka"
+  },
+  {
+    "created": "1999-02-24T00:00:00Z",
     "description": "first-key",
     "key": "MYKEY1",
     "owner_email": "bstrauch@confluent.io",
