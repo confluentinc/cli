@@ -455,15 +455,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			client, err := createKafkaRESTClient(restEndpoint, unsafeTrace)
-			if err != nil {
-				return nil, err
-			}
-
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, unsafeTrace, r.Config.IsTest),
-				Client:      client,
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -1031,10 +1026,10 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
-	return kafkarestv3.NewAPIClient(cfg), nil
+	return kafkarestv3.NewAPIClient(cfg)
 }

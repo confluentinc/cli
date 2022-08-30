@@ -67,7 +67,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)

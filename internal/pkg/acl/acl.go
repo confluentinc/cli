@@ -13,7 +13,8 @@ import (
 	"github.com/spf13/pflag"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -29,7 +30,7 @@ var (
 )
 
 type AclRequestDataWithError struct {
-	ResourceType kafkarestv3.AclResourceType
+	ResourceType cpkafkarestv3.AclResourceType
 	ResourceName string
 	PatternType  string
 	Principal    string
@@ -39,7 +40,7 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, listFields, humanLabels, structuredLabels []string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []cpkafkarestv3.AclData, writer io.Writer, listFields, humanLabels, structuredLabels []string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
@@ -210,8 +211,8 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	if conf.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
 
@@ -220,11 +221,11 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	n = strings.ReplaceAll(n, "-", "_")
 
 	enumUtils := utils.EnumUtils{}
-	enumUtils.Init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-		kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
-	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
+	enumUtils.Init(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+		cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
+	conf.ResourceType = enumUtils[n].(cpkafkarestv3.AclResourceType)
 
-	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
+	if conf.ResourceType == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 		conf.PatternType = "LITERAL"
 	}
 	conf.ResourceName = v
@@ -235,10 +236,10 @@ func convertToFlags(operations ...interface{}) string {
 
 	for _, v := range operations {
 		// clean the resources that don't map directly to flag name
-		if v == kafkarestv3.ACLRESOURCETYPE_GROUP {
+		if v == cpkafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
+		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
 		s := fmt.Sprintf("%v", v)
@@ -264,15 +265,15 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 
 	if aclConfiguration.ResourceType == "" {
 		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *kafkarestv3.CreateKafkaAclsOpts {
-	return &kafkarestv3.CreateKafkaAclsOpts{
-		CreateAclRequestData: optional.NewInterface(kafkarestv3.CreateAclRequestData{
+func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
+	return &cpkafkarestv3.CreateKafkaAclsOpts{
+		CreateAclRequestData: optional.NewInterface(cpkafkarestv3.CreateAclRequestData{
 			ResourceType: acl.ResourceType,
 			ResourceName: acl.ResourceName,
 			PatternType:  acl.PatternType,
@@ -286,8 +287,8 @@ func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *kafkarestv3.Cre
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclRequest(acl *AclRequestDataWithError) *kafkarestv3.GetKafkaAclsOpts {
-	opts := &kafkarestv3.GetKafkaAclsOpts{}
+func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
+	opts := &cpkafkarestv3.GetKafkaAclsOpts{}
 	if acl.ResourceType != "" {
 		opts.ResourceType = optional.NewInterface(acl.ResourceType)
 	}
@@ -312,8 +313,8 @@ func AclRequestToListAclRequest(acl *AclRequestDataWithError) *kafkarestv3.GetKa
 	return opts
 }
 
-func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *kafkarestv3.DeleteKafkaAclsOpts {
-	return &kafkarestv3.DeleteKafkaAclsOpts{
+func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
+	return &cpkafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
 		PatternType:  optional.NewString(acl.PatternType),
@@ -324,8 +325,8 @@ func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *kafkarestv3.Del
 	}
 }
 
-func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.AclData {
-	return kafkarestv3.AclData{
+func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.AclData {
+	return cpkafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
 		PatternType:  data.PatternType,
@@ -336,7 +337,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	}
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp cckafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
 	// non list commands which do not have -o flags also uses this function, need to set default
 	_, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

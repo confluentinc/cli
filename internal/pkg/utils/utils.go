@@ -170,3 +170,7 @@ func ArrayToCommaDelimitedString(arr []string) string {
 
 	return delimitedStr.String()
 }
+
+func Int32Ptr(x int32) *int32 {
+	return &x
+}
