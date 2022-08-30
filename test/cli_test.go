@@ -49,8 +49,6 @@ type CLITest struct {
 	env []string
 	// The login context; either "cloud" or "platform"
 	login string
-	// Optional organization id to log in as
-	organizationId string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
 	// The kafka cluster ID to "use"
@@ -167,15 +165,19 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		// Executes login command if test specifies
 		switch tt.login {
 		case "cloud":
-			loginURL := s.getLoginURL(true, tt)
-			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-			loginString := "login --url " + loginURL
-			if tt.organizationId != "" {
-				loginString += fmt.Sprintf(" --organization-id %s", tt.organizationId)
-				env = append(env, fmt.Sprintf("%s=%s", pauth.ConfluentCloudOrganizationId, tt.organizationId))
-				os.Setenv(pauth.ConfluentCloudOrganizationId, tt.organizationId)
-				defer os.Unsetenv(pauth.ConfluentCloudOrganizationId)
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			for _, e := range env {
+				keyVal := strings.Split(e, "=")
+				os.Setenv(keyVal[0], keyVal[1])
 			}
+
+			defer func() {
+				for _, e := range env {
+					keyVal := strings.Split(e, "=")
+					os.Unsetenv(keyVal[0])
+				}
+			}()
 
 			output := runCommand(t, testBin, env, loginString, 0)
 			if *debug {
