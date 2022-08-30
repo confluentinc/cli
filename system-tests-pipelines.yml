@@ -14,7 +14,7 @@ jobs:
   steps:
   
   - template: azure-pipelines-templates/setup-secrets.yml
-
+  
   - bash: |
       git clone git@github.com:confluentinc/cc-mk-include.git mk-include
       echo "include ./mk-include/cc-begin.mk" >> Makefile
@@ -26,18 +26,18 @@ jobs:
     displayName: Add mk-include targets to Makefile
   - bash: make install-vault
     displayName: Install vault
-
+  
   - task: DownloadSecureFile@1
     name: vaultsecrets
     inputs:
       secureFile: "vault_secrets"
     displayName: Securely download Vault environment variables
-
+  
   - task: HelmInstaller@1 # Azure Pipelines preinstalls helm, replace it with version 3.3.4 specified in cc-helm.mk
     inputs:
       helmVersionToInstall: 3.3.4
     displayName: Install helm
-
+  
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath) # export VAULT_ADDR, VAULT_ROLE_ID, and VAULT_SECRET_ID
@@ -57,10 +57,10 @@ jobs:
     displayName: Inject Vault secrets, set up Docker and Helm
   - bash: make gcloud-install
     displayName: Install gcloud
-
+  
   - bash: make cpd-update
     displayName: Install cpd
-
+  
   - bash: |
       . $(vaultsecrets.secureFilePath)
       make cpd-priv-create-if-missing
@@ -70,9 +70,9 @@ jobs:
       AZURE_PIPELINES_PROJECT_NAME: "cli"
       CPD_CR_ARGS: "--pool-name ci"
     displayName: Create CPD cluster
-
+  
   - template: azure-pipelines-templates/setup-go.yml
-
+  
   - bash: |
       echo "##vso[task.setvariable variable=GOROOT]$(BIN_PATH)/go"
       echo "##vso[task.setvariable variable=GOPATH]$(BIN_PATH)/gopath"
@@ -83,21 +83,21 @@ jobs:
       mkdir -p ${GOPATH}\bin
       mkdir -p ${GOROOT}\bin
     displayName: Set up Go environment and workspace
-
+  
   - bash: make deps
     displayName: Download Go dependencies
-
+  
   - bash: make build
     displayName: Build CLI binary
-
+  
   - task: GoTool@0
     inputs:
       version: "1.15.7"
     displayName: Use Go 1.15.7 for cc-system-tests
-
+  
   - bash: make checkout-cc-system-tests
     displayName: Check out cc-system-tests
-
+  
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
@@ -106,10 +106,10 @@ jobs:
       . vault-sem-get-secret cc-system-tests
       $(BIN_PATH)/cpd priv inject-credentials --id $(kubectl config current-context) --all-namespaces
     displayName: Inject Docker credentials into CPD
-
+  
   - bash: make cpd-priv-testenv || make cpd-debug-and-err
     displayName: Get environment variables for cc-system-tests
-
+  
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
@@ -120,10 +120,10 @@ jobs:
     env:
       CREATE_KAFKA_CLUSTERS: "true"
     displayName: Initialize CPD environment
-
+  
   - bash: make replace-cli-binary
     displayName: Replace CLI binary
-
+  
   - bash: |
       export PATH="$(BIN_PATH):$PATH"
       . $(vaultsecrets.secureFilePath)
@@ -134,7 +134,7 @@ jobs:
     env:
       GO_TEST_PACKAGE_ARGS: "./test/cli/..."
     displayName: Run system tests
-
+  
   - bash: make cpd-destroy
     condition: always()
     displayName: Free CPD
