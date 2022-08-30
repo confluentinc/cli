@@ -1,6 +1,7 @@
 package testserver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
@@ -83,16 +86,22 @@ func init() {
 
 // Handler for: "/api/me"
 func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
-	org := &orgv1.Organization{Id: 42, ResourceId: "abc-123", Name: "Confluent"}
-	if !isAuditLogEnabled {
-		org.AuditLog = &orgv1.AuditLog{
-			ClusterId:        "lkc-ab123",
-			AccountId:        "env-987zy",
-			ServiceAccountId: auditLogServiceAccountID,
-			TopicName:        "confluent-audit-log-events",
-		}
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		orgResourceId := os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+		if orgResourceId == "" {
+			orgResourceId = "abc-123"
+		}
+
+		org := &orgv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		if !isAuditLogEnabled {
+			org.AuditLog = &orgv1.AuditLog{
+				ClusterId:        "lkc-ab123",
+				AccountId:        "env-987zy",
+				ServiceAccountId: auditLogServiceAccountID,
+				TopicName:        "confluent-audit-log-events",
+			}
+		}
+
 		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
 			User: &orgv1.User{
 				Id:         23,
@@ -779,6 +788,13 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 // Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
 func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		ldUserData, err := base64.StdEncoding.DecodeString(vars["user"])
+		require.NoError(t, err)
+
+		ldUser := lduser.User{}
+		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
+
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
 			"testBool":   true,
@@ -789,7 +805,13 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWrite
 				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
 			},
 		}
-		err := json.NewEncoder(w).Encode(&flags)
+
+		val, ok := ldUser.GetCustom("org.resource_id")
+		if ok && val.StringValue() == "multicluster-key-org" {
+			flags["cli.multicluster-api-keys.enable"] = true
+		}
+
+		err = json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}
 }
