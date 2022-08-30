@@ -36,7 +36,7 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	log.CliLogger.Debugf("Deleting cluster: %v", id)
+	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
 	req := &schedv1.KSQLCluster{
 		AccountId: c.EnvironmentId(),
