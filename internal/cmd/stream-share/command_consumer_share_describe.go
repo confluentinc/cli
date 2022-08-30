@@ -34,7 +34,7 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 
 	consumerShare, httpResp, err := c.V2Client.DescribeConsumerShare(shareId)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return output.DescribeObject(cmd, c.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)

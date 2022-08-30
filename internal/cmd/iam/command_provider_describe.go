@@ -39,7 +39,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	identityProviderProfile, httpResp, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	describeIdentityProvider := &identityProvider{
