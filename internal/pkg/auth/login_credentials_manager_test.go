@@ -384,6 +384,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 		}),
 		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
 	)
+	fmt.Println("") // HACK: Newline needed to parse test output
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 
