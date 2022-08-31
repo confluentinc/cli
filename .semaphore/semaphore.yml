@@ -82,6 +82,8 @@ blocks:
             - export "PATH=/usr/local/go/bin:$PATH"
             - export "GOPATH=$(go env GOPATH)"
             - export "PATH=$GOPATH/bin:$PATH"
+            - echo $GOROOT
+            - export "PATH=$GOROOT/bin:$PATH"
             
             # Set up Git
             - checkout
