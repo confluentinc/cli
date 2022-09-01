@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
-
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
