@@ -165,9 +165,21 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		// Executes login command if test specifies
 		switch tt.login {
 		case "cloud":
-			loginURL := s.getLoginURL(true, tt)
-			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			for _, e := range env {
+				keyVal := strings.Split(e, "=")
+				os.Setenv(keyVal[0], keyVal[1])
+			}
+
+			defer func() {
+				for _, e := range env {
+					keyVal := strings.Split(e, "=")
+					os.Unsetenv(keyVal[0])
+				}
+			}()
+
+			output := runCommand(t, testBin, env, loginString, 0)
 			if *debug {
 				fmt.Println(output)
 			}
