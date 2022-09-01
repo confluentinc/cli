@@ -83,6 +83,36 @@ func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilt
 	return c.ACLV3Api.DeleteKafkaAclsExecute(req)
 }
 
+func (c *KafkaRestClient) CreateKafkaLink(clusterId, linkName string, validateLink, validateOnly bool, data kafkarestv3.CreateLinkRequestData) (*http.Response, error) {
+	req := c.ClusterLinkingV3Api.CreateKafkaLink(c.context(), clusterId).LinkName(linkName).ValidateLink(validateLink).ValidateOnly(validateOnly).CreateLinkRequestData(data)
+	return c.ClusterLinkingV3Api.CreateKafkaLinkExecute(req)
+}
+
+func (c *KafkaRestClient) CreateKafkaMirrorTopic(clusterId, linkName string, data kafkarestv3.CreateMirrorTopicRequestData) (*http.Response, error) {
+	req := c.ClusterLinkingV3Api.CreateKafkaMirrorTopic(c.context(), clusterId, linkName).CreateMirrorTopicRequestData(data)
+	return c.ClusterLinkingV3Api.CreateKafkaMirrorTopicExecute(req)
+}
+
+func (c *KafkaRestClient) DeleteKafkaLink(clusterId, linkName string) (*http.Response, error) {
+	req := c.ClusterLinkingV3Api.DeleteKafkaLink(c.context(), clusterId, linkName)
+	return c.ClusterLinkingV3Api.DeleteKafkaLinkExecute(req)
+}
+
+func (c *KafkaRestClient) ListKafkaLinkConfigs(clusterId, linkName string) (kafkarestv3.ListLinkConfigsResponseDataList, *http.Response, error) {
+	req := c.ClusterLinkingV3Api.ListKafkaLinkConfigs(c.context(), clusterId, linkName)
+	return c.ClusterLinkingV3Api.ListKafkaLinkConfigsExecute(req)
+}
+
+func (c *KafkaRestClient) ListKafkaLinks(clusterId string) (kafkarestv3.ListLinksResponseDataList, *http.Response, error) {
+	req := c.ClusterLinkingV3Api.ListKafkaLinks(c.context(), clusterId)
+	return c.ClusterLinkingV3Api.ListKafkaLinksExecute(req)
+}
+
+func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {
+	req := c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(c.context(), clusterId, linkName).AlterConfigBatchRequestData(data)
+	return c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatchExecute(req)
+}
+
 func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
 	req := c.ConfigsV3Api.ListKafkaTopicConfigs(c.context(), clusterId, topicName)
 	return c.ConfigsV3Api.ListKafkaTopicConfigsExecute(req)

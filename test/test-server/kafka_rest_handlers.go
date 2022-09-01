@@ -473,20 +473,18 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseDataList{Data: []cpkafkarestv3.ListLinksResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
-					SourceClusterId: stringPtr("cluster-1"),
-					LinkName:        "link-1",
-					LinkId:          "LINKID1",
-					TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
+					SourceClusterId:      stringPtr("cluster-1"),
+					DestinationClusterId: stringPtr("cluster-2"),
+					LinkName:             "link-1",
+					LinkId:               "LINKID1",
+					TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
-					SourceClusterId: stringPtr("cluster-1"),
-					LinkName:        "link-2",
-					LinkId:          "LINKID2",
-					TopicsNames:     []string{"link-2-topic-1", "link-2-topic-2"},
+					SourceClusterId:      stringPtr("cluster-1"),
+					DestinationClusterId: stringPtr("cluster-2"),
+					LinkName:             "link-2",
+					LinkId:               "LINKID2",
+					TopicsNames:          []string{"link-2-topic-1", "link-2-topic-2"},
 				},
 			}})
 			require.NoError(t, err)

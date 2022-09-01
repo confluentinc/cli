@@ -6,7 +6,6 @@ require (
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
@@ -15,7 +14,6 @@ require (
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
-	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.2
@@ -63,6 +61,7 @@ require (
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/linkedin/goavro/v2 v2.11.0
 	github.com/mattn/go-isatty v0.0.14
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -81,8 +80,6 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
-
-require github.com/mitchellh/go-homedir v1.1.0
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
@@ -167,12 +164,14 @@ require (
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211216145620-d92e9ce0af51 // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
+	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
+	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
@@ -417,6 +416,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest => ../ccloud-sdk-go-v2/kafkarest
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
