@@ -786,7 +786,7 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 }
 
 // Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
-func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ldUserData, err := base64.StdEncoding.DecodeString(vars["user"])
