@@ -674,6 +674,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 h1:NCEZ7nR76RThfu4oCBguMf+IH
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0/go.mod h1:JLmrXfnT2PzcuXHD8a6c2cW1c9LKK7aMsdZjjqxYPEk=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0 h1:ZrkmlXbQynqJdnrkgnJ1NDssQGEA5CoUtekv1rawLpQ=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0/go.mod h1:S7oehZAn7PW2HEj5DEE7MTeaGEm/DJcVZQ04+37UJ9M=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4LF8WgahqqDC47Ap51L4thM=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6lqvR3OQ2k/VrReF75g=

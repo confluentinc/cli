@@ -22,7 +22,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
@@ -418,7 +418,6 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest => ../ccloud-sdk-go-v2/kafkarest
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
