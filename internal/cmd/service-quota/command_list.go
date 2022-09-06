@@ -3,8 +3,6 @@ package servicequota
 import (
 	"strconv"
 
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -66,16 +64,15 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network)
-	if err != nil {
-		return err
-	}
-
 	quotaCode, err := cmd.Flags().GetString("quota-code")
 	if err != nil {
 		return err
 	}
-	quotas = filterQuotaResults(quotas, quotaCode)
+
+	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode)
+	if err != nil {
+		return err
+	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
@@ -113,18 +110,4 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputWriter.Out()
-}
-
-// TODO: remove this filter func when service-quota api supports filtering by quota code.
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
-	var filteredQuotas []servicequotav1.ServiceQuotaV1AppliedQuota
-	if quotaCode != "" {
-		for _, quota := range quotaList {
-			if *quota.Id == quotaCode {
-				filteredQuotas = append(filteredQuotas, quota)
-			}
-		}
-		quotaList = filteredQuotas
-	}
-	return quotaList
 }

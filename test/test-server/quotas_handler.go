@@ -17,6 +17,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 		environment := r.URL.Query().Get("environment")
 		kafkaCluster := r.URL.Query().Get("kafka_cluster")
 		network := r.URL.Query().Get("network")
+		quotaCode := r.URL.Query().Get("id")
 
 		quota1 := servicequotav1.ServiceQuotaV1AppliedQuota{
 			Id:           stringToPtr("quota_a"),
@@ -60,7 +61,7 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 			AppliedLimit: int32ToPtr(18),
 		}
 
-		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster)
+		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster, quotaCode)
 		quotaList := &servicequotav1.ServiceQuotaV1AppliedQuotaList{
 			ApiVersion: "service-quota/v1",
 			Kind:       "AppliedQuotaList",
@@ -82,7 +83,7 @@ func int32ToPtr(i int32) *int32 {
 	return &i
 }
 
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string) []servicequotav1.ServiceQuotaV1AppliedQuota {
+func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
 
 	//filter by environment id
 	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
@@ -111,6 +112,17 @@ func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, e
 	if network != "" {
 		for _, quota := range quotaList {
 			if quota.Network != nil && quota.Network.Id == network {
+				filtered = append(filtered, quota)
+			}
+		}
+		quotaList = filtered
+	}
+
+	//filter by quota code (id)
+	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
+	if quotaCode != "" {
+		for _, quota := range quotaList {
+			if quota.Id != nil && *quota.Id == quotaCode {
 				filtered = append(filtered, quota)
 			}
 		}

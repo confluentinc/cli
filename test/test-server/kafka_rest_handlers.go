@@ -1553,11 +1553,11 @@ func (r KafkaRestProxyRouter) HandleClustersClusterIdTopicsTopicsNamePartitionsR
 
 func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
-	responseBody := fmt.Sprintf(`{
+	errorResponseBody := fmt.Sprintf(`{
 		"error_code": %d,
 		"message": "%s"
 	}`, errorCode, message)
-	_, err := io.WriteString(responseWriter, responseBody)
+	_, err := io.WriteString(responseWriter, errorResponseBody)
 	return err
 }
 
