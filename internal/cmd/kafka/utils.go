@@ -28,7 +28,21 @@ func copyMap(inputMap map[string]string) map[string]string {
 	return newMap
 }
 
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []cpkafkarestv3.ConfigData {
+func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
+	topicConfigs := make([]cckafkarestv3.ConfigData, len(topicConfigsMap))
+	i := 0
+	for k, v := range topicConfigsMap {
+		val := v
+		topicConfigs[i] = cckafkarestv3.ConfigData{
+			Name:  k,
+			Value: *cckafkarestv3.NewNullableString(&val),
+		}
+		i++
+	}
+	return topicConfigs
+}
+
+func toCreateTopicConfigsOnPrem(topicConfigsMap map[string]string) []cpkafkarestv3.ConfigData {
 	topicConfigs := make([]cpkafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
@@ -42,7 +56,7 @@ func toCreateTopicConfigs(topicConfigsMap map[string]string) []cpkafkarestv3.Con
 	return topicConfigs
 }
 
-func toAlterConfigBatchRequestDataCloud(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
+func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
 	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {
@@ -56,7 +70,7 @@ func toAlterConfigBatchRequestDataCloud(configsMap map[string]string) cckafkares
 	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
-func toAlterConfigBatchRequestData(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
+func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
 	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
 	for key, val := range configsMap {

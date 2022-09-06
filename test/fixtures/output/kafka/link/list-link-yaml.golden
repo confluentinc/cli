@@ -1,4 +1,6 @@
-- link_name: link-1
+- destination_cluster_id: cluster-2
+  link_name: link-1
   source_cluster_id: cluster-1
-- link_name: link-2
+- destination_cluster_id: cluster-2
+  link_name: link-2
   source_cluster_id: cluster-1

@@ -674,8 +674,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 h1:NCEZ7nR76RThfu4oCBguMf+IH
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0/go.mod h1:JLmrXfnT2PzcuXHD8a6c2cW1c9LKK7aMsdZjjqxYPEk=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.6.0 h1:GvKyWa5cB3VJwyC+L+LRts7fn/69FWM0j01wy/TUrD0=
-github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.6.0/go.mod h1:S7oehZAn7PW2HEj5DEE7MTeaGEm/DJcVZQ04+37UJ9M=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0 h1:ZrkmlXbQynqJdnrkgnJ1NDssQGEA5CoUtekv1rawLpQ=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0/go.mod h1:S7oehZAn7PW2HEj5DEE7MTeaGEm/DJcVZQ04+37UJ9M=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4LF8WgahqqDC47Ap51L4thM=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6lqvR3OQ2k/VrReF75g=
@@ -2851,7 +2851,6 @@ golang.org/x/sys v0.0.0-20211213223007-03aa0b5f6827/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220412211240-33da011f77ad/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 h1:0A+M6Uqn+Eje4kHMK80dtF3JCXC4ykBgQG4Fe06QRhQ=
 golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 h1:v6hYoSR9T5oet+pMXwUWkbiVqx/63mlHjefrHmxwfeY=
 golang.org/x/sys v0.0.0-20220829200755-d48e67d00261/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

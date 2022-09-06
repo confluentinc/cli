@@ -1315,6 +1315,44 @@ func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, 
 							return kafkarestv3.AclDataList{}, &http.Response{StatusCode: http.StatusOK}, nil
 						},
 					},
+					ClusterLinkingV3Api: &kafkarestmock.ClusterLinkingV3Api{
+						CreateKafkaLinkFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaLinkRequest {
+							return kafkarestv3.ApiCreateKafkaLinkRequest{}
+						},
+						CreateKafkaLinkExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaLinkRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						CreateKafkaMirrorTopicFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiCreateKafkaMirrorTopicRequest {
+							return kafkarestv3.ApiCreateKafkaMirrorTopicRequest{}
+						},
+						CreateKafkaMirrorTopicExecuteFunc: func(_ kafkarestv3.ApiCreateKafkaMirrorTopicRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						DeleteKafkaLinkFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiDeleteKafkaLinkRequest {
+							return kafkarestv3.ApiDeleteKafkaLinkRequest{}
+						},
+						DeleteKafkaLinkExecuteFunc: func(_ kafkarestv3.ApiDeleteKafkaLinkRequest) (*http.Response, error) {
+							return nil, nil
+						},
+						ListKafkaLinkConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaLinkConfigsRequest {
+							return kafkarestv3.ApiListKafkaLinkConfigsRequest{}
+						},
+						ListKafkaLinkConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaLinkConfigsRequest) (kafkarestv3.ListLinkConfigsResponseDataList, *http.Response, error) {
+							return kafkarestv3.ListLinkConfigsResponseDataList{}, nil, nil
+						},
+						ListKafkaLinksFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaLinksRequest {
+							return kafkarestv3.ApiListKafkaLinksRequest{}
+						},
+						ListKafkaLinksExecuteFunc: func(_ kafkarestv3.ApiListKafkaLinksRequest) (kafkarestv3.ListLinksResponseDataList, *http.Response, error) {
+							return kafkarestv3.ListLinksResponseDataList{}, nil, nil
+						},
+						UpdateKafkaLinkConfigBatchFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiUpdateKafkaLinkConfigBatchRequest {
+							return kafkarestv3.ApiUpdateKafkaLinkConfigBatchRequest{}
+						},
+						UpdateKafkaLinkConfigBatchExecuteFunc: func(_ kafkarestv3.ApiUpdateKafkaLinkConfigBatchRequest) (*http.Response, error) {
+							return nil, nil
+						},
+					},
 					ConfigsV3Api: &kafkarestmock.ConfigsV3Api{
 						ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
 							return kafkarestv3.ApiListKafkaTopicConfigsRequest{}

@@ -22,7 +22,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
@@ -61,6 +61,7 @@ require (
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/linkedin/goavro/v2 v2.11.0
 	github.com/mattn/go-isatty v0.0.14
+	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -78,10 +79,6 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
-)
-
-require (
-	github.com/mitchellh/go-homedir v1.1.0
 	gotest.tools/gotestsum v1.8.2
 )
 

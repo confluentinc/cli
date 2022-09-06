@@ -72,7 +72,7 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	data := toAlterConfigBatchRequestData(configMap)
+	data := toAlterConfigBatchRequestDataOnPrem(configMap)
 
 	if all {
 		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,

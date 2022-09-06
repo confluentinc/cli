@@ -83,14 +83,14 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if hasNumPartitionsChanged {
 			delete(configMap, "num.partitions")
 		}
-		kafkaRestConfigs := toAlterConfigBatchRequestDataCloud(configMap)
+		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
 		}
 
-		data := toAlterConfigBatchRequestDataCloud(configMap)
+		data := toAlterConfigBatchRequestData(configMap)
 		httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
 
 		if err != nil && httpResp != nil {
