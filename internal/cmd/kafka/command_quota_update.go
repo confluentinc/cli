@@ -96,7 +96,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if contains, _ := removePrincipals[principal.Id]; !contains {
+			if contains := removePrincipals[principal.Id]; !contains {
 				updatePrincipals[i] = principal
 				i++
 			}
