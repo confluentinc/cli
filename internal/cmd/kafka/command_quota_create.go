@@ -2,7 +2,7 @@ package kafka
 
 import (
 	"fmt"
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -71,30 +71,34 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	quota, err := c.V2Client.CreateKafkaQuota(displayName, description, throughput,
-		&kafkaquotas.ObjectReference{Id: cluster.ID}, principals,
-		&kafkaquotas.ObjectReference{Id: c.EnvironmentId()},
-	)
+	quota, resp, err := c.V2Client.CreateKafkaQuota(kafkaquotasv1.KafkaQuotasV1ClientQuota{
+		DisplayName: &displayName,
+		Description: &description,
+		Throughput:  throughput,
+		Cluster:     &kafkaquotasv1.ObjectReference{Id: cluster.ID},
+		Principals:  principals,
+		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
+	})
 	if err != nil {
-		return quotaErr(err)
+		return errors.CatchCCloudV2Error(err, resp)
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	printableQuota := quotaToPrintable(quota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func (c *quotaCommand) sliceToObjRefArray(accounts []string) *[]kafkaquotas.ObjectReference {
-	a := make([]kafkaquotas.ObjectReference, len(accounts))
+func (c *quotaCommand) sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.ObjectReference {
+	a := make([]kafkaquotasv1.ObjectReference, len(accounts))
 	for i := range a {
-		a[i] = kafkaquotas.ObjectReference{
+		a[i] = kafkaquotasv1.ObjectReference{
 			Id: accounts[i],
 		}
 	}
 	return &a
 }
 
-func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
-	var throughput kafkaquotas.KafkaQuotasV1Throughput
+func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotasv1.KafkaQuotasV1Throughput, error) {
+	var throughput kafkaquotasv1.KafkaQuotasV1Throughput
 
 	ingress, err := cmd.Flags().GetString("ingress")
 	if err != nil {

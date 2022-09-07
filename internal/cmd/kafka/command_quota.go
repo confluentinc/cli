@@ -1,12 +1,10 @@
 package kafka
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
@@ -41,21 +39,6 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
-}
-
-func quotaErr(err error) error {
-	if openAPIError, ok := err.(kafkaquotas.GenericOpenAPIError); ok {
-		test, ok := openAPIError.Model().(kafkaquotas.Failure)
-		if !ok {
-			return err
-		}
-		var formattedErr error
-		for _, e := range test.Errors {
-			formattedErr = multierror.Append(formattedErr, errors.Errorf("%s: %s", err.Error(), e.GetDetail()))
-		}
-		return formattedErr
-	}
-	return err
 }
 
 func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) interface{} {

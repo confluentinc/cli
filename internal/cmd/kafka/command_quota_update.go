@@ -2,6 +2,7 @@ package kafka
 
 import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,9 +37,9 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	quotaId := args[0]
 
-	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
+	quota, resp, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		return quotaErr(err)
+		return errors.CatchCCloudV2Error(err, resp)
 	}
 
 	updateName, err := getUpdatedName(cmd, *quota.DisplayName)
@@ -58,7 +59,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatedQuota, err := c.V2Client.UpdateKafkaQuota(kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
+	updatedQuota, resp, err := c.V2Client.UpdateKafkaQuota(kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
 		Id:          &quotaId,
 		DisplayName: &updateName,
 		Description: &updateDescription,
@@ -66,7 +67,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		Principals:  updatePrincipals,
 	})
 	if err != nil {
-		return quotaErr(err)
+		return errors.CatchCCloudV2Error(err, resp)
 	}
 	// add back cluster and environment for printing
 	updatedQuota.Cluster = quota.Cluster

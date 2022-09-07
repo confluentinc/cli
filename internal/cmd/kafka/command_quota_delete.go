@@ -21,9 +21,9 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteKafkaQuota(args[0])
+	resp, err := c.V2Client.DeleteKafkaQuota(args[0])
 	if err != nil {
-		return quotaErr(err)
+		return errors.CatchCCloudV2Error(err, resp)
 	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, "client quota", args[0])
 	return nil

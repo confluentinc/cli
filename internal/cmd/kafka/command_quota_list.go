@@ -2,6 +2,7 @@ package kafka
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -41,9 +42,9 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
+	quotas, resp, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
 	if err != nil {
-		return quotaErr(err)
+		return errors.CatchCCloudV2Error(err, resp)
 	}
 
 	w, err := output.NewListOutputWriter(cmd, quotaListFields, quotaHumanFields, quotaStructuredFields)
