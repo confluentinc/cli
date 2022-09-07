@@ -3,6 +3,7 @@ package kafka
 import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -54,18 +55,18 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	updatePrincipals, err := c.getUpdatedPrincipals(cmd, quota.Principals)
+	updatePrincipals, err := c.getUpdatedPrincipals(cmd, *quota.Principals)
 	if err != nil {
 		return err
 	}
-
-	updatedQuota, resp, err := c.V2Client.UpdateKafkaQuota(kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
+	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
 		Id:          &quotaId,
 		DisplayName: &updateName,
 		Description: &updateDescription,
 		Throughput:  updateThroughput,
 		Principals:  updatePrincipals,
-	})
+	}
+	updatedQuota, resp, err := c.V2Client.UpdateKafkaQuota(quotaUpdate)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
@@ -77,14 +78,13 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, principals *[]kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {
-	updatePrincipals := *principals
+func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {
 	if cmd.Flags().Changed("add-principals") {
 		serviceAccountsToAdd, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
 			return nil, err
 		}
-		principalsToAdd := c.sliceToObjRefArray(serviceAccountsToAdd)
+		principalsToAdd := sliceToObjRefArray(serviceAccountsToAdd)
 		updatePrincipals = append(updatePrincipals, *principalsToAdd...)
 	}
 	if cmd.Flags().Changed("remove-principals") {
@@ -92,14 +92,14 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, principals *[]ka
 		if err != nil {
 			return nil, err
 		}
-		// TODO on upgrade to Go 1.18+ -- instead of using map just do slices.Contains()
-		removePrincipalMap := make(map[string]struct{})
+		// TODO on upgrade to Go 1.18+ -- instead of using set just do slices.Contains()
+		removePrincipals := set.New()
 		for _, p := range principalsToRemove {
-			removePrincipalMap[p] = struct{}{}
+			removePrincipals.Add(p)
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if _, ok := removePrincipalMap[principal.Id]; !ok {
+			if contains, _ := removePrincipals[principal.Id]; contains {
 				updatePrincipals[i] = principal
 				i++
 			}
@@ -136,8 +136,7 @@ func getUpdatedDescription(cmd *cobra.Command, description string) (string, erro
 
 func getUpdatedName(cmd *cobra.Command, name string) (string, error) {
 	if cmd.Flags().Changed("name") {
-		updatedName, err := cmd.Flags().GetString("name")
-		return updatedName, err
+		return cmd.Flags().GetString("name")
 	}
 	return name, nil
 }

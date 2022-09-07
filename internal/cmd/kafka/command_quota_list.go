@@ -58,7 +58,7 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		quotas = getQuotasForPrincipal(quotas, principal)
+		quotas = filterQuotasByPrincipal(quotas, principal)
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	for _, quota := range quotas {
@@ -68,16 +68,16 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	return w.Out()
 }
 
-func getQuotasForPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
-	var filteredQuotaData []v1.KafkaQuotasV1ClientQuota
+func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
+	var filteredQuotas []v1.KafkaQuotasV1ClientQuota
 	for _, quota := range quotas {
 		for _, p := range *quota.Principals {
 			if p.Id == principal {
-				filteredQuotaData = append(filteredQuotaData, quota)
+				filteredQuotas = append(filteredQuotas, quota)
 				// principals can only belong to one quota so break after finding it
-				return filteredQuotaData
+				return filteredQuotas
 			}
 		}
 	}
-	return filteredQuotaData
+	return filteredQuotas
 }

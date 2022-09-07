@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
 
@@ -22,13 +23,14 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a Kafka client quota.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
-		Example: examples.BuildExampleString(examples.Example{
-			Text: `Create a client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".`,
-			Code: `confluent kafka quota create --name clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
-		},
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".`,
+				Code: `confluent kafka quota create --name clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234`,
+			},
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
-				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234"`,
+				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
 			}),
 	}
 
@@ -36,7 +38,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (bytes/second).")
 	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")
-	cmd.Flags().StringSlice("principals", []string{}, `A comma delimited list of service accounts to apply quota to. Use \"<default>\" to apply quota to all service accounts.`)
+	cmd.Flags().StringSlice("principals", []string{}, `A comma delimited list of service accounts to apply quota to. Use "<default>" to apply quota to all service accounts.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -50,7 +52,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	principals := c.sliceToObjRefArray(serviceAccounts)
+	principals := sliceToObjRefArray(serviceAccounts)
 
 	displayName, err := cmd.Flags().GetString("name")
 	if err != nil {
@@ -87,7 +89,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func (c *quotaCommand) sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.ObjectReference {
+func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.ObjectReference {
 	a := make([]kafkaquotasv1.ObjectReference, len(accounts))
 	for i := range a {
 		a[i] = kafkaquotasv1.ObjectReference{

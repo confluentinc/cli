@@ -3,14 +3,13 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type quotaCommand struct {

@@ -29,7 +29,10 @@ func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
+	format, err := cmd.Flags().GetString(output.FlagName)
+	if err != nil {
+		return err
+	}
 	printableQuota := quotaToPrintable(quota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }

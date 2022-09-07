@@ -11,9 +11,7 @@ func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv
 	cfg := kafkaquotasv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
-	cfg.Servers = kafkaquotasv1.ServerConfigurations{
-		{URL: url},
-	}
+	cfg.Servers = kafkaquotasv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return kafkaquotasv1.NewAPIClient(cfg)
@@ -24,25 +22,24 @@ func (c *Client) quotaContext() context.Context {
 }
 
 func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, *http.Response, error) {
-	quotas := make([]kafkaquotasv1.KafkaQuotasV1ClientQuota, 0)
+	var list []kafkaquotasv1.KafkaQuotasV1ClientQuota
 
-	collectedAllQuotas := false
+	done := false
 	pageToken := ""
-	for !collectedAllQuotas {
-		quotaList, resp, err := c.listQuotas(clusterId, envId, pageToken)
+	for !done {
+		page, resp, err := c.listQuotas(clusterId, envId, pageToken)
 		if err != nil {
 			return nil, resp, err
 		}
-		quotas = append(quotas, quotaList.GetData()...)
+		list = append(list, page.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
-		nextPageUrlStringNullable := quotaList.GetMetadata().Next
-		pageToken, collectedAllQuotas, err = extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable)
+		pageToken, done, err = extractKafkaQuotasNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
-	return quotas, nil, nil
+	return list, nil, nil
 }
 
 func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.KafkaQuotasV1ClientQuotaList, *http.Response, error) {
