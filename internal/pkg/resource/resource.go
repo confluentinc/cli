@@ -24,6 +24,7 @@ const (
 	User                  = "user"
 	ProviderShare         = "provider share"
 	ConsumerShare         = "consumer share"
+	ClientQuota           = "client quota"
 )
 
 const (
