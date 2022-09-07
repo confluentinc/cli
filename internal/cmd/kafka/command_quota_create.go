@@ -40,6 +40,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")
 	cmd.Flags().StringSlice("principals", []string{}, `A comma delimited list of service accounts to apply quota to. Use "<default>" to apply quota to all service accounts.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("name")
@@ -73,14 +74,15 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	quota, resp, err := c.V2Client.CreateKafkaQuota(kafkaquotasv1.KafkaQuotasV1ClientQuota{
+	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		DisplayName: &displayName,
 		Description: &description,
 		Throughput:  throughput,
 		Cluster:     &kafkaquotasv1.ObjectReference{Id: cluster.ID},
 		Principals:  principals,
 		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
-	})
+	}
+	quota, resp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}

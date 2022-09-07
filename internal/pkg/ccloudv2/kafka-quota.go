@@ -43,19 +43,16 @@ func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.Kafka
 }
 
 func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.KafkaQuotasV1ClientQuotaList, *http.Response, error) {
-	var req kafkaquotasv1.ApiListKafkaQuotasV1ClientQuotasRequest
+	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.quotaContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
-		req = c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.quotaContext()).PageSize(ccloudV2ListPageSize).PageToken(pageToken)
-	} else {
-		req = c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotas(c.quotaContext()).PageSize(ccloudV2ListPageSize)
+		req.PageToken(pageToken)
 	}
 	req = req.Cluster(clusterId).Environment(envId)
 	return c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotasExecute(req)
 }
 
 func (c *Client) CreateKafkaQuota(quota kafkaquotasv1.KafkaQuotasV1ClientQuota) (kafkaquotasv1.KafkaQuotasV1ClientQuota, *http.Response, error) {
-	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(c.quotaContext())
-	req = req.KafkaQuotasV1ClientQuota(quota)
+	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(c.quotaContext()).KafkaQuotasV1ClientQuota(quota)
 	quota, resp, err := req.Execute()
 	return quota, resp, err
 }

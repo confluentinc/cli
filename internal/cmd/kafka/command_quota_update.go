@@ -70,9 +70,6 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
-	// add back cluster and environment for printing
-	updatedQuota.Cluster = quota.Cluster
-	updatedQuota.Environment = quota.Environment
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	printableQuota := quotaToPrintable(updatedQuota, format)
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
@@ -99,7 +96,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if contains, _ := removePrincipals[principal.Id]; contains {
+			if contains, _ := removePrincipals[principal.Id]; !contains {
 				updatePrincipals[i] = principal
 				i++
 			}

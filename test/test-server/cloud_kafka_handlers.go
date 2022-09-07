@@ -38,6 +38,8 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 			req := &v1.KafkaQuotasV1ClientQuota{}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
+			req.Cluster = &v1.ObjectReference{Id: "lkc-1234"}
+			req.Environment = &v1.ObjectReference{Id: "env-1234"}
 			err = json.NewEncoder(w).Encode(req)
 			require.NoError(t, err)
 		case http.MethodDelete:

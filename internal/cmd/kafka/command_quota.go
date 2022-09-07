@@ -28,8 +28,7 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	dc := dynamicconfig.New(config, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
-	clientQuotasEnable := launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
-	c.Hidden = !clientQuotasEnable
+	c.Hidden = !launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
