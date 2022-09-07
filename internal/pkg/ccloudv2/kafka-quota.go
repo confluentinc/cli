@@ -73,19 +73,9 @@ func (c *Client) CreateKafkaQuota(displayName string, description string, throug
 	return quota, err
 }
 
-func (c *Client) UpdateKafkaQuota(quotaId string, displayName string, description string, throughput *kafkaquotas.KafkaQuotasV1Throughput,
-	cluster *kafkaquotas.ObjectReference, principals *[]kafkaquotas.ObjectReference,
-	environment *kafkaquotas.ObjectReference) (kafkaquotas.KafkaQuotasV1ClientQuota, error) {
-	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.UpdateKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
-	req = req.KafkaQuotasV1ClientQuota(kafkaquotas.KafkaQuotasV1ClientQuota{
-		Id:          &quotaId,
-		DisplayName: &displayName,
-		Description: &description,
-		Throughput:  throughput,
-		Cluster:     cluster,
-		Principals:  principals,
-		Environment: environment,
-	})
+func (c *Client) UpdateKafkaQuota(quota kafkaquotas.KafkaQuotasV1ClientQuota) (kafkaquotas.KafkaQuotasV1ClientQuota, error) {
+	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.UpdateKafkaQuotasV1ClientQuota(c.quotaContext(), *quota.Id)
+	req = req.KafkaQuotasV1ClientQuota(quota)
 	quota, _, err := req.Execute()
 	return quota, err
 }
