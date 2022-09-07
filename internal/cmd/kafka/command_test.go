@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"log"
 	"net/http"
 	"os"
@@ -1248,6 +1249,7 @@ func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr
 
 /*************** TEST setup/helpers ***************/
 func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
+	featureflags.Init(nil, true)
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
