@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"log"
 	"net/http"
 	"os"
@@ -18,7 +20,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
@@ -1248,6 +1249,7 @@ func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr
 
 /*************** TEST setup/helpers ***************/
 func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
+	featureflags.Init(nil, true)
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{

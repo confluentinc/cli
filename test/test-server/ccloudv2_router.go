@@ -33,6 +33,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/service-accounts/{id}":                                handleIamServiceAccount,
 	"/iam/v2/users":                                                handleIamUsers,
 	"/iam/v2/users/{id}":                                           handleIamUser,
+	"/kafka-quotas/v1/client-quotas/{id}":                          handleKafkaClientQuota,
+	"/kafka-quotas/v1/client-quotas":                               handleKafkaClientQuotas,
 	"/org/v2/environments":                                         handleOrgEnvironments,
 	"/org/v2/environments/{id}":                                    handleOrgEnvironment,
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
