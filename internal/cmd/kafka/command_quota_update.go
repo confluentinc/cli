@@ -16,8 +16,8 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(examples.Example{
-			Text: `Add "sa-1234" to an existing quota and remove "sa-5678".'`,
-			Code: `confluent kafka quota update cq-123ab --add-principals sa-1234 --remove-principals sa-5678`,
+			Text: `Add "sa-12345" to an existing quota and remove "sa-67890".`,
+			Code: `confluent kafka quota update cq-123ab --add-principals sa-12345 --remove-principals sa-67890`,
 		}),
 	}
 
@@ -41,19 +41,19 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return quotaErr(err)
 	}
 
-	updateName, err := getUpdateName(cmd, *quota.DisplayName)
+	updateName, err := getUpdatedName(cmd, *quota.DisplayName)
 	if err != nil {
 		return err
 	}
-	updateDescription, err := getUpdateDescription(cmd, *quota.Description)
+	updateDescription, err := getUpdatedDescription(cmd, *quota.Description)
 	if err != nil {
 		return err
 	}
-	updateThroughput, err := getUpdateThroughput(cmd, quota.Throughput)
+	updateThroughput, err := getUpdatedThroughput(cmd, quota.Throughput)
 	if err != nil {
 		return err
 	}
-	updatePrincipals, err := c.getUpdatePrincipals(cmd, quota.Principals)
+	updatePrincipals, err := c.getUpdatedPrincipals(cmd, quota.Principals)
 	if err != nil {
 		return err
 	}
@@ -70,12 +70,12 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func (c *quotaCommand) getUpdatePrincipals(cmd *cobra.Command, principals *[]kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {
+func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, principals *[]kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {
 	updatePrincipals := *principals
 	if cmd.Flags().Changed("add-principals") {
 		serviceAccountsToAdd, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
-			return &updatePrincipals, err
+			return nil, err
 		}
 		principalsToAdd := c.sliceToObjRefArray(serviceAccountsToAdd)
 		updatePrincipals = append(updatePrincipals, *principalsToAdd...)
@@ -83,9 +83,9 @@ func (c *quotaCommand) getUpdatePrincipals(cmd *cobra.Command, principals *[]kaf
 	if cmd.Flags().Changed("remove-principals") {
 		principalsToRemove, err := cmd.Flags().GetStringSlice("remove-principals")
 		if err != nil {
-			return &updatePrincipals, err
+			return nil, err
 		}
-		// TODO on upgrage to Go 1.18+ -- instead of using map just do slices.Contains()
+		// TODO on upgrade to Go 1.18+ -- instead of using map just do slices.Contains()
 		removePrincipalMap := make(map[string]struct{})
 		for _, p := range principalsToRemove {
 			removePrincipalMap[p] = struct{}{}
@@ -102,7 +102,7 @@ func (c *quotaCommand) getUpdatePrincipals(cmd *cobra.Command, principals *[]kaf
 	return &updatePrincipals, nil
 }
 
-func getUpdateThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
+func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
 	if cmd.Flags().Changed("ingress") {
 		updatedIngress, err := cmd.Flags().GetString("ingress")
 		if err != nil {
@@ -120,15 +120,14 @@ func getUpdateThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotas
 	return throughput, nil
 }
 
-func getUpdateDescription(cmd *cobra.Command, description string) (string, error) {
+func getUpdatedDescription(cmd *cobra.Command, description string) (string, error) {
 	if cmd.Flags().Changed("description") {
-		updatedDescription, err := cmd.Flags().GetString("description")
-		return updatedDescription, err
+		return cmd.Flags().GetString("description")
 	}
 	return description, nil
 }
 
-func getUpdateName(cmd *cobra.Command, name string) (string, error) {
+func getUpdatedName(cmd *cobra.Command, name string) (string, error) {
 	if cmd.Flags().Changed("name") {
 		updatedName, err := cmd.Flags().GetString("name")
 		return updatedName, err

@@ -22,14 +22,14 @@ func (c *quotaCommand) newListCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(examples.Example{
-			Text: `List client quotas for cluster "lkc-1234".`,
-			Code: `confluent kafka quota list --cluster lkc-1234`,
+			Text: `List client quotas for cluster "lkc-12345".`,
+			Code: `confluent kafka quota list --cluster lkc-12345`,
 		}),
 	}
 
+	pcmd.AddPrincipalFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddPrincipalFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -69,13 +69,12 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 
 func getQuotasForPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
 	var filteredQuotaData []v1.KafkaQuotasV1ClientQuota
-out:
 	for _, quota := range quotas {
 		for _, p := range *quota.Principals {
 			if p.Id == principal {
 				filteredQuotaData = append(filteredQuotaData, quota)
 				// principals can only belong to one quota so break after finding it
-				break out
+				return filteredQuotaData
 			}
 		}
 	}

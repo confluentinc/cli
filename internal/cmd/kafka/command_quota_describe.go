@@ -10,7 +10,7 @@ import (
 func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
-		Short: "Describe a client quota.",
+		Short: "Describe a Kafka client quota.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 	}

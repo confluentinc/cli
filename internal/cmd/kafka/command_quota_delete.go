@@ -25,6 +25,6 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return quotaErr(err)
 	}
-	utils.Printf(cmd, errors.DeletedClientQuotaMessage, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, "client quota", args[0])
 	return nil
 }

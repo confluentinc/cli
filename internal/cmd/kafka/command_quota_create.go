@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2-internal/kafka-quotas/v1"
 	"github.com/spf13/cobra"
 
@@ -31,11 +32,11 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 			}),
 	}
 
-	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (B/s).")
-	cmd.Flags().String("egress", "", "Egress throughput limit for client (B/s).")
-	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("name", "", "Display name for quota.")
-	cmd.Flags().StringSlice("principals", []string{}, "List of service accounts to apply quota for (comma-separated). Use \"<default>\" to apply quota to all service accounts.")
+	cmd.Flags().String("description", "", "Description of quota.")
+	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (bytes/second).")
+	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")
+	cmd.Flags().StringSlice("principals", []string{}, `A comma delimited list of service accounts to apply quota to. Use \"<default>\" to apply quota to all service accounts.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -108,7 +109,7 @@ func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotas.KafkaQuotasV1Throughpu
 	throughput.EgressByteRate = &egress
 
 	if ingress == "" || egress == "" {
-		return &throughput, errors.New(errors.MustSpecifyIngressAndEgress)
+		return &throughput, errors.New(fmt.Sprintf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress"))
 	}
 	return &throughput, nil
 }

@@ -485,7 +485,7 @@ const (
 	MustSpecifyTopicAndPartitionErrorMsg = "must provide topic and partition flags together"
 
 	// Kafka quota errors
-	MustSpecifyIngressAndEgress = `must specify both "--ingress" and "--egress"`
+	MustSpecifyBothFlagsErrorMsg = "must specify both `--%s` and `--%s`"
 
 	// Special error types
 	GenericOpenAPIErrorMsg       = "metadata service backend error: %s: %s"

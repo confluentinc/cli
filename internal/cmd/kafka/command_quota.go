@@ -36,9 +36,9 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
 	c.AddCommand(c.newUpdateCommand())
-	c.AddCommand(c.newDescribeCommand())
 
 	return c.Command
 }
