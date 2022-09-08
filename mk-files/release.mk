@@ -8,7 +8,6 @@ release: check-branch commit-release tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	@VERSION=$(VERSION) make publish-docs
-	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
@@ -22,7 +21,6 @@ check-branch:
 .PHONY: release-to-stag
 release-to-stag:
 	@make gorelease
-	git checkout go.sum
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
