@@ -1,7 +1,7 @@
 [
   {
     "created": "1999-02-24T00:00:00Z",
-    "description": "Example description",
+    "description": "first-key",
     "key": "MYKEY1",
     "owner_email": "bstrauch@confluent.io",
     "owner_resource_id": "u11",

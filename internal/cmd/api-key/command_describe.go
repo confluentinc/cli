@@ -10,23 +10,16 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <api-key>",
+		Use:   "describe <id>",
 		Short: "Describe an API key.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `List the API keys that belong to service account "sa-123456" on cluster "lkc-123456".`,
-				Code: "confluent api-key list --resource lkc-123456 --service-account sa-123456",
-			},
-		),
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -59,7 +52,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 		serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 
-		ownerId = apiKey.Spec.Owner.Id
+		ownerId = apiKey.Spec.Owner.GetId()
 		email = c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 	}
 
@@ -79,13 +72,13 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	// needs to be added here to determine the resource type.
 	for _, res := range resources {
 		outputWriter.AddElement(&apiKeyRow{
-			Key:            *apiKey.Id,
-			Description:    *apiKey.Spec.Description,
+			Key:            apiKey.GetId(),
+			Description:    apiKey.Spec.GetDescription(),
 			UserResourceId: ownerId,
 			UserEmail:      email,
-			ResourceType:   resourceKindToType[*res.Kind],
-			ResourceId:     getApiKeyResourceId(res.Id),
-			Created:        apiKey.Metadata.CreatedAt.Format(time.RFC3339),
+			ResourceType:   resourceKindToType[res.GetKind()],
+			ResourceId:     getApiKeyResourceId(res.GetId()),
+			Created:        apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 		})
 	}
 

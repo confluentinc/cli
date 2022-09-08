@@ -124,23 +124,23 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		// Add '*' only in the case where we are printing out tables
-		outputKey := *apiKey.Id
+		outputKey := apiKey.GetId()
 		if outputWriter.GetOutputFormat() == output.Human {
-			if clusterId != "" && *apiKey.Id == currentKey {
-				outputKey = fmt.Sprintf("* %s", *apiKey.Id)
+			if clusterId != "" && apiKey.GetId() == currentKey {
+				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
 			} else {
-				outputKey = fmt.Sprintf("  %s", *apiKey.Id)
+				outputKey = fmt.Sprintf("  %s", apiKey.GetId())
 			}
 		}
 
-		ownerId := apiKey.Spec.Owner.Id
+		ownerId := apiKey.Spec.Owner.GetId()
 		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 
-		resources := []apikeysv2.ObjectReference{*apiKey.Spec.Resource}
+		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
 		// Check if multicluster keys are enabled, and if so check the resources field
 		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
-			resources = *apiKey.Spec.Resources
+			resources = apiKey.Spec.GetResources()
 		}
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
@@ -148,12 +148,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		for _, res := range resources {
 			outputWriter.AddElement(&apiKeyRow{
 				Key:            outputKey,
-				Description:    *apiKey.Spec.Description,
+				Description:    apiKey.Spec.GetDescription(),
 				UserResourceId: ownerId,
 				UserEmail:      email,
-				ResourceType:   resourceKindToType[*res.Kind],
-				ResourceId:     getApiKeyResourceId(res.Id),
-				Created:        apiKey.Metadata.CreatedAt.Format(time.RFC3339),
+				ResourceType:   resourceKindToType[res.GetKind()],
+				ResourceId:     getApiKeyResourceId(res.GetId()),
+				Created:        apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}

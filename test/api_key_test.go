@@ -151,6 +151,8 @@ func (s *CLITestSuite) TestAPIKey() {
 }
 
 func (s *CLITestSuite) TestApiKeyDescribe() {
+	resetConfiguration(s.T(), false)
+
 	tests := []CLITest{
 		{args: "api-key describe MYKEY1", fixture: "api-key/describe.golden"},
 		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
