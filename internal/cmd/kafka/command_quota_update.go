@@ -71,8 +71,8 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
-	printableQuota := quotaToPrintable(updatedQuota, format)
-	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
+	printQuota := quotaToPrintable(updatedQuota, format)
+	return output.DescribeObject(cmd, printQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {

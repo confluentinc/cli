@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Display Name", "Description": "Description", "Throughput": "Throughput", "Cluster": "Cluster", "Principals": "Principals"}
-	structuredRenames = map[string]string{"Id": "id", "DisplayName": "display_name", "Description": "description", "Ingress": "ingress", "Egress": "egress", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals"}
+	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Name", "Description": "Description", "Throughput": "Throughput", "Cluster": "Cluster", "Principals": "Principals", "Environment": "Environment"}
+	structuredRenames = map[string]string{"Id": "id", "DisplayName": "name", "Description": "description", "Ingress": "ingress", "Egress": "egress", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals", "Environment": "environment"}
 )
 
 func (c *quotaCommand) newCreateCommand() *cobra.Command {

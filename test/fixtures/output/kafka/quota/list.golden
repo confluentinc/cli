@@ -1,4 +1,4 @@
-    ID    | Display Name |    Description    | Ingress  |  Egress  | Cluster  |   Principals     
-----------+--------------+-------------------+----------+----------+----------+------------------
-  cq-1234 | quotaName    | quota description | 2000 B/s | 5000 B/s | lkc-1234 | sa-1234,sa-5678  
-  cq-4321 | quota2       | quota description | 2000 B/s | 5000 B/s | lkc-1234 | sa-4321          
+    ID    |   Name    |    Description    | Ingress  |  Egress  | Cluster  |   Principals    | Environment  
+----------+-----------+-------------------+----------+----------+----------+-----------------+--------------
+  cq-1234 | quotaName | quota description | 2000 B/s | 5000 B/s | lkc-1234 | sa-1234,sa-5678 | env-1234     
+  cq-4321 | quota2    | quota description | 2000 B/s | 5000 B/s | lkc-1234 | sa-4321         | env-1234     

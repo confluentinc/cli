@@ -49,34 +49,27 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
-			id := "cq-1234"
-			id2 := "cq-4321"
-			egress := "5000"
-			ingress := "2000"
-			name := "quotaName"
-			name2 := "quota2"
-			description := "quota description"
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuotaList{
 				Data: []kafkaquotasv1.KafkaQuotasV1ClientQuota{
 					{
-						Id:          &id,
-						DisplayName: &name,
-						Description: &description,
+						Id:          kafkaquotasv1.PtrString("cq-1234"),
+						DisplayName: kafkaquotasv1.PtrString("quotaName"),
+						Description: kafkaquotasv1.PtrString("quota description"),
 						Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
-							IngressByteRate: &ingress,
-							EgressByteRate:  &egress,
+							IngressByteRate: kafkaquotasv1.PtrString("2000"),
+							EgressByteRate:  kafkaquotasv1.PtrString("5000"),
 						},
 						Cluster:     &kafkaquotasv1.ObjectReference{Id: "lkc-1234"},
 						Principals:  &[]kafkaquotasv1.ObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
 						Environment: &kafkaquotasv1.ObjectReference{Id: "env-1234"},
 					},
 					{
-						Id:          &id2,
-						DisplayName: &name2,
-						Description: &description,
+						Id:          kafkaquotasv1.PtrString("cq-4321"),
+						DisplayName: kafkaquotasv1.PtrString("quota2"),
+						Description: kafkaquotasv1.PtrString("quota description"),
 						Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
-							IngressByteRate: &ingress,
-							EgressByteRate:  &egress,
+							IngressByteRate: kafkaquotasv1.PtrString("2000"),
+							EgressByteRate:  kafkaquotasv1.PtrString("5000"),
 						},
 						Cluster:     &kafkaquotasv1.ObjectReference{Id: "lkc-1234"},
 						Principals:  &[]kafkaquotasv1.ObjectReference{{Id: "sa-4321"}},

@@ -50,7 +50,7 @@ type printableQuota struct {
 	Environment string
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) printableQuota {
+func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) *printableQuota {
 	s := printableQuota{
 		Id:          *quota.Id,
 		DisplayName: *quota.DisplayName,
@@ -65,7 +65,7 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string)
 		s.Ingress = s.Ingress + " B/s"
 		s.Egress = s.Egress + " B/s"
 	}
-	return s
+	return &s
 }
 
 func principalsToString(principals []kafkaquotas.ObjectReference) string {

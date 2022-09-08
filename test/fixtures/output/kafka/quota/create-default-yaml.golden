@@ -1,7 +1,8 @@
 cluster: lkc-1234
 description: ""
-display_name: clientQuota
 egress: "100"
+environment: a-595
 id: cq-1234
 ingress: "500"
+name: clientQuota
 principals: <default>
