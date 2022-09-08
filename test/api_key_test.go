@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestAPIKey() {
@@ -145,6 +146,19 @@ func (s *CLITestSuite) TestAPIKey() {
 
 	for _, tt := range tests {
 		tt.workflow = true
+		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestApiKeyDescribe() {
+	tests := []CLITest{
+		{args: "api-key describe MYKEY1", fixture: "api-key/describe.golden"},
+		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
+		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
 		s.runIntegrationTest(tt)
 	}
 }

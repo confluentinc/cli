@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	listFields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
+	fields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	humanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	structuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
 
 var resourceKindToType = map[string]string{
@@ -112,7 +112,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
 	if err != nil {
 		return err
 	}
@@ -133,14 +133,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		ownerId := apiKey.GetSpec().Owner.GetId()
+		ownerId := apiKey.Spec.Owner.Id
 		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 
-		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
+		resources := []apikeysv2.ObjectReference{*apiKey.Spec.Resource}
 
 		// Check if multicluster keys are enabled, and if so check the resources field
 		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
-			resources = apiKey.Spec.GetResources()
+			resources = *apiKey.Spec.Resources
 		}
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
@@ -148,12 +148,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		for _, res := range resources {
 			outputWriter.AddElement(&apiKeyRow{
 				Key:            outputKey,
-				Description:    *apiKey.GetSpec().Description,
+				Description:    *apiKey.Spec.Description,
 				UserResourceId: ownerId,
 				UserEmail:      email,
-				ResourceType:   resourceKindToType[res.GetKind()],
+				ResourceType:   resourceKindToType[*res.Kind],
 				ResourceId:     getApiKeyResourceId(res.Id),
-				Created:        apiKey.GetMetadata().CreatedAt.Format(time.RFC3339),
+				Created:        apiKey.Metadata.CreatedAt.Format(time.RFC3339),
 			})
 		}
 	}
