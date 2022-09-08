@@ -13,10 +13,10 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -803,6 +803,7 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.deprecation_notices": []map[string]interface{}{
 				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
 			},
+			"cli.client_quotas.enable": true,
 		}
 
 		val, ok := ldUser.GetCustom("org.resource_id")
