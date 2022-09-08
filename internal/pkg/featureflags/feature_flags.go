@@ -59,18 +59,10 @@ type launchDarklyManager struct {
 
 func Init(version *version.Version, isTest bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
-	var ldClient *sling.Sling
 	if isTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
-		// need to set timeout so that flag requests will timeout in unit tests when test server is not running
-		ldClient = sling.New().Base(cliBasePath).Client(&http.Client{
-			Timeout: 5 * time.Second,
-		})
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
-	}
-	if ldClient == nil {
-		ldClient = sling.New().Base(cliBasePath)
 	}
 
 	ccloudClientProvider := func(client v1.LaunchDarklyClient) *sling.Sling {
@@ -92,7 +84,7 @@ func Init(version *version.Version, isTest bool) {
 	}
 
 	Manager = &launchDarklyManager{
-		cliClient:    ldClient,
+		cliClient:    sling.New().Base(cliBasePath),
 		ccloudClient: ccloudClientProvider,
 		version:      version,
 	}
