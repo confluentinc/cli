@@ -442,9 +442,9 @@ func DeleteACLsTest(t *testing.T, enableREST bool) {
 	}
 }
 
-//func TestDeleteACLs1(t *testing.T) {
-//	DeleteACLsTest(t, true)
-//}
+func TestDeleteACLs1(t *testing.T) {
+	DeleteACLsTest(t, true)
+}
 
 func TestDeleteACLs2(t *testing.T) {
 	DeleteACLsTest(t, false)

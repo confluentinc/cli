@@ -134,7 +134,6 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	var err error
 	if !areCachedFlagsAvailable(ctx, user, client) {
 		flagVals, err = ld.fetchFlags(user, client)
-		fmt.Println(flagVals)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
 			return defaultVal
