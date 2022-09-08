@@ -24,14 +24,14 @@ type command struct {
 	flagResolver pcmd.FlagResolver
 }
 
-type apiKeyRow struct {
-	Key            string
-	Description    string
-	UserResourceId string
-	UserEmail      string
-	ResourceType   string
-	ResourceId     string
-	Created        string
+type row struct {
+	Key             string
+	Description     string
+	OwnerResourceId string
+	OwnerEmail      string
+	ResourceType    string
+	ResourceId      string
+	Created         string
 }
 
 const resourceFlagName = "resource"

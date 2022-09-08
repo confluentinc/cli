@@ -20,7 +20,7 @@ import (
 )
 
 var (
-	fields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	fields           = []string{"Key", "Description", "OwnerResourceId", "OwnerEmail", "ResourceType", "ResourceId", "Created"}
 	humanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
 	structuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
@@ -146,14 +146,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		for _, res := range resources {
-			outputWriter.AddElement(&apiKeyRow{
-				Key:            outputKey,
-				Description:    apiKey.Spec.GetDescription(),
-				UserResourceId: ownerId,
-				UserEmail:      email,
-				ResourceType:   resourceKindToType[res.GetKind()],
-				ResourceId:     getApiKeyResourceId(res.GetId()),
-				Created:        apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+			outputWriter.AddElement(&row{
+				Key:             outputKey,
+				Description:     apiKey.Spec.GetDescription(),
+				OwnerResourceId: ownerId,
+				OwnerEmail:      email,
+				ResourceType:    resourceKindToType[res.GetKind()],
+				ResourceId:      getApiKeyResourceId(res.GetId()),
+				Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}
