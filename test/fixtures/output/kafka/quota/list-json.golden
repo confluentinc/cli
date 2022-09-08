@@ -1,0 +1,12 @@
+[
+  {
+    "cluster": "lkc-1234",
+    "description": "quota description",
+    "egress": "5000",
+    "environment": "env-1234",
+    "id": "cq-1234",
+    "ingress": "2000",
+    "name": "quotaName",
+    "principals": "sa-1234,sa-5678"
+  }
+]
