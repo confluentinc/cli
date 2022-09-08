@@ -12,8 +12,8 @@ import (
 
 var (
 	quotaListFields       = []string{"Id", "DisplayName", "Description", "Ingress", "Egress", "Cluster", "Principals"}
-	quotaHumanFields      = []string{"ID", "Display Name", "Description", "Ingress", "Egress", "Cluster", "Principals"}
-	quotaStructuredFields = []string{"id", "display_name", "description", "ingress", "egress", "cluster", "principals"}
+	quotaHumanFields      = []string{"ID", "Name", "Description", "Ingress", "Egress", "Cluster", "Principals"}
+	quotaStructuredFields = []string{"id", "name", "description", "ingress", "egress", "cluster", "principals"}
 )
 
 func (c *quotaCommand) newListCommand() *cobra.Command {

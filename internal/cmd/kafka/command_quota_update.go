@@ -89,14 +89,13 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 		if err != nil {
 			return nil, err
 		}
-		// TODO on upgrade to Go 1.18+ -- instead of using set just do slices.Contains()
 		removePrincipals := set.New()
 		for _, p := range principalsToRemove {
 			removePrincipals.Add(p)
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if contains := removePrincipals[principal.Id]; !contains {
+			if contains := removePrincipals.Contains(principal.Id); !contains {
 				updatePrincipals[i] = principal
 				i++
 			}

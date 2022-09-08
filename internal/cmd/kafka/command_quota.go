@@ -39,17 +39,19 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	return c.Command
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) interface{} {
-	s := struct {
-		Id          string
-		DisplayName string
-		Description string
-		Ingress     string
-		Egress      string
-		Principals  string
-		Cluster     string
-		Environment string
-	}{
+type printableQuota struct {
+	Id          string
+	DisplayName string
+	Description string
+	Ingress     string
+	Egress      string
+	Principals  string
+	Cluster     string
+	Environment string
+}
+
+func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) printableQuota {
+	s := printableQuota{
 		Id:          *quota.Id,
 		DisplayName: *quota.DisplayName,
 		Description: *quota.Description,
@@ -63,7 +65,7 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string)
 		s.Ingress = s.Ingress + " B/s"
 		s.Egress = s.Egress + " B/s"
 	}
-	return &s
+	return s
 }
 
 func principalsToString(principals []kafkaquotas.ObjectReference) string {

@@ -117,7 +117,7 @@ func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotasv1.KafkaQuotasV1Through
 	throughput.EgressByteRate = &egress
 
 	if ingress == "" || egress == "" {
-		return &throughput, errors.New(fmt.Sprintf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress"))
+		return nil, fmt.Errorf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress")
 	}
 	return &throughput, nil
 }
