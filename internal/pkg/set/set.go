@@ -10,6 +10,10 @@ func (s Set) Add(key string) {
 	s[key] = true
 }
 
+func (s Set) Contains(key string) bool {
+	return s[key]
+}
+
 func (s Set) Slice() []string {
 	l := make([]string, len(s))
 	i := 0
