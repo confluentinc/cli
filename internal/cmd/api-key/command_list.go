@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	listFields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
+	fields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
+	humanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
+	structuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
 
 var resourceKindToType = map[string]string{
@@ -112,7 +112,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
 	if err != nil {
 		return err
 	}
@@ -124,16 +124,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		// Add '*' only in the case where we are printing out tables
-		outputKey := *apiKey.Id
+		outputKey := apiKey.GetId()
 		if outputWriter.GetOutputFormat() == output.Human {
-			if clusterId != "" && *apiKey.Id == currentKey {
-				outputKey = fmt.Sprintf("* %s", *apiKey.Id)
+			if clusterId != "" && apiKey.GetId() == currentKey {
+				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
 			} else {
-				outputKey = fmt.Sprintf("  %s", *apiKey.Id)
+				outputKey = fmt.Sprintf("  %s", apiKey.GetId())
 			}
 		}
 
-		ownerId := apiKey.GetSpec().Owner.GetId()
+		ownerId := apiKey.Spec.Owner.GetId()
 		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 
 		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
@@ -148,12 +148,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		for _, res := range resources {
 			outputWriter.AddElement(&apiKeyRow{
 				Key:            outputKey,
-				Description:    *apiKey.GetSpec().Description,
+				Description:    apiKey.Spec.GetDescription(),
 				UserResourceId: ownerId,
 				UserEmail:      email,
 				ResourceType:   resourceKindToType[res.GetKind()],
-				ResourceId:     getApiKeyResourceId(res.Id),
-				Created:        apiKey.GetMetadata().CreatedAt.Format(time.RFC3339),
+				ResourceId:     getApiKeyResourceId(res.GetId()),
+				Created:        apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}
