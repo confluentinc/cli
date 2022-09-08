@@ -151,7 +151,7 @@ func fillKeyStoreV2() {
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
-			Description: apikeysv2.PtrString(""),
+			Description: apikeysv2.PtrString("Example description"),
 		},
 	}
 
