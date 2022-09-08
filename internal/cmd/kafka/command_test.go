@@ -29,6 +29,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
@@ -441,9 +442,9 @@ func DeleteACLsTest(t *testing.T, enableREST bool) {
 	}
 }
 
-func TestDeleteACLs1(t *testing.T) {
-	DeleteACLsTest(t, true)
-}
+//func TestDeleteACLs1(t *testing.T) {
+//	DeleteACLsTest(t, true)
+//}
 
 func TestDeleteACLs2(t *testing.T) {
 	DeleteACLsTest(t, false)
@@ -1248,6 +1249,7 @@ func CheckIfCmdErrors(t *testing.T, cmd *cobra.Command, args []string, expectErr
 
 /*************** TEST setup/helpers ***************/
 func newMockCmd(kafkaExpect chan interface{}, kafkaRestExpect chan interface{}, enableREST bool) *cobra.Command {
+	featureflags.Init(nil, true)
 	client := &ccloud.Client{
 		Kafka: cliMock.NewKafkaMock(kafkaExpect),
 		User: &mock.User{
