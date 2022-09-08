@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Name", "Description": "Description", "Throughput": "Throughput", "Cluster": "Cluster", "Principals": "Principals", "Environment": "Environment"}
+	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Name"}
 	structuredRenames = map[string]string{"Id": "id", "DisplayName": "name", "Description": "description", "Ingress": "ingress", "Egress": "egress", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals", "Environment": "environment"}
 )
 
