@@ -11,16 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
