@@ -10,6 +10,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+var (
+	fields            = []string{"Id", "Name"}
+	humanRenames      = map[string]string{"Id": "ID"}
+	structuredRenames = map[string]string{"Id": "id", "Name": "name"}
+)
+
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",

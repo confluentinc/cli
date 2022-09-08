@@ -1,6 +1,7 @@
 package environment
 
 import (
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -8,20 +9,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	fields            = []string{"Id", "Name"}
-	humanRenames      = map[string]string{"Id": "ID"}
-	structuredRenames = map[string]string{"Id": "id", "Name": "name"}
-)
-
 func (c *command) newDescribeCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a Confluent Cloud environment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
+
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
@@ -30,5 +29,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, r)
 	}
 
-	return output.DescribeObject(cmd, environment, fields, humanRenames, structuredRenames)
+	account := &orgv1.Account{
+		Id:   *environment.Id,
+		Name: *environment.DisplayName,
+	}
+
+	return output.DescribeObject(cmd, account, fields, humanRenames, structuredRenames)
 }
