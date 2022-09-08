@@ -21,6 +21,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 	cmd.AddCommand(newLinkCommand(cfg, prerunner))
 	cmd.AddCommand(newMirrorCommand(prerunner))
 	cmd.AddCommand(newPartitionCommand(prerunner))
+	cmd.AddCommand(newQuotaCommand(cfg, prerunner))
 	cmd.AddCommand(newRegionCommand(prerunner))
 	cmd.AddCommand(newReplicaCommand(prerunner))
 	cmd.AddCommand(newTopicCommand(cfg, prerunner, clientID))
