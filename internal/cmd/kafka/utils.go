@@ -1,10 +1,7 @@
 package kafka
 
 import (
-	"bufio"
-	"log"
 	_nethttp "net/http"
-	"os"
 	"regexp"
 	"strings"
 
@@ -90,34 +87,6 @@ func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error)
 		return "", err
 	}
 	return kafkaClusterConfig.ID, nil
-}
-
-func createTestConfigFile(name string, configs map[string]string) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	log.Println("Test config file dir:", dir)
-	file, err := os.Create(name)
-	if err != nil {
-		return "", err
-	}
-
-	path := dir + "/" + name
-
-	write := bufio.NewWriter(file)
-	for key, val := range configs {
-		if _, err = write.WriteString(key + "=" + val + "\n"); err != nil {
-			file.Close()
-			return path, err
-		}
-	}
-
-	if err = write.Flush(); err != nil {
-		return path, err
-	}
-
-	return path, file.Close()
 }
 
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
