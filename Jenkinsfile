@@ -11,6 +11,14 @@ def config = jobConfig {
     ]
     realJobPrefixes = ['cli']
     timeoutHours = 16
+    sonarqubeProjectName="cli"
+    sonarqubeScannerEnable=true
+    sonarqubeXmlTestReportPath="test.out"
+    sonarqubeXmlCoveragePath="coverage.txt"
+    sonarqubeCodeLanguage="go"
+    sonarqubeIncludeTestFiles=false
+    sonarqubeExclusions="**/*test*/**/*"
+    sonarqubeProjectSourcesPath="."
 }
 
 def job = {
