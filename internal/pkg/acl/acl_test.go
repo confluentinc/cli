@@ -47,7 +47,7 @@ func TestParseAclRequest(t *testing.T) {
 		{
 			args: []string{"--operation", "fake", "--principal", "User:Alice", "--cluster-scope", "--transactional-id", "123"},
 			expectedAcl: AclRequestDataWithError{
-				Errors: multierror.Append(errors.New("Invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
+				Errors: multierror.Append(errors.New("invalid operation value: FAKE"), fmt.Errorf("exactly one of %v must be set",
 					convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
 						kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID))),
 			},
