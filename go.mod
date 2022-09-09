@@ -46,10 +46,10 @@ require (
 	github.com/gobuffalo/flect v0.2.4
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
-	github.com/golangci/golangci-lint v1.44.0
+	github.com/golangci/golangci-lint v1.49.0
 	github.com/google/go-github/v25 v25.1.3
 	github.com/google/uuid v1.3.0
-	github.com/goreleaser/goreleaser v1.4.1
+	github.com/goreleaser/goreleaser v1.11.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.1.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -427,4 +427,4 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 )
 
-go 1.17
+go 1.19
