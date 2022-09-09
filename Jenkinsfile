@@ -79,16 +79,16 @@ def job = {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
-                                git clone git@github.com:${CP_FORK}/muckrake.git
+                                git clone git@github.com:confluentinc/muckrake.git
                                 cd muckrake
-                                git remote add upstream git@github.com:confluentinc/muckrake.git
-                                git checkout upstream/7.2.x
+                                git checkout 7.2.x
+                                git remote add userfork git@github.com:${muckrake_remote}/muckrake.git
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
                                 git checkout -b cli_system_test_$HASH
                                 git commit -am "System test configuration for CLI build ${HASH}"
-                                git push -u origin cli_system_test_$HASH
+                                git push -u userfork cli_system_test_$HASH
                             '''
                         }
                     }
@@ -144,7 +144,7 @@ def post = {
                     . ./resources/aws-iam.sh
                     vagrant destroy -f
                     cd ..
-                    git push --delete origin cli_system_test_$HASH
+                    git push --delete userfork cli_system_test_$HASH
                 '''
             }
             withVaultEnv([["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
