@@ -13,6 +13,8 @@ def config = jobConfig {
     timeoutHours = 16
 }
 
+def muckrake_remote = "confluentinc"
+
 def job = {
     if (config.isPrJob) {
         configureGitSSH("github/confluent_jenkins", "private_key")
@@ -62,6 +64,7 @@ def job = {
             }
 
             stage('Clone muckrake') {
+                muckrake_remote = env.CHANGE_FORK ?: muckrake_remote
                 withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                     ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
                     ["github/confluent_jenkins", "user", "GIT_USER"],
@@ -76,9 +79,10 @@ def job = {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
-                                git clone git@github.com:confluentinc/muckrake.git
+                                git clone git@github.com:${CP_FORK}/muckrake.git
                                 cd muckrake
-                                git checkout 7.2.x
+                                git remote add upstream git@github.com:confluentinc/muckrake.git
+                                git checkout upstream/7.2.x
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
