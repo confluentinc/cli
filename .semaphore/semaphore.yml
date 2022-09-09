@@ -14,7 +14,7 @@ global_job_config:
     - name: CI
       value: "true"
     - name: GO_VERSION
-      value: "1.19.0"
+      value: "1.19"
   secrets:
     - name: vault_sem2_approle
 
