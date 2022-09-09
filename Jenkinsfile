@@ -13,8 +13,6 @@ def config = jobConfig {
     timeoutHours = 16
 }
 
-def muckrake_remote = "confluentinc"
-
 def job = {
     if (config.isPrJob) {
         configureGitSSH("github/confluent_jenkins", "private_key")
@@ -64,7 +62,6 @@ def job = {
             }
 
             stage('Clone muckrake') {
-                muckrake_remote = env.CHANGE_FORK ?: muckrake_remote
                 withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                     ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
                     ["github/confluent_jenkins", "user", "GIT_USER"],
@@ -73,7 +70,10 @@ def job = {
                     ["artifactory/tools_jenkins", "password", "TOOLS_ARTIFACTORY_PASSWORD"],
                     ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
-                    withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"]) {
+                    withEnv([
+                        "GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"
+                        "CP_FORK=${env.CHANGE_FORK ?: muckrake_remote}"
+                    ]) {
                         withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                             sh '''#!/usr/bin/env bash
@@ -82,7 +82,7 @@ def job = {
                                 git clone git@github.com:confluentinc/muckrake.git
                                 cd muckrake
                                 git checkout 7.2.x
-                                git remote add userfork git@github.com:${muckrake_remote}/muckrake.git
+                                git remote add userfork git@github.com:${CP_FORK}/muckrake.git
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
