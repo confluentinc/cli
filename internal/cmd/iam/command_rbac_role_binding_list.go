@@ -329,10 +329,8 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
-	poolToNameMap, err := c.getPoolToNameMap()
-	if err != nil {
-		return err
-	}
+	// TODO: Catch this error once Identity Providers goes GA
+	poolToNameMap, _ := c.getPoolToNameMap()
 
 	sort.Strings(principals)
 	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
