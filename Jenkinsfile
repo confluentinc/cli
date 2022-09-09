@@ -72,7 +72,7 @@ def job = {
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv([
                         "GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"
-                        "CP_FORK=${env.CHANGE_FORK ?: muckrake_remote}"
+                        "CP_FORK=${env.CHANGE_FORK ?: 'confluentinc'}"
                     ]) {
                         withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
