@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	fields            = []string{"Id", "Name"}
-	humanRenames      = map[string]string{"Id": "ID"}
-	structuredRenames = map[string]string{"Id": "id", "Name": "name"}
-)
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -40,5 +34,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return output.DescribeObject(cmd, environment, fields, humanRenames, structuredRenames)
+	table := output.NewTable(cmd, fields)
+	table.Set(&out{
+		Id:   environment.Id,
+		Name: environment.Name,
+	})
+	return table.Print()
 }

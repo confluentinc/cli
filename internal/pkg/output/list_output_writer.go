@@ -26,7 +26,7 @@ type ListOutputWriter interface {
 		Out - Create the output to the IO channel passed in during construction
 	*/
 	Out() error
-	GetOutputFormat() output
+	GetOutputFormat() Format
 	StableSort()
 }
 
