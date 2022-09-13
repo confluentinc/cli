@@ -165,7 +165,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 }
 
 func getJaasValue(apiKey, apiSecret string) string {
-	return fmt.Sprintf(jaasConfigPrefix+` username="%s" password="%s";`, apiKey, apiSecret)
+	return fmt.Sprintf(`%s username="%s" password="%s";`, jaasConfigPrefix, apiKey, apiSecret)
 }
 
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {

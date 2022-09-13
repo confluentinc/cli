@@ -123,7 +123,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	foundTopic := false
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic %s", t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
