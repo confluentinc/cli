@@ -57,17 +57,15 @@ func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare
 func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, error) {
 	deliveryMethod := "Email"
 	req := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
-		CdxV1CreateShareRequest(cdxv1.CdxV1CreateShareRequest{
-			Environment:  &environment,
-			KafkaCluster: &kafkaCluster,
-			ConsumerRestriction: &cdxv1.CdxV1CreateShareRequestConsumerRestrictionOneOf{
+		CdxV1CreateProviderShareRequest(cdxv1.CdxV1CreateProviderShareRequest{
+			ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
 				CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
 					Kind:  deliveryMethod,
 					Email: email,
 				},
 			},
 			DeliveryMethod: &deliveryMethod,
-			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s", kafkaCluster, topic)},
+			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s/environment=%s", kafkaCluster, topic, environment)},
 		})
 	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
