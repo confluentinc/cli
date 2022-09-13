@@ -73,7 +73,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 	for !done {
 		page, r, err := c.executeListProviderShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchV2ErrorDetailWithResponse(err, r)
+			return nil, errors.CatchCCloudV2Error(err, r)
 		}
 		list = append(list, page.GetData()...)
 
@@ -94,7 +94,7 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 	for !done {
 		page, r, err := c.executeListConsumerShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchV2ErrorDetailWithResponse(err, r)
+			return nil, errors.CatchCCloudV2Error(err, r)
 		}
 		list = append(list, page.GetData()...)
 

@@ -74,7 +74,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 
 	redeemResponse, httpResp, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	var resources []string

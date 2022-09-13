@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -89,10 +89,11 @@ type lagDataStruct struct {
 
 func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "consumer-group",
-		Aliases: []string{"cg"},
-		Short:   "Manage Kafka consumer groups.",
-		Hidden:  true,
+		Use:         "consumer-group",
+		Aliases:     []string{"cg"},
+		Short:       "Manage Kafka consumer groups.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Hidden:      true,
 	}
 
 	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
@@ -135,9 +136,9 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
 	if err != nil {
-		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return nil, kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return &groupCmdResp, nil

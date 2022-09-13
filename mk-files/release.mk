@@ -8,7 +8,6 @@ release: check-branch commit-release tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	@VERSION=$(VERSION) make publish-docs
-	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
@@ -22,7 +21,6 @@ check-branch:
 .PHONY: release-to-stag
 release-to-stag:
 	@make gorelease
-	git checkout go.sum
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
@@ -47,17 +45,19 @@ endef
 
 .PHONY: switch-librdkafka-arm64
 switch-librdkafka-arm64:
-	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
-		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
-		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
-		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
+	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor); \
+	if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)"; \
+		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a; \
+		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a; \
 	fi
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
-	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
-        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
-		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
+	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor); \
+	if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
+        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)"; \
+		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a; \
 	fi
 
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)

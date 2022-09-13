@@ -14,6 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -35,6 +36,7 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
+	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
 	req := &schedv1.KSQLCluster{
 		AccountId: c.EnvironmentId(),
@@ -47,34 +49,15 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
 
-	// Terminated cluster needs to also be sent to KSQL cluster to clean up internal topics of the KSQL
+	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
+	// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
+	// the topics.
 	if cluster.Status == schedv1.ClusterStatus_UP {
-		ctx := c.Config.Context()
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return err
-		}
-
-		bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
-		if err != nil {
-			return err
-		}
-
-		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
-		client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
-		request := make(map[string][]string)
-		request["deleteTopicList"] = []string{".*"}
-		response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
-		if err != nil {
-			return err
-		}
-
-		if response.StatusCode != http.StatusOK {
-			body, err := ioutil.ReadAll(response.Body)
-			if err != nil {
+		provisioningFailed, err := c.checkProvisioningFailed(cluster)
+		if !provisioningFailed && err != nil {
+			if err := c.deleteTopics(req); err != nil {
 				return err
 			}
-			return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, args[0], string(body))
 		}
 	}
 
@@ -83,5 +66,36 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, args[0])
+	return nil
+}
+
+func (c *ksqlCommand) deleteTopics(cluster *schedv1.KSQLCluster) error {
+	ctx := c.Config.Context()
+	state, err := ctx.AuthenticatedState()
+	if err != nil {
+		return err
+	}
+
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
+	if err != nil {
+		return err
+	}
+
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
+	request := map[string][]string{"deleteTopicList": []string{".*"}}
+	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
+	//this returns a 503
+	if err != nil {
+		return err
+	}
+
+	if response.StatusCode != http.StatusOK {
+		body, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return err
+		}
+		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, cluster.Id, string(body))
+	}
 	return nil
 }

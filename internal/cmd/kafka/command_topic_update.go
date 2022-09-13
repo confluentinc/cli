@@ -7,10 +7,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -78,8 +77,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil && !dryRun {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
 		_, hasNumPartitionsChanged := configMap["num.partitions"]
 		if hasNumPartitionsChanged {
@@ -91,22 +89,19 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		lkc := kafkaClusterConfig.ID
 
-		httpResp, err := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName,
-			&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
-			})
+		data := toAlterConfigBatchRequestData(configMap)
+		httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := parseOpenAPIErrorCloud(err)
 			if parseErr == nil {
 				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -117,9 +112,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			}
 
 			// Kafka REST is available and there was no error
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+			configsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 			if err != nil {
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 			}
@@ -129,7 +124,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				if conf.IsReadOnly {
 					readOnlyConfigs.Add(conf.Name)
 				}
-				configsValues[conf.Name] = *conf.Value
+				configsValues[conf.Name] = conf.GetValue()
 			}
 
 			// Output writing preparation
@@ -147,10 +142,10 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				configsValues["num.partitions"] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
-				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
+				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
-			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
-				return kafkaRestConfigs[i].Name < kafkaRestConfigs[j].Name
+			sort.Slice(kafkaRestConfigs.Data, func(i, j int) bool {
+				return kafkaRestConfigs.Data[i].Name < kafkaRestConfigs.Data[j].Name
 			})
 
 			// Write current state of relevant config settings
@@ -161,7 +156,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			if format == output.Human.String() {
 				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRestMsg, topicName)
 			}
-			for _, config := range kafkaRestConfigs {
+			for _, config := range kafkaRestConfigs.Data {
 				row := &updateRow{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
