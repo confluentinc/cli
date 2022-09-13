@@ -75,10 +75,11 @@ func (c *command) autocompleteConsumerShares() []string {
 }
 
 func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
+	status := share.GetStatus()
 	return &consumerShare{
 		Id:              share.GetId(),
 		ProviderName:    share.GetProviderUserName(),
-		Status:          share.GetStatus(),
+		Status:          status.GetPhase(),
 		InviteExpiresAt: share.GetInviteExpiresAt(),
 	}
 }

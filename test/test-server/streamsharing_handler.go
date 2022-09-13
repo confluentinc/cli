@@ -17,7 +17,7 @@ func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 	return cdxv1.CdxV1ConsumerShare{
 		Id:               stringToPtr("ss-12345"),
 		ProviderUserName: stringToPtr("provider"),
-		Status:           stringToPtr("active"),
+		Status:           &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
 		InviteExpiresAt:  &expiresAt,
 	}
 }
@@ -31,7 +31,7 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 		ConsumerUserName:         stringToPtr("consumer"),
 		ConsumerOrganizationName: stringToPtr("consumer org"),
 		ProviderUserName:         stringToPtr("provider"),
-		Status:                   stringToPtr("active"),
+		Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
 		DeliveryMethod:           stringToPtr("email"),
 		RedeemedAt:               &redeemedAt,
 		InvitedAt:                &invitedAt,
@@ -121,7 +121,7 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		response := cdxv1.CdxV1RedeemTokenResponse{
 			Id:                stringPtr("ss-12345"),
-			Apikey:            stringPtr("00000000000000000000"),
+			ApiKey:            stringPtr("00000000000000000000"),
 			Secret:            stringPtr("00000000000000000000"),
 			KafkaBootstrapUrl: stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
