@@ -16,6 +16,9 @@ type link struct {
 	TopicName            string
 	SourceClusterId      string
 	DestinationClusterId string
+	LinkState            string
+	LinkError            string
+	LinkErrorMessage     string
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
@@ -24,6 +27,9 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
+		LinkState:            data.GetLinkState(),
+		LinkError:            data.GetLinkError(),
+		LinkErrorMessage:     data.GetLinkErrorMessage(),
 	}
 }
 
@@ -98,5 +104,5 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId")
+	return append(x, "SourceClusterId", "DestinationClusterId", "LinkState", "LinkError", "LinkErrorMessage")
 }
