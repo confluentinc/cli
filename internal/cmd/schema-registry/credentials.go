@@ -18,6 +18,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
+const MaxRetries = 10
+
 func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
 	f := form.New(
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
@@ -102,8 +104,9 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 	// First examine existing credentials. If check fails(saved credentials no longer works or user enters
 	// incorrect information), shouldPrompt becomes true and prompt users to enter credentials again.
 	shouldPrompt := false
-
+	var retries = MaxRetries
 	for {
+		retries--
 		// Get credentials as Schema Registry BasicAuth
 		if srAPIKey != "" && srAPISecret != "" {
 			srCluster.SrCredentials = &v1.APIKeyPair{
@@ -148,6 +151,10 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedErrorMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
+			if retries == 0 {
+				utils.ErrPrintln(cmd, "Maximum number of retries reached.")
+				return nil, nil, err
+			}
 			continue
 		}
 
