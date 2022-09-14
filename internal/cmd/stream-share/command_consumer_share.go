@@ -9,31 +9,34 @@ import (
 )
 
 var (
-	consumerShareListFields           = []string{"Id", "ProviderName", "Status", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Invite Expires At"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "invite_expires_at"}
+	consumerShareListFields           = []string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"}
+	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Provider Organization Name", "Status", "Invite Expires At"}
+	consumerShareListStructuredLabels = []string{"id", "provider_user_name", "provider_organization_name", "status", "invite_expires_at"}
 )
 
 var (
 	consumerHumanLabelMap = map[string]string{
-		"Id":              "ID",
-		"ProviderName":    "Provider Name",
-		"Status":          "Status",
-		"InviteExpiresAt": "Invite Expires At",
+		"Id":                       "ID",
+		"ProviderName":             "Provider Name",
+		"ProviderOrganizationName": "Provider Organization Name",
+		"Status":                   "Status",
+		"InviteExpiresAt":          "Invite Expires At",
 	}
 	consumerStructuredLabelMap = map[string]string{
-		"Id":              "id",
-		"ProviderName":    "provider_name",
-		"Status":          "status",
-		"InviteExpiresAt": "invite_expires_at",
+		"Id":                       "id",
+		"ProviderName":             "provider_user_name",
+		"ProviderOrganizationName": "provider_organization_name",
+		"Status":                   "status",
+		"InviteExpiresAt":          "invite_expires_at",
 	}
 )
 
 type consumerShare struct {
-	Id              string
-	ProviderName    string
-	Status          string
-	InviteExpiresAt time.Time
+	Id                       string
+	ProviderName             string
+	ProviderOrganizationName string
+	Status                   string
+	InviteExpiresAt          time.Time
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -77,9 +80,10 @@ func (c *command) autocompleteConsumerShares() []string {
 func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
 	status := share.GetStatus()
 	return &consumerShare{
-		Id:              share.GetId(),
-		ProviderName:    share.GetProviderUserName(),
-		Status:          status.GetPhase(),
-		InviteExpiresAt: share.GetInviteExpiresAt(),
+		Id:                       share.GetId(),
+		ProviderName:             share.GetProviderUserName(),
+		ProviderOrganizationName: share.GetProviderOrganizationName(),
+		Status:                   status.GetPhase(),
+		InviteExpiresAt:          share.GetInviteExpiresAt(),
 	}
 }
