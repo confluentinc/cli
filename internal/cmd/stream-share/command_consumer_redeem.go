@@ -90,7 +90,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 
 	tokenObj := &redeemToken{
 		Id:                redeemResponse.GetId(),
-		ApiKey:            redeemResponse.GetApikey(),
+		ApiKey:            redeemResponse.GetApiKey(),
 		Secret:            redeemResponse.GetSecret(),
 		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
 		Resources:         resources,
