@@ -131,7 +131,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 
 func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndCount(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
 	describeStruct := convertClusterToDescribeStruct(cluster)
-	if all { // expose KAPI, total topic count, total partition count when --all flag is set
+	if all { // expose KAPI, total topic count when --all flag is set
 		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 		if err != nil {
 			return err
