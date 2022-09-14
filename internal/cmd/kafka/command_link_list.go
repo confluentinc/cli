@@ -2,11 +2,11 @@ package kafka
 
 import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
+	"strings"
 )
 
 const includeTopicsFlagName = "include-topics"
@@ -76,7 +76,11 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	listFields := getListFields(includeTopics)
-	humanLabels := camelToSpaced(listFields)
+	camelToSpacedListFields := camelToSpaced(listFields)
+	var humanLabels []string
+	for _, humanLabel := range camelToSpacedListFields {
+		humanLabels = append(humanLabels, strings.TrimPrefix(humanLabel, "Link "))
+	}
 	structuredLabels := camelToSnake(listFields)
 
 	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
