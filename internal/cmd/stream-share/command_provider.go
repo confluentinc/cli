@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	providerShareListFields = []string{"Id", "ConsumerName", "ConsumerOrganizationName", "ProviderName",
+	providerShareListFields = []string{"Id", "ConsumerName", "ConsumerOrganizationName",
 		"Status", "DeliveryMethod", "InvitedAt", "RedeemedAt", "InviteExpiresAt"}
-	providerShareListHumanLabels = []string{"ID", "Consumer Name", "Consumer Organization Name", "Provider Name",
+	providerShareListHumanLabels = []string{"ID", "Consumer Name", "Consumer Organization Name",
 		"Status", "Delivery Method", "Invited At", "Redeemed At", "Invite Expires At"}
-	providerShareListStructuredLabels = []string{"id", "consumer_name", "consumer_organization_name", "provider_name",
+	providerShareListStructuredLabels = []string{"id", "consumer_name", "consumer_organization_name",
 		"status", "delivery_method", "invited_at", "redeemed_at", "invite_expires_at"}
 )
 
@@ -19,7 +19,6 @@ type providerShare struct {
 	Id                       string
 	ConsumerName             string
 	ConsumerOrganizationName string
-	ProviderName             string
 	Status                   string
 	DeliveryMethod           string
 	RedeemedAt               string
@@ -32,7 +31,6 @@ var (
 		"Id":                       "ID",
 		"ConsumerName":             "Consumer Name",
 		"ConsumerOrganizationName": "Consumer Organization Name",
-		"ProviderName":             "Provider Name",
 		"Status":                   "Status",
 		"DeliveryMethod":           "Delivery Method",
 		"RedeemedAt":               "Redeemed At",
@@ -41,9 +39,8 @@ var (
 	}
 	providerStructuredLabelMap = map[string]string{
 		"Id":                       "id",
-		"ConsumerName":             "consumer_name",
+		"ConsumerName":             "consumer_user_name",
 		"ConsumerOrganizationName": "consumer_organization_name",
-		"ProviderName":             "provider_name",
 		"Status":                   "status",
 		"DeliveryMethod":           "delivery_method",
 		"RedeemedAt":               "redeemed_at",

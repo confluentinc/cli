@@ -50,7 +50,6 @@ func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerSh
 		Id:                       share.GetId(),
 		ConsumerName:             share.GetConsumerUserName(),
 		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
-		ProviderName:             share.GetProviderUserName(),
 		Status:                   status.GetPhase(),
 		DeliveryMethod:           share.GetDeliveryMethod(),
 		InvitedAt:                share.GetInvitedAt(),
