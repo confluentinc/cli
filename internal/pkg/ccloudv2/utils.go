@@ -56,9 +56,9 @@ func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
 		if ok, _ := retryableHTTPCodes[resp.StatusCode]; ok {
-			return true, nil
+			return true, err
 		}
-		return false, nil
+		return false, err
 	}
 	return client.StandardClient()
 }
