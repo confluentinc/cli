@@ -45,7 +45,7 @@ endef
 
 .PHONY: switch-librdkafka-arm64
 switch-librdkafka-arm64:
-	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor); \
+	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor)
 	if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
 		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)"; \
 		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a; \
@@ -54,7 +54,7 @@ switch-librdkafka-arm64:
 
 .PHONY: restore-librdkafka-amd64
 restore-librdkafka-amd64:
-	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor); \
+	$(eval RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor)
 	if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
         echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)"; \
 		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a; \
