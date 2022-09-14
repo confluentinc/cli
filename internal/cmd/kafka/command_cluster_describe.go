@@ -113,7 +113,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
-	return c.outputKafkaClusterDescriptionWithKAPIAndCount(cmd, &cluster, all)
+	return c.outputKafkaClusterDescriptionWithKAPIAndTopicCount(cmd, &cluster, all)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -129,7 +129,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return lkc, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndCount(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
+func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndTopicCount(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
 	describeStruct := convertClusterToDescribeStruct(cluster)
 	if all { // expose KAPI, total topic count when --all flag is set
 		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
