@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,6 +18,24 @@ const (
 	pageTokenQueryParameter = "page_token"
 	ccloudV2ListPageSize    = 100
 )
+
+var retryableHTTPCodes = map[int]bool{
+	// 429
+	http.StatusTooManyRequests: true,
+
+	// 5XX
+	http.StatusInternalServerError:           true,
+	http.StatusNotImplemented:                true,
+	http.StatusBadGateway:                    true,
+	http.StatusServiceUnavailable:            true,
+	http.StatusGatewayTimeout:                true,
+	http.StatusHTTPVersionNotSupported:       true,
+	http.StatusVariantAlsoNegotiates:         true,
+	http.StatusInsufficientStorage:           true,
+	http.StatusLoopDetected:                  true,
+	http.StatusNotExtended:                   true,
+	http.StatusNetworkAuthenticationRequired: true,
+}
 
 var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
 
@@ -35,6 +54,12 @@ func IsCCloudURL(url string, isTest bool) bool {
 func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if ok, _ := retryableHTTPCodes[resp.StatusCode]; ok {
+			return true, err
+		}
+		return false, err
+	}
 	return client.StandardClient()
 }
 
