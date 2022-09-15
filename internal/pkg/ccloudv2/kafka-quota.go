@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
@@ -21,25 +22,25 @@ func (c *Client) quotaContext() context.Context {
 	return context.WithValue(context.Background(), kafkaquotasv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, *http.Response, error) {
+func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
 	var list []kafkaquotasv1.KafkaQuotasV1ClientQuota
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, resp, err := c.listQuotas(clusterId, envId, pageToken)
+		page, httpResp, err := c.listQuotas(clusterId, envId, pageToken)
 		if err != nil {
-			return nil, resp, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
 		pageToken, done, err = extractKafkaQuotasNextPagePageToken(page.GetMetadata().Next)
 		if err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 	}
-	return list, nil, nil
+	return list, nil
 }
 
 func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.KafkaQuotasV1ClientQuotaList, *http.Response, error) {
