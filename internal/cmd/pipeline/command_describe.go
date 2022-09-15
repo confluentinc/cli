@@ -3,37 +3,40 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe <pipeline-id>",
-		Short:       "Describe a pipeline with the option to save pipeline model.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.describe,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "describe <pipeline-id>",
+		Short: "Describe a pipeline with the option to save pipeline model.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.describe,
 	}
+
 	cmd.Flags().Bool("save-sql", false, "Save the pipeline model in a local file.")
 	cmd.Flags().String("output-directory", "", "Path to save pipeline model.")
+
 	return cmd
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	save_sql, _ := cmd.Flags().GetBool("save-sql")
-	output_dir, _ := cmd.Flags().GetString("output-directory")
+	saveSql, _ := cmd.Flags().GetBool("save-sql")
+	outputDir, _ := cmd.Flags().GetString("output-directory")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	var client http.Client
@@ -111,7 +114,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if save_sql {
+	if saveSql {
 
 		// TODO: Create GET /{pipeline_id}/describe API to export SQL file
 		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines/%s/content", c.Context.GetCurrentEnvironmentId(), cluster.ID, args[0]), nil)
@@ -137,11 +140,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		if resp.StatusCode == 200 && err == nil {
 			filepath := args[0] + ".sql"
 
-			if output_dir != "" {
-				if string(output_dir[len(output_dir)-1]) == "/" {
-					filepath = output_dir + args[0] + ".sql"
+			if outputDir != "" {
+				if string(outputDir[len(outputDir)-1]) == "/" {
+					filepath = outputDir + args[0] + ".sql"
 				} else {
-					filepath = output_dir + "/" + args[0] + ".sql"
+					filepath = outputDir + "/" + args[0] + ".sql"
 				}
 			}
 

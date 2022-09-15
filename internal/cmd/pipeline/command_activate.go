@@ -3,30 +3,30 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:         "activate <pipeline-id>",
-		Short:       "Request to activate a pipeline.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.activate,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+	return &cobra.Command{
+		Use:   "activate <pipeline-id>",
+		Short: "Request to activate a pipeline.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.activate,
 	}
-	return cmd
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	var client http.Client
@@ -60,7 +60,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		utils.Println(cmd, "Could not activate pipeline: "+args[0]+" with error: "+err.Error())
 		return nil

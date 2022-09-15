@@ -3,14 +3,16 @@ package pipeline
 import (
 	"encoding/json"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/olekukonko/tablewriter"
-	"github.com/spf13/cobra"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+
+	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type Pipeline struct {
@@ -20,20 +22,19 @@ type Pipeline struct {
 }
 
 func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:         "list",
-		Short:       "Display pipelines in the current environment and cluster.",
-		Args:        cobra.ExactArgs(0),
-		RunE:        c.list,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+	return &cobra.Command{
+		Use:   "list",
+		Short: "Display pipelines in the current environment and cluster.",
+		Args:  cobra.ExactArgs(0),
+		RunE:  c.list,
 	}
-	return cmd
 }
+
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	var client http.Client
@@ -67,7 +68,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		utils.Println(cmd, "Could not list pipelines with error: "+err.Error())
 		return nil

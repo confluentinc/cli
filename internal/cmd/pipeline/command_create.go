@@ -5,28 +5,32 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+
+	"github.com/spf13/cobra"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create",
-		Short:       "Create a new pipeline.",
-		Args:        cobra.ExactArgs(0),
-		RunE:        c.create,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "create",
+		Short: "Create a new pipeline.",
+		Args:  cobra.ExactArgs(0),
+		RunE:  c.create,
 	}
+
 	cmd.Flags().String("name", "", "Name for new pipeline.")
 	cmd.Flags().String("ksqldb-cluster", "", "KSQL DB cluster for new pipeline.")
 	cmd.Flags().String("description", "", "Description for new pipeline.")
+
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("ksqldb-cluster")
+
 	return cmd
 }
 
@@ -38,11 +42,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	kafka_cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
-	ksql_req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: ksql}
-	ksql_cluster, err := c.Client.KSQL.Describe(context.Background(), ksql_req)
+	ksqlReq := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: ksql}
+	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)
 	if err != nil {
 		utils.Println(cmd, "Could not get Ksql Cluster with error: "+err.Error())
 		return nil
@@ -54,7 +58,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	if kafka_cluster.ID != ksql_cluster.KafkaClusterId {
+	if kafka_cluster.ID != ksqlCluster.KafkaClusterId {
 		utils.Println(cmd, "KSQL DB Cluster not in Kafka Cluster")
 		return nil
 	}
@@ -82,7 +86,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		"ksqlId":                 ksql,
 		"connectEndpoint":        fmt.Sprintf("https://devel.cpdev.cloud/api/connect/v1/environments/%s/clusters/%s", c.Context.GetCurrentEnvironmentId(), kafka_cluster.ID),
 		"kafkaClusterEndpoint":   kafka_cluster.Bootstrap,
-		"ksqlEndpoint":           ksql_cluster.Endpoint,
+		"ksqlEndpoint":           ksqlCluster.Endpoint,
 		"schemaRegistryEndpoint": sr_cluster.SchemaRegistryEndpoint,
 		"schemaRegistryId":       sr_cluster.Id,
 	})

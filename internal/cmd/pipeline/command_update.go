@@ -4,38 +4,41 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "update <pipeline-id>",
-		Short:       "Update an existing pipeline.",
-		Args:        cobra.ExactArgs(1),
-		RunE:        c.update,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:   "update <pipeline-id>",
+		Short: "Update an existing pipeline.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.update,
 	}
+
 	cmd.Flags().String("name", "", "New pipeline name.")
 	cmd.Flags().String("description", "", "New pipeline description.")
 	cmd.Flags().String("sql-file", "", "Path to the new pipeline model file.")
+
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	sql_file, _ := cmd.Flags().GetString("sql-file")
+	sqlFile, _ := cmd.Flags().GetString("sql-file")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	var client http.Client
@@ -55,7 +58,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		MaxAge: 300,
 	}
 
-	if name == "" && description == "" && sql_file == "" {
+	if name == "" && description == "" && sqlFile == "" {
 		utils.Println(cmd, "At least one field must be specified with --name, --description, or --sql-file")
 		return nil
 	}
@@ -105,8 +108,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if sql_file != "" {
-		putBody, err := os.Open(sql_file)
+	if sqlFile != "" {
+		putBody, err := os.Open(sqlFile)
 		if err != nil {
 			utils.Println(cmd, "Could not open the sql file for pipeline: "+args[0]+" with error: "+err.Error())
 			return nil
