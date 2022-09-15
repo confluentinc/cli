@@ -87,7 +87,7 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 		RunE:              c.describe,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster. Total topic count available only for current active cluster.")
+	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -131,6 +131,15 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 
 func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndTopicCount(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
 	describeStruct := convertClusterToDescribeStruct(cluster)
+	counts := *cluster.Id == c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
+	if counts {
+		totalTopicCount, err := c.getTotalTopicCountForKafkaCluster(cluster)
+		if err != nil {
+			return err
+		}
+		describeStruct.TotalTopicCount = totalTopicCount
+	}
+
 	if all { // expose KAPI, total topic count when --all flag is set
 		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 		if err != nil {
@@ -138,19 +147,10 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndTopicCount(cmd 
 		}
 		describeStruct.KAPI = kAPI
 
-		counts := *cluster.Id == c.Config.Context().KafkaClusterContext.GetActiveKafkaClusterId()
-		if counts {
-			totalTopicCount, err := c.getTotalTopicCountForKafkaCluster(cluster)
-			if err != nil {
-				return err
-			}
-			describeStruct.TotalTopicCount = totalTopicCount
-		}
-
 		return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithKAPI, counts), describeHumanRenames, describeStructuredRenames)
 	}
 
-	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields, false), describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields, counts), describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
