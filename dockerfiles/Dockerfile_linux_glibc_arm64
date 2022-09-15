@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64/v8 centos-arm64:latest
+FROM --platform=linux/arm64/v8 centos-arm64-cli:latest
 
 COPY . /go/src/github.com/confluentinc/cli/
 
