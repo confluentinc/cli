@@ -6,4 +6,4 @@ RUN cd /go/src/github.com/confluentinc/cli && \
     make gorelease-linux-glibc-arm64
 
 RUN cd /go/src/github.com/confluentinc/cli && \
-    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
+    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux_arm64}"; done;
