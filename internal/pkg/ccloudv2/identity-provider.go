@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newIdentityProviderClient(url, userAgent string, unsafeTrace bool) *identityproviderv2.APIClient {
@@ -51,9 +52,9 @@ func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProv
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListIdentityProviders(pageToken)
+		page, httpResp, err := c.executeListIdentityProviders(pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

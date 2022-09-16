@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
@@ -49,9 +50,9 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListServiceAccounts(pageToken)
+		page, httpResp, err := c.executeListServiceAccounts(pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
