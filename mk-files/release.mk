@@ -73,6 +73,12 @@ gorelease:
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
+	./build_linux_glibc_arm64.sh && \
+	aws s3 cp dist/confluent_$(VERSION)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_arm64.tar.gz && \
+	aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64 && \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
 	make upload-linux-build-to-github
 	
@@ -151,4 +157,7 @@ upload-linux-build-to-github:
 	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_arm64.tar.gz && \
+	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
+	gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
 	gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt
