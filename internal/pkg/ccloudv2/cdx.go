@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -52,17 +51,15 @@ func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare
 func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
 	deliveryMethod := "Email"
 	req := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
-		CdxV1CreateShareRequest(cdxv1.CdxV1CreateShareRequest{
-			Environment:  &environment,
-			KafkaCluster: &kafkaCluster,
-			ConsumerRestriction: &cdxv1.CdxV1CreateShareRequestConsumerRestrictionOneOf{
+		CdxV1CreateProviderShareRequest(cdxv1.CdxV1CreateProviderShareRequest{
+			ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
 				CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
 					Kind:  deliveryMethod,
 					Email: email,
 				},
 			},
 			DeliveryMethod: &deliveryMethod,
-			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s", kafkaCluster, topic)},
+			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s/environment=%s", kafkaCluster, topic, environment)},
 		})
 	return c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 }
@@ -109,6 +106,36 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 	return list, nil
 }
 
+func (c *Client) ListConsumerSharedResources(streamShareId string) ([]cdxv1.CdxV1ConsumerSharedResource, error) {
+	var list []cdxv1.CdxV1ConsumerSharedResource
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, r, err := c.executeListConsumerSharedResources(streamShareId, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, r)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return list, nil
+}
+
+func (c *Client) executeListConsumerSharedResources(streamShareId, pageToken string) (cdxv1.CdxV1ConsumerSharedResourceList, *http.Response, error) {
+	req := c.CdxClient.ConsumerSharedResourcesCdxV1Api.ListCdxV1ConsumerSharedResources(c.cdxApiContext()).
+		StreamShare(streamShareId).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.CdxClient.ConsumerSharedResourcesCdxV1Api.ListCdxV1ConsumerSharedResourcesExecute(req)
+}
+
 func (c *Client) executeListConsumerShares(sharedResource, pageToken string) (cdxv1.CdxV1ConsumerShareList, *http.Response, error) {
 	req := c.CdxClient.ConsumerSharesCdxV1Api.ListCdxV1ConsumerShares(c.cdxApiContext()).
 		SharedResource(sharedResource).PageSize(ccloudV2ListPageSize)
@@ -135,12 +162,18 @@ func extractCdxNextPageToken(nextPageUrlStringNullable cdxv1.NullableString) (st
 	return pageToken, false, err
 }
 
-func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
+func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
 	redeemTokenRequest := cdxv1.CdxV1RedeemTokenRequest{
 		Token:             &token,
 		AwsAccount:        &awsAccountId,
 		AzureSubscription: &azureSubscriptionId,
+		GcpProject:        &gcpProjectId,
 	}
 	req := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).CdxV1RedeemTokenRequest(redeemTokenRequest)
 	return c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
+}
+
+func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.CdxV1Network, *http.Response, error) {
+	req := c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResource(c.cdxApiContext(), sharedResourceId)
+	return c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResourceExecute(req)
 }
