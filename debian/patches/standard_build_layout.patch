@@ -1,6 +1,6 @@
---- cli/Makefile	2022-08-24 16:16:05.000000000 -0700
-+++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,229 +1,130 @@
+--- cli/Makefile	2022-09-16 14:14:59.000000000 -0700
++++ debian/Makefile	2022-09-01 10:34:50.000000000 -0700
+@@ -1,225 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -43,12 +43,6 @@
 -    endif
 -endif
 -
--.PHONY: build-darwin-arm64
--build-darwin-arm64:
--	make switch-librdkafka-arm64
--	CGO_ENABLED=1 make cli-builder || true 
--	make restore-librdkafka-amd64
--
 -.PHONY: cli-builder
 -cli-builder:
 -	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
@@ -67,7 +61,7 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_VERSION = 1.8.2
+-RDKAFKA_VERSION = 1.9.3-RC3
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
