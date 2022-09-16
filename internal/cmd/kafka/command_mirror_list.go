@@ -77,7 +77,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName, opts)
 	}
 	if err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST.Client)
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)

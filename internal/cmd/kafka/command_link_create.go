@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -62,59 +61,32 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a new cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a cluster link, using a configuration file.",
+				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt",
+			},
+			examples.Example{
+				Text: "Create a cluster link using command line flags.",
+				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
+			},
+		),
 	}
 
-	example1 := examples.Example{Text: "Create a cluster link, using a configuration file."}
-	example2 := examples.Example{Text: "Create a cluster link using command line flags."}
-	if c.cfg.IsCloudLogin() {
-		example1.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt"
-		example2.Code = "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
-	} else {
-		example1.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --config-file config.txt"
-		example2.Code = "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret"
-	}
-	cmd.Example = examples.BuildExampleString(example1, example2)
-
-	// As of now, only CP --> CC links are supported.
-	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
-		cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
-		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID for source initiated cluster links.")
-		cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key "bootstrap.servers".`)
-	} else {
-		cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
-		cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
-	}
-
-	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. "+
-		"For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+
-		authHelperMsg)
-	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. "+
-		"For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+
-		authHelperMsg)
-	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. "+
-		"This is used for remote cluster authentication links at the source cluster. "+
-		authHelperMsg)
-	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. "+
-		"This is used for remote cluster authentication for links at the source cluster. "+
-		authHelperMsg)
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. "+
-		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cmd.Flags().String(sourceClusterIdFlagName, "", "Source cluster ID.")
+	cmd.Flags().String(sourceBootstrapServerFlagName, "", "Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.")
+	cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID for source initiated cluster links.")
+	cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key "bootstrap.servers".`)
+	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. "+authHelperMsg)
+	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. "+authHelperMsg)
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
-
-	if c.cfg.IsCloudLogin() {
-		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	}
-
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-
-	if !c.cfg.IsCloudLogin() {
-		_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
-	}
 
 	return cmd
 }
@@ -142,13 +114,6 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if !c.cfg.IsCloudLogin() {
-		// On prem we only support source initiated links currently.
-		if linkMode != Source {
-			return errors.New("Confluent Platform only supports source initiated links.")
-		}
-	}
-
 	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
 		return err
 	}
@@ -162,42 +127,45 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		configMap[bootstrapServersPropertyName] = bootstrapServer
 	}
 
-	data := kafkarestv3.CreateLinkRequestData{Configs: toCreateTopicConfigs(configMap)}
-	if linkMode == Destination {
-		if remoteClusterId != "" {
-			data.SourceClusterId = remoteClusterId
-		}
-	} else {
-		if remoteClusterId != "" {
-			data.DestinationClusterId = remoteClusterId
+	configs := toCreateTopicConfigs(configMap)
+	data := kafkarestv3.CreateLinkRequestData{Configs: &configs}
+
+	if remoteClusterId != "" {
+		if linkMode == Destination {
+			data.SourceClusterId = &remoteClusterId
+		} else {
+			data.DestinationClusterId = &remoteClusterId
 		}
 	}
 
-	opts := &kafkarestv3.CreateKafkaLinkOpts{
-		ValidateOnly:          optional.NewBool(dryRun),
-		ValidateLink:          optional.NewBool(!noValidate),
-		CreateLinkRequestData: optional.NewInterface(data),
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	if httpResp, err := client.ClusterLinkingV3Api.CreateKafkaLink(ctx, clusterId, linkName, opts); err != nil {
-		return handleOpenApiError(httpResp, err, client)
+	if httpResp, err := kafkaREST.CloudClient.CreateKafkaLink(clusterId, linkName, !noValidate, dryRun, data); err != nil {
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	msg := errors.CreatedResourceMsg
+	msg := fmt.Sprintf(errors.CreatedResourceMsg, resource.ClusterLink, linkName)
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Printf(cmd, msg, resource.ClusterLink, linkName)
+	utils.Print(cmd, msg)
+
 	return nil
 }
 
 func getJaasValue(apiKey, apiSecret string) string {
-	return fmt.Sprintf(jaasConfigPrefix+` username="%s" password="%s";`, apiKey, apiSecret)
+	return fmt.Sprintf(`%s username="%s" password="%s";`, jaasConfigPrefix, apiKey, apiSecret)
 }
 
 func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, linkMode, error) {

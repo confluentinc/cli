@@ -35,6 +35,8 @@ const (
 	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  },\n  {\n    \"name\": \"topic-2\"\n  },\n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
+var conf *v1.Config
+
 type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient

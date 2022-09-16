@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -30,13 +31,8 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 		RunE:  c.describe,
 	}
 
-	if c.cfg.IsCloudLogin() {
-		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	}
-
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -46,14 +42,22 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	listLinkConfigsRespData, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, linkName)
+	listLinkConfigsRespData, httpResp, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, linkName)
 	if err != nil {
-		return handleOpenApiError(httpResp, err, client)
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, describeLinkConfigFields, humanDescribeLinkConfigFields, structuredDescribeLinkConfigFields)
@@ -70,8 +74,6 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
 		ReadOnly:    true,
 		Sensitive:   true,
-		Source:      "",
-		Synonyms:    nil,
 	})
 
 	for _, config := range listLinkConfigsRespData.Data {

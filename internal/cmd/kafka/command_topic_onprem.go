@@ -51,7 +51,7 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("validateTopic: found topic %s", t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}

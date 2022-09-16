@@ -55,8 +55,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return err
@@ -74,7 +73,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				printAclsDeleted(cmd, matchingBindingCount)
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if err != nil {
@@ -82,7 +81,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					printAclsDeleted(cmd, matchingBindingCount)
 				}
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if httpResp.StatusCode == http.StatusOK {

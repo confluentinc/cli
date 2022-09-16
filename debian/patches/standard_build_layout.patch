@@ -1,6 +1,6 @@
---- cli/Makefile	2022-08-24 16:41:29.000000000 -0700
-+++ debian/Makefile	2022-06-29 16:02:09.000000000 -0700
-@@ -1,257 +1,130 @@
+--- cli/Makefile	2022-08-24 16:16:05.000000000 -0700
++++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
+@@ -1,229 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -24,8 +24,7 @@
 -		make cli-builder
 -    endif
 -endif
-+SHELL=/bin/bash
- 
+-
 -.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 -cross-build:
 -ifeq ($(GOARCH),arm64) # build for darwin/arm64.
@@ -42,10 +41,14 @@
 -    else # build for Darwin/amd64
 -		CGO_ENABLED=1 make cli-builder
 -    endif
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
- endif
- 
+-endif
+-
+-.PHONY: build-darwin-arm64
+-build-darwin-arm64:
+-	make switch-librdkafka-arm64
+-	CGO_ENABLED=1 make cli-builder || true 
+-	make restore-librdkafka-amd64
+-
 -.PHONY: cli-builder
 -cli-builder:
 -	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
@@ -64,24 +67,21 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_VERSION = 1.9.3-RC3
--RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
+-RDKAFKA_VERSION = 1.8.2
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++SHELL=/bin/bash
  
 -.PHONY: clean
 -clean:
 -	@for dir in bin dist docs legal release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
++endif
  
 -.PHONY: generate
 -generate:
@@ -91,28 +91,16 @@
 -deps:
 -	go install github.com/goreleaser/goreleaser@v1.4.1 && \
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
--	go install github.com/mitchellh/golicense@v0.2.0
+-	go install github.com/mitchellh/golicense@v0.2.0 && \
+-	go install gotest.tools/gotestsum@v1.8.2
 -
 -.PHONY: jenkins-deps
 -# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 -jenkins-deps:
 -	go get github.com/goreleaser/goreleaser@v1.4.1
 -
--ifeq ($(shell uname),Darwin)
--    SHASUM ?= gsha256sum
--else ifneq (,$(findstring NT,$(shell uname)))
--# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
--    SHASUM ?= CertUtil SHA256 -hashfile
--else ifneq (,$(findstring Windows,$(shell systeminfo)))
--    SHASUM ?= CertUtil SHA256 -hashfile
--else
--    SHASUM ?= sha256sum
--endif
-+APPLY_PATCHES?=yes
- 
 -show-args:
 -	@echo "VERSION: $(VERSION)"
--	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
 -
 -#
 -# START DEVELOPMENT HELPERS
@@ -126,11 +114,8 @@
 -  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 -  # ...and turn them into do-nothing targets
 -  $(eval $(RUN_ARGS):;@:)
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
- 
+-endif
+-
 -.PHONY: run
 -run:
 -	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
@@ -138,11 +123,6 @@
 -#
 -# END DEVELOPMENT HELPERS
 -#
--
--.PHONY: build-integ
--build-integ:
--	make build-integ-nonrace
--	make build-integ-race
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
@@ -184,32 +164,28 @@
 -	true
 -else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
 -	make release
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
+-else
 -	true
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
++
++APPLY_PATCHES?=yes
++
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
  endif
  
 -.PHONY: lint
 -lint:
--ifdef CI
--ifeq ($(shell uname),Darwin)
--	true
--else ifneq (,$(findstring NT,$(shell uname)))
--	true
--else
--	@make lint-go
--	@make lint-cli
--endif
--else
--	@make lint-go
--	@make lint-cli
--endif
-+all: install
- 
+-	make lint-go
+-	make lint-cli
+-
 -.PHONY: lint-go
 -lint-go:
 -	@golangci-lint run --timeout=10m
@@ -239,28 +215,36 @@
 -ifdef CI
 -	@echo "mode: atomic" > coverage.txt
 -endif
-+archive: install
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
-+	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
- 
+-
 -.PHONY: unit-test
 -## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 -unit-test:
 -ifdef CI
--	@# Run unit tests with coverage.
 -  ifeq "$(OS)" "Windows_NT"
--	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  else
--	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
--else
--	@# Run unit tests.
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -  ifeq "$(OS)" "Windows_NT"
 -	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  else
 -	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 -  endif
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
++endif
++
++all: install
++
++archive: install
++	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
++	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
++
 +apply-patches: $(wildcard debian/patches/*)
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
@@ -270,13 +254,8 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
--	@# Run integration tests with coverage.
--	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
--else
--	@# Run integration tests.
--	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
--endif
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -331,10 +310,13 @@
 +ifneq ($(RPM_RELEASE_POSTFIX),)
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
-+else
+ else
+-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 +	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
+ endif
+ 
+-.PHONY: test
+-test: test-prep unit-test int-test test-installer
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
@@ -360,9 +342,7 @@
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
--.PHONY: test
--test: test-prep unit-test int-test test-installer
++
 +RPM_BUILDING/%:
 +	mkdir -p $@
  

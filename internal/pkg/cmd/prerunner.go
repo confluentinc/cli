@@ -455,15 +455,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			client, err := createKafkaRESTClient(restEndpoint, unsafeTrace)
-			if err != nil {
-				return nil, err
-			}
-
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, unsafeTrace, r.Config.IsTest),
-				Client:      client,
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -485,7 +480,7 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return err
 	}
 
-	v2Client := ccloudv2.NewClient(cliCmd.AuthToken(), ctx.Platform.Server, cliCmd.Version.UserAgent, unsafeTrace, r.Config.IsTest)
+	v2Client := cliCmd.Config.GetCloudClientV2(unsafeTrace)
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
@@ -839,7 +834,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			v2Client := ccloudv2.NewClient(ctx.State.AuthToken, ctx.Platform.Server, command.Version.UserAgent, unsafeTrace, r.Config.IsTest)
+			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
 			ctx.Client = client
 			command.Config.Client = client
@@ -1031,10 +1026,10 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
-	return kafkarestv3.NewAPIClient(cfg), nil
+	return kafkarestv3.NewAPIClient(cfg)
 }

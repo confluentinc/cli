@@ -65,12 +65,11 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 
 	data := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configMap))
 	i := 0
-	for k, v := range configMap {
-		v2 := v
+	for key, val := range configMap {
+		v := val
 		data[i] = kafkarestv3.AlterConfigBatchRequestDataData{
-			Name:      k,
-			Value:     &v2,
-			Operation: nil,
+			Name:  key,
+			Value: &v,
 		}
 		i++
 	}
