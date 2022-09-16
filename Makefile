@@ -24,10 +24,10 @@ endif
 
 .PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
+ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux)
 		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else
+    else # build for darwin/arm64
 		CGO_ENABLED=1 make cli-builder
     endif
 else # build for amd64 arch
