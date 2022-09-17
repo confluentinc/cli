@@ -25,9 +25,9 @@ test-installer:
 verify-binaries:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(aws-authenticate) && \
-	for os in linux darwin windows; do \
+	for os in linux alpine darwin windows; do \
 		for arch in arm64 amd64; do \
-			if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \
+			if [ "$${os}" = "windows" ] && [ "$${arch}" = "arm64" ] ; then \
 				continue; \
 			fi ; \
 			suffix="" ; \
@@ -39,9 +39,6 @@ verify-binaries:
 			aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; }; \
 		done; \
 	done
-	FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_alpine_amd64; \
-	echo "Checking binary: $${FILE}"; \
-	aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; };
 	rm -rf $(TEMP_DIR)	
 	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
 
