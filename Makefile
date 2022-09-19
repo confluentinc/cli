@@ -14,12 +14,8 @@ else ifneq (,$(findstring Linux,$(shell uname)))
     else # build for glibc Linux
 		CC=gcc CXX=g++ make cli-builder
     endif
-else
-    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
-		make cli-builder
-    else # build for Darwin/arm64
-		make cli-builder
-    endif
+else #build for Darwin
+	make cli-builder
 endif
 
 .PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
