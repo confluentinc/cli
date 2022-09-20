@@ -18,19 +18,27 @@ else #build for Darwin
 	make cli-builder
 endif
 
-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+.PHONY: cross-build # cross-compile from Darwin machine to Win64, Linux64 and Darwin/arm64
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux)
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+        ifeq ($(TAGS), musl)
+			CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=$(TAGS) make cli-builder
+        else
+			CGO_ENABLED=1 CC=aarch64-unknown-linux-gnu-gcc CXX=aarch64-unknown-linux-gnu-g++ CGO_LDFLAGS="-static" make cli-builder
+        endif
     else # build for darwin/arm64
 		CGO_ENABLED=1 make cli-builder
     endif
 else # build for amd64 arch
     ifeq ($(GOOS),windows)
 		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
-    else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+    else ifeq ($(GOOS),linux)
+        ifeq ($(TAGS), musl)
+			CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=$(TAGS) make cli-builder
+        else
+			CGO_ENABLED=1 CC=x86_64-unknown-linux-gnu-gcc CXX=x86_64-unknown-linux-gnu-g++ CGO_LDFLAGS="-static" make cli-builder
+        endif
     else # build for Darwin/amd64
 		CGO_ENABLED=1 make cli-builder
     endif
