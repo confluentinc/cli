@@ -14,7 +14,7 @@ import (
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update a previously created cluster link.",
+		Short: "Update a Kafka client quota.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(examples.Example{
