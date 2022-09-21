@@ -1,0 +1,69 @@
+project_name: confluent
+
+dist: dist
+
+before:
+  hooks:
+    # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
+    - rm -rf $GOPATH/pkg/mod
+
+# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
+# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
+builds:
+  - binary: confluent
+    id: confluent-linux-amd64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-unknown-linux-gnu-gcc
+      - CXX=x86_64-unknown-linux-gnu-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - binary: confluent
+    id: confluent-linux-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-unknown-linux-gnu-gcc
+      - CXX=aarch64-unknown-linux-gnu-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - arm64
+
+release:
+  disable: true
+
+archives:
+  - id: binary
+    format: binary
+  - id: archive
+    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
