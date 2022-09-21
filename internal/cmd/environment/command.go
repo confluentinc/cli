@@ -21,6 +21,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
 	c.AddCommand(c.newUpdateCommand())
 	c.AddCommand(c.newUseCommand())

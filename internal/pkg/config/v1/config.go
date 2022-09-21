@@ -12,10 +12,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -85,7 +87,8 @@ type Config struct {
 
 	// The following configurations are not persisted between runs
 
-	IsTest bool `json:"-"`
+	IsTest  bool              `json:"-"`
+	Version *pversion.Version `json:"-"`
 
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
@@ -124,6 +127,7 @@ func New() *Config {
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
+		Version:       new(pversion.Version),
 	}
 }
 
@@ -647,4 +651,9 @@ func (c *Config) GetLastUsedOrgId() string {
 		return ctx.LastOrgId
 	}
 	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+}
+
+func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
+	ctx := c.Context()
+	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
 }

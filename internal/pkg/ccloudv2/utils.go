@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -37,16 +38,19 @@ func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	return client.StandardClient()
 }
 
-func getServerUrl(baseURL string, isTest bool) string {
-	if isTest {
-		return testserver.TestV2CloudURL.String()
+func getServerUrl(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return baseURL
 	}
-	if strings.Contains(baseURL, "devel") {
-		return "https://api.devel.cpdev.cloud"
-	} else if strings.Contains(baseURL, "stag") {
-		return "https://api.stag.cpdev.cloud"
+
+	if utils.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
+		u.Host = "api." + u.Host
+	} else {
+		u.Path = "api"
 	}
-	return "https://api.confluent.cloud"
+
+	return u.String()
 }
 
 func extractPageToken(nextPageUrlString string) (string, error) {

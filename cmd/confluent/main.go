@@ -28,13 +28,13 @@ func main() {
 
 	isTest, err := strconv.ParseBool(isTest)
 	cobra.CheckErr(err)
+
 	cfg.IsTest = isTest
+	cfg.Version = pversion.NewVersion(version, commit, date, host)
 
-	ver := pversion.NewVersion(version, commit, date, host)
+	cmd := pcmd.NewConfluentCommand(cfg)
 
-	cmd := pcmd.NewConfluentCommand(cfg, ver)
-
-	if err := pcmd.Execute(cmd, os.Args[1:], cfg, ver); err != nil {
+	if err := pcmd.Execute(cmd, os.Args[1:], cfg); err != nil {
 		if isTest {
 			bincover.ExitCode = 1
 		} else {

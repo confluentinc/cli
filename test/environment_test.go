@@ -25,3 +25,15 @@ func (s *CLITestSuite) TestEnvironment() {
 		s.runIntegrationTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestEnvironmentDescribe() {
+	tests := []CLITest{
+		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
+		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}

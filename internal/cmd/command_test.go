@@ -17,8 +17,6 @@ import (
 )
 
 var (
-	mockVersion = new(pversion.Version)
-
 	regularOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
 			Organization: testserver.RegularOrg,
@@ -108,7 +106,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 		require.NotContains(t, out, command)
 	}
 
-	cmd := NewConfluentCommand(cfg, mockVersion)
+	cmd := NewConfluentCommand(cfg)
 
 	out, err = pcmd.ExecuteCommand(cmd, "admin", "payment", "--help")
 	require.NoError(t, err)
@@ -193,7 +191,8 @@ func TestHelp_OnPrem(t *testing.T) {
 func runWithConfig(cfg *v1.Config) (string, error) {
 	cfg.BaseConfig = new(config.BaseConfig)
 	cfg.IsTest = true
+	cfg.Version = new(pversion.Version)
 
-	cmd := NewConfluentCommand(cfg, mockVersion)
+	cmd := NewConfluentCommand(cfg)
 	return pcmd.ExecuteCommand(cmd, "help")
 }
