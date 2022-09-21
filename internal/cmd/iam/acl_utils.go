@@ -117,7 +117,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 				conf.AclBinding.Entry.Operation = op.(mds.AclOperation)
 				break
 			}
-			conf.errors = multierror.Append(conf.errors, fmt.Errorf("Invalid operation value: "+v))
+			conf.errors = multierror.Append(conf.errors, fmt.Errorf("invalid operation value: %s", v))
 		}
 	}
 }

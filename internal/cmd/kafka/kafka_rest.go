@@ -9,6 +9,7 @@ import (
 
 	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -30,6 +31,18 @@ func kafkaRestHttpError(httpResp *http.Response) error {
 		errors.InternalServerErrorSuggestions)
 }
 
+func parseOpenAPIErrorCloud(err error) (*kafkaRestV3Error, error) {
+	if openAPIError, ok := err.(cckafkarestv3.GenericOpenAPIError); ok {
+		var decodedError kafkaRestV3Error
+		err = json.Unmarshal(openAPIError.Body(), &decodedError)
+		if err != nil {
+			return nil, err
+		}
+		return &decodedError, nil
+	}
+	return nil, fmt.Errorf("unexpected type")
+}
+
 func parseOpenAPIError(err error) (*kafkaRestV3Error, error) {
 	if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 		var decodedError kafkaRestV3Error
@@ -49,6 +62,18 @@ func kafkaRestError(url string, err error, httpResp *http.Response) error {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaRestConnectionErrorMsg, url, e.Err), errors.KafkaRestCertErrorSuggestions)
 		}
 		return errors.Errorf(errors.KafkaRestConnectionErrorMsg, url, e.Err)
+	case cckafkarestv3.GenericOpenAPIError:
+		openAPIError, parseErr := parseOpenAPIErrorCloud(err)
+		if parseErr == nil {
+			if strings.Contains(openAPIError.Message, "invalid_token") {
+				return errors.NewErrorWithSuggestions(errors.InvalidMDSTokenErrorMsg, errors.InvalidMDSTokenSuggestions)
+			}
+			return fmt.Errorf("REST request failed: %v (%v)", openAPIError.Message, openAPIError.Code)
+		}
+		if httpResp != nil && httpResp.StatusCode >= 400 {
+			return kafkaRestHttpError(httpResp)
+		}
+		return errors.NewErrorWithSuggestions(errors.UnknownErrorMsg, errors.InternalServerErrorSuggestions)
 	case kafkarestv3.GenericOpenAPIError:
 		openAPIError, parseErr := parseOpenAPIError(err)
 		if parseErr == nil {

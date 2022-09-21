@@ -57,7 +57,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)

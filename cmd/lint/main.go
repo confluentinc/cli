@@ -12,7 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{
@@ -307,7 +307,9 @@ func main() {
 	code := 0
 	for _, cfg := range configs {
 		cfg.IsTest = true
-		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version))
+		cfg.Version = new(pversion.Version)
+	
+		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1

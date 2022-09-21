@@ -67,7 +67,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)

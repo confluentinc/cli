@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/docs"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -32,9 +32,11 @@ func main() {
 	tabs := make([]docs.Tab, len(configs))
 	for i, cfg := range configs {
 		cfg.IsTest = true
+		cfg.Version = new(pversion.Version)
+
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg, new(version.Version)),
+			Command: cmd.NewConfluentCommand(cfg),
 		}
 	}
 
