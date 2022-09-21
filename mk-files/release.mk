@@ -43,6 +43,11 @@ define copy-stag-content-to-prod
 	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
 endef
 
+.PHONY: gorelease-linux-glibc
+gorelease-linux-glibc:
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release -f .goreleaser-linux-glibc.yml
+
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 # Uploading linux glibc files because its goreleaser file has set release disabled
 .PHONY: gorelease
