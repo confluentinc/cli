@@ -1,5 +1,5 @@
---- cli/Makefile	2022-08-24 16:16:05.000000000 -0700
-+++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
+--- cli/Makefile	2022-09-20 13:33:59.000000000 -0700
++++ debian/Makefile	2022-09-01 10:34:50.000000000 -0700
 @@ -1,229 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -17,35 +17,35 @@
 -    else # build for glibc Linux
 -		CC=gcc CXX=g++ make cli-builder
 -    endif
--else
--    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
--		make cli-builder
--    else # build for Darwin/arm64
--		make switch-librdkafka-arm64
--		make cli-builder || true 
--		make restore-librdkafka-amd64
--    endif
+-else #build for Darwin
+-	make cli-builder
 -endif
 -
--.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+-.PHONY: cross-build # cross-compile from Darwin machine to Win64, Linux64 and Darwin/arm64
 -cross-build:
--ifeq ($(GOARCH),arm64) # build for darwin/arm64.
--	make build-darwin-arm64
+-ifeq ($(GOARCH),arm64)
+-    ifeq ($(GOOS),linux)
+-        ifeq ($(TAGS), musl)
+-			CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=$(TAGS) make cli-builder
+-        else
+-			CGO_ENABLED=1 CC=aarch64-unknown-linux-gnu-gcc CXX=aarch64-unknown-linux-gnu-g++ CGO_LDFLAGS="-static" make cli-builder
+-        endif
+-    else # build for darwin/arm64
+-		CGO_ENABLED=1 make cli-builder
+-    endif
 -else # build for amd64 arch
 -    ifeq ($(GOOS),windows)
 -		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
--    else ifeq ($(GOOS),linux) 
--		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+-    else ifeq ($(GOOS),linux)
+-        ifeq ($(TAGS), musl)
+-			CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=$(TAGS) make cli-builder
+-        else
+-			CGO_ENABLED=1 CC=x86_64-unknown-linux-gnu-gcc CXX=x86_64-unknown-linux-gnu-g++ CGO_LDFLAGS="-static" make cli-builder
+-        endif
 -    else # build for Darwin/amd64
 -		CGO_ENABLED=1 make cli-builder
 -    endif
 -endif
--
--.PHONY: build-darwin-arm64
--build-darwin-arm64:
--	make switch-librdkafka-arm64
--	CGO_ENABLED=1 make cli-builder || true 
--	make restore-librdkafka-amd64
 -
 -.PHONY: cli-builder
 -cli-builder:
@@ -65,7 +65,7 @@
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -HOSTNAME := $(shell id -u -n)@$(shell hostname)
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_VERSION = 1.8.2
+-RDKAFKA_VERSION = 1.9.3-RC3
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
