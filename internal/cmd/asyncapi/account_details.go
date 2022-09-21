@@ -9,7 +9,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/swaggest/go-asyncapi/spec-2.1.0"
+	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -41,12 +41,17 @@ type accountDetails struct {
 }
 
 func (d *accountDetails) getTags() error {
-	tags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
+	fmt.Println(topicLevelTags)
+	if err != nil {
+		return fmt.Errorf("failed to get topic level tags: %v", err)
+	}
+	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
 	var tagsInSpec []spec.Tag
-	for _, tag := range tags {
+	for _, tag := range schemaLevelTags {
 		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tag.TypeName})
 	}
 	d.channelDetails.tags = tagsInSpec
@@ -95,7 +100,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	if d.channelDetails.example != nil {
 		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, spec.MessageBindingsObject{Kafka: &d.channelDetails.bindings.messageBinding})
+	(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
 	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
 	return entityProducer
 }

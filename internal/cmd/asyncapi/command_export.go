@@ -13,8 +13,8 @@ import (
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
-	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.1.0"
-	"github.com/swaggest/go-asyncapi/spec-2.1.0"
+	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
+	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -43,24 +43,10 @@ type confluentBinding struct {
 	Configs    Configs `json:"x-configs"`
 }
 
-type operationBinding struct {
-	GroupId  string `json:"groupId"`
-	ClientId string `json:"clientId"`
-}
-
-type Key struct {
-	Type string `json:"type"`
-}
-
-type messageBinding struct {
-	Key            interface{} `json:"key"`
-	BindingVersion string      `json:"bindingVersion"`
-}
-
 type bindings struct {
 	channelBindings  interface{}
-	messageBinding   interface{}
-	operationBinding interface{}
+	messageBinding   spec.MessageBindingsObject
+	operationBinding spec.OperationBindingsObject
 }
 
 type flags struct {
@@ -159,7 +145,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 			log.CliLogger.Warn(err)
 		}
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic, flags.groupId)
+	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
 	if err != nil {
 		return fmt.Errorf("bindings not found: %v", err)
 	}
@@ -263,7 +249,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription, groupId string) (*bindings, error) {
+func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription) (*bindings, error) {
 	topic := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicDescription.Name}}
 	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
 	if err != nil {
@@ -291,15 +277,27 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 			ConfluentValueSchemaValidation: "true",
 		},
 	}
+	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
+		AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+			"type": "string",
+		},
+		}},
+	}}
+	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
+		GroupID: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
+			AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+				"type": "string",
+			},
+			}},
+		ClientID: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
+			AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+				"type": "string"},
+			}},
+		MapOfAnything: nil,
+	}}
 	bindings := &bindings{
-		messageBinding: messageBinding{
-			Key:            Key{Type: "string"},
-			BindingVersion: "0.1.0",
-		},
-		operationBinding: operationBinding{
-			GroupId:  groupId,
-			ClientId: "client1",
-		},
+		messageBinding:   messageBindings,
+		operationBinding: operationBindings,
 	}
 	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
 		bindings.channelBindings = channelBinding
@@ -403,26 +401,30 @@ func msgName(s string) string {
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
-			Servers: map[string]spec.Server{
+			Servers: map[string]spec.ServersAdditionalProperties{
 				getEnv(broker) + "-broker": {
-					URL:             broker,
-					Description:     "Confluent Kafka instance.",
-					ProtocolVersion: "2.6.0",
-					Protocol:        "kafka",
-					Security: []map[string][]string{
-						{
-							"confluentBroker": []string{},
+					Server: &spec.Server{
+						URL:             broker,
+						Description:     "Confluent Kafka instance.",
+						ProtocolVersion: "2.6.0",
+						Protocol:        "kafka",
+						Security: []map[string][]string{
+							{
+								"confluentBroker": []string{},
+							},
 						},
 					},
 				},
 				getEnv(broker) + "-schemaRegistry": {
-					URL:             schemaCluster.SchemaRegistryEndpoint,
-					Description:     "Confluent Kafka Schema Registry Server",
-					ProtocolVersion: "2.6.0",
-					Protocol:        "kafka",
-					Security: []map[string][]string{
-						{
-							"confluentSchemaRegistry": []string{},
+					Server: &spec.Server{
+						URL:             schemaCluster.SchemaRegistryEndpoint,
+						Description:     "Confluent Kafka Schema Registry Server",
+						ProtocolVersion: "2.6.0",
+						Protocol:        "kafka",
+						Security: []map[string][]string{
+							{
+								"confluentSchemaRegistry": []string{},
+							},
 						},
 					},
 				},
@@ -458,7 +460,7 @@ func addChannel(reflector asyncapi.Reflector, topicName string, bindings binding
 			Subscribe: &spec.Operation{
 				ID:       strcase.ToCamel(topicName) + "Subscribe",
 				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(topicName)}},
-				Bindings: &spec.OperationBindingsObject{Kafka: &bindings.operationBinding},
+				Bindings: &bindings.operationBinding,
 			},
 		},
 	}
