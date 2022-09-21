@@ -140,7 +140,7 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPIAndTopicCount(cmd 
 		describeStruct.TotalTopicCount = totalTopicCount
 	}
 
-	if all { // expose KAPI, total topic count when --all flag is set
+	if all { // expose KAPI when --all flag is set
 		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 		if err != nil {
 			return err
