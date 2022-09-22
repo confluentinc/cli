@@ -66,8 +66,7 @@ archives:
       - legal/**/*
 
 blobs:
-  -
-    ids:
+  - ids:
     - binary
     provider: s3
     bucket: confluent.cloud
