@@ -32,9 +32,10 @@ func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV
 	return c.CmkClient.ClustersCmkV2Api.GetCmkV2ClusterExecute(req)
 }
 
-func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, *http.Response, error) {
+func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, error) {
 	req := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2Cluster(c.cmkApiContext(), clusterId).CmkV2ClusterUpdate(update)
-	return c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
+	resp, httpResp, err := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Response, error) {
