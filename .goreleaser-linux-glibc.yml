@@ -72,8 +72,7 @@ blobs:
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
-  -
-    ids:
+  - ids:
     - archive
     provider: s3
     bucket: confluent.cloud

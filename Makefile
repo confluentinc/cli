@@ -14,7 +14,7 @@ else ifneq (,$(findstring Linux,$(shell uname)))
     else # build for glibc Linux
 		CC=gcc CXX=g++ make cli-builder
     endif
-else #build for Darwin
+else # build for Darwin
 	make cli-builder
 endif
 
