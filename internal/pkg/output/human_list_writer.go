@@ -8,7 +8,7 @@ import (
 )
 
 type HumanListWriter struct {
-	outputFormat output
+	outputFormat Format
 	data         [][]string
 	listFields   []string
 	listLabels   []string
@@ -24,7 +24,7 @@ func (o *HumanListWriter) Out() error {
 	return nil
 }
 
-func (o *HumanListWriter) GetOutputFormat() output {
+func (o *HumanListWriter) GetOutputFormat() Format {
 	return o.outputFormat
 }
 

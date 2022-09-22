@@ -65,15 +65,13 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	identityProvider := &identityProvider{
-		Id:        *resp.Id,
-		Name:      *resp.DisplayName,
-		IssuerUri: *resp.Issuer,
-		JwksUri:   *resp.JwksUri,
-	}
-	if resp.Description != nil {
-		identityProvider.Description = *resp.Description
-	}
-
-	return output.DescribeObject(cmd, identityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          resp.GetId(),
+		Name:        resp.GetDisplayName(),
+		Description: resp.GetDescription(),
+		IssuerUri:   resp.GetIssuer(),
+		JwksUri:     resp.GetJwksUri(),
+	})
+	return table.Print()
 }
