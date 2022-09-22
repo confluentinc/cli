@@ -61,9 +61,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	connectorExpansion, httpResp, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	outputFormat, err := cmd.Flags().GetString(output.FlagName)

@@ -25,9 +25,9 @@ func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 
 func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 	quotaId := args[0]
-	quota, resp, err := c.V2Client.DescribeKafkaQuota(quotaId)
+	quota, httpResp, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {

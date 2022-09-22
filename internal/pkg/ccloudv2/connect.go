@@ -43,34 +43,34 @@ func (c *Client) ListConnectorsWithExpansions(environmentId, kafkaClusterId, exp
 	return c.ConnectClient.ConnectorsV1Api.ListConnectv1ConnectorsWithExpansionsExecute(req)
 }
 
-func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, _, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+	connectorExpansions, httpResp, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
 	if err != nil {
-		return nil, err
+		return nil, httpResp, err
 	}
 
 	for _, connector := range connectorExpansions {
 		if connector.Id.GetId() == connectorId {
-			return &connector, nil
+			return &connector, httpResp, nil
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
+	return nil, httpResp, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorId)
 }
 
-func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, _, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+	connectorExpansions, httpResp, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
 	if err != nil {
-		return nil, err
+		return nil, httpResp, err
 	}
 
 	for name, connector := range connectorExpansions {
 		if name == connectorName {
-			return &connector, nil
+			return &connector, httpResp, nil
 		}
 	}
 
-	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
+	return nil, httpResp, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
 }
 
 func (c *Client) PauseConnector(connectorName, environmentId, kafkaClusterId string) (*http.Response, error) {

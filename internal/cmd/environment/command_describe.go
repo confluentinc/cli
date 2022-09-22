@@ -24,9 +24,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	environment, r, err := c.V2Client.GetOrgEnvironment(args[0])
+	environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0])
 	if err != nil {
-		return errors.CatchEnvironmentNotFoundError(err, r)
+		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
 	account := &orgv1.Account{

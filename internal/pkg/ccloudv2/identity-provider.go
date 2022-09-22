@@ -100,9 +100,9 @@ func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListIdentityPools(providerId, pageToken)
+		page, httpResp, err := c.executeListIdentityPools(providerId, pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

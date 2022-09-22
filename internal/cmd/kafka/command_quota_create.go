@@ -82,9 +82,9 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		Principals:  principals,
 		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
 	}
-	quota, resp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
+	quota, httpResp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	printableQuota := quotaToPrintable(quota, format)

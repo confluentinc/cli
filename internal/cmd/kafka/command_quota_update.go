@@ -66,9 +66,9 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		Throughput:  updateThroughput,
 		Principals:  updatePrincipals,
 	}
-	updatedQuota, resp, err := c.V2Client.UpdateKafkaQuota(quotaUpdate)
+	updatedQuota, httpResp, err := c.V2Client.UpdateKafkaQuota(quotaUpdate)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	printQuota := quotaToPrintable(updatedQuota, format)
