@@ -53,6 +53,7 @@ type flags struct {
 	file            string
 	groupId         string
 	consumeExamples bool
+	specVersion     string
 	apiKey          string
 	apiSecret       string
 	valueFormat     string
@@ -71,6 +72,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
 	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
+	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
@@ -89,7 +91,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 	// Servers & Info Section
-	reflector := addServer(accountDetails.broker, accountDetails.srCluster)
+	reflector := addServer(accountDetails.broker, accountDetails.srCluster, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
 	for _, topic := range accountDetails.topics {
@@ -108,7 +110,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				messages[msgName(topic.Name)] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
-				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat)
+				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat, accountDetails.channelDetails.topicLevelTags)
 				if err != nil {
 					return err
 				}
@@ -354,6 +356,10 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	specVersion, err := cmd.Flags().GetString("spec-version")
+	if err != nil {
+		return nil, err
+	}
 	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return nil, err
@@ -370,6 +376,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		file:            file,
 		groupId:         groupId,
 		consumeExamples: consumeExamples,
+		specVersion:     specVersion,
 		apiKey:          apiKey,
 		apiSecret:       apiSecret,
 		valueFormat:     valueFormat,
@@ -379,6 +386,9 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error {
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(c.Command)
 	if err != nil {
+		if strings.Contains(err.Error(), "Schema Registry not enabled") {
+			return errors.NewErrorWithSuggestions(err.Error(), "Enable Stream Governance Essential Package to access this feature.")
+		}
 		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
 	}
 	if flags.apiKey == "" && flags.apiSecret == "" && schemaCluster.SrCredentials != nil {
@@ -398,16 +408,15 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 func msgName(s string) string {
 	return strcase.ToCamel(s) + "Message"
 }
-func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.Reflector {
+func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersion string) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.ServersAdditionalProperties{
-				getEnv(broker) + "-broker": {
+				"cluster": {
 					Server: &spec.Server{
-						URL:             broker,
-						Description:     "Confluent Kafka instance.",
-						ProtocolVersion: "2.6.0",
-						Protocol:        "kafka",
+						URL:         broker,
+						Description: "Confluent Kafka instance.",
+						Protocol:    "kafka",
 						Security: []map[string][]string{
 							{
 								"confluentBroker": []string{},
@@ -415,12 +424,11 @@ func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.
 						},
 					},
 				},
-				getEnv(broker) + "-schemaRegistry": {
+				"schema-registry": {
 					Server: &spec.Server{
-						URL:             schemaCluster.SchemaRegistryEndpoint,
-						Description:     "Confluent Kafka Schema Registry Server",
-						ProtocolVersion: "2.6.0",
-						Protocol:        "kafka",
+						URL:         schemaCluster.SchemaRegistryEndpoint,
+						Description: "Confluent Kafka Schema Registry Server",
+						Protocol:    "kafka",
 						Security: []map[string][]string{
 							{
 								"confluentSchemaRegistry": []string{},
@@ -430,7 +438,7 @@ func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster) asyncapi.
 				},
 			},
 			Info: spec.Info{
-				Version: "1.0.0",
+				Version: specVersion,
 				Title:   "API Document for Confluent Cluster",
 			},
 		},
@@ -452,7 +460,7 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func addChannel(reflector asyncapi.Reflector, topicName string, bindings bindings, mapOfMessageCompat map[string]interface{}) (asyncapi.Reflector, error) {
+func addChannel(reflector asyncapi.Reflector, topicName string, bindings bindings, mapOfMessageCompat map[string]interface{}, topicLevelTags []spec.Tag) (asyncapi.Reflector, error) {
 	channel := asyncapi.ChannelInfo{
 		Name: topicName,
 		BaseChannelItem: &spec.ChannelItem{
@@ -461,6 +469,7 @@ func addChannel(reflector asyncapi.Reflector, topicName string, bindings binding
 				ID:       strcase.ToCamel(topicName) + "Subscribe",
 				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(topicName)}},
 				Bindings: &bindings.operationBinding,
+				Tags:     topicLevelTags,
 			},
 		},
 	}

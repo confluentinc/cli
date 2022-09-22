@@ -22,7 +22,8 @@ type channelDetails struct {
 	schema             *schemaregistry.Schema
 	unmarshalledSchema map[string]interface{}
 	mapOfMessageCompat map[string]interface{}
-	tags               []spec.Tag
+	topicLevelTags     []spec.Tag
+	schemaLevelTags    []spec.Tag
 	bindings           *bindings
 	example            interface{}
 }
@@ -42,19 +43,24 @@ type accountDetails struct {
 
 func (d *accountDetails) getTags() error {
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
-	fmt.Println(topicLevelTags)
 	if err != nil {
 		return fmt.Errorf("failed to get topic level tags: %v", err)
 	}
+	var topicLevelTagsInSpec []spec.Tag
+	for _, topicLevelTag := range topicLevelTags {
+		topicLevelTagsInSpec = append(topicLevelTagsInSpec, spec.Tag{Name: topicLevelTag.TypeName})
+	}
+	d.channelDetails.topicLevelTags = topicLevelTagsInSpec
+	// Get Schema level tags
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
-	var tagsInSpec []spec.Tag
-	for _, tag := range schemaLevelTags {
-		tagsInSpec = append(tagsInSpec, spec.Tag{Name: tag.TypeName})
+	var schemaLevelTagsInSpec []spec.Tag
+	for _, schemaLevelTag := range schemaLevelTags {
+		schemaLevelTagsInSpec = append(schemaLevelTagsInSpec, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
-	d.channelDetails.tags = tagsInSpec
+	d.channelDetails.schemaLevelTags = schemaLevelTagsInSpec
 	return nil
 }
 
@@ -93,7 +99,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	} else if d.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.tags...)
+	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
 	// Name
 	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.Name))
 	// Example

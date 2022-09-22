@@ -282,7 +282,7 @@ func TestGetBindings(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
 	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
-	_, err = c.getBindings(details.cluster, topics[0], "group1")
+	_, err = c.getBindings(details.cluster, topics[0])
 	require.NoError(t, err)
 }
 

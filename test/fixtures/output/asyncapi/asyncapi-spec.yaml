@@ -1,4 +1,4 @@
-asyncapi:2.1.0
+asyncapi:2.4.0
 info:
 title:APIDocumentforConfluentCluster
 version:1.0.0
@@ -10,8 +10,11 @@ subscribe:
 operationId:Topic1Subscribe
 bindings:
 kafka:
-groupId:consumerApplication
-clientId:client1
+bindingVersion:0.1.0
+groupId:
+type:string
+clientId:
+type:string
 message:
 $ref:'#/components/messages/Topic1Message'
 bindings:
@@ -45,9 +48,9 @@ type:record
 name:Topic1Message
 bindings:
 kafka:
+bindingVersion:0.1.0
 key:
 type:string
-bindingVersion:0.1.0
 securitySchemes:
 confluentBroker:
 type:userPassword
