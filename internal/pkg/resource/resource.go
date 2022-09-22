@@ -22,6 +22,7 @@ const (
 	ServiceAccount        = "service account"
 	Topic                 = "topic"
 	User                  = "user"
+	PromoCode             = "promo code"
 	ProviderShare         = "provider share"
 	ConsumerShare         = "consumer share"
 	ClientQuota           = "client quota"

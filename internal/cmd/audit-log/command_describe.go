@@ -11,31 +11,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields    = []string{"ClusterId", "EnvironmentId", "ServiceAccountId", "TopicName"}
-	humanLabelMap = map[string]string{
-		"ClusterId":        "Cluster",
-		"EnvironmentId":    "Environment",
-		"ServiceAccountId": "Service Account",
-		"TopicName":        "Topic Name",
-	}
-	structuredLabelMap = map[string]string{
-		"ClusterId":        "cluster_id",
-		"EnvironmentId":    "environment_id",
-		"ServiceAccountId": "service_account_id",
-		"TopicName":        "topic_name",
-	}
-)
-
 type describeCmd struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type auditLogStruct struct {
-	ClusterId        string
-	EnvironmentId    string
-	ServiceAccountId string
-	TopicName        string
+type out struct {
+	ClusterId        string `human:"Cluster" json:"cluster_id" yaml:"cluster_id"`
+	EnvironmentId    string `human:"Environment" json:"environment_id" yaml:"environment_id"`
+	ServiceAccountId string `human:"Service Account" json:"service_account_id" yaml:"service_account_id"`
+	TopicName        string `human:"Topic Name" json:"topic_name" yaml:"topic_name"`
 }
 
 func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -66,10 +50,12 @@ func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return output.DescribeObject(cmd, &auditLogStruct{
+	table := output.NewTable(cmd)
+	table.Add(&out{
 		ClusterId:        auditLog.ClusterId,
 		EnvironmentId:    auditLog.AccountId,
 		ServiceAccountId: serviceAccount.ResourceId,
 		TopicName:        auditLog.TopicName,
-	}, listFields, humanLabelMap, structuredLabelMap)
+	})
+	return table.Print()
 }

@@ -37,7 +37,7 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, op := range identityProviders {
-		element := &identityProvider{
+		element := &identityProviderOut{
 			Id:        *op.Id,
 			Name:      *op.DisplayName,
 			IssuerUri: *op.Issuer,

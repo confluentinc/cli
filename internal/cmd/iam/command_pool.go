@@ -10,12 +10,12 @@ type identityPoolCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type identityPool struct {
-	Id            string
-	DisplayName   string
-	Description   string
-	IdentityClaim string
-	Filter        string
+type identityPoolOut struct {
+	Id            string `human:"ID" json:"id" yaml:"id"`
+	DisplayName   string `human:"Display Name" json:"display_name" yaml:"display_name"`
+	Description   string `human:"Description" json:"description" yaml:"description"`
+	IdentityClaim string `human:"Identity Claim" json:"identity_claim" yaml:"identity_claim"`
+	Filter        string `human:"Filter" json:"filter" yaml:"filter"`
 }
 
 func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -44,7 +44,7 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
-	
+
 	provider, _ := cmd.Flags().GetString("provider")
 	return pcmd.AutocompleteIdentityPools(c.V2Client, provider)
 }

@@ -8,20 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	providerHumanLabelMap = map[string]string{
-		"Id":        "ID",
-		"IssuerUri": "Issuer URI",
-		"JwksUri":   "JWKS URI",
-	}
-	providerStructuredLabelMap = map[string]string{
-		"Id":          "id",
-		"Description": "description",
-		"IssuerUri":   "issuer_uri",
-		"JwksUri":     "jwks_uri",
-	}
-)
-
 func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
@@ -42,15 +28,13 @@ func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) err
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	describeIdentityProvider := &identityProvider{
-		Id:        *identityProviderProfile.Id,
-		Name:      *identityProviderProfile.DisplayName,
-		IssuerUri: *identityProviderProfile.Issuer,
-		JwksUri:   *identityProviderProfile.JwksUri,
-	}
-	if identityProviderProfile.Description != nil {
-		describeIdentityProvider.Description = *identityProviderProfile.Description
-	}
-
-	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          identityProviderProfile.GetId(),
+		Name:        identityProviderProfile.GetDisplayName(),
+		Description: identityProviderProfile.GetDescription(),
+		IssuerUri:   identityProviderProfile.GetIssuer(),
+		JwksUri:     identityProviderProfile.GetJwksUri(),
+	})
+	return table.Print()
 }
