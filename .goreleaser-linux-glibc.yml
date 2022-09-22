@@ -11,6 +11,7 @@ before:
 # That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   - binary: confluent
+    id: confluent-linux-amd64
     main: cmd/confluent/main.go
     flags:
       - -mod=readonly
@@ -20,13 +21,35 @@ builds:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-unknown-linux-gnu-gcc
+      - CXX=x86_64-unknown-linux-gnu-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
     goos:
       - linux
     goarch:
       - amd64
-
-release:
-  disable: true
+  - binary: confluent
+    id: confluent-linux-arm64
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=readonly
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-unknown-linux-gnu-gcc
+      - CXX=aarch64-unknown-linux-gnu-g++
+      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
+    goos:
+      - linux
+    goarch:
+      - arm64
 
 archives:
   - id: binary
@@ -41,3 +64,17 @@ archives:
     files:
       - LICENSE
       - legal/**/*
+
+blobs:
+  - ids:
+    - binary
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+  - ids:
+    - archive
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"
