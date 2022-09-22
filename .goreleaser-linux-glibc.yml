@@ -51,9 +51,6 @@ builds:
     goarch:
       - arm64
 
-release:
-  disable: true
-
 archives:
   - id: binary
     format: binary

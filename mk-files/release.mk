@@ -57,7 +57,8 @@ gorelease:
 	mv dist/../confluent_$(VERSION_NO_V)_checksums.txt dist/confluent_$(VERSION_NO_V)_checksums_first_pass.txt && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_first_pass.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
+	gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt
 
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
