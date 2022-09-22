@@ -6,18 +6,16 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var providerListFields = []string{"Id", "Name", "Description", "IssuerUri", "JwksUri"}
-
 type identityProviderCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type identityProvider struct {
-	Id          string
-	Name        string
-	Description string
-	IssuerUri   string
-	JwksUri     string
+type identityProviderOut struct {
+	Id          string `human:"ID" json:"id" yaml:"id"`
+	Name        string `human:"Name" json:"name" yaml:"name"`
+	Description string `human:"Description" json:"description" yaml:"description"`
+	IssuerUri   string `human:"Issuer URI" json:"issuer_uri" yaml:"issuer_uri"`
+	JwksUri     string `human:"JWKS URI" json:"jwks_uri" yaml:"jwks_uri"`
 }
 
 func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {

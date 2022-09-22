@@ -44,7 +44,7 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, pool := range identityPools {
-		element := &identityPool{
+		element := &identityPoolOut{
 			Id:            *pool.Id,
 			DisplayName:   *pool.DisplayName,
 			IdentityClaim: *pool.IdentityClaim,

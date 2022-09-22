@@ -8,8 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var fields = []string{"Id", "Name"}
-
 type out struct {
 	Id   string `human:"ID" json:"id" yaml:"id"`
 	Name string `human:"Name" json:"name" yaml:"name"`
@@ -35,8 +33,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, r)
 	}
 
-	table := output.NewTable(cmd, fields)
-	table.Set(&out{
+	table := output.NewTable(cmd)
+	table.Add(&out{
 		Id:   *environment.Id,
 		Name: *environment.DisplayName,
 	})

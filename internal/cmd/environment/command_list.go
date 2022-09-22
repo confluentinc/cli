@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -29,7 +30,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd, fields)
+	list := output.NewList(cmd, resource.Environment)
 
 	for _, environment := range environments {
 		id := *environment.Id
@@ -41,12 +42,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		table.Add(&out{
+		list.Add(&out{
 			Id:   id,
 			Name: *environment.DisplayName,
 		})
 	}
 
-	table.Sort()
-	return table.Print()
+	return list.Print()
 }

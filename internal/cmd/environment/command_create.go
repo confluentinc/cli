@@ -34,8 +34,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd, fields)
-	table.Set(&out{
+	table := output.NewTable(cmd)
+	table.Add(&out{
 		Id:   environment.Id,
 		Name: environment.Name,
 	})

@@ -88,12 +88,13 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	describeIdentityPool := &identityPool{
+	table := output.NewTable(cmd)
+	table.Add(&identityPoolOut{
 		Id:            *resp.Id,
 		DisplayName:   *resp.DisplayName,
 		Description:   *resp.Description,
 		IdentityClaim: *resp.IdentityClaim,
 		Filter:        *resp.Filter,
-	}
-	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	})
+	return table.Print()
 }
