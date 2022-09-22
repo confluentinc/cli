@@ -42,13 +42,13 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, httpResp, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
-	if _, httpResp, err := c.V2Client.DeleteConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+	if _, err := c.V2Client.DeleteConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+		return err
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Connector, args[0])

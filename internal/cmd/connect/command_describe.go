@@ -8,7 +8,6 @@ import (
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -63,9 +62,9 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, httpResp, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)

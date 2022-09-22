@@ -22,9 +22,9 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	httpResp, err := c.V2Client.DeleteKafkaQuota(args[0])
+	err := c.V2Client.DeleteKafkaQuota(args[0])
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClientQuota, args[0])
 	return nil

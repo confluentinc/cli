@@ -41,13 +41,14 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, httpResp, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
-	if httpResp, err := c.V2Client.ResumeConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+	err = c.V2Client.ResumeConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	if err != nil {
+		return err
 	}
 
 	utils.Printf(cmd, errors.ResumedConnectorMsg, args[0])

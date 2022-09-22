@@ -29,9 +29,10 @@ func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccoun
 	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccountExecute(req)
 }
 
-func (c *Client) DeleteIamServiceAccount(id string) (*http.Response, error) {
+func (c *Client) DeleteIamServiceAccount(id string) error {
 	req := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(c.iamApiContext(), id)
-	return c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
+	httpResp, err := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
@@ -74,14 +75,16 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 
 // iam user api calls
 
-func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
+func (c *Client) DeleteIamUser(id string) error {
 	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
-	return c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+	httpResp, err := c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, *http.Response, error) {
+func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, error) {
 	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
-	return c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	user, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	return user, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

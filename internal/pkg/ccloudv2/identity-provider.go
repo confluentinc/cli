@@ -26,24 +26,28 @@ func (c *Client) identityPoolApiContext() context.Context {
 	return context.WithValue(context.Background(), identityproviderv2.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateIdentityProvider(identityProvider identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
+func (c *Client) CreateIdentityProvider(identityProvider identityproviderv2.IamV2IdentityProvider) (identityproviderv2.IamV2IdentityProvider, error) {
 	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProvider(c.identityProviderApiContext()).IamV2IdentityProvider(identityProvider)
-	return c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProviderExecute(req)
+	provider, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.CreateIamV2IdentityProviderExecute(req)
+	return provider, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteIdentityProvider(id string) (*http.Response, error) {
+func (c *Client) DeleteIdentityProvider(id string) error {
 	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.DeleteIamV2IdentityProvider(c.identityProviderApiContext(), id)
-	return c.IdentityProviderClient.IdentityProvidersIamV2Api.DeleteIamV2IdentityProviderExecute(req)
+	httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.DeleteIamV2IdentityProviderExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetIdentityProvider(id string) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
+func (c *Client) GetIdentityProvider(id string) (identityproviderv2.IamV2IdentityProvider, error) {
 	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.GetIamV2IdentityProvider(c.identityProviderApiContext(), id)
-	return c.IdentityProviderClient.IdentityProvidersIamV2Api.GetIamV2IdentityProviderExecute(req)
+	provider, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.GetIamV2IdentityProviderExecute(req)
+	return provider, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityProviderUpdate) (identityproviderv2.IamV2IdentityProvider, *http.Response, error) {
+func (c *Client) UpdateIdentityProvider(update identityproviderv2.IamV2IdentityProviderUpdate) (identityproviderv2.IamV2IdentityProvider, error) {
 	req := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProvider(c.identityProviderApiContext(), *update.Id).IamV2IdentityProviderUpdate(update)
-	return c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProviderExecute(req)
+	provider, httpResp, err := c.IdentityProviderClient.IdentityProvidersIamV2Api.UpdateIamV2IdentityProviderExecute(req)
+	return provider, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProvider, error) {
@@ -74,24 +78,28 @@ func (c *Client) executeListIdentityProviders(pageToken string) (identityprovide
 	return c.IdentityProviderClient.IdentityProvidersIamV2Api.ListIamV2IdentityProvidersExecute(req)
 }
 
-func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+func (c *Client) CreateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, error) {
 	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPool(c.identityPoolApiContext(), providerId).IamV2IdentityPool(identityPool)
-	return c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
+	pool, httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.CreateIamV2IdentityPoolExecute(req)
+	return pool, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteIdentityPool(id, providerId string) (*http.Response, error) {
+func (c *Client) DeleteIdentityPool(id, providerId string) error {
 	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
-	return c.IdentityProviderClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPoolExecute(req)
+	httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.DeleteIamV2IdentityPoolExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetIdentityPool(id, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+func (c *Client) GetIdentityPool(id, providerId string) (identityproviderv2.IamV2IdentityPool, error) {
 	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.GetIamV2IdentityPool(c.identityPoolApiContext(), providerId, id)
-	return c.IdentityProviderClient.IdentityPoolsIamV2Api.GetIamV2IdentityPoolExecute(req)
+	pool, httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.GetIamV2IdentityPoolExecute(req)
+	return pool, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, *http.Response, error) {
+func (c *Client) UpdateIdentityPool(identityPool identityproviderv2.IamV2IdentityPool, providerId string) (identityproviderv2.IamV2IdentityPool, error) {
 	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPool(c.identityPoolApiContext(), providerId, *identityPool.Id).IamV2IdentityPool(identityPool)
-	return c.IdentityProviderClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPoolExecute(req)
+	pool, httpResp, err := c.IdentityProviderClient.IdentityPoolsIamV2Api.UpdateIamV2IdentityPoolExecute(req)
+	return pool, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV2IdentityPool, error) {
