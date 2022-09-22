@@ -19,9 +19,9 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig,
 		return nil, err
 	}
 
-	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	cluster, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return nil, errors.CatchCCloudV2Error(err, httpResp)
+		return nil, err
 	}
 
 	apiEndpoint, err := getKafkaApiEndpoint(d.Client, clusterId, environmentId)

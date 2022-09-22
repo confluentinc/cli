@@ -31,9 +31,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return errors.New(errors.BadServiceAccountIDErrorMsg)
 	}
 
-	httpResp, err := c.V2Client.DeleteIamServiceAccount(args[0])
+	err := c.V2Client.DeleteIamServiceAccount(args[0])
 	if err != nil {
-		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, args[0], errors.CatchCCloudV2Error(err, httpResp))
+		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, args[0], err)
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.ServiceAccount, args[0])
