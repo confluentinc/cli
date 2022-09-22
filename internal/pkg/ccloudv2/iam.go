@@ -83,8 +83,8 @@ func (c *Client) DeleteIamUser(id string) error {
 
 func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, error) {
 	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
-	user, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
-	return user, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {

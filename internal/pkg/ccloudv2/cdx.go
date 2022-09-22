@@ -38,8 +38,8 @@ func (c *Client) DeleteProviderShare(shareId string) error {
 
 func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, error) {
 	req := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	providerShare, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
-	return providerShare, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteConsumerShare(shareId string) error {
@@ -50,8 +50,8 @@ func (c *Client) DeleteConsumerShare(shareId string) error {
 
 func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare, error) {
 	req := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	consumerShare, httpResp, err := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
-	return consumerShare, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, error) {
@@ -69,8 +69,8 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (c
 			DeliveryMethod: &deliveryMethod,
 			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s", kafkaCluster, topic)},
 		})
-	providerShare, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
-	return providerShare, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
@@ -148,6 +148,6 @@ func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId stri
 		AzureSubscription: &azureSubscriptionId,
 	}
 	req := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).CdxV1RedeemTokenRequest(redeemTokenRequest)
-	response, httpResp, err := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
-	return response, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

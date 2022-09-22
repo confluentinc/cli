@@ -54,21 +54,21 @@ func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.K
 
 func (c *Client) CreateKafkaQuota(quota kafkaquotasv1.KafkaQuotasV1ClientQuota) (kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.CreateKafkaQuotasV1ClientQuota(c.quotaContext()).KafkaQuotasV1ClientQuota(quota)
-	quota, httpResp, err := req.Execute()
-	return quota, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateKafkaQuota(quota kafkaquotasv1.KafkaQuotasV1ClientQuotaUpdate) (kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.UpdateKafkaQuotasV1ClientQuota(c.quotaContext(), *quota.Id)
 	req = req.KafkaQuotasV1ClientQuotaUpdate(quota)
-	updatedQuota, httpResp, err := req.Execute()
-	return updatedQuota, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DescribeKafkaQuota(quotaId string) (kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.GetKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
-	quota, httpResp, err := req.Execute()
-	return quota, errors.CatchCCloudV2Error(err, httpResp)
+	resp, httpResp, err := req.Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteKafkaQuota(quotaId string) error {

@@ -172,9 +172,10 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	}
 
 	if resBody.Error.Message != "" {
-		return Wrap(err, strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
+		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == rune('.') || c == rune('\n')
-		}))
+		})
+		return Wrap(err, errorMessage)
 	}
 
 	return err
