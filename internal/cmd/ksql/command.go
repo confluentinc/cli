@@ -29,8 +29,8 @@ type ksqlCommand struct {
 type ksqlCluster struct {
 	Id                    string `human:"ID" json:"id" yaml:"id"`
 	Name                  string `human:"Name" json:"name" yaml:"name"`
-	OutputTopicPrefix     string `human:"Topic Prefix" json:"output_topic_prefix" yaml:"output_topic_prefix"`
-	KafkaClusterId        string `human:"Kafka" json:"kafka_cluster_id" yaml:"kafka_cluster_id"`
+	OutputTopicPrefix     string `human:"Topic Prefix" json:"topic_prefix" yaml:"topic_prefix"`
+	KafkaClusterId        string `human:"Kafka" json:"kafka" yaml:"kafka"`
 	Storage               int32  `human:"Storage" json:"storage" yaml:"storage"`
 	Endpoint              string `human:"Endpoint" json:"endpoint" yaml:"endpoint"`
 	Status                string `human:"Status" json:"status" yaml:"status"`
