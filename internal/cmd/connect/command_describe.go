@@ -109,7 +109,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 }
 
 func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
-	var tasks []taskDescribeOut
+	tasks := make([]taskDescribeOut, 0)
 	for _, task := range connector.Status.GetTasks() {
 		tasks = append(tasks, taskDescribeOut{TaskId: task.Id, State: task.State})
 	}
