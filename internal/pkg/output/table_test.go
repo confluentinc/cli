@@ -14,7 +14,7 @@ import (
 type out struct {
 	Id          int    `human:"ID" json:"id" yaml:"id"`
 	Name        string `human:"Name" json:"name" yaml:"name"`
-	Description string `human:"Description" json:"description" yaml:"description"`
+	Description string `human:"Description,omitempty" json:"description,omitempty" yaml:"description,omitempty"`
 }
 
 func TestTable(t *testing.T) {
@@ -25,7 +25,6 @@ func TestTable(t *testing.T) {
 			"| Name        | lkc-123456      |",
 			"| Description | Example Cluster |",
 			"+-------------+-----------------+",
-			"",
 		},
 		JSON.String(): {
 			"{",
@@ -33,13 +32,11 @@ func TestTable(t *testing.T) {
 			`  "name": "lkc-123456",`,
 			`  "description": "Example Cluster"`,
 			"}",
-			"",
 		},
 		YAML.String(): {
 			"id: 1",
 			"name: lkc-123456",
 			"description: Example Cluster",
-			"",
 		},
 	}
 
@@ -59,7 +56,7 @@ func TestTable(t *testing.T) {
 		err := table.Print()
 		require.NoError(t, err)
 
-		require.Equal(t, strings.Join(expected, "\n"), buf.String(), format)
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
 	}
 }
 
@@ -74,7 +71,6 @@ func TestTable_NoAutoWrap(t *testing.T) {
 			`|             |   "B": 2   |`,
 			"|             | }          |",
 			"+-------------+------------+",
-			"",
 		},
 		JSON.String(): {
 			"{",
@@ -82,7 +78,6 @@ func TestTable_NoAutoWrap(t *testing.T) {
 			`  "name": "lkc-123456",`,
 			`  "description": "{\n  \"A\": 1,\n  \"B\": 2\n}"`,
 			"}",
-			"",
 		},
 		YAML.String(): {
 			"id: 1",
@@ -92,7 +87,6 @@ func TestTable_NoAutoWrap(t *testing.T) {
 			`    "A": 1,`,
 			`    "B": 2`,
 			"  }",
-			"",
 		},
 	}
 
@@ -121,7 +115,7 @@ func TestTable_NoAutoWrap(t *testing.T) {
 		err := table.PrintWithAutoWrap(false)
 		require.NoError(t, err)
 
-		require.Equal(t, strings.Join(expected, "\n"), buf.String(), format)
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
 	}
 }
 
@@ -132,19 +126,16 @@ func TestTable_Filter(t *testing.T) {
 			"| Name        | lkc-123456      |",
 			"| Description | Example Cluster |",
 			"+-------------+-----------------+",
-			"",
 		},
 		JSON.String(): {
 			"{",
 			`  "name": "lkc-123456",`,
 			`  "description": "Example Cluster"`,
 			"}",
-			"",
 		},
 		YAML.String(): {
 			"name: lkc-123456",
 			"description: Example Cluster",
-			"",
 		},
 	}
 
@@ -165,7 +156,46 @@ func TestTable_Filter(t *testing.T) {
 		err := table.Print()
 		require.NoError(t, err)
 
-		require.Equal(t, strings.Join(expected, "\n"), buf.String(), format)
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+	}
+}
+
+func TestTable_OmitEmpty(t *testing.T) {
+	tests := map[string][]string{
+		Human.String(): {
+			"+------+------------+",
+			"| ID   |          1 |",
+			"| Name | lkc-123456 |",
+			"+------+------------+",
+		},
+		JSON.String(): {
+			"{",
+			`  "id": 1,`,
+			`  "name": "lkc-123456"`,
+			"}",
+		},
+		YAML.String(): {
+			"id: 1",
+			"name: lkc-123456",
+		},
+	}
+
+	for format, expected := range tests {
+		buf := new(bytes.Buffer)
+		cmd := &cobra.Command{}
+		cmd.Flags().String("output", format, "")
+		cmd.SetOut(buf)
+
+		table := NewTable(cmd)
+		table.Add(&out{
+			Id:   1,
+			Name: "lkc-123456",
+		})
+
+		err := table.Print()
+		require.NoError(t, err)
+
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
 	}
 }
 

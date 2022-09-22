@@ -11,9 +11,8 @@ import (
 	"golang.org/x/oauth2"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {

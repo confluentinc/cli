@@ -8,8 +8,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type connectCreateOut struct {
+	Id         string `human:"ID" json:"id" yaml:"id"`
+	Name       string `human:"Name" json:"name" yaml:"name"`
+	ErrorTrace string `human:"Error Trace,omitempty" json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
+}
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -66,25 +71,11 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	trace := connectorExpansion.Status.Connector.GetTrace()
-
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorExpansion.Id.GetId(), connectorInfo.GetName())
-		if trace != "" {
-			utils.Printf(cmd, "Error Trace: %s\n", trace)
-		}
-	} else {
-		return output.StructuredOutput(outputFormat, &connectCreateDisplay{
-			Id:         connectorExpansion.Id.GetId(),
-			Name:       connectorInfo.GetName(),
-			ErrorTrace: trace,
-		})
-	}
-
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(&connectCreateOut{
+		Id:         connectorExpansion.Id.GetId(),
+		Name:       connectorInfo.GetName(),
+		ErrorTrace: connectorExpansion.Status.Connector.GetTrace(),
+	})
+	return table.Print()
 }

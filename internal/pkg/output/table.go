@@ -6,12 +6,15 @@ import (
 	"io"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/go-yaml/yaml"
 	"github.com/olekukonko/tablewriter"
 	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type table struct {
@@ -117,8 +120,9 @@ func (t *table) PrintWithAutoWrap(auto bool) error {
 	if t.isList() {
 		var header []string
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			if tag := reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()); tag != "-" {
-				header = append(header, tag)
+			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
+			if tag[0] != "-" {
+				header = append(header, tag[0])
 			}
 		}
 
@@ -129,7 +133,8 @@ func (t *table) PrintWithAutoWrap(auto bool) error {
 		for _, object := range t.objects {
 			var row []string
 			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
-				if tag := reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()); tag != "-" {
+				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
+				if tag[0] != "-" {
 					row = append(row, fmt.Sprintf("%v", reflect.ValueOf(object).Elem().Field(i)))
 				}
 			}
@@ -137,8 +142,10 @@ func (t *table) PrintWithAutoWrap(auto bool) error {
 		}
 	} else {
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			if tag := reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()); tag != "-" {
-				w.Append([]string{tag, fmt.Sprintf("%v", reflect.ValueOf(t.objects[0]).Elem().Field(i))})
+			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
+			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
+			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
+				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
 			}
 		}
 	}

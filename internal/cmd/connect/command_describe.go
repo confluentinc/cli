@@ -1,32 +1,30 @@
 package connect
 
 import (
-	"os"
-
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type taskDescribeDisplay struct {
-	TaskId int32  `json:"task_id" yaml:"task_id"`
-	State  string `json:"state" yaml:"state"`
+type taskDescribeOut struct {
+	TaskId int32  `human:"Task ID" json:"task_id" yaml:"task_id"`
+	State  string `human:"State" json:"state" yaml:"state"`
 }
 
-type configDescribeDisplay struct {
-	Config string `json:"config" yaml:"config"`
-	Value  string `json:"value" yaml:"value"`
+type configDescribeOut struct {
+	Config string `human:"Config" json:"config" yaml:"config"`
+	Value  string `human:"Value" json:"value" yaml:"value"`
 }
 
 type structuredDescribeDisplay struct {
-	Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
-	Tasks     []taskDescribeDisplay     `json:"tasks" yaml:"task"`
-	Configs   []configDescribeDisplay   `json:"configs" yaml:"configs"`
+	Connector *connectOut         `json:"connector" yaml:"connector"`
+	Tasks     []taskDescribeOut   `json:"tasks" yaml:"task"`
+	Configs   []configDescribeOut `json:"configs" yaml:"configs"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -73,65 +71,65 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputOption == output.Human.String() {
-		printHumanDescribe(cmd, connectorExpansion)
-		return nil
+		return printHumanDescribe(cmd, connectorExpansion)
 	}
 
-	return printStructuredDescribe(connectorExpansion, outputOption)
+	return printStructuredDescribe(cmd, connectorExpansion)
 }
 
-func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) {
+func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
 	utils.Println(cmd, "Connector Details")
-	data := &connectorDescribeDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&connectOut{
 		Name:   connector.Status.GetName(),
-		ID:     connector.Id.GetId(),
+		Id:     connector.Id.GetId(),
 		Status: connector.Status.Connector.GetState(),
 		Type:   connector.Status.GetType(),
 		Trace:  connector.Status.Connector.GetTrace(),
+	})
+	if err := table.Print(); err != nil {
+		return err
 	}
-	_ = printer.RenderTableOut(data, listFields, map[string]string{}, os.Stdout)
 
 	utils.Println(cmd, "\n\nTask Level Details")
-	var tasks [][]string
+	list := output.NewList(cmd, "task")
 	for _, task := range connector.Status.GetTasks() {
-		row := printer.ToRow(&taskDescribeDisplay{task.Id, task.State}, []string{"TaskId", "State"})
-		tasks = append(tasks, row)
+		list.Add(&taskDescribeOut{task.Id, task.State})
 	}
-	printer.RenderCollectionTable(tasks, []string{"Task ID", "State"})
+	if err := list.Print(); err != nil {
+		return err
+	}
 
 	utils.Println(cmd, "\n\nConfiguration Details")
-	var configs [][]string
-	titleRow := []string{"Config", "Value"}
+	list = output.NewList(cmd, "config")
 	for name, value := range connector.Info.GetConfig() {
-		row := printer.ToRow(&configDescribeDisplay{name, value}, titleRow)
-		configs = append(configs, row)
+		list.Add(&configDescribeOut{name, value})
 	}
-	printer.RenderCollectionTable(configs, titleRow)
+	return list.Print()
 }
 
-func printStructuredDescribe(connector *connectv1.ConnectV1ConnectorExpansion, format string) error {
-	structuredDisplay := &structuredDescribeDisplay{
-		Connector: &connectorDescribeDisplay{
+func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
+	var tasks []taskDescribeOut
+	for _, task := range connector.Status.GetTasks() {
+		tasks = append(tasks, taskDescribeOut{TaskId: task.Id, State: task.State})
+	}
+
+	configs := make([]configDescribeOut, 0)
+	for name, value := range connector.Info.GetConfig() {
+		configs = append(configs, configDescribeOut{Config: name, Value: value})
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(&structuredDescribeDisplay{
+		Connector: &connectOut{
 			Name:   connector.Status.GetName(),
-			ID:     connector.Id.GetId(),
+			Id:     connector.Id.GetId(),
 			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
 			Trace:  connector.Status.Connector.GetTrace(),
 		},
-		Tasks:   []taskDescribeDisplay{},
-		Configs: []configDescribeDisplay{},
-	}
-	for _, task := range connector.Status.GetTasks() {
-		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{
-			TaskId: task.Id,
-			State:  task.State,
-		})
-	}
-	for name, value := range connector.Info.GetConfig() {
-		structuredDisplay.Configs = append(structuredDisplay.Configs, configDescribeDisplay{
-			Config: name,
-			Value:  value,
-		})
-	}
-	return output.StructuredOutput(format, structuredDisplay)
+		Tasks:   tasks,
+		Configs: configs,
+	})
+	return table.Print()
 }

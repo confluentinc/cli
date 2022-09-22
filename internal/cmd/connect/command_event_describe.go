@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type out struct {
+type eventDescribeOut struct {
 	ClusterId        string `human:"Cluster" json:"cluster_id" yaml:"cluster_id"`
 	EnvironmentId    string `human:"Environment" json:"environment_id" yaml:"environment_id"`
 	ServiceAccountId string `human:"Service Account" json:"service_account_id" yaml:"service_account_id"`
@@ -44,7 +44,7 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&out{
+	table.Add(&eventDescribeOut{
 		ClusterId:        auditLog.ClusterId,
 		EnvironmentId:    auditLog.AccountId,
 		ServiceAccountId: serviceAccount.ResourceId,
