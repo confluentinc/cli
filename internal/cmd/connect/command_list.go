@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -45,21 +46,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.Connector)
 
 	for name, connector := range connectorExpansions {
-		connector := &connectorDescribeDisplay{
+		list.Add(&connectOut{
 			Name:   name,
-			ID:     connector.Id.GetId(),
+			Id:     connector.Id.GetId(),
 			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
 			Trace:  connector.Status.Connector.GetTrace(),
-		}
-		outputWriter.AddElement(connector)
+		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

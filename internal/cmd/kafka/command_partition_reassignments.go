@@ -63,7 +63,7 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 			return err
 		}
 		if topic == "" {
-			return errors.New(errors.SpecifyParitionIdWithTopicErrorMsg)
+			return errors.New(errors.SpecifyPartitionIdWithTopicErrorMsg)
 		}
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)

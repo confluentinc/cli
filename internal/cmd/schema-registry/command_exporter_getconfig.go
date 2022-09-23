@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
@@ -42,10 +43,7 @@ func getExporterConfig(cmd *cobra.Command, name string, srClient *srsdk.APIClien
 		return err
 	}
 
-	outputFormat, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return err
-	}
-
-	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
+	mapping := output.NewMapping(cmd, resource.ExporterConfiguration)
+	mapping.Add(configs)
+	return mapping.Print()
 }

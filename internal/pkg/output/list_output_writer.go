@@ -13,7 +13,6 @@ import (
 	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type ListOutputWriter interface {
@@ -26,7 +25,7 @@ type ListOutputWriter interface {
 		Out - Create the output to the IO channel passed in during construction
 	*/
 	Out() error
-	GetOutputFormat() output
+	GetOutputFormat() Format
 	StableSort()
 }
 
@@ -104,30 +103,9 @@ func StructuredOutput(format string, obj interface{}) error {
 	return err
 }
 
-// StructuredOutputForCommand - pretty prints an object in specified format (JSON or YAML) using tags specified in
-// struct definition using the command's outwriter (allows us to verify output in unit tests)
-func StructuredOutputForCommand(cmd *cobra.Command, format string, obj interface{}) error {
-	var b []byte
-	if format == JSON.String() {
-		j, _ := json.Marshal(obj)
-		b = pretty.Pretty(j)
-	} else if format == YAML.String() {
-		b, _ = yaml.Marshal(obj)
-	} else {
-		return NewInvalidOutputFormatFlagError(format)
-	}
-	_, err := fmt.Fprint(cmd.OutOrStdout(), string(b))
-	return err
-}
-
 // NewInvalidOutputFormatFlagError - create a new error to describe an invalid output format flag
 func NewInvalidOutputFormatFlagError(format string) error {
 	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
 	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(ValidFlagValues, ", "))
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
-}
-
-// IsValidOutputString - returns whether a format string is a valid format (human, json, yaml)
-func IsValidOutputString(output string) bool {
-	return utils.Contains(ValidFlagValues, output)
 }
