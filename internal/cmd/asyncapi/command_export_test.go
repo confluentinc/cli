@@ -232,11 +232,6 @@ func newCmd() (*command, error) {
 	return c, nil
 }
 
-func TestGetEnv(t *testing.T) {
-	require.Equal(t, "dev", getEnv("pkc-0wg55.us-central1.gcp.devel.cpdev.cloud:9092"))
-	require.Equal(t, "local", getEnv("localhost:8081"))
-}
-
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)

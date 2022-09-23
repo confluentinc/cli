@@ -333,16 +333,6 @@ func (c *command) getClusterDetails(details *accountDetails) error {
 	return nil
 }
 
-func getEnv(broker string) string {
-	if strings.Contains(broker, "devel") {
-		return "dev"
-	} else if strings.Contains(broker, "local") {
-		return "local"
-	} else {
-		return "prod"
-	}
-}
-
 func getFlags(cmd *cobra.Command) (*flags, error) {
 	file, err := cmd.Flags().GetString("file")
 	if err != nil {
