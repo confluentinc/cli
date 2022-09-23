@@ -37,7 +37,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
 		return err
 	}
 

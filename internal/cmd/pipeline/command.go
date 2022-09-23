@@ -33,7 +33,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
-	c.Hidden = !launchdarkly.Manager.BoolVariation("cli.client_stream_designer.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.client_stream_designer.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
 	return c.Command
 }

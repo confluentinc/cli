@@ -41,11 +41,14 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	kafka_cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
 		return err
 	}
 
-	ksqlReq := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: ksql}
+	ksqlReq := &schedv1.KSQLCluster{
+		AccountId: c.EnvironmentId(), 
+		Id: ksql,
+	}
+
 	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)
 	if err != nil {
 		utils.Println(cmd, "Could not get Ksql Cluster with error: "+err.Error())

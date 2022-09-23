@@ -6,12 +6,13 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
-	"os"
+	// "os"
 
-	"github.com/olekukonko/tablewriter"
+	// "github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -25,7 +26,7 @@ func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
 		Short: "Display pipelines in the current environment and cluster.",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
 }
@@ -33,7 +34,6 @@ func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
 		return err
 	}
 
@@ -83,21 +83,29 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 
 		clusterLabels := []string{"id", "name", "state"}
-		var out [][]string
-
-		for _, element := range pipelines {
-			out = append(out, []string{element.Id,
-				element.Name,
-				element.State})
+		// var out [][]string
+		outputWriter, err := output.NewListOutputWriter(cmd, clusterLabels, clusterLabels, clusterLabels)
+		if err != nil {
+			utils.Println(cmd, "Could not list pipelines with error: "+err.Error())
+			return err
 		}
 
-		tablePrinter := tablewriter.NewWriter(os.Stdout)
-		tablePrinter.SetAutoWrapText(false)
-		tablePrinter.SetAutoFormatHeaders(false)
-		tablePrinter.SetHeader(clusterLabels)
-		tablePrinter.AppendBulk(out)
-		tablePrinter.SetBorder(false)
-		tablePrinter.Render()
+		for _, element := range pipelines {
+			outputWriter.AddElement([]string{element.Id,
+				element.Name,
+				element.State})
+			// out = append(out, []string{element.Id,
+			// 	element.Name,
+			// 	element.State})
+		}
+		return outputWriter.Out()
+		// tablePrinter := tablewriter.NewWriter(os.Stdout)
+		// tablePrinter.SetAutoWrapText(false)
+		// tablePrinter.SetAutoFormatHeaders(false)
+		// tablePrinter.SetHeader(clusterLabels)
+		// tablePrinter.AppendBulk(out)
+		// tablePrinter.SetBorder(false)
+		// tablePrinter.Render()
 	} else {
 		if err != nil {
 			utils.Println(cmd, "Could not list pipelines with error: "+err.Error())

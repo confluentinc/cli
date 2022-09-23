@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"path/filepath"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -35,7 +36,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		utils.Println(cmd, "Could not get Kafka Cluster with error: "+err.Error())
 		return err
 	}
 
@@ -138,15 +138,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 
 		if resp.StatusCode == 200 && err == nil {
-			filepath := args[0] + ".sql"
-
-			if outputDir != "" {
-				if string(outputDir[len(outputDir)-1]) == "/" {
-					filepath = outputDir + args[0] + ".sql"
-				} else {
-					filepath = outputDir + "/" + args[0] + ".sql"
-				}
-			}
+			filepath, err := fmt.Println(filepath.Join(outputDir, args[0] + ".sql"))
 
 			out, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0755)
 			if err != nil {
