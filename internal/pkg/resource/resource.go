@@ -6,10 +6,13 @@ import (
 
 const (
 	Unknown               = "unknown"
+	Acl                   = "ACL"
 	ApiKey                = "API key"
+	ClientQuota           = "client quota"
 	Cloud                 = "cloud"
 	ClusterLink           = "cluster link"
 	Connector             = "connector"
+	ConsumerShare         = "consumer share"
 	Context               = "context"
 	Environment           = "environment"
 	IdentityPool          = "identity pool"
@@ -17,15 +20,17 @@ const (
 	KafkaCluster          = "Kafka cluster"
 	KsqlCluster           = "kSQL cluster"
 	MirrorTopic           = "mirror topic"
+	Plugin                = "plugin"
+	Pool                  = "pool"
+	Price                 = "price"
+	PromoCode             = "promo code"
+	ProviderShare         = "provider share"
+	RoleBinding           = "role binding"
 	SchemaExporter        = "schema exporter"
 	SchemaRegistryCluster = "Schema Registry cluster"
 	ServiceAccount        = "service account"
 	Topic                 = "topic"
 	User                  = "user"
-	PromoCode             = "promo code"
-	ProviderShare         = "provider share"
-	ConsumerShare         = "consumer share"
-	ClientQuota           = "client quota"
 )
 
 const (

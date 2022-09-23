@@ -5,12 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	identityPoolListFields           = []string{"Id", "DisplayName", "Description", "IdentityClaim", "Filter"}
-	identityPoolListHumanLabels      = []string{"ID", "Display Name", "Description", "Identity Claim", "Filter"}
-	identityPoolListStructuredLabels = []string{"id", "display_name", "description", "identity_claim", "filter"}
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityPoolCommand) newListCommand() *cobra.Command {
@@ -22,8 +17,9 @@ func (c *identityPoolCommand) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	_ = cmd.MarkFlagRequired("provider")
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("provider")
 
 	return cmd
 }
@@ -39,21 +35,17 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, identityPoolListFields, identityPoolListHumanLabels, identityPoolListStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.Pool)
+
 	for _, pool := range identityPools {
-		element := &identityPoolOut{
-			Id:            *pool.Id,
-			DisplayName:   *pool.DisplayName,
-			IdentityClaim: *pool.IdentityClaim,
-			Filter:        *pool.Filter,
-		}
-		if pool.Description != nil {
-			element.Description = *pool.Description
-		}
-		outputWriter.AddElement(element)
+		list.Add(&identityPoolOut{
+			Id:            pool.GetId(),
+			DisplayName:   pool.GetDisplayName(),
+			Description:   pool.GetDescription(),
+			IdentityClaim: pool.GetIdentityClaim(),
+			Filter:        pool.GetFilter(),
+		})
 	}
-	return outputWriter.Out()
+
+	return list.Print()
 }

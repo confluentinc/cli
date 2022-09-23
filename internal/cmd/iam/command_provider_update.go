@@ -57,18 +57,18 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		update.Description = &description
 	}
 
-	resp, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
+	identityProvider, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&identityProviderOut{
-		Id:          resp.GetId(),
-		Name:        resp.GetDisplayName(),
-		Description: resp.GetDescription(),
-		IssuerUri:   resp.GetIssuer(),
-		JwksUri:     resp.GetJwksUri(),
+		Id:          identityProvider.GetId(),
+		Name:        identityProvider.GetDisplayName(),
+		Description: identityProvider.GetDescription(),
+		IssuerUri:   identityProvider.GetIssuer(),
+		JwksUri:     identityProvider.GetJwksUri(),
 	})
 	return table.Print()
 }

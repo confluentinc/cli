@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -59,22 +60,19 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.KafkaCluster)
 
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
-		if outputWriter.GetOutputFormat() == output.Human {
+		if output.GetFormat(cmd) == output.Human {
 			if *cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
 				*cluster.Id = fmt.Sprintf("* %s", *cluster.Id)
 			} else {
 				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
+		list.Add(convertClusterToDescribeStruct(&cluster))
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

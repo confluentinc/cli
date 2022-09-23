@@ -45,7 +45,7 @@ type roleBindingTest struct {
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
 	mockedListUserResult    []*orgv1.User
-	expected                []listDisplay
+	expected                []listOut
 }
 
 type expectedListCmdArgs struct {
@@ -283,7 +283,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listDisplay{
+		expected: []listOut{
 			{
 				Principal: "User:u-epo7ml",
 				Role:      "MetricsViewer",
@@ -308,7 +308,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listDisplay{
+		expected: []listOut{
 			{
 				Principal: "User:u-123",
 				Role:      "MetricsViewer",
@@ -331,7 +331,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			},
 		},
 		mockedListUserResult: []*orgv1.User{},
-		expected: []listDisplay{
+		expected: []listOut{
 			{
 				Principal: "User:sa-123",
 				Role:      "MetricsViewer",
@@ -414,7 +414,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listDisplay{
+		expected: []listOut{
 			{
 				Principal:    "User:u-123",
 				Role:         "CloudClusterAdmin",
@@ -484,7 +484,7 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 		}()
 		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
-		var actual []listDisplay
+		var actual []listOut
 		err = json.Unmarshal([]byte(output), &actual)
 		assert.Nil(suite.T(), err)
 		assert.Equal(suite.T(), tc.expected, actual)

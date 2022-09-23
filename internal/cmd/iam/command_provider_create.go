@@ -44,7 +44,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	issuer, err := cmd.Flags().GetString("issuer-uri")
+	issuerUri, err := cmd.Flags().GetString("issuer-uri")
 	if err != nil {
 		return err
 	}
@@ -57,21 +57,21 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
 		DisplayName: identityproviderv2.PtrString(name),
 		Description: identityproviderv2.PtrString(description),
-		Issuer:      identityproviderv2.PtrString(issuer),
+		Issuer:      identityproviderv2.PtrString(issuerUri),
 		JwksUri:     identityproviderv2.PtrString(jwksuri),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	provider, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&identityProviderOut{
-		Id:          resp.GetId(),
-		Name:        resp.GetDisplayName(),
-		Description: resp.GetDescription(),
-		IssuerUri:   resp.GetIssuer(),
-		JwksUri:     resp.GetJwksUri(),
+		Id:          provider.GetId(),
+		Name:        provider.GetDisplayName(),
+		Description: provider.GetDescription(),
+		IssuerUri:   provider.GetIssuer(),
+		JwksUri:     provider.GetJwksUri(),
 	})
 	return table.Print()
 }

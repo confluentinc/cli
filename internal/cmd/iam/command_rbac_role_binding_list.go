@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type displayStruct struct {
@@ -151,15 +152,12 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, ccloudResourcePatternListFields, ccloudResourcePatternHumanListLabels, ccloudResourcePatternStructuredListLabels)
-	if err != nil {
-		return err
-	}
-
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return err
 	}
+
+	list := output.NewList(cmd, resource.RoleBinding)
 
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
@@ -207,7 +205,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 							continue
 						}
 					}
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&listOut{
 						Principal:      principalName,
 						Email:          principalEmail,
 						Role:           roleName,
@@ -222,7 +220,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				}
 
 				if len(resourcePatterns) == 0 {
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&listOut{
 						Principal:    principalName,
 						Email:        principalEmail,
 						Role:         roleName,
@@ -234,9 +232,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		}
 	}
 
-	outputWriter.StableSort()
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
@@ -387,10 +383,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.RoleBinding)
 
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
@@ -406,7 +399,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 						}
 					}
 					if add {
-						outputWriter.AddElement(&listDisplay{
+						list.Add(&listOut{
 							Principal:    principalName,
 							Role:         roleName,
 							ResourceType: resourcePattern.ResourceType,
@@ -416,21 +409,17 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 					}
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&listOut{
 						Principal:    principalName,
 						Role:         roleName,
 						ResourceType: "Cluster",
-						Name:         "",
-						PatternType:  "",
 					})
 				}
 			}
 		}
 	}
 
-	outputWriter.StableSort()
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {

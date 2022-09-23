@@ -20,14 +20,10 @@ import (
 )
 
 var (
-	resourcePatternListFields           = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
-	resourcePatternHumanListLabels      = []string{"Principal", "Role", "Resource Type", "Name", "Pattern Type"}
-	resourcePatternStructuredListLabels = []string{"principal", "role", "resource_type", "name", "pattern_type"}
+	resourcePatternListFields = []string{"Principal", "Role", "ResourceType", "Name", "PatternType"}
 
 	// ccloud has Email as additional field
-	ccloudResourcePatternListFields           = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
-	ccloudResourcePatternHumanListLabels      = []string{"Principal", "Email", "Role", "Environment", "Cloud Cluster", "Cluster Type", "Logical Cluster", "Resource Type", "Name", "Pattern Type"}
-	ccloudResourcePatternStructuredListLabels = []string{"principal", "email", "role", "environment", "cloud_cluster", "cluster_type", "logical_cluster", "resource_type", "resource_name", "pattern_type"}
+	ccloudResourcePatternListFields = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
 
 	//TODO: please move this to a backend route (https://confluentinc.atlassian.net/browse/CIAM-890)
 	clusterScopedRoles = map[string]bool{
@@ -63,17 +59,17 @@ type roleBindingCommand struct {
 	cfg *v1.Config
 }
 
-type listDisplay struct {
-	Principal      string `json:"principal"`
-	Email          string `json:"email"`
-	Role           string `json:"role"`
-	Environment    string `json:"environment"`
-	CloudCluster   string `json:"cloud_cluster"`
-	ClusterType    string `json:"cluster_type"`
-	LogicalCluster string `json:"logical_cluster"`
-	ResourceType   string `json:"resource_type"`
-	Name           string `json:"resource_name"`
-	PatternType    string `json:"pattern_type"`
+type listOut struct {
+	Principal      string `human:"Principal" json:"principal" yaml:"principal"`
+	Email          string `human:"Email" json:"email" yaml:"email"`
+	Role           string `human:"Role" json:"role" yaml:"role"`
+	Environment    string `human:"Environment" json:"environment" yaml:"environment"`
+	CloudCluster   string `human:"Cloud Cluster" json:"cloud_cluster" yaml:"cloud_cluster"`
+	ClusterType    string `human:"Cluster Type" json:"cluster_type" yaml:"cluster_type"`
+	LogicalCluster string `human:"Logical Cluster" json:"logical_cluster" yaml:"logical_cluster"`
+	ResourceType   string `human:"Resource Type" json:"resource_type" yaml:"resource_type"`
+	Name           string `human:"Name" json:"resource_name" yaml:"resource_name"`
+	PatternType    string `human:"Pattern Type" json:"pattern_type" yaml:"pattern_type"`
 }
 
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -84,9 +80,7 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 		Long:    "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.",
 	}
 
-	c := &roleBindingCommand{
-		cfg: cfg,
-	}
+	c := &roleBindingCommand{cfg: cfg}
 
 	if cfg.IsOnPremLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
@@ -527,25 +521,26 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
-	var fieldsSelected []string
-	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
-	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
-	displayStruct := &listDisplay{
+	table := output.NewTable(cmd)
+
+	out := &listOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}
-
 	if options.resource != "" {
 		if len(options.resourcesRequestV2.ResourcePatterns) != 1 {
 			return errors.New("display error: number of resource pattern is not 1")
 		}
 		resourcePattern := options.resourcesRequestV2.ResourcePatterns[0]
-		displayStruct.ResourceType = resourcePattern.ResourceType
-		displayStruct.Name = resourcePattern.Name
-		displayStruct.PatternType = resourcePattern.PatternType
+		out.ResourceType = resourcePattern.ResourceType
+		out.Name = resourcePattern.Name
+		out.PatternType = resourcePattern.PatternType
 	}
+	table.Add(out)
 
+	var fieldsSelected []string
+	userResourceId := strings.TrimLeft(options.principal, "User:")
+	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
 	if err != nil {
 		if options.resource != "" {
 			fieldsSelected = resourcePatternListFields
@@ -556,17 +551,19 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = user.Email
+			out.Email = user.Email
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}
-	return output.DescribeObject(cmd, displayStruct, fieldsSelected, map[string]string{}, structuredRename)
+	table.Filter(fieldsSelected)
+
+	return table.Print()
 }
 
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	var fieldsSelected []string
 
-	displayStruct := &listDisplay{
+	out := &listOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}
@@ -576,18 +573,18 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 			return errors.New("display error: number of resource pattern is not 1")
 		}
 		resourcePattern := options.resourcesRequest.ResourcePatterns[0]
-		displayStruct.ResourceType = resourcePattern.ResourceType
-		displayStruct.Name = resourcePattern.Name
-		displayStruct.PatternType = resourcePattern.PatternType
+		out.ResourceType = resourcePattern.ResourceType
+		out.Name = resourcePattern.Name
+		out.PatternType = resourcePattern.PatternType
 	} else {
 		fieldsSelected = []string{"Principal", "Role", "ResourceType"}
-		displayStruct.ResourceType = "Cluster"
+		out.ResourceType = "Cluster"
 	}
 
-	humanRenames := map[string]string{"ResourceType": "Resource Type", "PatternType": "Pattern Type"}
-	structuredRenames := map[string]string{"Principal": "principal", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
-
-	return output.DescribeObject(cmd, displayStruct, fieldsSelected, humanRenames, structuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(out)
+	table.Filter(fieldsSelected)
+	return table.Print()
 }
 
 func (c *roleBindingCommand) createContext() context.Context {
