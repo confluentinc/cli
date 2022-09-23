@@ -8,22 +8,17 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	invitationListFields       = []string{"Id", "Email", "FirstName", "LastName", "UserResourceId", "Status"}
-	invitationHumanLabels      = []string{"ID", "Email", "First Name", "Last Name", "User ID", "Status"}
-	invitationStructuredLabels = []string{"id", "email", "first_name", "last_name", "user_resource_id", "status"}
-)
-
-type invitationStruct struct {
-	Id             string
-	Email          string
-	FirstName      string
-	LastName       string
-	UserResourceId string
-	Status         string
+type invitationOut struct {
+	Id             string `human:"ID" structured:"id"`
+	Email          string `human:"Email" structured:"email"`
+	FirstName      string `human:"First Name" structured:"first_name"`
+	LastName       string `human:"Last Name" structured:"last_name"`
+	UserResourceId string `human:"User ID" structured:"user_resource_id"`
+	Status         string `human:"Status" structured:"status"`
 }
 
 func (c invitationCommand) newListCommand() *cobra.Command {
@@ -50,10 +45,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return nil
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, invitationListFields, invitationHumanLabels, invitationStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.Invitation)
 
 	for _, invitation := range invitations {
 		user := &orgv1.User{ResourceId: invitation.UserResourceId}
@@ -64,7 +56,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 			lastName = user.LastName
 		}
 
-		outputWriter.AddElement(&invitationStruct{
+		list.Add(&invitationOut{
 			Id:             invitation.Id,
 			Email:          invitation.Email,
 			FirstName:      firstName,
@@ -74,5 +66,5 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

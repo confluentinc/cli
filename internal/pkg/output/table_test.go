@@ -206,7 +206,6 @@ func TestList(t *testing.T) {
 			"-----+------------+--------------",
 			"   1 | lkc-111111 | Cluster 1    ",
 			"   2 | lkc-222222 | Cluster 2    ",
-			"",
 		},
 		JSON.String(): {
 			"[",
@@ -221,7 +220,6 @@ func TestList(t *testing.T) {
 			`    "description": "Cluster 2"`,
 			"  }",
 			"]",
-			"",
 		},
 		YAML.String(): {
 			"- id: 1",
@@ -230,7 +228,6 @@ func TestList(t *testing.T) {
 			"- id: 2",
 			"  name: lkc-222222",
 			"  description: Cluster 2",
-			"",
 		},
 	}
 
@@ -256,15 +253,12 @@ func TestList_Empty(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
 			"No clusters found.",
-			"",
 		},
 		JSON.String(): {
 			"[]",
-			"",
 		},
 		YAML.String(): {
 			"[]",
-			"",
 		},
 	}
 
@@ -287,5 +281,70 @@ func testList(t *testing.T, format string, objects []interface{}, expected []str
 	err := list.Print()
 	require.NoError(t, err)
 
-	require.Equal(t, strings.Join(expected, "\n"), buf.String(), format)
+	require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+}
+
+func TestMapping(t *testing.T) {
+	tests := map[string][]string{
+		Human.String(): {
+			"+---+--------+",
+			"| A | apple  |",
+			"| B | banana |",
+			"+---+--------+",
+		},
+		JSON.String(): {
+			"{",
+			`  "A": "apple",`,
+			`  "B": "banana"`,
+			"}",
+		},
+		YAML.String(): {
+			"A: apple",
+			"B: banana",
+		},
+	}
+
+	for format, expected := range tests {
+		buf := new(bytes.Buffer)
+		cmd := &cobra.Command{}
+		cmd.Flags().String("output", format, "")
+		cmd.SetOut(buf)
+
+		mapping := NewMapping(cmd, "configuration")
+		mapping.Add(map[string]string{"A": "apple", "B": "banana"})
+
+		err := mapping.Print()
+		require.NoError(t, err)
+
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+	}
+}
+
+func TestMapping_Empty(t *testing.T) {
+	tests := map[string][]string{
+		Human.String(): {
+			"No configurations found.",
+		},
+		JSON.String(): {
+			"{}",
+		},
+		YAML.String(): {
+			"{}",
+		},
+	}
+
+	for format, expected := range tests {
+		buf := new(bytes.Buffer)
+		cmd := &cobra.Command{}
+		cmd.Flags().String("output", format, "")
+		cmd.SetOut(buf)
+
+		mapping := NewMapping(cmd, "configuration")
+		mapping.Add(map[string]string{})
+
+		err := mapping.Print()
+		require.NoError(t, err)
+
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+	}
 }

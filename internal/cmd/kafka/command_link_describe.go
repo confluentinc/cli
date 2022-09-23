@@ -6,21 +6,16 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	describeLinkConfigFields           = []string{"ConfigName", "ConfigValue", "ReadOnly", "Sensitive", "Source", "Synonyms"}
-	structuredDescribeLinkConfigFields = camelToSnake(describeLinkConfigFields)
-	humanDescribeLinkConfigFields      = camelToSpaced(describeLinkConfigFields)
-)
-
-type LinkConfigWriter struct {
-	ConfigName  string
-	ConfigValue string
-	ReadOnly    bool
-	Sensitive   bool
-	Source      string
-	Synonyms    []string
+type linkConfigurationOut struct {
+	ConfigName  string   `human:"Config Name" serialized:"config_name"`
+	ConfigValue string   `human:"Config Value" serialized:"config_value"`
+	ReadOnly    bool     `human:"Read Only" serialized:"read_only"`
+	Sensitive   bool     `human:"Sensitive" serialized:"sensitive"`
+	Source      string   `human:"Source" serialized:"source"`
+	Synonyms    []string `human:"Synonyms" serialized:"synonyms"`
 }
 
 func (c *linkCommand) newDescribeCommand() *cobra.Command {
@@ -60,16 +55,13 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, describeLinkConfigFields, humanDescribeLinkConfigFields, structuredDescribeLinkConfigFields)
-	if err != nil {
-		return err
+	list := output.NewList(cmd, resource.ClusterLinkConfiguration)
+
+	if len(listLinkConfigsRespData.Data) == 0 {
+		return list.Print()
 	}
 
-	if len(listLinkConfigsRespData.Data) < 1 {
-		return outputWriter.Out()
-	}
-
-	outputWriter.AddElement(&LinkConfigWriter{
+	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
 		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
 		ReadOnly:    true,
@@ -77,7 +69,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	})
 
 	for _, config := range listLinkConfigsRespData.Data {
-		outputWriter.AddElement(&LinkConfigWriter{
+		list.Add(&linkConfigurationOut{
 			ConfigName:  config.Name,
 			ConfigValue: config.Value,
 			ReadOnly:    config.ReadOnly,
@@ -87,5 +79,5 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

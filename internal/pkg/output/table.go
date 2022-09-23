@@ -17,16 +17,25 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type kind int
+
+const (
+	table kind = iota
+	mapping
+	list
+)
+
 type Table struct {
+	kind     kind
 	writer   io.Writer
-	format   Format
 	resource string
+	format   Format
 	objects  []interface{}
 	filter   []string
 	sort     bool
 }
 
-// NewTable initializes a table capable of printing a single object.
+// NewTable creates a table for printing a single object.
 func NewTable(cmd *cobra.Command) *Table {
 	return &Table{
 		writer: cmd.OutOrStdout(),
@@ -34,19 +43,29 @@ func NewTable(cmd *cobra.Command) *Table {
 	}
 }
 
-// NewList initializes a table capable of printing multiple objects.
+// NewMapping creates a table for printing key-value pairs.
+func NewMapping(cmd *cobra.Command, resource string) *Table {
+	table := NewTable(cmd)
+	table.kind = mapping
+	table.resource = resource
+	return table
+}
+
+// NewList creates a table for printing multiple objects.
 func NewList(cmd *cobra.Command, resource string) *Table {
 	table := NewTable(cmd)
+	table.kind = list
 	table.resource = resource
 	table.sort = true
 	return table
 }
 
 func (t *Table) Add(i interface{}) {
-	if t.isList() {
-		t.objects = append(t.objects, i)
-	} else {
+	switch t.kind {
+	case table, mapping:
 		t.objects = []interface{}{i}
+	case list:
+		t.objects = append(t.objects, i)
 	}
 }
 
@@ -64,28 +83,34 @@ func (t *Table) Print() error {
 }
 
 func (t *Table) PrintWithAutoWrap(auto bool) error {
-	if t.format.IsSerialized() {
-		for i := range t.objects {
-			serializer := FieldSerializer{format: t.format}
-			t.objects[i] = retag.Convert(t.objects[i], serializer)
+	if t.kind != mapping {
+		if t.format.IsSerialized() {
+			for i := range t.objects {
+				serializer := FieldSerializer{format: t.format}
+				t.objects[i] = retag.Convert(t.objects[i], serializer)
+			}
 		}
-	}
 
-	for i := range t.objects {
-		hider := FieldHider{
-			format: t.format,
-			filter: &t.filter,
+		for i := range t.objects {
+			hider := FieldHider{
+				format: t.format,
+				filter: &t.filter,
+			}
+			t.objects[i] = retag.Convert(t.objects[i], hider)
 		}
-		t.objects[i] = retag.Convert(t.objects[i], hider)
 	}
 
 	if t.sort {
 		sort.Slice(t.objects, func(i, j int) bool {
 			for k := 0; k < reflect.TypeOf(t.objects[i]).Elem().NumField(); k++ {
-				vi := fmt.Sprintf("%v", reflect.ValueOf(t.objects[i]).Elem().Field(k))
-				vj := fmt.Sprintf("%v", reflect.ValueOf(t.objects[j]).Elem().Field(k))
-				if vi != vj {
-					return vi < vj
+				vi := reflect.ValueOf(t.objects[i]).Elem().Field(k)
+				vj := reflect.ValueOf(t.objects[j]).Elem().Field(k)
+
+				si := fmt.Sprintf("%v", vi)
+				sj := fmt.Sprintf("%v", vj)
+			
+				if si != sj {
+					return si < sj
 				}
 			}
 			return false
@@ -94,13 +119,16 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 
 	if t.format.IsSerialized() {
 		var v interface{}
-		if t.isList() {
+		switch t.kind {
+		case table:
+			v = t.objects[0]
+		case mapping:
+			v = t.objects[0].(map[string]string)
+		case list:
 			v = t.objects
 			if len(t.objects) == 0 {
 				v = []interface{}{}
 			}
-		} else {
-			v = t.objects[0]
 		}
 
 		switch t.format {
@@ -116,7 +144,14 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 		}
 	}
 
-	if len(t.objects) == 0 {
+	isEmpty := false
+	switch t.kind {
+	case list:
+		isEmpty = len(t.objects) == 0
+	case mapping:
+		isEmpty = len(t.objects[0].(map[string]string)) == 0
+	}
+	if isEmpty {
 		_, err := fmt.Fprintf(t.writer, "No %ss found.\n", t.resource)
 		return err
 	}
@@ -124,7 +159,20 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 	w := tablewriter.NewWriter(t.writer)
 	w.SetAutoWrapText(auto)
 
-	if t.isList() {
+	switch t.kind {
+	case table:
+		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
+			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
+			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
+			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
+				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
+			}
+		}
+	case mapping:
+		for k, v := range t.objects[0].(map[string]string) {
+			w.Append([]string{k, v})
+		}
+	case list:
 		var header []string
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
@@ -147,21 +195,9 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			}
 			w.Append(row)
 		}
-	} else {
-		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
-			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
-				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
-			}
-		}
 	}
 
 	w.Render()
 
 	return nil
-}
-
-func (t *Table) isList() bool {
-	return t.resource != ""
 }

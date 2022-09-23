@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
@@ -40,16 +41,13 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, describeLinkConfigFields, humanDescribeLinkConfigFields, structuredDescribeLinkConfigFields)
-	if err != nil {
-		return err
+	list := output.NewList(cmd, resource.ClusterLinkConfiguration)
+
+	if len(listLinkConfigsRespData.Data) == 0 {
+		return list.Print()
 	}
 
-	if len(listLinkConfigsRespData.Data) < 1 {
-		return outputWriter.Out()
-	}
-
-	outputWriter.AddElement(&LinkConfigWriter{
+	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
 		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
 		ReadOnly:    true,
@@ -57,7 +55,7 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 	})
 
 	for _, config := range listLinkConfigsRespData.Data {
-		outputWriter.AddElement(&LinkConfigWriter{
+		list.Add(&linkConfigurationOut{
 			ConfigName:  config.Name,
 			ConfigValue: config.Value,
 			ReadOnly:    config.ReadOnly,
@@ -67,5 +65,5 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

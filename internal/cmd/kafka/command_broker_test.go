@@ -111,7 +111,7 @@ func newCmdWithAllFlag() *cobra.Command {
 	return cmd
 }
 
-func verifyConfigData(req *require.Assertions, data []configData, expected []configData) {
+func verifyConfigData(req *require.Assertions, data []*configData, expected []configData) {
 	req.Equal(len(data), len(expected))
 	for i, d := range data {
 		req.Equal(expected[i].Name, d.Name)

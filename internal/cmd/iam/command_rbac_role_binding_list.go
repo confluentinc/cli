@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/confluentinc/go-printer"
@@ -486,19 +485,12 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 		}
 	}
 
-	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, presource.RoleBinding)
 
 	for _, principal := range principals {
-		displayStruct := &struct {
-			Principal string
-		}{
-			Principal: principal,
-		}
-		outputWriter.AddElement(displayStruct)
+		list.Add(&roleBindingOut{Principal: principal})
 	}
-	return outputWriter.Out()
+
+	list.Filter([]string{"Principal"})
+	return list.Print()
 }

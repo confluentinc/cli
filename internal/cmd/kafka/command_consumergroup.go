@@ -37,29 +37,29 @@ type consumerGroupCommand struct {
 }
 
 type consumerData struct {
-	ConsumerGroupId string `json:"consumer_group" yaml:"consumer_group"`
-	ConsumerId      string `json:"consumer" yaml:"consumer"`
-	InstanceId      string `json:"instance" yaml:"instance"`
-	ClientId        string `json:"client" yaml:"client"`
+	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group"`
+	ConsumerId      string `human:"Consumer" serialized:"consumer"`
+	InstanceId      string `human:"Instance" serialized:"instance"`
+	ClientId        string `human:"Client" serialized:"client"`
 }
 
 type groupData struct {
-	ClusterId         string         `json:"cluster" yaml:"cluster"`
-	ConsumerGroupId   string         `json:"consumer_group" yaml:"consumer_group"`
-	Coordinator       string         `json:"coordinator" yaml:"coordinator"`
-	IsSimple          bool           `json:"simple" yaml:"simple"`
-	PartitionAssignor string         `json:"partition_assignor" yaml:"partition_assignor"`
-	State             string         `json:"state" yaml:"state"`
-	Consumers         []consumerData `json:"consumers" yaml:"consumers"`
-}
-
-type groupDescribeStruct struct {
 	ClusterId         string
 	ConsumerGroupId   string
 	Coordinator       string
 	IsSimple          bool
 	PartitionAssignor string
 	State             string
+	Consumers         []consumerData
+}
+
+type consumerGroupOut struct {
+	ClusterId         string `human:"Cluster" serialized:"cluster"`
+	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
+	Coordinator       string `human:"Coordinator" serialized:"coordinator"`
+	IsSimple          bool   `human:"Is Simple" serialized:"simple"`
+	PartitionAssignor string `human:"Partition Assignor" serialized:"partition_assignor"`
+	State             string `human:"State" serialized:"state"`
 }
 
 type lagSummaryStruct struct {
