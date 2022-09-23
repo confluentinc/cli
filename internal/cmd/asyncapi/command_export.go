@@ -44,7 +44,7 @@ type confluentBinding struct {
 }
 
 type bindings struct {
-	channelBindings  interface{}
+	channelBindings  spec.ChannelBindingsObject
 	messageBinding   spec.MessageBindingsObject
 	operationBinding spec.OperationBindingsObject
 }
@@ -270,7 +270,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 			}
 		}
 	}
-	channelBinding := confluentBinding{
+	var channelBindings interface{} = confluentBinding{
 		Partitions: len(topicDescription.GetPartitions()),
 		Replicas:   len(topicDescription.GetPartitions()[0].Replicas),
 		Configs: Configs{
@@ -302,7 +302,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 		operationBinding: operationBindings,
 	}
 	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
-		bindings.channelBindings = channelBinding
+		bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
 	}
 	return bindings, nil
 }
@@ -473,8 +473,8 @@ func addChannel(reflector asyncapi.Reflector, topicName string, bindings binding
 			},
 		},
 	}
-	if bindings.channelBindings != nil {
-		channel.BaseChannelItem.Bindings = &spec.ChannelBindingsObject{Kafka: &bindings.channelBindings}
+	if bindings.channelBindings.Kafka != nil {
+		channel.BaseChannelItem.Bindings = &bindings.channelBindings
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err

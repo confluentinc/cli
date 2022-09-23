@@ -42,25 +42,24 @@ type accountDetails struct {
 }
 
 func (d *accountDetails) getTags() error {
+	// Get topic level tags
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get topic level tags: %v", err)
 	}
-	var topicLevelTagsInSpec []spec.Tag
 	for _, topicLevelTag := range topicLevelTags {
-		topicLevelTagsInSpec = append(topicLevelTagsInSpec, spec.Tag{Name: topicLevelTag.TypeName})
+		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
 	}
-	d.channelDetails.topicLevelTags = topicLevelTagsInSpec
-	// Get Schema level tags
+	
+	// Get schema level tags
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
-	var schemaLevelTagsInSpec []spec.Tag
 	for _, schemaLevelTag := range schemaLevelTags {
-		schemaLevelTagsInSpec = append(schemaLevelTagsInSpec, spec.Tag{Name: schemaLevelTag.TypeName})
+		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
-	d.channelDetails.schemaLevelTags = schemaLevelTagsInSpec
+
 	return nil
 }
 
