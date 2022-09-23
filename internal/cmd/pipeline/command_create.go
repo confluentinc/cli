@@ -45,8 +45,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	ksqlReq := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(), 
-		Id: ksql,
+		AccountId: c.EnvironmentId(),
+		Id:        ksql,
 	}
 
 	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)

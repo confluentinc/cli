@@ -128,7 +128,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		}
 
 		if resp.StatusCode == 200 && err == nil {
-			filepath := filepath.Join(outputDir, args[0] + ".sql")
+			filepath := filepath.Join(outputDir, args[0]+".sql")
 			out, err := os.OpenFile(filepath, os.O_RDWR|os.O_CREATE, 0755)
 			if err != nil {
 				return err
