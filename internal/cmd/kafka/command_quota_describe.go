@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -24,15 +25,13 @@ func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
-	quotaId := args[0]
-	quota, resp, err := c.V2Client.DescribeKafkaQuota(quotaId)
+	quota, resp, err := c.V2Client.DescribeKafkaQuota(args[0])
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	printableQuota := quotaToPrintable(quota, format)
-	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(quota, format))
+	return table.Print()
 }

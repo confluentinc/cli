@@ -11,9 +11,9 @@ import (
 )
 
 type connectCreateOut struct {
-	Id         string `human:"ID" json:"id" yaml:"id"`
-	Name       string `human:"Name" json:"name" yaml:"name"`
-	ErrorTrace string `human:"Error Trace,omitempty" json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
+	Id         string `human:"ID" serialized:"id"`
+	Name       string `human:"Name" serialized:"name"`
+	ErrorTrace string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
 func (c *command) newCreateCommand() *cobra.Command {

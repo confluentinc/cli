@@ -65,11 +65,11 @@ var (
 )
 
 type out struct {
-	Metric       string `human:"Metric" json:"metric" yaml:"metric"`
-	ClusterType  string `human:"Cluster Type" json:"cluster_type" yaml:"cluster_type"`
-	Availability string `human:"Availability" json:"availability" yaml:"availability"`
-	NetworkType  string `human:"Network Type" json:"network_type" yaml:"network_type"`
-	Price        string `human:"Price" json:"price" yaml:"price"`
+	Metric       string `human:"Metric" serialized:"metric"`
+	ClusterType  string `human:"Cluster Type" serialized:"cluster_type"`
+	Availability string `human:"Availability" serialized:"availability"`
+	NetworkType  string `human:"Network Type" serialized:"network_type"`
+	Price        string `human:"Price" serialized:"price"`
 }
 
 type row struct {

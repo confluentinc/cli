@@ -11,11 +11,11 @@ type identityProviderCommand struct {
 }
 
 type identityProviderOut struct {
-	Id          string `human:"ID" json:"id" yaml:"id"`
-	Name        string `human:"Name" json:"name" yaml:"name"`
-	Description string `human:"Description" json:"description" yaml:"description"`
-	IssuerUri   string `human:"Issuer URI" json:"issuer_uri" yaml:"issuer_uri"`
-	JwksUri     string `human:"JWKS URI" json:"jwks_uri" yaml:"jwks_uri"`
+	Id          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	Description string `human:"Description" serialized:"description"`
+	IssuerUri   string `human:"Issuer URI" serialized:"issuer_uri"row`
+	JwksUri     string `human:"JWKS URI" serialized:"jwks_uri"row`
 }
 
 func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {

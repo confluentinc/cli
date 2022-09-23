@@ -12,10 +12,10 @@ type serviceAccountCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type serviceAccount struct {
-	ResourceId  string
-	Name        string
-	Description string
+type serviceAccountOut struct {
+	ResourceId  string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	Description string `human:"Description" serialized:"description"`
 }
 
 func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {

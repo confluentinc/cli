@@ -13,9 +13,9 @@ import (
 )
 
 type out struct {
-	Name       string `human:"Name" json:"name" yaml:"name"`
-	Platform   string `human:"Platform" json:"platform" yaml:"platform"`
-	Credential string `human:"Credential" json:"credential" yaml:"credential"`
+	Name       string `human:"Name" serialized:"name"`
+	Platform   string `human:"Platform" serialized:"platform"`
+	Credential string `human:"Credential" serialized:"credential"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

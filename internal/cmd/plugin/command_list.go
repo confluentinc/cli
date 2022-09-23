@@ -13,8 +13,8 @@ import (
 )
 
 type out struct {
-	PluginName string `human:"Plugin Name" json:"plugin_name" yaml:"plugin_name"`
-	FilePath   string `human:"File Path" json:"file_path" yaml:"file_path"`
+	PluginName string `human:"Plugin Name" serialized:"plugin_name"`
+	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -43,9 +43,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd, resource.Plugin)
 
-	var overshadowedPlugins, nameConflictPlugins []out
+	var overshadowedPlugins, nameConflictPlugins []*out
 	for name, pathList := range pluginMap {
-		pluginInfo := out{
+		pluginInfo := &out{
 			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
 			FilePath:   pathList[0],
 		}
@@ -56,8 +56,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			list.Add(pluginInfo)
 		}
 		for i := 1; i < len(pathList); i++ {
-			overshadowedPlugins = append(overshadowedPlugins, out{PluginName: pluginInfo.PluginName, FilePath: pathList[i]})
+			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: pathList[i]})
 		}
+	}
+
+	if err := list.Print(); err != nil {
+		return err
 	}
 
 	for _, pluginInfo := range nameConflictPlugins {
@@ -67,5 +71,5 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		utils.ErrPrintf(cmd, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 
-	return list.Print()
+	return nil
 }

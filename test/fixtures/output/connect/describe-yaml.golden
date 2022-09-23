@@ -3,7 +3,7 @@ connector:
   name: az-connector
   status: RUNNING
   type: Sink
-task:
+tasks:
 - task_id: 1
   state: RUNNING
 configs: []

@@ -14,9 +14,9 @@ import (
 )
 
 type out struct {
-	Code       string `human:"Code" json:"code" yaml:"code"`
-	Balance    string `human:"Balance" json:"balance" yaml:"balance"`
-	Expiration string `human:"Expiration" json:"expiration" yaml:"expiration"`
+	Code       string `human:"Code" serialized:"code"`
+	Balance    string `human:"Balance" serialized:"balance"`
+	Expiration string `human:"Expiration" serialized:"expiration"`
 }
 
 func (c *command) newListCommand() *cobra.Command {

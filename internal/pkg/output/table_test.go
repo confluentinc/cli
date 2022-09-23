@@ -12,9 +12,9 @@ import (
 )
 
 type out struct {
-	Id          int    `human:"ID" json:"id" yaml:"id"`
-	Name        string `human:"Name" json:"name" yaml:"name"`
-	Description string `human:"Description,omitempty" json:"description,omitempty" yaml:"description,omitempty"`
+	Id          int    `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	Description string `human:"Description,omitempty" serialized:"description,omitempty"`
 }
 
 func TestTable(t *testing.T) {

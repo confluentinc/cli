@@ -19,8 +19,8 @@ import (
 )
 
 type createOut struct {
-	Key    string `human:"API Key" json:"key" yaml:"key"`
-	Secret string `human:"Secret" json:"secret" yaml:"secret"`
+	Key    string `human:"API Key" serialized:"key"`
+	Secret string `human:"Secret" serialized:"secret"`
 }
 
 var resourceTypeToKind = map[string]string{

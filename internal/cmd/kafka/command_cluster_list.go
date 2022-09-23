@@ -11,12 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-)
-
 func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -74,5 +68,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		list.Add(convertClusterToDescribeStruct(&cluster))
 	}
 
+	list.Filter([]string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
 	return list.Print()
 }

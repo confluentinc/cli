@@ -39,33 +39,33 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	return c.Command
 }
 
-type printableQuota struct {
-	Id          string
-	DisplayName string
-	Description string
-	Ingress     string
-	Egress      string
-	Principals  string
-	Cluster     string
-	Environment string
+type quotaOut struct {
+	Id          string `human:"ID" serialized:"id"row`
+	DisplayName string `human:"Name" serialized:"display_name"row`
+	Description string `human:"Description" serialized:"description"row`
+	Ingress     string `human:"Ingress" serialized:"ingress"row`
+	Egress      string `human:"Egress" serialized:"egress"row`
+	Principals  string `human:"Principals" serialized:"principals"row`
+	Cluster     string `human:"Cluster" serialized:"cluster"row`
+	Environment string `human:"Environment" serialized:"environment"row`
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) *printableQuota {
-	s := printableQuota{
-		Id:          *quota.Id,
-		DisplayName: *quota.DisplayName,
-		Description: *quota.Description,
-		Ingress:     *quota.Throughput.IngressByteRate,
-		Egress:      *quota.Throughput.EgressByteRate,
-		Principals:  principalsToString(*quota.Principals),
+func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
+	s := &quotaOut{
+		Id:          quota.GetId(),
+		DisplayName: quota.GetDisplayName(),
+		Description: quota.GetDescription(),
+		Ingress:     quota.Throughput.GetIngressByteRate(),
+		Egress:      quota.Throughput.GetEgressByteRate(),
+		Principals:  principalsToString(quota.GetPrincipals()),
 		Cluster:     quota.Cluster.Id,
 		Environment: quota.Environment.Id,
 	}
-	if format == output.Human.String() {
-		s.Ingress = s.Ingress + " B/s"
-		s.Egress = s.Egress + " B/s"
+	if format == output.Human {
+		s.Ingress += " B/s"
+		s.Egress += " B/s"
 	}
-	return &s
+	return s
 }
 
 func principalsToString(principals []kafkaquotas.ObjectReference) string {

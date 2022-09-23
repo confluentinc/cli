@@ -11,11 +11,11 @@ type identityPoolCommand struct {
 }
 
 type identityPoolOut struct {
-	Id            string `human:"ID" json:"id" yaml:"id"`
-	DisplayName   string `human:"Display Name" json:"display_name" yaml:"display_name"`
-	Description   string `human:"Description" json:"description" yaml:"description"`
-	IdentityClaim string `human:"Identity Claim" json:"identity_claim" yaml:"identity_claim"`
-	Filter        string `human:"Filter" json:"filter" yaml:"filter"`
+	Id            string `human:"ID" serialized:"id"`
+	DisplayName   string `human:"Display Name" serialized:"display_name"`
+	Description   string `human:"Description" serialized:"description"`
+	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"row`
+	Filter        string `human:"Filter" serialized:"filter"row`
 }
 
 func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {

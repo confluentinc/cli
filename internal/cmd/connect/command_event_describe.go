@@ -11,10 +11,10 @@ import (
 )
 
 type eventDescribeOut struct {
-	ClusterId        string `human:"Cluster" json:"cluster_id" yaml:"cluster_id"`
-	EnvironmentId    string `human:"Environment" json:"environment_id" yaml:"environment_id"`
-	ServiceAccountId string `human:"Service Account" json:"service_account_id" yaml:"service_account_id"`
-	TopicName        string `human:"Topic Name" json:"topic_name" yaml:"topic_name"`
+	ClusterId        string `human:"Cluster" serialized:"cluster_id"`
+	EnvironmentId    string `human:"Environment" serialized:"environment_id"`
+	ServiceAccountId string `human:"Service Account" serialized:"service_account_id"`
+	TopicName        string `human:"Topic Name" serialized:"topic_name"`
 }
 
 func (c *eventCommand) newDescribeCommand() *cobra.Command {

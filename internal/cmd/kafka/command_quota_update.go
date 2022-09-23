@@ -2,9 +2,10 @@ package kafka
 
 import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/set"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -59,6 +60,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
 		Id:          &quotaId,
 		DisplayName: &updateName,
@@ -70,9 +72,11 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchCCloudV2Error(err, resp)
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	printQuota := quotaToPrintable(updatedQuota, format)
-	return output.DescribeObject(cmd, printQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(updatedQuota, format))
+	return table.Print()
 }
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.ObjectReference) (*[]kafkaquotas.ObjectReference, error) {

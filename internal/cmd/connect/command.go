@@ -16,11 +16,11 @@ type command struct {
 }
 
 type connectOut struct {
-	Id     string `human:"ID" json:"id" yaml:"id"`
-	Name   string `human:"Name" json:"name" yaml:"name"`
-	Status string `human:"Status" json:"status" yaml:"status"`
-	Type   string `human:"Type" json:"type" yaml:"type"`
-	Trace  string `human:"Trace,omitempty" json:"trace,omitempty" yaml:"trace,omitempty"`
+	Id     string `human:"ID" serialized:"id"`
+	Name   string `human:"Name" serialized:"name"`
+	Status string `human:"Status" serialized:"status"`
+	Type   string `human:"Type" serialized:"type"`
+	Trace  string `human:"Trace,omitempty" serialized:"trace,omitempty"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

@@ -74,6 +74,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		DisplayName: &displayName,
 		Description: &description,
@@ -82,13 +83,16 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		Principals:  principals,
 		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
 	}
-	quota, resp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
+
+	quota, httpResp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	printableQuota := quotaToPrintable(quota, format)
-	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(quota, format))
+	return table.Print()
 }
 
 func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.ObjectReference {

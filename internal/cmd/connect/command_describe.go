@@ -12,19 +12,19 @@ import (
 )
 
 type taskDescribeOut struct {
-	TaskId int32  `human:"Task ID" json:"task_id" yaml:"task_id"`
-	State  string `human:"State" json:"state" yaml:"state"`
+	TaskId int32  `human:"Task ID" serialized:"task_id"`
+	State  string `human:"State" serialized:"state"`
 }
 
 type configDescribeOut struct {
-	Config string `human:"Config" json:"config" yaml:"config"`
-	Value  string `human:"Value" json:"value" yaml:"value"`
+	Config string `human:"Config" serialized:"config"`
+	Value  string `human:"Value" serialized:"value"`
 }
 
 type structuredDescribeDisplay struct {
-	Connector *connectOut         `json:"connector" yaml:"connector"`
-	Tasks     []taskDescribeOut   `json:"tasks" yaml:"task"`
-	Configs   []configDescribeOut `json:"configs" yaml:"configs"`
+	Connector *connectOut         `serialized:"connector"`
+	Tasks     []taskDescribeOut   `serialized:"tasks"`
+	Configs   []configDescribeOut `serialized:"configs"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

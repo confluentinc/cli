@@ -10,8 +10,8 @@ import (
 )
 
 type pluginListOut struct {
-	Class string `human:"Plugin Name" json:"plugin_name" yaml:"plugin_name"`
-	Type  string `human:"Type" json:"type" yaml:"type"`
+	Class string `human:"Plugin Name" serialized:"plugin_name"`
+	Type  string `human:"Type" serialized:"type"`
 }
 
 func (c *pluginCommand) newListCommand() *cobra.Command {

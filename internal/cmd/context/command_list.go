@@ -11,10 +11,10 @@ import (
 )
 
 type listOut struct {
-	Current    string `human:"Current" json:"current" yaml:"current"`
-	Name       string `human:"Name" json:"name" yaml:"name"`
-	Platform   string `human:"Platform" json:"platform" yaml:"platform"`
-	Credential string `human:"Credential" json:"credential" yaml:"credential"`
+	Current    string `human:"Current" serialized:"current"`
+	Name       string `human:"Name" serialized:"name"`
+	Platform   string `human:"Platform" serialized:"platform"`
+	Credential string `human:"Credential" serialized:"credential"`
 }
 
 func (c *command) newListCommand() *cobra.Command {

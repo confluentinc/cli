@@ -16,13 +16,13 @@ import (
 )
 
 type out struct {
-	Key             string `human:"Key" json:"key" yaml:"key"`
-	Description     string `human:"Description" json:"description" yaml:"description"`
-	OwnerResourceId string `human:"Owner Resource ID" json:"owner_resource_id" yaml:"owner_resource_id"`
-	OwnerEmail      string `human:"Owner Email" json:"owner_email" yaml:"owner_email"`
-	ResourceType    string `human:"Resource Type" json:"resource_type" yaml:"resource_type"`
-	ResourceId      string `human:"Resource ID" json:"resource_id" yaml:"resource_id"`
-	Created         string `human:"Created" json:"created" yaml:"created"`
+	Key             string `human:"Key" serialized:"key"`
+	Description     string `human:"Description" serialized:"description"`
+	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
+	OwnerEmail      string `human:"Owner Email" serialized:"owner_email"`
+	ResourceType    string `human:"Resource Type" serialized:"resource_type"row`
+	ResourceId      string `human:"Resource ID" serialized:"resource_id"row`
+	Created         string `human:"Created" serialized:"created"row`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

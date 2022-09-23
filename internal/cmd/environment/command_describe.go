@@ -9,8 +9,8 @@ import (
 )
 
 type out struct {
-	Id   string `human:"ID" json:"id" yaml:"id"`
-	Name string `human:"Name" json:"name" yaml:"name"`
+	Id   string `human:"ID" serialized:"id"`
+	Name string `human:"Name" serialized:"name"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

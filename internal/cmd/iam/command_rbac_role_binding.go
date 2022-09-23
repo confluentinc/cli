@@ -59,17 +59,17 @@ type roleBindingCommand struct {
 	cfg *v1.Config
 }
 
-type listOut struct {
-	Principal      string `human:"Principal" json:"principal" yaml:"principal"`
-	Email          string `human:"Email" json:"email" yaml:"email"`
-	Role           string `human:"Role" json:"role" yaml:"role"`
-	Environment    string `human:"Environment" json:"environment" yaml:"environment"`
-	CloudCluster   string `human:"Cloud Cluster" json:"cloud_cluster" yaml:"cloud_cluster"`
-	ClusterType    string `human:"Cluster Type" json:"cluster_type" yaml:"cluster_type"`
-	LogicalCluster string `human:"Logical Cluster" json:"logical_cluster" yaml:"logical_cluster"`
-	ResourceType   string `human:"Resource Type" json:"resource_type" yaml:"resource_type"`
-	Name           string `human:"Name" json:"resource_name" yaml:"resource_name"`
-	PatternType    string `human:"Pattern Type" json:"pattern_type" yaml:"pattern_type"`
+type roleBindingOut struct {
+	Principal      string `human:"Principal" serialized:"principal"`
+	Email          string `human:"Email" serialized:"email"`
+	Role           string `human:"Role" serialized:"role"`
+	Environment    string `human:"Environment" serialized:"environment"`
+	CloudCluster   string `human:"Cloud Cluster" serialized:"cloud_cluster"`
+	ClusterType    string `human:"Cluster Type" serialized:"cluster_type"`
+	LogicalCluster string `human:"Logical Cluster" serialized:"logical_cluster"`
+	ResourceType   string `human:"Resource Type" serialized:"resource_type"`
+	Name           string `human:"Name" serialized:"name"`
+	PatternType    string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -523,7 +523,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	table := output.NewTable(cmd)
 
-	out := &listOut{
+	out := &roleBindingOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}
@@ -563,7 +563,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	var fieldsSelected []string
 
-	out := &listOut{
+	out := &roleBindingOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}

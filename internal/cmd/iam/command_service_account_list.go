@@ -5,12 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	serviceAccountListFields           = []string{"ResourceId", "Name", "Description"}
-	serviceAccountListHumanLabels      = []string{"ID", "Name", "Description"}
-	serviceAccountListStructuredLabels = []string{"id", "name", "description"}
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newListCommand() *cobra.Command {
@@ -32,13 +27,15 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, serviceAccountListFields, serviceAccountListHumanLabels, serviceAccountListStructuredLabels)
-	if err != nil {
-		return err
+	list := output.NewList(cmd, resource.ServiceAccount)
+
+	for _, serviceAccount := range serviceAccounts {
+		list.Add(&serviceAccountOut{
+			ResourceId:  serviceAccount.GetId(),
+			Name:        serviceAccount.GetDisplayName(),
+			Description: serviceAccount.GetDescription(),
+		})
 	}
-	for _, sa := range serviceAccounts {
-		element := &serviceAccount{ResourceId: *sa.Id, Name: *sa.DisplayName, Description: *sa.Description}
-		outputWriter.AddElement(element)
-	}
-	return outputWriter.Out()
+
+	return list.Print()
 }

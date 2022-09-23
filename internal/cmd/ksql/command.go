@@ -26,14 +26,14 @@ type ksqlCommand struct {
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
 // in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
-	Id                    string `human:"ID" json:"id" yaml:"id"`
-	Name                  string `human:"Name" json:"name" yaml:"name"`
-	OutputTopicPrefix     string `human:"Topic Prefix" json:"topic_prefix" yaml:"topic_prefix"`
-	KafkaClusterId        string `human:"Kafka" json:"kafka" yaml:"kafka"`
-	Storage               int32  `human:"Storage" json:"storage" yaml:"storage"`
-	Endpoint              string `human:"Endpoint" json:"endpoint" yaml:"endpoint"`
-	Status                string `human:"Status" json:"status" yaml:"status"`
-	DetailedProcessingLog bool   `human:"Detailed Processing Log" json:"detailed_processing_log" yaml:"detailed_processing_log"`
+	Id                    string `human:"ID" serialized:"id"`
+	Name                  string `human:"Name" serialized:"name"`
+	OutputTopicPrefix     string `human:"Topic Prefix" serialized:"topic_prefix"`
+	KafkaClusterId        string `human:"Kafka" serialized:"kafka"`
+	Storage               int32  `human:"Storage" serialized:"storage"`
+	Endpoint              string `human:"Endpoint" serialized:"endpoint"`
+	Status                string `human:"Status" serialized:"status"`
+	DetailedProcessingLog bool   `human:"Detailed Processing Log" serialized:"detailed_processing_log"`
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {

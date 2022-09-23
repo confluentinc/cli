@@ -16,14 +16,14 @@ import (
 )
 
 type out struct {
-	KafkaClusterId string                `human:"Kafka Cluster ID" json:"kafka_cluster_id"`
-	Principal      string                `human:"Principal" json:"principal" yaml:"principal"`
-	Permission     mds.AclPermissionType `human:"Permission" json:"permission" yaml:"permission"`
-	Operation      mds.AclOperation      `human:"Operation" json:"operation" yaml:"operation"`
-	Host           string                `human:"Host" json:"host" yaml:"host"`
-	ResourceType   mds.AclResourceType   `human:"Resource Type" json:"resource_type" yaml:"resource_type"`
-	ResourceName   string                `human:"Resource Name" json:"resource_name" yaml:"resource_name"`
-	PatternType    mds.PatternType       `human:"Pattern Type" json:"pattern_type" yaml:"pattern_type"`
+	KafkaClusterId string                `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
+	Principal      string                `human:"Principal" serialized:"principal"`
+	Permission     mds.AclPermissionType `human:"Permission" serialized:"permission"`
+	Operation      mds.AclOperation      `human:"Operation" serialized:"operation"`
+	Host           string                `human:"Host" serialized:"host"`
+	ResourceType   mds.AclResourceType   `human:"Resource Type" serialized:"resource_type"`
+	ResourceName   string                `human:"Resource Name" serialized:"resource_name"`
+	PatternType    mds.PatternType       `human:"Pattern Type" serialized:"pattern_type"`
 }
 
 type aclCommand struct {

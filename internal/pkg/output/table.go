@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type table struct {
+type Table struct {
 	writer   io.Writer
 	format   Format
 	resource string
@@ -27,22 +27,22 @@ type table struct {
 }
 
 // NewTable initializes a table capable of printing a single object.
-func NewTable(cmd *cobra.Command) *table {
-	return &table{
+func NewTable(cmd *cobra.Command) *Table {
+	return &Table{
 		writer: cmd.OutOrStdout(),
 		format: GetFormat(cmd),
 	}
 }
 
 // NewList initializes a table capable of printing multiple objects.
-func NewList(cmd *cobra.Command, resource string) *table {
+func NewList(cmd *cobra.Command, resource string) *Table {
 	table := NewTable(cmd)
 	table.resource = resource
 	table.sort = true
 	return table
 }
 
-func (t *table) Add(i interface{}) {
+func (t *Table) Add(i interface{}) {
 	if t.isList() {
 		t.objects = append(t.objects, i)
 	} else {
@@ -51,19 +51,26 @@ func (t *table) Add(i interface{}) {
 }
 
 // Filter allows for printing a specific subset or ordering of fields
-func (t *table) Filter(fields []string) {
+func (t *Table) Filter(fields []string) {
 	t.filter = fields
 }
 
-func (t *table) Sort(sort bool) {
+func (t *Table) Sort(sort bool) {
 	t.sort = sort
 }
 
-func (t *table) Print() error {
+func (t *Table) Print() error {
 	return t.PrintWithAutoWrap(true)
 }
 
-func (t *table) PrintWithAutoWrap(auto bool) error {
+func (t *Table) PrintWithAutoWrap(auto bool) error {
+	if t.format.IsSerialized() {
+		for i := range t.objects {
+			serializer := FieldSerializer{format: t.format}
+			t.objects[i] = retag.Convert(t.objects[i], serializer)
+		}
+	}
+
 	for i := range t.objects {
 		hider := FieldHider{
 			format: t.format,
@@ -155,6 +162,6 @@ func (t *table) PrintWithAutoWrap(auto bool) error {
 	return nil
 }
 
-func (t *table) isList() bool {
+func (t *Table) isList() bool {
 	return t.resource != ""
 }

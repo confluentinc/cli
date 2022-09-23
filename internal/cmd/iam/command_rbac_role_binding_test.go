@@ -2,7 +2,6 @@ package iam
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -21,7 +20,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -45,7 +43,7 @@ type roleBindingTest struct {
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
 	mockedListUserResult    []*orgv1.User
-	expected                []listOut
+	expected                []roleBindingOut
 }
 
 type expectedListCmdArgs struct {
@@ -283,7 +281,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listOut{
+		expected: []roleBindingOut{
 			{
 				Principal: "User:u-epo7ml",
 				Role:      "MetricsViewer",
@@ -308,7 +306,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listOut{
+		expected: []roleBindingOut{
 			{
 				Principal: "User:u-123",
 				Role:      "MetricsViewer",
@@ -331,7 +329,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			},
 		},
 		mockedListUserResult: []*orgv1.User{},
-		expected: []listOut{
+		expected: []roleBindingOut{
 			{
 				Principal: "User:sa-123",
 				Role:      "MetricsViewer",
@@ -414,7 +412,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			Email:      "test@email.com",
 			ResourceId: v1.MockUserResourceId,
 		}},
-		expected: []listOut{
+		expected: []roleBindingOut{
 			{
 				Principal:    "User:u-123",
 				Role:         "CloudClusterAdmin",
@@ -470,25 +468,6 @@ var myRoleBindingListTests = []myRoleBindingTest{
 			},
 		},
 	},
-}
-
-func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockeRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
-	mockeListUserResult := make(chan []*orgv1.User)
-	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockeRoleBindingsResult, mockeListUserResult)
-
-		go func() {
-			mockeRoleBindingsResult <- tc.scopeRoleBindingMapping
-			mockeListUserResult <- tc.mockedListUserResult
-		}()
-		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
-		assert.Nil(suite.T(), err)
-		var actual []listOut
-		err = json.Unmarshal([]byte(output), &actual)
-		assert.Nil(suite.T(), err)
-		assert.Equal(suite.T(), tc.expected, actual)
-	}
 }
 
 var roleBindingCreateDeleteTests = []roleBindingTest{
