@@ -20,7 +20,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new pipeline.",
-		Args:  cobra.ExactArgs(0),
+		Args:  cobra.NoArgs,
 		RunE:  c.create,
 	}
 
@@ -51,14 +51,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)
 	if err != nil {
-		utils.Println(cmd, "Could not get Ksql Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	sr_cluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
-		utils.Println(cmd, "Could not get Schema Registry Cluster with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	if kafka_cluster.ID != ksqlCluster.KafkaClusterId {
@@ -69,8 +67,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	var client http.Client
 	jar, err := cookiejar.New(nil)
 	if err != nil {
-		utils.Println(cmd, "Could not update pipeline with error:"+err.Error())
-		return nil
+		return err
 	}
 
 	client = http.Client{
@@ -97,8 +94,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines", c.Context.GetCurrentEnvironmentId(), kafka_cluster.ID), bytesPostBody)
 	if err != nil {
-		utils.Println(cmd, "Could not create pipeline with error: "+string(err.Error()))
-		return nil
+		return err
 	}
 
 	req.AddCookie(cookie)
@@ -106,28 +102,25 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	resp, err := client.Do(req)
 	if err != nil {
-		utils.Println(cmd, "Could not create pipeline with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		utils.Println(cmd, "Could not create pipeline with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	var data map[string]interface{}
 	err = json.Unmarshal([]byte(string(body)), &data)
 	if err != nil {
-		utils.Println(cmd, "Could not create pipeline with error: "+err.Error())
-		return nil
+		return err
 	}
 
 	if resp.StatusCode == 200 && err == nil {
 		utils.Println(cmd, "Created pipeline: "+data["id"].(string))
 	} else {
 		if err != nil {
-			utils.Println(cmd, "Could not create pipeline with error: "+err.Error())
+			return err
 		} else if body != nil {
 			if data["title"] != "{}" {
 				utils.Println(cmd, data["title"].(string))
