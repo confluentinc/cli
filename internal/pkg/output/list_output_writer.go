@@ -13,7 +13,6 @@ import (
 	"github.com/tidwall/pretty"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type ListOutputWriter interface {
@@ -26,7 +25,7 @@ type ListOutputWriter interface {
 		Out - Create the output to the IO channel passed in during construction
 	*/
 	Out() error
-	GetOutputFormat() output
+	GetOutputFormat() Format
 	StableSort()
 }
 
@@ -125,9 +124,4 @@ func NewInvalidOutputFormatFlagError(format string) error {
 	errorMsg := fmt.Sprintf(errors.InvalidFlagValueErrorMsg, format, FlagName)
 	suggestionsMsg := fmt.Sprintf(errors.InvalidFlagValueSuggestions, FlagName, strings.Join(ValidFlagValues, ", "))
 	return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
-}
-
-// IsValidOutputString - returns whether a format string is a valid format (human, json, yaml)
-func IsValidOutputString(output string) bool {
-	return utils.Contains(ValidFlagValues, output)
 }

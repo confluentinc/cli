@@ -38,8 +38,6 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	} else if !output.IsValidOutputString(format) { // catch format flag
-		return output.NewInvalidOutputFormatFlagError(format)
 	}
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
