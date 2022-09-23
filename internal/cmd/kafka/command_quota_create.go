@@ -84,9 +84,9 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
 	}
 
-	quota, httpResp, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
+	quota, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

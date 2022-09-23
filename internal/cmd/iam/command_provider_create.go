@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -60,9 +59,9 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		Issuer:      identityproviderv2.PtrString(issuerUri),
 		JwksUri:     identityproviderv2.PtrString(jwksuri),
 	}
-	provider, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	provider, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

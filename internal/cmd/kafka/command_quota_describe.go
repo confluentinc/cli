@@ -3,8 +3,6 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -25,9 +23,9 @@ func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
-	quota, resp, err := c.V2Client.DescribeKafkaQuota(args[0])
+	quota, err := c.V2Client.DescribeKafkaQuota(args[0])
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

@@ -38,9 +38,9 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	quotas, resp, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
+	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 
 	// TODO use API for filtering by principal when it becomes available: https://confluentinc.atlassian.net/browse/KPLATFORM-733

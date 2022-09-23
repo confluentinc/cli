@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -67,9 +66,9 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

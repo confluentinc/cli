@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -30,9 +29,9 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityPoolProfile, httpResp, err := c.V2Client.GetIdentityPool(args[0], provider)
+	identityPoolProfile, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

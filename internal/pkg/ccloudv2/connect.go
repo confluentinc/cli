@@ -23,28 +23,32 @@ func (c *Client) connectApiContext() context.Context {
 	return context.WithValue(context.Background(), connectv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateConnector(environmentId, kafkaClusterId string, connect connectv1.InlineObject) (connectv1.ConnectV1Connector, *http.Response, error) {
+func (c *Client) CreateConnector(environmentId, kafkaClusterId string, connect connectv1.InlineObject) (connectv1.ConnectV1Connector, error) {
 	req := c.ConnectClient.ConnectorsV1Api.CreateConnectv1Connector(c.connectApiContext(), environmentId, kafkaClusterId).InlineObject(connect)
-	return c.ConnectClient.ConnectorsV1Api.CreateConnectv1ConnectorExecute(req)
+	resp, httpResp, err := c.ConnectClient.ConnectorsV1Api.CreateConnectv1ConnectorExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateOrUpdateConnectorConfig(connectorName, environmentId, kafkaClusterId string, configs map[string]string) (connectv1.ConnectV1Connector, *http.Response, error) {
+func (c *Client) CreateOrUpdateConnectorConfig(connectorName, environmentId, kafkaClusterId string, configs map[string]string) (connectv1.ConnectV1Connector, error) {
 	req := c.ConnectClient.ConnectorsV1Api.CreateOrUpdateConnectv1ConnectorConfig(c.connectApiContext(), connectorName, environmentId, kafkaClusterId).RequestBody(configs)
-	return c.ConnectClient.ConnectorsV1Api.CreateOrUpdateConnectv1ConnectorConfigExecute(req)
+	resp, httpResp, err := c.ConnectClient.ConnectorsV1Api.CreateOrUpdateConnectv1ConnectorConfigExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteConnector(connectorName, environmentId, kafkaClusterId string) (connectv1.InlineResponse200, *http.Response, error) {
+func (c *Client) DeleteConnector(connectorName, environmentId, kafkaClusterId string) (connectv1.InlineResponse200, error) {
 	req := c.ConnectClient.ConnectorsV1Api.DeleteConnectv1Connector(c.connectApiContext(), connectorName, environmentId, kafkaClusterId)
-	return c.ConnectClient.ConnectorsV1Api.DeleteConnectv1ConnectorExecute(req)
+	resp, httpResp, err := c.ConnectClient.ConnectorsV1Api.DeleteConnectv1ConnectorExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListConnectorsWithExpansions(environmentId, kafkaClusterId, expand string) (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+func (c *Client) ListConnectorsWithExpansions(environmentId, kafkaClusterId, expand string) (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
 	req := c.ConnectClient.ConnectorsV1Api.ListConnectv1ConnectorsWithExpansions(c.connectApiContext(), environmentId, kafkaClusterId).Expand(expand)
-	return c.ConnectClient.ConnectorsV1Api.ListConnectv1ConnectorsWithExpansionsExecute(req)
+	resp, httpResp, err := c.ConnectClient.ConnectorsV1Api.ListConnectv1ConnectorsWithExpansionsExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, _, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+	connectorExpansions, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
 	if err != nil {
 		return nil, err
 	}
@@ -59,28 +63,30 @@ func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClus
 }
 
 func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, _, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+	connectorExpansions, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
 	if err != nil {
 		return nil, err
 	}
 
 	for name, connector := range connectorExpansions {
 		if name == connectorName {
-			return &connector, nil
+			return &connector, err
 		}
 	}
 
 	return nil, errors.Errorf(errors.UnknownConnectorIdErrorMsg, connectorName)
 }
 
-func (c *Client) PauseConnector(connectorName, environmentId, kafkaClusterId string) (*http.Response, error) {
+func (c *Client) PauseConnector(connectorName, environmentId, kafkaClusterId string) error {
 	req := c.ConnectClient.LifecycleV1Api.PauseConnectv1Connector(c.connectApiContext(), connectorName, environmentId, kafkaClusterId)
-	return c.ConnectClient.LifecycleV1Api.PauseConnectv1ConnectorExecute(req)
+	httpResp, err := c.ConnectClient.LifecycleV1Api.PauseConnectv1ConnectorExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ResumeConnector(connectorName, environmentId, kafkaClusterId string) (*http.Response, error) {
+func (c *Client) ResumeConnector(connectorName, environmentId, kafkaClusterId string) error {
 	req := c.ConnectClient.LifecycleV1Api.ResumeConnectv1Connector(c.connectApiContext(), connectorName, environmentId, kafkaClusterId)
-	return c.ConnectClient.LifecycleV1Api.ResumeConnectv1ConnectorExecute(req)
+	httpResp, err := c.ConnectClient.LifecycleV1Api.ResumeConnectv1ConnectorExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListConnectorPlugins(environmentId, kafkaClusterId string) ([]connectv1.InlineResponse2002, *http.Response, error) {
@@ -88,7 +94,8 @@ func (c *Client) ListConnectorPlugins(environmentId, kafkaClusterId string) ([]c
 	return c.ConnectClient.PluginsV1Api.ListConnectv1ConnectorPluginsExecute(req)
 }
 
-func (c *Client) ValidateConnectorPlugin(pluginName, environmentId, kafkaClusterId string, configs map[string]string) (connectv1.InlineResponse2003, *http.Response, error) {
+func (c *Client) ValidateConnectorPlugin(pluginName, environmentId, kafkaClusterId string, configs map[string]string) (connectv1.InlineResponse2003, error) {
 	req := c.ConnectClient.PluginsV1Api.ValidateConnectv1ConnectorPlugin(c.connectApiContext(), pluginName, environmentId, kafkaClusterId).RequestBody(configs)
-	return c.ConnectClient.PluginsV1Api.ValidateConnectv1ConnectorPluginExecute(req)
+	resp, httpResp, err := c.ConnectClient.PluginsV1Api.ValidateConnectv1ConnectorPluginExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

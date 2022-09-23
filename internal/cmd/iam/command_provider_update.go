@@ -57,9 +57,9 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		update.Description = &description
 	}
 
-	identityProvider, httpResp, err := c.V2Client.UpdateIdentityProvider(update)
+	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

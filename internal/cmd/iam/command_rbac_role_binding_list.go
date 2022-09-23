@@ -238,13 +238,13 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	providers, err := c.V2Client.ListIdentityProviders()
 	if err != nil {
-		return nil, err
+		return map[string]string{}, err
 	}
 	poolToName := make(map[string]string)
 	for _, provider := range providers {
 		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
 		if err != nil {
-			return nil, err
+			return map[string]string{}, err
 		}
 		for _, pool := range pools {
 			poolToName["User:"+*pool.Id] = *pool.DisplayName
@@ -325,10 +325,8 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
-	poolToNameMap, err := c.getPoolToNameMap()
-	if err != nil {
-		return err
-	}
+	// TODO: Catch this error once Identity Providers goes GA
+	poolToNameMap, _ := c.getPoolToNameMap()
 
 	list := output.NewList(cmd, presource.RoleBinding)
 

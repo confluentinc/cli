@@ -51,7 +51,7 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field+" length should not exceed %d characters.", maxLen)
+		return fmt.Errorf("%s length should not exceed %d characters", field, maxLen)
 	}
 
 	return nil

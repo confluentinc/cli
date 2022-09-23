@@ -46,7 +46,8 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.PauseConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+	err = c.V2Client.PauseConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	if err != nil {
 		return err
 	}
 
