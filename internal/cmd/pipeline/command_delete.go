@@ -38,7 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Pipeline, args[0])
 	return nil
 }

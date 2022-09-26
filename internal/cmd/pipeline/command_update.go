@@ -63,7 +63,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		utils.Println(cmd, "Updated pipeline: "+args[0])
+		utils.Println(cmd, `Updated pipeline:  "%s"`, args[0])
 	}
 
 	if sqlFile != "" {
@@ -84,7 +84,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		utils.Println(cmd, "Replaced pipeline: "+args[0])
+		utils.Println(cmd, `Replaced pipeline:  "%s"`, args[0])
 	}
 	return nil
 }
