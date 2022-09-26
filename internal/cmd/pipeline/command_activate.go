@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -19,6 +20,12 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Request to activate a pipeline.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.activate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Request to activate a pipeline in Stream Designer",
+				Code: `confluent pipeline activate pipe-12345`,
+			},
+		),
 	}
 }
 

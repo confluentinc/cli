@@ -3,13 +3,14 @@ package pipeline
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/output"
+
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
@@ -24,11 +25,18 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Create a new pipeline.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Create a new pipeline in Stream Designer",
+				Code: `confluent pipeline create --name "test pipeline" --ksqldb-cluster "lkc-0000" --description "this is a test pipeline"`,
+			},
+		),
 	}
 
-	cmd.Flags().String("name", "", "Name for new pipeline.")
-	cmd.Flags().String("ksqldb-cluster", "", "KSQL DB cluster for new pipeline.")
-	cmd.Flags().String("description", "", "Description for new pipeline.")
+	pcmd.AddKSQLClusterFlag(cmd, c.AuthenticatedCLICommand)
+
+	cmd.Flags().String("name", "", "Name of the pipeline.")
+	cmd.Flags().String("description", "", "Description of the pipeline.")
 
 	_ = cmd.MarkFlagRequired("name")
 	_ = cmd.MarkFlagRequired("ksqldb-cluster")
@@ -40,7 +48,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	// get flag values
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	ksql, _ := cmd.Flags().GetString("ksqldb-cluster")
+	ksqldbCluster, _ := cmd.Flags().GetString("ksqldb-cluster")
 
 	// get kafka cluster
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
@@ -51,7 +59,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	// validate ksql id
 	ksqlReq := &schedv1.KSQLCluster{
 		AccountId: c.EnvironmentId(),
-		Id:        ksql,
+		Id:        ksqldbCluster,
 	}
 
 	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)
@@ -60,7 +68,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if kafkaCluster.ID != ksqlCluster.KafkaClusterId {
-		utils.Println(cmd, "KSQL DB Cluster not in Kafka Cluster")
+		return fmt.Errorf(`ksqlDB cluster "%s" is not in Kafka cluster "%s", ksqldbCluster`, kafkaCluster.ID)
 		return nil
 	}
 
@@ -78,7 +86,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	createPipeline := sdv1.SdV1Pipeline{
 		Name:                   sdv1.PtrString(name),
 		Description:            sdv1.PtrString(description),
-		KsqlId:                 sdv1.PtrString(ksql),
+		KsqlId:                 sdv1.PtrString(ksqldbCluster),
 		SchemaRegistryId:       sdv1.PtrString(srCluster.Id),
 		KafkaClusterEndpoint:   sdv1.PtrString(kafkaCluster.Bootstrap),
 		KsqlEndpoint:           sdv1.PtrString(ksqlCluster.Endpoint),

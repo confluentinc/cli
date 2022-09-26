@@ -1,15 +1,13 @@
 package pipeline
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"net/http/cookiejar"
-
+	// "io"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -19,68 +17,33 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Delete a pipeline.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Delete a pipeline in Stream Designer",
+				Code: `confluent pipeline delete pipe-12345`,
+			},
+		),
 	}
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
+	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	var client http.Client
-	jar, err := cookiejar.New(nil)
+	// call api
+	resp, err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
 
-	client = http.Client{
-		Jar: jar,
+	if resp.StatusCode != 200 {
+		utils.Printf(cmd, `Could not delete pipeline: "%s".`, args[0])
+		return nil
 	}
 
-	cookie := &http.Cookie{
-		Name:   "auth_token",
-		Value:  c.State.AuthToken,
-		MaxAge: 300,
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines/%s", c.Context.GetCurrentEnvironmentId(), cluster.ID, args[0]), nil)
-	if err != nil {
-		return err
-	}
-
-	req.AddCookie(cookie)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 202 && err == nil {
-		utils.Println(cmd, "Deleted pipeline: "+args[0])
-	} else {
-		utils.Print(cmd, "Could not delete pipeline: "+args[0])
-		var data map[string]interface{}
-		err = json.Unmarshal([]byte(string(body)), &data)
-		if err != nil {
-			return err
-		} else if body != nil {
-			var data map[string]interface{}
-			err = json.Unmarshal([]byte(string(body)), &data)
-			if err != nil {
-				return err
-			}
-			if data["title"] != "{}" {
-				utils.Println(cmd, data["title"].(string))
-			}
-			utils.Println(cmd, data["action"].(string))
-		}
-	}
-
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Pipeline, args[0])
 	return nil
 }
