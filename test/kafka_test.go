@@ -384,8 +384,6 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/topic/list-yaml.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
-		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello --no-auth", kafkaRestURL), fixture: "kafka/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
 	}
 
 	for _, clitest := range tests {

@@ -274,8 +274,6 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentListTopics() {
 		{input: "list --url http://localhos:8082", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"no such host"}, message: "incorrect host in url should throw ierror"},
 		{input: "list --url http://localhost:808", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"connection refused"}, message: "incorrect port in url should throw error"},
 		{input: "list --url http://localhost:808a", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"invalid port"}, message: "invalid url should throw error"},
-		// Invalid format string should throw error
-		{input: "list --url http://localhost:8082 -o hello --no-auth", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"invalid value", "--output", "hello"}, message: "invalid format string should throw error"},
 	}
 
 	// Test test cases

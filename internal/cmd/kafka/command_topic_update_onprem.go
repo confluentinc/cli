@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -36,14 +35,8 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
-	// Parse Argument
 	topicName := args[0]
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	} else if !output.IsValidOutputString(format) { // catch format flag
-		return output.NewInvalidOutputFormatFlagError(format)
-	}
+
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -73,38 +66,32 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		}
 		i++
 	}
-	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName,
-		&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
-		})
+
+	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
+		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
+	}
+	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
-	if format == output.Human.String() {
-		// no errors (config update successful)
-		utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
-		// Print Updated Configs
-		tableLabels := []string{"Name", "Value"}
-		tableEntries := make([][]string, len(data))
-		for i, config := range data {
-			tableEntries[i] = printer.ToRow(
-				&struct {
-					Name  string
-					Value string
-				}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
-		}
-		sort.Slice(tableEntries, func(i int, j int) bool {
-			return tableEntries[i][0] < tableEntries[j][0]
-		})
-		printer.RenderCollectionTable(tableEntries, tableLabels)
-	} else { //json or yaml
-		sort.Slice(data, func(i int, j int) bool {
+
+	if output.GetFormat(cmd).IsSerialized() {
+		sort.Slice(data, func(i, j int) bool {
 			return data[i].Name < data[j].Name
 		})
-		err = output.StructuredOutput(format, data)
-		if err != nil {
-			return err
-		}
+		return output.StructuredOutput(cmd, data)
 	}
-	return nil
+
+	// no errors (config update successful)
+	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
+	// Print Updated Configs
+	list := output.NewList(cmd)
+	for _, config := range data {
+		list.Add(&configOut{
+			Name:  config.Name,
+			Value: *config.Value,
+		})
+	}
+	list.Filter([]string{"Name", "Value"})
+	return list.Print()
 }
