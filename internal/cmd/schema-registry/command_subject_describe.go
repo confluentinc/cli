@@ -12,8 +12,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
+
+type versionOut struct {
+	Version int32 `human:"Version" serialized:"version"`
+}
 
 func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -53,25 +58,15 @@ func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.API
 		return err
 	}
 
-	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
+	opts := &srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
+	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, opts)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	list := output.NewList(cmd, resource.SubjectVersion)
+	for _, version := range versions {
+		list.Add(&versionOut{Version: version})
 	}
-
-	if outputOption == output.Human.String() {
-		printVersions(versions)
-	} else {
-		structuredOutput := &struct{ Version []int32 }{versions}
-		fields := []string{"Version"}
-		structuredRenames := map[string]string{"Version": "version"}
-		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
-	}
-
-	return nil
+	return list.Print()
 }

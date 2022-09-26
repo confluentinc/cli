@@ -7,31 +7,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var (
-	lagFields               = []string{"ClusterId", "ConsumerGroupId", "Lag", "LogEndOffset", "CurrentOffset", "ConsumerId", "InstanceId", "ClientId", "TopicName", "PartitionId"}
-	lagListHumanLabels      = []string{"Cluster", "ConsumerGroup", "Lag", "LogEndOffset", "CurrentOffset", "Consumer", "Instance", "Client", "Topic", "Partition"}
-	lagListStructuredLabels = []string{"cluster", "consumer_group", "lag", "log_end_offset", "current_offset", "consumer", "instance", "client", "topic", "partition"}
-	lagGetHumanRenames      = map[string]string{
-		"ClusterId":       "Cluster",
-		"ConsumerGroupId": "ConsumerGroup",
-		"ConsumerId":      "Consumer",
-		"InstanceId":      "Instance",
-		"ClientId":        "Client",
-		"TopicName":       "Topic",
-		"PartitionId":     "Partition"}
-	lagGetStructuredRenames = map[string]string{
-		"ClusterId":       "cluster",
-		"ConsumerGroupId": "consumer_group",
-		"Lag":             "lag",
-		"LogEndOffset":    "log_end_offset",
-		"CurrentOffset":   "current_offset",
-		"ConsumerId":      "consumer",
-		"InstanceId":      "instance",
-		"ClientId":        "client",
-		"TopicName":       "topic",
-		"PartitionId":     "partition"}
-)
-
 type consumerGroupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
@@ -60,31 +35,6 @@ type consumerGroupOut struct {
 	IsSimple          bool   `human:"Is Simple" serialized:"simple"`
 	PartitionAssignor string `human:"Partition Assignor" serialized:"partition_assignor"`
 	State             string `human:"State" serialized:"state"`
-}
-
-type lagSummaryStruct struct {
-	ClusterId         string
-	ConsumerGroupId   string
-	TotalLag          int64
-	MaxLag            int64
-	MaxLagConsumerId  string
-	MaxLagInstanceId  string
-	MaxLagClientId    string
-	MaxLagTopicName   string
-	MaxLagPartitionId int32
-}
-
-type lagDataStruct struct {
-	ClusterId       string
-	ConsumerGroupId string
-	Lag             int64
-	LogEndOffset    int64
-	CurrentOffset   int64
-	ConsumerId      string
-	InstanceId      string
-	ClientId        string
-	TopicName       string
-	PartitionId     int32
 }
 
 func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {

@@ -8,35 +8,12 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-var (
-	consumerShareListFields           = []string{"Id", "ProviderName", "Status", "SharedResourceId", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expires At"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
-)
-
-var (
-	consumerHumanLabelMap = map[string]string{
-		"Id":               "ID",
-		"ProviderName":     "Provider Name",
-		"Status":           "Status",
-		"SharedResourceId": "Shared Resource ID",
-		"InviteExpiresAt":  "Invite Expires At",
-	}
-	consumerStructuredLabelMap = map[string]string{
-		"Id":               "id",
-		"ProviderName":     "provider_name",
-		"Status":           "status",
-		"SharedResourceId": "shared_resource_id",
-		"InviteExpiresAt":  "invite_expires_at",
-	}
-)
-
-type consumerShare struct {
-	Id               string
-	ProviderName     string
-	Status           string
-	SharedResourceId string
-	InviteExpiresAt  time.Time
+type shareOut struct {
+	Id               string    `human:"ID" serialized:"id"`
+	ProviderName     string    `human:"Provider Name" serialized:"provider_name"`
+	Status           string    `human:"Status" serialized:"status"`
+	SharedResourceId string    `human:"Shared Resource ID" serialized:"shared_resource_id"`
+	InviteExpiresAt  time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -77,9 +54,9 @@ func (c *command) autocompleteConsumerShares() []string {
 	return suggestions
 }
 
-func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
+func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *shareOut {
 	sharedResource := share.GetSharedResource()
-	return &consumerShare{
+	return &shareOut{
 		Id:               share.GetId(),
 		ProviderName:     share.GetProviderUserName(),
 		Status:           share.GetStatus(),
