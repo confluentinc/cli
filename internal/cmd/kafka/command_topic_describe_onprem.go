@@ -35,10 +35,7 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
+
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -105,37 +102,35 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 			topicData.Configs[config.Name] = ""
 		}
 	}
+
 	// Print topic info
-	if format == output.Human.String() { // human output
-		// Output partitions info
-		utils.Printf(cmd, "Topic: %s\nPartitionCount: %d\nReplicationFactor: %d\n\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
-		partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-		partitionsTableEntries := make([][]string, topicData.PartitionCount)
-		for i, partition := range topicData.Partitions {
-			partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
-		}
-		printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
-		// Output config info
-		utils.Print(cmd, "\nConfiguration\n\n")
-		configsTableLabels := []string{"Name", "Value"}
-		configsTableEntries := make([][]string, len(topicData.Configs))
-		i := 0
-		for name, value := range topicData.Configs {
-			configsTableEntries[i] = printer.ToRow(&struct {
-				name  string
-				value string
-			}{name: name, value: value}, []string{"name", "value"})
-			i++
-		}
-		sort.Slice(configsTableEntries, func(i int, j int) bool {
-			return configsTableEntries[i][0] < configsTableEntries[j][0]
-		})
-		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
-	} else { // machine output (json or yaml)
-		err = output.StructuredOutput(format, topicData)
-		if err != nil {
-			return err
-		}
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.StructuredOutput(cmd, topicData)
 	}
+
+	// Output partitions info
+	utils.Printf(cmd, "Topic: %s\nPartitionCount: %d\nReplicationFactor: %d\n\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
+	partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
+	partitionsTableEntries := make([][]string, topicData.PartitionCount)
+	for i, partition := range topicData.Partitions {
+		partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
+	}
+	printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
+	// Output config info
+	utils.Print(cmd, "\nConfiguration\n\n")
+	configsTableLabels := []string{"Name", "Value"}
+	configsTableEntries := make([][]string, len(topicData.Configs))
+	i := 0
+	for name, value := range topicData.Configs {
+		configsTableEntries[i] = printer.ToRow(&struct {
+			name  string
+			value string
+		}{name: name, value: value}, []string{"name", "value"})
+		i++
+	}
+	sort.Slice(configsTableEntries, func(i int, j int) bool {
+		return configsTableEntries[i][0] < configsTableEntries[j][0]
+	})
+	printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
 	return nil
 }

@@ -383,8 +383,6 @@ const (
 	// Flag Errors
 	FlagRequiredErrorMsg              = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"

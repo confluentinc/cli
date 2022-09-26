@@ -49,11 +49,6 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -92,12 +87,12 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if format == output.Human.String() {
-		c.printHumanUpdate(all, clusterId, brokerId, data)
-		return nil
+	if output.GetFormat(cmd).IsSerialized() {
+		return c.printStructuredUpdate(cmd, data)
 	}
 
-	return c.printStructuredUpdate(format, data)
+	c.printHumanUpdate(all, clusterId, brokerId, data)
+	return nil
 }
 
 func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, data kafkarestv3.AlterConfigBatchRequestData) {
@@ -121,7 +116,7 @@ func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId in
 	printer.RenderCollectionTable(tableEntries, tableLabels)
 }
 
-func (c *brokerCommand) printStructuredUpdate(format string, data kafkarestv3.AlterConfigBatchRequestData) error {
+func (c *brokerCommand) printStructuredUpdate(cmd *cobra.Command, data kafkarestv3.AlterConfigBatchRequestData) error {
 	type printConfig struct {
 		Name  string `json:"name" yaml:"name"`
 		Value string `json:"value,omitempty" yaml:"value,omitempty"`
@@ -136,5 +131,5 @@ func (c *brokerCommand) printStructuredUpdate(format string, data kafkarestv3.Al
 	sort.Slice(printConfigs, func(i, j int) bool {
 		return printConfigs[i].Name < printConfigs[j].Name
 	})
-	return output.StructuredOutput(format, printConfigs)
+	return output.StructuredOutput(cmd, printConfigs)
 }
