@@ -48,7 +48,7 @@ func TestPromoListEmpty(t *testing.T) {
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "list")
 	require.NoError(t, err)
-	require.Equal(t, "No promo codes found.\n", out)
+	require.Equal(t, "None found.\n", out)
 }
 
 func TestFormatBalance(t *testing.T) {

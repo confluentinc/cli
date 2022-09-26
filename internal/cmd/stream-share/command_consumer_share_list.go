@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newConsumerShareListCommand() *cobra.Command {
@@ -41,7 +40,7 @@ func (c *command) listConsumerShares(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd, resource.ConsumerShare)
+	list := output.NewList(cmd)
 
 	for _, share := range consumerShares {
 		list.Add(c.buildConsumerShare(share))

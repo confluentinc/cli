@@ -6,7 +6,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
@@ -64,7 +63,7 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	list := output.NewList(cmd, resource.ClusterLink)
+	list := output.NewList(cmd)
 
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics && len(data.TopicsNames) > 0 {

@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -88,7 +87,7 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 		data = parseBrokerConfigData(brokerConfig)
 	}
 
-	list := output.NewList(cmd, resource.BrokerConfiguration)
+	list := output.NewList(cmd)
 
 	for _, entry := range data {
 		if output.GetFormat(cmd) == output.Human {

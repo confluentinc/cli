@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityPoolCommand) newListCommand() *cobra.Command {
@@ -35,7 +34,7 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd, resource.Pool)
+	list := output.NewList(cmd)
 
 	for _, pool := range identityPools {
 		list.Add(&identityPoolOut{

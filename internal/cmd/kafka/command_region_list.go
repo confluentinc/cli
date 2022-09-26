@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *regionCommand) newListCommand() *cobra.Command {
@@ -34,7 +33,7 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd, resource.Region)
+	list := output.NewList(cmd)
 	for _, region := range regions {
 		list.Add(region)
 	}

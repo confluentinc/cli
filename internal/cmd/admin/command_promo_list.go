@@ -10,7 +10,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -40,7 +39,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd, resource.PromoCode)
+	list := output.NewList(cmd)
 
 	for _, code := range codes {
 		isSerialized := output.GetFormat(cmd).IsSerialized()

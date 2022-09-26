@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -96,7 +95,7 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		versions = []int32{v}
 	}
 
-	list := output.NewList(cmd, resource.SubjectVersion)
+	list := output.NewList(cmd)
 	for _, version := range versions {
 		list.Add(&versionOut{Version: version})
 	}

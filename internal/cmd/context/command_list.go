@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type listOut struct {
@@ -31,7 +30,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	list := output.NewList(cmd, resource.Context)
+	list := output.NewList(cmd)
 
 	for _, context := range c.Config.Contexts {
 		isCurrent := context.Name == c.Config.CurrentContext

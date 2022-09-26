@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *mirrorCommand) newListCommand() *cobra.Command {
@@ -81,7 +80,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.MirrorTopic)
+	list := output.NewList(cmd)
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
 		var maxLag int64 = 0

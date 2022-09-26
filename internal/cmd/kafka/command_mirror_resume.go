@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *mirrorCommand) newResumeCommand() *cobra.Command {
@@ -78,7 +77,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 }
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
-	list := output.NewList(cmd, resource.MirrorTopic)
+	list := output.NewList(cmd)
 
 	for _, result := range results.Data {
 		var errorMessage string

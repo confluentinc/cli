@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *lagCommand) newListCommand() *cobra.Command {
@@ -44,7 +43,7 @@ func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.ConsumerLag)
+	list := output.NewList(cmd)
 
 	for _, lagData := range lagSummaryResp.Data {
 		list.Add(convertLagToStruct(lagData))

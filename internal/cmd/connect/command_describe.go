@@ -92,7 +92,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	}
 
 	utils.Println(cmd, "\n\nTask Level Details")
-	list := output.NewList(cmd, "task")
+	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
 		list.Add(&taskDescribeOut{task.Id, task.State})
 	}
@@ -101,7 +101,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	}
 
 	utils.Println(cmd, "\n\nConfiguration Details")
-	list = output.NewList(cmd, "config")
+	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
 		list.Add(&configDescribeOut{name, value})
 	}

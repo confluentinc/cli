@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type brokerOut struct {
@@ -47,7 +46,7 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	list := output.NewList(cmd, resource.Broker)
+	list := output.NewList(cmd)
 
 	for _, data := range brokersGetResp.Data {
 		broker := &brokerOut{

@@ -17,22 +17,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type kind int
-
-const (
-	table kind = iota
-	mapping
-	list
-)
-
 type Table struct {
-	kind     kind
-	writer   io.Writer
-	resource string
-	format   Format
-	objects  []interface{}
-	filter   []string
-	sort     bool
+	isList  bool
+	writer  io.Writer
+	format  Format
+	objects []interface{}
+	filter  []string
+	sort    bool
 }
 
 // NewTable creates a table for printing a single object.
@@ -43,29 +34,19 @@ func NewTable(cmd *cobra.Command) *Table {
 	}
 }
 
-// NewMapping creates a table for printing key-value pairs.
-func NewMapping(cmd *cobra.Command, resource string) *Table {
-	table := NewTable(cmd)
-	table.kind = mapping
-	table.resource = resource
-	return table
-}
-
 // NewList creates a table for printing multiple objects.
-func NewList(cmd *cobra.Command, resource string) *Table {
+func NewList(cmd *cobra.Command) *Table {
 	table := NewTable(cmd)
-	table.kind = list
-	table.resource = resource
+	table.isList = true
 	table.sort = true
 	return table
 }
 
 func (t *Table) Add(i interface{}) {
-	switch t.kind {
-	case table, mapping:
-		t.objects = []interface{}{i}
-	case list:
+	if t.isList {
 		t.objects = append(t.objects, i)
+	} else {
+		t.objects = []interface{}{i}
 	}
 }
 
@@ -83,7 +64,7 @@ func (t *Table) Print() error {
 }
 
 func (t *Table) PrintWithAutoWrap(auto bool) error {
-	if t.kind != mapping {
+	if !t.isMap() {
 		if t.format.IsSerialized() {
 			for i := range t.objects {
 				serializer := FieldSerializer{format: t.format}
@@ -108,7 +89,7 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 
 				si := fmt.Sprintf("%v", vi)
 				sj := fmt.Sprintf("%v", vj)
-			
+
 				if si != sj {
 					return si < sj
 				}
@@ -119,16 +100,13 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 
 	if t.format.IsSerialized() {
 		var v interface{}
-		switch t.kind {
-		case table:
-			v = t.objects[0]
-		case mapping:
-			v = t.objects[0].(map[string]string)
-		case list:
+		if t.isList {
 			v = t.objects
 			if len(t.objects) == 0 {
 				v = []interface{}{}
 			}
+		} else {
+			v = t.objects[0]
 		}
 
 		switch t.format {
@@ -145,34 +123,20 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 	}
 
 	isEmpty := false
-	switch t.kind {
-	case list:
+	if t.isList {
 		isEmpty = len(t.objects) == 0
-	case mapping:
+	} else if t.isMap() {
 		isEmpty = len(t.objects[0].(map[string]string)) == 0
 	}
 	if isEmpty {
-		_, err := fmt.Fprintf(t.writer, "No %ss found.\n", t.resource)
+		_, err := fmt.Fprintln(t.writer, "None found.")
 		return err
 	}
 
 	w := tablewriter.NewWriter(t.writer)
 	w.SetAutoWrapText(auto)
 
-	switch t.kind {
-	case table:
-		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
-			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
-			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
-			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
-				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
-			}
-		}
-	case mapping:
-		for k, v := range t.objects[0].(map[string]string) {
-			w.Append([]string{k, v})
-		}
-	case list:
+	if t.isList {
 		var header []string
 		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
@@ -195,9 +159,30 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			}
 			w.Append(row)
 		}
+	} else if t.isMap() {
+		for k, v := range t.objects[0].(map[string]string) {
+			w.Append([]string{k, v})
+		}
+	} else {
+		for i := 0; i < reflect.TypeOf(t.objects[0]).Elem().NumField(); i++ {
+			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
+			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
+			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
+				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
+			}
+		}
 	}
 
 	w.Render()
 
 	return nil
+}
+
+func (t *Table) isMap() bool {
+	if len(t.objects) == 0 {
+		return false
+	}
+
+	_, ok := t.objects[0].(map[string]string)
+	return ok
 }

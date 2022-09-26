@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type roleBindingListOut struct {
@@ -156,7 +155,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	list := output.NewList(cmd, presource.RoleBinding)
+	list := output.NewList(cmd)
 
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
@@ -327,7 +326,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 	// TODO: Catch this error once Identity Providers goes GA
 	poolToNameMap, _ := c.getPoolToNameMap()
 
-	list := output.NewList(cmd, presource.RoleBinding)
+	list := output.NewList(cmd)
 
 	for _, principal := range principals {
 		row := &roleBindingListOut{Principal: principal}
@@ -378,7 +377,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 		return err
 	}
 
-	list := output.NewList(cmd, presource.RoleBinding)
+	list := output.NewList(cmd)
 
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
@@ -485,7 +484,7 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 		}
 	}
 
-	list := output.NewList(cmd, presource.RoleBinding)
+	list := output.NewList(cmd)
 
 	for _, principal := range principals {
 		list.Add(&roleBindingOut{Principal: principal})

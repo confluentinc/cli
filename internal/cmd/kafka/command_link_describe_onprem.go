@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
@@ -41,7 +40,7 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	list := output.NewList(cmd, resource.ClusterLinkConfiguration)
+	list := output.NewList(cmd)
 
 	if len(listLinkConfigsRespData.Data) == 0 {
 		return list.Print()

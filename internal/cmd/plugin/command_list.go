@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -41,7 +40,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		utils.ErrPrintln(cmd, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 
-	list := output.NewList(cmd, resource.Plugin)
+	list := output.NewList(cmd)
 
 	var overshadowedPlugins, nameConflictPlugins []*out
 	for name, pathList := range pluginMap {

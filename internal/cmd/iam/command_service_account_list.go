@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newListCommand() *cobra.Command {
@@ -27,7 +26,7 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	list := output.NewList(cmd, resource.ServiceAccount)
+	list := output.NewList(cmd)
 
 	for _, serviceAccount := range serviceAccounts {
 		list.Add(&serviceAccountOut{

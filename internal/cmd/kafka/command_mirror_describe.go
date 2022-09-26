@@ -7,7 +7,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
@@ -61,7 +60,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.MirrorTopic)
+	list := output.NewList(cmd)
 
 	for _, partitionLag := range mirror.MirrorLags {
 		list.Add(&mirrorOut{

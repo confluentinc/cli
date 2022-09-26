@@ -12,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -101,7 +100,7 @@ func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 }
 
 func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclBinding) error {
-	list := output.NewList(cmd, resource.Acl)
+	list := output.NewList(cmd)
 
 	for _, binding := range aclBindings {
 		list.Add(&out{

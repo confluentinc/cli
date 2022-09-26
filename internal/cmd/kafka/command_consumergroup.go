@@ -32,7 +32,7 @@ type consumerGroupOut struct {
 	ClusterId         string `human:"Cluster" serialized:"cluster"`
 	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
 	Coordinator       string `human:"Coordinator" serialized:"coordinator"`
-	IsSimple          bool   `human:"Is Simple" serialized:"simple"`
+	IsSimple          bool   `human:"Simple" serialized:"simple"`
 	PartitionAssignor string `human:"Partition Assignor" serialized:"partition_assignor"`
 	State             string `human:"State" serialized:"state"`
 }

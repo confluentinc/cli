@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type linkConfigurationOut struct {
@@ -55,7 +54,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.ClusterLinkConfiguration)
+	list := output.NewList(cmd)
 
 	if len(listLinkConfigsRespData.Data) == 0 {
 		return list.Print()

@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *partitionCommand) newListCommand() *cobra.Command {
@@ -54,7 +53,7 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	list := output.NewList(cmd, resource.Partition)
+	list := output.NewList(cmd)
 
 	for _, partition := range partitionListResp.Data {
 		list.Add(&partitionOut{

@@ -8,7 +8,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -45,7 +44,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return nil
 	}
 
-	list := output.NewList(cmd, resource.Invitation)
+	list := output.NewList(cmd)
 
 	for _, invitation := range invitations {
 		user := &orgv1.User{ResourceId: invitation.UserResourceId}

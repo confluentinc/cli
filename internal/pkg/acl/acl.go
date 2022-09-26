@@ -49,7 +49,7 @@ type AclRequestDataWithError struct {
 }
 
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
-	list := output.NewList(cmd, resource.Acl)
+	list := output.NewList(cmd)
 
 	for _, acl := range acls {
 		list.Add(&out{
@@ -67,7 +67,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.Acl
 }
 
 func PrintACLs(cmd *cobra.Command, acls []*schedv1.ACLBinding) error {
-	list := output.NewList(cmd, resource.Acl)
+	list := output.NewList(cmd)
 
 	for _, acl := range acls {
 		list.Add(&out{
@@ -301,7 +301,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 }
 
 func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []cckafkarestv3.AclData, idMap map[int32]string) error {
-	list := output.NewList(cmd, resource.Acl)
+	list := output.NewList(cmd)
 
 	for _, acl := range acls {
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Principal, idMap)
@@ -326,7 +326,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []
 }
 
 func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*schedv1.ACLBinding, idMap map[int32]string) error {
-	list := output.NewList(cmd, resource.Acl)
+	list := output.NewList(cmd)
 
 	for _, acl := range acls {
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, idMap)

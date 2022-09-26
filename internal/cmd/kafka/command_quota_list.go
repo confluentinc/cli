@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *quotaCommand) newListCommand() *cobra.Command {
@@ -51,7 +50,7 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		quotas = filterQuotasByPrincipal(quotas, principal)
 	}
 
-	list := output.NewList(cmd, resource.ClientQuota)
+	list := output.NewList(cmd)
 
 	format := output.GetFormat(cmd)
 	for _, quota := range quotas {

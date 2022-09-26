@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type brokerTaskData struct {
@@ -93,7 +92,7 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	list := output.NewList(cmd, resource.BrokerTask)
+	list := output.NewList(cmd)
 
 	for _, entry := range taskData.Data {
 		list.Add(parseBrokerTaskData(entry))

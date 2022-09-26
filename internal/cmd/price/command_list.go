@@ -12,7 +12,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -232,7 +231,7 @@ func mapToSlice(m map[string]string) []string {
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {
-	list := output.NewList(cmd, resource.Price)
+	list := output.NewList(cmd)
 
 	for _, row := range rows {
 		if output.GetFormat(cmd) == output.Human {

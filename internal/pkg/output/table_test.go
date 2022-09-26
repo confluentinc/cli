@@ -199,6 +199,68 @@ func TestTable_OmitEmpty(t *testing.T) {
 	}
 }
 
+func TestTable_Map(t *testing.T) {
+	tests := map[string][]string{
+		Human.String(): {
+			"+---+-------+",
+			"| A | apple |",
+			"+---+-------+",
+		},
+		JSON.String(): {
+			"{",
+			`  "A": "apple"`,
+			"}",
+		},
+		YAML.String(): {
+			"A: apple",
+		},
+	}
+
+	for format, expected := range tests {
+		buf := new(bytes.Buffer)
+		cmd := &cobra.Command{}
+		cmd.Flags().String("output", format, "")
+		cmd.SetOut(buf)
+
+		table := NewTable(cmd)
+		table.Add(map[string]string{"A": "apple"})
+
+		err := table.Print()
+		require.NoError(t, err)
+
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+	}
+}
+
+func TestTable_EmptyMap(t *testing.T) {
+	tests := map[string][]string{
+		Human.String(): {
+			"None found.",
+		},
+		JSON.String(): {
+			"{}",
+		},
+		YAML.String(): {
+			"{}",
+		},
+	}
+
+	for format, expected := range tests {
+		buf := new(bytes.Buffer)
+		cmd := &cobra.Command{}
+		cmd.Flags().String("output", format, "")
+		cmd.SetOut(buf)
+
+		table := NewTable(cmd)
+		table.Add(map[string]string{})
+
+		err := table.Print()
+		require.NoError(t, err)
+
+		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
+	}
+}
+
 func TestList(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
@@ -252,7 +314,7 @@ func TestList(t *testing.T) {
 func TestList_Empty(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
-			"No clusters found.",
+			"None found.",
 		},
 		JSON.String(): {
 			"[]",
@@ -273,7 +335,7 @@ func testList(t *testing.T, format string, objects []interface{}, expected []str
 	cmd.Flags().String("output", format, "")
 	cmd.SetOut(buf)
 
-	list := NewList(cmd, "cluster")
+	list := NewList(cmd)
 	for _, object := range objects {
 		list.Add(object)
 	}
@@ -282,69 +344,4 @@ func testList(t *testing.T, format string, objects []interface{}, expected []str
 	require.NoError(t, err)
 
 	require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
-}
-
-func TestMapping(t *testing.T) {
-	tests := map[string][]string{
-		Human.String(): {
-			"+---+--------+",
-			"| A | apple  |",
-			"| B | banana |",
-			"+---+--------+",
-		},
-		JSON.String(): {
-			"{",
-			`  "A": "apple",`,
-			`  "B": "banana"`,
-			"}",
-		},
-		YAML.String(): {
-			"A: apple",
-			"B: banana",
-		},
-	}
-
-	for format, expected := range tests {
-		buf := new(bytes.Buffer)
-		cmd := &cobra.Command{}
-		cmd.Flags().String("output", format, "")
-		cmd.SetOut(buf)
-
-		mapping := NewMapping(cmd, "configuration")
-		mapping.Add(map[string]string{"A": "apple", "B": "banana"})
-
-		err := mapping.Print()
-		require.NoError(t, err)
-
-		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
-	}
-}
-
-func TestMapping_Empty(t *testing.T) {
-	tests := map[string][]string{
-		Human.String(): {
-			"No configurations found.",
-		},
-		JSON.String(): {
-			"{}",
-		},
-		YAML.String(): {
-			"{}",
-		},
-	}
-
-	for format, expected := range tests {
-		buf := new(bytes.Buffer)
-		cmd := &cobra.Command{}
-		cmd.Flags().String("output", format, "")
-		cmd.SetOut(buf)
-
-		mapping := NewMapping(cmd, "configuration")
-		mapping.Add(map[string]string{})
-
-		err := mapping.Print()
-		require.NoError(t, err)
-
-		require.Equal(t, strings.Join(expected, "\n")+"\n", buf.String(), format)
-	}
 }

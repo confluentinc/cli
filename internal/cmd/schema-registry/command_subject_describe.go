@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -64,7 +63,7 @@ func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.API
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.SubjectVersion)
+	list := output.NewList(cmd)
 	for _, version := range versions {
 		list.Add(&versionOut{Version: version})
 	}

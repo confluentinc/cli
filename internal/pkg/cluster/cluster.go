@@ -10,7 +10,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 const (
@@ -36,7 +35,7 @@ func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
 		return output.StructuredOutput(format.String(), clusterInfos)
 	}
 
-	list := output.NewList(cmd, resource.Cluster)
+	list := output.NewList(cmd)
 	for _, clusterInfo := range clusterInfos {
 		cluster, err := createPrettyCluster(clusterInfo)
 		if err != nil {

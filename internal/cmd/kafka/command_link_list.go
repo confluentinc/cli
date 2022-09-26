@@ -7,7 +7,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 const includeTopicsFlagName = "include-topics"
@@ -76,7 +75,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	list := output.NewList(cmd, resource.ClusterLink)
+	list := output.NewList(cmd)
 
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics && len(*data.TopicsNames) > 0 {

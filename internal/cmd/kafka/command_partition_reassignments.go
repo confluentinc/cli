@@ -12,6 +12,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type reassignmentsOut struct {
+	ClusterId        string  `human:"Cluster ID" serialized:"cluster_id"`
+	TopicName        string  `human:"Topic Name" serialized:"topic_name"`
+	PartitionId      int32   `human:"Partition ID" serialized:"partition_id"`
+	AddingReplicas   []int32 `human:"Adding Replicas" serialized:"adding_replicas"`
+	RemovingReplicas []int32 `human:"Removing Replicas" serialized:"removing_replicas"`
+}
+
 func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-reassignments [id]",
@@ -82,26 +90,17 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "TopicName", "PartitionId", "AddingReplicas", "RemovingReplicas"}, []string{"Cluster ID", "Topic Name", "Partition ID", "Adding Replicas", "Removing Replicas"}, []string{"cluster_id", "topic_name", "partition_id", "adding_replicas", "removing_replicas"})
-	if err != nil {
-		return err
-	}
-	for _, data := range reassignmentListResp.Data {
-		s := &struct {
-			ClusterId        string
-			TopicName        string
-			PartitionId      int32
-			AddingReplicas   []int32
-			RemovingReplicas []int32
-		}{
-			ClusterId:        data.ClusterId,
-			TopicName:        data.TopicName,
-			PartitionId:      data.PartitionId,
-			AddingReplicas:   data.AddingReplicas,
-			RemovingReplicas: data.RemovingReplicas,
-		}
-		outputWriter.AddElement(s)
+	list := output.NewList(cmd)
+
+	for _, reassignment := range reassignmentListResp.Data {
+		list.Add(&reassignmentsOut{
+			ClusterId:        reassignment.ClusterId,
+			TopicName:        reassignment.TopicName,
+			PartitionId:      reassignment.PartitionId,
+			AddingReplicas:   reassignment.AddingReplicas,
+			RemovingReplicas: reassignment.RemovingReplicas,
+		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

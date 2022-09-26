@@ -8,7 +8,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newListCommand() *cobra.Command {
@@ -54,7 +53,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	list := output.NewList(cmd, resource.KafkaCluster)
+	list := output.NewList(cmd)
 
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
