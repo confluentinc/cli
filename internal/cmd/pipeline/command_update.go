@@ -63,22 +63,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode == 200 && err == nil {
-			utils.Println(cmd, "Updated pipeline: "+args[0])
-		} else {
-			utils.Print(cmd, "Could not update pipeline code: "+args[0])
-			if err != nil {
-				return err
-			} else if body != nil {
-				utils.Print(cmd, " with error: "+string(body))
-				return nil
-			}
-		}
+		utils.Println(cmd, "Updated pipeline: "+args[0])
 	}
 
 	if sqlFile != "" {
@@ -99,23 +84,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode == 200 && err == nil {
-			utils.Println(cmd, "Replaced pipeline: "+args[0])
-		} else {
-			utils.Print(cmd, "Could not replace pipeline code: "+args[0])
-			if err != nil {
-				return err
-			} else if body != nil {
-				utils.Print(cmd, " with error: "+string(body))
-				return nil
-			}
-
-		}
+		utils.Println(cmd, "Replaced pipeline: "+args[0])
 	}
 	return nil
 }

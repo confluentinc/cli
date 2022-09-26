@@ -38,12 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	if resp.StatusCode != 200 {
-		utils.Printf(cmd, `Could not delete pipeline: "%s".`, args[0])
-		return nil
-	}
-
+	
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Pipeline, args[0])
 	return nil
 }
