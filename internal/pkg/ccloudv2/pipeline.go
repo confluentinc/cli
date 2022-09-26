@@ -2,9 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
 
 	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newSdClient(url, userAgent string, unsafeTrace bool) *sdv1.APIClient {
@@ -29,7 +29,7 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipel
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListPipelines(envId, clusterId, pageToken)
+		page, err := c.executeListPipelines(envId, clusterId, pageToken)
 		if err != nil {
 			return nil, err
 		}
@@ -43,32 +43,37 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipel
 	return list, nil
 }
 
-func (c *Client) executeListPipelines(envId string, clusterId string, pageToken string) (sdv1.SdV1PipelineList, *http.Response, error) {
+func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (sdv1.SdV1PipelineList, error) {
 	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext(), envId, clusterId).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.SdClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
+	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePipeline(envId string, clusterId string, pipeline sdv1.SdV1Pipeline) (sdv1.SdV1Pipeline, *http.Response, error) {
+func (c *Client) CreatePipeline(envId string, clusterId string, pipeline sdv1.SdV1Pipeline) (sdv1.SdV1Pipeline, error) {
 	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext(), envId, clusterId).SdV1Pipeline(pipeline)
-	return c.SdClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
+	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteSdPipeline(envId string, clusterId string, id string) (*http.Response, error) {
+func (c *Client) DeleteSdPipeline(envId, clusterId, id string) (error) {
 	req := c.SdClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), envId, clusterId, id)
-	return c.SdClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
+	httpResp, err := c.SdClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetSdPipeline(envId string, clusterId string, id string) (sdv1.SdV1Pipeline, *http.Response, error) {
+func (c *Client) GetSdPipeline(envId, clusterId, id string) (sdv1.SdV1Pipeline, error) {
 	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), envId, clusterId, id)
-	return c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
+	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, *http.Response, error) {
+func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, error) {
 	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), envId, clusterId, id).SdV1PipelineUpdate(update)
-	return c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
+	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func extractSdNextPageToken(nextPageUrlStringNullable sdv1.NullableString) (string, bool, error) {
