@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type Pipeline struct {
@@ -14,6 +13,12 @@ type Pipeline struct {
 	Name  string `json:"name"`
 	State string `json:"state"`
 }
+
+var (
+	pipelineListFields           = []string{"Id", "Name", "State"}
+	pipelineListHumanLabels      = []string{"Id", "Name", "State"}
+	pipelineListStructuredLabels = []string{"Id", "Name", "State"}
+)
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
@@ -23,7 +28,7 @@ type command struct {
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pipeline",
-		Short:       "Manage stream designer pipelines.",
+		Short:       "Manage Stream Designer pipelines.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -42,8 +47,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
-
-	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.client_stream_designer.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
 	return c.Command
 }
