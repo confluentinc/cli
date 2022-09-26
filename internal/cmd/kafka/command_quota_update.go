@@ -2,7 +2,6 @@ package kafka
 
 import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/spf13/cobra"
 
@@ -14,7 +13,7 @@ import (
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <id>",
-		Short: "Update a previously created cluster link.",
+		Short: "Update a Kafka client quota.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
 		Example: examples.BuildExampleString(examples.Example{
@@ -38,9 +37,9 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	quotaId := args[0]
 
-	quota, resp, err := c.V2Client.DescribeKafkaQuota(quotaId)
+	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 
 	updateName, err := getUpdatedName(cmd, *quota.DisplayName)
@@ -66,9 +65,9 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		Throughput:  updateThroughput,
 		Principals:  updatePrincipals,
 	}
-	updatedQuota, resp, err := c.V2Client.UpdateKafkaQuota(quotaUpdate)
+	updatedQuota, err := c.V2Client.UpdateKafkaQuota(quotaUpdate)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 	format, _ := cmd.Flags().GetString(output.FlagName)
 	printQuota := quotaToPrintable(updatedQuota, format)
