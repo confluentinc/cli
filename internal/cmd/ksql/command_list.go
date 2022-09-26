@@ -11,12 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields           = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status", "DetailedProcessingLog"}
-	listHumanLabels      = []string{"ID", "Name", "Topic Prefix", "Kafka", "Storage", "Endpoint", "Status", "Detailed Processing Log"}
-	listStructuredLabels = []string{"id", "name", "topic_prefix", "kafka", "storage", "endpoint", "status", "detailed_processing_log"}
-)
-
 func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -39,12 +33,9 @@ func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 	for _, cluster := range clusters {
-		outputWriter.AddElement(c.updateKsqlClusterForDescribeAndList(cluster))
+		list.Add(c.updateKsqlClusterForDescribeAndList(cluster))
 	}
-	return outputWriter.Out()
+	return list.Print()
 }

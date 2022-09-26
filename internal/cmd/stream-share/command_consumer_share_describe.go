@@ -29,12 +29,12 @@ func (c *command) newConsumerShareDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error {
-	shareId := args[0]
-
-	consumerShare, err := c.V2Client.DescribeConsumerShare(shareId)
+	consumerShare, err := c.V2Client.DescribeConsumerShare(args[0])
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(c.buildConsumerShare(consumerShare))
+	return table.Print()
 }

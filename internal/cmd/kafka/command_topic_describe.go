@@ -44,15 +44,6 @@ func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if !output.IsValidOutputString(outputOption) {
-		return output.NewInvalidOutputFormatFlagError(outputOption)
-	}
-
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
@@ -95,11 +86,11 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 			topicData.Config[partitionCount] = strconv.Itoa(numPartitions)
 
-			if outputOption == output.Human.String() {
-				return printHumanDescribe(topicData)
+			if output.GetFormat(cmd).IsSerialized() {
+				return output.StructuredOutput(cmd, topicData)
 			}
 
-			return output.StructuredOutput(outputOption, topicData)
+			return printHumanDescribe(topicData)
 		}
 	}
 	// Kafka REST is not available, fallback to KafkaAPI
@@ -114,11 +105,11 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	if outputOption == output.Human.String() {
-		return printHumanTopicDescription(resp)
-	} else {
-		return printStructuredTopicDescription(resp, outputOption)
+	if output.GetFormat(cmd).IsSerialized() {
+		return printStructuredTopicDescription(cmd, resp)
 	}
+
+	return printHumanTopicDescription(resp)
 }
 
 func printHumanDescribe(topicData *topicData) error {
@@ -167,7 +158,7 @@ func printHumanTopicDescription(resp *schedv1.TopicDescription) error {
 	return nil
 }
 
-func printStructuredTopicDescription(resp *schedv1.TopicDescription, format string) error {
+func printStructuredTopicDescription(cmd *cobra.Command, resp *schedv1.TopicDescription) error {
 	structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
 	structuredDisplay.TopicName = resp.Name
 
@@ -175,5 +166,5 @@ func printStructuredTopicDescription(resp *schedv1.TopicDescription, format stri
 		structuredDisplay.Config[entry.Name] = entry.Value
 	}
 	structuredDisplay.Config[partitionCount] = strconv.Itoa(len(resp.Partitions))
-	return output.StructuredOutput(format, structuredDisplay)
+	return output.StructuredOutput(cmd, structuredDisplay)
 }

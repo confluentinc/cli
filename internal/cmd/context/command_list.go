@@ -6,14 +6,15 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields       = []string{"Current", "Name", "Platform", "Credential"}
-	structuredLabels = []string{"current", "name", "platform", "credential"}
-)
+type listOut struct {
+	Current    string `human:"Current" serialized:"current"`
+	Name       string `human:"Name" serialized:"name"`
+	Platform   string `human:"Platform" serialized:"platform"`
+	Credential string `human:"Credential" serialized:"credential"`
+}
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -29,47 +30,27 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	w, err := output.NewListOutputWriter(cmd, listFields, listFields, structuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 
-	for _, ctx := range c.Config.Contexts {
-		isHuman := w.GetOutputFormat() == output.Human
-		row := newRow(isHuman, ctx, c.Config.CurrentContext)
-		w.AddElement(row)
-	}
-	w.StableSort()
+	for _, context := range c.Config.Contexts {
+		isCurrent := context.Name == c.Config.CurrentContext
 
-	return w.Out()
-}
-
-type row struct {
-	Current    string
-	Name       string
-	Platform   string
-	Credential string
-}
-
-func newRow(isHuman bool, ctx *v1.Context, current string) *row {
-	isCurrent := ctx.Name == current
-
-	return &row{
-		Current:    formatCurrent(isHuman, isCurrent),
-		Name:       ctx.Name,
-		Platform:   ctx.PlatformName,
-		Credential: ctx.CredentialName,
-	}
-}
-
-func formatCurrent(isHuman, isCurrent bool) string {
-	if isHuman {
+		current := ""
 		if isCurrent {
-			return "*"
-		} else {
-			return ""
+			current = "*"
 		}
-	} else {
-		return strconv.FormatBool(isCurrent)
+
+		if output.GetFormat(cmd).IsSerialized() {
+			current = strconv.FormatBool(isCurrent)
+		}
+
+		list.Add(&listOut{
+			Current:    current,
+			Name:       context.Name,
+			Platform:   context.PlatformName,
+			Credential: context.CredentialName,
+		})
 	}
+
+	return list.Print()
 }
