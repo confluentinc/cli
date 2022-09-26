@@ -63,18 +63,18 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	var authMethods []string
-	if userProfile.GetAuthConfig() != nil {
-		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-			authMethods = append(authMethods, authMethodFormats[method])
-		}
+	for _, method := range userProfile.GetAuthConfig().GetAllowedAuthMethods() {
+		authMethods = append(authMethods, authMethodFormats[method])
 	}
 
-	return output.DescribeObject(cmd, &userStruct{
+	table := output.NewTable(cmd)
+	table.Add(&userOut{
 		Id:                   userProfile.ResourceId,
 		Email:                userProfile.Email,
 		FirstName:            userProfile.FirstName,
 		LastName:             userProfile.LastName,
 		Status:               userStatus,
 		AuthenticationMethod: strings.Join(authMethods, ", "),
-	}, listFields, humanLabelMap, structuredLabelMap)
+	})
+	return table.Print()
 }

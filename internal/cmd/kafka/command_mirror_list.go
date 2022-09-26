@@ -80,10 +80,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
 		var maxLag int64 = 0
@@ -93,7 +90,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		outputWriter.AddElement(&listMirrorWrite{
+		list.Add(&mirrorOut{
 			LinkName:                 mirror.LinkName,
 			MirrorTopicName:          mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
@@ -104,5 +101,6 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		})
 	}
 
-	return outputWriter.Out()
+	list.Filter([]string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"})
+	return list.Print()
 }
