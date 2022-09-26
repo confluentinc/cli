@@ -12,7 +12,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
+
+type out struct {
+	Key             string `human:"Key" serialized:"key"`
+	Description     string `human:"Description" serialized:"description"`
+	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
+	OwnerEmail      string `human:"Owner Email" serialized:"owner_email"`
+	ResourceType    string `human:"Resource Type" serialized:"resource_type"row`
+	ResourceId      string `human:"Resource ID" serialized:"resource_id"row`
+	Created         string `human:"Created" serialized:"created"row`
+}
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -63,15 +74,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		resources = apiKey.Spec.GetResources()
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.ApiKey)
 
 	// Note that if more resource types are added with no logical clusters, then additional logic
 	// needs to be added here to determine the resource type.
 	for _, res := range resources {
-		outputWriter.AddElement(&row{
+		list.Add(&out{
 			Key:             apiKey.GetId(),
 			Description:     apiKey.Spec.GetDescription(),
 			OwnerResourceId: ownerId,
@@ -82,5 +90,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

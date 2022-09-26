@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newConsumerShareListCommand() *cobra.Command {
@@ -40,15 +41,11 @@ func (c *command) listConsumerShares(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, consumerShareListFields, consumerShareListHumanLabels, consumerShareListStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd, resource.ConsumerShare)
 
 	for _, share := range consumerShares {
-		element := c.buildConsumerShare(share)
-		outputWriter.AddElement(element)
+		list.Add(c.buildConsumerShare(share))
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

@@ -62,14 +62,14 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	// Setup ACLs
-	aclsDryRun, err := cmd.Flags().GetBool("dry-run")
+	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
 	}
 
 	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
-	if aclsDryRun {
-		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
+	if dryRun {
+		return acl.PrintACLs(cmd, bindings)
 	}
 
 	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)

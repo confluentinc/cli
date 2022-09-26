@@ -49,10 +49,6 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	if !output.IsValidOutputString(outputOption) {
-		return output.NewInvalidOutputFormatFlagError(outputOption)
-	}
-
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {

@@ -11,6 +11,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -74,23 +76,29 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	if permanent {
 		deleteType = "hard"
 	}
+
+	var versions []int32
 	if version == "all" {
-		deleteSubjectOpts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		versions, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, deleteSubjectOpts)
+		opts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
+		v, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, opts)
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
-		printVersions(versions)
-		return nil
+		versions = v
 	} else {
-		deleteVersionOpts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		versionResult, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, deleteVersionOpts)
+		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
+		v, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, opts)
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
-		printVersions([]int32{versionResult})
-		return nil
+		versions = []int32{v}
 	}
+
+	list := output.NewList(cmd, resource.SubjectVersion)
+	for _, version := range versions {
+		list.Add(&versionOut{Version: version})
+	}
+	return list.Print()
 }

@@ -461,7 +461,7 @@ const (
 	ClusterFlagWithApiLoginErrorMsg     = `"cluster" flag should not be passed for API key context, cluster is inferred`
 
 	// Partition command errors
-	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
+	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"

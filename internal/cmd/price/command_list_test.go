@@ -2,8 +2,6 @@ package price
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -53,26 +51,6 @@ func TestList(t *testing.T) {
 	got, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion)
 	require.NoError(t, err)
 	require.Equal(t, want+"\n", got)
-}
-
-func TestListJSON(t *testing.T) {
-	command := mockSingleRowCommand()
-
-	res := []map[string]string{
-		{
-			"availability": exampleAvailability,
-			"cluster_type": exampleClusterType,
-			"metric":       exampleMetric,
-			"network_type": exampleNetworkType,
-			"price":        strconv.Itoa(examplePrice),
-		},
-	}
-	want, err := json.MarshalIndent(res, "", "  ")
-	require.NoError(t, err)
-
-	got, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion, "-o", "json")
-	require.NoError(t, err)
-	require.Equal(t, string(want)+"\n", got)
 }
 
 func TestListLegacyClusterTypes(t *testing.T) {
