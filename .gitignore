@@ -39,5 +39,3 @@ integ_coverage.txt
 unit_coverage.txt
 *.sw*
 **/*.DS_Store
-
-*checksums.txt
