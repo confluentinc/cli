@@ -1,19 +1,21 @@
 package pipeline
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/cookiejar"
-
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+var (
+	describeFields            = []string{"Id", "Name", "State"}
+	describeHumanRenames      = map[string]string{"Id": "ID"}
+	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "State": "state"}
 )
 
 func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -35,15 +37,18 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
+	// get flag values
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksql, _ := cmd.Flags().GetString("ksqldb-cluster")
 
-	kafka_cluster, err := c.Context.GetKafkaClusterForCommand()
+	// get kafka cluster
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
+	// validate ksql id
 	ksqlReq := &schedv1.KSQLCluster{
 		AccountId: c.EnvironmentId(),
 		Id:        ksql,
@@ -54,80 +59,35 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	sr_cluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
-	if err != nil {
-		return err
-	}
-
-	if kafka_cluster.ID != ksqlCluster.KafkaClusterId {
+	if kafkaCluster.ID != ksqlCluster.KafkaClusterId {
 		utils.Println(cmd, "KSQL DB Cluster not in Kafka Cluster")
 		return nil
 	}
 
-	var client http.Client
-	jar, err := cookiejar.New(nil)
+	// validate sr id
+	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
 		return err
 	}
 
-	client = http.Client{
-		Jar: jar,
+	// call api
+	// todo: how to obtain cloud domain for connect endpoint?
+	createPipeline := sdv1.SdV1Pipeline{
+		Name:                   sdv1.PtrString(name),
+		Description:            sdv1.PtrString(description),
+		KsqlId:                 sdv1.PtrString(ksql),
+		SchemaRegistryId:       sdv1.PtrString(srCluster.Id),
+		KafkaClusterEndpoint:   sdv1.PtrString(kafkaCluster.Bootstrap),
+		KsqlEndpoint:           sdv1.PtrString(ksqlCluster.Endpoint),
+		ConnectEndpoint:        sdv1.PtrString(fmt.Sprintf("https://devel.cpdev.cloud/api/connect/v1/environments/%s/clusters/%s", c.Context.GetCurrentEnvironmentId(), kafkaCluster.ID)),
+		SchemaRegistryEndpoint: sdv1.PtrString(srCluster.SchemaRegistryEndpoint),
 	}
-
-	cookie := &http.Cookie{
-		Name:   "auth_token",
-		Value:  c.State.AuthToken,
-		MaxAge: 300,
-	}
-
-	postBody, _ := json.Marshal(map[string]string{
-		"name":                   name,
-		"description":            description,
-		"ksqlId":                 ksql,
-		"connectEndpoint":        fmt.Sprintf("https://devel.cpdev.cloud/api/connect/v1/environments/%s/clusters/%s", c.Context.GetCurrentEnvironmentId(), kafka_cluster.ID),
-		"kafkaClusterEndpoint":   kafka_cluster.Bootstrap,
-		"ksqlEndpoint":           ksqlCluster.Endpoint,
-		"schemaRegistryEndpoint": sr_cluster.SchemaRegistryEndpoint,
-		"schemaRegistryId":       sr_cluster.Id,
-	})
-	bytesPostBody := bytes.NewBuffer(postBody)
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines", c.Context.GetCurrentEnvironmentId(), kafka_cluster.ID), bytesPostBody)
+	resp, _, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, createPipeline)
 	if err != nil {
 		return err
 	}
 
-	req.AddCookie(cookie)
-	req.Header.Set("Content-Type", "application/json")
+	describePipeline := &Pipeline{Id: *resp.Id, Name: *resp.Name, State: *resp.State}
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	var data map[string]interface{}
-	err = json.Unmarshal([]byte(string(body)), &data)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 200 && err == nil {
-		utils.Println(cmd, "Created pipeline: "+data["id"].(string))
-	} else {
-		if err != nil {
-			return err
-		} else if body != nil {
-			if data["title"] != "{}" {
-				utils.Println(cmd, data["title"].(string))
-			}
-			utils.Println(cmd, data["action"].(string))
-		}
-	}
-
-	return nil
+	return output.DescribeObject(cmd, describePipeline, describeFields, describeHumanRenames, describeStructuredRenames)
 }
