@@ -7,12 +7,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	pipelineListFields           = []string{"Id", "Name", "State"}
-	pipelineListHumanLabels      = []string{"Id", "Name", "State"}
-	pipelineListStructuredLabels = []string{"Id", "Name", "State"}
-)
-
 func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
