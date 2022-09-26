@@ -9,8 +9,15 @@ import (
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
+type Pipeline struct {
+	Id    string `json:"id"`
+	Name  string `json:"name"`
+	State string `json:"state"`
+}
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
+	prerunner pcmd.PreRunner
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -20,7 +27,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &command{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+		prerunner:               prerunner,
+	}
 
 	c.AddCommand(c.newActivateCommand(prerunner))
 	c.AddCommand(c.newCreateCommand(prerunner))
