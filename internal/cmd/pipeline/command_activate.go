@@ -1,83 +1,57 @@
 package pipeline
 
 import (
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"net/http/cookiejar"
-
 	"github.com/spf13/cobra"
 
+	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "activate <pipeline-id>",
 		Short: "Request to activate a pipeline.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.activate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Request to activate a pipeline in Stream Designer",
+				Code: `confluent pipeline activate pipe-12345`,
+			},
+		),
 	}
+
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
+	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	var client http.Client
-	jar, err := cookiejar.New(nil)
+	updateBody := sdv1.NewSdV1PipelineUpdate()
+	updateBody.SetActivated(true)
+	
+	// call api (Current update API does not support this yet)
+	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], *updateBody)
 	if err != nil {
 		return err
 	}
 
-	client = http.Client{
-		Jar: jar,
-	}
-
-	cookie := &http.Cookie{
-		Name:   "auth_token",
-		Value:  c.State.AuthToken,
-		MaxAge: 300,
-	}
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines/%s/activate", c.Context.GetCurrentEnvironmentId(), cluster.ID, args[0]), nil)
+	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
 	if err != nil {
 		return err
 	}
 
-	req.AddCookie(cookie)
+	// *pipeline.state will be activating
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	outputWriter.AddElement(element)
 
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if resp.StatusCode == 200 && err == nil {
-		utils.Println(cmd, "Activation request for pipeline: "+args[0]+" is accepted and in processing.")
-	} else {
-		if err != nil {
-			return err
-		} else if body != nil {
-			var data map[string]interface{}
-			err = json.Unmarshal([]byte(string(body)), &data)
-			if err != nil {
-				return err
-			}
-			if data["title"] != "{}" {
-				utils.Println(cmd, data["title"].(string))
-			}
-			utils.Println(cmd, data["action"].(string))
-		}
-	}
-
-	return nil
+	return outputWriter.Out()
 }

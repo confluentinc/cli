@@ -1,18 +1,16 @@
 package pipeline
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"net/http/cookiejar"
 	"os"
 
 	"github.com/spf13/cobra"
 
+	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	// "github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -21,11 +19,19 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Update an existing pipeline.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.update,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Request to update a pipeline in Stream Designer with a new name, description, and source code located in current local directory",
+				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription" -- sql-file .`,
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "New pipeline name.")
 	cmd.Flags().String("description", "", "New pipeline description.")
 	cmd.Flags().String("sql-file", "", "Path to the new pipeline model file.")
+
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
@@ -40,115 +46,41 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var client http.Client
-	jar, err := cookiejar.New(nil)
+	if name == "" && description == "" && sqlFile == "" {
+		return fmt.Errorf("At least one field must be specified with --name, --description, or --sql-file")
+	}
+
+	updateBody := sdv1.NewSdV1PipelineUpdate()
+	if name != "" {
+		updateBody.SetName(name)
+	}
+	if description != "" {
+		updateBody.SetDescription(description)
+	}
+	if sqlFile != "" {
+		// get SQL content from filepath
+		sqlData, err := os.Open(sqlFile)
+		if err != nil {
+			return err
+		}
+
+		defer sqlData.Close()
+		// once minispec updated, use sqlData as a parameter
+	}
+
+	// call api
+	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], *updateBody)
 	if err != nil {
 		return err
 	}
 
-	client = http.Client{
-		Jar: jar,
+	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
+	if err != nil {
+		return err
 	}
 
-	cookie := &http.Cookie{
-		Name:   "auth_token",
-		Value:  c.State.AuthToken,
-		MaxAge: 300,
-	}
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	outputWriter.AddElement(element)
 
-	if name == "" && description == "" && sqlFile == "" {
-		utils.Println(cmd, "At least one field must be specified with --name, --description, or --sql-file")
-		return nil
-	}
-
-	if name != "" || description != "" {
-		postMap := make(map[string]string)
-		if name != "" {
-			postMap["name"] = name
-		}
-		if description != "" {
-			postMap["description"] = description
-		}
-
-		postBody, _ := json.Marshal(postMap)
-		bytesPostBody := bytes.NewBuffer(postBody)
-
-		req, err := http.NewRequest(http.MethodPatch, fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines/%s", c.Context.GetCurrentEnvironmentId(), cluster.ID, args[0]), bytesPostBody)
-		if err != nil {
-			return err
-		}
-
-		req.AddCookie(cookie)
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode == 200 && err == nil {
-			utils.Println(cmd, "Updated pipeline: "+args[0])
-		} else {
-			utils.Print(cmd, "Could not update pipeline code: "+args[0])
-			if err != nil {
-				return err
-			} else if body != nil {
-				utils.Print(cmd, " with error: "+string(body))
-				return nil
-			}
-		}
-	}
-
-	if sqlFile != "" {
-		putBody, err := os.Open(sqlFile)
-		if err != nil {
-			return err
-		}
-
-		defer putBody.Close()
-
-		// TODO: Modify PUT /{pipeline_id}/content API with a new @Consumes SQL file to import SQL file
-		req, err := http.NewRequest("PUT", fmt.Sprintf("https://devel.cpdev.cloud/api/sd/v1/environments/%s/clusters/%s/pipelines/%s/content", c.Context.GetCurrentEnvironmentId(), cluster.ID, args[0]), putBody)
-		if err != nil {
-			return err
-		}
-
-		req.AddCookie(cookie)
-
-		resp, err := client.Do(req)
-		if err != nil {
-			return err
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		if resp.StatusCode == 200 && err == nil {
-			utils.Println(cmd, "Updated pipeline: "+args[0])
-		} else {
-			utils.Print(cmd, "Could not update pipeline code: "+args[0])
-			if err != nil {
-				return err
-			} else if body != nil {
-				var data map[string]interface{}
-				err = json.Unmarshal([]byte(string(body)), &data)
-				if err != nil {
-					return err
-				}
-				if data["title"] != "{}" {
-					utils.Println(cmd, data["title"].(string))
-				}
-				utils.Println(cmd, data["action"].(string))
-			}
-		}
-	}
-
-	return nil
+	return outputWriter.Out()
 }
