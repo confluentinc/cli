@@ -1,9 +1,6 @@
 package kafka
 
 import (
-	"sort"
-
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -12,6 +9,22 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type partitionData struct {
+	TopicName              string  `human:"Topic" json:"topic" yaml:"topic"`
+	PartitionId            int32   `human:"Partition" json:"partition" yaml:"partition"`
+	LeaderBrokerId         int32   `human:"Leader" json:"leader" yaml:"leader"`
+	ReplicaBrokerIds       []int32 `human:"Replicas" json:"replicas" yaml:"replicas"`
+	InSyncReplicaBrokerIds []int32 `human:"ISR" json:"isr" yaml:"isr"`
+}
+
+type topicData struct {
+	TopicName         string            `json:"topic_name" yaml:"topic_name"`
+	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
+	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
+	Partitions        []partitionData   `json:"partitions" yaml:"partitions"`
+	Configs           map[string]string `json:"config" yaml:"config"`
+}
 
 func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
@@ -46,45 +59,43 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	}
 
 	// Get partitions
-	topicData := &TopicData{}
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	} else if partitionsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
-	topicData.TopicName = topicName
-	topicData.PartitionCount = len(partitionsResp.Data)
-	topicData.Partitions = make([]PartitionData, len(partitionsResp.Data))
+	topic := &topicData{
+		TopicName:      topicName,
+		PartitionCount: len(partitionsResp.Data),
+		Partitions:     make([]partitionData, len(partitionsResp.Data)),
+	}
 	for i, partitionResp := range partitionsResp.Data {
-		partitionId := partitionResp.PartitionId
-		partitionData := PartitionData{
-			TopicName:   topicName,
-			PartitionId: partitionId,
-		}
-
 		// For each partition, get replicas
-		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partitionId)
+		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partitionResp.PartitionId)
 		if err != nil {
 			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
-		partitionData.ReplicaBrokerIds = make([]int32, len(replicasResp.Data))
-		partitionData.InSyncReplicaBrokerIds = make([]int32, 0, len(replicasResp.Data))
+		topic.Partitions[i] = partitionData{
+			TopicName:              topicName,
+			PartitionId:            partitionResp.PartitionId,
+			ReplicaBrokerIds:       make([]int32, len(replicasResp.Data)),
+			InSyncReplicaBrokerIds: make([]int32, 0, len(replicasResp.Data)),
+		}
 		for j, replicaResp := range replicasResp.Data {
 			if replicaResp.IsLeader {
-				partitionData.LeaderBrokerId = replicaResp.BrokerId
+				topic.Partitions[i].LeaderBrokerId = replicaResp.BrokerId
 			}
-			partitionData.ReplicaBrokerIds[j] = replicaResp.BrokerId
+			topic.Partitions[i].ReplicaBrokerIds[j] = replicaResp.BrokerId
 			if replicaResp.IsInSync {
-				partitionData.InSyncReplicaBrokerIds = append(partitionData.InSyncReplicaBrokerIds, replicaResp.BrokerId)
+				topic.Partitions[i].InSyncReplicaBrokerIds = append(topic.Partitions[i].InSyncReplicaBrokerIds, replicaResp.BrokerId)
 			}
 		}
 		if i == 0 {
-			topicData.ReplicationFactor = len(replicasResp.Data)
+			topic.ReplicationFactor = len(replicasResp.Data)
 		}
-		topicData.Partitions[i] = partitionData
 	}
 
 	// Get configs
@@ -94,43 +105,43 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	} else if configsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
-	topicData.Configs = make(map[string]string)
+
+	topic.Configs = make(map[string]string)
 	for _, config := range configsResp.Data {
 		if config.Value != nil {
-			topicData.Configs[config.Name] = *config.Value
+			topic.Configs[config.Name] = *config.Value
 		} else {
-			topicData.Configs[config.Name] = ""
+			topic.Configs[config.Name] = ""
 		}
 	}
 
 	// Print topic info
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, topicData)
+		return output.StructuredOutput(cmd, topic)
 	}
 
 	// Output partitions info
-	utils.Printf(cmd, "Topic: %s\nPartitionCount: %d\nReplicationFactor: %d\n\n", topicData.TopicName, topicData.PartitionCount, topicData.ReplicationFactor)
-	partitionsTableLabels := []string{"Topic", "Partition", "Leader", "Replicas", "ISR"}
-	partitionsTableEntries := make([][]string, topicData.PartitionCount)
-	for i, partition := range topicData.Partitions {
-		partitionsTableEntries[i] = printer.ToRow(&partition, []string{"TopicName", "PartitionId", "LeaderBrokerId", "ReplicaBrokerIds", "InSyncReplicaBrokerIds"})
+	utils.Printf(cmd, "Topic: %s\n", topic.TopicName)
+	utils.Printf(cmd, "PartitionCount: %d\n", topic.PartitionCount)
+	utils.Printf(cmd, "ReplicationFactor: %d\n\n", topic.ReplicationFactor)
+
+	list := output.NewList(cmd)
+	for _, partition := range topic.Partitions {
+		list.Add(partition)
 	}
-	printer.RenderCollectionTable(partitionsTableEntries, partitionsTableLabels)
+	if err := list.Print(); err != nil {
+		return err
+	}
+
 	// Output config info
 	utils.Print(cmd, "\nConfiguration\n\n")
-	configsTableLabels := []string{"Name", "Value"}
-	configsTableEntries := make([][]string, len(topicData.Configs))
-	i := 0
-	for name, value := range topicData.Configs {
-		configsTableEntries[i] = printer.ToRow(&struct {
-			name  string
-			value string
-		}{name: name, value: value}, []string{"name", "value"})
-		i++
+	list = output.NewList(cmd)
+	for name, value := range topic.Configs {
+		list.Add(&configOut{
+			Name:  name,
+			Value: value,
+		})
 	}
-	sort.Slice(configsTableEntries, func(i int, j int) bool {
-		return configsTableEntries[i][0] < configsTableEntries[j][0]
-	})
-	printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
-	return nil
+	list.Filter([]string{"Name", "Value"})
+	return list.Print()
 }

@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -372,7 +371,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(c.createContext(), principal, *scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(scope, principal, role)
+			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
 		return err
 	}
@@ -417,39 +416,41 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return list.Print()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(
-			c.createContext(),
-			principal,
-			*mdsScope)
+		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(c.createContext(), principal, *mdsScope)
 		if err != nil {
 			return err
 		}
 	}
 
-	var data [][]string
+	list := output.NewList(cmd)
+
 	for _, roleName := range roleNames {
-		rps, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(
-			c.createContext(),
-			principal,
-			roleName,
-			*mdsScope)
+		resourcePatterns, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.createContext(), principal, roleName, *mdsScope)
 		if err != nil {
 			return err
 		}
-		for _, pattern := range rps {
-			data = append(data, []string{roleName, pattern.ResourceType, pattern.Name, pattern.PatternType})
+		for _, pattern := range resourcePatterns {
+			list.Add(&roleBindingOut{
+				Role:         roleName,
+				ResourceType: pattern.ResourceType,
+				Name:         pattern.Name,
+				PatternType:  pattern.PatternType,
+			})
 		}
-		if len(rps) == 0 && clusterScopedRoles[roleName] {
-			data = append(data, []string{roleName, "Cluster", "", ""})
+		if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+			list.Add(&roleBindingOut{
+				Role:         roleName,
+				ResourceType: "Cluster",
+			})
 		}
 	}
 
-	printer.RenderCollectionTable(data, []string{"Role", "ResourceType", "Name", "PatternType"})
-	return nil
+	list.Filter([]string{"Role", "ResourceType", "Name", "PatternType"})
+	return list.Print()
 }
 
 func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {

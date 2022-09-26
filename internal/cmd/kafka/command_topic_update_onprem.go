@@ -4,7 +4,6 @@ import (
 	"sort"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -67,16 +66,17 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		}
 		i++
 	}
-	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName,
-		&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-			AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
-		})
+
+	opts := &kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
+		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: data}),
+	}
+	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts)
 	if err != nil {
 		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		sort.Slice(data, func(i int, j int) bool {
+		sort.Slice(data, func(i, j int) bool {
 			return data[i].Name < data[j].Name
 		})
 		return output.StructuredOutput(cmd, data)
@@ -85,18 +85,13 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	// no errors (config update successful)
 	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
 	// Print Updated Configs
-	tableLabels := []string{"Name", "Value"}
-	tableEntries := make([][]string, len(data))
-	for i, config := range data {
-		tableEntries[i] = printer.ToRow(
-			&struct {
-				Name  string
-				Value string
-			}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
+	list := output.NewList(cmd)
+	for _, config := range data {
+		list.Add(&configOut{
+			Name:  config.Name,
+			Value: *config.Value,
+		})
 	}
-	sort.Slice(tableEntries, func(i int, j int) bool {
-		return tableEntries[i][0] < tableEntries[j][0]
-	})
-	printer.RenderCollectionTable(tableEntries, tableLabels)
-	return nil
+	list.Filter([]string{"Name", "Value"})
+	return list.Print()
 }

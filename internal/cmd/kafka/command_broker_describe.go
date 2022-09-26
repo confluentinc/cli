@@ -15,7 +15,7 @@ import (
 
 const abbreviationLength = 25
 
-type configData struct {
+type configOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
 	IsDefault   bool   `human:"Is Default" serialized:"is_default"`
@@ -72,7 +72,7 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get Broker Configs
-	var data []*configData
+	var data []*configOut
 	if all { // fetch cluster-wide configs
 		clusterConfig, err := getClusterWideConfigs(restClient, restContext, clusterId, configName)
 		if err != nil {
@@ -100,10 +100,10 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 	return list.Print()
 }
 
-func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*configData {
-	var configs []*configData
+func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*configOut {
+	var configs []*configOut
 	for _, data := range brokerConfig.Data {
-		config := &configData{
+		config := &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
@@ -117,10 +117,10 @@ func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*con
 	return configs
 }
 
-func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*configData {
-	var configs []*configData
+func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*configOut {
+	var configs []*configOut
 	for _, data := range clusterConfig.Data {
-		config := &configData{
+		config := &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
