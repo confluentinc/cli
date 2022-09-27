@@ -10,7 +10,7 @@ subscribe:
 operationId:Topic1Subscribe
 bindings:
 kafka:
-bindingVersion:0.1.0
+bindingVersion:0.3.0
 groupId:
 type:string
 clientId:
@@ -48,7 +48,7 @@ type:record
 name:Topic1Message
 bindings:
 kafka:
-bindingVersion:0.1.0
+bindingVersion:0.3.0
 key:
 type:string
 securitySchemes:

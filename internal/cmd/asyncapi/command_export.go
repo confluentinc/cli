@@ -110,7 +110,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				messages[msgName(topic.Name)] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
-				reflector, err = addChannel(reflector, accountDetails.channelDetails.currentTopic.Name, *accountDetails.channelDetails.bindings, accountDetails.channelDetails.mapOfMessageCompat, accountDetails.channelDetails.topicLevelTags)
+				reflector, err = addChannel(reflector, accountDetails.channelDetails)
 				if err != nil {
 					return err
 				}
@@ -150,6 +150,10 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
 	if err != nil {
 		return fmt.Errorf("bindings not found: %v", err)
+	}
+	err = details.getTopicDescription()
+	if err != nil {
+		log.CliLogger.Warnf("failed to get tags: %v", err)
 	}
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
@@ -279,23 +283,22 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 			ConfluentValueSchemaValidation: "true",
 		},
 	}
-	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
-		AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{
+		Schema: map[string]interface{}{
 			"type": "string",
 		},
-		}},
+	},
 	}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
-		GroupID: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
-			AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+		GroupID: &spec.KafkaOperationGroupID{
+			Schema: map[string]interface{}{
 				"type": "string",
 			},
-			}},
-		ClientID: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchema{
-			AllOf1: &spec.HTTPSRawGithubusercontentComAsyncapiAsyncapiNodeV277Schemas200JSONDefinitionsSchemaAllOf1{MapOfAnything: map[string]interface{}{
+		},
+		ClientID: &spec.KafkaOperationClientID{
+			Schema: map[string]interface{}{
 				"type": "string"},
-			}},
-		MapOfAnything: nil,
+		},
 	}}
 	bindings := &bindings{
 		messageBinding:   messageBindings,
@@ -450,21 +453,24 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func addChannel(reflector asyncapi.Reflector, topicName string, bindings bindings, mapOfMessageCompat map[string]interface{}, topicLevelTags []spec.Tag) (asyncapi.Reflector, error) {
+func addChannel(reflector asyncapi.Reflector, channelDetails channelDetails) (asyncapi.Reflector, error) {
 	channel := asyncapi.ChannelInfo{
-		Name: topicName,
+		Name: channelDetails.currentTopic.Name,
 		BaseChannelItem: &spec.ChannelItem{
-			MapOfAnything: mapOfMessageCompat,
+			MapOfAnything: channelDetails.mapOfMessageCompat,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(topicName) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(topicName)}},
-				Bindings: &bindings.operationBinding,
-				Tags:     topicLevelTags,
+				ID:       strcase.ToCamel(channelDetails.currentTopic.Name) + "Subscribe",
+				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(channelDetails.currentTopic.Name)}},
+				Bindings: &channelDetails.bindings.operationBinding,
+				Tags:     channelDetails.topicLevelTags,
 			},
 		},
 	}
-	if bindings.channelBindings.Kafka != nil {
-		channel.BaseChannelItem.Bindings = &bindings.channelBindings
+	if channelDetails.bindings.channelBindings.Kafka != nil {
+		channel.BaseChannelItem.Bindings = &channelDetails.bindings.channelBindings
+	}
+	if channelDetails.currentTopicDescription != nil {
+		channel.BaseChannelItem.Description = fmt.Sprintf("%v", channelDetails.currentTopicDescription)
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err

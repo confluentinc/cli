@@ -16,16 +16,17 @@ import (
 )
 
 type channelDetails struct {
-	currentTopic       *schedv1.TopicDescription
-	currentSubject     string
-	contentType        string
-	schema             *schemaregistry.Schema
-	unmarshalledSchema map[string]interface{}
-	mapOfMessageCompat map[string]interface{}
-	topicLevelTags     []spec.Tag
-	schemaLevelTags    []spec.Tag
-	bindings           *bindings
-	example            interface{}
+	currentTopic            *schedv1.TopicDescription
+	currentTopicDescription interface{}
+	currentSubject          string
+	contentType             string
+	schema                  *schemaregistry.Schema
+	unmarshalledSchema      map[string]interface{}
+	mapOfMessageCompat      map[string]interface{}
+	topicLevelTags          []spec.Tag
+	schemaLevelTags         []spec.Tag
+	bindings                *bindings
+	example                 interface{}
 }
 
 type accountDetails struct {
@@ -41,42 +42,42 @@ type accountDetails struct {
 	channelDetails channelDetails
 }
 
-func (d *accountDetails) getTags() error {
+func (details *accountDetails) getTags() error {
 	// Get topic level tags
-	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
+	topicLevelTags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "kafka_topic", details.cluster.Id+":"+details.channelDetails.currentTopic.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get topic level tags: %v", err)
 	}
 	for _, topicLevelTag := range topicLevelTags {
-		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
+		details.channelDetails.topicLevelTags = append(details.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
 	}
-	
+
 	// Get schema level tags
-	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	schemaLevelTags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "sr_schema", strconv.Itoa(int(details.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
 	for _, schemaLevelTag := range schemaLevelTags {
-		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
+		details.channelDetails.schemaLevelTags = append(details.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
 
 	return nil
 }
 
-func (d *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
-	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
+func (details *accountDetails) getSchemaDetails() error {
+	log.CliLogger.Debugf("Adding operation: %s", details.channelDetails.currentTopic.Name)
+	schema, _, err := details.srClient.DefaultApi.GetSchemaByVersion(details.srContext, details.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
 	}
 	var unmarshalledSchema map[string]interface{}
 	if schema.SchemaType == "" {
-		d.channelDetails.contentType = "application/avro"
+		details.channelDetails.contentType = "application/avro"
 	} else if schema.SchemaType == "JSON" {
-		d.channelDetails.contentType = "application/json"
+		details.channelDetails.contentType = "application/json"
 	} else if schema.SchemaType == "PROTOBUF" {
 		log.CliLogger.Warn("Protobuf not supported.")
-		d.channelDetails.contentType = "PROTOBUF"
+		details.channelDetails.contentType = "PROTOBUF"
 		return nil
 	}
 	// JSON or Avro Format
@@ -85,27 +86,36 @@ func (d *accountDetails) getSchemaDetails() error {
 		return fmt.Errorf("failed to unmarshal schema: %v", err)
 
 	}
-	d.channelDetails.unmarshalledSchema = unmarshalledSchema
-	d.channelDetails.schema = &schema
+	details.channelDetails.unmarshalledSchema = unmarshalledSchema
+	details.channelDetails.schema = &schema
 	return nil
 }
 
-func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
+func (details *accountDetails) getTopicDescription() error {
+	atlasEntityWithExtInfo, _, err := details.srClient.DefaultApi.GetByUniqueAttributes(details.srContext, "kafka_topic", details.cluster.Id+":"+details.channelDetails.currentTopic.Name, nil)
+	if err != nil {
+		return err
+	}
+	details.channelDetails.currentTopicDescription = atlasEntityWithExtInfo.Entity.Attributes["description"]
+	return nil
+}
+
+func (details *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, d.channelDetails.contentType)
-	if d.channelDetails.contentType == "application/avro" {
+	(*spec.MessageEntity).WithContentType(entityProducer, details.channelDetails.contentType)
+	if details.channelDetails.contentType == "application/avro" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
-	} else if d.channelDetails.contentType == "application/json" {
+	} else if details.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
+	(*spec.MessageEntity).WithTags(entityProducer, details.channelDetails.schemaLevelTags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.Name))
+	(*spec.MessageEntity).WithName(entityProducer, msgName(details.channelDetails.currentTopic.Name))
 	// Example
-	if d.channelDetails.example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
+	if details.channelDetails.example != nil {
+		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &details.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
-	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
+	(*spec.MessageEntity).WithBindings(entityProducer, details.channelDetails.bindings.messageBinding)
+	(*spec.MessageEntity).WithPayload(entityProducer, details.channelDetails.unmarshalledSchema)
 	return entityProducer
 }

@@ -36,6 +36,12 @@ var details = &accountDetails{
 	},
 	srClient: &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
+			GetByUniqueAttributesFunc: func(_ context.Context, typeName string, qualifiedName string, localVarOptionals *srsdk.GetByUniqueAttributesOpts) (srsdk.AtlasEntityWithExtInfo, *http.Response, error) {
+				if typeName == "kafka_topic" {
+					return srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{Attributes: map[string]interface{}{"description": "kafka topic description"}}}, nil, nil
+				}
+				return srsdk.AtlasEntityWithExtInfo{}, nil, nil
+			},
 			ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
@@ -232,6 +238,17 @@ func newCmd() (*command, error) {
 	return c, nil
 }
 
+func TestGetTopicDescription(t *testing.T) {
+	c, err := newCmd()
+	require.NoError(t, err)
+	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.channelDetails.currentSubject = "subject1"
+	details.channelDetails.currentTopic = details.topics[0]
+	err = details.getTopicDescription()
+	require.NoError(t, err)
+	require.Equal(t, "kafka topic description", details.channelDetails.currentTopicDescription)
+
+}
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
