@@ -105,16 +105,10 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.StructuredOutput(cmd, &outputStruct{response.Id})
 	}
 
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		return output.StructuredOutput(outputFormat, &outputStruct{response.Id})
-	}
-
+	utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	return nil
 }

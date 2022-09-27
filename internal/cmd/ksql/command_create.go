@@ -104,5 +104,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(c.updateKsqlClusterForDescribeAndList(cluster))
+	return table.Print()
 }

@@ -5,9 +5,9 @@
 | Provider Name              | provider                      |
 | Status                     | active                        |
 | Delivery Method            | email                         |
-| ServiceAccountId           | sa-123456                     |
-| SharedResourceId           | sr-12345                      |
-| Invited At                 | 2022-07-20 22:08:41 +0000 UTC |
+| Service Account ID         | sa-123456                     |
+| Shared Resource ID         | sr-12345                      |
 | Redeemed At                | 2022-07-21 22:08:41 +0000 UTC |
+| Invited At                 | 2022-07-20 22:08:41 +0000 UTC |
 | Invite Expires At          | 2022-07-22 22:08:41 +0000 UTC |
 +----------------------------+-------------------------------+
