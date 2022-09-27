@@ -195,3 +195,22 @@ func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 	}
 }
+
+// Handler for: "/cdx/v1/opt-in"
+func handleOptInOptOut(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		body, _ := io.ReadAll(r.Body)
+		var reqBody cdxv1.CdxV1OptIn
+		_ = json.Unmarshal(body, &reqBody)
+
+		network := cdxv1.CdxV1OptIn{
+			StreamShareEnabled: reqBody.StreamShareEnabled,
+		}
+		b, err := json.Marshal(&network)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}

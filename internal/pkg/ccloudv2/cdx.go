@@ -184,3 +184,10 @@ func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.Cdx
 	req := c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResource(c.cdxApiContext(), sharedResourceId)
 	return c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResourceExecute(req)
 }
+
+func (c *Client) OptInOrOut(status bool) (cdxv1.CdxV1OptIn, *http.Response, error) {
+	req := c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptIn(c.cdxApiContext()).CdxV1OptIn(cdxv1.CdxV1OptIn{
+		StreamShareEnabled: &status,
+	})
+	return c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptInExecute(req)
+}
