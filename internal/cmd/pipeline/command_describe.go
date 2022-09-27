@@ -53,7 +53,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
 	outputWriter.AddElement(element)
 
 	if outputDirectory != "" {
@@ -68,7 +68,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		defer out.Close()
 
 		// replace pipeline.Name with pipeline.Spec.Sql once official minispec used
-		_, err = out.Write([]byte(*pipeline.Name))
+		_, err = out.Write([]byte(*pipeline.Spec.DisplayName))
 		if err != nil {
 			return err
 		}

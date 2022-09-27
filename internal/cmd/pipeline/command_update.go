@@ -50,12 +50,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("At least one field must be specified with --name, --description, or --sql-file")
 	}
 
-	updateBody := sdv1.NewSdV1PipelineUpdate()
+	updatePipeline := sdv1.SdV1PipelineUpdate{
+		Spec: &sdv1.SdV1PipelineSpecUpdate{},
+	}
 	if name != "" {
-		updateBody.SetName(name)
+		updatePipeline.Spec.SetDisplayName(name)
 	}
 	if description != "" {
-		updateBody.SetDescription(description)
+		updatePipeline.Spec.SetDescription(description)
 	}
 	if sqlFile != "" {
 		// get SQL content from filepath
@@ -69,7 +71,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], *updateBody)
+	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}
@@ -79,7 +81,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
 	outputWriter.AddElement(element)
 
 	return outputWriter.Out()

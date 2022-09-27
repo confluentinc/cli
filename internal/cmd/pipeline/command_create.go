@@ -2,12 +2,9 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -63,7 +60,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Id:        ksqldbCluster,
 	}
 
-	ksqlCluster, err := c.Client.KSQL.Describe(context.Background(), ksqlReq)
+	_, err = c.Client.KSQL.Describe(context.Background(), ksqlReq)
 	if err != nil {
 		return err
 	}
@@ -78,18 +75,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	// todo: how to obtain cloud domain for connect endpoint?
-	createPipeline := sdv1.SdV1Pipeline{
-		Name:                   sdv1.PtrString(name),
-		Description:            sdv1.PtrString(description),
-		KsqlId:                 sdv1.PtrString(ksqldbCluster),
-		SchemaRegistryId:       sdv1.PtrString(srCluster.Id),
-		KafkaClusterEndpoint:   sdv1.PtrString(kafkaCluster.Bootstrap),
-		KsqlEndpoint:           sdv1.PtrString(ksqlCluster.Endpoint),
-		ConnectEndpoint:        sdv1.PtrString(fmt.Sprintf("https://devel.cpdev.cloud/api/connect/v1/environments/%s/clusters/%s", c.Context.GetCurrentEnvironmentId(), kafkaCluster.ID)),
-		SchemaRegistryEndpoint: sdv1.PtrString(srCluster.SchemaRegistryEndpoint),
-	}
-	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, createPipeline)
+	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqldbCluster, srCluster.Id)
 	if err != nil {
 		return err
 	}
@@ -99,7 +85,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
 	outputWriter.AddElement(element)
 
 	return outputWriter.Out()

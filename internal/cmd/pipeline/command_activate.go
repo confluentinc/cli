@@ -35,11 +35,13 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateBody := sdv1.NewSdV1PipelineUpdate()
-	updateBody.SetActivated(true)
-	
+	updatePipeline := sdv1.SdV1PipelineUpdate{
+		Spec: &sdv1.SdV1PipelineSpecUpdate{},
+	}
+	updatePipeline.Spec.SetActivated(true)
+
 	// call api (Current update API does not support this yet)
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], *updateBody)
+	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}
@@ -50,7 +52,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 	}
 
 	// *pipeline.state will be activating
-	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Name, State: *pipeline.State}
+	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
 	outputWriter.AddElement(element)
 
 	return outputWriter.Out()
