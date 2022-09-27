@@ -2,12 +2,10 @@ package pipeline
 
 import (
 	"context"
-	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -74,23 +72,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	// todo: how to obtain cloud domain for connect endpoint?
-	createPipeline := sdv1.SdV1Pipeline{
-		Name:                   sdv1.PtrString(name),
-		Description:            sdv1.PtrString(description),
-		KsqlId:                 sdv1.PtrString(ksql),
-		SchemaRegistryId:       sdv1.PtrString(srCluster.Id),
-		KafkaClusterEndpoint:   sdv1.PtrString(kafkaCluster.Bootstrap),
-		KsqlEndpoint:           sdv1.PtrString(ksqlCluster.Endpoint),
-		ConnectEndpoint:        sdv1.PtrString(fmt.Sprintf("https://devel.cpdev.cloud/api/connect/v1/environments/%s/clusters/%s", c.Context.GetCurrentEnvironmentId(), kafkaCluster.ID)),
-		SchemaRegistryEndpoint: sdv1.PtrString(srCluster.SchemaRegistryEndpoint),
-	}
-	resp, _, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, createPipeline)
+	resp, _, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqlCluster.Id, srCluster.Id)
 	if err != nil {
 		return err
 	}
 
-	describePipeline := &Pipeline{Id: *resp.Id, Name: *resp.Name, State: *resp.State}
+	describePipeline := &Pipeline{Id: *resp.Id, Name: *resp.Spec.DisplayName, State: *resp.Status.State}
 
 	return output.DescribeObject(cmd, describePipeline, describeFields, describeHumanRenames, describeStructuredRenames)
 }

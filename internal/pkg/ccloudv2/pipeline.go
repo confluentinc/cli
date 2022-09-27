@@ -44,30 +44,46 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipel
 }
 
 func (c *Client) executeListPipelines(envId string, clusterId string, pageToken string) (sdv1.SdV1PipelineList, *http.Response, error) {
-	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext(), envId, clusterId).PageSize(ccloudV2ListPageSize)
+	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext(), clusterId).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
+
+	req.Environment(envId)
+
 	return c.SdClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
 }
 
-func (c *Client) CreatePipeline(envId string, clusterId string, pipeline sdv1.SdV1Pipeline) (sdv1.SdV1Pipeline, *http.Response, error) {
-	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext(), envId, clusterId).SdV1Pipeline(pipeline)
+func (c *Client) CreatePipeline(envId string, clusterId string, name string, description string, ksqlId string, srClusterId string) (sdv1.SdV1Pipeline, *http.Response, error) {
+	createPipeline := sdv1.SdV1Pipeline{
+		Spec: &sdv1.SdV1PipelineSpec{
+			DisplayName:             sdv1.PtrString(name),
+			Description:             sdv1.PtrString(description),
+			Environment:             &sdv1.ObjectReference{Id: envId},
+			KafkaCluster:            &sdv1.ObjectReference{Id: clusterId},
+			KsqlCluster:             &sdv1.ObjectReference{Id: ksqlId},
+			StreamGovernanceCluster: &sdv1.ObjectReference{Id: srClusterId},
+		},
+	}
+
+	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext(), clusterId).SdV1Pipeline(createPipeline)
 	return c.SdClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
 }
 
 func (c *Client) DeleteSdPipeline(envId string, clusterId string, id string) (*http.Response, error) {
-	req := c.SdClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), envId, clusterId, id)
+	req := c.SdClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), clusterId, id)
+	req = req.Environment(envId)
 	return c.SdClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
 }
 
 func (c *Client) GetSdPipeline(envId string, clusterId string, id string) (sdv1.SdV1Pipeline, *http.Response, error) {
-	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), envId, clusterId, id)
+	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), clusterId, id)
+	req = req.Environment(envId)
 	return c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
 }
 
 func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, *http.Response, error) {
-	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), envId, clusterId, id).SdV1PipelineUpdate(update)
+	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), clusterId, id).SdV1PipelineUpdate(update)
 	return c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
 }
 
