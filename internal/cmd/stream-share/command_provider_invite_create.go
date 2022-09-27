@@ -62,5 +62,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(c.buildProviderShare(invite))
+	return table.Print()
 }

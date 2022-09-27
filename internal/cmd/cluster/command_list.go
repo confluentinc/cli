@@ -8,7 +8,6 @@ import (
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type listCommand struct {
@@ -38,10 +37,5 @@ func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return print.PrintCluster(clusterInfos, format)
+	return print.PrintClusters(cmd, clusterInfos)
 }
