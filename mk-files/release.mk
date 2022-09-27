@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz alpine_amd64.tar.gz windows_amd64.zip
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_arm64.tar.gz alpine_amd64.tar.gz alpine_arm64.tar.gz windows_amd64.zip
 
 .PHONY: release
 release: check-branch commit-release tag-release
