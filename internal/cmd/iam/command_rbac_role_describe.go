@@ -104,7 +104,7 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(roleDisplay)
-	return table.PrintWithAutoWrap(false)
+	list := output.NewList(cmd)
+	list.Add(roleDisplay)
+	return list.PrintWithAutoWrap(false)
 }

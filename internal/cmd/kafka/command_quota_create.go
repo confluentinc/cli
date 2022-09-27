@@ -12,11 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Name"}
-	structuredRenames = map[string]string{"Id": "id", "DisplayName": "name", "Description": "description", "Ingress": "ingress", "Egress": "egress", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals", "Environment": "environment"}
-)
-
 func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -31,7 +26,8 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
 				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
-			}),
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "Display name for quota.")

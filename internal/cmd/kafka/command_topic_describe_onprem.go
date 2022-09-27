@@ -22,7 +22,7 @@ type topicData struct {
 	TopicName         string            `json:"topic_name" yaml:"topic_name"`
 	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
 	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []partitionData   `json:"partitions" yaml:"partitions"`
+	Partitions        []*partitionData  `json:"partitions" yaml:"partitions"`
 	Configs           map[string]string `json:"config" yaml:"config"`
 }
 
@@ -68,7 +68,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	topic := &topicData{
 		TopicName:      topicName,
 		PartitionCount: len(partitionsResp.Data),
-		Partitions:     make([]partitionData, len(partitionsResp.Data)),
+		Partitions:     make([]*partitionData, len(partitionsResp.Data)),
 	}
 	for i, partitionResp := range partitionsResp.Data {
 		// For each partition, get replicas
@@ -78,7 +78,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
-		topic.Partitions[i] = partitionData{
+		topic.Partitions[i] = &partitionData{
 			TopicName:              topicName,
 			PartitionId:            partitionResp.PartitionId,
 			ReplicaBrokerIds:       make([]int32, len(replicasResp.Data)),
