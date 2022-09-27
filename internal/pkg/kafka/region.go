@@ -7,10 +7,10 @@ import (
 )
 
 type region struct {
-	CloudId    string
-	CloudName  string
-	RegionId   string
-	RegionName string
+	CloudId    string `human:"Cloud ID" structured:"cloud_id"`
+	CloudName  string `human:"Cloud Name" structured:"cloud_name"`
+	RegionId   string `human:"Region ID" structured:"region_id"`
+	RegionName string `human:"Region Name" structured:"region_name"`
 }
 
 var Clouds = []string{"aws", "azure", "gcp"}

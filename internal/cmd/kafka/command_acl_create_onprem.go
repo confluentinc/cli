@@ -61,5 +61,5 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	aclData := aclutil.CreateAclRequestDataToAclData(acl)
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData})
 }

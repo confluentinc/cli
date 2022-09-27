@@ -157,6 +157,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
 		{args: "iam rbac role-binding list --help", fixture: "iam/rbac/role-binding/list-help-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidOrgAdmin", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-1-cloud.golden", wantErrCode: 1},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role InvalidMetricsViewer", fixture: "iam/rbac/role-binding/list-invalid-role-error-type-2-cloud.golden", wantErrCode: 1},
+		{args: "iam rbac role-binding list --current-user", fixture: "iam/rbac/role-binding/list-current-user.golden"},
 	}
 
 	for _, tt := range tests {

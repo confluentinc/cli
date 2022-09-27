@@ -14,6 +14,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type out struct {
+	Key             string `human:"Key" serialized:"key"`
+	Description     string `human:"Description" serialized:"description"`
+	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
+	OwnerEmail      string `human:"Owner Email" serialized:"owner_email"`
+	ResourceType    string `human:"Resource Type" serialized:"resource_type"`
+	ResourceId      string `human:"Resource ID" serialized:"resource_id"`
+	Created         string `human:"Created" serialized:"created"`
+}
+
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
@@ -63,15 +73,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		resources = apiKey.Spec.GetResources()
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 
 	// Note that if more resource types are added with no logical clusters, then additional logic
 	// needs to be added here to determine the resource type.
 	for _, res := range resources {
-		outputWriter.AddElement(&row{
+		list.Add(&out{
 			Key:             apiKey.GetId(),
 			Description:     apiKey.Spec.GetDescription(),
 			OwnerResourceId: ownerId,
@@ -82,5 +89,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

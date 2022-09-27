@@ -1,15 +1,15 @@
 {
-  "id": "lkc-describe-dedicated",
-  "name": "kafka-cluster",
-  "type": "DEDICATED",
-  "cluster_size": 1,
-  "ingress": 50,
-  "egress": 150,
-  "storage": "Infinite",
-  "provider": "aws",
-  "region": "us-west-2",
-  "availability": "single-zone",
-  "status": "UP",
-  "endpoint": "SASL_SSL://kafka-endpoint",
-  "rest_endpoint": "http://kafka-rest-url"
+  "Id": "lkc-describe-dedicated",
+  "Name": "kafka-cluster",
+  "Type": "DEDICATED",
+  "ClusterSize": 1,
+  "NetworkIngress": 50,
+  "NetworkEgress": 150,
+  "Storage": "Infinite",
+  "ServiceProvider": "aws",
+  "Region": "us-west-2",
+  "Availability": "single-zone",
+  "Status": "UP",
+  "Endpoint": "SASL_SSL://kafka-endpoint",
+  "RestEndpoint": "http://kafka-rest-url"
 }
