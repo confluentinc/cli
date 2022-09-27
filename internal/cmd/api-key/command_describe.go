@@ -19,9 +19,9 @@ type out struct {
 	Description     string `human:"Description" serialized:"description"`
 	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
 	OwnerEmail      string `human:"Owner Email" serialized:"owner_email"`
-	ResourceType    string `human:"Resource Type" serialized:"resource_type"row`
-	ResourceId      string `human:"Resource ID" serialized:"resource_id"row`
-	Created         string `human:"Created" serialized:"created"row`
+	ResourceType    string `human:"Resource Type" serialized:"resource_type"`
+	ResourceId      string `human:"Resource ID" serialized:"resource_id"`
+	Created         string `human:"Created" serialized:"created"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {

@@ -26,12 +26,6 @@ type topicConfigurationOut struct {
 	ReadOnly string `human:"Read-Only" serialized:"read_only"`
 }
 
-var (
-	topicListLabels           = []string{"Name", "Value", "ReadOnly"}
-	topicListHumanLabels      = []string{"Name", "Value", "Read-Only"}
-	topicListStructuredLabels = []string{"name", "value", "read_only"}
-)
-
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic>",

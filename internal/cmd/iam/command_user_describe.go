@@ -14,25 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	humanLabelMap = map[string]string{
-		"Id":                   "ID",
-		"Email":                "Email",
-		"FirstName":            "First Name",
-		"LastName":             "Last Name",
-		"Status":               "Status",
-		"AuthenticationMethod": "Authentication Method",
-	}
-	structuredLabelMap = map[string]string{
-		"Id":                   "id",
-		"Email":                "email",
-		"FirstName":            "first_name",
-		"LastName":             "last_name",
-		"Status":               "status",
-		"AuthenticationMethod": "authentication_method",
-	}
-)
-
 func (c userCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",

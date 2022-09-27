@@ -14,8 +14,8 @@ type identityPoolOut struct {
 	Id            string `human:"ID" serialized:"id"`
 	DisplayName   string `human:"Display Name" serialized:"display_name"`
 	Description   string `human:"Description" serialized:"description"`
-	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"row`
-	Filter        string `human:"Filter" serialized:"filter"row`
+	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"`
+	Filter        string `human:"Filter" serialized:"filter"`
 }
 
 func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {

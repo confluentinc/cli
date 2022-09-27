@@ -40,14 +40,14 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 }
 
 type quotaOut struct {
-	Id          string `human:"ID" serialized:"id"row`
-	DisplayName string `human:"Name" serialized:"display_name"row`
-	Description string `human:"Description" serialized:"description"row`
-	Ingress     string `human:"Ingress" serialized:"ingress"row`
-	Egress      string `human:"Egress" serialized:"egress"row`
-	Principals  string `human:"Principals" serialized:"principals"row`
-	Cluster     string `human:"Cluster" serialized:"cluster"row`
-	Environment string `human:"Environment" serialized:"environment"row`
+	Id          string `human:"ID" serialized:"id"`
+	DisplayName string `human:"Name" serialized:"display_name"`
+	Description string `human:"Description" serialized:"description"`
+	Ingress     string `human:"Ingress" serialized:"ingress"`
+	Egress      string `human:"Egress" serialized:"egress"`
+	Principals  string `human:"Principals" serialized:"principals"`
+	Cluster     string `human:"Cluster" serialized:"cluster"`
+	Environment string `human:"Environment" serialized:"environment"`
 }
 
 func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {

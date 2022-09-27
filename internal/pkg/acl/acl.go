@@ -21,11 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	listFields       = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	humanLabels      = []string{"Principal", "Permission", "Operation", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabels = []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-)
+var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
 
 type out struct {
 	Principal    string `human:"Principal" serialized:"principal"`
