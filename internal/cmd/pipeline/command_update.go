@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	// "github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -21,8 +20,8 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Request to update a pipeline in Stream Designer with a new name, description, and source code located in current local directory",
-				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription" -- sql-file .`,
+				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name, description, and source code located in current directory.`,
+				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription" -- sql-file`,
 			},
 		),
 	}

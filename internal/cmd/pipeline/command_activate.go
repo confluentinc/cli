@@ -17,7 +17,7 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.activate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Request to activate a pipeline in Stream Designer",
+				Text: `Request to activate Stream Designer pipeline "pipe-12345".`,
 				Code: `confluent pipeline activate pipe-12345`,
 			},
 		),
@@ -29,7 +29,6 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

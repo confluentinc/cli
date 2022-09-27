@@ -17,7 +17,7 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 		RunE:  c.deactivate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Request to deactivate a pipeline in Stream Designer",
+				Text: `Request to deactivate Stream Designer pipeline "pipe-12345".`,
 				Code: `confluent pipeline deactivate pipe-12345`,
 			},
 		),
@@ -29,7 +29,6 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 }
 
 func (c *command) deactivate(cmd *cobra.Command, args []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

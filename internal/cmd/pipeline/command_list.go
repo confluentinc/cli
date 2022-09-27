@@ -24,7 +24,6 @@ func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 //       object yet, hence you will see error message as below. Official API minispec is coming soon.
 //       'Error: json: cannot unmarshal array into Go value of type v1.SdV1PipelineList'
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
