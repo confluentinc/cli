@@ -11,9 +11,8 @@ import (
 	"golang.org/x/oauth2"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
@@ -27,14 +26,14 @@ type ksqlCommand struct {
 // Contains all the fields for listing + describing from the &schedv1.KSQLCluster object
 // in scheduler but changes Status to a string so we can have a `PAUSED` option
 type ksqlCluster struct {
-	Id                    string `json:"id,omitempty"`
-	Name                  string `json:"name,omitempty"`
-	OutputTopicPrefix     string `json:"output_topic_prefix,omitempty"`
-	KafkaClusterId        string `json:"kafka_cluster_id,omitempty"`
-	Storage               int32  `json:"storage,omitempty"`
-	Endpoint              string `json:"endpoint,omitempty"`
-	Status                string `json:"status,omitempty"`
-	DetailedProcessingLog bool   `json:"detailed_processing_log,omitempty"`
+	Id                    string `human:"ID" serialized:"id"`
+	Name                  string `human:"Name" serialized:"name"`
+	OutputTopicPrefix     string `human:"Topic Prefix" serialized:"topic_prefix"`
+	KafkaClusterId        string `human:"Kafka" serialized:"kafka"`
+	Storage               int32  `human:"Storage" serialized:"storage"`
+	Endpoint              string `human:"Endpoint" serialized:"endpoint"`
+	Status                string `human:"Status" serialized:"status"`
+	DetailedProcessingLog bool   `human:"Detailed Processing Log" serialized:"detailed_processing_log"`
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {

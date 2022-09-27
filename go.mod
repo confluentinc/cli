@@ -32,7 +32,6 @@ require (
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
-	github.com/confluentinc/go-printer v0.16.0
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
@@ -67,6 +66,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
+	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0
@@ -165,7 +165,6 @@ require (
 	github.com/chavacava/garif v0.0.0-20210405164556-e8a0a408d6af // indirect
 	github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4 // indirect
 	github.com/cncf/xds/go v0.0.0-20211216145620-d92e9ce0af51 // indirect
-	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
 	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
@@ -196,7 +195,6 @@ require (
 	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/fzipp/gocyclo v0.4.0 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gliderlabs/ssh v0.3.0 // indirect
 	github.com/go-critic/go-critic v0.6.2 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
