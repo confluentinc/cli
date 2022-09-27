@@ -20,8 +20,8 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe a pipeline, and save the source code to current local directory.",
-				Code: `confluent pipeline describe pipe-12345 --output-directory .`,
+				Text: `Describe Stream Designer pipeline "pipe-12345" and save the source code to working directory.`,
+				Code: `confluent pipeline describe pipe-12345 --output-directory`,
 			},
 		),
 	}
@@ -36,7 +36,6 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	outputDirectory, _ := cmd.Flags().GetString("output-directory")
 
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

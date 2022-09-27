@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	// "io"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -19,7 +18,7 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Delete a pipeline in Stream Designer",
+				Text: `Request to delete Stream Designer pipeline "pipe-12345".`,
 				Code: `confluent pipeline delete pipe-12345`,
 			},
 		),
