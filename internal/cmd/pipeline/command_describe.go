@@ -36,7 +36,6 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	outputDirectory, _ := cmd.Flags().GetString("output-directory")
 
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

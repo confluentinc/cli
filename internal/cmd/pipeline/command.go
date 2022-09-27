@@ -16,8 +16,8 @@ type Pipeline struct {
 
 var (
 	pipelineListFields           = []string{"Id", "Name", "State"}
-	pipelineListHumanLabels      = []string{"Id", "Name", "State"}
-	pipelineListStructuredLabels = []string{"Id", "Name", "State"}
+	pipelineListHumanLabels      = []string{"ID", "Name", "State"}
+	pipelineListStructuredLabels = []string{"id", "name", "state"}
 )
 
 type command struct {

@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeFields            = []string{"Id", "Name", "State"}
-	describeHumanRenames      = map[string]string{"Id": "ID"}
-	describeStructuredRenames = map[string]string{"Id": "id", "Name": "name", "State": "state"}
-)
-
 func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -25,7 +19,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new pipeline in Stream Designer",
-				Code: `confluent pipeline create --name "test pipeline" --ksqldb-cluster "lkc-0000" --description "this is a test pipeline"`,
+				Code: `confluent pipeline create --name "test pipeline" --ksqldb-cluster lksqlc-12345 --description "this is a test pipeline"`,
 			},
 		),
 	}
@@ -43,12 +37,10 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	// get flag values
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqldbCluster, _ := cmd.Flags().GetString("ksqldb-cluster")
 
-	// get kafka cluster
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

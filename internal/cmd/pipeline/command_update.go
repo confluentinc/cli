@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	// "github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {

@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	// "io"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

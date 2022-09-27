@@ -29,7 +29,6 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 }
 
 func (c *command) deactivate(cmd *cobra.Command, args []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
