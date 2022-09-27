@@ -5,7 +5,7 @@
     "status": "RUNNING",
     "type": "Sink"
   },
-  "tasks": [
+  "task": [
     {
       "task_id": 1,
       "state": "RUNNING"
