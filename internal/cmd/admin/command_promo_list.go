@@ -40,7 +40,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, code := range codes {
 		isSerialized := output.GetFormat(cmd).IsSerialized()
 
@@ -50,7 +49,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Expiration: formatExpiration(isSerialized, code.CreditExpirationDate.Seconds),
 		})
 	}
-
 	return list.Print()
 }
 

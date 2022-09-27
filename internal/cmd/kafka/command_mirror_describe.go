@@ -61,7 +61,6 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, partitionLag := range mirror.MirrorLags {
 		list.Add(&mirrorOut{
 			LinkName:              mirror.LinkName,
@@ -74,7 +73,6 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
-
 	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})
 	return list.Print()
 }

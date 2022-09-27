@@ -78,7 +78,6 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	list := output.NewList(cmd)
-
 	for _, result := range results.Data {
 		var errorMessage string
 		if result.ErrorMessage != nil {
@@ -114,7 +113,6 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 			})
 		}
 	}
-
 	list.Filter([]string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"})
 	return list.Print()
 }

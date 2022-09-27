@@ -27,7 +27,6 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, serviceAccount := range serviceAccounts {
 		list.Add(&serviceAccountOut{
 			ResourceId:  serviceAccount.GetId(),
@@ -35,6 +34,5 @@ func (c *serviceAccountCommand) list(cmd *cobra.Command, _ []string) error {
 			Description: serviceAccount.GetDescription(),
 		})
 	}
-
 	return list.Print()
 }

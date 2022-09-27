@@ -27,7 +27,6 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, provider := range identityProviders {
 		list.Add(&identityProviderOut{
 			Id:          provider.GetId(),
@@ -37,6 +36,5 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 			JwksUri:     provider.GetJwksUri(),
 		})
 	}
-
 	return list.Print()
 }

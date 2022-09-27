@@ -31,7 +31,6 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
-
 	for _, context := range c.Config.Contexts {
 		isCurrent := context.Name == c.Config.CurrentContext
 
@@ -51,6 +50,5 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Credential: context.CredentialName,
 		})
 	}
-
 	return list.Print()
 }

@@ -46,7 +46,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for name, connector := range connectorExpansions {
 		list.Add(&connectOut{
 			Name:   name,
@@ -56,6 +55,5 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Trace:  connector.Status.Connector.GetTrace(),
 		})
 	}
-
 	return list.Print()
 }

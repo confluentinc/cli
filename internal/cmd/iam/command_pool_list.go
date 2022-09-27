@@ -35,7 +35,6 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, pool := range identityPools {
 		list.Add(&identityPoolOut{
 			Id:            pool.GetId(),
@@ -45,6 +44,5 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 			Filter:        pool.GetFilter(),
 		})
 	}
-
 	return list.Print()
 }

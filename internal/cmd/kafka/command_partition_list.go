@@ -54,7 +54,6 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, partition := range partitionListResp.Data {
 		list.Add(&partitionOut{
 			ClusterId:   partition.ClusterId,
@@ -63,6 +62,5 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 			LeaderId:    parseLeaderId(partition.Leader),
 		})
 	}
-
 	return list.Print()
 }

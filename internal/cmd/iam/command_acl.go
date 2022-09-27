@@ -101,7 +101,6 @@ func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 
 func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclBinding) error {
 	list := output.NewList(cmd)
-
 	for _, binding := range aclBindings {
 		list.Add(&out{
 			KafkaClusterId: kafkaClusterId,
@@ -114,7 +113,6 @@ func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclB
 			PatternType:    binding.Pattern.PatternType,
 		})
 	}
-
 	return list.Print()
 }
 

@@ -51,12 +51,10 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	format := output.GetFormat(cmd)
 	for _, quota := range quotas {
 		list.Add(quotaToPrintable(quota, format))
 	}
-
 	return list.Print()
 }
 

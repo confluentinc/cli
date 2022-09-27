@@ -41,7 +41,6 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	if len(listLinkConfigsRespData.Data) == 0 {
 		return list.Print()
 	}
@@ -63,6 +62,5 @@ func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
 			Synonyms:    config.Synonyms,
 		})
 	}
-
 	return list.Print()
 }

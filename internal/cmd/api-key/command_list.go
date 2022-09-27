@@ -107,7 +107,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	usersMap := getUsersMap(allUsers)
 
 	list := output.NewList(cmd)
-
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if !apiKey.Spec.HasOwner() {
@@ -148,7 +147,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
-
 	return list.Print()
 }
 

@@ -155,7 +155,6 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	}
 
 	list := output.NewList(cmd)
-
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
 		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
@@ -228,7 +227,6 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 			}
 		}
 	}
-
 	return list.Print()
 }
 
@@ -326,7 +324,6 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 	poolToNameMap, _ := c.getPoolToNameMap()
 
 	list := output.NewList(cmd)
-
 	for _, principal := range principals {
 		row := &roleBindingListOut{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
@@ -342,7 +339,6 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 			list.Add(row)
 		}
 	}
-
 	return list.Print()
 }
 
@@ -377,7 +373,6 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	}
 
 	list := output.NewList(cmd)
-
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
@@ -411,7 +406,6 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 			}
 		}
 	}
-
 	list.Filter(resourcePatternListFields)
 	return list.Print()
 }
@@ -427,7 +421,6 @@ func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 	}
 
 	list := output.NewList(cmd)
-
 	for _, roleName := range roleNames {
 		resourcePatterns, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.createContext(), principal, roleName, *mdsScope)
 		if err != nil {
@@ -448,7 +441,6 @@ func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsSco
 			})
 		}
 	}
-
 	list.Filter([]string{"Role", "ResourceType", "Name", "PatternType"})
 	return list.Print()
 }
@@ -486,11 +478,9 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 	}
 
 	list := output.NewList(cmd)
-
 	for _, principal := range principals {
 		list.Add(&roleBindingOut{Principal: principal})
 	}
-
 	list.Filter([]string{"Principal"})
 	return list.Print()
 }

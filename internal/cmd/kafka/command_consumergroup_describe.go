@@ -66,7 +66,6 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		utils.Print(cmd, "\nConsumers\n\n")
 
 		list := output.NewList(cmd)
-
 		for _, consumer := range groupData.Consumers {
 			list.Add(&consumer)
 		}

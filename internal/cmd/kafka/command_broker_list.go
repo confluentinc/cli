@@ -47,7 +47,6 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, data := range brokersGetResp.Data {
 		broker := &brokerOut{
 			ClusterId: data.ClusterId,
@@ -61,6 +60,5 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		list.Add(broker)
 	}
-
 	return list.Print()
 }

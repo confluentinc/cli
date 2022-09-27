@@ -85,7 +85,6 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			list := output.NewList(cmd)
-
 			for name, value := range configs {
 				list.Add(&configOut{
 					Name:  name,
@@ -121,7 +120,6 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	list := output.NewList(cmd)
-
 	for _, config := range resp.Config {
 		list.Add(&configOut{
 			Name:  config.Name,
@@ -132,7 +130,6 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		Name:  partitionCount,
 		Value: strconv.Itoa(len(resp.Partitions)),
 	})
-
 	list.Filter([]string{"Name", "Value"})
 	return list.Print()
 }

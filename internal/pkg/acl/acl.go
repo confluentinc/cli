@@ -46,7 +46,6 @@ type AclRequestDataWithError struct {
 
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
 	list := output.NewList(cmd)
-
 	for _, acl := range acls {
 		list.Add(&out{
 			Principal:    acl.Principal,
@@ -58,13 +57,11 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.Acl
 			PatternType:  acl.PatternType,
 		})
 	}
-
 	return list.Print()
 }
 
 func PrintACLs(cmd *cobra.Command, acls []*schedv1.ACLBinding) error {
 	list := output.NewList(cmd)
-
 	for _, acl := range acls {
 		list.Add(&out{
 			Principal:    acl.GetEntry().GetPrincipal(),
@@ -75,7 +72,6 @@ func PrintACLs(cmd *cobra.Command, acls []*schedv1.ACLBinding) error {
 			PatternType:  acl.GetPattern().GetPatternType().String(),
 		})
 	}
-
 	list.Filter(listFields)
 	return list.Print()
 }
@@ -201,7 +197,7 @@ func convertToFlags(operations ...interface{}) string {
 		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprintf("%v", v)
+		s := fmt.Sprint(v)
 		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}
@@ -298,7 +294,6 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 
 func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []cckafkarestv3.AclData, idMap map[int32]string) error {
 	list := output.NewList(cmd)
-
 	for _, acl := range acls {
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Principal, idMap)
 		if err != nil {
@@ -316,14 +311,12 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []
 			PatternType:  acl.PatternType,
 		})
 	}
-
 	list.Filter(listFields)
 	return list.Print()
 }
 
 func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*schedv1.ACLBinding, idMap map[int32]string) error {
 	list := output.NewList(cmd)
-
 	for _, acl := range acls {
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, idMap)
 		if err != nil {
@@ -341,7 +334,6 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*schedv1.ACLBinding, 
 			PatternType:  acl.Pattern.PatternType.String(),
 		})
 	}
-
 	list.Filter(listFields)
 	return list.Print()
 }

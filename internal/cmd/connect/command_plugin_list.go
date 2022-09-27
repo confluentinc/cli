@@ -45,13 +45,11 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, plugin := range plugins {
 		list.Add(&pluginListOut{
 			Class: plugin.Class,
 			Type:  plugin.Type,
 		})
 	}
-
 	return list.Print()
 }

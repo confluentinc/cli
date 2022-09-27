@@ -74,7 +74,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	// Note that if more resource types are added with no logical clusters, then additional logic
 	// needs to be added here to determine the resource type.
 	for _, res := range resources {
@@ -88,6 +87,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 			Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 		})
 	}
-
 	return list.Print()
 }

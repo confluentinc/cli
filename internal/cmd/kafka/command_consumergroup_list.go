@@ -43,7 +43,6 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, group := range groupCmdResp.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
@@ -54,6 +53,5 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 			State:             group.GetState(),
 		})
 	}
-
 	return list.Print()
 }

@@ -232,7 +232,6 @@ func mapToSlice(m map[string]string) []string {
 
 func printTable(cmd *cobra.Command, rows []row) error {
 	list := output.NewList(cmd)
-
 	for _, row := range rows {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&out{
@@ -248,16 +247,15 @@ func printTable(cmd *cobra.Command, rows []row) error {
 				ClusterType:  row.clusterType,
 				Availability: row.availability,
 				NetworkType:  row.networkType,
-				Price:        fmt.Sprintf("%v", row.price),
+				Price:        fmt.Sprint(row.price),
 			})
 		}
 	}
-
 	return list.Print()
 }
 
 func formatPrice(price float64, unit string) string {
-	priceStr := fmt.Sprintf("%v", price)
+	priceStr := fmt.Sprint(price)
 
 	// Require >= 2 digits after the decimal
 	if strings.Contains(priceStr, ".") {

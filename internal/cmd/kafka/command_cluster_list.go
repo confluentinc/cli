@@ -54,7 +54,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
 		if output.GetFormat(cmd) == output.Human {
@@ -66,7 +65,6 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		list.Add(convertClusterToDescribeStruct(&cluster))
 	}
-
 	list.Filter([]string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
 	return list.Print()
 }

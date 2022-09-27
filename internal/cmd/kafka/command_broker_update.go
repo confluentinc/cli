@@ -93,14 +93,12 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, config := range data.Data {
 		list.Add(&configOut{
 			Name:  config.Name,
 			Value: *config.Value,
 		})
 	}
-
 	list.Filter([]string{"Name", "Value"})
 	return list.Print()
 }

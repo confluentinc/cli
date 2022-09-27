@@ -69,7 +69,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, quota := range quotas {
 		out := &quotaValue{
 			QuotaCode:    quota.GetId(),
@@ -97,6 +96,5 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		}
 		list.Add(out)
 	}
-
 	return list.Print()
 }

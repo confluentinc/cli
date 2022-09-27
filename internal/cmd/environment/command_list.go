@@ -30,7 +30,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, environment := range environments {
 		id := *environment.Id
 		if output.GetFormat(cmd) == output.Human {
@@ -46,6 +45,5 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Name: *environment.DisplayName,
 		})
 	}
-
 	return list.Print()
 }

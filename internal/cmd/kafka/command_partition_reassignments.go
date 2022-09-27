@@ -91,7 +91,6 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 	}
 
 	list := output.NewList(cmd)
-
 	for _, reassignment := range reassignmentListResp.Data {
 		list.Add(&reassignmentsOut{
 			ClusterId:        reassignment.ClusterId,
@@ -101,6 +100,5 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 			RemovingReplicas: reassignment.RemovingReplicas,
 		})
 	}
-
 	return list.Print()
 }

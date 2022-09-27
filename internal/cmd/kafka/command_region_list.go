@@ -36,6 +36,5 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, region := range regions {
 		list.Add(region)
-	}
-	return list.Print()
+	}	return list.Print()
 }

@@ -213,7 +213,7 @@ var roleBindingListTests = []roleBindingTest{
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprint(tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {

@@ -44,10 +44,8 @@ func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, lagData := range lagSummaryResp.Data {
 		list.Add(convertLagToStruct(lagData))
 	}
-
 	return list.Print()
 }

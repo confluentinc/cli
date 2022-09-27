@@ -88,7 +88,6 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, entry := range data {
 		if output.GetFormat(cmd) == output.Human {
 			entry.Name = utils.Abbreviate(entry.Name, abbreviationLength)
@@ -96,7 +95,6 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 		}
 		list.Add(entry)
 	}
-
 	return list.Print()
 }
 

@@ -31,7 +31,6 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, user := range users {
 		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
@@ -58,6 +57,5 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 			AuthenticationMethod: strings.Join(authMethods, ", "),
 		})
 	}
-
 	return list.Print()
 }

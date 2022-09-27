@@ -87,7 +87,6 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, data := range replicaStatusDataList.Data {
 		out := &replicaOut{
 			ClusterId:          data.ClusterId,
@@ -101,8 +100,8 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 			IsCaughtUp:         data.IsCaughtUp,
 			LogStartOffset:     data.LogStartOffset,
 			LogEndOffset:       data.LogEndOffset,
-			LastCaughtUpTimeMs: fmt.Sprintf("%v", data.LastCaughtUpTimeMs),
-			LastFetchTimeMs:    fmt.Sprintf("%v", data.LastFetchTimeMs),
+			LastCaughtUpTimeMs: fmt.Sprint(data.LastCaughtUpTimeMs),
+			LastFetchTimeMs:    fmt.Sprint(data.LastFetchTimeMs),
 			LinkName:           data.LinkName,
 		}
 		if output.GetFormat(cmd) == output.Human {
@@ -111,7 +110,6 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		list.Add(out)
 	}
-
 	return list.Print()
 }
 

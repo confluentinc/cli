@@ -45,7 +45,6 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	}
 
 	list := output.NewList(cmd)
-
 	for _, invitation := range invitations {
 		user := &orgv1.User{ResourceId: invitation.UserResourceId}
 
@@ -64,6 +63,5 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 			Status:         invitation.Status,
 		})
 	}
-
 	return list.Print()
 }

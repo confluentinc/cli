@@ -87,8 +87,8 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 				vi := reflect.ValueOf(t.objects[i]).Elem().Field(k)
 				vj := reflect.ValueOf(t.objects[j]).Elem().Field(k)
 
-				si := fmt.Sprintf("%v", vi)
-				sj := fmt.Sprintf("%v", vj)
+				si := fmt.Sprint(vi)
+				sj := fmt.Sprint(vj)
 
 				if si != sj {
 					return si < sj
@@ -154,7 +154,7 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			for i := 0; i < reflect.TypeOf(object).Elem().NumField(); i++ {
 				tag := strings.Split(reflect.TypeOf(object).Elem().Field(i).Tag.Get(t.format.String()), ",")
 				if tag[0] != "-" {
-					row = append(row, fmt.Sprintf("%v", reflect.ValueOf(object).Elem().Field(i)))
+					row = append(row, fmt.Sprint(reflect.ValueOf(object).Elem().Field(i)))
 				}
 			}
 			w.Append(row)
@@ -168,7 +168,7 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			tag := strings.Split(reflect.TypeOf(t.objects[0]).Elem().Field(i).Tag.Get(t.format.String()), ",")
 			val := reflect.ValueOf(t.objects[0]).Elem().Field(i)
 			if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
-				w.Append([]string{tag[0], fmt.Sprintf("%v", val)})
+				w.Append([]string{tag[0], fmt.Sprint(val)})
 			}
 		}
 	}

@@ -93,11 +93,9 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 	}
 
 	list := output.NewList(cmd)
-
 	for _, entry := range taskData.Data {
 		list.Add(parseBrokerTaskData(entry))
 	}
-
 	return list.Print()
 }
 
