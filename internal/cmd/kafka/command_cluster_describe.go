@@ -2,6 +2,8 @@ package kafka
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strings"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -30,6 +32,7 @@ var (
 		"PendingClusterSize": "Pending Cluster Size",
 		"RestEndpoint":       "REST Endpoint",
 		"ServiceProvider":    "Provider",
+		"TopicCount":         "Topic Count",
 	}
 	describeStructuredRenames = map[string]string{
 		"Id":                 "id",
@@ -49,6 +52,7 @@ var (
 		"EncryptionKeyId":    "encryption_key_id",
 		"RestEndpoint":       "rest_endpoint",
 		"KAPI":               "kapi",
+		"TopicCount":         "topic_count",
 	}
 )
 
@@ -70,6 +74,7 @@ type describeStruct struct {
 	EncryptionKeyId    string
 	RestEndpoint       string
 	KAPI               string
+	TopicCount         int
 }
 
 func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
@@ -126,16 +131,23 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 
 func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
 	describeStruct := convertClusterToDescribeStruct(cluster)
+	topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+	if err != nil {
+		return err
+	}
+	describeStruct.TopicCount = topicCount
+
 	if all { // expose KAPI when --all flag is set
 		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 		if err != nil {
 			return err
 		}
 		describeStruct.KAPI = kAPI
-		return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithKAPI), describeHumanRenames, describeStructuredRenames)
+
+		return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithKAPI, true), describeHumanRenames, describeStructuredRenames)
 	}
 
-	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields), describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields, true), describeHumanRenames, describeStructuredRenames)
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
@@ -145,7 +157,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	}
 	describeStruct := convertClusterToDescribeStruct(cluster)
 	describeStruct.ApiEndpoint = kAPI
-	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint), describeHumanRenames, describeStructuredRenames)
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint, false), describeHumanRenames, describeStructuredRenames)
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster) *describeStruct {
@@ -179,7 +191,7 @@ func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster) string {
 	}
 }
 
-func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string) []string {
+func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string, counts bool) []string {
 	describeFields := basicFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
@@ -189,6 +201,9 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 		if cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil && *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != "" {
 			describeFields = append(describeFields, "EncryptionKeyId")
 		}
+	}
+	if counts {
+		describeFields = append(describeFields, "TopicCount")
 	}
 	return describeFields
 }
@@ -201,4 +216,36 @@ func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (
 		return "", errors.CatchKafkaNotFoundError(err, lkc, nil)
 	}
 	return kafkaCluster.ApiEndpoint, nil
+}
+
+func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
+	lkc := *cluster.Id
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		ctx := c.AuthenticatedCLICommand.Context.Config.Context()
+		c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
+
+		kafkaREST, _ := c.GetKafkaREST()
+		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
+
+		if err != nil && httpResp != nil {
+			// Kafka REST is available, but an error occurred
+			return 0, kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+
+		if err == nil && httpResp != nil {
+			if httpResp.StatusCode != http.StatusOK {
+				return 0, errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+			// Kafka REST is available and there was no error
+			return len(topicGetResp.Data), nil
+		}
+	}
+
+	// Kafka REST is not available, fall back to KafkaAPI, to be deprecated
+	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
+	resp, err := c.Client.Kafka.ListTopics(context.Background(), req)
+	return len(resp), err
 }
