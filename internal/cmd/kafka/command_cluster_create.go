@@ -199,7 +199,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &kafkaCluster)
+	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
 func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {

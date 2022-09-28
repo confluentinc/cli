@@ -12,4 +12,5 @@
 | Endpoint      | SASL_SSL://kafka-endpoint |
 | API Endpoint  | http://kafka-api-url      |
 | REST Endpoint | http://127.0.0.1:1025     |
+| Topic Count   |                         2 |
 +---------------+---------------------------+
