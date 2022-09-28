@@ -133,10 +133,10 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
 	}
 
-	return c.handlePrivateLinkCluster(cmd, redeemResponse, tokenObj)
+	return c.handlePrivateLinkClusterRedeem(cmd, redeemResponse, tokenObj)
 }
 
-func (c *command) handlePrivateLinkCluster(cmd *cobra.Command, redeemResponse cdxv1.CdxV1RedeemTokenResponse, tokenObj *redeemToken) error {
+func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemResponse cdxv1.CdxV1RedeemTokenResponse, tokenObj *redeemToken) error {
 	consumerSharedResources, err := c.V2Client.ListConsumerSharedResources(redeemResponse.GetId())
 	if err != nil {
 		return err
@@ -151,6 +151,21 @@ func (c *command) handlePrivateLinkCluster(cmd *cobra.Command, redeemResponse cd
 		network = privateNetwork
 	}
 
+	networkKind, privateLinkDataType, privateLinkData := getPrivateLinkNetworkDetails(network)
+
+	tokenObj.NetworkDNSDomain = network.GetDnsDomain()
+	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
+	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
+	tokenObj.NetworkKind = networkKind
+	tokenObj.NetworkPrivateLinkDataType = privateLinkDataType
+	tokenObj.NetworkPrivateLinkData = privateLinkData
+
+	return output.DescribeObject(cmd, tokenObj, append(redeemTokenFields, redeemTokenPrivateLinkFields...),
+		combineMaps(redeemTokenHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
+		combineMaps(redeemTokenStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
+}
+
+func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) (string, string, interface{}) {
 	var networkKind string
 	var privateLinkDataType string
 	var privateLinkData interface{}
@@ -168,17 +183,7 @@ func (c *command) handlePrivateLinkCluster(cmd *cobra.Command, redeemResponse cd
 		privateLinkDataType = "Private Service Connect Service Attachments"
 		privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
 	}
-
-	tokenObj.NetworkDNSDomain = network.GetDnsDomain()
-	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
-	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
-	tokenObj.NetworkKind = networkKind
-	tokenObj.NetworkPrivateLinkDataType = privateLinkDataType
-	tokenObj.NetworkPrivateLinkData = privateLinkData
-
-	return output.DescribeObject(cmd, tokenObj, append(redeemTokenFields, redeemTokenPrivateLinkFields...),
-		combineMaps(redeemTokenHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
-		combineMaps(redeemTokenStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
+	return networkKind, privateLinkDataType, privateLinkData
 }
 
 func combineMaps(m1, m2 map[string]string) map[string]string {
