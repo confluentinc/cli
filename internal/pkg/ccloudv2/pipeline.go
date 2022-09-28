@@ -4,6 +4,7 @@ import (
 	"context"
 	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"strconv"
 )
 
 func newSdClient(url, userAgent string, unsafeTrace bool) *sdv1.APIClient {
@@ -43,12 +44,12 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipel
 }
 
 func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (sdv1.SdV1PipelineList, error) {
-	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext(), clusterId).PageSize(ccloudV2ListPageSize)
+	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
 
-	req.Environment(envId)
+	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
@@ -66,28 +67,35 @@ func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srC
 		},
 	}
 
-	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext(), clusterId).SdV1Pipeline(createPipeline)
+	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext()).SdV1Pipeline(createPipeline)
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
-	req := c.SdClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), clusterId, id)
-	req = req.Environment(envId)
+	req := c.SdClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), id)
+	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	httpResp, err := c.SdClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetSdPipeline(envId, clusterId, id string) (sdv1.SdV1Pipeline, error) {
-	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), clusterId, id)
-	req = req.Environment(envId)
+func (c *Client) GetSdPipeline(envId, clusterId, id string, includeSql bool) (sdv1.SdV1Pipeline, error) {
+	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id)
+	req = req.Environment(envId).SpecKafkaCluster(clusterId)
+
+	if includeSql {
+		req = req.IncludeSql(strconv.FormatBool(true))
+	}
+
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, error) {
-	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), clusterId, id).SdV1PipelineUpdate(update)
+	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1PipelineUpdate(update)
+	req = req.Environment(envId).SpecKafkaCluster(clusterId)
+
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
