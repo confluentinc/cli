@@ -108,6 +108,10 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	ctx := c.AuthenticatedCLICommand.Context.Config.Context()
+	c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
+
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
@@ -150,14 +154,23 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Comman
 	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFields, true), describeHumanRenames, describeStructuredRenames)
 }
 
-func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
+func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
 	kAPI, err := c.getCmkClusterApiEndpoint(cluster)
 	if err != nil {
 		return err
 	}
 	describeStruct := convertClusterToDescribeStruct(cluster)
 	describeStruct.ApiEndpoint = kAPI
-	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint, false), describeHumanRenames, describeStructuredRenames)
+
+	if getTopicCount {
+		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+		if err != nil {
+			return err
+		}
+		describeStruct.TopicCount = topicCount
+	}
+
+	return output.DescribeObject(cmd, describeStruct, getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint, getTopicCount), describeHumanRenames, describeStructuredRenames)
 }
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster) *describeStruct {
@@ -191,7 +204,7 @@ func getKafkaClusterStorage(cluster *cmkv2.CmkV2Cluster) string {
 	}
 }
 
-func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string, counts bool) []string {
+func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []string, getTopicCount bool) []string {
 	describeFields := basicFields
 	if isDedicated(cluster) {
 		describeFields = append(describeFields, "ClusterSize")
@@ -202,9 +215,11 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 			describeFields = append(describeFields, "EncryptionKeyId")
 		}
 	}
-	if counts {
+
+	if getTopicCount {
 		describeFields = append(describeFields, "TopicCount")
 	}
+
 	return describeFields
 }
 
@@ -221,13 +236,7 @@ func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (
 func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
 	lkc := *cluster.Id
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		ctx := c.AuthenticatedCLICommand.Context.Config.Context()
-		c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
-
-		kafkaREST, _ := c.GetKafkaREST()
 		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
-
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
 			return 0, kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)

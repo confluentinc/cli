@@ -14,4 +14,5 @@
 | REST Endpoint        | http://127.0.0.1:1025       |
 | Cluster Size         |                           2 |
 | Pending Cluster Size |                           1 |
+| Topic Count          |                           2 |
 +----------------------+-----------------------------+
