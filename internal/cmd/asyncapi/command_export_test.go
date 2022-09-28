@@ -247,8 +247,8 @@ func TestGetTopicDescription(t *testing.T) {
 	err = details.getTopicDescription()
 	require.NoError(t, err)
 	require.Equal(t, "kafka topic description", details.channelDetails.currentTopicDescription)
-
 }
+
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)

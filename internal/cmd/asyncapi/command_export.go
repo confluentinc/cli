@@ -153,7 +153,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	err = details.getTopicDescription()
 	if err != nil {
-		log.CliLogger.Warnf("failed to get tags: %v", err)
+		log.CliLogger.Warnf("failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
@@ -453,24 +453,22 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	return mapOfMessageCompat, nil
 }
 
-func addChannel(reflector asyncapi.Reflector, channelDetails channelDetails) (asyncapi.Reflector, error) {
+func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.Reflector, error) {
 	channel := asyncapi.ChannelInfo{
-		Name: channelDetails.currentTopic.Name,
+		Name: details.currentTopic.Name,
 		BaseChannelItem: &spec.ChannelItem{
-			MapOfAnything: channelDetails.mapOfMessageCompat,
+			Description:   details.currentTopicDescription,
+			MapOfAnything: details.mapOfMessageCompat,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(channelDetails.currentTopic.Name) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(channelDetails.currentTopic.Name)}},
-				Bindings: &channelDetails.bindings.operationBinding,
-				Tags:     channelDetails.topicLevelTags,
+				ID:       strcase.ToCamel(details.currentTopic.Name) + "Subscribe",
+				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.Name)}},
+				Bindings: &details.bindings.operationBinding,
+				Tags:     details.topicLevelTags,
 			},
 		},
 	}
-	if channelDetails.bindings.channelBindings.Kafka != nil {
-		channel.BaseChannelItem.Bindings = &channelDetails.bindings.channelBindings
-	}
-	if channelDetails.currentTopicDescription != nil {
-		channel.BaseChannelItem.Description = fmt.Sprintf("%v", channelDetails.currentTopicDescription)
+	if details.bindings.channelBindings.Kafka != nil {
+		channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err

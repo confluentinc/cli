@@ -17,7 +17,7 @@ import (
 
 type channelDetails struct {
 	currentTopic            *schedv1.TopicDescription
-	currentTopicDescription interface{}
+	currentTopicDescription string
 	currentSubject          string
 	contentType             string
 	schema                  *schemaregistry.Schema
@@ -42,42 +42,42 @@ type accountDetails struct {
 	channelDetails channelDetails
 }
 
-func (details *accountDetails) getTags() error {
+func (d *accountDetails) getTags() error {
 	// Get topic level tags
-	topicLevelTags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "kafka_topic", details.cluster.Id+":"+details.channelDetails.currentTopic.Name)
+	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get topic level tags: %v", err)
 	}
 	for _, topicLevelTag := range topicLevelTags {
-		details.channelDetails.topicLevelTags = append(details.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
+		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
 	}
 
 	// Get schema level tags
-	schemaLevelTags, _, err := details.srClient.DefaultApi.GetTags(details.srContext, "sr_schema", strconv.Itoa(int(details.channelDetails.schema.Id)))
+	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return fmt.Errorf("failed to get schema level tags: %v", err)
 	}
 	for _, schemaLevelTag := range schemaLevelTags {
-		details.channelDetails.schemaLevelTags = append(details.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
+		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
 
 	return nil
 }
 
-func (details *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", details.channelDetails.currentTopic.Name)
-	schema, _, err := details.srClient.DefaultApi.GetSchemaByVersion(details.srContext, details.channelDetails.currentSubject, "latest", nil)
+func (d *accountDetails) getSchemaDetails() error {
+	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
+	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
 	}
 	var unmarshalledSchema map[string]interface{}
 	if schema.SchemaType == "" {
-		details.channelDetails.contentType = "application/avro"
+		d.channelDetails.contentType = "application/avro"
 	} else if schema.SchemaType == "JSON" {
-		details.channelDetails.contentType = "application/json"
+		d.channelDetails.contentType = "application/json"
 	} else if schema.SchemaType == "PROTOBUF" {
 		log.CliLogger.Warn("Protobuf not supported.")
-		details.channelDetails.contentType = "PROTOBUF"
+		d.channelDetails.contentType = "PROTOBUF"
 		return nil
 	}
 	// JSON or Avro Format
@@ -86,17 +86,19 @@ func (details *accountDetails) getSchemaDetails() error {
 		return fmt.Errorf("failed to unmarshal schema: %v", err)
 
 	}
-	details.channelDetails.unmarshalledSchema = unmarshalledSchema
-	details.channelDetails.schema = &schema
+	d.channelDetails.unmarshalledSchema = unmarshalledSchema
+	d.channelDetails.schema = &schema
 	return nil
 }
 
-func (details *accountDetails) getTopicDescription() error {
-	atlasEntityWithExtInfo, _, err := details.srClient.DefaultApi.GetByUniqueAttributes(details.srContext, "kafka_topic", details.cluster.Id+":"+details.channelDetails.currentTopic.Name, nil)
+func (d *accountDetails) getTopicDescription() error {
+	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
 	if err != nil {
 		return err
 	}
-	details.channelDetails.currentTopicDescription = atlasEntityWithExtInfo.Entity.Attributes["description"]
+	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
+		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
+	}
 	return nil
 }
 
