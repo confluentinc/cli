@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strings"
@@ -364,7 +363,7 @@ func fetchConfigFile(configId string) (string, error) {
 
 	defer resp.Body.Close()
 
-	configFile, err := ioutil.ReadAll(resp.Body)
+	configFile, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

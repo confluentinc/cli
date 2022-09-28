@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -684,7 +683,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/organizations/{id}/invites"
 func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		bs := string(body)
 		var res flowv1.SendInviteReply
 		switch {
@@ -720,7 +719,7 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
-			body, _ := ioutil.ReadAll(r.Body)
+			body, _ := io.ReadAll(r.Body)
 			bs := string(body)
 			var res flowv1.CreateInvitationReply
 			if strings.Contains(bs, "user@exists.com") {

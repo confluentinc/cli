@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"github.com/confluentinc/cli/internal/pkg/form"
 )
@@ -77,7 +76,7 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 	// Read from a file
 	if source[0] == '@' {
 		filePath := source[1:]
-		b, err := ioutil.ReadFile(filePath)
+		b, err := os.ReadFile(filePath)
 		if err != nil {
 			return "", err
 		}

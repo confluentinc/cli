@@ -2,7 +2,6 @@ package auditlog
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"os"
 
@@ -36,12 +35,12 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		data, err = ioutil.ReadFile(fileName)
+		data, err = os.ReadFile(fileName)
 		if err != nil {
 			return err
 		}
 	} else {
-		data, err = ioutil.ReadAll(os.Stdin)
+		data, err = io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}

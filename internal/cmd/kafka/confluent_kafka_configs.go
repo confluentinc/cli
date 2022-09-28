@@ -3,7 +3,6 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -319,7 +318,7 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 			return err
 		}
 		defer configFile.Close()
-		configBytes, err := ioutil.ReadAll(configFile)
+		configBytes, err := io.ReadAll(configFile)
 		if err != nil {
 			return err
 		}

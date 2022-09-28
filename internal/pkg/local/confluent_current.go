@@ -4,7 +4,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -81,11 +80,11 @@ func (cc *ConfluentCurrentManager) GetCurrentDir() (string, error) {
 		if err := os.MkdirAll(cc.currentDir, 0777); err != nil {
 			return "", err
 		}
-		if err := ioutil.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir+"\n"), 0644); err != nil {
+		if err := os.WriteFile(cc.getTrackingFile(), []byte(cc.currentDir+"\n"), 0644); err != nil {
 			return "", err
 		}
 	} else {
-		data, err := ioutil.ReadFile(cc.getTrackingFile())
+		data, err := os.ReadFile(cc.getTrackingFile())
 		if err != nil {
 			return "", err
 		}
@@ -137,7 +136,7 @@ func (cc *ConfluentCurrentManager) WriteConfig(service string, config []byte) er
 		return err
 	}
 
-	return ioutil.WriteFile(file, config, 0644)
+	return os.WriteFile(file, config, 0644)
 }
 
 func (cc *ConfluentCurrentManager) GetLogFile(service string) (string, error) {
@@ -180,7 +179,7 @@ func (cc *ConfluentCurrentManager) ReadPid(service string) (int, error) {
 		return 0, err
 	}
 
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return 0, err
 	}
@@ -195,7 +194,7 @@ func (cc *ConfluentCurrentManager) WritePid(service string, pid int) error {
 	}
 
 	data := []byte(strconv.Itoa(pid) + "\n")
-	return ioutil.WriteFile(file, data, 0644)
+	return os.WriteFile(file, data, 0644)
 }
 
 func (cc *ConfluentCurrentManager) RemovePidFile(service string) error {

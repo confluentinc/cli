@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -196,7 +196,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 		return nil, errors.Wrap(err, "failed to get oauth token")
 	}
 	defer res.Body.Close()
-	errorResponseBody, _ := ioutil.ReadAll(res.Body)
+	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]interface{}
 	err = json.Unmarshal(errorResponseBody, &data)
 	if err != nil {

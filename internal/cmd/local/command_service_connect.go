@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -93,7 +92,7 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return nil
 	}
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -232,7 +231,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		}
 	}
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -399,7 +398,7 @@ func makeRequest(method, url string, body []byte) (string, error) {
 }
 
 func formatJSONResponse(res *http.Response) (string, error) {
-	out, err := ioutil.ReadAll(res.Body)
+	out, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}

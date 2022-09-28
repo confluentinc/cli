@@ -66,18 +66,18 @@ func (c *PassThroughFileSystem) RemoveAll(path string) error {
 	return c.FS.RemoveAll(path)
 }
 
-func (c *PassThroughFileSystem) ReadDir(dirname string) ([]os.FileInfo, error) {
+func (c *PassThroughFileSystem) ReadDir(dirname string) ([]os.DirEntry, error) {
 	if c.Mock.ReadDirFunc != nil {
 		return c.Mock.ReadDirFunc(dirname)
 	}
 	return c.FS.ReadDir(dirname)
 }
 
-func (c *PassThroughFileSystem) TempDir(dir, prefix string) (string, error) {
-	if c.Mock.TempDirFunc != nil {
-		return c.Mock.TempDir(dir, prefix)
+func (c *PassThroughFileSystem) MkdirTemp(dir, prefix string) (string, error) {
+	if c.Mock.MkdirTempFunc != nil {
+		return c.Mock.MkdirTemp(dir, prefix)
 	}
-	return c.FS.TempDir(dir, prefix)
+	return c.FS.MkdirTemp(dir, prefix)
 }
 
 func (c *PassThroughFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) {

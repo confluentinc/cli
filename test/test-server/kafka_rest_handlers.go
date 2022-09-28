@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"testing"
@@ -119,7 +118,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
-			reqBody, _ := ioutil.ReadAll(r.Body)
+			reqBody, _ := io.ReadAll(r.Body)
 			var requestData cpkafkarestv3.CreateTopicRequestData
 			err := json.Unmarshal(reqBody, &requestData)
 			require.NoError(t, err)
@@ -408,7 +407,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		case http.MethodPost:
 			if topicName == "topic-exist" || topicName == "topic-exist-rest" {
 				// Parse Alter Args
-				requestBody, err := ioutil.ReadAll(r.Body)
+				requestBody, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
 				var requestData cpkafkarestv3.AlterConfigBatchRequestData
 				err = json.Unmarshal(requestBody, &requestData)

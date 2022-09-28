@@ -1,7 +1,6 @@
 package releasenotes
 
 import (
-	"io/ioutil"
 	"runtime"
 	"strings"
 )
@@ -41,7 +40,7 @@ func (h *DocsUpdateHandlerImp) getUpdatedDocsPage(newReleaseNotes string) (strin
 }
 
 func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
-	b, err := ioutil.ReadFile(h.docsFilePath)
+	b, err := os.ReadFile(h.docsFilePath)
 	if err != nil {
 		return "", err
 	}

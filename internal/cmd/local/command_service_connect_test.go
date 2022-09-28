@@ -1,7 +1,6 @@
 package local
 
 import (
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"testing"
@@ -25,7 +24,7 @@ func TestFormatJSONResponse(t *testing.T) {
 	req := require.New(t)
 
 	res := &http.Response{
-		Body: ioutil.NopCloser(strings.NewReader(exampleJSON)),
+		Body: io.NopCloser(strings.NewReader(exampleJSON)),
 	}
 
 	out, err := formatJSONResponse(res)
@@ -37,7 +36,7 @@ func TestFormatEmptyJSONResponse(t *testing.T) {
 	req := require.New(t)
 
 	res := &http.Response{
-		Body: ioutil.NopCloser(strings.NewReader("")),
+		Body: io.NopCloser(strings.NewReader("")),
 	}
 
 	out, err := formatJSONResponse(res)
