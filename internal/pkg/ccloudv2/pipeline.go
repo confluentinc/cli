@@ -81,12 +81,7 @@ func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
 }
 
 func (c *Client) GetSdPipeline(envId, clusterId, id string, includeSql bool) (sdv1.SdV1Pipeline, error) {
-	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id)
-	req = req.Environment(envId).SpecKafkaCluster(clusterId)
-
-	if includeSql {
-		req = req.IncludeSql(strconv.FormatBool(true))
-	}
+	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId).IncludeSql(strconv.FormatBool(includeSql))
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
