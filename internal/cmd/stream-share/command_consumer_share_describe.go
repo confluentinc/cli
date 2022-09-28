@@ -1,8 +1,11 @@
 package streamshare
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -36,5 +39,40 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildConsumerShare(consumerShare), consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+	consumerSharedResources, err := c.V2Client.ListConsumerSharedResources(shareId)
+	if err != nil {
+		return err
+	}
+
+	var network cdxv1.CdxV1Network
+	if len(consumerSharedResources) != 0 {
+		privateNetwork, httpResp, err := c.V2Client.GetPrivateLinkNetworkConfig(consumerSharedResources[0].GetId())
+		if err != nil {
+			return errors.CatchCCloudV2Error(err, httpResp)
+		}
+		network = privateNetwork
+	}
+
+	consumerShareObj := c.buildConsumerShare(consumerShare)
+	cloud := network.GetCloud()
+	if cloud.CdxV1AwsNetwork == nil && cloud.CdxV1AzureNetwork == nil && cloud.CdxV1GcpNetwork == nil {
+		return output.DescribeObject(cmd, consumerShareObj, consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+	}
+
+	return c.handlePrivateLinkClusterConsumerShare(cmd, network, consumerShareObj)
+}
+
+func (c *command) handlePrivateLinkClusterConsumerShare(cmd *cobra.Command, network cdxv1.CdxV1Network, consumerShareObj *consumerShare) error {
+	networkKind, privateLinkDataType, privateLinkData := getPrivateLinkNetworkDetails(network)
+
+	consumerShareObj.NetworkDNSDomain = network.GetDnsDomain()
+	consumerShareObj.NetworkZones = strings.Join(network.GetZones(), ",")
+	consumerShareObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
+	consumerShareObj.NetworkKind = networkKind
+	consumerShareObj.NetworkPrivateLinkDataType = privateLinkDataType
+	consumerShareObj.NetworkPrivateLinkData = privateLinkData
+
+	return output.DescribeObject(cmd, consumerShareObj, append(consumerShareListFields, redeemTokenPrivateLinkFields...),
+		combineMaps(consumerHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
+		combineMaps(consumerStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
 }
