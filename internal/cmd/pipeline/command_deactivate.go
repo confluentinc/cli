@@ -24,6 +24,8 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 	}
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }
@@ -39,7 +41,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 	}
 	updatePipeline.Spec.SetActivated(false)
 
-	// call api (Current update API does not support this yet)
+	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err

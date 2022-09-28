@@ -16,6 +16,8 @@ func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

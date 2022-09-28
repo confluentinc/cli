@@ -26,9 +26,11 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("output-directory", "", "Path to save pipeline model.")
+	cmd.Flags().String("output-directory", "", "Path to save pipeline model as SQL file.")
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }
@@ -42,7 +44,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0], false)
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0], outputDirectory != "")
 	if err != nil {
 		return err
 	}
@@ -66,8 +68,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 		defer out.Close()
 
-		// replace pipeline.Name with pipeline.Spec.Sql once official minispec used
-		_, err = out.Write([]byte(*pipeline.Spec.DisplayName))
+		_, err = out.Write([]byte(*pipeline.Spec.SourceCode))
 		if err != nil {
 			return err
 		}

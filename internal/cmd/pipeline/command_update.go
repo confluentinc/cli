@@ -31,6 +31,8 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("sql-file", "", "Path to the new pipeline model file.")
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }
@@ -59,14 +61,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updatePipeline.Spec.SetDescription(description)
 	}
 	if sqlFile != "" {
-		// get SQL content from filepath
-		sqlData, err := os.Open(sqlFile)
+		// get SQL content from file
+		sqlData, err := os.ReadFile(sqlFile)
 		if err != nil {
 			return err
 		}
 
-		defer sqlData.Close()
-		// once minispec updated, use sqlData as a parameter
+		updatePipeline.Spec.SetSourceCode(string(sqlData))
 	}
 
 	// call api

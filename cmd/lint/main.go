@@ -178,6 +178,7 @@ var properNouns = []string{
 	"Rust",
 	"Scala",
 	"Spring Boot",
+	"Stream Designer",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.

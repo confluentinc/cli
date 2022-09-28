@@ -11,7 +11,7 @@ import (
 )
 
 func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delete <pipeline-id>",
 		Short: "Delete a pipeline.",
 		Args:  cobra.ExactArgs(1),
@@ -23,6 +23,11 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			},
 		),
 	}
+
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {

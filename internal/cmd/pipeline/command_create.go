@@ -32,6 +32,8 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	_ = cmd.MarkFlagRequired("ksqldb-cluster")
 
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }
