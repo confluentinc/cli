@@ -1,0 +1,9 @@
+FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-arm64:latest
+
+COPY . /go/src/github.com/confluentinc/cli/
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    make gorelease-linux-glibc-arm64
+
+RUN cd /go/src/github.com/confluentinc/cli && \
+    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux_arm64}"; done;
