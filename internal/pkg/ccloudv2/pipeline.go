@@ -4,7 +4,6 @@ import (
 	"context"
 	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"strconv"
 )
 
 func newSdClient(url, userAgent string, unsafeTrace bool) *sdv1.APIClient {
@@ -80,16 +79,18 @@ func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetSdPipeline(envId, clusterId, id string, includeSql bool) (sdv1.SdV1Pipeline, error) {
-	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId).IncludeSql(strconv.FormatBool(includeSql))
+func (c *Client) GetSdPipeline(envId, clusterId, id string) (sdv1.SdV1Pipeline, error) {
+	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, error) {
+	update.Spec.SetEnvironment(sdv1.ObjectReference{Id: envId})
+	update.Spec.SetKafkaCluster(sdv1.ObjectReference{Id: clusterId})
+
 	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1PipelineUpdate(update)
-	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)

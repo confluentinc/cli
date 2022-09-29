@@ -1,15 +1,11 @@
 package pipeline
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -36,15 +32,13 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	outputDirectory, _ := cmd.Flags().GetString("output-directory")
-
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
 	// call api
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0], outputDirectory != "")
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
@@ -56,24 +50,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
 	outputWriter.AddElement(element)
-
-	if outputDirectory != "" {
-		// add pipelineId.sql to user chosen directory
-		filepath := filepath.Join(outputDirectory, args[0]+".sql")
-		// create the file at generated filepath
-		out, err := os.Create(filepath)
-		if err != nil {
-			return err
-		}
-
-		defer out.Close()
-
-		_, err = out.Write([]byte(*pipeline.Spec.SourceCode))
-		if err != nil {
-			return err
-		}
-		utils.Printf(cmd, "Saved SQL file for pipeline %s.\n", args[0])
-	}
-
 	return outputWriter.Out()
 }

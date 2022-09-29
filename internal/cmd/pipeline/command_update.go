@@ -2,8 +2,6 @@ package pipeline
 
 import (
 	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
@@ -40,14 +38,13 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" {
+	if name == "" && description == "" {
 		return fmt.Errorf("At least one field must be specified with --name, --description, or --sql-file")
 	}
 
@@ -59,15 +56,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	if description != "" {
 		updatePipeline.Spec.SetDescription(description)
-	}
-	if sqlFile != "" {
-		// get SQL content from file
-		sqlData, err := os.ReadFile(sqlFile)
-		if err != nil {
-			return err
-		}
-
-		updatePipeline.Spec.SetSourceCode(string(sqlData))
 	}
 
 	// call api
