@@ -82,7 +82,6 @@ generate:
 deps:
 	go install github.com/goreleaser/goreleaser@v1.11.2 && \
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
-	go install github.com/mitchellh/golicense@v0.2.0 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps

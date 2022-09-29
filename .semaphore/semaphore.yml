@@ -55,7 +55,7 @@ blocks:
             - make lint
             - ulimit -n 2048
             - make test
-            - make lint-licenses
+#            - make lint-licenses
             
             # Cache Go dependencies
             - cache store linux-$(checksum go.sum) $GOPATH/pkg/mod

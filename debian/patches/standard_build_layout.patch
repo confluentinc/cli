@@ -1,6 +1,6 @@
---- cli/Makefile	2022-09-08 15:53:13.000000000 -0700
+--- cli/Makefile	2022-09-29 13:44:29.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,229 +1,130 @@
+@@ -1,228 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -89,7 +89,6 @@
 -deps:
 -	go install github.com/goreleaser/goreleaser@v1.11.2 && \
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
--	go install github.com/mitchellh/golicense@v0.2.0 && \
 -	go install gotest.tools/gotestsum@v1.8.2
 -
 -.PHONY: jenkins-deps
