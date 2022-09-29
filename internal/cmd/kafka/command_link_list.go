@@ -24,13 +24,17 @@ type link struct {
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
+	var linkError string
+	if data.GetLinkError() != "NO_ERROR" {
+		linkError = data.GetLinkError()
+	}
 	return &link{
 		LinkName:             data.LinkName,
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
 		LinkState:            data.GetLinkState(),
-		LinkError:            data.GetLinkError(),
+		LinkError:            linkError,
 		LinkErrorMessage:     data.GetLinkErrorMessage(),
 	}
 }
