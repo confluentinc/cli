@@ -2,6 +2,7 @@ package releasenotes
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )

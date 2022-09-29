@@ -1,6 +1,7 @@
 package releasenotes
 
 import (
+	"os"
 	"runtime"
 	"strings"
 )

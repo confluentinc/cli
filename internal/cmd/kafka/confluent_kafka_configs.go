@@ -3,6 +3,7 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"

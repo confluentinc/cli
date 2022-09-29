@@ -1,6 +1,7 @@
 package local
 
 import (
+	"io"
 	"net/http"
 	"strings"
 	"testing"

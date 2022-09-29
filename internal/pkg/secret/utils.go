@@ -2,6 +2,7 @@ package secret
 
 import (
 	"bytes"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"

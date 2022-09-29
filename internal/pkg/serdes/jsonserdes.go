@@ -3,6 +3,7 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 

@@ -1,6 +1,8 @@
 package serdes
 
 import (
+	"os"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/linkedin/goavro/v2"

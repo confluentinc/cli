@@ -2,6 +2,7 @@ package connect
 
 import (
 	"encoding/json"
+	"os"
 
 	"github.com/spf13/cobra"
 

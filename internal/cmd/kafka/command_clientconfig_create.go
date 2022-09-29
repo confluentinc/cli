@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"

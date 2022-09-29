@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
