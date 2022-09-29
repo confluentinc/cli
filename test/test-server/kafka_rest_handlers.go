@@ -478,6 +478,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 			linkStateAvailable := "AVAILABLE"
 			linkStateUnavailable := "UNAVAILABLE"
 			linkAuthErr := "AUTHENTICATION_ERROR"
+			noErrorErr := "NO_ERROR"
 			linkAuthErrMsg := "Please check your API key and secret."
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseDataList{Data: []cckafkarestv3.ListLinksResponseData{
 				{
@@ -486,6 +487,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 					LinkName:             "link-1",
 					LinkId:               "LINKID1",
 					TopicsNames:          &topics,
+					LinkError:            &noErrorErr,
 				},
 				{
 					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
@@ -494,6 +496,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 					LinkId:               "LINKID2",
 					TopicsNames:          &topics,
 					LinkState:            &linkStateAvailable,
+					LinkError:            &noErrorErr,
 				},
 				{
 					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
