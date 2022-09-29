@@ -473,37 +473,40 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 			w.Header().Set("Content-Type", "application/json")
 			topics := make([]string, 2)
 			topics = append(topics, "link-1-topic-1", "link-1-topic-2")
-			cluster1 := "cluster-1"
-			cluster2 := "cluster-2"
-			linkStateAvailable := "AVAILABLE"
-			linkStateUnavailable := "UNAVAILABLE"
-			linkAuthErr := "AUTHENTICATION_ERROR"
-			linkAuthErrMsg := "Please check your API key and secret."
+			cluster1 := cckafkarestv3.PtrString("cluster-1")
+			cluster2 := cckafkarestv3.PtrString("cluster-2")
+			linkStateAvailable := cckafkarestv3.PtrString("AVAILABLE")
+			linkStateUnavailable := cckafkarestv3.PtrString("UNAVAILABLE")
+			linkAuthErr := cckafkarestv3.PtrString("AUTHENTICATION_ERROR")
+			noErrorErr := cckafkarestv3.PtrString("NO_ERROR")
+			linkAuthErrMsg := cckafkarestv3.PtrString("Please check your API key and secret.")
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseDataList{Data: []cckafkarestv3.ListLinksResponseData{
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-1",
 					LinkId:               "LINKID1",
 					TopicsNames:          &topics,
+					LinkError:            noErrorErr,
 				},
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-2",
 					LinkId:               "LINKID2",
 					TopicsNames:          &topics,
-					LinkState:            &linkStateAvailable,
+					LinkState:            linkStateAvailable,
+					LinkError:            noErrorErr,
 				},
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-3",
 					LinkId:               "LINKID3",
 					TopicsNames:          &topics,
-					LinkState:            &linkStateUnavailable,
-					LinkError:            &linkAuthErr,
-					LinkErrorMessage:     *cckafkarestv3.NewNullableString(&linkAuthErrMsg),
+					LinkState:            linkStateUnavailable,
+					LinkError:            linkAuthErr,
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(linkAuthErrMsg),
 				},
 			}})
 			require.NoError(t, err)
