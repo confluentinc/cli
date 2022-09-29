@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -81,7 +80,7 @@ func main() {
 	// Load config file, if any
 	config := &Config{}
 	if *configFile != "" {
-		b, err := ioutil.ReadFile(*configFile)
+		b, err := os.ReadFile(*configFile)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Unable to read config file at %s: %s", *configFile, err)
 			os.Exit(1)
@@ -225,7 +224,7 @@ func (g *LicenseDownloader) DownloadLicense(ctx context.Context, owner, repo str
 		}
 		return nil
 	}
-	return ioutil.WriteFile(fmt.Sprintf(g.LicenseFmt, owner, repo), []byte(license), os.ModePerm)
+	return os.WriteFile(fmt.Sprintf(g.LicenseFmt, owner, repo), []byte(license), os.ModePerm)
 }
 
 func (g *LicenseDownloader) DownloadNotice(ctx context.Context, owner, repo string) error {
@@ -236,7 +235,7 @@ func (g *LicenseDownloader) DownloadNotice(ctx context.Context, owner, repo stri
 	if notice == "" {
 		return nil
 	}
-	return ioutil.WriteFile(fmt.Sprintf(g.NoticeFmt, owner, repo), []byte(notice), os.ModePerm)
+	return os.WriteFile(fmt.Sprintf(g.NoticeFmt, owner, repo), []byte(notice), os.ModePerm)
 }
 
 func (g *LicenseDownloader) GetLicense(ctx context.Context, owner, repo string) (string, error) {
