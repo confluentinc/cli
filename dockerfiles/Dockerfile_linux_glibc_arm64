@@ -1,4 +1,4 @@
-FROM 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-arm64:latest
+FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-arm64:latest
 
 COPY . /go/src/github.com/confluentinc/cli/
 
