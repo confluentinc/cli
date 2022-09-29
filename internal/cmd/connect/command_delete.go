@@ -47,7 +47,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, _, err := c.V2Client.DeleteConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+	if _, err := c.V2Client.DeleteConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
 		return err
 	}
 

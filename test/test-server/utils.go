@@ -151,7 +151,7 @@ func fillKeyStoreV2() {
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
-			Description: apikeysv2.PtrString(""),
+			Description: apikeysv2.PtrString("Example description"),
 		},
 	}
 
@@ -365,7 +365,7 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),

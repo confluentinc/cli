@@ -22,12 +22,13 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
-	github.com/confluentinc/confluent-kafka-go v1.8.2
+	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
@@ -57,9 +58,9 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.13
-	github.com/jhump/protoreflect v1.10.2
+	github.com/jhump/protoreflect v1.12.0
 	github.com/jonboulle/clockwork v0.2.2
-	github.com/linkedin/goavro/v2 v2.11.0
+	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.2.0
@@ -230,7 +231,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-misc v0.0.0-20220329215616-d24fe342adfe // indirect

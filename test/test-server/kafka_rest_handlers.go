@@ -470,20 +470,39 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 			require.NoError(t, err)
 		case http.MethodGet:
 			w.Header().Set("Content-Type", "application/json")
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseDataList{Data: []cpkafkarestv3.ListLinksResponseData{
+			topics := make([]string, 2)
+			topics = append(topics, "link-1-topic-1", "link-1-topic-2")
+			cluster1 := "cluster-1"
+			cluster2 := "cluster-2"
+			linkStateAvailable := "AVAILABLE"
+			linkStateUnavailable := "UNAVAILABLE"
+			linkAuthErr := "AUTHENTICATION_ERROR"
+			linkAuthErrMsg := "Please check your API key and secret."
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseDataList{Data: []cckafkarestv3.ListLinksResponseData{
 				{
-					SourceClusterId:      stringPtr("cluster-1"),
-					DestinationClusterId: stringPtr("cluster-2"),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
 					LinkName:             "link-1",
 					LinkId:               "LINKID1",
-					TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
+					TopicsNames:          &topics,
 				},
 				{
-					SourceClusterId:      stringPtr("cluster-1"),
-					DestinationClusterId: stringPtr("cluster-2"),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
 					LinkName:             "link-2",
 					LinkId:               "LINKID2",
-					TopicsNames:          []string{"link-2-topic-1", "link-2-topic-2"},
+					TopicsNames:          &topics,
+					LinkState:            &linkStateAvailable,
+				},
+				{
+					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					LinkName:             "link-3",
+					LinkId:               "LINKID3",
+					TopicsNames:          &topics,
+					LinkState:            &linkStateUnavailable,
+					LinkError:            &linkAuthErr,
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(&linkAuthErrMsg),
 				},
 			}})
 			require.NoError(t, err)

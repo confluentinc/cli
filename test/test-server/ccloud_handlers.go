@@ -802,6 +802,7 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.deprecation_notices": []map[string]interface{}{
 				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
 			},
+			"cli.client_quotas.enable": true,
 		}
 
 		val, ok := ldUser.GetCustom("org.resource_id")

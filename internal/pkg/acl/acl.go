@@ -195,7 +195,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 				conf.Operation = op.(string)
 				break
 			}
-			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("Invalid operation value: "+v))
+			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("invalid operation value: %s", v))
 		}
 	}
 }
