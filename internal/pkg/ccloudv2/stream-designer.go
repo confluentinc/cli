@@ -49,7 +49,7 @@ func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (strea
 	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
-	return resp, errors.CatchStreamDesignerError(err, httpResp)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srClusterId string) (streamdesignerv1.SdV1Pipeline, error) {
@@ -66,7 +66,7 @@ func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srC
 
 	req := c.SdClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext()).SdV1Pipeline(createPipeline)
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
-	return resp, errors.CatchStreamDesignerError(err, httpResp)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
@@ -74,14 +74,14 @@ func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
 	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	httpResp, err := c.SdClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
-	return errors.CatchStreamDesignerError(err, httpResp)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetSdPipeline(envId, clusterId, id string) (streamdesignerv1.SdV1Pipeline, error) {
 	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
-	return resp, errors.CatchStreamDesignerError(err, httpResp)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update streamdesignerv1.SdV1PipelineUpdate) (streamdesignerv1.SdV1Pipeline, error) {
@@ -91,7 +91,7 @@ func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, upd
 	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1PipelineUpdate(update)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
-	return resp, errors.CatchStreamDesignerError(err, httpResp)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func extractSdNextPageToken(nextPageUrlStringNullable streamdesignerv1.NullableString) (string, bool, error) {
