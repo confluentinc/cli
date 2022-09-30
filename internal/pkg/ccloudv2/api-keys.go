@@ -67,9 +67,9 @@ func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, e
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListApiKeys(owner, resource, pageToken)
+		page, httpResp, err := c.executeListApiKeys(owner, resource, pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

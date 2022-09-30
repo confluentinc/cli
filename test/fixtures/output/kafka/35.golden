@@ -8,7 +8,8 @@ name: kafka-cluster
 pending_cluster_size: 2
 provider: aws
 region: us-west-2
-rest_endpoint: http://kafka-rest-url
+rest_endpoint: http://127.0.0.1:1025
 status: EXPANDING
 storage: Infinite
+topic_count: 2
 type: DEDICATED

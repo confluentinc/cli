@@ -20,15 +20,16 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.7.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.0.0-20220929200443-5dbe6fd693f3
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
-	github.com/confluentinc/confluent-kafka-go v1.8.2
+	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
@@ -58,9 +59,9 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.12
-	github.com/jhump/protoreflect v1.10.2
+	github.com/jhump/protoreflect v1.12.0
 	github.com/jonboulle/clockwork v0.2.2
-	github.com/linkedin/goavro/v2 v2.11.0
+	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/golicense v0.2.0
@@ -69,7 +70,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.14.0
 	github.com/tidwall/pretty v1.2.0
@@ -188,7 +189,7 @@ require (
 	github.com/ekzhu/minhash-lsh v0.0.0-20171225071031-5c06ee8586a1 // indirect
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/envoyproxy/go-control-plane v0.10.1 // indirect
+	github.com/envoyproxy/go-control-plane v0.10.2-0.20220325020618-49ff273808a1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.7 // indirect
 	github.com/esimonov/ifshort v1.0.4 // indirect
 	github.com/ettle/strcase v0.1.1 // indirect
@@ -221,7 +222,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
+	github.com/golang/snappy v0.0.4 // indirect
 	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
 	github.com/golangci/go-misc v0.0.0-20180628070357-927a3d87b613 // indirect
@@ -378,7 +379,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f // indirect
-	golang.org/x/sys v0.0.0-20220829200755-d48e67d00261 // indirect
+	golang.org/x/sys v0.0.0-20220913175220-63ea55921009 // indirect
 	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20211116232009-f0f3c7e86c11 // indirect
@@ -388,9 +389,9 @@ require (
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	google.golang.org/api v0.63.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20220222213610-43724f9ea8cf // indirect
-	google.golang.org/grpc v1.44.0 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/genproto v0.0.0-20220503193339-ba3ae3f07e29 // indirect
+	google.golang.org/grpc v1.46.0 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -419,6 +420,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer => /Users/sgaddam/ccloud-sdk-go-v2/stream-designer
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0

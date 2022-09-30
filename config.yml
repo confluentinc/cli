@@ -1,0 +1,11 @@
+specVersion: v1
+name: Flight Notifications
+description: >
+  Combines passenger, flight booking, and current flight plan data to
+  immediately alert a passenger about flight updates in real time.
+id: pipe-9GbyQ
+environment: env-38b7
+cloudCluster: lkc-68h8
+schemaRegistry: lsrc-8958
+ksqlDB: lksqlc-29t8
+code: flights.sql
