@@ -131,10 +131,11 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
+		log.CliLogger.Log("Protobuf is not supported.")
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	err = details.getTags()
 	if err != nil {
