@@ -19,17 +19,17 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new Stream Designer pipeline",
-				Code: `confluent pipeline create --name "test pipeline" --ksqldb-cluster lksqlc-12345 --description "this is a test pipeline"`,
+				Code: `confluent pipeline create --name "test pipeline" --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
 			},
 		),
 	}
 
-	pcmd.AddKsqldbClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 
 	_ = cmd.MarkFlagRequired("name")
-	_ = cmd.MarkFlagRequired("ksqldb-cluster")
+	_ = cmd.MarkFlagRequired("ksql-cluster")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -41,7 +41,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	ksqldbCluster, _ := cmd.Flags().GetString("ksqldb-cluster")
+	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -51,7 +51,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	// validate ksql id
 	ksqlReq := &schedv1.KSQLCluster{
 		AccountId: c.EnvironmentId(),
-		Id:        ksqldbCluster,
+		Id:        ksqlCluster,
 	}
 
 	_, err = c.Client.KSQL.Describe(context.Background(), ksqlReq)
@@ -69,7 +69,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqldbCluster, srCluster.Id)
+	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqlCluster, srCluster.Id)
 	if err != nil {
 		return err
 	}
