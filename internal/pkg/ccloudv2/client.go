@@ -12,7 +12,7 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -32,7 +32,7 @@ type Client struct {
 	KafkaQuotasClient      *kafkaquotas.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
-	SdClient               *sdv1.APIClient
+	SdClient               *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
 }
 

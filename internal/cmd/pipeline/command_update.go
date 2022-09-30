@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -19,7 +19,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
-				Code: `confluent pipeline update pipe-12345 --name "test-pipeline" --description "Description of the pipeline"`,
+				Code: `confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"`,
 			},
 		),
 	}
@@ -47,7 +47,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("one of `--name` or `--description` must be provided")
 	}
 
-	updatePipeline := sdv1.SdV1PipelineUpdate{Spec: &sdv1.SdV1PipelineSpecUpdate{}}
+	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{}}
 	if name != "" {
 		updatePipeline.Spec.SetDisplayName(name)
 	}

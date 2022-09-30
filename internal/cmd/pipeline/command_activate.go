@@ -3,7 +3,7 @@ package pipeline
 import (
 	"github.com/spf13/cobra"
 
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -36,7 +36,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatePipeline := sdv1.SdV1PipelineUpdate{Spec: &sdv1.SdV1PipelineSpecUpdate{Activated: sdv1.PtrBool(true)}}
+	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{Activated: streamdesignerv1.PtrBool(true)}}
 
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)

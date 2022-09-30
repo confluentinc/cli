@@ -2,26 +2,26 @@ package ccloudv2
 
 import (
 	"context"
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func newSdClient(url, userAgent string, unsafeTrace bool) *sdv1.APIClient {
-	cfg := sdv1.NewConfiguration()
+func newSdClient(url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
+	cfg := streamdesignerv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
-	cfg.Servers = sdv1.ServerConfigurations{{URL: url}}
+	cfg.Servers = streamdesignerv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
-	return sdv1.NewAPIClient(cfg)
+	return streamdesignerv1.NewAPIClient(cfg)
 }
 
 func (c *Client) sdApiContext() context.Context {
-	return context.WithValue(context.Background(), sdv1.ContextAccessToken, c.AuthToken)
+	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipeline, error) {
-	var list []sdv1.SdV1Pipeline
+func (c *Client) ListPipelines(envId string, clusterId string) ([]streamdesignerv1.SdV1Pipeline, error) {
+	var list []streamdesignerv1.SdV1Pipeline
 
 	done := false
 	pageToken := ""
@@ -40,7 +40,7 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipel
 	return list, nil
 }
 
-func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (sdv1.SdV1PipelineList, error) {
+func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (streamdesignerv1.SdV1PipelineList, error) {
 	req := c.SdClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext()).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
@@ -52,15 +52,15 @@ func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (sdv1.
 	return resp, errors.CatchStreamDesignerError(err, httpResp)
 }
 
-func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srClusterId string) (sdv1.SdV1Pipeline, error) {
-	createPipeline := sdv1.SdV1Pipeline{
-		Spec: &sdv1.SdV1PipelineSpec{
-			DisplayName:             sdv1.PtrString(name),
-			Description:             sdv1.PtrString(description),
-			Environment:             &sdv1.ObjectReference{Id: envId},
-			KafkaCluster:            &sdv1.ObjectReference{Id: clusterId},
-			KsqlCluster:             &sdv1.ObjectReference{Id: ksqlId},
-			StreamGovernanceCluster: &sdv1.ObjectReference{Id: srClusterId},
+func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srClusterId string) (streamdesignerv1.SdV1Pipeline, error) {
+	createPipeline := streamdesignerv1.SdV1Pipeline{
+		Spec: &streamdesignerv1.SdV1PipelineSpec{
+			DisplayName:             streamdesignerv1.PtrString(name),
+			Description:             streamdesignerv1.PtrString(description),
+			Environment:             &streamdesignerv1.ObjectReference{Id: envId},
+			KafkaCluster:            &streamdesignerv1.ObjectReference{Id: clusterId},
+			KsqlCluster:             &streamdesignerv1.ObjectReference{Id: ksqlId},
+			StreamGovernanceCluster: &streamdesignerv1.ObjectReference{Id: srClusterId},
 		},
 	}
 
@@ -77,16 +77,16 @@ func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
 	return errors.CatchStreamDesignerError(err, httpResp)
 }
 
-func (c *Client) GetSdPipeline(envId, clusterId, id string) (sdv1.SdV1Pipeline, error) {
+func (c *Client) GetSdPipeline(envId, clusterId, id string) (streamdesignerv1.SdV1Pipeline, error) {
 	req := c.SdClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.SdClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
 	return resp, errors.CatchStreamDesignerError(err, httpResp)
 }
 
-func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update sdv1.SdV1PipelineUpdate) (sdv1.SdV1Pipeline, error) {
-	update.Spec.SetEnvironment(sdv1.ObjectReference{Id: envId})
-	update.Spec.SetKafkaCluster(sdv1.ObjectReference{Id: clusterId})
+func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, update streamdesignerv1.SdV1PipelineUpdate) (streamdesignerv1.SdV1Pipeline, error) {
+	update.Spec.SetEnvironment(streamdesignerv1.ObjectReference{Id: envId})
+	update.Spec.SetKafkaCluster(streamdesignerv1.ObjectReference{Id: clusterId})
 
 	req := c.SdClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1PipelineUpdate(update)
 
@@ -94,7 +94,7 @@ func (c *Client) UpdateSdPipeline(envId string, clusterId string, id string, upd
 	return resp, errors.CatchStreamDesignerError(err, httpResp)
 }
 
-func extractSdNextPageToken(nextPageUrlStringNullable sdv1.NullableString) (string, bool, error) {
+func extractSdNextPageToken(nextPageUrlStringNullable streamdesignerv1.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
 	}

@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	sdv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,18 +32,18 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 }
 
 func (c *command) deactivate(cmd *cobra.Command, args []string) error {
-	retained_topics, _ := cmd.Flags().GetStringSlice("retained-topics")
+	retainedTopics, _ := cmd.Flags().GetStringSlice("retained-topics")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	updatePipeline := sdv1.SdV1PipelineUpdate{
-		Spec: &sdv1.SdV1PipelineSpecUpdate{},
+	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{
+		Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{},
 	}
 	updatePipeline.Spec.SetActivated(false)
-	updatePipeline.Spec.SetRetainedTopicNames(retained_topics)
+	updatePipeline.Spec.SetRetainedTopicNames(retainedTopics)
 
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {

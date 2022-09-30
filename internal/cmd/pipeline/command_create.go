@@ -19,7 +19,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new Stream Designer pipeline",
-				Code: `confluent pipeline create --name "test-pipeline" --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
+				Code: `confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
 			},
 		),
 	}
