@@ -41,6 +41,10 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 	}
 	updatePipeline.Spec.SetActivated(false)
 
+	// deactivate pipe-12345 --retained-topic-names "topic1, topic2, topic3"
+	// deactivate pipe-12345 --retained-topic-name topic1 --retained-topic-name topic2 --retained-topic-name topic3
+	updatePipeline.Spec.SetRetainedTopicNames()
+
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
