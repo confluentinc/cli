@@ -44,7 +44,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	config := map[string]string{"connector.class": args[0]}
 
-	reply, _, err := c.V2Client.ValidateConnectorPlugin(args[0], c.EnvironmentId(), kafkaCluster.ID, config)
+	reply, err := c.V2Client.ValidateConnectorPlugin(args[0], c.EnvironmentId(), kafkaCluster.ID, config)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}

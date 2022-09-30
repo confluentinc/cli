@@ -46,7 +46,8 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.ResumeConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+	err = c.V2Client.ResumeConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	if err != nil {
 		return err
 	}
 
