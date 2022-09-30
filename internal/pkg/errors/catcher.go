@@ -164,7 +164,8 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(detail, "\n"))
+			resolution := resBody.Errors[0].Resolution
+			return NewWrapErrorWithSuggestions(err, strings.TrimSuffix(detail, "\n"), strings.TrimSuffix(resolution, "\n"))
 		}
 	}
 
@@ -177,31 +178,6 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 			return c == rune('.') || c == rune('\n')
 		})
 		return Wrap(err, errorMessage)
-	}
-
-	return err
-}
-
-func CatchStreamDesignerError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	body, _ := io.ReadAll(r.Body)
-	var resBody errorResponseBody
-	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Errors) > 0 {
-		detail := resBody.Errors[0].Detail
-		resolution := resBody.Errors[0].Resolution
-		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
-		} else if detail != "" {
-			return NewWrapErrorWithSuggestions(err, strings.TrimSuffix(detail, "\n"), strings.TrimSuffix(resolution, "\n"))
-		}
 	}
 
 	return err
