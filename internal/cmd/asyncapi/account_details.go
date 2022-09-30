@@ -46,7 +46,12 @@ func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
-		return fmt.Errorf("failed to get topic level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		switch err.(type) {
+		case schemaregistry.GenericOpenAPIError:
+			return fmt.Errorf("failed to get topic level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		default:
+			return fmt.Errorf("failed to get topic level tags: %v", err)
+		}
 	}
 	for _, topicLevelTag := range topicLevelTags {
 		d.channelDetails.topicLevelTags = append(d.channelDetails.topicLevelTags, spec.Tag{Name: topicLevelTag.TypeName})
@@ -55,7 +60,12 @@ func (d *accountDetails) getTags() error {
 	// Get schema level tags
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
-		return fmt.Errorf("failed to get schema level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		switch err.(type) {
+		case schemaregistry.GenericOpenAPIError:
+			return fmt.Errorf("failed to get schema level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		default:
+			return fmt.Errorf("failed to get schema level tags: %v", err)
+		}
 	}
 	for _, schemaLevelTag := range schemaLevelTags {
 		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
@@ -94,7 +104,12 @@ func (d *accountDetails) getSchemaDetails() error {
 func (d *accountDetails) getTopicDescription() error {
 	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
 	if err != nil {
-		return fmt.Errorf("%v\n%s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		switch err.(type) {
+		case schemaregistry.GenericOpenAPIError:
+			return fmt.Errorf("%v\n%s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+		default:
+			return err
+		}
 	}
 	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
 		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
