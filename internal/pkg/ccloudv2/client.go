@@ -55,7 +55,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
-		SdClient:               newSdClient(url, userAgent, unsafeTrace),
+		SdClient:               newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 	}
 }

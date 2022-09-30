@@ -6,7 +6,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func newSdClient(url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
+func newStreamDesignerClient(url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
 	cfg := streamdesignerv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
