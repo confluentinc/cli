@@ -2,7 +2,6 @@ package connect
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/spf13/cobra"
 
@@ -69,7 +68,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *command) autocompleteConnectors() []string {
-	connectors, _, err := c.fetchConnectors()
+	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return nil
 	}
@@ -83,10 +82,10 @@ func (c *command) autocompleteConnectors() []string {
 	return suggestions
 }
 
-func (c *command) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, *http.Response, error) {
+func (c *command) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")

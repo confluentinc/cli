@@ -37,8 +37,9 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if httpResp, err := c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+	err = c.V2Client.DeleteIdentityPool(args[0], provider)
+	if err != nil {
+		return err
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.IdentityPool, args[0])

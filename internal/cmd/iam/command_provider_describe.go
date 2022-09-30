@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,9 +36,9 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
-	identityProviderProfile, httpResp, err := c.V2Client.GetIdentityProvider(args[0])
+	identityProviderProfile, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	describeIdentityProvider := &identityProvider{

@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -25,9 +24,9 @@ func (c *quotaCommand) newDescribeCommand() *cobra.Command {
 
 func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 	quotaId := args[0]
-	quota, resp, err := c.V2Client.DescribeKafkaQuota(quotaId)
+	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
