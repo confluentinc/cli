@@ -17,11 +17,13 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 		RunE:  c.deactivate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Request to deactivate Stream Designer pipeline "pipe-12345".`,
-				Code: `confluent pipeline deactivate pipe-12345`,
+				Text: `Request to deactivate Stream Designer pipeline "pipe-12345" with 3 retained topics.`,
+				Code: `confluent pipeline deactivate pipe-12345 --retained-topic topic1,topic2,topic3`,
 			},
 		),
 	}
+
+	cmd.Flags().StringSlice("retained-topic", []string{}, "A comma-separated list of topics to be retained after deactivation.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -31,6 +33,8 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 }
 
 func (c *command) deactivate(cmd *cobra.Command, args []string) error {
+	retained_topics, _ := cmd.Flags().GetStringSlice("retained-topic")
+
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -40,10 +44,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		Spec: &sdv1.SdV1PipelineSpecUpdate{},
 	}
 	updatePipeline.Spec.SetActivated(false)
-
-	// deactivate pipe-12345 --retained-topic-names "topic1, topic2, topic3"
-	// deactivate pipe-12345 --retained-topic-name topic1 --retained-topic-name topic2 --retained-topic-name topic3
-	updatePipeline.Spec.SetRetainedTopicNames()
+	updatePipeline.Spec.SetRetainedTopicNames(retained_topics)
 
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
@@ -51,14 +52,8 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
 	// *pipeline.state will be deactivating
 	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
-	outputWriter.AddElement(element)
 
-	return outputWriter.Out()
+	return output.DescribeObject(cmd, element, pipelineListFields, pipelineMapHumanLabels, pipelineMapStructuredLabels)
 }

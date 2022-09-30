@@ -27,6 +27,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.0.0-20220929200443-5dbe6fd693f3
 	github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
@@ -174,7 +175,6 @@ require (
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.0.0-00010101000000-000000000000 // indirect
 	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
@@ -420,7 +420,7 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer => /Users/xxiang/Workspace/ccloud-sdk-go-v2/stream-designer
+	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer => /Users/sgaddam/ccloud-sdk-go-v2/stream-designer
 	github.com/confluentinc/protoc-gen-ccloud => github.com/confluentinc/protoc-gen-ccloud v0.0.4
 	github.com/influxdata/influxdb1-client => github.com/influxdata/influxdb1-client v0.0.0-20190124185755-16c852ea613f
 	github.com/shurcooL/sanitized_anchor_name => github.com/shurcooL/sanitized_anchor_name v1.0.0
