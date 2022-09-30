@@ -2,29 +2,9 @@ package test
 
 import (
 	"os"
-	// "context"
-	// iamMock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
-	// "github.com/stretchr/testify/require"
-	// schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	// "github.com/confluentinc/ccloud-sdk-go-v1"
-	// "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	// v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	// cliMock "github.com/confluentinc/cli/mock"
-	// "github.com/spf13/cobra"
-	// "github.com/stretchr/testify/suite"
 )
 
-// const (
-// 	ksqlClusterID     = "lksqlc-12345"
-// 	physicalClusterID = "pksqlc-zxcvb"
-// 	outputTopicPrefix = "pksqlc-abcde"
-// 	keyString         = "key"
-// 	keySecretString   = "secret"
-// 	serviceAcctID     = int32(123)
-// )
-
 func (s *CLITestSuite) TestSDPipeline() {
-	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
 	tests := []CLITest{
