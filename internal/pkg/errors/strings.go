@@ -92,9 +92,6 @@ const (
 	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
 
-	// stream-designer commands
-	DeletionAcceptedMsg = "Request to delete %s \"%s\" is accepted.\n"
-
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
 
@@ -142,9 +139,10 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg = "Created %s \"%s\".\n"
-	DeletedResourceMsg = "Deleted %s \"%s\".\n"
-	UpdatedResourceMsg = "Updated %s \"%s\".\n"
+	CreatedResourceMsg         = "Created %s \"%s\".\n"
+	DeletedResourceMsg         = "Deleted %s \"%s\".\n"
+	RequestedDeleteResourceMsg = "Requested to delete %s \"%s\".\n"
+	UpdatedResourceMsg         = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
