@@ -17,13 +17,11 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.activate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Request to activate Stream Designer pipeline "pipe-12345" with 3 retained topics.`,
-				Code: `confluent pipeline activate pipe-12345 --retained-topic topic1,topic2,topic3`,
+				Text: `Request to activate Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline activate pipe-12345`,
 			},
 		),
 	}
-
-	cmd.Flags().StringSlice("retained-topic", []string{}, "A comma-separated list of topics to be retained after activation.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -33,8 +31,6 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
-	retained_topics, _ := cmd.Flags().GetStringSlice("retained-topic")
-
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -44,7 +40,6 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		Spec: &sdv1.SdV1PipelineSpecUpdate{},
 	}
 	updatePipeline.Spec.SetActivated(true)
-	updatePipeline.Spec.SetRetainedTopicNames(retained_topics)
 
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
