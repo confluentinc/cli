@@ -92,6 +92,9 @@ const (
 	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
 
+	// stream-designer commands
+	DeletionAcceptedMsg = "Request to delete %s \"%s\" is accepted.\n"
+
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
 
