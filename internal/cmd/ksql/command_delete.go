@@ -3,7 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -91,7 +91,7 @@ func (c *ksqlCommand) deleteTopics(cluster *schedv1.KSQLCluster) error {
 	}
 
 	if response.StatusCode != http.StatusOK {
-		body, err := ioutil.ReadAll(response.Body)
+		body, err := io.ReadAll(response.Body)
 		if err != nil {
 			return err
 		}

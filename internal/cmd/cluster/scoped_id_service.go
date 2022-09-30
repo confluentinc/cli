@@ -3,7 +3,7 @@ package cluster
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -62,7 +62,7 @@ func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*Scope
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

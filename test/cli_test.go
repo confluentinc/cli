@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -285,7 +284,7 @@ func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, 
 // takes an io.Reader with the desired input read into it
 func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	return func(cmd *exec.Cmd) error {
-		buf, err := ioutil.ReadAll(stdinInput)
+		buf, err := io.ReadAll(stdinInput)
 		fmt.Printf("%s", buf)
 		if err != nil {
 			return err
@@ -319,7 +318,7 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
+	err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
