@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
@@ -142,4 +143,30 @@ func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
 		_, _, err := getPrefixAndResourceIdFromPrincipal(principal, nil)
 		require.Error(t, err)
 	}
+}
+
+func TestAclBindingToClustersClusterIdAclsPostOpts(t *testing.T) {
+	req := require.New(t)
+
+	binding := &schedv1.ACLBinding{
+		Pattern: &schedv1.ResourcePatternConfig{
+			ResourceType: schedv1.ResourceTypes_CLUSTER,
+			Name:         "mycluster",
+			PatternType:  schedv1.PatternTypes_LITERAL,
+		},
+		Entry: &schedv1.AccessControlEntryConfig{
+			Principal:      "myprincipal",
+			Operation:      schedv1.ACLOperations_READ,
+			Host:           "myhost",
+			PermissionType: schedv1.ACLPermissionTypes_DENY,
+		},
+	}
+
+	data := GetCreateAclRequestData(binding)
+	req.True(data.Host == "myhost")
+	req.True(data.Operation == "READ")
+	req.True(data.ResourceName == "mycluster")
+	req.True(data.Principal == "myprincipal")
+	req.True(data.Permission == "DENY")
+	req.True(data.PatternType == "LITERAL")
 }
