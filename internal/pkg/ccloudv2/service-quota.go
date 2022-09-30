@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newServiceQuotaClient(url, userAgent string, unsafeTrace bool) *servicequotav1.APIClient {
@@ -27,9 +28,9 @@ func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, networ
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network, quotaCode)
+		page, httpResp, err := c.executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network, quotaCode)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

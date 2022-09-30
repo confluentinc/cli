@@ -29,8 +29,9 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	if httpResp, err := c.V2Client.DeleteConsumerShare(shareId); err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+	err := c.V2Client.DeleteConsumerShare(shareId)
+	if err != nil {
+		return err
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ConsumerShare, shareId)
