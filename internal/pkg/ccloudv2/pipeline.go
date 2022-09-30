@@ -20,8 +20,6 @@ func (c *Client) sdApiContext() context.Context {
 	return context.WithValue(context.Background(), sdv1.ContextAccessToken, c.AuthToken)
 }
 
-// sd pipeline api calls
-
 func (c *Client) ListPipelines(envId string, clusterId string) ([]sdv1.SdV1Pipeline, error) {
 	var list []sdv1.SdV1Pipeline
 

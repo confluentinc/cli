@@ -20,14 +20,14 @@ var (
 	pipelineListHumanLabels      = []string{"ID", "Name", "State"}
 	pipelineListStructuredLabels = []string{"id", "name", "state"}
 	pipelineMapHumanLabels       = map[string]string{
-		"id":           "ID",
-		"display_name": "Name",
-		"state":        "state",
+		"Id":    "ID",
+		"Name":  "Name",
+		"State": "State",
 	}
 	pipelineMapStructuredLabels = map[string]string{
-		"id":           "ID",
-		"display_name": "Name",
-		"state":        "state",
+		"Id":    "id",
+		"Name":  "name",
+		"State": "state",
 	}
 )
 
@@ -59,7 +59,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
-	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.client_stream_designer.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.stream_designer", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
 	return c.Command
 }

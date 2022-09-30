@@ -19,7 +19,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new Stream Designer pipeline",
-				Code: `confluent pipeline create --name "test pipeline" --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
+				Code: `confluent pipeline create --name "test-pipeline" --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
 			},
 		),
 	}
@@ -27,13 +27,12 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
-
-	_ = cmd.MarkFlagRequired("name")
-	_ = cmd.MarkFlagRequired("ksql-cluster")
-
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	_ = cmd.MarkFlagRequired("ksql-cluster")
+	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }

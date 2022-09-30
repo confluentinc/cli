@@ -18,13 +18,12 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to deactivate Stream Designer pipeline "pipe-12345" with 3 retained topics.`,
-				Code: `confluent pipeline deactivate pipe-12345 --retained-topic topic1,topic2,topic3`,
+				Code: `confluent pipeline deactivate pipe-12345 --retained-topics topic1,topic2,topic3`,
 			},
 		),
 	}
 
-	cmd.Flags().StringSlice("retained-topic", []string{}, "A comma-separated list of topics to be retained after deactivation.")
-
+	cmd.Flags().StringSlice("retained-topics", []string{}, "A comma-separated list of topics to be retained after deactivation.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -33,7 +32,7 @@ func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command 
 }
 
 func (c *command) deactivate(cmd *cobra.Command, args []string) error {
-	retained_topics, _ := cmd.Flags().GetStringSlice("retained-topic")
+	retained_topics, _ := cmd.Flags().GetStringSlice("retained-topics")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -46,7 +45,6 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 	updatePipeline.Spec.SetActivated(false)
 	updatePipeline.Spec.SetRetainedTopicNames(retained_topics)
 
-	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err

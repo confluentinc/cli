@@ -19,13 +19,13 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
-				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription"`,
+				Code: `confluent pipeline update pipe-12345 --name "test-pipeline" --description "Description of the pipeline"`,
 			},
 		),
 	}
 
-	cmd.Flags().String("name", "", "New pipeline name.")
-	cmd.Flags().String("description", "", "New pipeline description.")
+	cmd.Flags().String("name", "", "Name of the pipeline.")
+	cmd.Flags().String("description", "", "Description of the pipeline.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,12 +44,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if name == "" && description == "" {
-		return fmt.Errorf("At least one field must be specified with --name or --description")
+		return fmt.Errorf("one of `--name` or `--description` must be provided")
 	}
 
-	updatePipeline := sdv1.SdV1PipelineUpdate{
-		Spec: &sdv1.SdV1PipelineSpecUpdate{},
-	}
+	updatePipeline := sdv1.SdV1PipelineUpdate{Spec: &sdv1.SdV1PipelineSpecUpdate{}}
 	if name != "" {
 		updatePipeline.Spec.SetDisplayName(name)
 	}

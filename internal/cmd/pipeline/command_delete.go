@@ -38,8 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	// call api
-	err = c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
-	if err != nil {
+	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0]); err != nil {
 		return err
 	}
 

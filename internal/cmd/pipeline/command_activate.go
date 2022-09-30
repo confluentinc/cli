@@ -36,10 +36,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatePipeline := sdv1.SdV1PipelineUpdate{
-		Spec: &sdv1.SdV1PipelineSpecUpdate{},
-	}
-	updatePipeline.Spec.SetActivated(true)
+	updatePipeline := sdv1.SdV1PipelineUpdate{Spec: &sdv1.SdV1PipelineSpecUpdate{Activated: sdv1.PtrBool(true)}}
 
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
