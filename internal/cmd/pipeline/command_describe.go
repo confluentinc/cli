@@ -11,18 +11,16 @@ import (
 func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <pipeline-id>",
-		Short: "Describe a pipeline, and optionally save it locally.",
+		Short: "Describe a Stream Designer pipeline.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe Stream Designer pipeline "pipe-12345" and save the source code to working directory.`,
-				Code: `confluent pipeline describe pipe-12345 --output-directory`,
+				Text: `Describe Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline describe pipe-12345`,
 			},
 		),
 	}
-
-	cmd.Flags().String("output-directory", "", "Path to save pipeline model as SQL file.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -43,12 +41,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
 	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
-	outputWriter.AddElement(element)
-	return outputWriter.Out()
+
+	return output.DescribeObject(cmd, element, pipelineListFields, pipelineMapHumanLabels, pipelineMapStructuredLabels)
 }

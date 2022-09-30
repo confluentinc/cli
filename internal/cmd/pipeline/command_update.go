@@ -18,15 +18,14 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name, description, and source code located in current directory.`,
-				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription" -- sql-file`,
+				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
+				Code: `confluent pipeline update pipe-12345 --name "NewPipeline" -- description "NewDescription"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "New pipeline name.")
 	cmd.Flags().String("description", "", "New pipeline description.")
-	cmd.Flags().String("sql-file", "", "Path to the new pipeline model file.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -45,7 +44,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if name == "" && description == "" {
-		return fmt.Errorf("At least one field must be specified with --name, --description, or --sql-file")
+		return fmt.Errorf("At least one field must be specified with --name or --description")
 	}
 
 	updatePipeline := sdv1.SdV1PipelineUpdate{
@@ -64,13 +63,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
 	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
-	outputWriter.AddElement(element)
 
-	return outputWriter.Out()
+	return output.DescribeObject(cmd, element, pipelineListFields, pipelineMapHumanLabels, pipelineMapStructuredLabels)
 }
