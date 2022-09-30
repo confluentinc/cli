@@ -31,6 +31,7 @@ func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) activate(cmd *cobra.Command, args []string) error {
+
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -47,14 +48,8 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
 	// *pipeline.state will be activating
 	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
-	outputWriter.AddElement(element)
 
-	return outputWriter.Out()
+	return output.DescribeObject(cmd, element, pipelineListFields, pipelineMapHumanLabels, pipelineMapStructuredLabels)
 }

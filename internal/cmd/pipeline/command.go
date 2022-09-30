@@ -5,6 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type Pipeline struct {
@@ -17,6 +19,16 @@ var (
 	pipelineListFields           = []string{"Id", "Name", "State"}
 	pipelineListHumanLabels      = []string{"ID", "Name", "State"}
 	pipelineListStructuredLabels = []string{"id", "name", "state"}
+	pipelineMapHumanLabels       = map[string]string{
+		"id":           "ID",
+		"display_name": "Name",
+		"state":        "state",
+	}
+	pipelineMapStructuredLabels = map[string]string{
+		"id":           "ID",
+		"display_name": "Name",
+		"state":        "state",
+	}
 )
 
 type command struct {
@@ -43,6 +55,11 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newDescribeCommand(prerunner))
 	c.AddCommand(c.newListCommand(prerunner))
 	c.AddCommand(c.newUpdateCommand(prerunner))
+
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+
+	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.client_stream_designer.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
 	return c.Command
 }
