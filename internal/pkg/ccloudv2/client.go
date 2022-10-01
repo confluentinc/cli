@@ -32,7 +32,7 @@ type Client struct {
 	KafkaQuotasClient      *kafkaquotas.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
-	SdClient               *streamdesignerv1.APIClient
+	StreamDesignerClient            *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
 }
 
@@ -55,7 +55,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
-		SdClient:               newStreamDesignerClient(url, userAgent, unsafeTrace),
+		StreamDesignerClient:               newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 	}
 }

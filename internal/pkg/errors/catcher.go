@@ -164,8 +164,11 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			resolution := resBody.Errors[0].Resolution
-			return NewWrapErrorWithSuggestions(err, strings.TrimSuffix(detail, "\n"), strings.TrimSuffix(resolution, "\n"))
+			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
+				err = NewErrorWithSuggestions(err.Error(), resolution)
+			}
+			return err
 		}
 	}
 
