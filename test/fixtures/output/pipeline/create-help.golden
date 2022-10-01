@@ -1,0 +1,22 @@
+Create a new pipeline.
+
+Usage:
+  confluent pipeline create [flags]
+
+Examples:
+Create a new Stream Designer pipeline
+
+  $ confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"
+
+Flags:
+      --ksql-cluster string   REQUIRED: ksqlDB cluster for the pipeline.
+      --name string           REQUIRED: Name of the pipeline.
+      --description string    Description of the pipeline.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string        Kafka cluster ID.
+      --environment string    Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
