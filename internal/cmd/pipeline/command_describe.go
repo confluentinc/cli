@@ -41,7 +41,15 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	element := &Pipeline{Id: *pipeline.Id, Name: *pipeline.Spec.DisplayName, State: *pipeline.Status.State}
+	element := &Pipeline{
+		Id:          *pipeline.Id,
+		Name:        *pipeline.Spec.DisplayName,
+		Description: *pipeline.Spec.Description,
+		KsqlCluster: *&pipeline.Spec.KsqlCluster.Id,
+		State:       *pipeline.Status.State,
+		CreatedAt:   *pipeline.Metadata.CreatedAt,
+		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
+	}
 
-	return output.DescribeObject(cmd, element, pipelineListFields, pipelineMapHumanLabels, pipelineMapStructuredLabels)
+	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
 }

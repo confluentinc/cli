@@ -4,6 +4,8 @@ func (s *CLITestSuite) TestSDPipeline() {
 	tests := []CLITest{
 		{args: "pipeline list --help", fixture: "pipeline/list-help.golden"},
 		{args: "pipeline list", fixture: "pipeline/list.golden"},
+		{args: "pipeline describe --help", fixture: "pipeline/describe-help.golden"},
+		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
 		{args: "pipeline create --help", fixture: "pipeline/create-help.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},

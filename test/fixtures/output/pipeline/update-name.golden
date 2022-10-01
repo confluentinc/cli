@@ -1,5 +1,9 @@
-+-------+---------------+
-| ID    | pipe-12345    |
-| Name  | testPipeline2 |
-| State | draft         |
-+-------+---------------+
++--------------+-------------------------------+
+| ID           | pipe-12345                    |
+| Name         | testPipeline2                 |
+| Description  | description                   |
+| Ksql Cluster | lksqlc-12345                  |
+| State        | draft                         |
+| CreatedAt    | 2022-10-04 06:00:00 +0000 UTC |
+| UpdatedAt    | 2022-10-06 06:00:00 +0000 UTC |
++--------------+-------------------------------+

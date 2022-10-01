@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"github.com/spf13/cobra"
+	"time"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -10,24 +11,37 @@ import (
 )
 
 type Pipeline struct {
-	Id    string `json:"id"`
-	Name  string `json:"name"`
-	State string `json:"state"`
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	KsqlCluster string    `json:"ksqlCluster"`
+	State       string    `json:"state"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 var (
-	pipelineListFields           = []string{"Id", "Name", "State"}
-	pipelineListHumanLabels      = []string{"ID", "Name", "State"}
-	pipelineListStructuredLabels = []string{"id", "name", "state"}
-	pipelineMapHumanLabels       = map[string]string{
-		"Id":    "ID",
-		"Name":  "Name",
-		"State": "State",
+	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
+	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "Ksql Cluster", "State"}
+	pipelineListStructuredLabels = []string{"id", "name", "description", "ksqlcluster", "state"}
+	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
+	pipelineDescribeHumanLabels  = map[string]string{
+		"Id":          "ID",
+		"Name":        "Name",
+		"Description": "Description",
+		"KsqlCluster": "Ksql Cluster",
+		"State":       "State",
+		"CreatedAt":   "CreatedAt",
+		"UpdatedAt":   "UpdatedAt",
 	}
-	pipelineMapStructuredLabels = map[string]string{
-		"Id":    "id",
-		"Name":  "name",
-		"State": "state",
+	pipelineDescribeStructuredLabels = map[string]string{
+		"Id":          "id",
+		"Name":        "name",
+		"Description": "description",
+		"KsqlCluster": "ksqlcluster",
+		"State":       "state",
+		"CreatedAt":   "createdat",
+		"UpdatedAt":   "updatedat",
 	}
 )
 

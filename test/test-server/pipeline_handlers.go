@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/stretchr/testify/require"
@@ -29,10 +30,40 @@ type PipelineRequestBody struct {
 
 // Handler for: "/sd/v1/pipelines/{id}"
 func handlePipeline(t *testing.T) http.HandlerFunc {
+	CreatedAt := time.Date(2022, 10, 4, 06, 00, 00, 000000000, time.UTC)
+	UpdatedAt := time.Date(2022, 10, 6, 06, 00, 00, 000000000, time.UTC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:
 			w.WriteHeader(202)
+
+		case http.MethodGet:
+			id := "pipe-12345"
+			name := "testPipeline"
+			state := "draft"
+
+			pipeline := &streamdesignerv1.SdV1Pipeline{
+				Id: &id,
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName: &name,
+					Description: streamdesignerv1.PtrString("description"),
+					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+				},
+
+				Status: &streamdesignerv1.SdV1PipelineStatus{
+					State: &state,
+				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
+				},
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(202)
+			err := json.NewEncoder(w).Encode(pipeline)
+			require.NoError(t, err)
 
 		case http.MethodPatch:
 			var body PipelineRequestBody
@@ -55,11 +86,20 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			}
 
 			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id:   &id,
-				Spec: &streamdesignerv1.SdV1PipelineSpec{DisplayName: &name},
+				Id: &id,
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName: &name,
+					Description: streamdesignerv1.PtrString("description"),
+					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
 					State: &state,
+				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
 				},
 			}
 
@@ -74,6 +114,9 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 
 // Handler for: "/sd/v1/pipelines"
 func handlePipelines(t *testing.T) http.HandlerFunc {
+	CreatedAt := time.Date(2022, 10, 4, 06, 00, 00, 000000000, time.UTC)
+	UpdatedAt := time.Date(2022, 10, 6, 06, 00, 00, 000000000, time.UTC)
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -81,25 +124,42 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 			name := "testPipeline"
 			state := "draft"
 			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id:   &id,
-				Spec: &streamdesignerv1.SdV1PipelineSpec{DisplayName: &name},
+				Id: &id,
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName: &name,
+					Description: streamdesignerv1.PtrString("description"),
+					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
 					State: &state,
+				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
 				},
 			}
 			id2 := "pipe-12346"
 			name2 := "testPipeline2"
 			pipeline2 := &streamdesignerv1.SdV1Pipeline{
-				Id:   &id2,
-				Spec: &streamdesignerv1.SdV1PipelineSpec{DisplayName: &name2},
+				Id: &id2,
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName: &name2,
+					Description: streamdesignerv1.PtrString("description2"),
+					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-54321"},
+				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
 					State: &state,
 				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
+				},
 			}
 			pipelineList := streamdesignerv1.SdV1PipelineList{Data: []streamdesignerv1.SdV1Pipeline{*pipeline, *pipeline2}}
-
 			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(pipelineList)
 			require.NoError(t, err)
@@ -112,11 +172,20 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 			id := "pipe-12345"
 			state := "draft"
 			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id:   &id,
-				Spec: &streamdesignerv1.SdV1PipelineSpec{DisplayName: body.Spec.DisplayName},
+				Id: &id,
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName: body.Spec.DisplayName,
+					Description: streamdesignerv1.PtrString("description"),
+					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
 					State: &state,
+				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
 				},
 			}
 
