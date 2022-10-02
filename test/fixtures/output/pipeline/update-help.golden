@@ -1,0 +1,21 @@
+Update an existing pipeline.
+
+Usage:
+  confluent pipeline update <pipeline-id> [flags]
+
+Examples:
+Request to update Stream Designer pipeline "pipe-12345", with new name and new description.
+
+  $ confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"
+
+Flags:
+      --name string          Name of the pipeline.
+      --description string   Description of the pipeline.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
