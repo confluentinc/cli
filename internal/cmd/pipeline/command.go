@@ -1,0 +1,79 @@
+package pipeline
+
+import (
+	"github.com/spf13/cobra"
+	"time"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+)
+
+type Pipeline struct {
+	Id          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	KsqlCluster string    `json:"ksqlCluster"`
+	State       string    `json:"state"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+var (
+	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
+	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "Ksql Cluster", "State"}
+	pipelineListStructuredLabels = []string{"id", "name", "description", "ksqlcluster", "state"}
+	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
+	pipelineDescribeHumanLabels  = map[string]string{
+		"Id":          "ID",
+		"Name":        "Name",
+		"Description": "Description",
+		"KsqlCluster": "Ksql Cluster",
+		"State":       "State",
+		"CreatedAt":   "CreatedAt",
+		"UpdatedAt":   "UpdatedAt",
+	}
+	pipelineDescribeStructuredLabels = map[string]string{
+		"Id":          "id",
+		"Name":        "name",
+		"Description": "description",
+		"KsqlCluster": "ksqlcluster",
+		"State":       "state",
+		"CreatedAt":   "createdat",
+		"UpdatedAt":   "updatedat",
+	}
+)
+
+type command struct {
+	*pcmd.AuthenticatedStateFlagCommand
+	prerunner pcmd.PreRunner
+}
+
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:         "pipeline",
+		Short:       "Manage Stream Designer pipelines.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+	}
+
+	c := &command{
+		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
+		prerunner:                     prerunner,
+	}
+
+	c.AddCommand(c.newActivateCommand(prerunner))
+	c.AddCommand(c.newCreateCommand(prerunner))
+	c.AddCommand(c.newDeactivateCommand(prerunner))
+	c.AddCommand(c.newDeleteCommand(prerunner))
+	c.AddCommand(c.newDescribeCommand(prerunner))
+	c.AddCommand(c.newListCommand(prerunner))
+	c.AddCommand(c.newUpdateCommand(prerunner))
+
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+
+	c.Hidden = !cfg.IsTest && !launchdarkly.Manager.BoolVariation("cli.stream_designer", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+
+	return c.Command
+}
