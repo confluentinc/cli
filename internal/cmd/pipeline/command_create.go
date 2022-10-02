@@ -59,15 +59,11 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// validate sr id
-	// todo: with devel, this srCluster returned is not the same as what's running in system test cluster
-	//       hence creation is failing for system test account. I haven't tried other account yet, will debug
-	//       later
 	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
 		return err
 	}
 
-	// call api
 	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqlCluster, srCluster.Id)
 	if err != nil {
 		return err

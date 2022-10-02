@@ -1,13 +1,13 @@
 package pipeline
 
 import (
-	"github.com/spf13/cobra"
 	"time"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/spf13/cobra"
 )
 
 type Pipeline struct {
@@ -22,14 +22,14 @@ type Pipeline struct {
 
 var (
 	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
-	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "Ksql Cluster", "State"}
+	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "KSQL Cluster", "State"}
 	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
 	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
 	pipelineDescribeHumanLabels  = map[string]string{
 		"Id":          "ID",
 		"Name":        "Name",
 		"Description": "Description",
-		"KsqlCluster": "Ksql Cluster",
+		"KsqlCluster": "KSQL Cluster",
 		"State":       "State",
 		"CreatedAt":   "Created At",
 		"UpdatedAt":   "Updated At",

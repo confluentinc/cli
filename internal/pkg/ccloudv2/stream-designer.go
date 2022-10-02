@@ -20,7 +20,7 @@ func (c *Client) sdApiContext() context.Context {
 	return context.WithValue(context.Background(), streamdesignerv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListPipelines(envId string, clusterId string) ([]streamdesignerv1.SdV1Pipeline, error) {
+func (c *Client) ListPipelines(envId, clusterId string) ([]streamdesignerv1.SdV1Pipeline, error) {
 	var list []streamdesignerv1.SdV1Pipeline
 
 	done := false
@@ -41,12 +41,10 @@ func (c *Client) ListPipelines(envId string, clusterId string) ([]streamdesigner
 }
 
 func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (streamdesignerv1.SdV1PipelineList, error) {
-	req := c.StreamDesignerClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext()).PageSize(ccloudV2ListPageSize)
+	req := c.StreamDesignerClient.PipelinesSdV1Api.ListSdV1Pipelines(c.sdApiContext()).PageSize(ccloudV2ListPageSize).Environment(envId).SpecKafkaCluster(clusterId)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-
-	req = req.Environment(envId).SpecKafkaCluster(clusterId)
 
 	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)

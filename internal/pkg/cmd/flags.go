@@ -93,7 +93,7 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster for the pipeline.")
+	cmd.Flags().String("ksql-cluster", "", "KSQL cluster for the pipeline.")
 	RegisterFlagCompletionFunc(cmd, "ksql-cluster", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
