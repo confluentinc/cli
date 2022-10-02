@@ -65,7 +65,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:          *pipeline.Id,
 		Name:        *pipeline.Spec.DisplayName,
 		Description: *pipeline.Spec.Description,
-		KsqlCluster: *&pipeline.Spec.KsqlCluster.Id,
+		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
 		State:       *pipeline.Status.State,
 		CreatedAt:   *pipeline.Metadata.CreatedAt,
 		UpdatedAt:   *pipeline.Metadata.UpdatedAt,

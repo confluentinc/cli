@@ -43,7 +43,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			Id:          *pipeline.Id,
 			Name:        *pipeline.Spec.DisplayName,
 			Description: *pipeline.Spec.Description,
-			KsqlCluster: *&pipeline.Spec.KsqlCluster.Id,
+			KsqlCluster: pipeline.Spec.KsqlCluster.Id,
 			State:       *pipeline.Status.State,
 		}
 		outputWriter.AddElement(element)
