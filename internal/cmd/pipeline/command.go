@@ -14,7 +14,7 @@ type Pipeline struct {
 	Id          string    `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	KsqlCluster string    `json:"ksqlCluster"`
+	KsqlCluster string    `json:"ksql_cluster"`
 	State       string    `json:"state"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -23,7 +23,7 @@ type Pipeline struct {
 var (
 	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
 	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "Ksql Cluster", "State"}
-	pipelineListStructuredLabels = []string{"id", "name", "description", "ksqlcluster", "state"}
+	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
 	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
 	pipelineDescribeHumanLabels  = map[string]string{
 		"Id":          "ID",
@@ -31,17 +31,17 @@ var (
 		"Description": "Description",
 		"KsqlCluster": "Ksql Cluster",
 		"State":       "State",
-		"CreatedAt":   "CreatedAt",
-		"UpdatedAt":   "UpdatedAt",
+		"CreatedAt":   "Created At",
+		"UpdatedAt":   "Updated At",
 	}
 	pipelineDescribeStructuredLabels = map[string]string{
 		"Id":          "id",
 		"Name":        "name",
 		"Description": "description",
-		"KsqlCluster": "ksqlcluster",
+		"KsqlCluster": "ksql_cluster",
 		"State":       "state",
-		"CreatedAt":   "createdat",
-		"UpdatedAt":   "updatedat",
+		"CreatedAt":   "created_at",
+		"UpdatedAt":   "updated_at",
 	}
 )
 
