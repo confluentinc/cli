@@ -46,9 +46,9 @@ func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
-		switch err.(type) {
+		switch errType := err.(type) {
 		case schemaregistry.GenericOpenAPIError:
-			return fmt.Errorf("failed to get topic level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+			return fmt.Errorf("failed to get topic level tags: %v\n %s", err, string(errType.Body()))
 		default:
 			return fmt.Errorf("failed to get topic level tags: %v", err)
 		}
@@ -60,9 +60,9 @@ func (d *accountDetails) getTags() error {
 	// Get schema level tags
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
-		switch err.(type) {
+		switch errType := err.(type) {
 		case schemaregistry.GenericOpenAPIError:
-			return fmt.Errorf("failed to get schema level tags: %v\n %s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+			return fmt.Errorf("failed to get schema level tags: %v\n %s", err, string(errType.Body()))
 		default:
 			return fmt.Errorf("failed to get schema level tags: %v", err)
 		}
@@ -104,9 +104,9 @@ func (d *accountDetails) getSchemaDetails() error {
 func (d *accountDetails) getTopicDescription() error {
 	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
 	if err != nil {
-		switch err.(type) {
+		switch errType := err.(type) {
 		case schemaregistry.GenericOpenAPIError:
-			return fmt.Errorf("%v\n%s", err, string(err.(schemaregistry.GenericOpenAPIError).Body()))
+			return fmt.Errorf("%v\n%s", err, string(errType.Body()))
 		default:
 			return err
 		}
@@ -117,22 +117,22 @@ func (d *accountDetails) getTopicDescription() error {
 	return nil
 }
 
-func (details *accountDetails) buildMessageEntity() *spec.MessageEntity {
+func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, details.channelDetails.contentType)
-	if details.channelDetails.contentType == "application/avro" {
+	(*spec.MessageEntity).WithContentType(entityProducer, d.channelDetails.contentType)
+	if d.channelDetails.contentType == "application/avro" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
-	} else if details.channelDetails.contentType == "application/json" {
+	} else if d.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, details.channelDetails.schemaLevelTags...)
+	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, msgName(details.channelDetails.currentTopic.Name))
+	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.Name))
 	// Example
-	if details.channelDetails.example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &details.channelDetails.example})
+	if d.channelDetails.example != nil {
+		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, details.channelDetails.bindings.messageBinding)
-	(*spec.MessageEntity).WithPayload(entityProducer, details.channelDetails.unmarshalledSchema)
+	(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
 	return entityProducer
 }
