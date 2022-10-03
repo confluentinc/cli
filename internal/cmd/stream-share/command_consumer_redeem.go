@@ -13,15 +13,18 @@ import (
 )
 
 var (
-	redeemTokenFields            = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "Resources"}
+	redeemTokenFields            = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
 	redeemTokenPrivateLinkFields = []string{"NetworkDNSDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
 		"NetworkPrivateLinkDataType", "NetworkPrivateLinkData"}
 	redeemTokenHumanLabelMap = map[string]string{
-		"Id":                "ID",
-		"ApiKey":            "API Key",
-		"Secret":            "Secret",
-		"KafkaBootstrapUrl": "Kafka Bootstrap URL",
-		"Resources":         "Resources",
+		"Id":                   "ID",
+		"ApiKey":               "API Key",
+		"Secret":               "Secret",
+		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
+		"SchemaRegistryApiKey": "Schema Registry Api Key",
+		"SchemaRegistrySecret": "Schema Registry Secret",
+		"SchemaRegistryUrl":    "Schema Registry Url",
+		"Resources":            "Resources",
 	}
 	redeemTokenPrivateLinkHumanLabelMap = map[string]string{
 		"NetworkDNSDomain":           "Network DNS Domain",
@@ -32,11 +35,14 @@ var (
 		"NetworkPrivateLinkData":     "Network Private Link Data",
 	}
 	redeemTokenStructuredLabelMap = map[string]string{
-		"Id":                "id",
-		"ApiKey":            "api_key",
-		"Secret":            "secret",
-		"KafkaBootstrapUrl": "kafka_bootstrap_url",
-		"Resources":         "resources",
+		"Id":                   "id",
+		"ApiKey":               "api_key",
+		"Secret":               "secret",
+		"KafkaBootstrapUrl":    "kafka_bootstrap_url",
+		"SchemaRegistryApiKey": "schema_registry_api_key",
+		"SchemaRegistrySecret": "schema_registry_secret",
+		"SchemaRegistryUrl":    "schema_registry_url",
+		"Resources":            "resources",
 	}
 	redeemTokenPrivateLinkStructuredLabelMap = map[string]string{
 		"NetworkDNSDomain":           "network_dns_domain",
@@ -53,6 +59,9 @@ type redeemToken struct {
 	ApiKey                     string
 	Secret                     string
 	KafkaBootstrapUrl          string
+	SchemaRegistryApiKey       string
+	SchemaRegistrySecret       string
+	SchemaRegistryUrl          string
 	Resources                  []string
 	NetworkDNSDomain           string
 	NetworkZones               string
@@ -120,11 +129,14 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	}
 
 	tokenObj := &redeemToken{
-		Id:                redeemResponse.GetId(),
-		ApiKey:            redeemResponse.GetApiKey(),
-		Secret:            redeemResponse.GetSecret(),
-		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
-		Resources:         resources,
+		Id:                   redeemResponse.GetId(),
+		ApiKey:               redeemResponse.GetApiKey(),
+		Secret:               redeemResponse.GetSecret(),
+		KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
+		SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
+		SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
+		SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
+		Resources:            resources,
 	}
 
 	// non private link cluster
