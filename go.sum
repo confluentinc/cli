@@ -673,8 +673,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/K
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0 h1:hnYc/T55dGEqhFBYJIGBfSCMhyhT78U31kqEj9vdS94=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0/go.mod h1:vzL/maQvg76G8BMXM9Mx0FNrXI1ctdBr46/EbZ0VJso=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0 h1:NCEZ7nR76RThfu4oCBguMf+IHRdOr3KtAoYbzMJr18o=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.6.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.7.0 h1:ZGVAFrMO4PItSyKr5evdxu2CoRunP7nufQWfpLGTfeA=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.7.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0/go.mod h1:JLmrXfnT2PzcuXHD8a6c2cW1c9LKK7aMsdZjjqxYPEk=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.2.0 h1:t187nIutiU35BATsTPCk5MKv/XBGRPl7z9ieaQcF2jU=
@@ -687,6 +687,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
+github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0 h1:yJpe4scsmbxoZ5qcd7Jjh/su8R8p+YruWCHnhXx1IGI=
+github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0/go.mod h1:Yqjcig48HUMh97OHvPxWGZMj5VXon8XIY+AKhZMj16U=
 github.com/confluentinc/cire-k8saas-structs v1.19.0/go.mod h1:arP5z1yPnhZf+yglHM2K5fn0J1coT5bK1AzmflQQNDk=

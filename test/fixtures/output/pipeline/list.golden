@@ -1,0 +1,4 @@
+      ID     |     Name      | Description  | KSQL Cluster | State  
+-------------+---------------+--------------+--------------+--------
+  pipe-12345 | testPipeline  | description  | lksqlc-12345 | draft  
+  pipe-12346 | testPipeline2 | description2 | lksqlc-54321 | draft  
