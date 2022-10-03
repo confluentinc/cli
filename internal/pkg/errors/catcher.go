@@ -31,7 +31,8 @@ type errorResponseBody struct {
 }
 
 type errorDetail struct {
-	Detail string `json:"detail"`
+	Detail     string `json:"detail"`
+	Resolution string `json:"resolution"`
 }
 
 type errorBody struct {
@@ -163,7 +164,11 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(detail, "\n"))
+			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
+				err = NewErrorWithSuggestions(err.Error(), resolution)
+			}
+			return err
 		}
 	}
 
