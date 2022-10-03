@@ -73,7 +73,7 @@ func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilt
 	}
 
 	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		req = req.Permission("ALLOW")
+		req = req.Permission(acl.EntryFilter.PermissionType.String())
 	}
 
 	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
