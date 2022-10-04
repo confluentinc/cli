@@ -146,6 +146,8 @@ var properNouns = []string{
 	"ACL",
 	"API",
 	"Apache",
+	"Async",
+	"AsyncAPI",
 	"CLI",
 	"Confluent Cloud",
 	"Confluent Platform",
@@ -191,6 +193,7 @@ var vocabWords = []string{
 	"api",
 	"apikey",
 	"apisecret",
+	"asyncapi",
 	"auth",
 	"avro",
 	"aws",
@@ -308,7 +311,7 @@ func main() {
 	for _, cfg := range configs {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
-	
+
 		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
