@@ -96,6 +96,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			return list.Print()
 		}
 	}
+
 	// Kafka REST is not available, fallback to KafkaAPI
 	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {

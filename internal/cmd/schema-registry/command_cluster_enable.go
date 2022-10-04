@@ -18,8 +18,8 @@ import (
 )
 
 type enableOut struct {
-	Id                     string `human:"Cluster ID" serialized:"cluster_id"`
-	SchemaRegistryEndpoint string `human:"Endpoint URL" serialized:"endpoint_url"`
+	Id          string `human:"ID" serialized:"id"`
+	EndpointUrl string `human:"Endpoint URL" serialized:"endpoint_url"`
 }
 
 var availableGeos = []string{"us", "eu", "apac"}
@@ -109,13 +109,13 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		}
 
 		out = &enableOut{
-			Id:                     existingCluster.Id,
-			SchemaRegistryEndpoint: existingCluster.Endpoint,
+			Id:          existingCluster.Id,
+			EndpointUrl: existingCluster.Endpoint,
 		}
 	} else {
 		out = &enableOut{
-			Id:                     newCluster.Id,
-			SchemaRegistryEndpoint: newCluster.Endpoint,
+			Id:          newCluster.Id,
+			EndpointUrl: newCluster.Endpoint,
 		}
 	}
 

@@ -19,11 +19,11 @@ import (
 
 type clusterOut struct {
 	Name                  string `human:"Name" serialized:"name"`
-	ID                    string `human:"ID" serialized:"cluster_id"`
-	URL                   string `human:"Endpoint URL" serialized:"endpoint_url"`
-	Used                  string `human:"Used Schemas" serialized:"used_schemas"`
-	Available             string `human:"Available Schemas" serialized:"available_schemas"`
-	Compatibility         string `human:"Global Compatibility" serialized:"global_compatibility"`
+	ClusterId             string `human:"Cluster ID" serialized:"cluster_id"`
+	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
+	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
 	Mode                  string `human:"Mode" serialized:"mode"`
 	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
 	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
@@ -122,14 +122,14 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
 		Name:                  cluster.Name,
-		ID:                    cluster.Id,
-		URL:                   cluster.Endpoint,
+		ClusterId:             cluster.Id,
+		EndpointUrl:           cluster.Endpoint,
 		ServiceProvider:       cluster.ServiceProvider,
 		ServiceProviderRegion: cluster.ServiceProviderRegion,
 		Package:               getPackageDisplayName(cluster.Package),
-		Used:                  numSchemas,
-		Available:             availableSchemas,
-		Compatibility:         compatibility,
+		UsedSchemas:           numSchemas,
+		AvailableSchemas:      availableSchemas,
+		GlobalCompatibility:   compatibility,
 		Mode:                  mode,
 	})
 	return table.Print()

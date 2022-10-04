@@ -23,7 +23,7 @@ type configDescribeOut struct {
 
 type structuredDescribeDisplay struct {
 	Connector *connectOut         `serialized:"connector"`
-	Tasks     []taskDescribeOut   `serialized:"task"`
+	Tasks     []taskDescribeOut   `serialized:"tasks"`
 	Configs   []configDescribeOut `serialized:"configs"`
 }
 

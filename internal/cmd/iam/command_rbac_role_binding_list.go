@@ -17,9 +17,9 @@ import (
 
 type roleBindingListOut struct {
 	Principal   string `human:"Principal" serialized:"principal"`
-	Email       string `human:"Email,omitempty" serialized:"email,omitempty"`
-	ServiceName string `human:"Service Name,omitempty" serialized:"service_name,omitempty"`
-	PoolName    string `human:"Pool Name,omitempty" serialized:"pool_name,omitempty"`
+	Email       string `human:"Email" serialized:"email"`
+	ServiceName string `human:"Service Name" serialized:"service_name"`
+	PoolName    string `human:"Pool Name" serialized:"pool_name"`
 }
 
 func (c *roleBindingCommand) newListCommand() *cobra.Command {

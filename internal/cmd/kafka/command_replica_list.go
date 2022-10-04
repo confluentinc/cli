@@ -15,7 +15,7 @@ import (
 
 type replicaOut struct {
 	ClusterId          string `human:"Cluster ID" serialized:"cluster_id"`
-	TopicName          string `human:"Topic Name" serialized:"topicName"`
+	TopicName          string `human:"Topic Name" serialized:"topic_name"`
 	BrokerId           int32  `human:"Broker ID" serialized:"broker_id"`
 	PartitionId        int32  `human:"Partition ID" serialized:"partition_id"`
 	IsLeader           bool   `human:"Leader" serialized:"is_leader"`

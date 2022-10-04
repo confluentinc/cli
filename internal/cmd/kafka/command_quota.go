@@ -41,7 +41,7 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 
 type quotaOut struct {
 	Id          string `human:"ID" serialized:"id"`
-	DisplayName string `human:"Name" serialized:"display_name"`
+	DisplayName string `human:"Name" serialized:"name"`
 	Description string `human:"Description" serialized:"description"`
 	Ingress     string `human:"Ingress" serialized:"ingress"`
 	Egress      string `human:"Egress" serialized:"egress"`
@@ -58,8 +58,8 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.
 		Ingress:     quota.Throughput.GetIngressByteRate(),
 		Egress:      quota.Throughput.GetEgressByteRate(),
 		Principals:  principalsToString(quota.GetPrincipals()),
-		Cluster:     quota.Cluster.Id,
-		Environment: quota.Environment.Id,
+		Cluster:     quota.Cluster.GetId(),
+		Environment: quota.Environment.GetId(),
 	}
 	if format == output.Human {
 		s.Ingress += " B/s"

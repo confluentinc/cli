@@ -2,3 +2,4 @@
   name: az-connector
   status: RUNNING
   type: Sink
+  trace: ""
