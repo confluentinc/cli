@@ -44,7 +44,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		err = output.StructuredOutput(cmd, &registerSchemaResponse{Id: response.Id})
+		err = output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id})
 		if err != nil {
 			return nil, err
 		}

@@ -12,12 +12,12 @@ import (
 )
 
 type invitationOut struct {
-	Id             string `human:"ID" structured:"id"`
-	Email          string `human:"Email" structured:"email"`
-	FirstName      string `human:"First Name" structured:"first_name"`
-	LastName       string `human:"Last Name" structured:"last_name"`
-	UserResourceId string `human:"User ID" structured:"user_resource_id"`
-	Status         string `human:"Status" structured:"status"`
+	Id             string `human:"ID" serialized:"id"`
+	Email          string `human:"Email" serialized:"email"`
+	FirstName      string `human:"First Name" serialized:"first_name"`
+	LastName       string `human:"Last Name" serialized:"last_name"`
+	UserResourceId string `human:"User ID" serialized:"user_resource_id"`
+	Status         string `human:"Status" serialized:"status"`
 }
 
 func (c invitationCommand) newListCommand() *cobra.Command {

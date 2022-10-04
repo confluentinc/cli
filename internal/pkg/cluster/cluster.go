@@ -30,7 +30,7 @@ type prettyCluster struct {
 
 func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, clusterInfos)
+		return output.SerializedOutput(cmd, clusterInfos)
 	}
 
 	list := output.NewList(cmd)

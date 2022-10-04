@@ -79,7 +79,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		sort.Slice(data, func(i, j int) bool {
 			return data[i].Name < data[j].Name
 		})
-		return output.StructuredOutput(cmd, data)
+		return output.SerializedOutput(cmd, data)
 	}
 
 	// no errors (config update successful)

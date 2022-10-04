@@ -61,7 +61,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, roles)
+		return output.SerializedOutput(cmd, roles)
 	}
 
 	list := output.NewList(cmd)
@@ -82,7 +82,7 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, roles)
+		return output.SerializedOutput(cmd, roles)
 	}
 
 	list := output.NewList(cmd)

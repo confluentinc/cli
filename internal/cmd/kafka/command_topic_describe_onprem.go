@@ -117,7 +117,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 
 	// Print topic info
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, topic)
+		return output.SerializedOutput(cmd, topic)
 	}
 
 	// Output partitions info

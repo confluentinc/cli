@@ -67,7 +67,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, details)
+		return output.SerializedOutput(cmd, details)
 	}
 
 	roleDisplay, err := createPrettyRoleV2(details)
@@ -96,7 +96,7 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		return output.StructuredOutput(cmd, details)
+		return output.SerializedOutput(cmd, details)
 	}
 
 	roleDisplay, err := createPrettyRole(details)

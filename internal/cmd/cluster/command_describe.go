@@ -120,7 +120,7 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 				ID:   meta.Scope.Clusters[name],
 			}
 		}
-		return output.StructuredOutput(cmd, structuredDisplay)
+		return output.SerializedOutput(cmd, structuredDisplay)
 	}
 
 	if meta.ID != "" {

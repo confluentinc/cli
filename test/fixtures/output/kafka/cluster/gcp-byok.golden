@@ -26,4 +26,5 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 | API Endpoint      | http://kafka-api-url      |
 | Encryption Key ID | xyz                       |
 | REST Endpoint     | https://pkc-endpoint      |
+| Topic Count       |                         0 |
 +-------------------+---------------------------+

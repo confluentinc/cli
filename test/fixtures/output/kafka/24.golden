@@ -1,13 +1,14 @@
 id: lkc-def963
 name: my-new-cluster
 type: BASIC
-networkingress: 100
-networkegress: 100
+ingress: 100
+egress: 100
 storage: 5 TB
-serviceprovider: aws
+provider: aws
 region: us-east-1
 availability: single-zone
 status: PROVISIONING
 endpoint: SASL_SSL://kafka-endpoint
-apiendpoint: http://kafka-api-url
-restendpoint: https://pkc-endpoint
+api_endpoint: http://kafka-api-url
+rest_endpoint: https://pkc-endpoint
+topic_count: 0

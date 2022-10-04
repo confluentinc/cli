@@ -81,7 +81,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			configs[partitionCount] = strconv.Itoa(numPartitions)
 
 			if output.GetFormat(cmd).IsSerialized() {
-				return output.StructuredOutput(cmd, configs)
+				return output.SerializedOutput(cmd, configs)
 			}
 
 			list := output.NewList(cmd)
@@ -116,7 +116,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			structuredDisplay.Config[entry.Name] = entry.Value
 		}
 		structuredDisplay.Config[partitionCount] = strconv.Itoa(len(resp.Partitions))
-		return output.StructuredOutput(cmd, structuredDisplay)
+		return output.SerializedOutput(cmd, structuredDisplay)
 	}
 
 	list := output.NewList(cmd)
