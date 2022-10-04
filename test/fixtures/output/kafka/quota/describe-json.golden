@@ -1,6 +1,6 @@
 {
   "id": "cq-1234",
-  "name": "quotaName",
+  "display_name": "quotaName",
   "description": "quota description",
   "ingress": "2000",
   "egress": "5000",

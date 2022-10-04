@@ -37,7 +37,7 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 }
 
 var (
-	expectedConfigData = []configData{
+	expectedConfigData = []configOut{
 		{
 			"testConfig",
 			"testValue",
@@ -111,7 +111,7 @@ func newCmdWithAllFlag() *cobra.Command {
 	return cmd
 }
 
-func verifyConfigData(req *require.Assertions, data []configData, expected []configData) {
+func verifyConfigData(req *require.Assertions, data []*configOut, expected []configOut) {
 	req.Equal(len(data), len(expected))
 	for i, d := range data {
 		req.Equal(expected[i].Name, d.Name)

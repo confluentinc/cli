@@ -1,4 +1,4 @@
 {
-  "id": "lsrc-1234",
+  "cluster_id": "lsrc-1234",
   "endpoint_url": "SASL_SSL://sr-endpoint"
 }

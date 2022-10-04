@@ -4,7 +4,6 @@ Connector Details
 | Name   | az-connector |
 | Status | RUNNING      |
 | Type   | Sink         |
-| Trace  |              |
 +--------+--------------+
 
 
@@ -15,5 +14,4 @@ Task Level Details
 
 
 Configuration Details
-  Config | Value  
----------+--------
+None found.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -89,21 +88,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+				_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				}
 				return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+					_ = aclutil.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -112,7 +111,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
+			return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
 		}
 	}
 
@@ -126,7 +125,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
+	return aclutil.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
 }
 
 func getCreateAclRequestData(acl *schedv1.ACLBinding) kafkarestv3.CreateAclRequestData {
