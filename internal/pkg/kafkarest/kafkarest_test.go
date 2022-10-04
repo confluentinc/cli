@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func TestKafkaRestError(t *testing.T) {
+func TestNewError(t *testing.T) {
 	req := require.New(t)
 	url := "http://my-url"
 	neturlMsg := "net-error"
