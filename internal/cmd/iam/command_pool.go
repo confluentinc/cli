@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type identityPoolCommand struct {
@@ -18,7 +21,7 @@ type identityPool struct {
 	Filter        string
 }
 
-func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPoolCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pool",
 		Short:       "Manage identity pools.",
@@ -26,6 +29,10 @@ func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &identityPoolCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	c.Hidden = !(cfg.IsTest || launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false))
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
@@ -44,7 +51,7 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
-	
+
 	provider, _ := cmd.Flags().GetString("provider")
 	return pcmd.AutocompleteIdentityPools(c.V2Client, provider)
 }
