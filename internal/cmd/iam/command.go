@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type command struct {
@@ -36,10 +35,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c.AddCommand(newACLCommand(c.prerunner))
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", c.Context, v1.CliLaunchDarklyClient, true, false) {
-		c.AddCommand(newPoolCommand(c.prerunner))
-		c.AddCommand(newProviderCommand(c.prerunner))
-	}
+	c.AddCommand(newPoolCommand(cfg, c.prerunner))
+	c.AddCommand(newProviderCommand(cfg, c.prerunner))
 	c.AddCommand(newRBACCommand(cfg, c.prerunner))
 	c.AddCommand(newServiceAccountCommand(c.prerunner))
 	c.AddCommand(newUserCommand(c.prerunner))

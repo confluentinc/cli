@@ -140,16 +140,6 @@ endef
 fmt:
 	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
-.PHONY: release-ci
-release-ci:
-ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
-	true
-else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
-	make release
-else
-	true
-endif
-
 .PHONY: lint
 lint:
 	make lint-go

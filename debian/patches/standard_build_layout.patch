@@ -1,6 +1,6 @@
---- cli/Makefile	2022-09-29 16:09:32.000000000 -0700
+--- cli/Makefile	2022-10-05 15:39:01.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,220 +1,130 @@
+@@ -1,210 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -72,6 +72,16 @@
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
 +endif
++
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
++
++APPLY_PATCHES?=yes
  
 -.PHONY: generate
 -generate:
@@ -147,29 +157,6 @@
 -fmt:
 -	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 -
--.PHONY: release-ci
--release-ci:
--ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
--	true
--else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
--	make release
--else
--	true
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
-+
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
-+APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
- endif
- 
 -.PHONY: lint
 -lint:
 -	make lint-go
@@ -215,6 +202,11 @@
 -	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
 -  endif
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
++endif
++
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)

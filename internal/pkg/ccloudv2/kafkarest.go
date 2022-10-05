@@ -43,19 +43,19 @@ func (c *KafkaRestClient) GetKafkaAcls(clusterId string, acl *schedv1.ACLBinding
 	req := c.ACLV3Api.GetKafkaAcls(c.context(), clusterId).Host(acl.Entry.Host).Principal(acl.Entry.Principal).ResourceName(acl.Pattern.Name)
 
 	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
-		req.Operation(acl.Entry.Operation.String())
+		req = req.Operation(acl.Entry.Operation.String())
 	}
 
 	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
-		req.PatternType(acl.Pattern.PatternType.String())
+		req = req.PatternType(acl.Pattern.PatternType.String())
 	}
 
 	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		req.Permission(acl.Entry.PermissionType.String())
+		req = req.Permission(acl.Entry.PermissionType.String())
 	}
 
 	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		req.ResourceType(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
+		req = req.ResourceType(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
 	}
 
 	return c.ACLV3Api.GetKafkaAclsExecute(req)
@@ -65,19 +65,19 @@ func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilt
 	req := c.ACLV3Api.DeleteKafkaAcls(c.context(), clusterId).Host(acl.EntryFilter.Host).Principal(acl.EntryFilter.Principal).ResourceName(acl.PatternFilter.Name)
 
 	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
-		req.Operation(acl.EntryFilter.Operation.String())
+		req = req.Operation(acl.EntryFilter.Operation.String())
 	}
 
 	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
-		req.PatternType(acl.PatternFilter.PatternType.String())
+		req = req.PatternType(acl.PatternFilter.PatternType.String())
 	}
 
 	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
-		req.Permission(acl.EntryFilter.PermissionType.String())
+		req = req.Permission(acl.EntryFilter.PermissionType.String())
 	}
 
 	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
-		req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
+		req = req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
 	}
 
 	return c.ACLV3Api.DeleteKafkaAclsExecute(req)
