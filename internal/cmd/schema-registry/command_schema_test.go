@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -105,7 +104,7 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 	cmd.Flags().String(output.FlagName, "human", `Specify the output format as "human", "json", or "yaml".`)
 	req := require.New(suite.T())
 	storePath := suite.T().TempDir()
-	file, err := ioutil.TempFile(storePath, "schema-file")
+	file, err := os.CreateTemp(storePath, "schema-file")
 	req.Nil(err)
 	err = file.Close()
 	req.Nil(err)

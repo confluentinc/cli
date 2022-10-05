@@ -1,7 +1,7 @@
 package serdes
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
@@ -17,7 +17,7 @@ func (avroProvider *AvroSerializationProvider) LoadSchema(schemaPath string, ref
 		return errors.New(errors.AvroReferenceNotSupportedErrorMsg)
 	}
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (avroProvider *AvroDeserializationProvider) LoadSchema(schemaPath string, r
 		return errors.New(errors.AvroReferenceNotSupportedErrorMsg)
 	}
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
