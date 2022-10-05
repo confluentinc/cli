@@ -54,6 +54,7 @@ steps:
   displayName: 'make deps'
 
 - script: |
+    go clean -modcache
     make lint
   timeoutInMinutes: 15
   displayName: 'make lint'
