@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -96,7 +97,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 	if err != nil {
 		// catch topic exists error
 		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
-			var decodedError kafkaRestV3Error
+			var decodedError kafkarest.V3Error
 			err2 := json.Unmarshal(openAPIError.Body(), &decodedError)
 			if err2 != nil {
 				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
@@ -108,7 +109,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 				return nil
 			}
 		}
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
