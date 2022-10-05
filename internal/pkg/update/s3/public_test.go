@@ -2,7 +2,6 @@ package s3
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -384,7 +383,7 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 func TestPublicRepo_DownloadVersion(t *testing.T) {
 	req := require.New(t)
 
-	downloadDir, err := ioutil.TempDir("", "cli-test5-")
+	downloadDir, err := os.MkdirTemp("", "cli-test5-")
 	require.NoError(t, err)
 	defer os.Remove(downloadDir)
 
@@ -500,7 +499,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 func TestPublicRepo_DownloadReleaseNotes(t *testing.T) {
 	req := require.New(t)
 
-	downloadDir, err := ioutil.TempDir("", "cli-test5-")
+	downloadDir, err := os.MkdirTemp("", "cli-test5-")
 	require.NoError(t, err)
 	defer os.Remove(downloadDir)
 

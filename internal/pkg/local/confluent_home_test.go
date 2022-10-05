@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -130,7 +129,7 @@ func (s *ConfluentHomeTestSuite) createTestConfluentFile(file string) error {
 		return err
 	}
 
-	return ioutil.WriteFile(path, []byte{}, 0644)
+	return os.WriteFile(path, []byte{}, 0644)
 }
 
 // Directories must have unique names to satisfy Windows tests
