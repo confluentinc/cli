@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-05 15:20:19.000000000 -0700
+--- cli/Makefile	2022-10-05 15:29:30.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,214 +1,130 @@
 -SHELL           := /bin/bash
@@ -162,7 +162,7 @@
 -lint:
 -	rm go.sum
 -	go clean -modcache
--	go mod tidy
+-	GOPRIVATE=github.com/confluentinc go mod tidy
 -	make lint-go
 -	make lint-cli
 -
