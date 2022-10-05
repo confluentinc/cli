@@ -38,7 +38,6 @@ clone-and-setup-docs-repos:
 
 .PHONY: build-release-notes
 build-release-notes:
-	@echo Previous Release Version: v$(CLEAN_VERSION)
 	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.releaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
 
 .PHONY: publish-release-notes-to-docs-repos
