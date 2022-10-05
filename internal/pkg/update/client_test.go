@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -67,7 +66,7 @@ func TestNewClient(t *testing.T) {
 }
 
 func TestCheckForUpdates(t *testing.T) {
-	tmpCheckFile1, err := ioutil.TempFile("", "cli-test1-")
+	tmpCheckFile1, err := os.CreateTemp("", "cli-test1-")
 	require.NoError(t, err)
 	defer os.Remove(tmpCheckFile1.Name())
 
@@ -372,7 +371,7 @@ func TestCheckForUpdates(t *testing.T) {
 func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 	req := require.New(t)
 
-	tmpDir, err := ioutil.TempDir("", "cli-test3-")
+	tmpDir, err := os.MkdirTemp("", "cli-test3-")
 	req.NoError(err)
 	defer os.RemoveAll(tmpDir)
 	checkFile := filepath.FromSlash(fmt.Sprintf("%s/new-check-file", tmpDir))
@@ -606,17 +605,17 @@ func TestUpdateBinary(t *testing.T) {
 
 	binName := "fake_cli"
 
-	installDir, err := ioutil.TempDir("", "cli-test4-")
+	installDir, err := os.MkdirTemp("", "cli-test4-")
 	require.NoError(t, err)
 	defer os.Remove(installDir)
 	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
-	_ = ioutil.WriteFile(installedBin, []byte("old version"), os.ModePerm)
+	_ = os.WriteFile(installedBin, []byte("old version"), os.ModePerm)
 
-	downloadDir, err := ioutil.TempDir("", "cli-test5-")
+	downloadDir, err := os.MkdirTemp("", "cli-test5-")
 	require.NoError(t, err)
 	defer os.Remove(downloadDir)
 	downloadedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", downloadDir, binName))
-	_ = ioutil.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
+	_ = os.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
 
 	clock := clockwork.NewFakeClockAt(time.Now())
 
