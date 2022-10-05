@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -38,22 +39,20 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 
 	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{Activated: streamdesignerv1.PtrBool(true)}}
 
-	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}
 
-	// *pipeline.state will be activating
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		Id:          pipeline.GetId(),
+		Name:        pipeline.Spec.GetDisplayName(),
+		Description: pipeline.Spec.GetDescription(),
+		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+		State:       pipeline.Status.GetState(),
+		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
+		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
+	})
+	return table.Print()
 }
