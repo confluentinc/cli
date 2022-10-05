@@ -1,14 +1,14 @@
 package test
 
 import (
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 )
 
 func LoadFixture(t *testing.T, fixture string) string {
-	content, err := ioutil.ReadFile(FixturePath(t, fixture))
+	content, err := os.ReadFile(FixturePath(t, fixture))
 	if err != nil {
 		t.Fatal(err)
 	}

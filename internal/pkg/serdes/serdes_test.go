@@ -2,7 +2,6 @@ package serdes
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -69,7 +68,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
 	schemaPath := filepath.Join(dir, "avro-schema.txt")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{6, 97, 115, 100}
@@ -103,7 +102,7 @@ func TestAvroSerdesInvalid(t *testing.T) {
 
 	schemaString := `{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}`
 	schemaPath := filepath.Join(dir, "avro-schema.txt")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(AVROSCHEMANAME)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -137,7 +136,7 @@ func TestJsonSerdesValid(t *testing.T) {
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
 	schemaPath := filepath.Join(dir, "json-demo.json")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
@@ -170,11 +169,11 @@ func TestJsonSerdesReference(t *testing.T) {
 
 	referenceString := `{"type": "string"}`
 	referencePath := filepath.Join(dir, "json-reference.json")
-	req.NoError(ioutil.WriteFile(referencePath, []byte(referenceString), 0644))
+	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
 
 	schemaString := `{"type":"object","properties":{"f1":{"$ref":"json-reference.json"}},"required":["f1"]}`
 	schemaPath := filepath.Join(dir, "json-demo.json")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
@@ -207,7 +206,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 
 	schemaString := `{"type":"object","properties":{"f1":{"type":"string"}},"required":["f1"]}`
 	schemaPath := filepath.Join(dir, "json-demo.json")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(JSONSCHEMANAME)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -253,7 +252,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	  int32 result = 3;
 	}`
 	schemaPath := filepath.Join(dir, "person.proto")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","page":1,"result":2}`
 	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 16, 1, 24, 2}
@@ -292,7 +291,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	}`
 
 	referencePath := filepath.Join(dir, "address.proto")
-	req.NoError(ioutil.WriteFile(referencePath, []byte(referenceString), 0644))
+	req.NoError(os.WriteFile(referencePath, []byte(referenceString), 0644))
 
 	schemaString := `
     syntax = "proto3";
@@ -304,7 +303,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	  int32 result = 3;
 	}`
 	schemaPath := filepath.Join(dir, "person.proto")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 18, 4, 10, 2, 76, 65, 24, 2}
@@ -344,7 +343,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	  int32 result = 3;
 	}`
 	schemaPath := filepath.Join(dir, "person.proto")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
@@ -399,7 +398,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 		}
 	}`
 	schemaPath := filepath.Join(dir, "person.proto")
-	req.NoError(ioutil.WriteFile(schemaPath, []byte(schemaString), 0644))
+	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
 	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 16, 2, 26, 10, 10, 3,
