@@ -1,6 +1,6 @@
 name: cli
 lang: go
-lang_version: 1.17.6
+lang_version: 1.19.0
 github:
   enable: true
   repo_name: confluentinc/cli

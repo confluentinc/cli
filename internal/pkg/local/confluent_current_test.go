@@ -1,7 +1,6 @@
 package local
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -39,7 +38,7 @@ func TestCreateAndTrackCurrentDir(t *testing.T) {
 
 	req.DirExists(currentDir)
 	req.FileExists(cc.trackingFile)
-	data, err := ioutil.ReadFile(cc.trackingFile)
+	data, err := os.ReadFile(cc.trackingFile)
 	req.NoError(err)
 	req.Equal(currentDir, strings.TrimSuffix(string(data), "\n"))
 }
@@ -52,7 +51,7 @@ func TestGetCurrentDirFromTrackingFile(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	file := filepath.Join(dir, exampleFile)
-	req.NoError(ioutil.WriteFile(file, []byte(exampleDir), 0644))
+	req.NoError(os.WriteFile(file, []byte(exampleDir), 0644))
 
 	cc := NewConfluentCurrentManager()
 	cc.trackingFile = file
