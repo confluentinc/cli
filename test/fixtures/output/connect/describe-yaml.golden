@@ -1,9 +1,3 @@
-connector:
-  name: az-connector
-  id: lcc-123
-  status: RUNNING
-  type: Sink
-task:
-- task_id: 1
-  state: RUNNING
-configs: []
+configs: '[]'
+connector: '&{lcc-123 az-connector RUNNING Sink }'
+tasks: '[{1 RUNNING}]'

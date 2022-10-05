@@ -31,13 +31,11 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	// call api
 	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0]); err != nil {
 		return err
 	}

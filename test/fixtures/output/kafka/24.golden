@@ -1,13 +1,14 @@
 api_endpoint: http://kafka-api-url
 availability: single-zone
-egress: 100
+egress: "100"
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-def963
-ingress: 100
+ingress: "100"
 name: my-new-cluster
 provider: aws
 region: us-east-1
 rest_endpoint: https://pkc-endpoint
 status: PROVISIONING
 storage: 5 TB
+topic_count: "0"
 type: BASIC
