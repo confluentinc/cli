@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime"
 	"strings"
@@ -229,7 +228,7 @@ func (s *CLITestSuite) TestClientConfig() {
 }
 
 func getCreateLinkConfigFile() string {
-	file, _ := ioutil.TempFile(os.TempDir(), "test")
+	file, _ := os.CreateTemp(os.TempDir(), "test")
 	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
 	return file.Name()
 }
