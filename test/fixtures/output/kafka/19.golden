@@ -1,13 +1,13 @@
 availability: single-zone
-egress: 100
+egress: "100"
 endpoint: SASL_SSL://kafka-endpoint
 id: lkc-describe
-ingress: 100
+ingress: "100"
 name: kafka-cluster
 provider: aws
 region: us-west-2
 rest_endpoint: http://127.0.0.1:1025
 status: UP
 storage: 5 TB
-topic_count: 2
+topic_count: "2"
 type: BASIC

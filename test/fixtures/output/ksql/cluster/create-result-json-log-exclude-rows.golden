@@ -1,10 +1,10 @@
 {
-  "id": "lksqlc-woooo",
-  "name": "kay cee queue elle",
-  "topic_prefix": "pksqlc-ghjkl",
-  "kafka": "lkc-zxcvb",
-  "storage": 123,
+  "detailed_processing_log": "false",
   "endpoint": "SASL_SSL://ksql-endpoint",
+  "id": "lksqlc-woooo",
+  "kafka": "lkc-zxcvb",
+  "name": "kay cee queue elle",
   "status": "PROVISIONING",
-  "detailed_processing_log": false
+  "storage": "123",
+  "topic_prefix": "pksqlc-ghjkl"
 }
