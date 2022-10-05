@@ -49,9 +49,6 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - echo $PATH
-            - which go
-            - go version
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
@@ -85,10 +82,7 @@ blocks:
             - wget https://golang.org/dl/go${GO_VERSION}.darwin-amd64.tar.gz
             - sudo tar -xzf go${GO_VERSION}.darwin-amd64.tar.gz -C /usr/local/
             - export "PATH=/usr/local/go/bin:$PATH"
-            - echo $PATH
-            - go env GOPATH
-            - go version
-            - export "GOPATH=$(go env GOPATH)"
+            - export "GOPATH=/usr/local/go"
             - export "PATH=$GOPATH/bin:$PATH"
             - export "PATH=$GOROOT/bin:$PATH"
             
