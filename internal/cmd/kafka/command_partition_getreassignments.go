@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type reassignmentsOut struct {
+type getReassignmentsOut struct {
 	ClusterId        string  `human:"Cluster ID" serialized:"cluster_id"`
 	TopicName        string  `human:"Topic Name" serialized:"topic_name"`
 	PartitionId      int32   `human:"Partition ID" serialized:"partition_id"`
@@ -92,7 +92,7 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 
 	list := output.NewList(cmd)
 	for _, reassignment := range reassignmentListResp.Data {
-		list.Add(&reassignmentsOut{
+		list.Add(&getReassignmentsOut{
 			ClusterId:        reassignment.ClusterId,
 			TopicName:        reassignment.TopicName,
 			PartitionId:      reassignment.PartitionId,

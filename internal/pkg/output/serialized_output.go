@@ -11,20 +11,20 @@ import (
 )
 
 // SerializedOutput - pretty prints an object in specified format (JSON or YAML) using tags specified in struct definition
-func SerializedOutput(cmd *cobra.Command, obj interface{}) error {
+func SerializedOutput(cmd *cobra.Command, v interface{}) error {
 	switch GetFormat(cmd) {
 	default:
-		b, err := json.Marshal(obj)
+		out, err := json.Marshal(v)
 		if err != nil {
 			return err
 		}
-		utils.Print(cmd, string(pretty.Pretty(b)))
+		utils.Print(cmd, string(pretty.Pretty(out)))
 	case YAML:
-		b, err := yaml.Marshal(obj)
+		out, err := yaml.Marshal(v)
 		if err != nil {
 			return err
 		}
-		utils.Print(cmd, string(b))
+		utils.Print(cmd, string(out))
 	}
 	return nil
 }

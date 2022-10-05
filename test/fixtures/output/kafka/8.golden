@@ -1,14 +1,14 @@
-- id: lkc-123
+- availability: single-zone
+  id: lkc-123
   name: abc
-  type: BASIC
   provider: gcp
   region: us-central1
-  availability: single-zone
   status: PROVISIONING
-- id: lkc-456
+  type: BASIC
+- availability: multi-zone
+  id: lkc-456
   name: def
-  type: BASIC
   provider: gcp
   region: us-central1
-  availability: multi-zone
   status: PROVISIONING
+  type: BASIC

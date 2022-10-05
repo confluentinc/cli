@@ -1,12 +1,12 @@
 [
   {
     "name": "compression.type",
-    "value": "gzip",
-    "read_only": "false"
+    "read_only": "false",
+    "value": "gzip"
   },
   {
     "name": "retention.ms",
-    "value": "1",
-    "read_only": "false"
+    "read_only": "false",
+    "value": "1"
   }
 ]

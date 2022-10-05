@@ -91,7 +91,6 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 					Value: value,
 				})
 			}
-
 			list.Filter([]string{"Name", "Value"})
 			return list.Print()
 		}
@@ -110,14 +109,12 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		structuredDisplay := &structuredDescribeDisplay{Config: make(map[string]string)}
-		structuredDisplay.TopicName = resp.Name
-
+		out := make(map[string]string)
 		for _, entry := range resp.Config {
-			structuredDisplay.Config[entry.Name] = entry.Value
+			out[entry.Name] = entry.Value
 		}
-		structuredDisplay.Config[partitionCount] = strconv.Itoa(len(resp.Partitions))
-		return output.SerializedOutput(cmd, structuredDisplay)
+		out[partitionCount] = strconv.Itoa(len(resp.Partitions))
+		return output.SerializedOutput(cmd, out)
 	}
 
 	list := output.NewList(cmd)

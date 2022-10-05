@@ -1,11 +1,11 @@
 [
   {
-    "principal": "User:12345",
-    "permission": "ALLOW",
-    "operation": "READ",
     "host": "*",
-    "resource_type": "TOPIC",
+    "operation": "READ",
+    "pattern_type": "LITERAL",
+    "permission": "ALLOW",
+    "principal": "User:12345",
     "resource_name": "test-topic",
-    "pattern_type": "LITERAL"
+    "resource_type": "TOPIC"
   }
 ]

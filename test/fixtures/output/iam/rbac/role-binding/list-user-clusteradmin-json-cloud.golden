@@ -1,14 +1,14 @@
 [
   {
-    "principal": "User:u-33ccc",
     "email": "u-33ccc@confluent.io",
-    "service_name": "",
-    "pool_name": ""
+    "pool_name": "",
+    "principal": "User:u-33ccc",
+    "service_name": ""
   },
   {
-    "principal": "User:u-44ddd",
     "email": "mhe@confluent.io",
-    "service_name": "",
-    "pool_name": ""
+    "pool_name": "",
+    "principal": "User:u-44ddd",
+    "service_name": ""
   }
 ]

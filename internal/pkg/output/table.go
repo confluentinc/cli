@@ -100,13 +100,28 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 
 	if t.format.IsSerialized() {
 		var v interface{}
-		if t.isList {
-			v = t.objects
-			if len(t.objects) == 0 {
-				v = []interface{}{}
-			}
-		} else {
+
+		if t.isMap() {
 			v = t.objects[0]
+		} else {
+			// TODO: Stop converting all output to strings in the next major version
+			m := make([]map[string]string, len(t.objects))
+			for i, object := range t.objects {
+				m[i] = make(map[string]string)
+				for k := 0; k < reflect.TypeOf(object).Elem().NumField(); k++ {
+					tag := strings.Split(reflect.TypeOf(object).Elem().Field(k).Tag.Get(t.format.String()), ",")
+					val := reflect.ValueOf(object).Elem().Field(k)
+					if tag[0] != "-" && !(utils.Contains(tag, "omitempty") && val.IsZero()) {
+						m[i][tag[0]] = fmt.Sprintf("%v", reflect.ValueOf(object).Elem().Field(k))
+					}
+				}
+			}
+
+			if t.isList {
+				v = m
+			} else {
+				v = m[0]
+			}
 		}
 
 		switch t.format {
@@ -118,7 +133,12 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			_, err = t.writer.Write(pretty.Pretty(out))
 			return err
 		case YAML:
-			return yaml.NewEncoder(t.writer).Encode(v)
+			out, err := yaml.Marshal(v)
+			if err != nil {
+				return err
+			}
+			_, err = t.writer.Write(out)
+			return err
 		}
 	}
 
