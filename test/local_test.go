@@ -1,7 +1,6 @@
 package test
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -134,7 +133,7 @@ func (s *CLITestSuite) createCH(files []string) {
 		dir := filepath.Dir(path)
 		req.NoError(os.MkdirAll(dir, 0777))
 
-		req.NoError(ioutil.WriteFile(path, []byte{}, 0644))
+		req.NoError(os.WriteFile(path, []byte{}, 0644))
 	}
 }
 
