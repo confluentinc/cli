@@ -163,7 +163,7 @@ endif
 lint:
 	rm go.sum
 	go clean -modcache
-	go mod tidy
+	GOPRIVATE=github.com/confluentinc go mod tidy
 	make lint-go
 	make lint-cli
 
