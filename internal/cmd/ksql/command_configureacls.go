@@ -3,16 +3,19 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -34,8 +37,6 @@ func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 }
 
 func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
-
 	// Get the Kafka Cluster
 	kafkaCluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
@@ -67,12 +68,31 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bindings := c.buildACLBindings(serviceAccountId, cluster, args[1:])
+	bindings := buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
 		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
 	}
 
-	return c.Client.Kafka.CreateACLs(ctx, kafkaCluster, bindings)
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+		if err != nil {
+			return err
+		}
+
+		httpResp, err := kafkaREST.CloudClient.BatchCreateKafkaAcls(kafkaClusterConfig.ID, getCreateAclRequestDataList(bindings))
+		if err != nil && httpResp != nil {
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+		if err == nil && httpResp != nil {
+			if httpResp.StatusCode != http.StatusCreated {
+				msg := fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode)
+				return errors.NewErrorWithSuggestions(msg, errors.InternalServerErrorSuggestions)
+			}
+			return nil
+		}
+	}
+
+	return c.Client.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, error) {
@@ -89,15 +109,17 @@ func (c *ksqlCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, e
 	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.Id)
 }
 
-func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1.KSQLCluster, topics []string) []*schedv1.ACLBinding {
-	bindings := make([]*schedv1.ACLBinding, 0)
-	for _, op := range []schedv1.ACLOperations_ACLOperation{
+func buildACLBindings(serviceAccountId string, cluster *schedv1.KSQLCluster, topics []string) []*schedv1.ACLBinding {
+	var bindings []*schedv1.ACLBinding
+
+	for _, operation := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, c.createClusterAcl(op, serviceAccountId))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_CLUSTER, "kafka-cluster", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
-	for _, op := range []schedv1.ACLOperations_ACLOperation{
+
+	for _, operation := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_CREATE,
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_ALTER,
@@ -107,64 +129,59 @@ func (c *ksqlCommand) buildACLBindings(serviceAccountId string, cluster *schedv1
 		schedv1.ACLOperations_WRITE,
 		schedv1.ACLOperations_DELETE,
 	} {
-		bindings = append(bindings, c.createACL(cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createACL("_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, "_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_GROUP, "_confluent-ksql-"+cluster.OutputTopicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
 	}
-	for _, op := range []schedv1.ACLOperations_ACLOperation{
+
+	for _, operation := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
-		bindings = append(bindings, c.createACL("*", schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_GROUP, serviceAccountId))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, "*", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_GROUP, "*", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
-	for _, op := range []schedv1.ACLOperations_ACLOperation{
+
+	for _, operation := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_DESCRIBE_CONFIGS,
 		schedv1.ACLOperations_READ,
 	} {
-		for _, t := range topics {
-			bindings = append(bindings, c.createACL(t, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TOPIC, serviceAccountId))
+		for _, topic := range topics {
+			bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, topic, schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
 		}
 	}
-	// for transactional produces to command topic
-	for _, op := range []schedv1.ACLOperations_ACLOperation{
+
+	for _, operation := range []schedv1.ACLOperations_ACLOperation{
 		schedv1.ACLOperations_DESCRIBE,
 		schedv1.ACLOperations_WRITE,
 	} {
-		bindings = append(bindings, c.createACL(cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, op, schedv1.ResourceTypes_TRANSACTIONAL_ID, serviceAccountId))
+		bindings = append(bindings, createACL(schedv1.ResourceTypes_TRANSACTIONAL_ID, cluster.PhysicalClusterId, schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
+
 	return bindings
 }
 
-func (c *ksqlCommand) createClusterAcl(operation schedv1.ACLOperations_ACLOperation, serviceAccountId string) *schedv1.ACLBinding {
-	binding := &schedv1.ACLBinding{
-		Entry: &schedv1.AccessControlEntryConfig{
-			Host: "*",
+func createACL(resourceType schedv1.ResourceTypes_ResourceType, name string, patternType schedv1.PatternTypes_PatternType, serviceAccountId string, operation schedv1.ACLOperations_ACLOperation) *schedv1.ACLBinding {
+	return &schedv1.ACLBinding{
+		Pattern: &schedv1.ResourcePatternConfig{
+			ResourceType: resourceType,
+			Name:         name,
+			PatternType:  patternType,
 		},
-		Pattern: &schedv1.ResourcePatternConfig{},
+		Entry: &schedv1.AccessControlEntryConfig{
+			Principal:      "User:" + serviceAccountId,
+			Operation:      operation,
+			Host:           "*",
+			PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+		},
 	}
-	binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
-	binding.Entry.Operation = operation
-	binding.Entry.Principal = "User:" + serviceAccountId
-	binding.Pattern.PatternType = schedv1.PatternTypes_LITERAL
-	binding.Pattern.ResourceType = schedv1.ResourceTypes_CLUSTER
-	binding.Pattern.Name = "kafka-cluster"
-	return binding
 }
 
-func (c *ksqlCommand) createACL(prefix string, patternType schedv1.PatternTypes_PatternType, operation schedv1.ACLOperations_ACLOperation, resource schedv1.ResourceTypes_ResourceType, serviceAccountId string) *schedv1.ACLBinding {
-	binding := &schedv1.ACLBinding{
-		Entry: &schedv1.AccessControlEntryConfig{
-			Host: "*",
-		},
-		Pattern: &schedv1.ResourcePatternConfig{},
+func getCreateAclRequestDataList(bindings []*schedv1.ACLBinding) kafkarestv3.CreateAclRequestDataList {
+	data := make([]kafkarestv3.CreateAclRequestData, 0)
+	for i, binding := range bindings {
+		data[i] = acl.GetCreateAclRequestData(binding)
 	}
-	binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
-	binding.Entry.Operation = operation
-	binding.Entry.Principal = "User:" + serviceAccountId
-	binding.Pattern.PatternType = patternType
-	binding.Pattern.ResourceType = resource
-	binding.Pattern.Name = prefix
-	return binding
+	return kafkarestv3.CreateAclRequestDataList{Data: data}
 }

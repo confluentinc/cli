@@ -143,6 +143,9 @@ fmt:
 
 .PHONY: lint
 lint:
+	rm go.sum
+	go clean -modcache
+	go mod tidy
 	make lint-go
 	make lint-cli
 

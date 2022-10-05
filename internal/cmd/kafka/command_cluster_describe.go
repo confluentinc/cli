@@ -14,6 +14,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -239,7 +240,7 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return 0, kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
