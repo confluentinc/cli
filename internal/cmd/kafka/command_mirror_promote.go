@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
@@ -67,7 +68,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)

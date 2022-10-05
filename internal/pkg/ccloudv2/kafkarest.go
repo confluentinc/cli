@@ -34,6 +34,11 @@ func (c *KafkaRestClient) context() context.Context {
 	return context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, c.AuthToken)
 }
 
+func (c *KafkaRestClient) BatchCreateKafkaAcls(clusterId string, list kafkarestv3.CreateAclRequestDataList) (*http.Response, error) {
+	req := c.ACLV3Api.BatchCreateKafkaV3Acls(c.context(), clusterId).CreateAclRequestDataList(list)
+	return c.ACLV3Api.BatchCreateKafkaV3AclsExecute(req)
+}
+
 func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.CreateAclRequestData) (*http.Response, error) {
 	req := c.ACLV3Api.CreateKafkaAcls(c.context(), clusterId).CreateAclRequestData(data)
 	return c.ACLV3Api.CreateKafkaAclsExecute(req)

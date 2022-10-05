@@ -12,6 +12,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
@@ -95,7 +96,7 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 	}
 
 	if httpResp != nil {
-		return kafkaRestError(client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return err

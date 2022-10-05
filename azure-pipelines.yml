@@ -54,6 +54,7 @@ steps:
   displayName: 'make deps'
 
 - script: |
+    go test -v ./...
     make lint
   timeoutInMinutes: 15
   displayName: 'make lint'
