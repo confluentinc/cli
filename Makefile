@@ -161,6 +161,7 @@ endif
 
 .PHONY: lint
 lint:
+	go clean -modcache
 	make lint-go
 	make lint-cli
 
