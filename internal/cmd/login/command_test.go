@@ -707,7 +707,6 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 
 	cert, err := x509.ParseCertificate(certBytes)
 	req.NoError(err, "Couldn't reparse certificate")
-	expectedSubject := cert.RawSubject
 	mdsClient.TokensAndAuthenticationApi = &mdsMock.TokensAndAuthenticationApi{
 		GetTokenFunc: func(ctx context.Context) (mds.AuthenticationResponse, *http.Response, error) {
 			req.NotEqual(http.DefaultClient, mdsClient)
@@ -715,8 +714,8 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			req.True(ok)
 			req.NotEqual(http.DefaultTransport, transport)
 			found := false
-			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() {
-				if bytes.Equal(expectedSubject, actualSubject) {
+			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() { //nolint:staticcheck
+				if bytes.Equal(cert.RawSubject, actualSubject) {
 					found = true
 					break
 				}

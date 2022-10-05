@@ -2,13 +2,13 @@ package releasenotes
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func readTestFile(filePath string) (string, error) {
-	fileBytes, err := ioutil.ReadFile(filePath)
+	fileBytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", fmt.Errorf("unable to load output file")
 	}

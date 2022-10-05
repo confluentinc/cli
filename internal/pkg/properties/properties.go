@@ -2,13 +2,13 @@ package properties
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
 // FileToMap reads key=value pairs from a properties file, ignoring comments and empty lines.
 func FileToMap(filename string) (map[string]string, error) {
-	buf, err := ioutil.ReadFile(filename)
+	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

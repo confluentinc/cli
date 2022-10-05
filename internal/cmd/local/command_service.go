@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +14,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -301,7 +302,7 @@ func (c *Command) configService(service string, configFile string) error {
 	if configFile == "" {
 		data, err = c.ch.ReadServiceConfig(service)
 	} else {
-		data, err = ioutil.ReadFile(configFile)
+		data, err = os.ReadFile(configFile)
 	}
 	if err != nil {
 		return err
@@ -764,6 +765,7 @@ func writeServiceName(service string) string {
 	case "zookeeper":
 		return "ZooKeeper"
 	default:
-		return strings.Title(strings.ReplaceAll(service, "-", " "))
+		service = strings.ReplaceAll(service, "-", " ")
+		return cases.Title(language.Und).String(service)
 	}
 }
