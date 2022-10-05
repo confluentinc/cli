@@ -55,7 +55,6 @@ steps:
 
 - script: |
     make lint
-  timeoutInMinutes: 15
   displayName: 'make lint'
 
 # make test will build the CLI as part of its work
