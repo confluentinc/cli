@@ -36,22 +36,20 @@ blocks:
             - source script.sh
             
             # Set up Go
-            - sem-version go $GO_VERSION
-            - export "GOPATH=$(go env GOPATH)"
-            - export "PATH=$GOPATH/bin:$PATH"
+            - checkout
+            - goenv install
+#            - sem-version go $GO_VERSION
+#            - export "GOPATH=$(go env GOPATH)"
+#            - export "PATH=$GOPATH/bin:$PATH"
             
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
             
             # Set up Git
-            - checkout
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - echo $PATH
-            - which go
-            - go version
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
@@ -82,27 +80,14 @@ blocks:
             - source script.sh
             
             # Set up Go
-#            - wget https://golang.org/dl/go${GO_VERSION}.darwin-amd64.tar.gz
-#            - sudo tar -xzf go${GO_VERSION}.darwin-amd64.tar.gz -C /usr/local/
-#            - export "PATH=/usr/local/go/bin:$PATH"
-#            - export "GOPATH=$HOME/git/go"
-#            - export "GOROOT=/usr/local/go"
-#            - export "PATH=$GOPATH/bin:$PATH"
-#            - export "PATH=$GOROOT/bin:$PATH"
+            - checkout
+            - goenv install
             
             # Set up Git
-            - checkout
-            - ls
-            - goenv install
-            - goenv version
-            - go version
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - echo $PATH
-            - which go
-            - go version
             - make deps
             - ulimit -n 2048
             - make test
