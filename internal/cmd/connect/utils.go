@@ -2,7 +2,7 @@ package connect
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"github.com/spf13/cobra"
 
@@ -36,7 +36,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 }
 
 func parseConfigFile(fileName string) (map[string]string, error) {
-	jsonFile, err := ioutil.ReadFile(fileName)
+	jsonFile, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "unable to read config file %s", fileName)
 	}

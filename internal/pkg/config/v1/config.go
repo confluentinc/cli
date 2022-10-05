@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -135,7 +134,7 @@ func New() *Config {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	filename := c.GetFilename()
-	input, err := ioutil.ReadFile(filename)
+	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
@@ -208,7 +207,7 @@ func (c *Config) Save() error {
 		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
 
-	if err := ioutil.WriteFile(filename, cfg, 0600); err != nil {
+	if err := os.WriteFile(filename, cfg, 0600); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 

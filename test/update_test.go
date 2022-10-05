@@ -1,7 +1,6 @@
 package test
 
 import (
-	"io/ioutil"
 	"os"
 
 	"github.com/stretchr/testify/require"
@@ -18,15 +17,15 @@ func (s *CLITestSuite) TestUpdate() {
 	require.NoError(s.T(), err)
 
 	// Be nice and restore the config when we're done
-	oldConfig, err := ioutil.ReadFile(configFile)
+	oldConfig, err := os.ReadFile(configFile)
 	require.NoError(s.T(), err)
 	defer func() {
-		err := ioutil.WriteFile(configFile, oldConfig, 0600)
+		err := os.WriteFile(configFile, oldConfig, 0600)
 		require.NoError(s.T(), err)
 	}()
 
 	// Reset the config to a known empty state
-	err = ioutil.WriteFile(configFile, []byte(`{}`), 0600)
+	err = os.WriteFile(configFile, []byte(`{}`), 0600)
 	require.NoError(s.T(), err)
 
 	tests := []CLITest{
@@ -44,10 +43,10 @@ func (s *CLITestSuite) TestUpdate() {
 		tt.workflow = true
 		switch tt.name {
 		case "HACK: disable update checks":
-			err = ioutil.WriteFile(configFile, []byte(`{"disable_update_checks": true}`), os.ModePerm)
+			err = os.WriteFile(configFile, []byte(`{"disable_update_checks": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		case "HACK: enabled checks, disable updates":
-			err = ioutil.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
+			err = os.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
 			s.runIntegrationTest(tt)
