@@ -49,6 +49,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
+            - go version
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
             - make deps
@@ -92,6 +93,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
+            - go version
             - make deps
             - ulimit -n 2048
             - make test
