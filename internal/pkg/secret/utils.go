@@ -2,7 +2,7 @@ package secret
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -227,7 +227,7 @@ func LoadJSONFile(path string) (string, error) {
 	defer jsonFile.Close()
 
 	// read our opened jsonFile as a byte array.
-	jsonByteArr, err := ioutil.ReadAll(jsonFile)
+	jsonByteArr, err := io.ReadAll(jsonFile)
 	if err != nil {
 		return "", err
 	}
@@ -387,7 +387,7 @@ func writeJSONConfig(path string, configs *properties.Properties, addSecureConfi
 }
 
 func WriteFile(path string, data []byte) error {
-	return ioutil.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0644)
 }
 
 func GenerateConfigKey(path string, key string) string {

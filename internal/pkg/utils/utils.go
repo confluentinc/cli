@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -96,7 +95,7 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
