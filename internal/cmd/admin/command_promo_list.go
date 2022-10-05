@@ -41,22 +41,24 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, code := range codes {
-		isSerialized := output.GetFormat(cmd).IsSerialized()
-
-		list.Add(&out{
-			Code:       code.Code,
-			Balance:    formatBalance(isSerialized, code.Balance, code.Amount),
-			Expiration: formatExpiration(isSerialized, code.CreditExpirationDate.Seconds),
-		})
+		if output.GetFormat(cmd).IsSerialized() {
+			list.Add(&out{
+				Code:       code.GetCode(),
+				Balance:    fmt.Sprint(ConvertToUSD(code.GetBalance())),
+				Expiration: fmt.Sprint(code.GetCreditExpirationDate().GetSeconds()),
+			})
+		} else {
+			list.Add(&out{
+				Code:       code.GetCode(),
+				Balance:    formatBalance(code.GetBalance(), code.GetAmount()),
+				Expiration: formatExpiration(code.GetCreditExpirationDate().GetSeconds()),
+			})
+		}
 	}
 	return list.Print()
 }
 
-func formatBalance(isSerialized bool, balance int64, amount int64) string {
-	if isSerialized {
-		return fmt.Sprint(ConvertToUSD(balance))
-	}
-
+func formatBalance(balance, amount int64) string {
 	return fmt.Sprintf("$%.2f/%.2f USD", ConvertToUSD(balance), ConvertToUSD(amount))
 }
 
@@ -65,10 +67,6 @@ func ConvertToUSD(balance int64) float64 {
 	return float64(balance) / 10000
 }
 
-func formatExpiration(isSerialized bool, seconds int64) string {
-	if isSerialized {
-		return fmt.Sprint(seconds)
-	}
-
+func formatExpiration(seconds int64) string {
 	return time.Unix(seconds, 0).Format("Jan 2, 2006")
 }

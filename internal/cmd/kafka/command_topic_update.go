@@ -167,7 +167,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}
 
-	utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	if output.GetFormat(cmd) == output.Human {
+		utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
+	}
 	list := output.NewList(cmd)
 	for name, value := range configMap {
 		list.Add(&topicConfigurationOut{

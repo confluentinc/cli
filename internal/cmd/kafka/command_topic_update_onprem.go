@@ -82,9 +82,8 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		return output.SerializedOutput(cmd, data)
 	}
 
-	// no errors (config update successful)
 	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
-	// Print Updated Configs
+
 	list := output.NewList(cmd)
 	for _, config := range data {
 		list.Add(&configOut{

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/go-yaml/yaml"
-	"github.com/sevlyar/retag"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
@@ -13,9 +12,6 @@ import (
 
 // SerializedOutput - pretty prints an object in specified format (JSON or YAML) using tags specified in struct definition
 func SerializedOutput(cmd *cobra.Command, v interface{}) error {
-	serializer := FieldSerializer{format: GetFormat(cmd)}
-	v = retag.Convert(v, serializer)
-
 	switch GetFormat(cmd) {
 	default:
 		out, err := json.Marshal(v)

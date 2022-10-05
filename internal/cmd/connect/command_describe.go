@@ -11,20 +11,38 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type serializedDescribeOut struct {
+	Connector *serializedConnectorOut `json:"connector" yaml:"connector"`
+	Tasks     []serializedTasksOut    `json:"tasks" yaml:"tasks"`
+	Configs   []serializedConfigsOut  `json:"configs" yaml:"configs"`
+}
+
+type serializedConnectorOut struct {
+	Id     string `json:"id" yaml:"id"`
+	Name   string `json:"name" yaml:"name"`
+	Status string `json:"status" yaml:"status"`
+	Type   string `json:"type" yaml:"type"`
+	Trace  string `json:"trace,omitempty" yaml:"trace,omitempty"`
+}
+
 type taskDescribeOut struct {
-	TaskId int32  `human:"Task ID" serialized:"task_id"`
-	State  string `human:"State" serialized:"state"`
+	TaskId int32  `human:"Task ID"`
+	State  string `human:"State"`
+}
+
+type serializedTasksOut struct {
+	TaskId int32  `json:"task_id" yaml:"task_id"`
+	State  string `json:"state" yaml:"state"`
 }
 
 type configDescribeOut struct {
-	Config string `human:"Config" serialized:"config"`
-	Value  string `human:"Value" serialized:"value"`
+	Config string `human:"Config"`
+	Value  string `human:"Value"`
 }
 
-type serializedDescribeOut struct {
-	Connector *connectOut         `serialized:"connector"`
-	Tasks     []taskDescribeOut   `serialized:"tasks"`
-	Configs   []configDescribeOut `serialized:"configs"`
+type serializedConfigsOut struct {
+	Config string `json:"config" yaml:"config"`
+	Value  string `json:"value" yaml:"value"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -94,7 +112,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	utils.Println(cmd, "\n\nTask Level Details")
 	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
-		list.Add(&taskDescribeOut{task.Id, task.State})
+		list.Add(&taskDescribeOut{
+			TaskId: task.GetId(),
+			State:  task.GetState(),
+		})
 	}
 	if err := list.Print(); err != nil {
 		return err
@@ -103,24 +124,27 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	utils.Println(cmd, "\n\nConfiguration Details")
 	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
-		list.Add(&configDescribeOut{name, value})
+		list.Add(&configDescribeOut{
+			Config: name,
+			Value:  value,
+		})
 	}
 	return list.Print()
 }
 
 func printSerializedDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
-	tasks := make([]taskDescribeOut, 0)
+	tasks := make([]serializedTasksOut, 0)
 	for _, task := range connector.Status.GetTasks() {
-		tasks = append(tasks, taskDescribeOut{TaskId: task.Id, State: task.State})
+		tasks = append(tasks, serializedTasksOut{TaskId: task.Id, State: task.State})
 	}
 
-	configs := make([]configDescribeOut, 0)
+	configs := make([]serializedConfigsOut, 0)
 	for name, value := range connector.Info.GetConfig() {
-		configs = append(configs, configDescribeOut{Config: name, Value: value})
+		configs = append(configs, serializedConfigsOut{Config: name, Value: value})
 	}
 
 	out := &serializedDescribeOut{
-		Connector: &connectOut{
+		Connector: &serializedConnectorOut{
 			Id:     connector.Id.GetId(),
 			Name:   connector.Status.GetName(),
 			Status: connector.Status.Connector.GetState(),
