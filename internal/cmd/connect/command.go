@@ -19,7 +19,7 @@ type connectOut struct {
 	Name   string `human:"Name" serialized:"name"`
 	Status string `human:"Status" serialized:"status"`
 	Type   string `human:"Type" serialized:"type"`
-	Trace  string `human:"Trace" serialized:"trace"`
+	Trace  string `human:"Trace,omitempty" serialized:"trace,omitempty"`
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {

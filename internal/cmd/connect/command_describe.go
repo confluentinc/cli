@@ -21,7 +21,7 @@ type configDescribeOut struct {
 	Value  string `human:"Value" serialized:"value"`
 }
 
-type structuredDescribeDisplay struct {
+type serializedDescribeOut struct {
 	Connector *connectOut         `serialized:"connector"`
 	Tasks     []taskDescribeOut   `serialized:"tasks"`
 	Configs   []configDescribeOut `serialized:"configs"`
@@ -74,7 +74,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return printHumanDescribe(cmd, connectorExpansion)
 	}
 
-	return printStructuredDescribe(cmd, connectorExpansion)
+	return printSerializedDescribe(cmd, connectorExpansion)
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
@@ -108,7 +108,7 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	return list.Print()
 }
 
-func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
+func printSerializedDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
 	tasks := make([]taskDescribeOut, 0)
 	for _, task := range connector.Status.GetTasks() {
 		tasks = append(tasks, taskDescribeOut{TaskId: task.Id, State: task.State})
@@ -119,17 +119,16 @@ func printStructuredDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1C
 		configs = append(configs, configDescribeOut{Config: name, Value: value})
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&structuredDescribeDisplay{
+	out := &serializedDescribeOut{
 		Connector: &connectOut{
-			Name:   connector.Status.GetName(),
 			Id:     connector.Id.GetId(),
+			Name:   connector.Status.GetName(),
 			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
 			Trace:  connector.Status.Connector.GetTrace(),
 		},
 		Tasks:   tasks,
 		Configs: configs,
-	})
-	return table.Print()
+	}
+	return output.SerializedOutput(cmd, out)
 }

@@ -110,17 +110,17 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
 
 	if output.GetFormat(cmd).IsSerialized() {
-		structuredDisplay := &out{
+		out := &out{
 			Crn:   meta.ID,
 			Scope: make([]scopeOut, len(types)),
 		}
 		for i, name := range types {
-			structuredDisplay.Scope[i] = scopeOut{
+			out.Scope[i] = scopeOut{
 				Type: name,
 				ID:   meta.Scope.Clusters[name],
 			}
 		}
-		return output.SerializedOutput(cmd, structuredDisplay)
+		return output.SerializedOutput(cmd, out)
 	}
 
 	if meta.ID != "" {
