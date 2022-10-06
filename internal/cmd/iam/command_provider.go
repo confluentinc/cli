@@ -4,6 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type identityProviderCommand struct {
@@ -18,7 +21,7 @@ type identityProviderOut struct {
 	JwksUri     string `human:"JWKS URI" serialized:"jwks_uri"`
 }
 
-func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newProviderCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "provider",
 		Short:       "Manage identity providers.",
@@ -26,6 +29,10 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &identityProviderCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	c.Hidden = !(cfg.IsTest || launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false))
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())

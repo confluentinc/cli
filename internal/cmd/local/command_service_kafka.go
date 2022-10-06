@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
@@ -242,7 +241,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 			return err
 		}
 
-		data, err := ioutil.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(cloudConfigFile)
 		if err != nil {
 			return err
 		}

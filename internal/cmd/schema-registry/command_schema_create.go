@@ -2,7 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -90,7 +90,7 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
