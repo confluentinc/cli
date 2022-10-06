@@ -35,9 +35,7 @@ blocks:
             
             # Set up Go
             - checkout
-            - goenv install
-            - echo $GOPATH
-            - go env GOPATH
+            - goenv install --skip-existing
             - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Try to restore cached dependencies
@@ -57,7 +55,7 @@ blocks:
 #            - make lint-licenses
             
             # Cache Go dependencies
-            - cache store linux-$(checksum go.sum) $GOPATH/pkg/mod
+            - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
@@ -79,9 +77,7 @@ blocks:
             
             # Set up Go
             - checkout
-            - goenv install
-            - echo $GOPATH
-            - go env GOPATH
+            - goenv install --skip-existing
             - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Set up Git
