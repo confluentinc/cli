@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-06 11:57:56.000000000 -0700
+--- cli/Makefile	2022-10-06 14:27:49.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,214 +1,130 @@
 -SHELL           := /bin/bash
@@ -161,7 +161,7 @@
 -.PHONY: lint
 -lint:
 -	rm go.sum
--	rm $(go env GOPATH)/pkg/mod/github.com/confluentinc/ccloud-sdk-go-v2/kafkarest@v0.9.0
+-	rm $GOPATH/pkg/mod/github.com/confluentinc/ccloud-sdk-go-v2/kafkarest@v0.9.0
 -	go mod tidy
 -	make lint-go
 -	make lint-cli
