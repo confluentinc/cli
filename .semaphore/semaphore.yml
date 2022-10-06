@@ -13,8 +13,6 @@ global_job_config:
   env_vars:
     - name: CI
       value: "true"
-    - name: GO_VERSION
-      value: "1.19"
   secrets:
     - name: vault_sem2_approle
 
@@ -38,9 +36,9 @@ blocks:
             # Set up Go
             - checkout
             - goenv install
-#            - sem-version go $GO_VERSION
-#            - export "GOPATH=$(go env GOPATH)"
-#            - export "PATH=$GOPATH/bin:$PATH"
+            - echo $GOPATH
+            - go env GOPATH
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
@@ -82,6 +80,9 @@ blocks:
             # Set up Go
             - checkout
             - goenv install
+            - echo $GOPATH
+            - go env GOPATH
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
