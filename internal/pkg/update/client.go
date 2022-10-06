@@ -233,7 +233,7 @@ func (c *client) VerifyChecksum(newBin, cliName, version string) error {
 
 // UpdateBinary replaces the named binary at path with the desired version
 func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
-	downloadDir, err := c.fs.TempDir("", cliName)
+	downloadDir, err := c.fs.MkdirTemp("", cliName)
 	if err != nil {
 		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
 	}
