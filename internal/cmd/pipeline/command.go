@@ -3,47 +3,23 @@ package pipeline
 import (
 	"time"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
-	"github.com/spf13/cobra"
 )
 
-type Pipeline struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	KsqlCluster string    `json:"ksql_cluster"`
-	State       string    `json:"state"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+type out struct {
+	Id          string    `human:"ID" serialized:"id"`
+	Name        string    `human:"Name" serialized:"name"`
+	Description string    `human:"Description" serialized:"description"`
+	KsqlCluster string    `human:"KSQL Cluster" serialized:"ksql_cluster"`
+	State       string    `human:"State" serialized:"state"`
+	CreatedAt   time.Time `human:"Created At" serialized:"created_at"`
+	UpdatedAt   time.Time `human:"Updated At" serialized:"updated_at"`
 }
-
-var (
-	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
-	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "KSQL Cluster", "State"}
-	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
-	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
-	pipelineDescribeHumanLabels  = map[string]string{
-		"Id":          "ID",
-		"Name":        "Name",
-		"Description": "Description",
-		"KsqlCluster": "KSQL Cluster",
-		"State":       "State",
-		"CreatedAt":   "Created At",
-		"UpdatedAt":   "Updated At",
-	}
-	pipelineDescribeStructuredLabels = map[string]string{
-		"Id":          "id",
-		"Name":        "name",
-		"Description": "description",
-		"KsqlCluster": "ksql_cluster",
-		"State":       "state",
-		"CreatedAt":   "created_at",
-		"UpdatedAt":   "updated_at",
-	}
-)
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand

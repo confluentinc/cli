@@ -383,8 +383,6 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/topic/list-yaml.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
-		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello --no-auth", kafkaRestURL), fixture: "kafka/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
 	}
 
 	for _, clitest := range tests {
@@ -459,8 +457,6 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 		// Topic name errors
 		{args: fmt.Sprintf("kafka topic describe --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "<topic> arg missing should lead to error"},
 		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-auth", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", wantErrCode: 1, name: "describing a non-existant topic should lead to error"},
-		// -o errors
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o asdf --no-auth", kafkaRestURL), contains: "Error: invalid value \"asdf\" for flag `--output`\n\nSuggestions:\n    The possible values for flag `output` are: human, json, yaml.", wantErrCode: 1, name: "bad output format flag should lead to error"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exist & human arg should lead to success"},

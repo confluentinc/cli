@@ -45,21 +45,15 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for name, connector := range connectorExpansions {
-		connector := &connectorDescribeDisplay{
+		list.Add(&connectOut{
 			Name:   name,
-			ID:     connector.Id.GetId(),
+			Id:     connector.Id.GetId(),
 			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
 			Trace:  connector.Status.Connector.GetTrace(),
-		}
-		outputWriter.AddElement(connector)
+		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

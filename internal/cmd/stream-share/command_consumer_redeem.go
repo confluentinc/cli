@@ -10,30 +10,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	redeemTokenFields        = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "Resources"}
-	redeemTokenHumanLabelMap = map[string]string{
-		"Id":                "ID",
-		"ApiKey":            "API Key",
-		"Secret":            "Secret",
-		"KafkaBootstrapUrl": "Kafka Bootstrap URL",
-		"Resources":         "Resources",
-	}
-	redeemTokenStructuredLabelMap = map[string]string{
-		"Id":                "id",
-		"ApiKey":            "api_key",
-		"Secret":            "secret",
-		"KafkaBootstrapUrl": "kafka_bootstrap_url",
-		"Resources":         "resources",
-	}
-)
-
-type redeemToken struct {
-	Id                string
-	ApiKey            string
-	Secret            string
-	KafkaBootstrapUrl string
-	Resources         []string
+type redeemOut struct {
+	Id                string   `human:"ID" serialized:"id"`
+	ApiKey            string   `human:"API Key" serialized:"api_key"`
+	Secret            string   `human:"Secret" serialized:"secret"`
+	KafkaBootstrapUrl string   `human:"Kafka Bootstrap URL" serialized:"kafka_bootstrap_url"`
+	Resources         []string `human:"Resources" serialized:"resources"`
 }
 
 func (c *command) newRedeemCommand() *cobra.Command {
@@ -87,13 +69,13 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	tokenObj := &redeemToken{
+	table := output.NewTable(cmd)
+	table.Add(&redeemOut{
 		Id:                redeemResponse.GetId(),
 		ApiKey:            redeemResponse.GetApikey(),
 		Secret:            redeemResponse.GetSecret(),
 		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
 		Resources:         resources,
-	}
-
-	return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
+	})
+	return table.Print()
 }

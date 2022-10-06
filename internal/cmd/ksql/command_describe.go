@@ -12,12 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeFields            = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status", "DetailedProcessingLog"}
-	describeHumanRenames      = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix", "DetailedProcessingLog": "Detailed Processing Log"}
-	describeStructuredRenames = map[string]string{"KafkaClusterId": "kafka", "OutputTopicPrefix": "topic_prefix", "DetailedProcessingLog": "detailed_processing_log"}
-)
-
 func (c *ksqlCommand) newDescribeCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
@@ -41,5 +35,7 @@ func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(c.updateKsqlClusterForDescribeAndList(cluster))
+	return table.Print()
 }
