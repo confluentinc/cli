@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -13,24 +14,13 @@ type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-type connectCreateDisplay struct {
-	Id         string `json:"id" yaml:"id"`
-	Name       string `json:"name" yaml:"name"`
-	ErrorTrace string `json:"error_trace,omitempty" yaml:"error_trace,omitempty"`
+type connectOut struct {
+	Id     string `human:"ID" serialized:"id"`
+	Name   string `human:"Name" serialized:"name"`
+	Status string `human:"Status" serialized:"status"`
+	Type   string `human:"Type" serialized:"type"`
+	Trace  string `human:"Trace,omitempty" serialized:"trace,omitempty"`
 }
-
-type connectorDescribeDisplay struct {
-	Name   string `json:"name" yaml:"name"`
-	ID     string `json:"id" yaml:"id"`
-	Status string `json:"status" yaml:"status"`
-	Type   string `json:"type" yaml:"type"`
-	Trace  string `json:"trace,omitempty" yaml:"trace,omitempty"`
-}
-
-var (
-	listFields           = []string{"ID", "Name", "Status", "Type", "Trace"}
-	listStructuredLabels = []string{"id", "name", "status", "type", "trace"}
-)
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{

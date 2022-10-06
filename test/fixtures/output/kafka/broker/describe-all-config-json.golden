@@ -1,9 +1,9 @@
 [
   {
+    "is_default": "false",
+    "is_read_only": "false",
+    "is_sensitive": "false",
     "name": "compression.type",
-    "value": "gzip",
-    "is_default": false,
-    "is_read_only": false,
-    "is_sensitive": false
+    "value": "gzip"
   }
 ]

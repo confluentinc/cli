@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
-)
-
 func (c *clusterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -59,22 +53,18 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, cluster := range clusters {
 		// Add '*' only in the case where we are printing out tables
-		if outputWriter.GetOutputFormat() == output.Human {
+		if output.GetFormat(cmd) == output.Human {
 			if *cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
 				*cluster.Id = fmt.Sprintf("* %s", *cluster.Id)
 			} else {
 				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
 			}
 		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
+		list.Add(convertClusterToDescribeStruct(&cluster))
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
+	return list.Print()
 }

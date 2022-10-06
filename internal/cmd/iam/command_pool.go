@@ -13,12 +13,12 @@ type identityPoolCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type identityPool struct {
-	Id            string
-	DisplayName   string
-	Description   string
-	IdentityClaim string
-	Filter        string
+type identityPoolOut struct {
+	Id            string `human:"ID" serialized:"id"`
+	DisplayName   string `human:"Display Name" serialized:"display_name"`
+	Description   string `human:"Description" serialized:"description"`
+	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"`
+	Filter        string `human:"Filter" serialized:"filter"`
 }
 
 func newPoolCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
