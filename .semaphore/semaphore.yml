@@ -34,15 +34,14 @@ blocks:
             - source script.sh
             
             # Set up Go
-            - sem-version go 1.17.6
-            - export "GOPATH=$(go env GOPATH)"
-            - export "PATH=$GOPATH/bin:$PATH"
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
             
             # Set up Git
-            - checkout
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
@@ -53,10 +52,10 @@ blocks:
             - make lint
             - ulimit -n 2048
             - make test
-            - make lint-licenses
+#            - make lint-licenses
             
             # Cache Go dependencies
-            - cache store linux-$(checksum go.sum) $GOPATH/pkg/mod
+            - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
@@ -77,15 +76,11 @@ blocks:
             - source script.sh
             
             # Set up Go
-            - wget https://golang.org/dl/go1.17.6.darwin-amd64.tar.gz
-            - sudo tar -xzf go1.17.6.darwin-amd64.tar.gz -C /usr/local/
-            - export "PATH=/usr/local/go/bin:$PATH"
-            - export "GOPATH=$(go env GOPATH)"
-            - export "PATH=$GOPATH/bin:$PATH"
-            - export "PATH=$GOROOT/bin:$PATH"
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
             
             # Set up Git
-            - checkout
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
@@ -119,8 +114,8 @@ blocks:
 #            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
-#            - Invoke-WebRequest https://golang.org/dl/go1.17.6.windows-amd64.zip -OutFile go1.17.6.windows-amd64.zip 
-#            - Expand-Archive go1.17.6.windows-amd64.zip -DestinationPath /usr/local/
+#            - Invoke-WebRequest https://golang.org/dl/go${GO_VERSION}.windows-amd64.zip -OutFile go${GO_VERSION}.windows-amd64.zip 
+#            - Expand-Archive go${GO_VERSION}.windows-amd64.zip -DestinationPath /usr/local/
 #            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
 #            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             

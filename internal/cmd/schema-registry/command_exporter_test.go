@@ -3,7 +3,6 @@ package schemaregistry
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -112,7 +111,7 @@ func (suite *ExporterTestSuite) TestCreateExporter() {
 	req.NoError(err)
 	configs := "key1=value1\nkey2=value2"
 	configPath := filepath.Join(dir, "config.txt")
-	req.NoError(ioutil.WriteFile(configPath, []byte(configs), 0644))
+	req.NoError(os.WriteFile(configPath, []byte(configs), 0644))
 	cmd.SetArgs([]string{"exporter", "create", exporterName, "--context-type", "AUTO",
 		"--context", contextName, "--subjects", subjectName, "--config-file", configPath})
 	output := new(bytes.Buffer)
