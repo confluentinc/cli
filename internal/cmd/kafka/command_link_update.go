@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -71,7 +72,7 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 	data := toAlterConfigBatchRequestData(configMap)
 
 	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(clusterId, linkName, data); err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)

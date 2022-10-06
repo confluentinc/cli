@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -152,7 +153,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if httpResp, err := kafkaREST.CloudClient.CreateKafkaLink(clusterId, linkName, !noValidate, dryRun, data); err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	msg := fmt.Sprintf(errors.CreatedResourceMsg, resource.ClusterLink, linkName)
