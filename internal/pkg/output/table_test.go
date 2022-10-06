@@ -28,15 +28,15 @@ func TestTable(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
-			`  "description": "Example Cluster",`,
-			`  "id": "1",`,
-			`  "name": "lkc-123456"`,
+			`  "id": 1,`,
+			`  "name": "lkc-123456",`,
+			`  "description": "Example Cluster"`,
 			"}",
 		},
 		YAML.String(): {
-			"description: Example Cluster",
-			`id: "1"`,
+			"id: 1",
 			"name: lkc-123456",
+			"description: Example Cluster",
 		},
 	}
 
@@ -74,19 +74,19 @@ func TestTable_NoAutoWrap(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
-			`  "description": "{\n  \"A\": 1,\n  \"B\": 2\n}",`,
-			`  "id": "1",`,
-			`  "name": "lkc-123456"`,
+			`  "id": 1,`,
+			`  "name": "lkc-123456",`,
+			`  "description": "{\n  \"A\": 1,\n  \"B\": 2\n}"`,
 			"}",
 		},
 		YAML.String(): {
+			"id: 1",
+			"name: lkc-123456",
 			"description: |-",
 			"  {",
 			`    "A": 1,`,
 			`    "B": 2`,
 			"  }",
-			`id: "1"`,
-			"name: lkc-123456",
 		},
 	}
 
@@ -129,13 +129,13 @@ func TestTable_Filter(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
-			`  "description": "Example Cluster",`,
-			`  "name": "lkc-123456"`,
+			`  "name": "lkc-123456",`,
+			`  "description": "Example Cluster"`,
 			"}",
 		},
 		YAML.String(): {
-			"description: Example Cluster",
 			"name: lkc-123456",
+			"description: Example Cluster",
 		},
 	}
 
@@ -170,12 +170,12 @@ func TestTable_OmitEmpty(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
-			`  "id": "1",`,
+			`  "id": 1,`,
 			`  "name": "lkc-123456"`,
 			"}",
 		},
 		YAML.String(): {
-			`id: "1"`,
+			"id: 1",
 			"name: lkc-123456",
 		},
 	}
@@ -272,24 +272,24 @@ func TestList(t *testing.T) {
 		JSON.String(): {
 			"[",
 			"  {",
-			`    "description": "Cluster 1",`,
-			`    "id": "1",`,
-			`    "name": "lkc-111111"`,
+			`    "id": 1,`,
+			`    "name": "lkc-111111",`,
+			`    "description": "Cluster 1"`,
 			"  },",
 			"  {",
-			`    "description": "Cluster 2",`,
-			`    "id": "2",`,
-			`    "name": "lkc-222222"`,
+			`    "id": 2,`,
+			`    "name": "lkc-222222",`,
+			`    "description": "Cluster 2"`,
 			"  }",
 			"]",
 		},
 		YAML.String(): {
-			"- description: Cluster 1",
-			`  id: "1"`,
+			"- id: 1",
 			"  name: lkc-111111",
-			"- description: Cluster 2",
-			`  id: "2"`,
+			"  description: Cluster 1",
+			"- id: 2",
 			"  name: lkc-222222",
+			"  description: Cluster 2",
 		},
 	}
 

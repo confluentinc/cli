@@ -1,16 +1,16 @@
 [
   {
-    "is_default": "true",
-    "is_read_only": "true",
-    "is_sensitive": "true",
     "name": "compression.type",
-    "value": "gzip"
+    "value": "gzip",
+    "is_default": true,
+    "is_read_only": true,
+    "is_sensitive": true
   },
   {
-    "is_default": "false",
-    "is_read_only": "false",
-    "is_sensitive": "false",
     "name": "sasl_mechanism",
-    "value": "SASL/PLAIN"
+    "value": "SASL/PLAIN",
+    "is_default": false,
+    "is_read_only": false,
+    "is_sensitive": false
   }
 ]

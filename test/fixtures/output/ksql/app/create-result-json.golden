@@ -1,11 +1,11 @@
 `confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
 {
-  "detailed_processing_log": "true",
-  "endpoint": "SASL_SSL://ksql-endpoint",
   "id": "lksqlc-ksql5",
-  "kafka": "lkc-qwert",
   "name": "account ksql",
+  "topic_prefix": "pksqlc-abcde",
+  "kafka": "lkc-qwert",
+  "storage": 101,
+  "endpoint": "SASL_SSL://ksql-endpoint",
   "status": "PROVISIONING",
-  "storage": "101",
-  "topic_prefix": "pksqlc-abcde"
+  "detailed_processing_log": true
 }
