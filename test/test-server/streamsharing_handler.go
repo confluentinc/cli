@@ -185,8 +185,6 @@ func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 			Zones:     &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
 			ZonalSubdomains: &map[string]string{
 				"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud",
-				"usw2-az3": "usw2-az3.abc123.us-west-2.aws.stag.cpdev.cloud",
-				"usw2-az1": "usw2-az1.abc123.us-west-2.aws.stag.cpdev.cloud",
 			},
 			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
 				CdxV1AwsNetwork: getTestAWSNetwork(),
