@@ -133,13 +133,10 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		response := cdxv1.CdxV1RedeemTokenResponse{
-			Id:                   stringPtr("ss-12345"),
-			ApiKey:               stringPtr("00000000000000000000"),
-			Secret:               stringPtr("00000000000000000000"),
-			KafkaBootstrapUrl:    stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
-			SchemaRegistryUrl:    stringToPtr("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
-			SchemaRegistryApiKey: stringPtr("00000000000000000000"),
-			SchemaRegistrySecret: stringPtr("00000000000000000000"),
+			Id:                stringPtr("ss-12345"),
+			ApiKey:            stringPtr("00000000000000000000"),
+			Secret:            stringPtr("00000000000000000000"),
+			KafkaBootstrapUrl: stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
 				{
 					CdxV1SharedTopic: &cdxv1.CdxV1SharedTopic{
@@ -185,6 +182,8 @@ func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 			Zones:     &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
 			ZonalSubdomains: &map[string]string{
 				"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud",
+				"usw2-az3": "usw2-az3.abc123.us-west-2.aws.stag.cpdev.cloud",
+				"usw2-az1": "usw2-az1.abc123.us-west-2.aws.stag.cpdev.cloud",
 			},
 			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
 				CdxV1AwsNetwork: getTestAWSNetwork(),
