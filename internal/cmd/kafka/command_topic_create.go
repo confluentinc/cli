@@ -14,6 +14,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -98,9 +99,9 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIErrorCloud(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestBadRequestErrorCode {
+				if restErr.Code == badRequestErrorCode {
 					// Ignore or pretty print topic exists error
 					if strings.Contains(restErr.Message, "already exists") {
 						if !ifNotExists {
@@ -117,7 +118,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 					}
 				}
 			}
-			return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
