@@ -143,6 +143,9 @@ fmt:
 
 .PHONY: lint
 lint:
+	rm go.sum
+	rm $GOPATH/pkg/mod/github.com/confluentinc/ccloud-sdk-go-v2/kafkarest@v0.9.0
+	go mod tidy
 	make lint-go
 	make lint-cli
 
