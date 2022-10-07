@@ -38,7 +38,7 @@ tmpdir=$(echo "${output}" | sed -n 's/.*licenses located in \(.*\)/\1/p')
 echo "<install.sh output and debug log>:"
 echo $output
 
-[[ "$(find "${tmpdir}/legal/licenses" -type file | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
+[[ "$(find "${tmpdir}/legal/licenses" -type f | wc -l)" -ge 20 ]] || ( echo "Appears to be missing some licenses; found less than 20 in the tmp dir" && exit 1 )
 
 ./bin/${binary} -h 2>&1 >/dev/null | grep -q "Manage your .*" || ( echo "Unable to execute installed ${binary} CLI" && exit 1 )
 
