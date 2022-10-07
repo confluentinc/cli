@@ -39,4 +39,4 @@ archives:
         format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
-      - licenses/**/*
+      - legal/**/*
