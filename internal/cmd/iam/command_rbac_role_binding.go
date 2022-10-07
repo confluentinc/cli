@@ -530,7 +530,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
+	user, err := c.V2Client.GetIamUser(userResourceId)
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -556,7 +556,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = user.Email
+			displayStruct.Email = user.GetEmail()
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}
