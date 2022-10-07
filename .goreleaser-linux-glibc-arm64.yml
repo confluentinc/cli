@@ -20,6 +20,10 @@ builds:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
       - all=-trimpath={{.Env.HOME}}/git
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
     goos:
       - linux
     goarch:
@@ -34,9 +38,6 @@ archives:
   - id: archive
     name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - legal/**/*
