@@ -21,6 +21,7 @@ var (
 	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
 	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
+	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -312,6 +313,13 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 	return err
 }
 
+func writeUserConflictError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusConflict)
+	_, err := io.WriteString(w, userConflictErrMsg)
+	return err
+}
+
 func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
@@ -394,6 +402,15 @@ func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
 		Email:    iamv2.PtrString(email),
 		FullName: iamv2.PtrString(name),
 		Id:       iamv2.PtrString(resourceId),
+	}
+}
+
+func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation {
+	return iamv2.IamV2Invitation{
+		Id:     iamv2.PtrString(id),
+		Email:  iamv2.PtrString(email),
+		User:   &iamv2.GlobalObjectReference{Id: userId},
+		Status: iamv2.PtrString(status),
 	}
 }
 

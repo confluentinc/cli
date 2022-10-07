@@ -29,6 +29,7 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/identity-providers/{id}":                              handleIamIdentityProvider,
 	"/iam/v2/identity-providers/{provider_id}/identity-pools":      handleIamIdentityPools,
 	"/iam/v2/identity-providers/{provider_id}/identity-pools/{id}": handleIamIdentityPool,
+	"/iam/v2/invitations":                                          handleIamInvitations,
 	"/iam/v2/service-accounts":                                     handleIamServiceAccounts,
 	"/iam/v2/service-accounts/{id}":                                handleIamServiceAccount,
 	"/iam/v2/users":                                                handleIamUsers,
