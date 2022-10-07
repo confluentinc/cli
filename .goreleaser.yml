@@ -97,9 +97,6 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-          env:
-            - LICENSE_BIN=confluent
-            - LICENSE_BIN_PATH=./dist/signed-amd64_darwin_amd64/confluent
         - cmd: gon gon_confluent_amd64.hcl
   - binary: confluent
     id: signed-arm64
@@ -137,8 +134,7 @@ archives:
         format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
-      - LICENSE
-      - legal/**/*
+      - licenses/**/*
 
 blobs:
   - ids:
