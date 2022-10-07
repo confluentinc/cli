@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-06 17:37:52.000000000 -0700
+--- cli/Makefile	2022-10-06 18:22:43.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,207 +1,130 @@
 -SHELL           := /bin/bash
@@ -66,7 +66,7 @@
  
 -.PHONY: clean
 -clean:
--	@for dir in bin dist docs licenses release-notes; do \
+-	@for dir in bin dist docs legal release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
 +ifndef VERSION
