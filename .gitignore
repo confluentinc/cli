@@ -1,7 +1,7 @@
 bin/
 dist/
 docs/
-licenses/
+legal/
 release-notes/
 
 .semaphore-cache/
