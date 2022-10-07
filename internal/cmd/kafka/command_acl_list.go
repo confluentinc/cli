@@ -12,6 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newListCommand() *cobra.Command {
@@ -66,7 +67,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {
