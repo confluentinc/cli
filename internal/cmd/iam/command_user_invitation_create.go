@@ -26,9 +26,7 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
 
-	req := iamv2.IamV2Invitation{
-		Email: iamv2.PtrString(email),
-	}
+	req := iamv2.IamV2Invitation{Email: iamv2.PtrString(email)}
 
 	invitation, err := c.V2Client.CreateIamInvitation(req)
 	if err != nil {

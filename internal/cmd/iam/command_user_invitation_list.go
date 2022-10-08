@@ -69,7 +69,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 			Email:          invitation.GetEmail(),
 			FirstName:      firstName,
 			LastName:       lastName,
-			UserResourceId: invitation.User.GetId(),
+			UserResourceId: invitation.GetUser().Id,
 			Status:         invitation.GetStatus(),
 		})
 	}
