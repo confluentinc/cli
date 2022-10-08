@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"context"
 	"net/http"
 	"os"
 	"sort"
@@ -258,25 +257,25 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
-	users, err := c.Client.User.List(context.Background())
+	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return nil, err
 	}
 	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmail["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.GetId()] = u.GetEmail()
 	}
 	return userToEmail, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 	serviceAccountToName := make(map[string]string)
-	for _, u := range users {
-		serviceAccountToName["User:"+u.ResourceId] = u.ServiceName
+	for _, sa := range serviceAccounts {
+		serviceAccountToName["User:"+sa.GetId()] = sa.GetDisplayName()
 	}
 	return serviceAccountToName, nil
 }
