@@ -118,10 +118,13 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
+		w.Header().Set("Content-Type", "application/json")
 		switch userId {
 		case "u-1":
-			w.Header().Set("Content-Type", "application/json")
 			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+		case "u-11aaa":
+			err := json.NewEncoder(w).Encode(buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa"))
 			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
