@@ -1,11 +1,9 @@
 package iam
 
 import (
-	"context"
 	"fmt"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,16 +26,15 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 		return errors.New(errors.BadEmailFormatErrorMsg)
 	}
 
-	req := &flowv1.CreateInvitationRequest{
-		User:           &orgv1.User{Email: email},
-		SendInvitation: true,
+	req := iamv2.IamV2Invitation{
+		Email: iamv2.PtrString(email),
 	}
 
-	user, err := c.Client.User.CreateInvitation(context.Background(), req)
+	invitation, err := c.V2Client.CreateIamInvitation(req)
 	if err != nil {
 		return err
 	}
 
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, user.Email))
+	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, invitation.GetEmail()))
 	return nil
 }

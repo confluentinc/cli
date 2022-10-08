@@ -2,9 +2,9 @@ package iam
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -12,52 +12,57 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
 
 type InvitationTestSuite struct {
 	suite.Suite
-	conf     *v1.Config
-	userMock *ccsdkmock.User
+	conf           *v1.Config
+	userMock       *ccsdkmock.User
+	invitationMock *iammock.InvitationsIamV2Api
 }
 
 func (suite *InvitationTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.userMock = &ccsdkmock.User{
-		GetUserProfileFunc: func(_ context.Context, _ *orgv1.User) (*flowv1.UserProfile, error) {
-			return &flowv1.UserProfile{
-				FirstName: "TEST",
-				LastName:  "lastname",
-			}, nil
-		},
 		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (*orgv1.User, error) {
 			return &orgv1.User{
 				FirstName: "TEST",
 				LastName:  "lastname",
 			}, nil
 		},
-		ListInvitationsFunc: func(_ context.Context) ([]*orgv1.Invitation, error) {
-			return []*orgv1.Invitation{
-				{
-					Id:             "invitation1",
-					Email:          "invitation1@confluent.io",
-					UserResourceId: "u-1234",
-					Status:         "SENT",
-				},
-				{
-					Id:             "invitation2",
-					Email:          "invitation2@confluent.io",
-					UserResourceId: "u-4321",
-					Status:         "PENDING",
-				},
-			}, nil
+	}
+	suite.invitationMock = &iammock.InvitationsIamV2Api{
+		CreateIamV2InvitationFunc: func(_ context.Context) iamv2.ApiCreateIamV2InvitationRequest {
+			return iamv2.ApiCreateIamV2InvitationRequest{}
 		},
-		CreateInvitationFunc: func(_ context.Context, arg1 *flowv1.CreateInvitationRequest) (*orgv1.Invitation, error) {
-			return &orgv1.Invitation{
-				Id:    "invitation1",
-				Email: "cli@confluent.io",
-			}, nil
+		CreateIamV2InvitationExecuteFunc: func(req iamv2.ApiCreateIamV2InvitationRequest) (iamv2.IamV2Invitation, *http.Response, error) {
+			return iamv2.IamV2Invitation{Id: iamv2.PtrString("invitation1"), Email: iamv2.PtrString("cli@confluent.io")}, nil, nil
+		},
+		ListIamV2InvitationsFunc: func(ctx context.Context) iamv2.ApiListIamV2InvitationsRequest {
+			return iamv2.ApiListIamV2InvitationsRequest{}
+		},
+		ListIamV2InvitationsExecuteFunc: func(r iamv2.ApiListIamV2InvitationsRequest) (iamv2.IamV2InvitationList, *http.Response, error) {
+			return iamv2.IamV2InvitationList{
+				Data: []iamv2.IamV2Invitation{
+					{
+						Id:     iamv2.PtrString("invitation1"),
+						Email:  iamv2.PtrString("invitation1@confluent.io"),
+						User:   &iamv2.GlobalObjectReference{Id: "u-1234"},
+						Status: iamv2.PtrString("SENT"),
+					},
+					{
+						Id:     iamv2.PtrString("invitation2"),
+						Email:  iamv2.PtrString("invitation2@confluent.io"),
+						User:   &iamv2.GlobalObjectReference{Id: "u-4321"},
+						Status: iamv2.PtrString("PENDING"),
+					},
+				},
+			}, nil, nil
 		},
 	}
 }
@@ -66,7 +71,10 @@ func (suite *InvitationTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	client := &ccloud.Client{
 		User: suite.userMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, nil, nil, conf)
+	iamClient := &iamv2.APIClient{
+		InvitationsIamV2Api: suite.invitationMock,
+	}
+	prerunner := cliMock.NewPreRunnerMock(client, &ccloudv2.Client{IamClient: iamClient}, nil, nil, conf)
 	return newUserCommand(prerunner)
 }
 
@@ -76,10 +84,9 @@ func (suite *InvitationTestSuite) TestInvitationList() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NoError(err)
-	req.True(suite.userMock.ListInvitationsCalled())
+	req.True(suite.invitationMock.ListIamV2InvitationsCalled())
+	req.True(suite.invitationMock.ListIamV2InvitationsExecuteCalled())
 	req.Equal(2, len(suite.userMock.DescribeCalls()))
-	req.Equal("u-1234", suite.userMock.DescribeCalls()[0].Arg1.ResourceId)
-	req.Equal("u-4321", suite.userMock.DescribeCalls()[1].Arg1.ResourceId)
 }
 
 func (suite *InvitationTestSuite) TestCreateInvitation() {
@@ -88,8 +95,8 @@ func (suite *InvitationTestSuite) TestCreateInvitation() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.userMock.CreateInvitationCalled())
-	req.Equal("cli@confluent.io", suite.userMock.CreateInvitationCalls()[0].Arg1.User.Email)
+	req.True(suite.invitationMock.CreateIamV2InvitationCalled())
+	req.True(suite.invitationMock.CreateIamV2InvitationExecuteCalled())
 }
 
 func TestUserTestSuite(t *testing.T) {
