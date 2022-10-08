@@ -292,11 +292,6 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 	}
 
 	// Mock User Client
-	// userMock := &ccsdkmock.User{
-	// 	ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
-	// 		return <-mockListUserResult, nil
-	// 	},
-	// }
 	iamUserMock := &iammock.UsersIamV2Api{
 		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
 			return iamv2.ApiListIamV2UsersRequest{}
@@ -305,9 +300,6 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 			return <-mockListIamUserResult, nil, nil
 		},
 	}
-	// client := &ccloud.Client{
-	// 	User: userMock,
-	// }
 	v2Client := &ccloudv2.Client{
 		IamClient: &iamv2.APIClient{UsersIamV2Api: iamUserMock},
 	}
@@ -532,7 +524,6 @@ var myRoleBindingListTests = []myRoleBindingTest{
 
 func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 	mockRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
-	// mockListUserResult := make(chan []*orgv1.User)
 	mockListIamUserResult := make(chan iamv2.IamV2UserList)
 	for _, tc := range myRoleBindingListTests {
 		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
