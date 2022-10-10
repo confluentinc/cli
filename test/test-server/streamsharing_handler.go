@@ -206,9 +206,7 @@ func handleOptInOptOut(t *testing.T) http.HandlerFunc {
 		var reqBody cdxv1.CdxV1OptIn
 		_ = json.Unmarshal(body, &reqBody)
 
-		network := cdxv1.CdxV1OptIn{
-			StreamShareEnabled: reqBody.StreamShareEnabled,
-		}
+		network := &cdxv1.CdxV1OptIn{StreamShareEnabled: reqBody.StreamShareEnabled}
 		b, err := json.Marshal(&network)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
