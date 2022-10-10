@@ -1,3 +1,3 @@
-     ID    | Provider Name | Status | Shared Resource ID |       Invite Expires At        
------------+---------------+--------+--------------------+--------------------------------
-  ss-12345 | provider      | active | sr-12345           | 2022-07-22 22:08:41 +0000 UTC  
+     ID    | Provider Name | Status |       Invite Expires At
+-----------+---------------+--------+--------------------------------
+  ss-12345 | provider      | active | 2022-07-22 22:08:41 +0000 UTC

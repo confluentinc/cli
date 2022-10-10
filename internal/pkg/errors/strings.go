@@ -138,13 +138,12 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg         = "Created %s \"%s\".\n"
-	DeletedResourceMsg         = "Deleted %s \"%s\".\n"
-	RequestedDeleteResourceMsg = "Requested to delete %s \"%s\".\n"
-	UpdatedResourceMsg         = "Updated %s \"%s\".\n"
+	CreatedResourceMsg = "Created %s \"%s\".\n"
+	DeletedResourceMsg = "Deleted %s \"%s\".\n"
+	UpdatedResourceMsg = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
 	// Stream Sharing commands
-	ResendInviteMsg = `Sent invitation for "%s".`
+	ResendInviteMsg = "Sent invitation for \"%s\".\n"
 )
