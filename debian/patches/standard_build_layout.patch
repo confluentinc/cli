@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-10 12:43:39.000000000 -0700
+--- cli/Makefile	2022-10-10 13:35:20.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,206 +1,130 @@
 -SHELL           := /bin/bash
@@ -96,7 +96,7 @@
 -
 -.PHONY: jenkins-deps
 -jenkins-deps:
--	go get github.com/goreleaser/goreleaser@v1.11.2
+-	go install github.com/goreleaser/goreleaser@v1.11.2
 -
 -show-args:
 -	@echo "VERSION: $(VERSION)"

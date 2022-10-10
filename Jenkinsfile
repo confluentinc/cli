@@ -44,12 +44,9 @@ def job = {
                                 export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
                                 mkdir -p $GOPATH/bin
                                 mkdir -p $GOROOT/bin
-                                echo $GOPATH
-                                ls $GOPATH/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
                                 make jenkins-deps
-                                ls $GOPATH/bin
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64

@@ -79,7 +79,7 @@ deps:
 
 .PHONY: jenkins-deps
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v1.11.2
+	go install github.com/goreleaser/goreleaser@v1.11.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
