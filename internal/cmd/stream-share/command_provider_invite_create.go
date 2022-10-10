@@ -61,7 +61,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	srSubjects, err := cmd.Flags().GetString("schema-registry-subjects")
+	schemaRegistrySubjects, err := cmd.Flags().GetString("schema-registry-subjects")
 	if err != nil {
 		return err
 	}
