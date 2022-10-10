@@ -27,7 +27,7 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 
 	cmd.Flags().String("email", "", "Email of the user with whom to share the topic.")
 	cmd.Flags().String("topic", "", "Topic to be shared.")
-	cmd.Flags().String("schema-registry-subjects", "", "A comma separated list of Schema Registry subjects")
+	cmd.Flags().StringSlice("schema-registry-subjects", "", "A comma separated list of Schema Registry subjects")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
