@@ -32,11 +32,17 @@ var (
 )
 
 type consumerShare struct {
-	Id                       string
-	ProviderName             string
-	ProviderOrganizationName string
-	Status                   string
-	InviteExpiresAt          time.Time
+	Id                         string
+	ProviderName               string
+	ProviderOrganizationName   string
+	Status                     string
+	InviteExpiresAt            time.Time
+	NetworkDNSDomain           string
+	NetworkZones               string
+	NetworkZonalSubdomains     []string
+	NetworkKind                string
+	NetworkPrivateLinkDataType string
+	NetworkPrivateLinkData     interface{}
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
