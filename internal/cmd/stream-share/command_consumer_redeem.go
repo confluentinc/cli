@@ -22,7 +22,7 @@ var (
 		"ApiKey":               "API Key",
 		"Secret":               "Secret",
 		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
-		"SchemaRegistryApiKey": "Schema Registry Api Key",
+		"SchemaRegistryApiKey": "Schema Registry API Key",
 		"SchemaRegistrySecret": "Schema Registry Secret",
 		"SchemaRegistryUrl":    "Schema Registry Url",
 		"Resources":            "Resources",
