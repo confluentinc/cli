@@ -52,7 +52,7 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srCluster
 	deliveryMethod := "Email"
 
 	resources := []string{
-		fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s/environment=%s", kafkaCluster, topic, environment),
+		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/kafka=%s/topic=%s", orgId, environment, kafkaCluster, topic),
 	}
 	for _, subject := range subjects {
 		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s", orgId, environment, srClusterId, subject))
