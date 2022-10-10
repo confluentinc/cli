@@ -48,8 +48,16 @@ func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare
 	return c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
 }
 
-func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
+func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
 	deliveryMethod := "Email"
+
+	resources := []string{
+		fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s/environment=%s", kafkaCluster, topic, environment),
+	}
+	for _, subject := range subjects {
+		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s", orgId, environment, srClusterId, subject))
+	}
+
 	req := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
 		CdxV1CreateProviderShareRequest(cdxv1.CdxV1CreateProviderShareRequest{
 			ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
@@ -59,7 +67,7 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email string) (c
 				},
 			},
 			DeliveryMethod: &deliveryMethod,
-			Resources:      &[]string{fmt.Sprintf("crn://confluent.cloud/kafka=%s/topic=%s/environment=%s", kafkaCluster, topic, environment)},
+			Resources:      &resources,
 		})
 	return c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 }
