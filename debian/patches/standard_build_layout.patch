@@ -1,6 +1,6 @@
---- cli/Makefile	2022-10-06 21:17:41.000000000 -0700
+--- cli/Makefile	2022-10-10 12:43:39.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,207 +1,130 @@
+@@ -1,206 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -95,9 +95,8 @@
 -	go install gotest.tools/gotestsum@v1.8.2
 -
 -.PHONY: jenkins-deps
--# Jenkins only depends on goreleaser
 -jenkins-deps:
--	go get github.com/goreleaser/goreleaser@v1.4.1
+-	go get github.com/goreleaser/goreleaser@v1.11.2
 -
 -show-args:
 -	@echo "VERSION: $(VERSION)"
