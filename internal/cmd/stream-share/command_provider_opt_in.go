@@ -13,12 +13,6 @@ func (c *command) newOptInCommand() *cobra.Command {
 		Use:   "opt-in",
 		Short: "Opt in to Stream Sharing.",
 		RunE:  c.optIn,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Opt in for Stream Sharing:`,
-				Code: "confluent stream-share provider opt-in",
-			},
-		),
 	}
 }
 
