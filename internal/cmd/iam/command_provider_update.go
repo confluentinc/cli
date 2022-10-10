@@ -17,7 +17,6 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		Short:             "Update an identity provider.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity provider "op-123456".`,

@@ -15,7 +15,6 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		Use:   "create <name>",
 		Short: "Create an identity provider.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an identity provider named "DemoIdentityProvider".`,

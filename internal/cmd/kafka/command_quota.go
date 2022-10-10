@@ -1,13 +1,12 @@
 package kafka
 
 import (
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
 
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
@@ -29,7 +28,6 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
 	c.Hidden = !(config.IsTest || launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false))
-
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newDescribeCommand())
