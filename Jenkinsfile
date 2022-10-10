@@ -46,8 +46,8 @@ def job = {
                                 mkdir -p $GOROOT/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                make jenkins-deps || exit 1
-                                make build
+                                make jenkins-deps
+                                make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64
                                 mv confluent_linux_amd64 $dir
@@ -78,7 +78,7 @@ def job = {
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
                                 git clone git@github.com:confluentinc/muckrake.git
                                 cd muckrake
-                                git checkout 7.2.x
+                                git checkout 7.3.x
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -103,7 +103,7 @@ def job = {
                     ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.2.x"]) {
+                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
                         withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
                             sh '''#!/usr/bin/env bash
