@@ -3,6 +3,9 @@
 | API Key                        |                                       00000000000000000000 |
 | Secret                         |                                       00000000000000000000 |
 | Kafka Bootstrap URL            | pkc-00000.us-east1.gcp.confluent.cloud:9092                |
+| Schema Registry Api Key        |                                       00000000000000000000 |
+| Schema Registry Secret         |                                       00000000000000000000 |
+| Schema Registry Url            | https://psrc-xyz123.us-west-2.aws.cpdev.cloud              |
 | Resources                      | [Topic="topic-12345"                                       |
 |                                | Group="stream-share.ss-12345"]                             |
 | Network DNS Domain             | abc123.us-west-2.aws.stag.cpdev.cloud                      |
