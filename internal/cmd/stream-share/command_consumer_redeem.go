@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -71,9 +72,9 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	redeemResponse, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId)
+	redeemResponse, httpResp, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	var resources []string
@@ -89,7 +90,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 
 	tokenObj := &redeemToken{
 		Id:                redeemResponse.GetId(),
-		ApiKey:            redeemResponse.GetApikey(),
+		ApiKey:            redeemResponse.GetApiKey(),
 		Secret:            redeemResponse.GetSecret(),
 		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
 		Resources:         resources,
