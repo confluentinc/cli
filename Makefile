@@ -78,9 +78,8 @@ deps:
 	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
-# Jenkins only depends on goreleaser
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v1.4.1
+	go get github.com/goreleaser/goreleaser@v1.11.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
