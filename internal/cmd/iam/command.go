@@ -1,10 +1,14 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 type command struct {
@@ -34,9 +38,15 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		fmt.Println(cfg.IsTest)
+		fmt.Println(launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false))
+		c.AddCommand(newPoolCommand(cfg, c.prerunner))
+		c.AddCommand(newProviderCommand(cfg, c.prerunner))
+	}
 	c.AddCommand(newACLCommand(c.prerunner))
-	c.AddCommand(newPoolCommand(cfg, c.prerunner))
-	c.AddCommand(newProviderCommand(cfg, c.prerunner))
 	c.AddCommand(newRBACCommand(cfg, c.prerunner))
 	c.AddCommand(newServiceAccountCommand(c.prerunner))
 	c.AddCommand(newUserCommand(c.prerunner))
