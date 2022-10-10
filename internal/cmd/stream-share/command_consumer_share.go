@@ -9,34 +9,40 @@ import (
 )
 
 var (
-	consumerShareListFields           = []string{"Id", "ProviderName", "Status", "SharedResourceId", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expires At"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
+	consumerShareListFields           = []string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"}
+	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Provider Organization Name", "Status", "Invite Expires At"}
+	consumerShareListStructuredLabels = []string{"id", "provider_user_name", "provider_organization_name", "status", "invite_expires_at"}
 )
 
 var (
 	consumerHumanLabelMap = map[string]string{
-		"Id":               "ID",
-		"ProviderName":     "Provider Name",
-		"Status":           "Status",
-		"SharedResourceId": "Shared Resource ID",
-		"InviteExpiresAt":  "Invite Expires At",
+		"Id":                       "ID",
+		"ProviderName":             "Provider Name",
+		"ProviderOrganizationName": "Provider Organization Name",
+		"Status":                   "Status",
+		"InviteExpiresAt":          "Invite Expires At",
 	}
 	consumerStructuredLabelMap = map[string]string{
-		"Id":               "id",
-		"ProviderName":     "provider_name",
-		"Status":           "status",
-		"SharedResourceId": "shared_resource_id",
-		"InviteExpiresAt":  "invite_expires_at",
+		"Id":                       "id",
+		"ProviderName":             "provider_user_name",
+		"ProviderOrganizationName": "provider_organization_name",
+		"Status":                   "status",
+		"InviteExpiresAt":          "invite_expires_at",
 	}
 )
 
 type consumerShare struct {
-	Id               string
-	ProviderName     string
-	Status           string
-	SharedResourceId string
-	InviteExpiresAt  time.Time
+	Id                         string
+	ProviderName               string
+	ProviderOrganizationName   string
+	Status                     string
+	InviteExpiresAt            time.Time
+	NetworkDNSDomain           string
+	NetworkZones               string
+	NetworkZonalSubdomains     []string
+	NetworkKind                string
+	NetworkPrivateLinkDataType string
+	NetworkPrivateLinkData     interface{}
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -78,12 +84,12 @@ func (c *command) autocompleteConsumerShares() []string {
 }
 
 func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
-	sharedResource := share.GetSharedResource()
+	status := share.GetStatus()
 	return &consumerShare{
-		Id:               share.GetId(),
-		ProviderName:     share.GetProviderUserName(),
-		Status:           share.GetStatus(),
-		SharedResourceId: sharedResource.GetId(),
-		InviteExpiresAt:  share.GetInviteExpiresAt(),
+		Id:                       share.GetId(),
+		ProviderName:             share.GetProviderUserName(),
+		ProviderOrganizationName: share.GetProviderOrganizationName(),
+		Status:                   status.GetPhase(),
+		InviteExpiresAt:          share.GetInviteExpiresAt(),
 	}
 }
