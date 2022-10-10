@@ -13,12 +13,6 @@ func (c *command) newOptOutCommand() *cobra.Command {
 		Use:   "opt-out",
 		Short: "Opt out of Stream Sharing.",
 		RunE:  c.optOut,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Opt out of Stream Sharing:`,
-				Code: "confluent stream-share provider opt-out",
-			},
-		),
 	}
 }
 
