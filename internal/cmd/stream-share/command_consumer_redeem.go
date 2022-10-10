@@ -24,7 +24,7 @@ var (
 		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
 		"SchemaRegistryApiKey": "Schema Registry API Key",
 		"SchemaRegistrySecret": "Schema Registry Secret",
-		"SchemaRegistryUrl":    "Schema Registry Url",
+		"SchemaRegistryUrl":    "Schema Registry URL",
 		"Resources":            "Resources",
 	}
 	redeemTokenPrivateLinkHumanLabelMap = map[string]string{
