@@ -4,18 +4,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
 	redeemTokenFields            = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
-	redeemTokenPrivateLinkFields = []string{"NetworkDNSDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
+	redeemTokenPrivateLinkFields = []string{"NetworkDnsDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
 		"NetworkPrivateLinkDataType", "NetworkPrivateLinkData"}
 	redeemTokenHumanLabelMap = map[string]string{
 		"Id":                   "ID",
@@ -28,7 +28,7 @@ var (
 		"Resources":            "Resources",
 	}
 	redeemTokenPrivateLinkHumanLabelMap = map[string]string{
-		"NetworkDNSDomain":           "Network DNS Domain",
+		"NetworkDnsDomain":           "Network DNS Domain",
 		"NetworkZones":               "Network Zones",
 		"NetworkZonalSubdomains":     "Network Zonal Subdomains",
 		"NetworkKind":                "Network Kind",
@@ -46,7 +46,7 @@ var (
 		"Resources":            "resources",
 	}
 	redeemTokenPrivateLinkStructuredLabelMap = map[string]string{
-		"NetworkDNSDomain":           "network_dns_domain",
+		"NetworkDnsDomain":           "network_dns_domain",
 		"NetworkZones":               "network_zones",
 		"NetworkZonalSubdomains":     "network_zonal_subdomains",
 		"NetworkKind":                "network_kind",
@@ -108,14 +108,14 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	gcpProjectId, err := cmd.Flags().GetString("gcp_project-id")
+	gcpProjectId, err := cmd.Flags().GetString("gcp-project-id")
 	if err != nil {
 		return err
 	}
 
-	redeemResponse, httpResp, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId)
+	redeemResponse, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	var resources []string
@@ -125,7 +125,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 
 		if resource.CdxV1SharedGroup != nil {
-			resources = append(resources, fmt.Sprintf("%s=\"%s\"", resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
+			resources = append(resources, fmt.Sprintf(`%s=\"%s\"`, resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
 		}
 	}
 
@@ -164,8 +164,7 @@ func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemRespo
 	}
 
 	networkKind, privateLinkDataType, privateLinkData := getPrivateLinkNetworkDetails(network)
-
-	tokenObj.NetworkDNSDomain = network.GetDnsDomain()
+	tokenObj.NetworkDnsDomain = network.GetDnsDomain()
 	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
 	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
 	tokenObj.NetworkKind = networkKind
@@ -208,7 +207,7 @@ func combineMaps(m1, m2 map[string]string) map[string]string {
 func mapSubdomainsToList(m map[string]string) []string {
 	var subdomains []string
 	for k, v := range m {
-		subdomains = append(subdomains, fmt.Sprintf("%s=\"%s\"", k, v))
+		subdomains = append(subdomains, fmt.Sprintf(`%s=\"%s\"`, k, v))
 	}
 
 	return subdomains

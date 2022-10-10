@@ -170,7 +170,7 @@ func extractCdxNextPageToken(nextPageUrlStringNullable cdxv1.NullableString) (st
 	return pageToken, false, err
 }
 
-func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId string) (cdxv1.CdxV1RedeemTokenResponse, *http.Response, error) {
+func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId string) (cdxv1.CdxV1RedeemTokenResponse, error) {
 	redeemTokenRequest := cdxv1.CdxV1RedeemTokenRequest{
 		Token:             &token,
 		AwsAccount:        &awsAccountId,
@@ -178,7 +178,8 @@ func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcp
 		GcpProject:        &gcpProjectId,
 	}
 	req := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedToken(c.cdxApiContext()).CdxV1RedeemTokenRequest(redeemTokenRequest)
-	return c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
+	resp, httpResp, err := c.CdxClient.SharedTokensCdxV1Api.RedeemCdxV1SharedTokenExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.CdxV1Network, *http.Response, error) {

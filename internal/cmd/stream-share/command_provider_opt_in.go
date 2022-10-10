@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -22,6 +21,6 @@ func (c *command) optIn(cmd *cobra.Command, _ []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.OptInMsg)
+	utils.Print(cmd, errors.OptInMsg)
 	return nil
 }
