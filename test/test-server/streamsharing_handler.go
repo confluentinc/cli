@@ -23,6 +23,19 @@ func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 	}
 }
 
+func getTestConsumerSharedResource() cdxv1.CdxV1ConsumerSharedResource {
+	return cdxv1.CdxV1ConsumerSharedResource{
+		Id: stringToPtr("sr-12345"),
+	}
+}
+
+func getTestAWSNetwork() *cdxv1.CdxV1AwsNetwork {
+	return &cdxv1.CdxV1AwsNetwork{
+		Kind:                       "AwsNetwork",
+		PrivateLinkEndpointService: stringToPtr("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+	}
+}
+
 func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
 	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
@@ -140,6 +153,43 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 			},
 		}
 		b, err := json.Marshal(&response)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/cdx/v1/consumer-shared-resources"
+func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		list := cdxv1.CdxV1ConsumerSharedResourceList{
+			Data: []cdxv1.CdxV1ConsumerSharedResource{getTestConsumerSharedResource()},
+		}
+		b, err := json.Marshal(&list)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/cdx/v1/consumer-shared-resources/{id}:network"
+func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		network := cdxv1.CdxV1Network{
+			DnsDomain: stringToPtr("abc123.us-west-2.aws.stag.cpdev.cloud"),
+			Zones:     &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
+			ZonalSubdomains: &map[string]string{
+				"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud",
+				"usw2-az3": "usw2-az3.abc123.us-west-2.aws.stag.cpdev.cloud",
+				"usw2-az1": "usw2-az1.abc123.us-west-2.aws.stag.cpdev.cloud",
+			},
+			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
+				CdxV1AwsNetwork: getTestAWSNetwork(),
+			},
+		}
+		b, err := json.Marshal(&network)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
