@@ -34,13 +34,28 @@ func newProviderCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
-	c.Hidden = !(cfg.IsTest || launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false))
+	launchDarklyFlag := launchdarkly.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+	c.Hidden = !(cfg.IsTest || launchDarklyFlag)
 
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newUpdateCommand())
+	newCreateCommand := c.newCreateCommand()
+	newDeleteCommand := c.newDeleteCommand()
+	newDescribeCommand := c.newDescribeCommand()
+	newListCommand := c.newListCommand()
+	newUpdateCommand := c.newUpdateCommand()
+
+	if launchDarklyFlag {
+		newCreateCommand.RunE = c.create
+		newDeleteCommand.RunE = c.delete
+		newDescribeCommand.RunE = c.describe
+		newListCommand.RunE = c.list
+		newUpdateCommand.RunE = c.update
+	}
+
+	cmd.AddCommand(newCreateCommand)
+	cmd.AddCommand(newDeleteCommand)
+	cmd.AddCommand(newDescribeCommand)
+	cmd.AddCommand(newListCommand)
+	cmd.AddCommand(newUpdateCommand)
 
 	return cmd
 }

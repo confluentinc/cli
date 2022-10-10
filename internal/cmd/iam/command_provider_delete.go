@@ -16,7 +16,6 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 		Short:             "Delete an identity provider.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete identity provider "op-12345":`,

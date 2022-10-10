@@ -18,7 +18,6 @@ func (c *identityProviderCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List identity providers.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

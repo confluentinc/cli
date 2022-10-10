@@ -27,7 +27,6 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 		Short:             "Describe an identity provider.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)
