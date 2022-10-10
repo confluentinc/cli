@@ -31,9 +31,9 @@ func (c *command) newResendEmailInviteCommand() *cobra.Command {
 func (c *command) resendEmailInvite(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	err := c.V2Client.ResendInvite(shareId)
+	httpResp, err := c.V2Client.ResendInvite(shareId)
 	if err != nil {
-		return err
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.ResendInviteMsg, shareId)
