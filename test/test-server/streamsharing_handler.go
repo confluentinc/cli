@@ -15,10 +15,11 @@ import (
 func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 	return cdxv1.CdxV1ConsumerShare{
-		Id:               stringToPtr("ss-12345"),
-		ProviderUserName: stringToPtr("provider"),
-		Status:           &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
-		InviteExpiresAt:  &expiresAt,
+		Id:                       stringToPtr("ss-12345"),
+		ProviderUserName:         stringToPtr("provider"),
+		ProviderOrganizationName: stringPtr("provider org"),
+		Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
+		InviteExpiresAt:          &expiresAt,
 	}
 }
 
@@ -30,7 +31,6 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 		Id:                       stringToPtr("ss-12345"),
 		ConsumerUserName:         stringToPtr("consumer"),
 		ConsumerOrganizationName: stringToPtr("consumer org"),
-		ProviderUserName:         stringToPtr("provider"),
 		Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
 		DeliveryMethod:           stringToPtr("email"),
 		RedeemedAt:               &redeemedAt,
