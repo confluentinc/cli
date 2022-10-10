@@ -88,7 +88,7 @@ func (c *command) newRedeemCommand() *cobra.Command {
 
 	cmd.Flags().String("aws-account-id", "", "Consumer's AWS account ID for PrivateLink access.")
 	cmd.Flags().String("azure-subscription-id", "", "Consumer's Azure subscription ID for PrivateLink access.")
-	cmd.Flags().String("gcp_project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
+	cmd.Flags().String("gcp-project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
 
 	pcmd.AddOutputFlag(cmd)
 
