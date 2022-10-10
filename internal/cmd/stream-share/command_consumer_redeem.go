@@ -64,7 +64,7 @@ type redeemToken struct {
 	SchemaRegistrySecret       string
 	SchemaRegistryUrl          string
 	Resources                  []string
-	NetworkDNSDomain           string
+	NetworkDnsDomain           string
 	NetworkZones               string
 	NetworkZonalSubdomains     []string
 	NetworkKind                string
