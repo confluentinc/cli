@@ -75,12 +75,14 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
-		DisplayName: &displayName,
-		Description: &description,
-		Throughput:  throughput,
-		Cluster:     &kafkaquotasv1.ObjectReference{Id: cluster.ID},
-		Principals:  principals,
-		Environment: &kafkaquotasv1.ObjectReference{Id: c.EnvironmentId()},
+		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
+			DisplayName: &displayName,
+			Description: &description,
+			Throughput:  throughput,
+			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
+			Principals:  principals,
+			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId()},
+		},
 	}
 	quota, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
@@ -91,10 +93,10 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
 }
 
-func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.ObjectReference {
-	a := make([]kafkaquotasv1.ObjectReference, len(accounts))
+func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.GlobalObjectReference {
+	a := make([]kafkaquotasv1.GlobalObjectReference, len(accounts))
 	for i := range a {
-		a[i] = kafkaquotasv1.ObjectReference{
+		a[i] = kafkaquotasv1.GlobalObjectReference{
 			Id: accounts[i],
 		}
 	}
@@ -108,13 +110,13 @@ func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotasv1.KafkaQuotasV1Through
 	if err != nil {
 		return nil, err
 	}
-	throughput.IngressByteRate = &ingress
+	throughput.IngressByteRate = ingress
 
 	egress, err := cmd.Flags().GetString("egress")
 	if err != nil {
 		return nil, err
 	}
-	throughput.EgressByteRate = &egress
+	throughput.EgressByteRate = egress
 
 	if ingress == "" || egress == "" {
 		return nil, fmt.Errorf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress")

@@ -48,7 +48,7 @@ func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.K
 	if pageToken != "" {
 		req.PageToken(pageToken)
 	}
-	req = req.Cluster(clusterId).Environment(envId)
+	req = req.SpecCluster(clusterId).Environment(envId)
 	return c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotasExecute(req)
 }
 
