@@ -50,7 +50,7 @@ def job = {
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64
-                                mv confluent_linux_amd64 $dir
+                                mv confluent_linux_amd64_v1 $dir
                                 tarball=$dir.tar.gz
                                 tar -czf $tarball $dir
                                 aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
