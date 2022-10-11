@@ -40,7 +40,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/featureflags"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -74,7 +74,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest)
+	launchdarkly.Init(cfg.Version, cfg.IsTest)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
@@ -116,9 +116,15 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
-	cmd.AddCommand(streamshare.New(cfg, prerunner))
 	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
+
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || launchdarkly.Manager.BoolVariation("cli.cdx", ctx, v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(streamshare.New(cfg, prerunner))
+	}
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
@@ -212,14 +218,14 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
-	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
-	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
+	deprecatedCmds := launchdarkly.Manager.JsonVariation(launchdarkly.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	cmdToFlagsAndMsg := launchdarkly.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
 			if flagsAndMsg.Flags == nil {
-				featureflags.DeprecateCommandTree(cmd)
+				launchdarkly.DeprecateCommandTree(cmd)
 			} else {
-				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
+				launchdarkly.DeprecateFlags(cmd, flagsAndMsg.Flags)
 			}
 		}
 	}
