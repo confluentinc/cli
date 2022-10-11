@@ -16,9 +16,9 @@ func (c *command) newOptInCommand() *cobra.Command {
 }
 
 func (c *command) optIn(cmd *cobra.Command, _ []string) error {
-	_, httpResp, err := c.V2Client.OptInOrOut(true)
+	_, err := c.V2Client.OptInOrOut(true)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	utils.Print(cmd, errors.OptInMsg)

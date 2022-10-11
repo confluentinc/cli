@@ -29,9 +29,9 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	httpResp, err := c.V2Client.DeleteProviderShare(shareId)
+	err := c.V2Client.DeleteProviderShare(shareId)
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ProviderShare, shareId)

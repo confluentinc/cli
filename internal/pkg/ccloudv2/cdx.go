@@ -23,32 +23,37 @@ func (c *Client) cdxApiContext() context.Context {
 	return context.WithValue(context.Background(), cdxv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ResendInvite(shareId string) (*http.Response, error) {
+func (c *Client) ResendInvite(shareId string) error {
 	req := c.CdxClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.CdxClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(req)
+	httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.ResendCdxV1ProviderShareExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteProviderShare(shareId string) (*http.Response, error) {
+func (c *Client) DeleteProviderShare(shareId string) error {
 	req := c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
+	httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.DeleteCdxV1ProviderShareExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
+func (c *Client) DescribeProviderShare(shareId string) (cdxv1.CdxV1ProviderShare, error) {
 	req := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShare(c.cdxApiContext(), shareId)
-	return c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
+	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.GetCdxV1ProviderShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DeleteConsumerShare(shareId string) (*http.Response, error) {
+func (c *Client) DeleteConsumerShare(shareId string) error {
 	req := c.CdxClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.CdxClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(req)
+	httpResp, err := c.CdxClient.ConsumerSharesCdxV1Api.DeleteCdxV1ConsumerShareExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare, *http.Response, error) {
+func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare, error) {
 	req := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShare(c.cdxApiContext(), shareId)
-	return c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
+	resp, httpResp, err := c.CdxClient.ConsumerSharesCdxV1Api.GetCdxV1ConsumerShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, *http.Response, error) {
+func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, error) {
 	deliveryMethod := "Email"
 
 	resources := []string{
@@ -69,7 +74,8 @@ func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srCluster
 			DeliveryMethod: &deliveryMethod,
 			Resources:      &resources,
 		})
-	return c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
+	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1ProviderShare, error) {
@@ -182,14 +188,16 @@ func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcp
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.CdxV1Network, *http.Response, error) {
+func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.CdxV1Network, error) {
 	req := c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResource(c.cdxApiContext(), sharedResourceId)
-	return c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResourceExecute(req)
+	resp, httpResp, err := c.CdxClient.ConsumerSharedResourcesCdxV1Api.NetworkCdxV1ConsumerSharedResourceExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) OptInOrOut(status bool) (cdxv1.CdxV1OptIn, *http.Response, error) {
+func (c *Client) OptInOrOut(status bool) (cdxv1.CdxV1OptIn, error) {
 	req := c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptIn(c.cdxApiContext()).CdxV1OptIn(cdxv1.CdxV1OptIn{
 		StreamShareEnabled: &status,
 	})
-	return c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptInExecute(req)
+	resp, httpResp, err := c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptInExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }

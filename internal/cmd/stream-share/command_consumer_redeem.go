@@ -8,7 +8,6 @@ import (
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -54,6 +53,12 @@ var (
 		"NetworkPrivateLinkData":     "network_private_link_data",
 	}
 )
+
+type privateLinkNetworkDetails struct {
+	networkKind         string
+	privateLinkDataType string
+	privateLinkData     interface{}
+}
 
 type redeemToken struct {
 	Id                         string
@@ -125,7 +130,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 
 		if resource.CdxV1SharedGroup != nil {
-			resources = append(resources, fmt.Sprintf(`%s="%s"`, resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
+			resources = append(resources, fmt.Sprintf(`Group_Prefix="%s"`, resource.CdxV1SharedGroup.GetGroupPrefix()))
 		}
 	}
 
@@ -156,45 +161,43 @@ func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemRespo
 
 	var network cdxv1.CdxV1Network
 	if len(consumerSharedResources) != 0 {
-		privateNetwork, httpResp, err := c.V2Client.GetPrivateLinkNetworkConfig(consumerSharedResources[0].GetId())
+		privateNetwork, err := c.V2Client.GetPrivateLinkNetworkConfig(consumerSharedResources[0].GetId())
 		if err != nil {
-			return errors.CatchCCloudV2Error(err, httpResp)
+			return err
 		}
 		network = privateNetwork
 	}
 
-	networkKind, privateLinkDataType, privateLinkData := getPrivateLinkNetworkDetails(network)
+	networkDetails := getPrivateLinkNetworkDetails(network)
 	tokenObj.NetworkDnsDomain = network.GetDnsDomain()
 	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
 	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
-	tokenObj.NetworkKind = networkKind
-	tokenObj.NetworkPrivateLinkDataType = privateLinkDataType
-	tokenObj.NetworkPrivateLinkData = privateLinkData
+	tokenObj.NetworkKind = networkDetails.networkKind
+	tokenObj.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
+	tokenObj.NetworkPrivateLinkData = networkDetails.privateLinkData
 
 	return output.DescribeObject(cmd, tokenObj, append(redeemTokenFields, redeemTokenPrivateLinkFields...),
 		combineMaps(redeemTokenHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
 		combineMaps(redeemTokenStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
 }
 
-func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) (string, string, interface{}) {
-	var networkKind string
-	var privateLinkDataType string
-	var privateLinkData interface{}
+func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
 	cloud := network.GetCloud()
+	var details privateLinkNetworkDetails
 	if cloud.CdxV1AwsNetwork != nil {
-		networkKind = cloud.CdxV1AwsNetwork.Kind
-		privateLinkDataType = "Private Link Endpoint Service"
-		privateLinkData = cloud.CdxV1AwsNetwork.GetPrivateLinkEndpointService()
+		details.networkKind = cloud.CdxV1AwsNetwork.Kind
+		details.privateLinkDataType = "Private Link Endpoint Service"
+		details.privateLinkData = cloud.CdxV1AwsNetwork.GetPrivateLinkEndpointService()
 	} else if cloud.CdxV1AzureNetwork != nil {
-		networkKind = cloud.CdxV1AzureNetwork.Kind
-		privateLinkDataType = "Private Link Service Aliases"
-		privateLinkData = cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases()
+		details.networkKind = cloud.CdxV1AzureNetwork.Kind
+		details.privateLinkDataType = "Private Link Service Aliases"
+		details.privateLinkData = cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases()
 	} else if cloud.CdxV1GcpNetwork != nil {
-		networkKind = cloud.CdxV1GcpNetwork.Kind
-		privateLinkDataType = "Private Service Connect Service Attachments"
-		privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
+		details.networkKind = cloud.CdxV1GcpNetwork.Kind
+		details.privateLinkDataType = "Private Service Connect Service Attachments"
+		details.privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
 	}
-	return networkKind, privateLinkDataType, privateLinkData
+	return &details
 }
 
 func combineMaps(m1, m2 map[string]string) map[string]string {
