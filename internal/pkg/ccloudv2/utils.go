@@ -46,6 +46,7 @@ func getServerUrl(baseURL string) string {
 
 	if utils.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
 		u.Host = "api." + u.Host
+		u.Path = ""
 	} else {
 		u.Path = "api"
 	}
