@@ -37,7 +37,7 @@ type consumerShare struct {
 	ProviderOrganizationName   string
 	Status                     string
 	InviteExpiresAt            time.Time
-	NetworkDNSDomain           string
+	NetworkDnsDomain           string
 	NetworkZones               string
 	NetworkZonalSubdomains     []string
 	NetworkKind                string

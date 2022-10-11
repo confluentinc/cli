@@ -66,7 +66,7 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 func (c *command) handlePrivateLinkClusterConsumerShare(cmd *cobra.Command, network cdxv1.CdxV1Network, consumerShareObj *consumerShare) error {
 	networkKind, privateLinkDataType, privateLinkData := getPrivateLinkNetworkDetails(network)
 
-	consumerShareObj.NetworkDNSDomain = network.GetDnsDomain()
+	consumerShareObj.NetworkDnsDomain = network.GetDnsDomain()
 	consumerShareObj.NetworkZones = strings.Join(network.GetZones(), ",")
 	consumerShareObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
 	consumerShareObj.NetworkKind = networkKind

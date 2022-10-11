@@ -7,5 +7,5 @@
 | Schema Registry Secret  |                          00000000000000000000 |
 | Schema Registry URL     | https://psrc-xyz123.us-west-2.aws.cpdev.cloud |
 | Resources               | [Topic="topic-12345"                          |
-|                         | Group=\"stream-share.ss-12345\"]              |
+|                         | Group="stream-share.ss-12345"]                |
 +-------------------------+-----------------------------------------------+

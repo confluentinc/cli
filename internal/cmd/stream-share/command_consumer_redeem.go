@@ -125,7 +125,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 
 		if resource.CdxV1SharedGroup != nil {
-			resources = append(resources, fmt.Sprintf(`%s=\"%s\"`, resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
+			resources = append(resources, fmt.Sprintf(`%s="%s"`, resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
 		}
 	}
 
@@ -207,7 +207,7 @@ func combineMaps(m1, m2 map[string]string) map[string]string {
 func mapSubdomainsToList(m map[string]string) []string {
 	var subdomains []string
 	for k, v := range m {
-		subdomains = append(subdomains, fmt.Sprintf(`%s=\"%s\"`, k, v))
+		subdomains = append(subdomains, fmt.Sprintf(`%s="%s"`, k, v))
 	}
 
 	return subdomains
