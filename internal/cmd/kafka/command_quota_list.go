@@ -70,7 +70,7 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
 	var filteredQuotas []v1.KafkaQuotasV1ClientQuota
 	for _, quota := range quotas {
-		for _, p := range *quota.Principals {
+		for _, p := range *quota.Spec.Principals {
 			if p.Id == principal {
 				filteredQuotas = append(filteredQuotas, quota)
 				// principals can only belong to one quota so break after finding it
