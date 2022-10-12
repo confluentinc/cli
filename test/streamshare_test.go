@@ -1,5 +1,12 @@
 package test
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/confluentinc/bincover"
+)
+
 func (s *CLITestSuite) TestStreamShare() {
 	tests := []CLITest{
 		{args: "stream-share provider share list --shared-resource sr-12345", fixture: "stream-share/list-provider-shares.golden"},
@@ -10,7 +17,16 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share provider invite resend ss-12345", fixture: "stream-share/resend-invite.golden"},
 
 		{args: "stream-share provider opt-in", fixture: "stream-share/opt-in.golden"},
-		{args: "stream-share provider opt-out", fixture: "stream-share/opt-out.golden"},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+			args:        fmt.Sprintf("stream-share provider opt-out"),
+			fixture:     "stream-share/opt-out-accept.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
+			args:        fmt.Sprintf("stream-share provider opt-out"),
+			fixture:     "stream-share/opt-out-decline.golden",
+		},
 
 		{args: "stream-share consumer share list --shared-resource sr-12345", fixture: "stream-share/list-consumer-shares.golden"},
 		{args: "stream-share consumer share delete ss-12345", fixture: "stream-share/delete-consumer-share.golden"},
