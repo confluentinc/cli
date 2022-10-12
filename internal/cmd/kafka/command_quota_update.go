@@ -42,7 +42,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updateName, err := getUpdatedName(cmd, *quota.Spec.DisplayName)
+	updateName, err := getUpdatedName(cmd, quota.Spec.GetDisplayName())
 	if err != nil {
 		return err
 	}
