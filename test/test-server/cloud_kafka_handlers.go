@@ -16,16 +16,18 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuota{
-				Id:          kafkaquotasv1.PtrString("cq-1234"),
-				DisplayName: kafkaquotasv1.PtrString("quotaName"),
-				Description: kafkaquotasv1.PtrString("quota description"),
-				Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
-					IngressByteRate: kafkaquotasv1.PtrString("2000"),
-					EgressByteRate:  kafkaquotasv1.PtrString("5000"),
+				Id: kafkaquotasv1.PtrString("cq-1234"),
+				Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
+					DisplayName: kafkaquotasv1.PtrString("quotaName"),
+					Description: kafkaquotasv1.PtrString("quota description"),
+					Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
+						IngressByteRate: "2000",
+						EgressByteRate:  "5000",
+					},
+					Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"},
+					Principals:  &[]kafkaquotasv1.GlobalObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
+					Environment: &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"},
 				},
-				Cluster:     &kafkaquotasv1.ObjectReference{Id: "lkc-1234"},
-				Principals:  &[]kafkaquotasv1.ObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
-				Environment: &kafkaquotasv1.ObjectReference{Id: "env-1234"},
 			}
 			err := json.NewEncoder(w).Encode(resp)
 			require.NoError(t, err)
@@ -33,8 +35,8 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 			req := &kafkaquotasv1.KafkaQuotasV1ClientQuota{}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
-			req.Cluster = &kafkaquotasv1.ObjectReference{Id: "lkc-1234"}
-			req.Environment = &kafkaquotasv1.ObjectReference{Id: "env-1234"}
+			req.Spec.Cluster = &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"}
+			req.Spec.Environment = &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"}
 			err = json.NewEncoder(w).Encode(req)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -52,28 +54,32 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuotaList{
 				Data: []kafkaquotasv1.KafkaQuotasV1ClientQuota{
 					{
-						Id:          kafkaquotasv1.PtrString("cq-1234"),
-						DisplayName: kafkaquotasv1.PtrString("quotaName"),
-						Description: kafkaquotasv1.PtrString("quota description"),
-						Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
-							IngressByteRate: kafkaquotasv1.PtrString("2000"),
-							EgressByteRate:  kafkaquotasv1.PtrString("5000"),
+						Id: kafkaquotasv1.PtrString("cq-1234"),
+						Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
+							DisplayName: kafkaquotasv1.PtrString("quotaName"),
+							Description: kafkaquotasv1.PtrString("quota description"),
+							Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
+								IngressByteRate: "2000",
+								EgressByteRate:  "5000",
+							},
+							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"},
+							Principals:  &[]kafkaquotasv1.GlobalObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
+							Environment: &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"},
 						},
-						Cluster:     &kafkaquotasv1.ObjectReference{Id: "lkc-1234"},
-						Principals:  &[]kafkaquotasv1.ObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
-						Environment: &kafkaquotasv1.ObjectReference{Id: "env-1234"},
 					},
 					{
-						Id:          kafkaquotasv1.PtrString("cq-4321"),
-						DisplayName: kafkaquotasv1.PtrString("quota2"),
-						Description: kafkaquotasv1.PtrString("quota description"),
-						Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
-							IngressByteRate: kafkaquotasv1.PtrString("2000"),
-							EgressByteRate:  kafkaquotasv1.PtrString("5000"),
+						Id: kafkaquotasv1.PtrString("cq-4321"),
+						Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
+							DisplayName: kafkaquotasv1.PtrString("quota2"),
+							Description: kafkaquotasv1.PtrString("quota description"),
+							Throughput: &kafkaquotasv1.KafkaQuotasV1Throughput{
+								IngressByteRate: "2000",
+								EgressByteRate:  "5000",
+							},
+							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"},
+							Principals:  &[]kafkaquotasv1.GlobalObjectReference{{Id: "sa-4321"}},
+							Environment: &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"},
 						},
-						Cluster:     &kafkaquotasv1.ObjectReference{Id: "lkc-1234"},
-						Principals:  &[]kafkaquotasv1.ObjectReference{{Id: "sa-4321"}},
-						Environment: &kafkaquotasv1.ObjectReference{Id: "env-1234"},
 					},
 				},
 			}
@@ -85,13 +91,15 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuota{
-				Id:          &id,
-				DisplayName: req.DisplayName,
-				Description: req.Description,
-				Throughput:  req.Throughput,
-				Cluster:     req.Cluster,
-				Principals:  req.Principals,
-				Environment: req.Environment,
+				Id: &id,
+				Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
+					DisplayName: req.Spec.DisplayName,
+					Description: req.Spec.Description,
+					Throughput:  req.Spec.Throughput,
+					Cluster:     req.Spec.Cluster,
+					Principals:  req.Spec.Principals,
+					Environment: req.Spec.Environment,
+				},
 			}
 			err = json.NewEncoder(w).Encode(resp)
 			require.NoError(t, err)
