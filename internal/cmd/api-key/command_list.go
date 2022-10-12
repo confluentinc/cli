@@ -14,7 +14,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -139,7 +139,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
 		// Check if multicluster keys are enabled, and if so check the resources field
-		if launchdarkly.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
+		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
 			resources = apiKey.Spec.GetResources()
 		}
 
