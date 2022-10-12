@@ -1,4 +1,4 @@
-source = ["./dist/signed-arm64_darwin_arm64/confluent"]
+source = ["path/to/file"]
 bundle_id = "io.confluent.cli.confluent"
 
 apple_id {
