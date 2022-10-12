@@ -12,18 +12,23 @@ update-whitelist:
 	
 	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
 	cd $(CC_CLI_SERVICE) && \
-	git checkout -b update-whitelist-$(BUMPED_VERSION) && \
-	make db-migrate-create NAME=$(BUMPED_VERSION)
-	
-	go run -ldflags "-X main.version=$(BUMPED_VERSION)" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_$(BUMPED_VERSION).up.sql")
-	echo "$$MIGRATEDOWN" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_$(BUMPED_VERSION).down.sql")
-	
+	make db-local-reset && \
+	git checkout -b cli-$(BUMPED_VERSION) && \
+	make db-migrate-create NAME=$(BUMPED_VERSION) && \
+	cd - && \
+	echo "$$MIGRATEDOWN" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_$(BUMPED_VERSION).down.sql") && \
+	go run -ldflags "-X main.version=$(BUMPED_VERSION)" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_$(BUMPED_VERSION).up.sql") && \
 	cd $(CC_CLI_SERVICE) && \
 	make db-migrate-up && \
 	git add . && \
-	git commit -m "update whitelist for $(BUMPED_VERSION)" && \
-	git push origin update-whitelist-$(BUMPED_VERSION) && \
-	gh pr create -B master --title "Update whitelist for $(BUMPED_VERSION)" --body ""
+	git commit -m "[ci skip] update whitelist for $(BUMPED_VERSION)" && \
+	cd db/migrations/ && \
+	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
+	b=$$(ls | grep up | tail -n 1) && \
+	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/$(BUMPED_VERSION)/" $$a && \
+	body=$$(echo -e "\`\`\`diff\n$$(diff -u $$a $$b)\n\`\`\`") && \
+	git push origin cli-$(BUMPED_VERSION) && \
+	gh pr create -B master --title "[ci skip] Update whitelist for $(BUMPED_VERSION)" --body "$${body}"
 
 promote:
 	$(eval DIR=$(shell mktemp -d))
