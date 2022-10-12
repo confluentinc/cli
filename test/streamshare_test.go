@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/confluentinc/bincover"
@@ -19,12 +18,12 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share provider opt-in", fixture: "stream-share/opt-in.golden"},
 		{
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
-			args:        fmt.Sprintf("stream-share provider opt-out"),
+			args:        "stream-share provider opt-out",
 			fixture:     "stream-share/opt-out-accept.golden",
 		},
 		{
 			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
-			args:        fmt.Sprintf("stream-share provider opt-out"),
+			args:        "stream-share provider opt-out",
 			fixture:     "stream-share/opt-out-decline.golden",
 		},
 
