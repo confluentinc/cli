@@ -147,6 +147,6 @@ const (
 
 	// Stream Sharing commands
 	ResendInviteMsg = "Sent invitation for \"%s\".\n"
-	OptInMsg        = "Successfully opted in to Stream Sharing."
-	OptOutMsg       = "Successfully opted out of Stream Sharing."
+	OptInMsg        = "Successfully opted in to Stream Sharing.\n"
+	OptOutMsg       = "Successfully opted out of Stream Sharing.\n"
 )

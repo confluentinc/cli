@@ -10,7 +10,7 @@ import (
 func (c *command) newOptOutCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "opt-out",
-		Short: "Opt out of Stream Sharing.",
+		Short: "Opt out of stream sharing.",
 		RunE:  c.optOut,
 	}
 }

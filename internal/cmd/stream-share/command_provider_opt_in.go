@@ -10,7 +10,7 @@ import (
 func (c *command) newOptInCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "opt-in",
-		Short: "Opt in to Stream Sharing.",
+		Short: "Opt in to stream sharing.",
 		RunE:  c.optIn,
 	}
 }
