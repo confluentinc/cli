@@ -19,7 +19,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -225,7 +225,7 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.
 	if c.isTest {
 		freeTrialPromoCode = testserver.PromoTestCode
 	} else {
-		freeTrialPromoCode = launchdarkly.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
+		freeTrialPromoCode = featureflags.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
 	}
 
 	// try to find free trial promo code
