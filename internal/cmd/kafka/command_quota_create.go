@@ -104,22 +104,21 @@ func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.GlobalObjectReferenc
 }
 
 func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotasv1.KafkaQuotasV1Throughput, error) {
-	var throughput kafkaquotasv1.KafkaQuotasV1Throughput
-
 	ingress, err := cmd.Flags().GetString("ingress")
 	if err != nil {
 		return nil, err
 	}
-	throughput.IngressByteRate = ingress
 
 	egress, err := cmd.Flags().GetString("egress")
 	if err != nil {
 		return nil, err
 	}
-	throughput.EgressByteRate = egress
 
 	if ingress == "" || egress == "" {
 		return nil, fmt.Errorf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress")
 	}
-	return &throughput, nil
+	return &kafkaquotasv1.KafkaQuotasV1Throughput{
+		IngressByteRate: ingress,
+		EgressByteRate:  egress,
+	}, nil
 }

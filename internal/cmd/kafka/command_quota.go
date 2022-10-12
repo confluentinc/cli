@@ -53,13 +53,13 @@ type printableQuota struct {
 func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) *printableQuota {
 	s := printableQuota{
 		Id:          *quota.Id,
-		DisplayName: *quota.Spec.DisplayName,
-		Description: *quota.Spec.Description,
-		Ingress:     quota.Spec.Throughput.IngressByteRate,
-		Egress:      quota.Spec.Throughput.EgressByteRate,
+		DisplayName: quota.Spec.GetDisplayName(),
+		Description: quota.Spec.GetDescription(),
+		Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
+		Egress:      quota.Spec.Throughput.GetEgressByteRate(),
 		Principals:  principalsToString(*quota.Spec.Principals),
-		Cluster:     quota.Spec.Cluster.Id,
-		Environment: quota.Spec.Environment.Id,
+		Cluster:     quota.Spec.Cluster.GetId(),
+		Environment: quota.Spec.Environment.GetId(),
 	}
 	if format == output.Human.String() {
 		s.Ingress = s.Ingress + " B/s"
