@@ -157,13 +157,17 @@ func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
 func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 	kcc, err := d.FindKafkaCluster(clusterId)
 	if err != nil {
-		return err
+		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
 	}
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
 		return d.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
-	return d.Save()
+	err = d.Save()
+	if err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
+	}
+	return nil
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,

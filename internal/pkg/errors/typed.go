@@ -94,6 +94,10 @@ type UnconfiguredAPISecretError struct {
 	ClusterID string
 }
 
+func NewUnconfiguredAPISecretError(apiKey, clusterID string) CLITypedError {
+	return &UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
+}
+
 func (e *UnconfiguredAPISecretError) Error() string {
 	return e.APIKey
 }
