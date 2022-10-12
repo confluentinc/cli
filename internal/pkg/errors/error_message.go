@@ -18,12 +18,12 @@ const (
 	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = `refusing to overwrite existing secret for API Key "%s"`
 	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
+	APIKeyUseFailedErrorMsg             = "unable to set active API key"
 	APIKeyUseFailedSuggestions          = "If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store %s <secret>`."
 	APIKeyNotValidForClusterErrorMsg    = "the provided API key does not belong to the target cluster"
 	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	APIKeyNotFoundErrorMsg              = "unknown API key %s"
 	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
-	APISecretNotSavedLocallyErrorMsg    = "api secret not saved locally"
 	ServiceAccountNotFoundErrorMsg      = `service account "%s" not found`
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
 
