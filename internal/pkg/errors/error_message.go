@@ -24,7 +24,6 @@ const (
 	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	APIKeyNotFoundErrorMsg              = "unknown API key %s"
 	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
-	APISecretNotSavedLocallyErrorMsg    = "api secret not saved locally"
 	ServiceAccountNotFoundErrorMsg      = `service account "%s" not found`
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
 

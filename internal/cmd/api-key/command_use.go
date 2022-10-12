@@ -1,8 +1,6 @@
 package apikey
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -43,7 +41,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	err = c.Context.UseAPIKey(apiKey, cluster.ID)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
+		return err
 	}
 	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
