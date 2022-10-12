@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 // ExecuteCommand runs the root command with the given args, and returns the output string or an error.
@@ -23,7 +23,7 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	root.SetOut(buf)
 	root.SetArgs(args)
 
-	launchdarkly.Init(nil, true)
+	featureflags.Init(nil, true)
 
 	c, err = root.ExecuteC()
 
