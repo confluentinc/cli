@@ -21,14 +21,14 @@ update-whitelist:
 	cd $(CC_CLI_SERVICE) && \
 	make db-migrate-up && \
 	git add . && \
-	git commit -m "[ci skip] update whitelist for $(BUMPED_VERSION)" && \
+	git commit -m "update whitelist for $(BUMPED_VERSION)" && \
 	cd db/migrations/ && \
 	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
 	b=$$(ls | grep up | tail -n 1) && \
 	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/$(BUMPED_VERSION)/" $$a && \
 	body=$$(echo -e "\`\`\`diff\n$$(diff -u $$a $$b)\n\`\`\`") && \
 	git push origin cli-$(BUMPED_VERSION) && \
-	gh pr create -B master --title "[ci skip] Update whitelist for $(BUMPED_VERSION)" --body "$${body}"
+	gh pr create -B master --title "Update whitelist for $(BUMPED_VERSION)" --body "$${body}"
 
 promote:
 	$(eval DIR=$(shell mktemp -d))
