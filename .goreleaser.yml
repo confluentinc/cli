@@ -77,7 +77,7 @@ builds:
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
         - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in dist/confluent-windows-amd64_windows_amd64/confluent.exe -out dist/confluent-windows-amd64_windows_amd64/confluent.exe
+        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
         - cmd: rm CLIEVCodeSigningCertificate2.pfx
   - binary: confluent
     id: signed-amd64
@@ -97,7 +97,8 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: gon gon_confluent_amd64.hcl
+        - cmd: ./gon_filepath_editor.sh {{ .Path }} gon_confluent_amd64.hcl
+        - cmd: gon dist/gon_confluent_amd64.hcl
   - binary: confluent
     id: signed-arm64
     main: cmd/confluent/main.go
@@ -117,7 +118,8 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: gon gon_confluent_arm64.hcl
+        - cmd: ./gon_filepath_editor.sh {{ .Path }} gon_confluent_arm64.hcl
+        - cmd: gon dist/gon_confluent_arm64.hcl
 
 archives:
   - id: binary
