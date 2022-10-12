@@ -71,7 +71,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
 	// the requested api-key exists, but the secret is not saved locally
-	return errors.Wrap(&errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}, errors.APISecretNotSavedLocallyErrorMsg)
+	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
 func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
