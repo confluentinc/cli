@@ -108,7 +108,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
-	cmd.AddCommand(pipeline.New(cfg, prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
@@ -123,6 +122,9 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
+	}
+	if cfg.IsTest || !featureflags.Manager.BoolVariation("cli.stream_designer", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(pipeline.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)
