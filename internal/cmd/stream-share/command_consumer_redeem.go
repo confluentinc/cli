@@ -19,7 +19,7 @@ var (
 	redeemTokenHumanLabelMap = map[string]string{
 		"Id":                   "ID",
 		"ApiKey":               "API Key",
-		"ApiSecret":            "Api Secret",
+		"ApiSecret":            "API Secret",
 		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
 		"SchemaRegistryApiKey": "Schema Registry API Key",
 		"SchemaRegistrySecret": "Schema Registry Secret",
