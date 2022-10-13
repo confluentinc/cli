@@ -10,7 +10,7 @@ docker container rm cli-linux-glibc-builder
 #build arm64
 architecture=$(uname -m)
 if [ "$architecture" == 'x86_64' ]; then
-  docker build . -f ./dockerfiles/Dockerfile_linux_glibc_arm64 -t cli-linux-glibc-arm64-builder-image
+  docker build . -f ./dockerfiles/Dockerfile_linux_glibc_arm64_from_amd64 -t cli-linux-glibc-arm64-builder-image
 else
   docker build . -f ./dockerfiles/Dockerfile_linux_glibc_arm64_m1 -t cli-linux-glibc-arm64-builder-image
 fi
