@@ -13,13 +13,13 @@ import (
 )
 
 var (
-	redeemTokenFields            = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
+	redeemTokenFields            = []string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
 	redeemTokenPrivateLinkFields = []string{"NetworkDnsDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
 		"NetworkPrivateLinkDataType", "NetworkPrivateLinkData"}
 	redeemTokenHumanLabelMap = map[string]string{
 		"Id":                   "ID",
 		"ApiKey":               "API Key",
-		"Secret":               "Secret",
+		"ApiSecret":            "Api Secret",
 		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
 		"SchemaRegistryApiKey": "Schema Registry API Key",
 		"SchemaRegistrySecret": "Schema Registry Secret",
@@ -37,7 +37,7 @@ var (
 	redeemTokenStructuredLabelMap = map[string]string{
 		"Id":                   "id",
 		"ApiKey":               "api_key",
-		"Secret":               "secret",
+		"ApiSecret":            "secret",
 		"KafkaBootstrapUrl":    "kafka_bootstrap_url",
 		"SchemaRegistryApiKey": "schema_registry_api_key",
 		"SchemaRegistrySecret": "schema_registry_secret",
@@ -63,7 +63,7 @@ type privateLinkNetworkDetails struct {
 type redeemToken struct {
 	Id                         string
 	ApiKey                     string
-	Secret                     string
+	ApiSecret                  string
 	KafkaBootstrapUrl          string
 	SchemaRegistryApiKey       string
 	SchemaRegistrySecret       string
@@ -137,7 +137,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	tokenObj := &redeemToken{
 		Id:                   redeemResponse.GetId(),
 		ApiKey:               redeemResponse.GetApiKey(),
-		Secret:               redeemResponse.GetSecret(),
+		ApiSecret:            redeemResponse.GetSecret(),
 		KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
 		SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
 		SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
