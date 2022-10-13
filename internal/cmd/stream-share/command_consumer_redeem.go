@@ -2,38 +2,79 @@ package streamshare
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var (
-	redeemTokenFields        = []string{"Id", "ApiKey", "Secret", "KafkaBootstrapUrl", "Resources"}
+	redeemTokenFields            = []string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
+	redeemTokenPrivateLinkFields = []string{"NetworkDnsDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
+		"NetworkPrivateLinkDataType", "NetworkPrivateLinkData"}
 	redeemTokenHumanLabelMap = map[string]string{
-		"Id":                "ID",
-		"ApiKey":            "API Key",
-		"Secret":            "Secret",
-		"KafkaBootstrapUrl": "Kafka Bootstrap URL",
-		"Resources":         "Resources",
+		"Id":                   "ID",
+		"ApiKey":               "API Key",
+		"ApiSecret":            "Api Secret",
+		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
+		"SchemaRegistryApiKey": "Schema Registry API Key",
+		"SchemaRegistrySecret": "Schema Registry Secret",
+		"SchemaRegistryUrl":    "Schema Registry URL",
+		"Resources":            "Resources",
+	}
+	redeemTokenPrivateLinkHumanLabelMap = map[string]string{
+		"NetworkDnsDomain":           "Network DNS Domain",
+		"NetworkZones":               "Network Zones",
+		"NetworkZonalSubdomains":     "Network Zonal Subdomains",
+		"NetworkKind":                "Network Kind",
+		"NetworkPrivateLinkDataType": "Network Private Link Data Type",
+		"NetworkPrivateLinkData":     "Network Private Link Data",
 	}
 	redeemTokenStructuredLabelMap = map[string]string{
-		"Id":                "id",
-		"ApiKey":            "api_key",
-		"Secret":            "secret",
-		"KafkaBootstrapUrl": "kafka_bootstrap_url",
-		"Resources":         "resources",
+		"Id":                   "id",
+		"ApiKey":               "api_key",
+		"ApiSecret":            "secret",
+		"KafkaBootstrapUrl":    "kafka_bootstrap_url",
+		"SchemaRegistryApiKey": "schema_registry_api_key",
+		"SchemaRegistrySecret": "schema_registry_secret",
+		"SchemaRegistryUrl":    "schema_registry_url",
+		"Resources":            "resources",
+	}
+	redeemTokenPrivateLinkStructuredLabelMap = map[string]string{
+		"NetworkDnsDomain":           "network_dns_domain",
+		"NetworkZones":               "network_zones",
+		"NetworkZonalSubdomains":     "network_zonal_subdomains",
+		"NetworkKind":                "network_kind",
+		"NetworkPrivateLinkDataType": "network_private_link_data_type",
+		"NetworkPrivateLinkData":     "network_private_link_data",
 	}
 )
 
+type privateLinkNetworkDetails struct {
+	networkKind         string
+	privateLinkDataType string
+	privateLinkData     interface{}
+}
+
 type redeemToken struct {
-	Id                string
-	ApiKey            string
-	Secret            string
-	KafkaBootstrapUrl string
-	Resources         []string
+	Id                         string
+	ApiKey                     string
+	ApiSecret                  string
+	KafkaBootstrapUrl          string
+	SchemaRegistryApiKey       string
+	SchemaRegistrySecret       string
+	SchemaRegistryUrl          string
+	Resources                  []string
+	NetworkDnsDomain           string
+	NetworkZones               string
+	NetworkZonalSubdomains     []string
+	NetworkKind                string
+	NetworkPrivateLinkDataType string
+	NetworkPrivateLinkData     interface{}
 }
 
 func (c *command) newRedeemCommand() *cobra.Command {
@@ -50,8 +91,9 @@ func (c *command) newRedeemCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("aws-account-id", "", "The AWS account ID for the consumer network.")
-	cmd.Flags().String("azure-subscription-id", "", "The Azure subscription ID for the consumer network.")
+	cmd.Flags().String("aws-account-id", "", "Consumer's AWS account ID for PrivateLink access.")
+	cmd.Flags().String("azure-subscription-id", "", "Consumer's Azure subscription ID for PrivateLink access.")
+	cmd.Flags().String("gcp-project-id", "", "Consumer's GCP project ID for Private Service Connect access.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -71,7 +113,12 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	redeemResponse, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId)
+	gcpProjectId, err := cmd.Flags().GetString("gcp-project-id")
+	if err != nil {
+		return err
+	}
+
+	redeemResponse, err := c.V2Client.RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId)
 	if err != nil {
 		return err
 	}
@@ -79,21 +126,92 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 	var resources []string
 	for _, resource := range redeemResponse.GetResources() {
 		if resource.CdxV1SharedTopic != nil {
-			resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedTopic.GetKind(), resource.CdxV1SharedTopic.GetTopic()))
+			resources = append(resources, fmt.Sprintf(`%s="%s"`, resource.CdxV1SharedTopic.GetKind(), resource.CdxV1SharedTopic.GetTopic()))
 		}
 
 		if resource.CdxV1SharedGroup != nil {
-			resources = append(resources, fmt.Sprintf("%s:%s", resource.CdxV1SharedGroup.GetKind(), resource.CdxV1SharedGroup.GetGroupPrefix()))
+			resources = append(resources, fmt.Sprintf(`Group_Prefix="%s"`, resource.CdxV1SharedGroup.GetGroupPrefix()))
 		}
 	}
 
 	tokenObj := &redeemToken{
-		Id:                redeemResponse.GetId(),
-		ApiKey:            redeemResponse.GetApikey(),
-		Secret:            redeemResponse.GetSecret(),
-		KafkaBootstrapUrl: redeemResponse.GetKafkaBootstrapUrl(),
-		Resources:         resources,
+		Id:                   redeemResponse.GetId(),
+		ApiKey:               redeemResponse.GetApiKey(),
+		ApiSecret:            redeemResponse.GetSecret(),
+		KafkaBootstrapUrl:    redeemResponse.GetKafkaBootstrapUrl(),
+		SchemaRegistryApiKey: redeemResponse.GetSchemaRegistryApiKey(),
+		SchemaRegistrySecret: redeemResponse.GetSchemaRegistrySecret(),
+		SchemaRegistryUrl:    redeemResponse.GetSchemaRegistryUrl(),
+		Resources:            resources,
 	}
 
-	return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
+	// non private link cluster
+	if awsAccountId == "" && azureSubscriptionId == "" && gcpProjectId == "" {
+		return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
+	}
+
+	return c.handlePrivateLinkClusterRedeem(cmd, redeemResponse, tokenObj)
+}
+
+func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemResponse cdxv1.CdxV1RedeemTokenResponse, tokenObj *redeemToken) error {
+	consumerSharedResources, err := c.V2Client.ListConsumerSharedResources(redeemResponse.GetId())
+	if err != nil {
+		return err
+	}
+
+	var network cdxv1.CdxV1Network
+	if len(consumerSharedResources) != 0 {
+		privateNetwork, err := c.V2Client.GetPrivateLinkNetworkConfig(consumerSharedResources[0].GetId())
+		if err != nil {
+			return err
+		}
+		network = privateNetwork
+	}
+
+	networkDetails := getPrivateLinkNetworkDetails(network)
+	tokenObj.NetworkDnsDomain = network.GetDnsDomain()
+	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
+	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
+	tokenObj.NetworkKind = networkDetails.networkKind
+	tokenObj.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
+	tokenObj.NetworkPrivateLinkData = networkDetails.privateLinkData
+
+	return output.DescribeObject(cmd, tokenObj, append(redeemTokenFields, redeemTokenPrivateLinkFields...),
+		combineMaps(redeemTokenHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
+		combineMaps(redeemTokenStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
+}
+
+func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
+	cloud := network.GetCloud()
+	var details privateLinkNetworkDetails
+	if cloud.CdxV1AwsNetwork != nil {
+		details.networkKind = cloud.CdxV1AwsNetwork.Kind
+		details.privateLinkDataType = "Private Link Endpoint Service"
+		details.privateLinkData = cloud.CdxV1AwsNetwork.GetPrivateLinkEndpointService()
+	} else if cloud.CdxV1AzureNetwork != nil {
+		details.networkKind = cloud.CdxV1AzureNetwork.Kind
+		details.privateLinkDataType = "Private Link Service Aliases"
+		details.privateLinkData = cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases()
+	} else if cloud.CdxV1GcpNetwork != nil {
+		details.networkKind = cloud.CdxV1GcpNetwork.Kind
+		details.privateLinkDataType = "Private Service Connect Service Attachments"
+		details.privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
+	}
+	return &details
+}
+
+func combineMaps(m1, m2 map[string]string) map[string]string {
+	for k, v := range m2 {
+		m1[k] = v
+	}
+	return m1
+}
+
+func mapSubdomainsToList(m map[string]string) []string {
+	var subdomains []string
+	for k, v := range m {
+		subdomains = append(subdomains, fmt.Sprintf(`%s="%s"`, k, v))
+	}
+
+	return subdomains
 }
