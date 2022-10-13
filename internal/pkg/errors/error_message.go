@@ -455,6 +455,7 @@ const (
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
+	FailedToReadOptOutConfirmationErrorMsg   = "failed to read your opt out confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`

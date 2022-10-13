@@ -96,6 +96,7 @@ var flagRules = []linter.FlagRule{
 			"message-send-max-retries",
 			"request-required-acks",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"source-bootstrap-server",
 		),
@@ -105,6 +106,7 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"aws-account-id",
 			"azure-subscription-id",
+			"gcp-project-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
@@ -129,6 +131,7 @@ var flagRules = []linter.FlagRule{
 			"request-timeout-ms",
 			"retry-backoff-ms",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"socket-buffer-size",
 			"source-api-key",
@@ -308,7 +311,7 @@ func main() {
 	for _, cfg := range configs {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
-	
+
 		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
