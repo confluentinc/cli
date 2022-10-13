@@ -68,7 +68,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	invite, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email, srCluster.Id,
+	invite, err := c.V2Client.CreateProviderInvite(environment, kafkaCluster, topic, email, srCluster.Id,
 		c.Config.GetLastUsedOrgId(), schemaRegistrySubjects)
 	if err != nil {
 		return err

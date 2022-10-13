@@ -53,7 +53,7 @@ func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, error) {
+func (c *Client) CreateProviderInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, error) {
 	deliveryMethod := "Email"
 
 	resources := []string{
