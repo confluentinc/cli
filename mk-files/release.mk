@@ -51,11 +51,10 @@ gorelease-linux-glibc:
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap
 ifneq (,$(findstring x86_64,$(shell uname -m)))
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
 else
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
 endif
 
