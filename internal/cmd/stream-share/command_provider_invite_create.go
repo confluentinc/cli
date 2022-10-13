@@ -26,6 +26,7 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	cmd.Flags().String("topic", "", "Topic to be shared.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().StringSlice("schema-registry-subjects", []string{}, "List of Schema Registry subjects (comma-separated).")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("email")
@@ -57,7 +58,18 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	invite, err := c.V2Client.CreateInvite(environment, kafkaCluster, topic, email)
+	schemaRegistrySubjects, err := cmd.Flags().GetStringSlice("schema-registry-subjects")
+	if err != nil {
+		return err
+	}
+
+	srCluster, err := c.Context.FetchSchemaRegistryByAccountId(cmd.Context(), c.EnvironmentId())
+	if err != nil {
+		return err
+	}
+
+	invite, err := c.V2Client.CreateProviderInvite(environment, kafkaCluster, topic, email, srCluster.Id,
+		c.Config.GetLastUsedOrgId(), schemaRegistrySubjects)
 	if err != nil {
 		return err
 	}
