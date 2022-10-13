@@ -70,7 +70,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
-	// this means the requested api-key exists, but we just don't have the secret saved locally
+	// the requested api-key exists, but the secret is not saved locally
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
