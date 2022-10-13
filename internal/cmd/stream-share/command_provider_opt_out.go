@@ -1,7 +1,6 @@
 package streamshare
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -15,14 +14,12 @@ func (c *command) newOptOutCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "opt-out",
 		Short: "Opt out of stream sharing.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.optOut(cmd, args, form.NewPrompt(os.Stdin))
-		},
+		RunE:  c.optOut,
 	}
 }
 
-func (c *command) optOut(cmd *cobra.Command, _ []string, prompt *form.RealPrompt) error {
-	isDeleteConfirmed, err := confirmOptOut(cmd, prompt)
+func (c *command) optOut(cmd *cobra.Command, _ []string) error {
+	isDeleteConfirmed, err := confirmOptOut(cmd)
 	if err != nil {
 		return err
 	}
@@ -41,16 +38,16 @@ func (c *command) optOut(cmd *cobra.Command, _ []string, prompt *form.RealPrompt
 	return nil
 }
 
-func confirmOptOut(cmd *cobra.Command, prompt form.Prompt) (bool, error) {
+func confirmOptOut(cmd *cobra.Command) (bool, error) {
 	f := form.New(
 		form.Field{
 			ID: "confirmation",
-			Prompt: fmt.Sprintf("Are you sure you want to disable Stream Sharing for your organization? " +
-				"Existing shares in your organization will not be accessible if Stream Sharing is disabled."),
+			Prompt: "Are you sure you want to disable Stream Sharing for your organization? " +
+				"Existing shares in your organization will not be accessible if Stream Sharing is disabled.",
 			IsYesOrNo: true,
 		},
 	)
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
 		return false, errors.New(errors.FailedToReadOptOutConfirmationErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
