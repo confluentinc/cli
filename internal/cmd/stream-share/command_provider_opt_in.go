@@ -16,7 +16,7 @@ func (c *command) newOptInCommand() *cobra.Command {
 }
 
 func (c *command) optIn(cmd *cobra.Command, _ []string) error {
-	_, err := c.V2Client.OptInOrOut(true)
+	_, err := c.V2Client.StreamShareOptInOrOut(true)
 	if err != nil {
 		return err
 	}

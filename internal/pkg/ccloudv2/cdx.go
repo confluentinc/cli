@@ -84,9 +84,9 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 	done := false
 	pageToken := ""
 	for !done {
-		page, r, err := c.executeListProviderShares(sharedResource, pageToken)
+		page, httpResp, err := c.executeListProviderShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, r)
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
@@ -126,9 +126,9 @@ func (c *Client) ListConsumerSharedResources(streamShareId string) ([]cdxv1.CdxV
 	done := false
 	pageToken := ""
 	for !done {
-		page, r, err := c.executeListConsumerSharedResources(streamShareId, pageToken)
+		page, httpResp, err := c.executeListConsumerSharedResources(streamShareId, pageToken)
 		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, r)
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
@@ -194,7 +194,7 @@ func (c *Client) GetPrivateLinkNetworkConfig(sharedResourceId string) (cdxv1.Cdx
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) OptInOrOut(status bool) (cdxv1.CdxV1OptIn, error) {
+func (c *Client) StreamShareOptInOrOut(status bool) (cdxv1.CdxV1OptIn, error) {
 	req := c.CdxClient.OptInsCdxV1Api.UpdateCdxV1OptIn(c.cdxApiContext()).CdxV1OptIn(cdxv1.CdxV1OptIn{
 		StreamShareEnabled: &status,
 	})
