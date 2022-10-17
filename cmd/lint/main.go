@@ -239,6 +239,7 @@ var vocabWords = []string{
 	"readwrite",
 	"recv",
 	"sasl",
+	"schemas",
 	"signup",
 	"sql",
 	"sr",
