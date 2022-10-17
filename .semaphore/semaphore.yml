@@ -128,8 +128,8 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-#            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-#            - choco install make
+            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            - choco install make
             - make deps
             - make test
           
