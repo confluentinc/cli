@@ -117,7 +117,7 @@ blocks:
             - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Try to restore cached dependencies
-#            - cache restore windows-$(checksum go.sum)
+            - cache restore windows-$(checksum go.sum)
           
             # Set up Git
             - checkout
@@ -128,7 +128,7 @@ blocks:
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
             - choco install make
             - make deps
-            - Set-Content coverage.txt "mode:: atomic"
+            - Set-Content coverage.txt "mode:\ atomic"
             - Get-Content coverage.txt
             - go list ./...
             - go list ./... | Select-String -Exclude test
@@ -141,7 +141,7 @@ blocks:
             - make test-installer
           
             # Cache Go dependencies
-#            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
+            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
       epilogue:
         always:
           commands:
