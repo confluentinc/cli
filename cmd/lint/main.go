@@ -236,6 +236,7 @@ var vocabWords = []string{
 	"readwrite",
 	"recv",
 	"sasl",
+	"schemas",
 	"signup",
 	"sql",
 	"sr",
@@ -308,7 +309,7 @@ func main() {
 	for _, cfg := range configs {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
-	
+
 		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)

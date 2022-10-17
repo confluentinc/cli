@@ -28,7 +28,7 @@ type row struct {
 func (c *schemaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List all schemas for given subject prefix",
+		Short:       "List all schemas for given subject prefix.",
 		Args:        cobra.NoArgs,
 		RunE:        c.list,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -75,6 +75,9 @@ func (c *schemaCommand) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClien
 
 	getSchemasOpts := srsdk.GetSchemasOpts{SubjectPrefix: optional.NewString(subjectPrefix)}
 	schemas, _, err := srClient.DefaultApi.GetSchemas(ctx, &getSchemasOpts)
+	if err != nil {
+		return err
+	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
 	if err != nil {

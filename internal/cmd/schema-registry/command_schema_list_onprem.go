@@ -12,7 +12,7 @@ import (
 func (c *schemaCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
-		Short:       "List all schemas for given subject prefix",
+		Short:       "List all schemas for given subject prefix.",
 		Args:        cobra.NoArgs,
 		RunE:        c.listOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
