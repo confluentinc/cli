@@ -112,20 +112,24 @@ blocks:
 #            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
-            - checkout
-            - goenv install --skip-existing
+            - Invoke-WebRequest https://golang.org/dl/go1.19.windows-amd64.zip -OutFile go1.19.windows-amd64.zip
+            - Expand-Archive go1.19.windows-amd64.zip -DestinationPath /usr/local/
+            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
             - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Try to restore cached dependencies
 #            - cache restore windows-$(checksum go.sum)
           
             # Set up Git
+            - checkout
+            # TODO: Use goenv, waiting on https://confluentinc.atlassian.net/browse/DP-9406
+            # goenv install --skip-existing
             - $Env:GOPRIVATE = "github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-            - choco install make
+#            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+#            - choco install make
             - make deps
             - make test
           
