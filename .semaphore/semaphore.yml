@@ -102,16 +102,23 @@ blocks:
       jobs:
         - name: windows/amd64
           commands:
+            # Install choco
+            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - Get-Content script.sh
             - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
-            - Get-Content id_rsa.b64
+            - choco install base64
+            - base64 -h
+            - base64 -d -i id_rsa.b64 -o .ssh\id_rsa
             - New-Item -Name ".ssh" -ItemType "directory"
-#            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
             
             # Set up Go
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9406
+            # checkout
+            # goenv install --skip-existing
             - Invoke-WebRequest https://golang.org/dl/go1.19.windows-amd64.zip -OutFile go1.19.windows-amd64.zip
             - Expand-Archive go1.19.windows-amd64.zip -DestinationPath /usr/local/
             - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
@@ -122,13 +129,11 @@ blocks:
           
             # Set up Git
             - checkout
-            # TODO: Use goenv, waiting on https://confluentinc.atlassian.net/browse/DP-9406
-            # goenv install --skip-existing
             - $Env:GOPRIVATE = "github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Run tests
-            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9451
             - choco install make
             - make deps
             - make test
