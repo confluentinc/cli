@@ -103,9 +103,8 @@ blocks:
             - Get-Content script.sh
             - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
             - choco install base64 -y
-            - base64 -h
-            - base64 -d -i id_rsa.b64 -o .ssh\id_rsa
             - New-Item -Name ".ssh" -ItemType "directory"
+            - base64 -d -i id_rsa.b64 -o .ssh\id_rsa
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9406
