@@ -81,6 +81,9 @@ func (suite *SchemaTestSuite) SetupTest() {
 			DeleteSubjectFunc: func(_ context.Context, _ string, _ *srsdk.DeleteSubjectOpts) ([]int32, *http.Response, error) {
 				return []int32{id}, nil, nil
 			},
+			GetSchemasFunc: func(_ context.Context, _ *srsdk.GetSchemasOpts) ([]srsdk.Schema, *http.Response, error) {
+				return []srsdk.Schema{{Subject: subjectName, Id: id, Version: versionInt32}}, nil, nil
+			},
 		},
 	}
 	suite.dynamicContext = cliMock.AuthenticatedDynamicConfigMock()
@@ -197,6 +200,18 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 	retVal := apiMock.GetSchemaByVersionCalls()[0]
 	req.Equal(retVal.Subject, subjectName)
 	req.Equal(retVal.Version, versionString)
+}
+
+func (suite *SchemaTestSuite) TestGetSchemas() {
+	cmd := suite.newCMD()
+	cmd.SetArgs([]string{"schema", "list", "--subject-prefix", subjectName})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
+	req.True(apiMock.GetSchemasCalled())
+	retVal := apiMock.GetSchemasCalls()[0]
+	req.Equal(retVal.LocalVarOptionals.SubjectPrefix.Value(), subjectName)
 }
 
 func TestSchemaSuite(t *testing.T) {
