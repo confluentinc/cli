@@ -127,7 +127,7 @@ blocks:
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
             - choco install make
             - make deps
-            - echo "mode: atomic" > coverage.txt
+#            - echo "mode: atomic" > coverage.txt
             - go list ./...
             - go list ./... | Select-String -Exclude test
             - go list ./... | Select-String -Exclude test | Select-String -Exclude mock
