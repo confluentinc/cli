@@ -100,21 +100,20 @@ blocks:
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Write-Host $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
             - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
-            - Get-Content id_rsa.b64
             - choco install base64 -y
-            - base64 -d -i id_rsa.b64
             - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
-            - Get-Content "C:\Users\semaphore\.ssh\id_rsa" 
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9406
             # checkout
             # goenv install --skip-existing
+            - go version
             - Invoke-WebRequest https://golang.org/dl/go1.19.windows-amd64.zip -OutFile go1.19.windows-amd64.zip
             - Expand-Archive go1.19.windows-amd64.zip -DestinationPath /usr/local/
             - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
+            - go version
+            - go env GOPATH
             - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Set up Git
