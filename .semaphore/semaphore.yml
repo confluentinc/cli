@@ -117,7 +117,7 @@ blocks:
             - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
             
             # Try to restore cached dependencies
-            - cache restore windows-$(checksum go.sum)
+            - cache restore windows-$(Get-FileHash go.sum).hash
           
             # Set up Git
             - checkout
@@ -141,7 +141,7 @@ blocks:
             - make test-installer
           
             # Cache Go dependencies
-            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
+            - cache store windows-$(Get-FileHash go.sum).hash $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
