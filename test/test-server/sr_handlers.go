@@ -170,9 +170,7 @@ func (s *SRRouter) HandleSRSchemas(t *testing.T) http.HandlerFunc {
 				Id:      100002,
 			},
 		}
-		switch subjectPrefix {
-		case "mysubject-1":
-		case "":
+		if subjectPrefix == "" {
 			schemas = append(schemas, srsdk.Schema{
 				Subject: "mysubject-2",
 				Version: 1,
