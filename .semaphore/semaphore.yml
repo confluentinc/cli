@@ -120,7 +120,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Try to restore cached dependencies
-            - cache restore windows-{$(Get-FileHash go.sum).Hash}
+            - cache restore windows-($(Get-FileHash go.sum).Hash)
             
             # Run tests
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
@@ -136,7 +136,7 @@ blocks:
             - make test-installer
           
             # Cache Go dependencies
-            - cache store windows-{$(Get-FileHash go.sum).Hash} $(go env GOPATH)/pkg/mod
+            - cache store windows-($(Get-FileHash go.sum).Hash) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
