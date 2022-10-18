@@ -100,9 +100,8 @@ blocks:
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Get-Content script.sh
-            - Write-Host $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1]
-            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1]
+            - Write-Host $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
+            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
             - Get-Content id_rsa.b64
             - choco install base64 -y
             - base64 -d -i id_rsa.b64
