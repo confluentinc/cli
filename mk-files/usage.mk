@@ -32,15 +32,17 @@ update-whitelist:
 update-db:
 	$(eval CC_CLI_SERVICE=$(shell mktemp -d)/cc-cli-service)
 
-	# TODO: Loop over stag, devel, prod
-	
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && \
 	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
 	cd $(CC_CLI_SERVICE) && \
-	eval $$(gimme-aws-creds --output-format export --roles arn:aws:iam::237597620434:role/administrator) && \
-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && \
-	cctunnel -e stag -b cli -i read-write && \
-	make db-migrate-up && \
-	kill -9 $$(lsof -i 4:8432 | awk 'NR > 1 { print $$2 };')
+	sed -i "" "s|db.url: .*|db.url: postgres://cc_cli_service@127.0.0.1:8432/cli?sslmode=require|" config.yaml && \
+	for pair in stag,237597620434 devel,037803949979 prod,050879227952; do \
+		IFS="," read env arn <<< $$pair; \
+		eval $$(gimme-aws-creds --output-format export --roles arn:aws:iam::$${arn}:role/administrator); \
+		cctunnel -e $$env -b cli -i read-write; \
+		make db-migrate-up; \
+		kill -9 $$(lsof -i 4:8432 | awk 'NR > 1 { print $$2 };'); \
+	done
 
 promote:
 	$(eval DIR=$(shell mktemp -d))
