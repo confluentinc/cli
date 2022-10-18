@@ -39,7 +39,7 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 		Context: &v1.Context{
 			KafkaClusterContext: &v1.KafkaClusterContext{
 				KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{
-					"lkc-123456": {LastUpdate: update},
+					"lkc-123456": {LastUpdate: update, Bootstrap: "test"},
 				},
 			},
 		},
