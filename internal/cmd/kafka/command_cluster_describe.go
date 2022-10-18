@@ -235,6 +235,10 @@ func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (
 }
 
 func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
+	if getCmkClusterStatus(cluster) == "PROVISIONING" {
+		return 0, nil
+	}
+
 	lkc := *cluster.Id
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
