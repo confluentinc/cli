@@ -114,7 +114,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
-	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil {
+	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
 		if clusterId == "anonymous-id" {
 			return config, nil
 		}
