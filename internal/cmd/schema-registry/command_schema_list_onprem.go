@@ -27,7 +27,7 @@ func (c *schemaCommand) newListCommandOnPrem() *cobra.Command {
 				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix :.mycontext:", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "List all schemas in default context.",
+				Text: "List all schemas in the default context.",
 				Code: fmt.Sprintf("%s schema-registry schema list", pversion.CLIName),
 			},
 		),
