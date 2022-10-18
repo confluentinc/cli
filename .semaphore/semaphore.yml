@@ -42,7 +42,7 @@ blocks:
 
             # Run tests
             - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make deps
             - make lint
             - ulimit -n 2048
@@ -102,8 +102,8 @@ blocks:
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - Set-Content id_rsa.b64 $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1]
             - choco install base64 -y
-            - New-Item -Name ".ssh" -ItemType "directory"
-            - base64 -d -i id_rsa.b64 -o .ssh\id_rsa
+            - dir "C:\Users"
+            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9406
@@ -120,22 +120,18 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Try to restore cached dependencies
-            - cache restore windows-($(Get-FileHash go.sum).Hash)
+            - cache restore windows-$($(Get-FileHash go.sum).Hash)
             
             # Run tests
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
             - choco install make
             - make deps
-            - Set-Content coverage.txt "mode:\ atomic"
-            - $(go list ./... | Select-String test -NotMatch | Select-String mock -NotMatch) -join ","
-            - gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$(go list ./... | Select-String test -NotMatch | Select-String mock -NotMatch) -join "," -coverprofile=unit_coverage.txt $(go list ./... | Select-String vendor -NotMatch | Select-String test -NotMatch) -ldflags '-buildmode=exe'
-            - $Env:INTEG_COVER = "on"
-            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String cli/test) -timeout 45m
-            - Select-String "mode:\ atomic" -NotMatch -h integ_coverage.txt >> coverage.txt
+            - gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$($(go list ./... | Select-String test -NotMatch | Select-String mock -NotMatch) -join ",") -coverprofile=unit_coverage.txt $(go list ./... | Select-String vendor -NotMatch | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String cli/test)
             - make test-installer
           
             # Cache Go dependencies
-            - cache store windows-($(Get-FileHash go.sum).Hash) $(go env GOPATH)/pkg/mod
+            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
