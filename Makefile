@@ -172,30 +172,21 @@ ifdef CI
 endif
 
 .PHONY: unit-test
-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 unit-test:
 ifdef CI
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  endif
+	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  endif
+	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 endif
 
 .PHONY: int-test
 int-test:
 ifdef CI
-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
+	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
 endif
 
 .PHONY: test
