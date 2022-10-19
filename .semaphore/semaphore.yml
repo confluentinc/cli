@@ -97,9 +97,6 @@ blocks:
       jobs:
         - name: windows/amd64
           commands:
-            - git rev-parse --short HEAD
-            - Get-Date -Format yyyy-MM-ddTHH:mm:ssZ
-            
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
@@ -121,12 +118,14 @@ blocks:
             - checkout
             - $Env:GOPRIVATE = "github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            
+
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
-            
+
             # Run tests
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
+            - git rev-parse --short HEAD
+            - Get-Date -Format yyyy-MM-ddTHH:mm:ssZ
             - choco install make
             - make deps
 #            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
