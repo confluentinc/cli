@@ -10,9 +10,6 @@ auto_cancel:
     when: "true"
 
 global_job_config:
-  env_vars:
-    - name: CI
-      value: "true"
   secrets:
     - name: vault_sem2_approle
 
@@ -30,29 +27,27 @@ blocks:
             - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
-            - source script.sh
-            
+
             # Set up Go
             - checkout
             - goenv install --skip-existing
             - export "PATH=$(go env GOPATH)/bin:$PATH"
-            
+
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
-            
+
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            
+
             # Run tests
             - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}') <(cat debian/patches/standard_build_layout.patch | awk '{if (NR>3) {print}}')
+            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make deps
             - make lint
             - ulimit -n 2048
             - make test
-            
+
             # Cache Go dependencies
             - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
@@ -73,16 +68,16 @@ blocks:
             - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
-            
+
             # Set up Go
             - checkout
             - goenv install --skip-existing
             - export "PATH=$(go env GOPATH)/bin:$PATH"
-            
+
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            
+
             # Run tests
             - make deps
             - ulimit -n 2048
@@ -93,47 +88,55 @@ blocks:
             - test-results publish . -N "darwin/amd64"
             - rm *.xml
 
-#  - name: windows/amd64
-#    dependencies: []
-#    task:
-#      agent:
-#        machine:
-#          type: s1-prod-windows
-#      jobs:
-#        - name: windows/amd64
-#          commands:
+  - name: windows/amd64
+    dependencies: []
+    task:
+      agent:
+        machine:
+          type: s1-prod-windows
+      jobs:
+        - name: windows/amd64
+          commands:
             # Get GitHub SSH key from Vault
-#            - Invoke-WebRequest https://releases.hashicorp.com/vault/1.11.0/vault_1.11.0_windows_amd64.zip -OutFile vault_1.11.0_windows_amd64.zip
-#            - Expand-Archive vault_1.11.0_windows_amd64.zip -DestinationPath .
-#            - .\vault.exe login -no-print token="$(.\vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
-#            - .\vault.exe kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-#            - Get-Content script.sh
-#            - $(Select-String "echo" script.sh).Matches[0].Value.Split('"')[1] > id_rsa.b64
-#            - New-Item -Name ".ssh" -ItemType "directory"
-#            - [System.Text.Encoding]::ASCII.GetString([System.Convert]::FromBase64String(Get-Content id_rsa.b64)) | Out-File -Encoding "ASCII" .ssh\id_rsa
+            - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
+            - choco install base64 -y
+            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
             
             # Set up Go
-#            - Invoke-WebRequest https://golang.org/dl/go${GO_VERSION}.windows-amd64.zip -OutFile go${GO_VERSION}.windows-amd64.zip 
-#            - Expand-Archive go${GO_VERSION}.windows-amd64.zip -DestinationPath /usr/local/
-#            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
-#            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9406
+            # checkout
+            # goenv install --skip-existing
+            - Invoke-WebRequest https://golang.org/dl/go1.19.windows-amd64.zip -OutFile go1.19.windows-amd64.zip
+            - Expand-Archive go1.19.windows-amd64.zip -DestinationPath /usr/local/
+            - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
+            - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
+            - echo $Env:PATH
+            - go version
+            
+            # Set up Git
+            - checkout
+            - $Env:GOPRIVATE = "github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
             
             # Try to restore cached dependencies
-#            - cache restore windows-$(checksum go.sum)
-          
-            # Set up Git
-#            - checkout
-#            - $Env:GOPRIVATE = "github.com/confluentinc"
-#            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - cache restore windows-$($(Get-FileHash go.sum).Hash)
             
             # Run tests
-#            - Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-#            - choco install make
-#            - make deps
-#            - make test
+            # TODO: https://confluentinc.atlassian.net/browse/DP-9451
+            - choco install make
+            - make deps
+            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
+            - make test-installer
           
             # Cache Go dependencies
-#            - cache store windows-$(checksum go.sum) $GOPATH/pkg/mod
+            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH)/pkg/mod
+      epilogue:
+        always:
+          commands:
+            - test-results publish . -N "windows/amd64"
 
 after_pipeline:
   task:
