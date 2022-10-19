@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-18 23:09:45.000000000 -0700
+--- cli/Makefile	2022-10-18 23:27:16.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,206 +1,130 @@
 -SHELL           := /bin/bash
@@ -143,7 +143,7 @@
 -.PHONY: build-integ-nonrace-windows
 -build-integ-nonrace-windows:
 -	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) \
+-		-X $(RESOLVED_PATH).commit=\"$$(git rev-parse --short HEAD)\" \
 -		-X $(RESOLVED_PATH).version=$(VERSION) \
 -		-X $(RESOLVED_PATH).isTest=true" \
 -		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
@@ -151,7 +151,7 @@
 -.PHONY: build-integ-race-windows
 -build-integ-race-windows:
 -	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) \
+-		-X $(RESOLVED_PATH).commit=\"$$(git rev-parse --short HEAD)\" \
 -		-X $(RESOLVED_PATH).version=$(VERSION) \
 -		-X $(RESOLVED_PATH).isTest=true" \
 -		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
