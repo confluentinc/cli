@@ -1,6 +1,6 @@
---- cli/Makefile	2022-10-18 22:28:16.000000000 -0700
+--- cli/Makefile	2022-10-18 23:09:45.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
-@@ -1,204 +1,130 @@
+@@ -1,206 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -134,6 +134,8 @@
 -.PHONY: build-integ-race
 -build-integ-race:
 -	go test ./cmd/confluent -ldflags="-s -w \
+-		-X $(RESOLVED_PATH).commit=$(REF) \
+-		-X $(RESOLVED_PATH).date=$(DATE) \
 -		-X $(RESOLVED_PATH).version=$(VERSION) \
 -		-X $(RESOLVED_PATH).isTest=true" \
 -		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
@@ -141,6 +143,7 @@
 -.PHONY: build-integ-nonrace-windows
 -build-integ-nonrace-windows:
 -	go test ./cmd/confluent -ldflags="-s -w \
+-		-X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) \
 -		-X $(RESOLVED_PATH).version=$(VERSION) \
 -		-X $(RESOLVED_PATH).isTest=true" \
 -		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
@@ -149,7 +152,6 @@
 -build-integ-race-windows:
 -	go test ./cmd/confluent -ldflags="-s -w \
 -		-X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) \
--		-X $(RESOLVED_PATH).date=$$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) \
 -		-X $(RESOLVED_PATH).version=$(VERSION) \
 -		-X $(RESOLVED_PATH).isTest=true" \
 -		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
