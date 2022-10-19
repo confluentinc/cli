@@ -27,7 +27,7 @@ import (
 )
 
 var (
-	userNotFoundError = errors.Errorf(errors.InvalidEmailErrorMsg, "notfound@email.com")
+	errUserNotFound = errors.Errorf(errors.InvalidEmailErrorMsg, "notfound@email.com")
 )
 
 const (
@@ -192,7 +192,7 @@ var roleBindingListTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
-		err:  userNotFoundError,
+		err:  errUserNotFound,
 	},
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
@@ -540,7 +540,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
-		err:  userNotFoundError,
+		err:  errUserNotFound,
 	},
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
