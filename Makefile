@@ -117,19 +117,25 @@ build-integ-nonrace:
 .PHONY: build-integ-race
 build-integ-race:
 	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
 		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
 
 .PHONY: build-integ-nonrace-windows
 build-integ-nonrace-windows:
-	go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) -X $(RESOLVED_PATH).date=$$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
 
 .PHONY: build-integ-race-windows
 build-integ-race-windows:
-	go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) -X $(RESOLVED_PATH).date=$$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=$$(git rev-parse --short HEAD) \
+		-X $(RESOLVED_PATH).date=$$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine

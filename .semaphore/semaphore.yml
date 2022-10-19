@@ -124,8 +124,6 @@ blocks:
 
             # Run tests
             # TODO: https://confluentinc.atlassian.net/browse/DP-9451
-            - git rev-parse --short HEAD
-            - Get-Date -Format yyyy-MM-ddTHH:mm:ssZ
             - choco install make
             - make deps
 #            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
