@@ -1,7 +1,6 @@
 package releasenotes
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
@@ -46,8 +45,6 @@ func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 }
 
 func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage, newReleaseNotes string) string {
-	fmt.Println("currentDocsPage", currentDocsPage)
-	fmt.Println("h.pageHeader", h.pageHeader)
 	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, h.pageHeader, "")
 	return h.pageHeader + "\n" + newReleaseNotes + "\n" + previousReleaseNotes
 }
