@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	// For integration test
-	NetrcIntegrationTestFile = "/tmp/netrc_test"
+	NetrcIntegrationTestFile = "netrc_test"
 
 	netrcCredentialsPrefix       = "confluent-cli"
 	netrcCredentialStringFormat  = netrcCredentialsPrefix + ":%s:%s"
