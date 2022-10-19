@@ -124,6 +124,9 @@ func (s *CLITestSuite) SetupSuite() {
 		} else {
 			makeArgs = "build-integ-nonrace"
 		}
+		if runtime.GOOS == "windows" {
+			makeArgs += "-windows"
+		}
 		makeCmd := exec.Command("make", makeArgs)
 		output, err := makeCmd.CombinedOutput()
 		if err != nil {
