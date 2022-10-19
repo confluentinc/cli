@@ -3,7 +3,6 @@ package releasenotes
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 )
 
@@ -19,9 +18,6 @@ type DocsUpdateHandler interface {
 }
 
 func NewDocsUpdateHandler(header, docsFilePath string) DocsUpdateHandler {
-	if runtime.GOOS == "windows" {
-		header = strings.ReplaceAll(header, "\n", "\r\n")
-	}
 	return &DocsUpdateHandlerImp{
 		pageHeader:   header,
 		docsFilePath: docsFilePath,
