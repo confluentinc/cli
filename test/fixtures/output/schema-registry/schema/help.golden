@@ -7,6 +7,7 @@ Available Commands:
   create      Create a schema.
   delete      Delete one or more schemas.
   describe    Get schema either by schema ID, or by subject/version.
+  list        List schemas for a given subject prefix.
 
 Global Flags:
   -h, --help            Show help for this command.
