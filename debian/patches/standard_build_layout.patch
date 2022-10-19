@@ -1,4 +1,4 @@
---- cli/Makefile	2022-10-19 00:07:23.000000000 -0700
+--- cli/Makefile	2022-10-19 00:13:05.000000000 -0700
 +++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
 @@ -1,208 +1,130 @@
 -SHELL           := /bin/bash
@@ -295,7 +295,7 @@
  endif
  
 -.PHONY: test
--test: test-prep unit-test int-test test-installer
+-test: test-prep unit-test int-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
