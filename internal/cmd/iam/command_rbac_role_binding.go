@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -125,11 +124,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue})
+				user, err := c.V2Client.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + user.ResourceId
+				principal = "User:" + user.GetId()
 			}
 		}
 	}
