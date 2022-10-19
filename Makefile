@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -52,7 +52,6 @@ include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 RDKAFKA_VERSION = 1.9.3-RC3
 
@@ -110,7 +109,6 @@ run:
 build-integ-nonrace:
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
@@ -120,7 +118,6 @@ build-integ-nonrace:
 build-integ-race:
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
@@ -129,9 +126,8 @@ build-integ-race:
 .PHONY: build-integ-nonrace-windows
 build-integ-nonrace-windows:
 	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
-		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).commit=$(git rev-parse --short HEAD) \
+		-X $(RESOLVED_PATH).date=$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
 		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
@@ -139,9 +135,8 @@ build-integ-nonrace-windows:
 .PHONY: build-integ-race-windows
 build-integ-race-windows:
 	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
-		-X $(RESOLVED_PATH).date=$(DATE) \
+		-X $(RESOLVED_PATH).commit=$(git rev-parse --short HEAD) \
+		-X $(RESOLVED_PATH).date=$(Get-Date -Format yyyy-MM-ddTHH:mm:ssZ) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
 		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
