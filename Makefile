@@ -125,19 +125,11 @@ build-integ-race:
 
 .PHONY: build-integ-nonrace-windows
 build-integ-nonrace-windows:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=\"$$(git rev-parse --short HEAD)\" \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
+	$$commit = $$(git rev-parse --short HEAD); go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).commit=$${commit} -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
 
 .PHONY: build-integ-race-windows
 build-integ-race-windows:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=\"$$(git rev-parse --short HEAD)\" \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
+	$$commit = $$(git rev-parse --short HEAD); go test ./cmd/confluent -ldflags="-s -w -X $(RESOLVED_PATH).commit=$${commit} -X $(RESOLVED_PATH).version=$(VERSION) -X $(RESOLVED_PATH).isTest=true" -tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
