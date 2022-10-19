@@ -93,19 +93,6 @@ func (c *Client) GetIamUser(id string) (iamv2.IamV2User, error) {
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	users, err := c.ListIamUsers()
-	if err != nil {
-		return iamv2.IamV2User{}, err
-	}
-	for _, user := range users {
-		if user.GetEmail() == email {
-			return user, nil
-		}
-	}
-	return iamv2.IamV2User{}, errors.Errorf(errors.InvalidEmailErrorMsg, email)
-}
-
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 	var list []iamv2.IamV2User
 
