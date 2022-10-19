@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -52,7 +52,6 @@ include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 RDKAFKA_VERSION = 1.9.3-RC3
 
@@ -108,27 +107,39 @@ run:
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	binary="bin/confluent_test" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o $${binexe}
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test
 
 .PHONY: build-integ-race
 build-integ-race:
-	binary="bin/confluent_test_race" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
+
+.PHONY: build-integ-nonrace-windows
+build-integ-nonrace-windows:
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=12345678 \
+		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
+
+.PHONY: build-integ-race-windows
+build-integ-race-windows:
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=12345678 \
+		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -172,30 +183,21 @@ ifdef CI
 endif
 
 .PHONY: unit-test
-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 unit-test:
 ifdef CI
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  endif
+	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  endif
+	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
 endif
 
 .PHONY: int-test
 int-test:
 ifdef CI
-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
+	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
 endif
 
 .PHONY: test
