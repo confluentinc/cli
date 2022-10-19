@@ -153,6 +153,36 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/schemas"
+func (s *SRRouter) HandleSRSchemas(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		subjectPrefix := r.URL.Query().Get("subjectPrefix")
+		schemas := []srsdk.Schema{
+			{
+				Subject: "mysubject-1",
+				Version: 1,
+				Id:      100001,
+			},
+			{
+				Subject: "mysubject-1",
+				Version: 2,
+				Id:      100002,
+			},
+		}
+		if subjectPrefix == "" {
+			schemas = append(schemas, srsdk.Schema{
+				Subject: "mysubject-2",
+				Version: 1,
+				Id:      100003,
+			})
+		}
+
+		err := json.NewEncoder(w).Encode(schemas)
+		require.NoError(t, err)
+	}
+}
+
 // Handler for: "/schemas/ids/{id}"
 func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
