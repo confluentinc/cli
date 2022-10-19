@@ -20,15 +20,15 @@ func (c *schemaCommand) newListCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List all schemas for subjects with prefix "my-subject".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix my-subject", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix my-subject %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: `List all schemas for all subjects in context ":.mycontext:".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix :.mycontext:", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix :.mycontext: %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: "List all schemas in the default context.",
-				Code: fmt.Sprintf("%s schema-registry schema list", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema list %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
