@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -125,11 +125,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue})
+				user, err := c.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + user.ResourceId
+				principal = "User:" + user.GetId()
 			}
 		}
 	}
@@ -596,4 +596,17 @@ func (c *roleBindingCommand) createContext() context.Context {
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
 	}
+}
+
+func (c *roleBindingCommand) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
+	users, err := c.V2Client.ListIamUsers()
+	if err != nil {
+		return iamv2.IamV2User{}, err
+	}
+	for _, user := range users {
+		if user.GetEmail() == email {
+			return user, nil
+		}
+	}
+	return iamv2.IamV2User{}, errors.Errorf(errors.InvalidEmailErrorMsg, email)
 }
