@@ -130,7 +130,7 @@ blocks:
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
           
             # Cache Go dependencies
-            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH)/pkg/mod
+            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH)\pkg\mod
       epilogue:
         always:
           commands:
