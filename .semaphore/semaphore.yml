@@ -108,13 +108,12 @@ blocks:
             # TODO: https://confluentinc.atlassian.net/browse/DP-9406
             # checkout
             # goenv install --skip-existing
-            - go version
             - Invoke-WebRequest https://golang.org/dl/go1.19.windows-amd64.zip -OutFile go1.19.windows-amd64.zip
             - Expand-Archive go1.19.windows-amd64.zip -DestinationPath /usr/local/
             - $Env:PATH = "/usr/local/go/bin:$Env:PATH"
-            - go version
-            - go env GOPATH
             - $Env:PATH = "$(go env GOPATH)/bin:$Env:PATH"
+            - echo $Env:PATH
+            - go version
             
             # Set up Git
             - checkout
