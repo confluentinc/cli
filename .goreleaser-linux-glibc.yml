@@ -15,7 +15,7 @@ builds:
     flags:
       - -mod=vendor
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
