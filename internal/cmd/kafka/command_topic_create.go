@@ -71,6 +71,15 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
+
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 		i := 0
@@ -81,11 +90,6 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 				Value: *kafkarestv3.NewNullableString(&v),
 			}
 			i++
-		}
-
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
 		}
 
 		data := kafkarestv3.CreateTopicRequestData{
