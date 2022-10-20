@@ -419,6 +419,7 @@ const (
 	KafkaRestCertErrorSuggestions     = `To specify a CA certificate, please use the "ca-cert-path" flag or set "CONFLUENT_PLATFORM_CA_CERT_PATH".`
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
+	KafkaRestProvisioningErrorMsg     = `Kafka REST unavailable: Kafka cluster "%s" is still provisioning`
 	NoClustersFoundErrorMsg           = "no clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration."
 	NeedClientCertAndKeyPathsErrorMsg = `must set "client-cert-path" and "client-key-path" flags together`
