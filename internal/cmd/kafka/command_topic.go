@@ -186,3 +186,14 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 
 	return len(resp.Partitions), nil
 }
+
+func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == "PROVISIONING" {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
+}
