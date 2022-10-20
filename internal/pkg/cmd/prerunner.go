@@ -448,7 +448,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
-		if cluster.Status.Phase == "PROVISIONING" {
+		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
 		if restEndpoint != "" {
