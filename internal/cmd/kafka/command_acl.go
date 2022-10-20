@@ -177,3 +177,14 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 	}
 	return idMap, nil
 }
+
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == "PROVISIONING" {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
+}
