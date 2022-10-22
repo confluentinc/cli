@@ -97,8 +97,8 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} {{ .Target }}
-        - cmd: gon dist/gon_confluent_{{ .Target }}.hcl
+        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} amd64
+        - cmd: gon dist/gon_confluent_amd64.hcl
   - binary: confluent
     id: signed-arm64
     main: cmd/confluent/main.go
@@ -118,8 +118,8 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} {{ .Target }}
-        - cmd: gon dist/gon_confluent_{{ .Target }}.hcl
+        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
+        - cmd: gon dist/gon_confluent_arm64.hcl
 
 archives:
   - id: binary
