@@ -117,7 +117,7 @@ blocks:
             # Set up Git
             - checkout
             - $Env:GOPRIVATE = "github.com/confluentinc"
-            - echo windows-$($(Get-FileHash go.sum).Hash
+            - echo windows-$($(Get-FileHash go.sum).Hash)
             - echo $(go env GOPATH)
             - echo $(go env GOPATH)\pkg\mod
 
