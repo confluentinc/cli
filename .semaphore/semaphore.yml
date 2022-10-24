@@ -117,9 +117,9 @@ blocks:
             # Set up Git
             - checkout
             - $Env:GOPRIVATE = "github.com/confluentinc"
-            - echo windows-$($(Get-FileHash go.sum).Hash)
-            - echo $(go env GOPATH)
-            - echo $(go env GOPATH)\pkg\mod
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - echo $(go env GOPATH).Trim()\pkg\mod
+            - echo $($(go env GOPATH).Trim())\pkg\mod
 
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
@@ -132,7 +132,7 @@ blocks:
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
           
             # Cache Go dependencies
-            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH)\pkg\mod
+            - cache store windows-$($(Get-FileHash go.sum).Hash) $(go env GOPATH).Trim()\pkg\mod
       epilogue:
         always:
           commands:
