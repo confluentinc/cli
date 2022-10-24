@@ -117,7 +117,9 @@ blocks:
             # Set up Git
             - checkout
             - $Env:GOPRIVATE = "github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - echo windows-$($(Get-FileHash go.sum).Hash
+            - echo $(go env GOPATH)
+            - echo $(go env GOPATH)\pkg\mod
 
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
