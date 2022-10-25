@@ -21,7 +21,7 @@ import (
 
 func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "configure-acls <id> TOPICS...",
+		Use:               "configure-acls <id> [topic-1] [topic-2] ... [topic-N]",
 		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
