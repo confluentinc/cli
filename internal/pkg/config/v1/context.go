@@ -84,7 +84,7 @@ func (c *Context) HasBasicMDSLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		return c.State != nil && c.State.AuthToken != ""
+		return c.GetAuthToken() != ""
 	case APIKey:
 		return false
 	default:
@@ -100,7 +100,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		return c.State != nil && c.State.AuthToken != "" && c.State.Auth != nil && c.State.Auth.Account != nil && c.State.Auth.Account.Id != ""
+		return c.GetAuthToken() != "" && c.GetEnvironment().GetId() != ""
 	case APIKey:
 		return false
 	default:
@@ -119,14 +119,6 @@ func (c *Context) DeleteUserAuth() error {
 
 	err := c.Save()
 	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
-}
-
-func (c *Context) GetCurrentEnvironmentId() string {
-	// non environment contexts
-	if c.State.Auth == nil {
-		return ""
-	}
-	return c.State.Auth.Account.Id
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
@@ -190,6 +182,13 @@ func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
 func (c *Context) GetEnvironment() *orgv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account
+	}
+	return nil
+}
+
+func (c *Context) GetEnvironments() []*orgv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Accounts
 	}
 	return nil
 }

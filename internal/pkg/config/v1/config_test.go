@@ -417,7 +417,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			if tt.accountOverwrite != nil {
-				tt.config.SetOverwrittenAccount(tt.config.Context().State.Auth.Account)
+				tt.config.SetOverwrittenAccount(tt.config.Context().GetEnvironment())
 				tt.config.Context().State.Auth.Account = tt.accountOverwrite
 			}
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
@@ -538,13 +538,13 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 		{
 			name:          "test no overwrite value",
 			config:        testConfigsCloud.statefulConfig,
-			activeAccount: testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount: testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:           "test with overwrite value",
 			config:         testConfigsCloud.statefulConfig,
 			overwrittenVal: &orgv1.Account{Id: "env-test"},
-			activeAccount:  testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount:  testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:   "test no overwrite value",
@@ -562,12 +562,12 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
 			tempAccount := tt.config.resolveOverwrittenAccount()
 			if tt.overwrittenVal != nil {
-				require.Equal(t, tt.overwrittenVal, tt.config.Context().State.Auth.Account)
+				require.Equal(t, tt.overwrittenVal, tt.config.Context().GetEnvironment())
 				require.Equal(t, tt.activeAccount, tempAccount.Id)
 			}
 			//restore should reset the current context to be the flag value
 			tt.config.restoreOverwrittenAccount(tempAccount)
-			require.Equal(t, tt.activeAccount, tt.config.Context().State.Auth.Account.Id)
+			require.Equal(t, tt.activeAccount, tt.config.Context().GetEnvironment().GetId())
 		}
 		tt.config.overwrittenAccount = nil
 	}

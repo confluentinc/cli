@@ -162,11 +162,11 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.State.AuthToken
+	return c.Context.GetAuthToken()
 }
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
-	return c.State.Auth.Account.Id
+	return c.Context.GetEnvironment().GetId()
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
@@ -444,7 +444,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		cluster, httpResp , err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
+		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}

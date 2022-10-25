@@ -91,7 +91,7 @@ func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Acc
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
-			d.Config.SetOverwrittenAccount(d.State.Auth.Account)
+			d.Config.SetOverwrittenAccount(d.GetEnvironment())
 			d.State.Auth.Account = env
 			return true
 		}
@@ -214,17 +214,13 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	return cluster, nil
 }
 
-func (d *DynamicContext) HasLogin() (bool, error) {
+func (d *DynamicContext) HasLogin() bool {
 	credType := d.Credential.CredentialType
 	switch credType {
 	case v1.Username:
-		_, err := d.resolveEnvironmentId()
-		if err != nil {
-			return false, err
-		}
-		return d.State.AuthToken != "", nil
+		return d.GetAuthToken() != ""
 	case v1.APIKey:
-		return false, nil
+		return false
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, d.Name))
 	}
@@ -242,11 +238,7 @@ func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
 // A view of the state is returned, rather than a pointer to the actual state. Changing the state
 // should be done by accessing the state field directly.
 func (d *DynamicContext) AuthenticatedState() (*v1.ContextState, error) {
-	hasLogin, err := d.HasLogin()
-	if err != nil {
-		return nil, err
-	}
-	if !hasLogin {
+	if !d.HasLogin() {
 		return nil, new(errors.NotLoggedInError)
 	}
 	return d.State, nil
@@ -294,16 +286,6 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	}
 
 	return key, secret, nil
-}
-
-func (d *DynamicContext) resolveEnvironmentId() (string, error) {
-	if d.State == nil || d.State.Auth == nil {
-		return "", new(errors.NotLoggedInError)
-	}
-	if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-		return "", new(errors.NotLoggedInError)
-	}
-	return d.State.Auth.Account.Id, nil
 }
 
 func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
