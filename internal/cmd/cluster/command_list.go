@@ -32,7 +32,7 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
 	if err != nil {
 		return print.HandleClusterError(err, response)

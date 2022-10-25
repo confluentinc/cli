@@ -31,5 +31,5 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *configCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken)
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 }

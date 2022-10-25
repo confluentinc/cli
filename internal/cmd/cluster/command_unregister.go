@@ -36,7 +36,7 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
