@@ -269,7 +269,7 @@ func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	ctx := c.Context()
 	var tempAccount *orgv1.Account
 	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
-		tempAccount = ctx.State.Auth.Account
+		tempAccount = ctx.GetEnvironment()
 		ctx.State.Auth.Account = c.overwrittenAccount
 	}
 	return tempAccount

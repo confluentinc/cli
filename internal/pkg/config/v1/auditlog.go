@@ -4,9 +4,9 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 )
 
-func GetAuditLog(state *ContextState) *orgv1.AuditLog {
-	if state.Auth == nil || state.Auth.Organization == nil || state.Auth.Organization.GetAuditLog().GetServiceAccountId() == 0 {
-		return nil
+func GetAuditLog(context *Context) *orgv1.AuditLog {
+	if auditLog := context.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
+		return auditLog
 	}
-	return state.Auth.Organization.AuditLog
+	return nil
 }

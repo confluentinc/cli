@@ -9,8 +9,10 @@ import (
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -172,7 +174,7 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client, command.State)
+		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
 	})
 }
 
@@ -187,7 +189,7 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
-func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, state *v1.ContextState) []string {
+func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
 	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
@@ -195,16 +197,15 @@ func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", environment.GetId(), environment.GetDisplayName())
 	}
 
-	if auditLog := v1.GetAuditLog(state); auditLog != nil {
-		auditLogAccountId := auditLog.AccountId
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
+		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLog.GetAccountId()})
 		if err != nil {
 			return nil
 		}
-		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLogAccountId, auditLogAccount.Name))
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), auditLogAccount.GetName()))
 	}
 
 	return suggestions
