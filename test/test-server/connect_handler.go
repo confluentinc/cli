@@ -67,16 +67,23 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 						State: "RUNNING",
 						Trace: connectv1.PtrString(""),
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{
-						connectv1.ConnectV1ConnectorExpansionStatusTasks{Id: 1, State: "RUNNING"}},
-					Type: "Sink",
+					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
 					Config: &map[string]string{},
 					Name:   connectv1.PtrString("az-connector"),
 				},
 			}
-			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{"az-connector": connectorExpansion})
+
+			connectorExpansion2 := connectorExpansion
+			connectorExpansion2.Id = &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-456")}
+
+			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
+				"az-connector":   connectorExpansion,
+				"az-connector-2": connectorExpansion2,
+			})
+		
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
 			var request connectv1.InlineObject
