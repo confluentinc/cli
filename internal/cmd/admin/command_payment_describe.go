@@ -19,7 +19,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
+	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
@@ -31,6 +31,6 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	utils.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
+	utils.Printf(cmd, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
 	return nil
 }

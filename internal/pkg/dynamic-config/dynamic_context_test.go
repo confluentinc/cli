@@ -160,7 +160,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 		err := cmd.ParseFlags([]string{"--cluster", tt.cluster, "--environment", tt.environment})
 		require.NoError(t, err)
-		initialEnvId := tt.ctx.GetCurrentEnvironmentId()
+		initialEnvId := tt.ctx.GetEnvironment().GetId()
 		initialActiveKafkaId := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 		err = tt.ctx.ParseFlagsIntoContext(cmd, client)
 		if tt.errMsg != "" {
@@ -171,7 +171,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 		} else {
 			require.NoError(t, err)
-			finalEnv := tt.ctx.GetCurrentEnvironmentId()
+			finalEnv := tt.ctx.GetEnvironment().GetId()
 			finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 			if tt.environment != "" {
 				require.Equal(t, tt.environment, finalEnv)
