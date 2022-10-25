@@ -113,7 +113,6 @@ blocks:
             - $Env:GOPRIVATE = "github.com/confluentinc"
             # TODO: https://confluentinc.atlassian.net/browse/DP-8234
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-            - $gopath=$(go env GOPATH); echo $gopath\pkg\mod
 
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
