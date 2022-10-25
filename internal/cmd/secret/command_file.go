@@ -70,7 +70,7 @@ func (c *command) getCipherMode() string {
 		return secret.AES_GCM
 	}
 
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken)
 	featureInfo, response, err := c.MDSClient.MetadataServiceOperationsApi.Features(ctx)
 
 	if err != nil || response.StatusCode == http.StatusNotFound {

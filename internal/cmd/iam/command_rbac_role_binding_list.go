@@ -137,7 +137,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 	principal := options.principal
 	if currentUser {
-		principal = "User:" + c.State.Auth.User.ResourceId
+		principal = "User:" + c.Context.GetUser().GetResourceId()
 	}
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(c.createContext(), principal, *scopeV2)

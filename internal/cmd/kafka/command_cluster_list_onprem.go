@@ -46,5 +46,5 @@ func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 }
