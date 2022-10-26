@@ -57,7 +57,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
-				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
 			},
 		),
 	}
@@ -365,6 +365,8 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 }
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
+	url = strings.Trim(url, "/") // localhost:8091/ --> localhost:8091
+
 	if isCCloud {
 		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
@@ -384,13 +386,8 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 
 	var msg []string
 	if !protocolMatch {
-		if isCCloud {
-			url = "https://" + url
-			msg = append(msg, "https protocol")
-		} else {
-			url = "http://" + url
-			msg = append(msg, "http protocol")
-		}
+		url = "https://" + url
+		msg = append(msg, "https protocol")
 	}
 	if !portMatch && !isCCloud {
 		url = url + ":8090"
