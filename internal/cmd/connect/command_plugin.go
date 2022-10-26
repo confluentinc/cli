@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -29,6 +30,8 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newInstallCommand())
+	// TODO: Search Confluent Hub
 
 	return c.Command
 }
