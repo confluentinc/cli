@@ -134,9 +134,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	if !cfg.DisablePlugins {
-		if plugin, err := pplugin.FindPlugin(cmd, args, cfg); err != nil {
-			return err
-		} else if plugin != nil {
+		if plugin := pplugin.FindPlugin(cmd, args, cfg); plugin != nil {
 			return pplugin.ExecPlugin(plugin)
 		}
 	}
