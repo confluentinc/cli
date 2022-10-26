@@ -445,9 +445,11 @@ const (
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		AvoidTimeoutSuggestions
-	InvalidEmailErrorMsg             = `user "%s" not found`
-	InvalidLoginURLErrorMsg          = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
-	InvalidLoginErrorMsg             = "incorrect email or password"
+	InvalidEmailErrorMsg         = `user "%s" not found`
+	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
+	InvalidLoginErrorMsg         = "incorrect email, password, or organization"
+	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	NoAPIKeySelectedErrorMsg         = `no API key selected for resource "%s"`
 	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
