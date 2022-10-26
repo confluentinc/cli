@@ -48,6 +48,7 @@ const (
 	AccessClusterRegistrySuggestions = EnsureCPSixPlusSuggestions
 	MustSpecifyOneClusterIDErrorMsg  = "must specify at least one cluster ID"
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
+	UnknownClusterErrorMsg           = `unknown cluster name: "%s"`
 
 	// connect and connector-catalog commands
 	UnknownConnectorIdErrorMsg         = `unknown connector ID "%s"`
