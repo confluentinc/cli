@@ -1,6 +1,7 @@
 package connect
 
 import (
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -11,19 +12,16 @@ import (
 
 func (c *command) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "resume <id>",
-		Short:             "Resume a connector.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "resume <id-1> [id-2] ... [id-N]",
+		Short:             "Resume connectors.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.resume,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Resume a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect resume",
-			},
-			examples.Example{
-				Code: "confluent connect resume --cluster lkc-123456",
+				Text: `Resume connectors "lcc-000001" and "lcc-000002":`,
+				Code: "confluent connect resume lcc-000001 lcc-000002",
 			},
 		),
 	}
@@ -41,16 +39,28 @@ func (c *command) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 	if err != nil {
 		return err
 	}
 
-	err = c.V2Client.ResumeConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID)
-	if err != nil {
-		return err
+	connectorsById := make(map[string]connectv1.ConnectV1ConnectorExpansion)
+	for _, connector := range connectorsByName {
+		connectorsById[connector.Id.GetId()] = connector
 	}
 
-	utils.Printf(cmd, errors.ResumedConnectorMsg, args[0])
+	for _, id := range args {
+		connector, ok := connectorsById[id]
+		if !ok {
+			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
+		}
+
+		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+			return err
+		}
+
+		utils.Printf(cmd, errors.ResumedConnectorMsg, id)
+	}
+
 	return nil
 }

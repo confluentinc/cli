@@ -61,7 +61,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -71,16 +71,16 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	trace := connectorExpansion.Status.Connector.GetTrace()
+	trace := connector.Status.Connector.GetTrace()
 
 	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.CreatedConnectorMsg, connectorExpansion.Id.GetId(), connectorInfo.GetName())
+		utils.Printf(cmd, errors.CreatedConnectorMsg, connector.Id.GetId(), connectorInfo.GetName())
 		if trace != "" {
 			utils.Printf(cmd, "Error Trace: %s\n", trace)
 		}
 	} else {
 		return output.StructuredOutput(outputFormat, &connectCreateDisplay{
-			Id:         connectorExpansion.Id.GetId(),
+			Id:         connector.Id.GetId(),
 			Name:       connectorInfo.GetName(),
 			ErrorTrace: trace,
 		})
