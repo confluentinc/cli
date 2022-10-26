@@ -8,6 +8,7 @@ import (
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/dghubble/sling"
 
@@ -61,11 +62,8 @@ func PersistLogoutToConfig(config *v1.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v1.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
-	state := &v1.ContextState{
-		Auth:      nil,
-		AuthToken: token,
-	}
+func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCertPath string, isLegacyContext bool) error {
+	state := &v1.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
@@ -75,19 +73,19 @@ func PersistConfluentLoginToConfig(config *v1.Config, username string, url strin
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
-	ctxName := GenerateCloudContextName(email, url)
-	user, err := getCCloudUser(client)
+func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
+	ctxName := GenerateCloudContextName(credentials.Username, url)
+	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return nil, nil, err
 	}
-	state := getCCloudContextState(config, ctxName, token, user)
+	state := getCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
-	return state.Auth.Account, user.Organization, err
+	err = addOrUpdateContext(config, ctxName, credentials.Username, url, state, "", user.GetOrganization().GetResourceId())
+	return state.Auth.Account, user.GetOrganization(), err
 }
 
-func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
+func addOrUpdateContext(config *v1.Config, ctxName, username, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
 	credName := generateCredentialName(username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -127,19 +125,17 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName, token string, user *flowv1.GetMeReply) *v1.ContextState {
-	var state *v1.ContextState
-	ctx, err := config.FindContext(ctxName)
-	if err == nil {
+func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *flowv1.GetMeReply) *v1.ContextState {
+	state := new(v1.ContextState)
+	if ctx, err := config.FindContext(ctxName); err == nil {
 		state = ctx.State
-	} else {
-		state = new(v1.ContextState)
 	}
-	state.AuthToken = token
 
 	if state.Auth == nil {
 		state.Auth = &v1.AuthConfig{}
 	}
+	state.AuthToken = token
+	state.AuthRefreshToken = refreshToken
 
 	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
@@ -151,28 +147,17 @@ func getCCloudContextState(config *v1.Config, ctxName, token string, user *flowv
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
 	if state.Auth.Account != nil {
-		for _, acc := range state.Auth.Accounts {
-			if acc.Id == state.Auth.Account.Id {
+		for _, account := range state.Auth.Accounts {
+			if account.Id == state.Auth.Account.Id {
 				hasGoodEnv = true
 			}
 		}
 	}
-	if !hasGoodEnv {
+	if !hasGoodEnv && len(state.Auth.Accounts) > 0 {
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
 	return state
-}
-
-func getCCloudUser(client *ccloud.Client) (*flowv1.GetMeReply, error) {
-	user, err := client.Auth.User(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	if len(user.Accounts) == 0 {
-		return nil, errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
-	}
-	return user, nil
 }
 
 func GenerateCloudContextName(username string, url string) string {
@@ -207,6 +192,21 @@ func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId strin
 	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return "", err
+	}
+	return responses.Token, nil
+}
+
+func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) (string, error) {
+	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
+	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
+
+	responses := new(response)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	if err != nil {
+		return "", err
+	}
+	if responses.Error != "" {
+		return "", errors.New(responses.Error)
 	}
 	return responses.Token, nil
 }

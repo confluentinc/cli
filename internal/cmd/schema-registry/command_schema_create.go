@@ -1,9 +1,9 @@
 package schemaregistry
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
+	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -25,14 +25,14 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 		Use:   "create",
 		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema schemafilepath", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type AVRO", pversion.CLIName),
 			},
 			examples.Example{
-				Text: "Where schemafilepath may include these contents.",
+				Text: "Where `schemafilepath` may include these contents:",
 				Code: `{
 	"type" : "record",
 	"namespace" : "Example",
@@ -54,7 +54,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
+	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("refs", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -65,13 +65,11 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 	_ = cmd.MarkFlagRequired("schema")
 	_ = cmd.MarkFlagRequired("subject")
 
-	pcmd.RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return []string{"AVRO", "PROTOBUF", "JSON"} })
-
 	return cmd
 }
 
 func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -90,26 +88,16 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	schemaType = strings.ToUpper(schemaType)
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
 
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
 		return err
-	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return err
-		}
-
-		if err := json.Unmarshal(refBlob, &refs); err != nil {
-			return err
-		}
 	}
 
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})

@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
@@ -13,21 +14,26 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/countrycode"
 
+	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
 	*pcmd.CLICommand
 	userAgent     string
 	clientFactory pauth.CCloudClientFactory
+	isTest        bool
 }
 
-func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory) *command {
+func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory, isTest bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
@@ -38,12 +44,13 @@ func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.C
 		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		userAgent:     userAgent,
 		clientFactory: ccloudClientFactory,
+		isTest:        isTest,
 	}
-	c.RunE = pcmd.NewCLIRunE(c.cloudSignupRunE)
+	cmd.RunE = c.cloudSignupRunE
 
-	c.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
+	cmd.Flags().String("url", "https://confluent.cloud", "Confluent Cloud service URL.")
 
-	return c
+	return cmd
 }
 
 func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
@@ -126,10 +133,11 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		},
 		CountryCode: countryCode,
 	}
+
 	signupReply, err := client.Signup.Create(context.Background(), req)
 	if err != nil {
 		if strings.Contains(err.Error(), "email already exists") {
-			return errors.NewErrorWithSuggestions("failed to signup", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
+			return errors.NewErrorWithSuggestions("failed to sign up", "Please check if a verification link has been sent to your inbox, otherwise contact support at support@confluent.io")
 		}
 		return err
 
@@ -152,9 +160,15 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			utils.Printf(cmd, "A new verification email has been sent to %s. If this email is not received, please contact support@confluent.io.\n", fEmailName.Responses["email"].(string))
 			continue
 		}
-		var token string
-		var err error
-		if token, err = client.Auth.Login(context.Background(), "", fEmailName.Responses["email"].(string), fOrgPswdTosPri.Responses["password"].(string), org.ResourceId); err != nil {
+
+		req := &flowv1.AuthenticateRequest{
+			Email:         fEmailName.Responses["email"].(string),
+			Password:      fOrgPswdTosPri.Responses["password"].(string),
+			OrgResourceId: org.ResourceId,
+		}
+
+		res, err := client.Auth.Login(context.Background(), req)
+		if err != nil {
 			if err.Error() == "username or password is invalid" {
 				utils.ErrPrintln(cmd, "Sorry, your email is not verified. Another verification email was sent to your address. Please click the verification link in that message to verify your email.")
 				continue
@@ -162,14 +176,70 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return err
 		}
 
-		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
-		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), token, client.BaseURL)
-		_, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, authorizedClient)
+		utils.Print(cmd, errors.CloudSignUpMsg)
+
+		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
+		credentials := &pauth.Credentials{
+			Username:         fEmailName.Responses["email"].(string),
+			AuthToken:        res.Token,
+			AuthRefreshToken: res.RefreshToken,
+		}
+		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
 		}
-		log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, fEmailName.Responses["email"].(string), currentOrg.ResourceId, currentOrg.Name)
+
+		c.printFreeTrialAnnouncement(cmd, authorizedClient, currentOrg)
+
+		utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, fEmailName.Responses["email"].(string), currentOrg.ResourceId, currentOrg.Name)
 		return nil
+	}
+}
+
+func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
+		return
+	}
+
+	org := &orgv1.Organization{Id: currentOrg.Id}
+	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to print free trial announcement: %v", err)
+		return
+	}
+
+	url, _ := c.Flags().GetString("url")
+
+	var ldClient v1.LaunchDarklyClient
+	switch url {
+	case "https://devel.cpdev.cloud":
+		ldClient = v1.CcloudDevelLaunchDarklyClient
+	case "https://stag.cpdev.cloud":
+		ldClient = v1.CcloudStagLaunchDarklyClient
+	default:
+		ldClient = v1.CcloudProdLaunchDarklyClient
+	}
+
+	var freeTrialPromoCode string
+	if c.isTest {
+		freeTrialPromoCode = testserver.PromoTestCode
+	} else {
+		freeTrialPromoCode = featureflags.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
+	}
+
+	// try to find free trial promo code
+	hasFreeTrialCode := false
+	freeTrialPromoCodeAmount := int64(0)
+	for _, promoCode := range promoCodes {
+		if promoCode.Code == freeTrialPromoCode {
+			hasFreeTrialCode = true
+			freeTrialPromoCodeAmount = promoCode.Amount
+			break
+		}
+	}
+
+	if hasFreeTrialCode {
+		utils.ErrPrintf(cmd, errors.FreeTrialSignUpMsg, admin.ConvertToUSD(freeTrialPromoCodeAmount))
 	}
 }

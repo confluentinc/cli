@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"testing"
@@ -11,9 +11,11 @@ const (
 	get                  = "/"
 	updateTopLevelConfig = "/config"
 	updateTopLevelMode   = "/mode"
+	compatibility        = "/compatibility/subjects/{subject}/versions/{version}"
 	subjectVersions      = "/subjects/{subject}/versions"
 	subject              = "/subjects/{subject}"
 	subjectVersion       = "/subjects/{subject}/versions/{version}"
+	schemas              = "/schemas"
 	schemaById           = "/schemas/ids/{id}"
 	subjects             = "/subjects"
 	exporters            = "/exporters"
@@ -47,9 +49,11 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(get, s.HandleSRGet(t))
 	s.HandleFunc(updateTopLevelConfig, s.HandleSRUpdateTopLevelConfig(t))
 	s.HandleFunc(updateTopLevelMode, s.HandleSRUpdateTopLevelMode(t))
+	s.HandleFunc(compatibility, s.HandleSRCompatibility(t))
 	s.HandleFunc(subjectVersions, s.HandleSRSubjectVersions(t))
 	s.HandleFunc(subject, s.HandleSRSubject(t))
 	s.HandleFunc(subjectVersion, s.HandleSRSubjectVersion(t))
+	s.HandleFunc(schemas, s.HandleSRSchemas(t))
 	s.HandleFunc(schemaById, s.HandleSRById(t))
 	s.HandleFunc(subjects, s.HandleSRSubjects(t))
 	s.HandleFunc(exporters, s.HandleSRExporters(t))

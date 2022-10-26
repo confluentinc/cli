@@ -7,6 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -17,7 +18,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Short:             "Describe a context.",
 		Long:              "Describe a context or a specific context field.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.describe),
+		RunE:              c.describe,
 	}
 
 	cmd.Flags().Bool("api-key", false, "Get the API key for a context.")
@@ -63,7 +64,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	return describeContext(cmd, ctx)
 }
 
-func describeContext(cmd *cobra.Command, ctx *pcmd.DynamicContext) error {
+func describeContext(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
 	var (
 		listFields        = []string{"Name", "Platform", "Credential"}
 		humanRenames      = map[string]string{"Name": "Name", "Platform": "Platform", "Credential": "Credential"}

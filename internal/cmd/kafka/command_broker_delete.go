@@ -9,13 +9,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.delete),
+		RunE:  c.delete,
 		Short: "Delete a Kafka broker.",
 	}
 
@@ -45,7 +46,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
 	_, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	fmt.Printf("Started deletion of broker %d. To monitor the remove-broker task run `confluent kafka broker get-tasks %d --task-type remove-broker`.", brokerId, brokerId)

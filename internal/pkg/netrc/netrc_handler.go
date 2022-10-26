@@ -3,7 +3,6 @@ package netrc
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime"
@@ -47,10 +46,11 @@ type NetrcHandler interface {
 }
 
 type NetrcMachineParams struct {
-	IsCloud bool
-	IsSSO   bool
-	Name    string
-	URL     string
+	IgnoreCert bool
+	IsCloud    bool
+	IsSSO      bool
+	Name       string
+	URL        string
 }
 
 type Machine struct {
@@ -89,7 +89,7 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, u
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
-	if err := ioutil.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
+	if err := os.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
@@ -159,7 +159,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		return err
 	}
 	filemode := info.Mode()
-	err = ioutil.WriteFile(filename, buf, filemode)
+	err = os.WriteFile(filename, buf, filemode)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
@@ -219,7 +219,9 @@ func (n *NetrcHandlerImpl) GetMatchingNetrcMachine(params NetrcMachineParams) (*
 	}
 
 	regex := getMachineNameRegex(params)
-	for _, machine := range machines {
+	// Look for the most recent entry matching the regex
+	for i := len(machines) - 1; i >= 0; i-- {
+		machine := machines[i]
 		if regex.Match([]byte(machine.Name)) {
 			return &Machine{Name: machine.Name, User: machine.Login, Password: machine.Password, IsSSO: isSSOMachine(machine.Name)}, nil
 		}
@@ -237,6 +239,12 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 		contextNameRegex = fmt.Sprintf(".*-%s", url)
 	} else {
 		contextNameRegex = ".*"
+	}
+
+	if params.IgnoreCert {
+		if idx := strings.Index(contextNameRegex, `\?cacertpath=`); idx != -1 {
+			contextNameRegex = contextNameRegex[:idx] + ".*"
+		}
 	}
 
 	var regexString string

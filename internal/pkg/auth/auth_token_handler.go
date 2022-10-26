@@ -6,17 +6,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
+	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-
-	"github.com/confluentinc/cli/internal/pkg/sso"
 )
 
 type AuthTokenHandler interface {
@@ -32,55 +29,94 @@ func NewAuthTokenHandler() AuthTokenHandler {
 }
 
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
-	anonClient := clientFactory.AnonHTTPClientFactory(url)
-	if credentials.IsSSO {
-		// For an SSO user, the "Password" field may contain a refresh token. If one exists, try to obtain a new token.
-		if credentials.Password != "" {
-			if token, refreshToken, err := a.refreshCCloudSSOToken(anonClient, credentials.Password, orgResourceId); err == nil {
+	client := clientFactory.AnonHTTPClientFactory(url)
+
+	if credentials.AuthRefreshToken != "" {
+		if credentials.IsSSO {
+			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, orgResourceId); err == nil {
 				return token, refreshToken, nil
 			}
+		} else {
+			if orgResourceId == "" {
+				orgResourceId = credentials.OrgResourceId
+			}
+			req := &flowv1.AuthenticateRequest{
+				RefreshToken:  credentials.AuthRefreshToken,
+				OrgResourceId: orgResourceId,
+			}
+			if res, err := client.Auth.Login(context.Background(), req); err == nil {
+				return res.Token, res.RefreshToken, nil
+			}
 		}
-		token, refreshToken, err := a.getCCloudSSOToken(anonClient, noBrowser, credentials.Username, orgResourceId)
+	}
+
+	// If SSO refresh token is missing or expired, ask for a new one
+	if credentials.IsSSO {
+		token, refreshToken, err := a.getCCloudSSOToken(client, noBrowser, credentials.Username, orgResourceId)
 		if err != nil {
-			return token, refreshToken, err
+			return "", "", err
 		}
-		err = a.checkSSOEmailMatchesLogin(clientFactory.JwtHTTPClientFactory(context.Background(), token, url), credentials.Username)
+
+		client = clientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+		err = a.checkSSOEmailMatchesLogin(client, credentials.Username)
 		return token, refreshToken, err
 	}
 
-	anonClient.HttpClient.Timeout = 30 * time.Second
+	client.HttpClient.Timeout = 30 * time.Second
 	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
-	token, err := anonClient.Auth.Login(context.Background(), "", credentials.Username, credentials.Password, orgResourceId)
-	return token, "", err
+
+	req := &flowv1.AuthenticateRequest{
+		Email:         credentials.Username,
+		Password:      credentials.Password,
+		OrgResourceId: orgResourceId,
+	}
+
+	res, err := client.Auth.Login(context.Background(), req)
+	if err != nil {
+		return "", "", err
+	}
+
+	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
+		log.CliLogger.Debugf(errors.EndOfFreeTrialErrorMsg, res.GetOrganization().GetSuspensionStatus())
+		return res.Token, res.RefreshToken, &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
+	}
+
+	return res.Token, res.RefreshToken, nil
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
 	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
+		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
 	}
 	if userSSO == "" {
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
+
 	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
-	token, err := client.Auth.Login(context.Background(), idToken, "", "", "")
+
+	req := &flowv1.AuthenticateRequest{IdToken: idToken}
+
+	res, err := client.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
-	return token, refreshToken, nil
+
+	return res.Token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
-	loginRealmReply, err := client.User.LoginRealm(context.Background(),
-		&flowv1.GetLoginRealmRequest{
-			Email:         email,
-			ClientId:      auth0ClientId,
-			OrgResourceId: orgResourceId,
-		})
+	req := &flowv1.GetLoginRealmRequest{
+		Email:         email,
+		ClientId:      auth0ClientId,
+		OrgResourceId: orgResourceId,
+	}
+	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
@@ -95,12 +131,18 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 	if err != nil {
 		return "", "", err
 	}
-	token, err := client.Auth.Login(context.Background(), idToken, "", "", orgResourceId)
+
+	req := &flowv1.AuthenticateRequest{
+		IdToken:       idToken,
+		OrgResourceId: orgResourceId,
+	}
+
+	res, err := client.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
 
-	return token, refreshToken, err
+	return res.Token, refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
@@ -114,12 +156,12 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
-	getMeReply, err := getCCloudUser(client)
+	getMeReply, err := client.Auth.User(context.Background())
 	if err != nil {
 		return err
 	}
 	if getMeReply.User.Email != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentials, loginEmail, getMeReply.User.Email), errors.SSOCrdentialsDoNotMatchSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.User.Email), errors.SSOCredentialsDoNotMatchSuggestions)
 	}
 	return nil
 }

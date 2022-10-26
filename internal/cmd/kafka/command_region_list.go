@@ -19,7 +19,7 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List cloud provider regions.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddCloudFlag(cmd)

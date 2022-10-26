@@ -3,11 +3,11 @@ Usage:
   confluent kafka replica list [flags]
 
 Examples:
-List the replica statuses for partition 1 of "my_topic".
+List the replica statuses for partition 1 of topic "my_topic".
 
   $ confluent kafka replica list --topic my_topic --partition 1
 
-List the replicas statuses for topic "my_topic".
+List the replica statuses for topic "my_topic".
 
   $ confluent kafka replica list --topic my_topic
 
@@ -24,5 +24,6 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 

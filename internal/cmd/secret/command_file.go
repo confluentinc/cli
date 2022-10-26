@@ -2,15 +2,19 @@ package secret
 
 import (
 	"context"
-	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/spf13/cobra"
 	"net/http"
 	"os"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/spf13/cobra"
+
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
+
+const masterKeyNotSetWarning = "This command fails if a master key has not been set in the environment variable `CONFLUENT_SECURITY_MASTER_KEY`. Create a master key using `confluent secret master-key generate`."
 
 func (c *command) newFileCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -66,7 +70,7 @@ func (c *command) getCipherMode() string {
 		return secret.AES_GCM
 	}
 
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	featureInfo, response, err := c.MDSClient.MetadataServiceOperationsApi.Features(ctx)
 
 	if err != nil || response.StatusCode == http.StatusNotFound {

@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -19,7 +20,7 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all consumer groups.",
@@ -43,9 +44,9 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)

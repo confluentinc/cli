@@ -7,7 +7,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cluster"
+	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -20,7 +20,7 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 		Short: "List registered ksqlDB clusters.",
 		Long:  "List ksqlDB clusters that are registered with the MDS cluster registry.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listOnPrem),
+		RunE:  c.listOnPrem,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -30,12 +30,12 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	ksqlClusterType := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
 	if err != nil {
-		return cluster.HandleClusterError(err, response)
+		return pcluster.HandleClusterError(err, response)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -43,5 +43,5 @@ func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return cluster.PrintCluster(clusterInfos, format)
+	return pcluster.PrintCluster(clusterInfos, format)
 }

@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	ccv2sdkmock "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	mds2mock "github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
 	"github.com/spf13/cobra"
@@ -17,13 +19,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
-	errNotFound = fmt.Errorf("user not found")
+	errUserNotFound = errors.Errorf(errors.InvalidEmailErrorMsg, "notfound@email.com")
 )
 
 const (
@@ -40,7 +44,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
-	mockedListUserResult    []*orgv1.User
+	mockedListIamUserResult iamv2.IamV2UserList
 	expected                []listDisplay
 }
 
@@ -56,11 +60,12 @@ type RoleBindingTestSuite struct {
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
+	os.Setenv("XX_DATAPLANE_3_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
 
-func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interface{}, message string) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
 		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
@@ -82,33 +87,82 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan interfac
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		},
 	}
-	userMock := &ccsdkmock.User{
-		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
-			if arg1.Email == "test@email.com" {
-				return &orgv1.User{
-					Email:      "test@email.com",
-					ResourceId: v1.MockUserResourceId,
-				}, nil
-			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
-				return nil, errNotFound
-			} else {
-				return &orgv1.User{
-					Email:      arg1.ResourceId + "@email.com",
-					ResourceId: arg1.ResourceId,
-				}, nil
-			}
+	iamUserMock := &iammock.UsersIamV2Api{
+		GetIamV2UserFunc: func(ctx context.Context, id string) iamv2.ApiGetIamV2UserRequest {
+			return iamv2.ApiGetIamV2UserRequest{}
 		},
-		ListFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{{
-				Email:      "test@email.com",
-				ResourceId: v1.MockUserResourceId,
-			}}, nil
+		GetIamV2UserExecuteFunc: func(r iamv2.ApiGetIamV2UserRequest) (iamv2.IamV2User, *http.Response, error) {
+			return iamv2.IamV2User{
+				Email: iamv2.PtrString("test@email.com"),
+				Id:    iamv2.PtrString(v1.MockUserResourceId),
+			}, nil, nil
+		},
+		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
+			return iamv2.ApiListIamV2UsersRequest{}
+		},
+		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
+			return iamv2.IamV2UserList{Data: []iamv2.IamV2User{
+				{
+					Email: iamv2.PtrString("test@email.com"),
+					Id:    iamv2.PtrString(v1.MockUserResourceId),
+				},
+			}}, nil, nil
 		},
 	}
-	client := &ccloud.Client{
-		User: userMock,
+	iamServiceAccountMock := &iammock.ServiceAccountsIamV2Api{
+		GetIamV2ServiceAccountFunc: func(ctx context.Context, id string) iamv2.ApiGetIamV2ServiceAccountRequest {
+			return iamv2.ApiGetIamV2ServiceAccountRequest{}
+		},
+		GetIamV2ServiceAccountExecuteFunc: func(r iamv2.ApiGetIamV2ServiceAccountRequest) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+			return iamv2.IamV2ServiceAccount{
+				DisplayName: iamv2.PtrString("One Great Service"),
+				Id:          iamv2.PtrString("User:sa-123456"),
+			}, nil, nil
+		},
+		ListIamV2ServiceAccountsFunc: func(ctx context.Context) iamv2.ApiListIamV2ServiceAccountsRequest {
+			return iamv2.ApiListIamV2ServiceAccountsRequest{}
+		},
+		ListIamV2ServiceAccountsExecuteFunc: func(r iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+			return iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{
+				{
+					DisplayName: iamv2.PtrString("One Great Service"),
+					Id:          iamv2.PtrString("User:sa-123456"),
+				},
+			}}, nil, nil
+		},
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	providerMock := &ccv2sdkmock.IdentityProvidersIamV2Api{
+		ListIamV2IdentityProvidersFunc: func(_ context.Context) identityproviderv2.ApiListIamV2IdentityProvidersRequest {
+			return identityproviderv2.ApiListIamV2IdentityProvidersRequest{}
+		},
+		ListIamV2IdentityProvidersExecuteFunc: func(_ identityproviderv2.ApiListIamV2IdentityProvidersRequest) (identityproviderv2.IamV2IdentityProviderList, *http.Response, error) {
+			id := "op-01"
+			prov := identityproviderv2.IamV2IdentityProvider{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{prov}}, nil, nil
+		},
+	}
+	poolMock := &ccv2sdkmock.IdentityPoolsIamV2Api{
+		ListIamV2IdentityPoolsFunc: func(_ context.Context, _ string) identityproviderv2.ApiListIamV2IdentityPoolsRequest {
+			return identityproviderv2.ApiListIamV2IdentityPoolsRequest{}
+		},
+		ListIamV2IdentityPoolsExecuteFunc: func(_ identityproviderv2.ApiListIamV2IdentityPoolsRequest) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
+			id := "pool-01"
+			pool := identityproviderv2.IamV2IdentityPool{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{pool}}, nil, nil
+		},
+	}
+	v2client := &ccloudv2.Client{
+		AuthToken: "auth-token",
+		IamClient: &iamv2.APIClient{
+			UsersIamV2Api:           iamUserMock,
+			ServiceAccountsIamV2Api: iamServiceAccountMock,
+		},
+		IdentityProviderClient: &identityproviderv2.APIClient{
+			IdentityPoolsIamV2Api:     poolMock,
+			IdentityProvidersIamV2Api: providerMock,
+		},
+	}
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2client, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
@@ -138,7 +192,7 @@ var roleBindingListTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
@@ -155,12 +209,36 @@ var roleBindingListTests = []roleBindingTest{
 		roleName: "EnvironmentAdmin",
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
 	},
+	{
+		args:      []string{"--current-user", "--environment", "env-123", "--kafka-cluster-id", "lkc-123"},
+		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
+		},
+	},
+	{
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
+		},
+	},
+	{
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		principal: "User:" + v1.MockUserResourceId,
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
+		},
+	},
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, "")
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
@@ -177,12 +255,12 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
 
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping, mockListUserResult chan []*orgv1.User) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping, mockListIamUserResult chan iamv2.IamV2UserList) *cobra.Command {
 	// Mock MDS Client
 	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
 	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
@@ -192,15 +270,18 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 	}
 
 	// Mock User Client
-	userMock := &ccsdkmock.User{
-		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
-			return <-mockListUserResult, nil
+	iamUserMock := &iammock.UsersIamV2Api{
+		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
+			return iamv2.ApiListIamV2UsersRequest{}
+		},
+		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
+			return <-mockListIamUserResult, nil, nil
 		},
 	}
-	client := &ccloud.Client{
-		User: userMock,
+	v2Client := &ccloudv2.Client{
+		IamClient: &iamv2.APIClient{UsersIamV2Api: iamUserMock},
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, mdsClient, suite.conf))
 }
 
 var myRoleBindingListTests = []myRoleBindingTest{
@@ -218,10 +299,12 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*orgv1.User{{
-			Email:      "test@email.com",
-			ResourceId: v1.MockUserResourceId,
-		}},
+		mockedListIamUserResult: iamv2.IamV2UserList{
+			Data: []iamv2.IamV2User{{
+				Email: iamv2.PtrString("test@email.com"),
+				Id:    iamv2.PtrString(v1.MockUserResourceId),
+			}},
+		},
 		expected: []listDisplay{
 			{
 				Principal: "User:u-epo7ml",
@@ -243,10 +326,12 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*orgv1.User{{
-			Email:      "test@email.com",
-			ResourceId: v1.MockUserResourceId,
-		}},
+		mockedListIamUserResult: iamv2.IamV2UserList{
+			Data: []iamv2.IamV2User{{
+				Email: iamv2.PtrString("test@email.com"),
+				Id:    iamv2.PtrString(v1.MockUserResourceId),
+			}},
+		},
 		expected: []listDisplay{
 			{
 				Principal: "User:u-123",
@@ -269,7 +354,9 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*orgv1.User{},
+		mockedListIamUserResult: iamv2.IamV2UserList{
+			Data: []iamv2.IamV2User{},
+		},
 		expected: []listDisplay{
 			{
 				Principal: "User:sa-123",
@@ -349,10 +436,12 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: []*orgv1.User{{
-			Email:      "test@email.com",
-			ResourceId: v1.MockUserResourceId,
-		}},
+		mockedListIamUserResult: iamv2.IamV2UserList{
+			Data: []iamv2.IamV2User{{
+				Email: iamv2.PtrString("test@email.com"),
+				Id:    iamv2.PtrString(v1.MockUserResourceId),
+			}},
+		},
 		expected: []listDisplay{
 			{
 				Principal:    "User:u-123",
@@ -412,14 +501,14 @@ var myRoleBindingListTests = []myRoleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockeRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
-	mockeListUserResult := make(chan []*orgv1.User)
+	mockRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
+	mockListIamUserResult := make(chan iamv2.IamV2UserList)
 	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockeRoleBindingsResult, mockeListUserResult)
+		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
 
 		go func() {
-			mockeRoleBindingsResult <- tc.scopeRoleBindingMapping
-			mockeListUserResult <- tc.mockedListUserResult
+			mockRoleBindingsResult <- tc.scopeRoleBindingMapping
+			mockListIamUserResult <- tc.mockedListIamUserResult
 		}()
 		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)
@@ -451,7 +540,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
@@ -466,6 +555,33 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--kafka-cluster-id", "lkc-123"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
+		},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "ResourceOwner",
+		scope: mdsv2alpha1.Scope{
+			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
+			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
+		},
+	},
+	{
 		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
 		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
@@ -474,7 +590,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
@@ -493,13 +609,13 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
-	expect := make(chan interface{})
+	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
@@ -518,7 +634,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }

@@ -7,8 +7,10 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -48,8 +50,27 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 	return auth, didPromptUser, nil
 }
 
-func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
+func getApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
+	if srClient != nil {
+		// Tests/mocks
+		return srClient, nil, nil
+	}
+	return GetSchemaRegistryClientWithApiKey(cmd, cfg, ver, "", "")
+}
+
+func GetSrApiClientWithToken(cmd *cobra.Command, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
+	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
+}
+
+func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version, srAPIKey, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
 	srConfig := srsdk.NewConfiguration()
+
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	srConfig.Debug = unsafeTrace
 
 	ctx := cfg.Context()
 
@@ -58,6 +79,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
+			log.CliLogger.Debug("failed to find active schema registry cluster")
 			return nil, nil, err
 		}
 		srCluster = cluster
@@ -108,8 +130,7 @@ func getSchemaRegistryClient(cmd *cobra.Command, cfg *pcmd.DynamicConfig, ver *v
 			if srCluster, ok := ctx.SchemaRegistryClusters[envId]; ok {
 				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 			} else {
-				ctxClient := pcmd.NewContextClient(ctx)
-				srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(srCtx, envId)
+				srCluster, err := ctx.FetchSchemaRegistryByAccountId(srCtx, envId)
 				if err != nil {
 					return nil, nil, err
 				}
@@ -167,6 +188,13 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 
 	srConfig.BasePath = endpoint
 	srConfig.UserAgent = ver.UserAgent
+
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	srConfig.Debug = unsafeTrace
 	srConfig.HTTPClient, err = utils.GetCAClient(caCertPath)
 	if err != nil {
 		return nil, nil, err

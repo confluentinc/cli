@@ -1,13 +1,20 @@
 package schemaregistry
 
 import (
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"context"
+	"fmt"
+
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *exporterCommand) newUpdateCommand() *cobra.Command {
@@ -15,15 +22,15 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 		Use:   "update <name>",
 		Short: "Update configs or information of schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
-				Code: `confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+				Code: fmt.Sprintf(`%s schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`, pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Update configs of new schema exporter.",
-				Code: "confluent schema-registry exporter update my-exporter --config-file ~/config.txt",
+				Code: fmt.Sprintf(`%s schema-registry exporter update my-exporter --config-file ~/config.txt`, pversion.CLIName),
 			},
 		),
 	}
@@ -43,13 +50,15 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
+	return updateExporter(cmd, args[0], srClient, ctx)
+}
+
+func updateExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
 		return err
@@ -69,12 +78,12 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 		updateRequest.ContextType = contextType
 	}
 
-	context, err := cmd.Flags().GetString("context-name")
+	contextName, err := cmd.Flags().GetString("context-name")
 	if err != nil {
 		return err
 	}
-	if context != "" {
-		updateRequest.Context = context
+	if contextName != "" {
+		updateRequest.Context = contextName
 	}
 
 	subjects, err := cmd.Flags().GetStringSlice("subjects")
@@ -97,18 +106,18 @@ func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	if configFile != "" {
-		configMap, err := utils.ReadConfigsFromFile(configFile)
+		updateRequest.Config, err = properties.FileToMap(configFile)
 		if err != nil {
 			return err
 		}
-		updateRequest.Config = configMap
 	}
 
 	if _, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Updated", name)
+	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

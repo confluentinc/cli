@@ -1,8 +1,10 @@
 package iam
 
 import (
-	"net/http"
+	"os"
+	"strings"
 
+	"github.com/antihax/optional"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -17,7 +19,7 @@ func (c *roleCommand) newListCommand() *cobra.Command {
 		Short: "List the available RBAC roles.",
 		Long:  "List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -37,19 +39,26 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	roles := mdsv2alpha1.RolesOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roles.Namespace = dataplaneNamespace
-	}
+	var roles []mdsv2alpha1.Role
 
-	// Currently we don't allow multiple namespace in roles so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	rolesV2, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), &roles)
-	if err != nil || r.StatusCode == http.StatusNoContent {
-		rolesV2, _, err = c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), nil)
+	// add public and dataplane roles
+	publicAndDataplaneNamespace := []string{publicNamespace.Value(), dataplaneNamespace.Value()}
+	publicAndDataplaneNamespaceOpt := optional.NewString(strings.Join(publicAndDataplaneNamespace, ","))
+	publicAndDataplaneRoles, err := c.namespaceRoles(publicAndDataplaneNamespaceOpt)
+	if err != nil {
+		return err
+	}
+	roles = append(roles, publicAndDataplaneRoles...)
+
+	// add ksql and datagovernance roles
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+		ksqlAndDataGovernanceNamespace := []string{ksqlNamespace.Value(), dataGovernanceNamespace.Value()}
+		ksqlAndDataGovernanceNamespaceOpt := optional.NewString(strings.Join(ksqlAndDataGovernanceNamespace, ","))
+		ksqlAndDataGovernanceRoles, err := c.namespaceRoles(ksqlAndDataGovernanceNamespaceOpt)
 		if err != nil {
 			return err
 		}
+		roles = append(roles, ksqlAndDataGovernanceRoles...)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -59,7 +68,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 
 	if format == output.Human.String() {
 		var data [][]string
-		for _, role := range rolesV2 {
+		for _, role := range roles {
 			roleDisplay, err := createPrettyRoleV2(role)
 			if err != nil {
 				return err
@@ -68,7 +77,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		}
 		outputTable(data)
 	} else {
-		return output.StructuredOutput(format, rolesV2)
+		return output.StructuredOutput(format, roles)
 	}
 
 	return nil

@@ -10,7 +10,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -18,7 +20,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 		Short: "Update per-broker or cluster-wide Kafka broker configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -32,7 +34,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringSlice("config", nil, "A comma-separated list of configuration overrides ('key=value') for the broker being updated.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the broker being updated.`)
 	cmd.Flags().Bool("all", false, "Apply config update to all brokers in the cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
@@ -63,52 +65,51 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configStrings, err := cmd.Flags().GetStringSlice("config")
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-
-	configsMap, err := utils.ToMap(configStrings)
+	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
-	configs := toAlterConfigBatchRequestData(configsMap)
+	data := toAlterConfigBatchRequestDataOnPrem(configMap)
 
 	if all {
 		resp, err := restClient.ConfigsV3Api.UpdateKafkaClusterConfigs(restContext, clusterId,
 			&kafkarestv3.UpdateKafkaClusterConfigsOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+				AlterConfigBatchRequestData: optional.NewInterface(data),
 			})
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 	} else {
 		resp, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsalterPost(restContext, clusterId, brokerId,
 			&kafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: configs}),
+				AlterConfigBatchRequestData: optional.NewInterface(data),
 			})
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 	}
 
 	if format == output.Human.String() {
-		c.printHumanUpdate(all, clusterId, brokerId, configs)
+		c.printHumanUpdate(all, clusterId, brokerId, data)
 		return nil
 	}
 
-	return c.printStructuredUpdate(format, configs)
+	return c.printStructuredUpdate(format, data)
 }
 
-func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, configs []kafkarestv3.AlterConfigBatchRequestDataData) {
+func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, data kafkarestv3.AlterConfigBatchRequestData) {
 	if all {
 		utils.Printf(c.Command, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
 	} else {
 		utils.Printf(c.Command, "Updated the following configs for broker \"%d\":\n", brokerId)
 	}
 	tableLabels := []string{"Name", "Value"}
-	tableEntries := make([][]string, len(configs))
-	for i, config := range configs {
+	tableEntries := make([][]string, len(data.Data))
+	for i, config := range data.Data {
 		tableEntries[i] = printer.ToRow(
 			&struct {
 				Name  string
@@ -121,13 +122,13 @@ func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId in
 	printer.RenderCollectionTable(tableEntries, tableLabels)
 }
 
-func (c *brokerCommand) printStructuredUpdate(format string, configs []kafkarestv3.AlterConfigBatchRequestDataData) error {
+func (c *brokerCommand) printStructuredUpdate(format string, data kafkarestv3.AlterConfigBatchRequestData) error {
 	type printConfig struct {
 		Name  string `json:"name" yaml:"name"`
 		Value string `json:"value,omitempty" yaml:"value,omitempty"`
 	}
-	printConfigs := make([]*printConfig, len(configs))
-	for i, config := range configs {
+	printConfigs := make([]*printConfig, len(data.Data))
+	for i, config := range data.Data {
 		printConfigs[i] = &printConfig{
 			Name:  config.Name,
 			Value: *config.Value,

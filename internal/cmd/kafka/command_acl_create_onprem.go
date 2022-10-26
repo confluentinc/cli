@@ -7,6 +7,7 @@ import (
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -14,11 +15,14 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:   "create",
 		Short: "Create a Kafka ACL.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.createOnPrem),
+		RunE:  c.createOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: `cluster-scope`, `consumer-group`, `topic`, or `transactional-id`. For example, for a consumer to read a topic, you need to grant `READ` and `DESCRIBE` both on the `consumer-group` and the `topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1\nconfluent kafka acl create --allow --Group:Finance --operation READ --operation DESCRIBE --topic '*'",
+				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"READ\" and \"DESCRIBE\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
+				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+			},
+			examples.Example{
+				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --topic '*'",
 			},
 		),
 	}
@@ -51,10 +55,10 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToCreateAclReqest(acl)
+	opts := aclutil.AclRequestToCreateAclRequest(acl)
 	httpResp, err := restClient.ACLV3Api.CreateKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
 	aclData := aclutil.CreateAclRequestDataToAclData(acl)

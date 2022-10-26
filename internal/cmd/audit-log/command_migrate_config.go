@@ -7,7 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -42,14 +41,14 @@ func (c *migrateCmd) newConfigCommand() *cobra.Command {
 func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 	crnAuthority, err := cmd.Flags().GetString("authority")
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 
 	bootstrapServers := []string{}
 	if cmd.Flags().Changed("bootstrap-servers") {
 		bootstrapServers, err = cmd.Flags().GetStringArray("bootstrap-servers")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 	}
 
@@ -57,13 +56,13 @@ func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 	if cmd.Flags().Changed("combine") {
 		fileNameMap, err := cmd.Flags().GetStringToString("combine")
 		if err != nil {
-			return errors.HandleCommon(err, cmd)
+			return err
 		}
 
 		for clusterId, filePath := range fileNameMap {
 			propertyFile, err := utils.LoadPropertiesFile(filePath)
 			if err != nil {
-				return errors.HandleCommon(err, cmd)
+				return err
 			}
 
 			routerConfig, ok := propertyFile.Get("confluent.security.event.router.config")
@@ -77,7 +76,7 @@ func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 
 	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, crnAuthority)
 	if err != nil {
-		return errors.HandleCommon(err, cmd)
+		return err
 	}
 	for _, warning := range warnings {
 		fmt.Fprintln(os.Stderr, warning)
@@ -87,6 +86,5 @@ func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
 
-	err = enc.Encode(combinedSpec)
-	return errors.HandleCommon(err, cmd)
+	return enc.Encode(combinedSpec)
 }

@@ -13,7 +13,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		Short: "List Kafka ACLs for a resource.",
 		Long:  "List Kafka ACLs for a resource. This command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the ACLs for the specified Kafka cluster:",

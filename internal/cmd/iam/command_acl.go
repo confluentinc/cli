@@ -18,7 +18,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func NewACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "acl",
 		Short:       "Manage Kafka ACLs (5.4+ only).",
@@ -132,5 +132,5 @@ func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 }

@@ -2,7 +2,7 @@ package auditlog
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 
@@ -18,7 +18,7 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 		Short: "Submits audit-log config spec object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.update),
+		RunE:  c.update,
 	}
 
 	cmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
@@ -36,12 +36,12 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		data, err = ioutil.ReadFile(fileName)
+		data, err = os.ReadFile(fileName)
 		if err != nil {
 			return err
 		}
 	} else {
-		data, err = ioutil.ReadAll(os.Stdin)
+		data, err = io.ReadAll(os.Stdin)
 		if err != nil {
 			return err
 		}

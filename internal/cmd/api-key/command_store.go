@@ -1,16 +1,15 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -31,7 +30,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),
-		RunE:  pcmd.NewCLIRunE(c.store),
+		RunE:  c.store,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pass the API key and secret as arguments",
@@ -71,9 +70,9 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Config.Resolver, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
 	if err == nil && clusterId != "" {
-		if resourceType != pcmd.KafkaResourceType {
+		if resourceType != resource.KafkaCluster {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
 		}
 		cluster, err = c.Context.FindKafkaCluster(clusterId)
@@ -115,18 +114,13 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if API key exists server-side
-	apiKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: key, AccountId: c.EnvironmentId()})
+	apiKey, httpResp, err := c.V2Client.GetApiKey(key)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	apiKeyIsValidForTargetCluster := false
-	for _, lkc := range apiKey.LogicalClusters {
-		if lkc.Id == cluster.ID {
-			apiKeyIsValidForTargetCluster = true
-			break
-		}
-	}
+	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
+
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
 	}
@@ -139,7 +133,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
 	}
 
-	if err := c.keystore.StoreAPIKey(&schedv1.ApiKey{Key: key, Secret: secret}, cluster.ID); err != nil {
+	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
 	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)

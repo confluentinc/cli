@@ -6,6 +6,6 @@ func (s *CLITestSuite) TestVersion() {
 		{fixture: "version/version-flag.golden", args: "--version"},
 	} {
 		tt.regex = true
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }

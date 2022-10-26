@@ -19,13 +19,13 @@ func initKafkaRest(a *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil { // require the flag
 		return nil, nil, err
 	}
-	kafkaRest, err := a.GetKafkaREST()
+	kafkaREST, err := a.GetKafkaREST()
 	if err != nil {
 		return nil, nil, err
 	}
-	kafkaRestClient := kafkaRest.Client
+	kafkaRestClient := kafkaREST.Client
 	setServerURL(cmd, kafkaRestClient, url)
-	return kafkaRestClient, kafkaRest.Context, nil
+	return kafkaRestClient, kafkaREST.Context, nil
 }
 
 // Used for on-prem KafkaRest commands
@@ -52,18 +52,13 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")
 }
 
-// Used for on-prem KafkaRest commands
-// Fetch rest url from flag, otherwise from CONFLUENT_REST_URL
+// getKafkaRestUrl tries to fetch the Kafka REST URL from the --url flag or from the CONFLUENT_REST_URL environment variable.
 func getKafkaRestUrl(cmd *cobra.Command) (string, error) {
-	if cmd.Flags().Changed("url") {
-		url, err := cmd.Flags().GetString("url")
-		if err != nil {
-			return "", err
-		}
+	if url, _ := cmd.Flags().GetString("url"); url != "" {
 		return url, nil
 	}
-	if restUrl := os.Getenv(ConfluentRestUrl); restUrl != "" {
-		return restUrl, nil
+	if url := os.Getenv("CONFLUENT_REST_URL"); url != "" {
+		return url, nil
 	}
 	return "", errors.NewErrorWithSuggestions(errors.KafkaRestUrlNotFoundErrorMsg, errors.KafkaRestUrlNotFoundSuggestions)
 }

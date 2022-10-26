@@ -1,9 +1,8 @@
-package release_notes
+package releasenotes
 
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -21,7 +20,7 @@ const (
 
 func WriteReleaseNotesPrep(filename, releaseVersion, prevVersion string) error {
 	prepBaseFile := path.Join(".", "internal", "pkg", "release-notes", "prep-base")
-	prepBaseBytes, err := ioutil.ReadFile(prepBaseFile)
+	prepBaseBytes, err := os.ReadFile(prepBaseFile)
 	if err != nil {
 		return fmt.Errorf("unable to load release prep-base")
 	}

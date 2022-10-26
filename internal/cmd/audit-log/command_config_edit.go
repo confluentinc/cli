@@ -19,7 +19,7 @@ func (c *configCommand) newEditCommand() *cobra.Command {
 		Short: "Edit the audit-log config spec interactively.",
 		Long:  "Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.edit),
+		RunE:  c.edit,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

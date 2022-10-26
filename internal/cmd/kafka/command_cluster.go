@@ -8,15 +8,27 @@ import (
 )
 
 const (
-	singleZone = "single-zone"
-	multiZone  = "multi-zone"
+	singleZone       = "single-zone"
+	multiZone        = "multi-zone"
+	lowAvailability  = "SINGLE_ZONE"
+	highAvailability = "MULTI_ZONE"
 )
+
+var availabilitiesToHuman = map[string]string{
+	lowAvailability:  singleZone,
+	highAvailability: multiZone,
+}
+
+var availabilitiesToModel = map[string]string{
+	singleZone: lowAvailability,
+	multiZone:  highAvailability,
+}
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *clusterCommand {
+func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage Kafka clusters.",
@@ -31,19 +43,19 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *clusterCommand
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newCreateCommand(cfg))
-	c.AddCommand(c.newDeleteCommand(cfg))
-	c.AddCommand(c.newDescribeCommand(cfg))
-	c.AddCommand(c.newUpdateCommand(cfg))
-	c.AddCommand(c.newUseCommand(cfg))
+	cmd.AddCommand(c.newCreateCommand(cfg))
+	cmd.AddCommand(c.newDeleteCommand(cfg))
+	cmd.AddCommand(c.newDescribeCommand(cfg))
+	cmd.AddCommand(c.newUpdateCommand(cfg))
+	cmd.AddCommand(c.newUseCommand(cfg))
 
 	if cfg.IsCloudLogin() {
-		c.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
-	return c
+	return cmd
 }
 
 func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -55,5 +67,5 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteClusters(c.EnvironmentId(), c.Client)
+	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.V2Client)
 }

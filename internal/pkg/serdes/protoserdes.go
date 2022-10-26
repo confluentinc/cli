@@ -2,6 +2,7 @@ package serdes
 
 import (
 	"path/filepath"
+	"strings"
 
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
@@ -88,12 +89,12 @@ func (protoProvider *ProtoDeserializationProvider) decode(data []byte) (string, 
 func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.Message, error) {
 	importPaths := []string{filepath.Dir(schemaPath)}
 	for _, path := range referencePathMap {
-		importPaths = append(importPaths, filepath.Dir(path))
+		importPaths = append(importPaths, strings.SplitAfter(path, "ccloud-schema")[0])
 	}
 	parser := parse.Parser{ImportPaths: importPaths}
 	fileDescriptors, err := parser.ParseFiles(filepath.Base(schemaPath))
 	if err != nil {
-		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)
+		return nil, errors.Wrap(err, errors.ProtoSchemaInvalidErrorMsg)
 	}
 	if len(fileDescriptors) == 0 {
 		return nil, errors.New(errors.ProtoSchemaInvalidErrorMsg)

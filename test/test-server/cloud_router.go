@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -16,10 +16,8 @@ const (
 	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
-	apiKey              = "/api/api_keys/{key}"
 	apiKeys             = "/api/api_keys"
 	cluster             = "/api/clusters/{id}"
-	clusters            = "/api/clusters"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
 	serviceAccount      = "/api/service_accounts/{id}"
@@ -32,22 +30,15 @@ const (
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
 	invitations         = "/api/invitations"
-	user                = "/api/users/{id}"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
-	connector           = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}"
-	connectorPause      = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
-	connectorResume     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
-	connectorUpdate     = "/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/config"
-	connectors          = "/api/accounts/{env}/clusters/{cluster}/connectors"
-	connectorPlugins    = "/api/accounts/{env}/clusters/{cluster}/connector-plugins"
-	connectCatalog      = "/api/accounts/{env}/clusters/{cluster}/connector-plugins/{plugin}/config/validate"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
 	usageLimits         = "/api/usage_limits"
-	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
+	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
+	externalIdentities  = "/api/external_identities"
 )
 
 type CloudRouter struct {
@@ -73,12 +64,14 @@ func NewEmptyCloudRouter() *CloudRouter {
 
 // Add handlers for cloud endpoints
 func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
-	c.HandleFunc(sessions, c.HandleLogin(t))
+	c.HandleFunc(sessions, handleLogin(t))
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
-	c.HandleFunc(loginRealm, c.HandleLoginRealm(t))
+	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
 	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
+	c.HandleFunc(launchDarklyProxy, c.HandleLaunchDarkly(t))
+	c.HandleFunc(externalIdentities, handleExternalIdentities(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
@@ -86,20 +79,21 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addClusterRoutes(t)
 	c.addKsqlRoutes(t)
 	c.addUserRoutes(t)
-	c.addConnectorsRoutes(t)
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
-	c.addMetricsQueryRoutes(t)
+	c.addJwtTokenRoutes(t)
 	c.addServiceAccountRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
 	c.HandleFunc(v2alphaAuthenticate, c.HandleV2Authenticate(t))
-	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies, v2RbacRoles)
+	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies)
 }
 
-func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
-	addRoles(base, routesAndReplies, rbacRoles)
+func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies map[string]string) {
+	jsonRolesMap := rolesListToJsonMap(rbacPublicRoles())
+	addRoles(base, routesAndReplies, jsonRolesMap)
+
 	for route, reply := range routesAndReplies {
 		s := reply
 		c.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +102,8 @@ func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRep
 			require.NoError(t, err)
 		})
 	}
+
+	c.HandleFunc(base, c.HandleAllRolesRoute(t))
 }
 
 func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
@@ -116,7 +112,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
-	c.HandleFunc(user, c.HandleUser(t))
 	c.HandleFunc(users, c.HandleUsers(t))
 	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }
@@ -135,13 +130,11 @@ func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
 }
 
 func (c *CloudRouter) addClusterRoutes(t *testing.T) {
-	c.HandleFunc(clusters, c.HandleClusters(t))
 	c.HandleFunc(cluster, c.HandleCluster(t))
 }
 
 func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
 	c.HandleFunc(apiKeys, c.HandleApiKeys(t))
-	c.HandleFunc(apiKey, c.HandleApiKey(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
@@ -149,22 +142,11 @@ func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
 	c.HandleFunc(account, c.HandleEnvironment(t))
 }
 
-func (c *CloudRouter) addConnectorsRoutes(t *testing.T) {
-	c.HandleFunc(connector, c.HandleConnector())
-	c.HandleFunc(connectors, c.HandleConnectors(t))
-	c.HandleFunc(connectorPause, c.HandleConnectorPause())
-	c.HandleFunc(connectorResume, c.HandleConnectorResume())
-	c.HandleFunc(connectorPlugins, c.HandlePlugins(t))
-	c.HandleFunc(connectCatalog, c.HandleConnectCatalog(t))
-	c.HandleFunc(connectorUpdate, c.HandleConnectUpdate())
-}
-
 func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
 }
 
-func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
-	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
+func (c *CloudRouter) addJwtTokenRoutes(t *testing.T) {
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }
 

@@ -1,13 +1,11 @@
 package environment
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -17,19 +15,18 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Short:             "Delete a Confluent Cloud environment and all its resources.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.delete),
+		RunE:              c.delete,
 	}
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	account := &orgv1.Account{Id: id, OrganizationId: c.State.Auth.Account.OrganizationId}
-
-	if err := c.Client.Account.Delete(context.Background(), account); err != nil {
-		return err
+	httpResp, err := c.V2Client.DeleteOrgEnvironment(id)
+	if err != nil {
+		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedEnvMsg, id)
+	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.Environment, id)
 	return nil
 }

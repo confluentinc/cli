@@ -48,13 +48,13 @@ func aclEntryFlags() *pflag.FlagSet {
 
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
 	flgSet.StringArray("operation", []string{""}, operationHelp)
+	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
 	flgSet.SortFlags = false
 
 	_ = cobra.MarkFlagRequired(flgSet, "operation")
-	_ = cobra.MarkFlagRequired(flgSet, "service-account")
 
 	return flgSet
 }
@@ -124,12 +124,25 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "prefix":
 			conf.Pattern.PatternType = schedv1.PatternTypes_PREFIXED
 		case "service-account":
-			if v == "0" {
-				conf.Entry.Principal = "User:*"
-				break
-			}
-			conf.Entry.Principal = "User:" + v
+			setConfigPrincipal(conf, true, v)
+		case "principal":
+			setConfigPrincipal(conf, false, v)
 		}
+	}
+}
+
+func setConfigPrincipal(conf *ACLConfiguration, isServiceAccount bool, v string) {
+	if conf.Entry.Principal != "" {
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal"))
+		return
+	}
+
+	if v == "0" {
+		conf.Entry.Principal = "User:*"
+	} else if isServiceAccount {
+		conf.Entry.Principal = "User:" + v
+	} else {
+		conf.Entry.Principal = v
 	}
 }
 

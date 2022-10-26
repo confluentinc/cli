@@ -20,7 +20,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "List registered Kafka clusters.",
 		Long:  "List Kafka clusters that are registered with the MDS cluster registry.",
-		RunE:  pcmd.NewCLIRunE(c.onPremList),
+		RunE:  c.onPremList,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -46,5 +46,5 @@ func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *clusterCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 }

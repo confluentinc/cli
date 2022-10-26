@@ -2,21 +2,20 @@
 package keystore
 
 import (
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KeyStore interface {
 	HasAPIKey(key string, clusterId string) (bool, error)
-	StoreAPIKey(key *schedv1.ApiKey, clusterId string) error
+	StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
 	DeleteAPIKey(key string) error
 }
 
 type ConfigKeyStore struct {
-	Config *cmd.DynamicConfig
+	Config *dynamicconfig.DynamicConfig
 }
 
 func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
@@ -33,7 +32,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *v1.APIKeyPair, clusterId string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
@@ -42,10 +41,7 @@ func (c *ConfigKeyStore) StoreAPIKey(key *schedv1.ApiKey, clusterId string) erro
 	if err != nil {
 		return err
 	}
-	kcc.APIKeys[key.Key] = &v1.APIKeyPair{
-		Key:    key.Key,
-		Secret: key.Secret,
-	}
+	kcc.APIKeys[key.Key] = key
 	return c.Config.Save()
 }
 

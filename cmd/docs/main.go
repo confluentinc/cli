@@ -3,10 +3,12 @@ package main
 import (
 	"os"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/docs"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -21,23 +23,20 @@ func main() {
 		panic(err)
 	}
 
-	// Auto-generate documentation for cloud and on-prem commands.
+	// Generate documentation for both subsets of commands: cloud and on-prem
 	configs := []*v1.Config{
-		{
-			Contexts:       map[string]*v1.Context{"Cloud": {PlatformName: v1.CCloudHostnames[0]}},
-			CurrentContext: "Cloud",
-		},
-		{
-			Contexts:       map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
-			CurrentContext: "On-Prem",
-		},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &orgv1.Organization{}}}}}},
+		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
 	tabs := make([]docs.Tab, len(configs))
 	for i, cfg := range configs {
+		cfg.IsTest = true
+		cfg.Version = new(pversion.Version)
+
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg, false, new(version.Version)).Command,
+			Command: cmd.NewConfluentCommand(cfg),
 		}
 	}
 

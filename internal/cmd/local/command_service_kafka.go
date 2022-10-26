@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
@@ -127,7 +126,7 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runKafkaConsumeCommand)
+	c.Command.RunE = c.runKafkaConsumeCommand
 	c.initFlags("consume")
 
 	return c.Command
@@ -156,7 +155,7 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runKafkaProduceCommand)
+	c.Command.RunE = c.runKafkaProduceCommand
 	c.initFlags("produce")
 
 	return c.Command
@@ -242,7 +241,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 			return err
 		}
 
-		data, err := ioutil.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(cloudConfigFile)
 		if err != nil {
 			return err
 		}

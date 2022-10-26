@@ -4,12 +4,13 @@
 | Type          | BASIC                     |
 | Ingress       |                       100 |
 | Egress        |                       100 |
-| Storage       |                       500 |
+| Storage       | 5 TB                      |
 | Provider      | aws                       |
 | Availability  | single-zone               |
 | Region        | us-west-2                 |
-| Status        | PROVISIONING              |
+| Status        | UP                        |
 | Endpoint      | SASL_SSL://kafka-endpoint |
-| REST Endpoint | http://kafka-rest-url     |
+| REST Endpoint | http://127.0.0.1:1025     |
 | KAPI          | http://kafka-api-url      |
+| Topic Count   |                         2 |
 +---------------+---------------------------+

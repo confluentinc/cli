@@ -7,12 +7,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -46,8 +46,6 @@ var (
 	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
-
-	dataplaneNamespace = optional.NewString("dataplane")
 )
 
 type roleBindingOptions struct {
@@ -63,8 +61,7 @@ type roleBindingOptions struct {
 
 type roleBindingCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	cfg                        *v1.Config
-	ccloudRbacDataplaneEnabled bool
+	cfg *v1.Config
 }
 
 type listDisplay struct {
@@ -89,8 +86,7 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	}
 
 	c := &roleBindingCommand{
-		cfg:                        cfg,
-		ccloudRbacDataplaneEnabled: os.Getenv("XX_CCLOUD_RBAC_DATAPLANE") != "",
+		cfg: cfg,
 	}
 
 	if cfg.IsOnPremLogin() {
@@ -114,15 +110,13 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 
 	isCloud := c.cfg.IsCloudLogin()
 
-	resource := ""
-	prefix := false
-	if !isCloud || c.ccloudRbacDataplaneEnabled {
-		resource, err = cmd.Flags().GetString("resource")
-		if err != nil {
-			return nil, err
-		}
-		prefix = cmd.Flags().Changed("prefix")
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
 	}
+
+	// The err is ignored here since the --prefix flag is not defined by the list subcommand
+	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	principal, err := cmd.Flags().GetString("principal")
 	if err != nil {
@@ -132,11 +126,11 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.Client.User.Describe(context.Background(), &orgv1.User{Email: principalValue})
+				user, err := c.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + user.ResourceId
+				principal = "User:" + user.GetId()
 			}
 		}
 	}
@@ -162,7 +156,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	resourcesRequest := mds.ResourcesRequest{}
 	resourcesRequestV2 := mdsv2alpha1.ResourcesRequest{}
 	if resource != "" {
-		if isCloud && c.ccloudRbacDataplaneEnabled {
+		if isCloud {
 			parsedResourcePattern, err := parseAndValidateResourcePatternV2(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -184,7 +178,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				Scope:            *scopeV2,
 				ResourcePatterns: []mdsv2alpha1.ResourcePattern{parsedResourcePattern},
 			}
-		} else if !isCloud {
+		} else {
 			parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 			if err != nil {
 				return nil, err
@@ -220,6 +214,29 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			resourcesRequestV2,
 		},
 		nil
+}
+
+/*
+Helper function to add flags for all the legal scopes/clusters for the command.
+*/
+func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
+	if isCloudLogin {
+		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
+		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+		}
+	} else {
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
+		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
+		pcmd.AddContextFlag(cmd, cliCommand)
+	}
 }
 
 func (c *roleBindingCommand) validatePrincipalFormat(principal string) error {
@@ -279,9 +296,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 }
 
 func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
-	scopeV2 := &mdsv2alpha1.Scope{}
-	orgResourceId := c.State.Auth.Organization.GetResourceId()
-	scopeV2.Path = []string{"organization=" + orgResourceId}
+	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
 	if cmd.Flags().Changed("current-env") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
@@ -301,12 +316,33 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
 	}
 
-	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("kafka-cluster-id") {
+	if cmd.Flags().Changed("kafka-cluster-id") {
 		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.KafkaCluster = kafkaCluster
+
+		// Users should not have to pass both --kafka-cluster-id and --cloud-cluster.
+		if !cmd.Flags().Changed("cloud-cluster") {
+			scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+kafkaCluster)
+		}
+	}
+
+	if cmd.Flags().Changed("schema-registry-cluster-id") {
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+		if err != nil {
+			return nil, err
+		}
+		scopeV2.Clusters.SchemaRegistryCluster = srCluster
+	}
+
+	if cmd.Flags().Changed("ksql-cluster-id") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+		if err != nil {
+			return nil, err
+		}
+		scopeV2.Clusters.KsqlCluster = ksqlCluster
 	}
 
 	if cmd.Flags().Changed("role") {
@@ -348,13 +384,11 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	ctx := c.createContext()
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roleDetail.Namespace = dataplaneNamespace
-	}
-	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, &roleDetail)
+	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 	if err != nil || resp.StatusCode == http.StatusNoContent {
 		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
 		if err != nil || resp.StatusCode == http.StatusNoContent {
@@ -495,13 +529,13 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
+	user, err := c.V2Client.GetIamUser(userResourceId)
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
 	}
 
-	if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+	if options.resource != "" {
 		if len(options.resourcesRequestV2.ResourcePatterns) != 1 {
 			return errors.New("display error: number of resource pattern is not 1")
 		}
@@ -512,16 +546,16 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	if err != nil {
-		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+		if options.resource != "" {
 			fieldsSelected = resourcePatternListFields
 		} else {
 			fieldsSelected = []string{"Principal", "Role"}
 		}
 	} else {
-		if c.ccloudRbacDataplaneEnabled && options.resource != "" {
+		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = user.Email
+			displayStruct.Email = user.GetEmail()
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}
@@ -561,4 +595,17 @@ func (c *roleBindingCommand) createContext() context.Context {
 	} else {
 		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
 	}
+}
+
+func (c *roleBindingCommand) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
+	users, err := c.V2Client.ListIamUsers()
+	if err != nil {
+		return iamv2.IamV2User{}, err
+	}
+	for _, user := range users {
+		if user.GetEmail() == email {
+			return user, nil
+		}
+	}
+	return iamv2.IamV2User{}, errors.Errorf(errors.InvalidEmailErrorMsg, email)
 }

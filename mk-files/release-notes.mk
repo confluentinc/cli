@@ -38,7 +38,6 @@ clone-and-setup-docs-repos:
 
 .PHONY: build-release-notes
 build-release-notes:
-	@echo Previous Release Version: v$(CLEAN_VERSION)
 	@GO11MODULE=on go run -ldflags '-X main.releaseVersion=$(BUMPED_VERSION) -X main.releaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/release-notes/release/main.go
 
 .PHONY: publish-release-notes-to-docs-repos
@@ -50,7 +49,7 @@ publish-release-notes-to-docs-repos:
 	git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
 	git commit -m "New release notes for $(BUMPED_VERSION)" || exit 1; \
 	git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
-	hub pull-request -b $(DOCS_BASE_BRANCH) -m "New release notes for $(BUMPED_VERSION)"
+	gh pr create -B $(DOCS_BASE_BRANCH) --title "New release notes for $(BUMPED_VERSION)" --body ""
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:

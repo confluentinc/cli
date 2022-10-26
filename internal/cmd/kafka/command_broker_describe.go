@@ -11,6 +11,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -29,7 +30,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
 		Example: examples.BuildExampleString(
@@ -161,7 +162,7 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 		brokerConfig, resp, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
-		return brokerConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return brokerConfig, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	return brokerConfig, nil
 }
@@ -179,7 +180,7 @@ func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext contex
 		clusterConfig, resp, err = restClient.ConfigsV3Api.ListKafkaClusterConfigs(restContext, clusterId)
 	}
 	if err != nil {
-		return clusterConfig, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return clusterConfig, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	return clusterConfig, nil
 }

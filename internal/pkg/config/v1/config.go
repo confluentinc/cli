@@ -3,19 +3,20 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/log"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -24,23 +25,70 @@ const (
 )
 
 var (
-	Version, _      = version.NewVersion("1.0.0")
-	CCloudHostnames = []string{"confluent.cloud", "cpdev.cloud"}
+	ver, _ = version.NewVersion("1.0.0")
+)
+
+const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+
+var (
+	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.SuspendedOrganizationSuggestions,
+	)
+	RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
+		"you must unsuspend your organization to use this command",
+		errors.EndOfFreeTrialSuggestions,
+	)
+	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
+		"you must log in to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud with a username and password to use this command",
+		"Log in with \"confluent login\".\n"+signupSuggestion,
+	)
+	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
+		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
+	)
+	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
+		"you must log out of Confluent Cloud to use this command",
+		"Log out with \"confluent logout\".\n",
+	)
+	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
+		"you must log in to Confluent Platform to use this command",
+		`Log in with "confluent login --url <mds-url>".`,
+	)
+	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
+	)
 )
 
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck     bool                     `json:"disable_update_check"`
-	DisableUpdates         bool                     `json:"disable_updates"`
-	NoBrowser              bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms              map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials            map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts               map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates          map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext         string                   `json:"current_context"`
-	AnonymousId            string                   `json:"anonymous_id,omitempty"`
-	IsTest                 bool                     `json:"-"`
+
+	DisableUpdateCheck bool                     `json:"disable_update_check"`
+	DisableUpdates     bool                     `json:"disable_updates"`
+	DisablePlugins     bool                     `json:"disable_plugins"`
+	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts           map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
+	CurrentContext     string                   `json:"current_context"`
+	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+
+	// The following configurations are not persisted between runs
+
+	IsTest  bool              `json:"-"`
+	Version *pversion.Version `json:"-"`
+
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -70,24 +118,23 @@ func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
 	}
 }
 
-// NewBaseConfig initializes a new Config object
-func New(params *config.Params) *Config {
+func New() *Config {
 	return &Config{
-		BaseConfig:    config.NewBaseConfig(params, Version),
+		BaseConfig:    config.NewBaseConfig(ver),
 		Platforms:     make(map[string]*Platform),
 		Credentials:   make(map[string]*Credential),
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
+		Version:       new(pversion.Version),
 	}
 }
 
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
-	currentVersion := Version
 	filename := c.GetFilename()
-	input, err := ioutil.ReadFile(filename)
+	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
@@ -99,9 +146,9 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
-	if c.Ver.Compare(currentVersion) < 0 {
-		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, currentVersion)
-	} else if c.Ver.Compare(Version) > 0 {
+	if c.Ver.Compare(ver) < 0 {
+		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, ver)
+	} else if c.Ver.Compare(ver) > 0 {
 		if c.Ver.Equal(version.Must(version.NewVersion("3.0.0"))) {
 			// The user is a CP user who downloaded the v2 CLI instead of running `confluent update --major`,
 			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
@@ -136,11 +183,7 @@ func (c *Config) Load() error {
 		}
 		context.KafkaClusterContext.Context = context
 	}
-	err = c.Validate()
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Validate()
 }
 
 // Save writes the CLI config to disk.
@@ -164,7 +207,7 @@ func (c *Config) Save() error {
 		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
 
-	if err := ioutil.WriteFile(filename, cfg, 0600); err != nil {
+	if err := os.WriteFile(filename, cfg, 0600); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 
@@ -226,7 +269,7 @@ func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	ctx := c.Context()
 	var tempAccount *orgv1.Account
 	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
-		tempAccount = ctx.State.Auth.Account
+		tempAccount = ctx.GetEnvironment()
 		ctx.State.Auth.Account = c.overwrittenAccount
 	}
 	return tempAccount
@@ -269,7 +312,7 @@ func (c *Config) Validate() error {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if *c.ContextStates[context.Name] != *context.State {
-			log.CliLogger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
+			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
@@ -469,7 +512,109 @@ func (c *Config) GetFilename() string {
 	return c.Filename
 }
 
+func (c *Config) CheckIsOnPremLogin() error {
+	ctx := c.Context()
+	if ctx != nil && ctx.PlatformName != "" && !c.isCloud() {
+		return nil
+	}
+	return RequireOnPremLoginErr
+}
+
+func (c *Config) CheckIsCloudLogin() error {
+	if !c.isCloud() {
+		return RequireCloudLoginErr
+	}
+
+	if c.isContextStatePresent() && c.isOrgSuspended() {
+		if c.isLoginBlockedByOrgSuspension() {
+			return RequireCloudLoginOrgUnsuspendedErr
+		} else {
+			return RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr
+		}
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
+	if !c.isCloud() {
+		return RequireCloudLoginErr
+	}
+
+	if c.isContextStatePresent() && c.isLoginBlockedByOrgSuspension() {
+		return RequireCloudLoginOrgUnsuspendedErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsCloudLoginOrOnPremLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
+
+	if !(isCloudLoginErr == nil || isOnPremLoginErr == nil) {
+		// return org suspension errors
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
+		}
+		return RequireCloudLoginOrOnPremErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonAPIKeyCloudLogin() error {
+	isCloudLoginErr := c.CheckIsCloudLogin()
+
+	if !(c.CredentialType() != APIKey && isCloudLoginErr == nil) {
+		// return org suspension errors
+		if isCloudLoginErr != nil && isCloudLoginErr != RequireCloudLoginErr {
+			return isCloudLoginErr
+		}
+		return RequireNonAPIKeyCloudLoginErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
+	isNonAPIKeyCloudLoginErr := c.CheckIsNonAPIKeyCloudLogin()
+	isOnPremLoginErr := c.CheckIsOnPremLogin()
+
+	if !(isNonAPIKeyCloudLoginErr == nil || isOnPremLoginErr == nil) {
+		// return org suspension errors
+		if isNonAPIKeyCloudLoginErr != nil && isNonAPIKeyCloudLoginErr != RequireCloudLoginErr && isNonAPIKeyCloudLoginErr != RequireNonAPIKeyCloudLoginErr {
+			return isNonAPIKeyCloudLoginErr
+		}
+		return RequireNonAPIKeyCloudLoginOrOnPremLoginErr
+	}
+
+	return nil
+}
+
+func (c *Config) CheckIsNonCloudLogin() error {
+	if c.isCloud() {
+		return RequireNonCloudLogin
+	}
+	return nil
+}
+
+func (c *Config) CheckAreUpdatesEnabled() error {
+	if c.DisableUpdates {
+		return RequireUpdatesEnabledErr
+	}
+	return nil
+}
+
 func (c *Config) IsCloudLogin() bool {
+	return c.CheckIsCloudLogin() == nil
+}
+
+func (c *Config) IsOnPremLogin() bool {
+	return c.CheckIsOnPremLogin() == nil
+}
+
+func (c *Config) isCloud() bool {
 	ctx := c.Context()
 	if ctx == nil {
 		return false
@@ -478,9 +623,26 @@ func (c *Config) IsCloudLogin() bool {
 	return ctx.IsCloud(c.IsTest)
 }
 
-func (c *Config) IsOnPremLogin() bool {
+func (c *Config) isContextStatePresent() bool {
 	ctx := c.Context()
-	return ctx != nil && ctx.PlatformName != "" && !c.IsCloudLogin()
+	if ctx == nil {
+		return false
+	}
+
+	if ctx.GetOrganization() == nil {
+		log.CliLogger.Trace("current context state is not set up properly for checking org suspension status")
+		return false
+	}
+
+	return true
+}
+
+func (c *Config) isOrgSuspended() bool {
+	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
+}
+
+func (c *Config) isLoginBlockedByOrgSuspension() bool {
+	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) GetLastUsedOrgId() string {
@@ -488,4 +650,9 @@ func (c *Config) GetLastUsedOrgId() string {
 		return ctx.LastOrgId
 	}
 	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+}
+
+func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
+	ctx := c.Context()
+	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
 }

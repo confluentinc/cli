@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -16,14 +15,11 @@ import (
 	"testing"
 
 	"github.com/confluentinc/bincover"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -50,7 +46,7 @@ type CLITest struct {
 	args string
 	// The set of environment variables to be set when the CLI is run
 	env []string
-	// "default" if you need to login, or "" otherwise
+	// The login context; either "cloud" or "platform"
 	login string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
@@ -64,6 +60,8 @@ type CLITest struct {
 	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
+	// True iff testing plugins
+	arePluginsEnabled bool
 	// Fixed string to check if output contains
 	contains string
 	// Fixed string to check that output does not contain
@@ -115,9 +113,6 @@ func (s *CLITestSuite) SetupSuite() {
 	err = os.Chdir("..")
 	req.NoError(err)
 
-	err = os.Setenv("XX_CCLOUD_RBAC_DATAPLANE", "yes")
-	req.NoError(err)
-
 	// Temporarily change $HOME, so the current config file isn't altered.
 	err = os.Setenv("HOME", os.TempDir())
 	req.NoError(err)
@@ -144,60 +139,11 @@ func (s *CLITestSuite) TearDownSuite() {
 	s.TestBackend.Close()
 }
 
-func (s *CLITestSuite) TestCcloudErrors() {
-	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
-
-	s.T().Run("invalid user or pass", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CCloudInvalidLoginSuggestions))
-	})
-
-	s.T().Run("suspended organization", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
-		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
-	})
-
-	s.T().Run("expired token", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
-		require.Contains(tt, output, errors.TokenExpiredMsg)
-		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
-	})
-
-	s.T().Run("malformed token", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
-		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
-	})
-
-	s.T().Run("invalid jwt", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
-		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
-	})
-}
-
-func (s *CLITestSuite) runCcloudTest(tt CLITest) {
+func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 	if tt.name == "" {
 		tt.name = tt.args
 	}
+
 	if strings.HasPrefix(tt.name, "error") {
 		tt.wantErrCode = 1
 	}
@@ -212,11 +158,33 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 		}
 
 		if !tt.workflow {
-			resetConfiguration(t)
+			resetConfiguration(t, tt.arePluginsEnabled)
 		}
-		loginURL := s.getLoginURL(true, tt)
-		if tt.login == "default" {
-			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
+
+		// Executes login command if test specifies
+		switch tt.login {
+		case "cloud":
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			for _, e := range env {
+				keyVal := strings.Split(e, "=")
+				os.Setenv(keyVal[0], keyVal[1])
+			}
+
+			defer func() {
+				for _, e := range env {
+					keyVal := strings.Split(e, "=")
+					os.Unsetenv(keyVal[0])
+				}
+			}()
+
+			output := runCommand(t, testBin, env, loginString, 0)
+			if *debug {
+				fmt.Println(output)
+			}
+		case "platform":
+			loginURL := s.getLoginURL(false, tt)
+			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
 			if *debug {
 				fmt.Println(output)
@@ -253,34 +221,6 @@ func (s *CLITestSuite) runCcloudTest(tt CLITest) {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
-
-		s.validateTestOutput(tt, t, output)
-	})
-}
-
-func (s *CLITestSuite) runConfluentTest(tt CLITest) {
-	if tt.name == "" {
-		tt.name = tt.args
-	}
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
-	s.T().Run(tt.name, func(t *testing.T) {
-		if !tt.workflow {
-			resetConfiguration(t)
-		}
-
-		// Executes login command if test specifies
-		loginURL := s.getLoginURL(false, tt)
-		if tt.login == "default" {
-			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-		}
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
 
 		s.validateTestOutput(tt, t, output)
 	})
@@ -344,7 +284,7 @@ func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, 
 // takes an io.Reader with the desired input read into it
 func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	return func(cmd *exec.Cmd) error {
-		buf, err := ioutil.ReadAll(stdinInput)
+		buf, err := io.ReadAll(stdinInput)
 		fmt.Printf("%s", buf)
 		if err != nil {
 			return err
@@ -368,17 +308,17 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T) {
+func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v1.New(new(config.Params))
-
+	cfg := v1.New()
+	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
+	err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -388,4 +328,9 @@ func binaryPath(t *testing.T, binaryName string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 	return path.Join(dir, binaryName)
+}
+
+func unsetPaymentAndPromoEnvs() {
+	os.Unsetenv("HAS_PAYMENT_METHOD")
+	os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
 }

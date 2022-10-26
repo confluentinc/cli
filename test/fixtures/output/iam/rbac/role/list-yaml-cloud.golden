@@ -1,5 +1,16 @@
 - name: CCloudRoleBindingAdmin
-  policies: []
+  policies:
+  - bindingscope: root
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: SecurityMetadata
+      operations:
+      - Describe
+      - Alter
+    - resourcetype: Organization
+      operations:
+      - AlterAccess
+      - DescribeAccess
 - name: CloudClusterAdmin
   policies:
   - bindingscope: cluster
@@ -112,7 +123,77 @@
       operations:
       - Describe
 - name: OrganizationAdmin
-  policies: []
+  policies:
+  - bindingscope: organization
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - All
+    - resourcetype: NetworkConfig
+      operations:
+      - All
+    - resourcetype: SecurityMetadata
+      operations:
+      - Describe
+      - Alter
+    - resourcetype: Billing
+      operations:
+      - All
+    - resourcetype: ClusterApiKey
+      operations:
+      - All
+    - resourcetype: Deployment
+      operations:
+      - All
+    - resourcetype: SchemaRegistry
+      operations:
+      - All
+    - resourcetype: KsqlCluster
+      operations:
+      - All
+    - resourcetype: CloudApiKey
+      operations:
+      - All
+    - resourcetype: NetworkAccess
+      operations:
+      - All
+    - resourcetype: SecuritySSO
+      operations:
+      - All
+    - resourcetype: SupportPlan
+      operations:
+      - All
+    - resourcetype: Connector
+      operations:
+      - All
+    - resourcetype: ClusterMetric
+      operations:
+      - All
+    - resourcetype: ServiceAccount
+      operations:
+      - All
+    - resourcetype: Subject
+      operations:
+      - All
+    - resourcetype: Cluster
+      operations:
+      - All
+    - resourcetype: Environment
+      operations:
+      - All
+    - resourcetype: NetworkRegion
+      operations:
+      - All
+    - resourcetype: Organization
+      operations:
+      - Alter
+      - CreateEnvironment
+      - AlterAccess
+      - DescribeAccess
+    - resourcetype: User
+      operations:
+      - All
 - name: ResourceOwner
   policies:
   - bindingscope: cloud-cluster
@@ -143,3 +224,50 @@
       - Delete
       - DescribeAccess
       - AlterAccess
+- name: DeveloperManage
+  policies:
+  - bindingscope: cloud-cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CloudCluster
+      operations:
+      - Describe
+  - bindingscope: cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: Cluster
+      operations:
+      - View
+      - AccessWithToken
+    - resourcetype: OwnKafkaClusterApiKey
+      operations:
+      - Describe
+      - Alter
+      - Delete
+      - Create
+    - resourcetype: OwnClusterApiKey
+      operations:
+      - Describe
+      - Alter
+      - Delete
+      - Create
+  - bindingscope: cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - Delete
+      - Describe
+      - Create
+      - DescribeConfigs
+    - resourcetype: Cluster
+      operations:
+      - Create
+      - DescribeConfigs
+    - resourcetype: TransactionalId
+      operations:
+      - Describe
+    - resourcetype: Group
+      operations:
+      - Describe
+      - Delete

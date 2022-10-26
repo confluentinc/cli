@@ -1,11 +1,14 @@
 package kafka
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -13,7 +16,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDelete),
+		RunE:  c.onPremDelete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topic "my_topic" at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
@@ -39,8 +42,8 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 	// Delete Topic
 	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	utils.Printf(cmd, errors.DeletedTopicMsg, topicName) // topic successfully deleted
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

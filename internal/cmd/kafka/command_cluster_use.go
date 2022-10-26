@@ -17,7 +17,7 @@ func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
 		Short:             "Make the Kafka cluster active for use in other commands.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.use),
+		RunE:              c.use,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -40,6 +40,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironmentId())
+	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetEnvironment().GetId())
 	return nil
 }

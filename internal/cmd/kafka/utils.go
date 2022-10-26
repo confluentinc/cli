@@ -1,18 +1,19 @@
 package kafka
 
 import (
-	"bufio"
-	logger "log"
 	_nethttp "net/http"
-	"os"
 	"regexp"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
@@ -26,20 +27,26 @@ func copyMap(inputMap map[string]string) map[string]string {
 	return newMap
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}
-
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
-	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
+func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
+	topicConfigs := make([]cckafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
 		val := v
-		topicConfigs[i] = kafkarestv3.ConfigData{
+		topicConfigs[i] = cckafkarestv3.ConfigData{
+			Name:  k,
+			Value: *cckafkarestv3.NewNullableString(&val),
+		}
+		i++
+	}
+	return topicConfigs
+}
+
+func toCreateTopicConfigsOnPrem(topicConfigsMap map[string]string) []cpkafkarestv3.ConfigData {
+	topicConfigs := make([]cpkafkarestv3.ConfigData, len(topicConfigsMap))
+	i := 0
+	for k, v := range topicConfigsMap {
+		val := v
+		topicConfigs[i] = cpkafkarestv3.ConfigData{
 			Name:  k,
 			Value: &val,
 		}
@@ -48,19 +55,32 @@ func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.Confi
 	return topicConfigs
 }
 
-func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.AlterConfigBatchRequestDataData {
-	kafkaRestConfigs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
+	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
-	for k, v := range configsMap {
-		val := v
-		kafkaRestConfigs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
-			Name:      k,
-			Value:     &val,
-			Operation: nil,
+	for key, val := range configsMap {
+		v := val
+		kafkaRestConfigs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
+			Name:  key,
+			Value: *cckafkarestv3.NewNullableString(&v),
 		}
 		i++
 	}
-	return kafkaRestConfigs
+	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
+}
+
+func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
+	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+	i := 0
+	for key, val := range configsMap {
+		v := val
+		kafkaRestConfigs[i] = cpkafkarestv3.AlterConfigBatchRequestDataData{
+			Name:  key,
+			Value: &v,
+		}
+		i++
+	}
+	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
@@ -71,36 +91,13 @@ func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error)
 	return kafkaClusterConfig.ID, nil
 }
 
-func createTestConfigFile(name string, configs map[string]string) (string, error) {
-	dir, _ := os.Getwd()
-	logger.Println("Test config file dir:", dir)
-	file, err := os.OpenFile(name, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
-	if err != nil {
-		return dir, err
-	}
-
-	write := bufio.NewWriter(file)
-	for key, val := range configs {
-		if _, err = write.WriteString(key + "=" + val + "\n"); err != nil {
-			file.Close()
-			return dir, err
-		}
-	}
-
-	if err = write.Flush(); err != nil {
-		return dir, err
-	}
-
-	return dir, file.Close()
-}
-
-func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {
+func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
 
 	if httpResp != nil {
-		return kafkaRestError(client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return err
@@ -122,20 +119,88 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-func isClusterResizeInProgress(currentCluster *schedv1.KafkaCluster) error {
-	switch currentCluster.Status {
-	case schedv1.ClusterStatus_PROVISIONING:
+func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
+	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-	case schedv1.ClusterStatus_EXPANDING:
+	}
+	if isExpanding(currentCluster) {
 		return errors.New(errors.KafkaClusterExpandingErrorMsg)
-	case schedv1.ClusterStatus_SHRINKING:
+	}
+	if isShrinking(currentCluster) {
 		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-	case schedv1.ClusterStatus_DELETING:
-		return errors.New(errors.KafkaClusterDeletingErrorMsg)
-	case schedv1.ClusterStatus_DELETED:
-		return errors.New(errors.KafkaClusterDeletingErrorMsg)
 	}
 	return nil
+}
+
+func getCmkClusterIngressAndEgress(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
+	if isDedicated(cluster) {
+		return 50 * (*cluster.Status.Cku), 150 * (*cluster.Status.Cku)
+	}
+	return 100, 100
+}
+
+func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
+	if isBasic(cluster) {
+		return productv1.Sku_name[2]
+	}
+	if isStandard(cluster) {
+		return productv1.Sku_name[3]
+	}
+	return productv1.Sku_name[4]
+}
+
+func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isDedicated(cluster) {
+		return *cluster.Status.Cku
+	}
+	return -1
+}
+
+func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
+	if isDedicated(cluster) {
+		return cluster.Spec.Config.CmkV2Dedicated.Cku
+	}
+	return -1
+}
+
+func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
+	if isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil {
+		return *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey
+	}
+	return ""
+}
+
+func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Basic != nil
+}
+
+func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Standard != nil
+}
+
+func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Dedicated != nil
+}
+
+func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku > *cluster.Status.Cku
+}
+
+func isShrinking(cluster *cmkv2.CmkV2Cluster) bool {
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku
+}
+
+func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
+	if isExpanding(cluster) {
+		return "EXPANDING"
+	}
+	if isShrinking(cluster) {
+		return "SHRINKING"
+	}
+	if cluster.Status.Phase == "PROVISIONED" {
+		return "UP"
+	}
+	return cluster.Status.Phase
 }
 
 func camelToSnake(camels []string) []string {

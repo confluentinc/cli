@@ -1,9 +1,6 @@
 package connect
 
 import (
-	"context"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,15 +15,15 @@ func (c *command) newPauseCommand() *cobra.Command {
 		Short:             "Pause a connector.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.pause),
+		RunE:              c.pause,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Pause a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect pause --config config.json",
+				Code: "confluent connect pause",
 			},
 			examples.Example{
-				Code: "confluent connect pause --config config.json --cluster lkc-123456",
+				Code: "confluent connect pause --cluster lkc-123456",
 			},
 		),
 	}
@@ -44,24 +41,13 @@ func (c *command) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector := &schedv1.Connector{
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-		Id:             args[0],
-	}
-
-	connectorExpansion, err := c.Client.Connect.GetExpansionById(context.Background(), connector)
+	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	connector = &schedv1.Connector{
-		Name:           connectorExpansion.Info.Name,
-		AccountId:      c.EnvironmentId(),
-		KafkaClusterId: kafkaCluster.ID,
-	}
-
-	if err := c.Client.Connect.Pause(context.Background(), connector); err != nil {
+	err = c.V2Client.PauseConnector(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	if err != nil {
 		return err
 	}
 

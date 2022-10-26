@@ -3,7 +3,6 @@ package secret
 import (
 	"encoding/base32"
 	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
@@ -646,10 +645,10 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yry
 			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			// Create config file
-			err = ioutil.WriteFile(tt.args.configFilePath, []byte(tt.args.configFileContent), 0644)
+			err = os.WriteFile(tt.args.configFilePath, []byte(tt.args.configFileContent), 0644)
 			req.NoError(err)
 
-			err = ioutil.WriteFile(tt.args.localSecureConfigPath, []byte(tt.args.secretFileContent), 0644)
+			err = os.WriteFile(tt.args.localSecureConfigPath, []byte(tt.args.secretFileContent), 0644)
 			req.NoError(err)
 
 			if tt.args.setNewMEK {
@@ -1393,8 +1392,8 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				newMasterKeyPassphrase: "xyz987",
-				cipherMode: AES_CBC,
-				newCipherMode: AES_GCM,
+				cipherMode:             AES_CBC,
+				newCipherMode:          AES_GCM,
 				contents:               "testPassword = password\n",
 				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
@@ -1410,8 +1409,8 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 			args: &args{
 				masterKeyPassphrase:    "abc123",
 				newMasterKeyPassphrase: "xyz987",
-				cipherMode: AES_GCM,
-				newCipherMode: AES_CBC,
+				cipherMode:             AES_GCM,
+				newCipherMode:          AES_CBC,
 				contents:               "testPassword = password\n",
 				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
 				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
@@ -1445,7 +1444,7 @@ func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
 		err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 		req.NoError(err)
 
-       // Rotate Data Key
+		// Rotate Data Key
 		err = plugin.RotateDataKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
 		checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
@@ -1479,24 +1478,24 @@ func createMasterKey(passphrase string, localSecretsFile string, plugin *Passwor
 }
 
 func createNewConfigFile(path string, contents string) error {
-	err := ioutil.WriteFile(path, []byte(contents), 0644)
+	err := os.WriteFile(path, []byte(contents), 0644)
 	return err
 }
 
 func validateTextFileContents(path string, expectedFileContent string, req *require.Assertions) {
-	readContent, err := ioutil.ReadFile(path)
+	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.Equal(expectedFileContent, string(readContent))
 }
 
 func validateTextFileContains(path string, expectedFileContent string, req *require.Assertions) {
-	readContent, err := ioutil.ReadFile(path)
+	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.Contains(string(readContent), expectedFileContent)
 }
 
 func validateJSONFileContents(path string, expectedFileContent string, req *require.Assertions) {
-	readContent, err := ioutil.ReadFile(path)
+	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.JSONEq(expectedFileContent, string(readContent))
 }
@@ -1562,7 +1561,7 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 		return fmt.Errorf("failed to decrypt config file")
 	}
 
-	decryptContent, err := ioutil.ReadFile(outputConfigPath)
+	decryptContent, err := os.ReadFile(outputConfigPath)
 	if err != nil {
 		return err
 	}

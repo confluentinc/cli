@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -62,7 +63,7 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorConfigCommand)
+	c.Command.RunE = c.runConnectConnectorConfigCommand
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -93,7 +94,7 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return nil
 	}
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -133,7 +134,7 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.MaximumNArgs(1),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorStatusCommand)
+	c.Command.RunE = c.runConnectConnectorStatusCommand
 	return c.Command
 }
 
@@ -199,7 +200,7 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorLoadCommand)
+	c.Command.RunE = c.runConnectConnectorLoadCommand
 	c.Flags().StringP("config", "c", "", "Configuration file for a connector.")
 	return c.Command
 }
@@ -232,7 +233,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		}
 	}
 
-	data, err := ioutil.ReadFile(configFile)
+	data, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
@@ -274,7 +275,7 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 			),
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectConnectorUnloadCommand)
+	c.Command.RunE = c.runConnectConnectorUnloadCommand
 	return c.Command
 }
 
@@ -323,7 +324,7 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = cmd.NewCLIRunE(c.runConnectPluginListCommand)
+	c.Command.RunE = c.runConnectPluginListCommand
 	return c.Command
 }
 
@@ -399,7 +400,7 @@ func makeRequest(method, url string, body []byte) (string, error) {
 }
 
 func formatJSONResponse(res *http.Response) (string, error) {
-	out, err := ioutil.ReadAll(res.Body)
+	out, err := io.ReadAll(res.Body)
 	if err != nil {
 		return "", err
 	}

@@ -54,7 +54,7 @@ func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
-	c.Command.RunE = pcmd.NewCLIRunE(c.runSchemaRegistryACLCommand)
+	c.Command.RunE = c.runSchemaRegistryACLCommand
 
 	for _, flag := range []string{"add", "list", "remove", "operation", "principal", "subject", "topic"} {
 		switch val := defaultValues[flag].(type) {

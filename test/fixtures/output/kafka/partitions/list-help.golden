@@ -4,7 +4,7 @@ Usage:
   confluent kafka partition list [flags]
 
 Examples:
-List the partitions for "my_topic".
+List the partitions of topic "my_topic".
 
   $ confluent kafka partition list --topic my_topic
 
@@ -20,4 +20,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

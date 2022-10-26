@@ -1,8 +1,10 @@
 package schemaregistry
 
 import (
+	"context"
 	"strings"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,9 +20,9 @@ var (
 func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe the information of the schema exporter.",
+		Short: "Describe the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -33,12 +35,16 @@ func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := GetApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, args[0])
+	return describeExporter(cmd, args[0], srClient, ctx)
+}
+
+func describeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
 	if err != nil {
 		return err
 	}

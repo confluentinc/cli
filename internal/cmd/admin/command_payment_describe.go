@@ -6,7 +6,6 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -15,12 +14,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe the active payment method.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
+	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
@@ -32,6 +31,6 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	utils.Printf(cmd, "%s ending in %s\n", card.Brand, card.Last4)
+	utils.Printf(cmd, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
 	return nil
 }

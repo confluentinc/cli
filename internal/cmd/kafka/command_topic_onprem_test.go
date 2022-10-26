@@ -35,6 +35,8 @@ const (
 	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  },\n  {\n    \"name\": \"topic-2\"\n  },\n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
+var conf *v1.Config
+
 type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient
@@ -237,8 +239,8 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, &provider, conf)
-	return newTopicCommand(conf, testPrerunner, "").authenticatedTopicCommand.Command
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
+	return newTopicCommand(conf, testPrerunner, "")
 }
 
 // Executes the given command with the given args, returns the command executed, stdout and error.
@@ -309,14 +311,14 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 		createTopicConfigs           []kafkarestv3.CreateTopicRequestDataConfigs
 	}{
 		{
-			input:               "create topic-X --url http://localhost:8082 --config retention.ms=1,compression",
+			input:               "create topic-X --url http://localhost:8082 --config compression,retention.ms=1",
 			expectError:         true,
 			errorMsgContainsAll: []string{`failed to parse "key=value" pattern from configuration: compression`},
 			createTopicName:     "topic-X",
 		},
 		{
 			input:                        "create topic-X --url http://localhost:8082 --config retention.ms=1,compression.type=gzip --replication-factor 2 --partitions 4",
-			expectedOutput:               fmt.Sprintf(errors.CreatedTopicMsg, "topic-X"),
+			expectedOutput:               "Created topic \"topic-X\".\n",
 			createTopicName:              "topic-X",
 			createTopicPartitionsCount:   4,
 			createTopicReplicationFactor: 2,

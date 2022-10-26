@@ -1,0 +1,5 @@
+Schema ID: 10
+Type: record
+Schema: schema
+References:
+	ref -> payment 1

@@ -8,230 +8,167 @@ import (
 	"github.com/hashicorp/go-hclog"
 )
 
-// Logger is the standard logger for the Confluent SDK.
-type Logger struct {
-	params *Params
-	l      hclog.Logger
-	buffer []bufferedLog
+// TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
+// TODO: global logger instead of (l *Logger) and then we can call log.Debug() instead of log.CliLogger.Debug()
+
+func init() {
+	CliLogger = New(ERROR, os.Stderr)
 }
 
-type bufferedLog struct {
+// CliLogger is a global logger instance
+var CliLogger *Logger
+
+// Logger is the standard logger for the Confluent CLI and is a wrapper around go-hclog
+type Logger struct {
+	Level  Level
+	logger hclog.Logger
+	buffer []leveledMessage
+}
+
+type leveledMessage struct {
 	level   Level
 	message string
 }
 
-// Global logger instance
-var CliLogger *Logger
-
 type Level int
 
 const (
-	// For information about unrecoverable events.
+	// ERROR is for information about unrecoverable events
 	ERROR Level = iota
-
-	// For information about rare but handled events.
+	// WARN is for information about rare but handled events
 	WARN
-
-	// For information about steady state operations.
+	// INFO is for information about steady state operations
 	INFO
-
-	// For programmer lowlevel analysis.
+	// DEBUG is for programmer low-level analysis
 	DEBUG
-
-	// The most verbose level. Intended to be used for the tracing of actions
-	// in code, such as function enters/exits, etc.
+	// TRACE is intended to be used for the tracing of actions in code, such as function enters/exits, etc
 	TRACE
 )
 
-type Params struct {
-	Level  Level
-	Output io.Writer
-	JSON   bool
-}
-
-// Initialize logger
-func init() {
-	CliLogger = New(&Params{
-		Level:  WARN,
-		Output: os.Stderr,
-		JSON:   false,
-	})
-}
-
-// TODO: once we migrate from ccloud-sdk-v1 we should change these functions to act on the
-// TODO: global logger instead of (l *Logger) and then we can call log.Debug() instead of log.CliLogger.Debug()
-
-// New creates and configures a new Logger.
-func New(params *Params) *Logger {
-	return newLogger(params, hclog.New(&hclog.LoggerOptions{
-		Output:     params.Output,
-		JSONFormat: params.JSON,
-		Level:      parseLevel(params.Level),
-	}))
-}
-
-func newLogger(params *Params, logger hclog.Logger) *Logger {
+// New creates and configures a new Logger
+func New(level Level, output io.Writer) *Logger {
 	return &Logger{
-		params: params,
-		l:      logger,
+		Level: level,
+		logger: hclog.New(&hclog.LoggerOptions{
+			Output: output,
+			Level:  mapToHclogLevel(level),
+		}),
 	}
 }
 
-func (l *Logger) Named(name string) *Logger {
-	logger := l.l.Named(name)
-	return newLogger(l.params, logger)
+func (l *Logger) SetVerbosity(verbosity int) {
+	level := Level(verbosity)
+	if verbosity > int(TRACE) {
+		level = TRACE
+	}
+
+	l.Level = level
+	l.logger.SetLevel(mapToHclogLevel(level))
 }
 
 func (l *Logger) Trace(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	if l.l.IsTrace() {
-		l.l.Trace(message)
+	if l.logger.IsTrace() {
+		l.logger.Trace(message)
 	} else {
-		l.bufferLogMessage(TRACE, message)
+		l.append(TRACE, message)
 	}
 }
 
 func (l *Logger) Tracef(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	if l.l.IsTrace() {
-		l.l.Trace(message)
-	} else {
-		l.bufferLogMessage(TRACE, message)
-	}
+	l.Trace(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Debug(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	if l.l.IsDebug() {
-		l.l.Debug(message)
+	if l.logger.IsDebug() {
+		l.logger.Debug(message)
 	} else {
-		l.bufferLogMessage(DEBUG, message)
+		l.append(DEBUG, message)
 	}
 }
 
 func (l *Logger) Debugf(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	if l.l.IsDebug() {
-		l.l.Debug(message)
-	} else {
-		l.bufferLogMessage(DEBUG, message)
-	}
+	l.Debug(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Info(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	if l.l.IsInfo() {
-		l.l.Info(message)
+	if l.logger.IsInfo() {
+		l.logger.Info(message)
 	} else {
-		l.bufferLogMessage(INFO, message)
+		l.append(INFO, message)
 	}
 }
 
 func (l *Logger) Infof(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	if l.l.IsInfo() {
-		l.l.Info(message)
-	} else {
-		l.bufferLogMessage(INFO, message)
-	}
+	l.Info(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Warn(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	if l.l.IsWarn() {
-		l.l.Warn(message)
+	if l.logger.IsWarn() {
+		l.logger.Warn(message)
 	} else {
-		l.bufferLogMessage(WARN, message)
+		l.append(WARN, message)
 	}
 }
 
 func (l *Logger) Warnf(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	if l.l.IsWarn() {
-		l.l.Warn(message)
-	} else {
-		l.bufferLogMessage(WARN, message)
-	}
+	l.Warn(fmt.Sprintf(format, args...))
 }
 
 func (l *Logger) Error(args ...interface{}) {
 	message := fmt.Sprint(args...)
-	if l.l.IsError() {
-		l.l.Error(message)
+	if l.logger.IsError() {
+		l.logger.Error(message)
 	} else {
-		l.bufferLogMessage(ERROR, message)
+		l.append(ERROR, message)
 	}
 }
 
 func (l *Logger) Errorf(format string, args ...interface{}) {
-	message := fmt.Sprintf(format, args...)
-	if l.l.IsError() {
-		l.l.Error(message)
-	} else {
-		l.bufferLogMessage(ERROR, message)
-	}
+	l.Error(fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) bufferLogMessage(level Level, message string) {
-	l.buffer = append(l.buffer, bufferedLog{
-		level:   level,
-		message: message,
-	})
+func (l *Logger) append(level Level, message string) {
+	l.buffer = append(l.buffer, leveledMessage{level, message})
 }
 
 func (l *Logger) Flush() {
-	for _, buffered := range l.buffer {
-		if buffered.level < l.GetLevel() {
+	for _, lm := range l.buffer {
+		if lm.level < l.Level {
 			continue
 		}
-		switch buffered.level {
+
+		switch lm.level {
 		case ERROR:
-			l.Error(buffered.message)
+			l.Error(lm.message)
 		case WARN:
-			l.Warn(buffered.message)
+			l.Warn(lm.message)
 		case INFO:
-			l.Info(buffered.message)
+			l.Info(lm.message)
 		case DEBUG:
-			l.Debug(buffered.message)
+			l.Debug(lm.message)
 		case TRACE:
-			l.Trace(buffered.message)
+			l.Trace(lm.message)
 		}
 	}
-	l.buffer = []bufferedLog{}
+
+	l.buffer = []leveledMessage{}
 }
 
 // Log logs a "msg" and key-value pairs.
 // Example: Log("msg", "hello", "key1", "val1", "key2", "val2")
 func (l *Logger) Log(args ...interface{}) {
-	if l.l.IsDebug() {
+	if l.logger.IsDebug() {
 		if args[0] != "msg" {
-			l.l.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
+			l.logger.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
 		}
-		l.l.Debug(fmt.Sprint(args[1]), args[2:]...)
+		l.logger.Debug(fmt.Sprint(args[1]), args[2:]...)
 	}
 }
 
-func (l *Logger) SetLevel(level Level) {
-	l.params.Level = level
-	l.l.SetLevel(parseLevel(level))
-}
-
-func (l *Logger) GetLevel() Level {
-	return l.params.Level
-}
-
-func parseLevel(level Level) hclog.Level {
-	switch level {
-	case ERROR:
-		return hclog.Error
-	case WARN:
-		return hclog.Warn
-	case INFO:
-		return hclog.Info
-	case DEBUG:
-		return hclog.Debug
-	case TRACE:
-		return hclog.Trace
-	}
-	return hclog.NoLevel
+func mapToHclogLevel(level Level) hclog.Level {
+	return hclog.Level(int(hclog.Error) - int(level))
 }

@@ -3,21 +3,22 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
 	"time"
 	"unicode"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 )
 
 type createCommand struct {
@@ -120,7 +121,7 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 		Long: clientConfigDescription + ", of which the client configuration file is printed to stdout and " +
 			"the warnings are printed to stderr. Please see our examples on how to redirect the command output.",
 		Args:        cobra.NoArgs,
-		RunE:        pcmd.NewCLIRunE(c.create(clientConfig.configId, clientConfig.isSrApiAvailable)),
+		RunE:        c.create(clientConfig.configId, clientConfig.isSrApiAvailable),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -187,7 +188,7 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 
 func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	kafkaCluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -196,7 +197,7 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 	// this is because currently "api-key store" does not check if the secret is valid. therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
 	// TODO: always validate key pair after feature enhancement: https://confluentinc.atlassian.net/browse/CLI-1575
-	flagKey, flagSecret, err := c.Context.KeyAndSecretFlags(cmd)
+	flagKey, flagSecret, err := c.Config.Context().KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
 	}
@@ -260,8 +261,13 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		return configFile, nil
 	}
 
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return "", err
+	}
+
 	// validate that the key pair matches with the cluster
-	if err := c.validateSchemaRegistryCredentials(srCluster); err != nil {
+	if err := c.validateSchemaRegistryCredentials(srCluster, unsafeTrace); err != nil {
 		return "", err
 	}
 
@@ -278,7 +284,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	// get SR cluster from context
-	srCluster, err := c.Context.SchemaRegistryCluster(cmd)
+	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +324,7 @@ func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterCo
 	return nil
 }
 
-func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster) error {
+func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
 
 	// set BasePath of srConfig
@@ -333,6 +339,7 @@ func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRe
 	srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 	srConfig.UserAgent = c.Version.UserAgent
+	srConfig.Debug = unsafeTrace
 	srClient := srsdk.NewAPIClient(srConfig)
 
 	// Test credentials
@@ -357,7 +364,7 @@ func fetchConfigFile(configId string) (string, error) {
 
 	defer resp.Body.Close()
 
-	configFile, err := ioutil.ReadAll(resp.Body)
+	configFile, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

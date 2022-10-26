@@ -17,13 +17,13 @@ func (s *CLITestSuite) contextCreateArgs(name string) string {
 }
 
 func (s *CLITestSuite) TestContextCreate() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
-	s.runCcloudTest(tt)
+	s.runIntegrationTest(tt)
 }
 
 func (s *CLITestSuite) TestContextDelete() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -33,12 +33,12 @@ func (s *CLITestSuite) TestContextDelete() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestDescribe() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -46,18 +46,18 @@ func (s *CLITestSuite) TestDescribe() {
 		{fixture: "context/describe/0.golden", args: "context describe"},
 		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
 		{fixture: "context/describe/2.golden", args: "context describe --username", wantErrCode: 1},
-		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "default", wantErrCode: 1},
-		{fixture: "context/describe/4.golden", args: "context describe --username", login: "default"},
+		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "cloud", wantErrCode: 1},
+		{fixture: "context/describe/4.golden", args: "context describe --username", login: "cloud"},
 	}
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestContextList() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -67,12 +67,12 @@ func (s *CLITestSuite) TestContextList() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: "login --url " + s.TestBackend.GetCloudUrl()},
@@ -94,7 +94,7 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 }
 
 func (s *CLITestSuite) TestContextUpdate() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -107,12 +107,12 @@ func (s *CLITestSuite) TestContextUpdate() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestContextUse() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
@@ -123,6 +123,6 @@ func (s *CLITestSuite) TestContextUse() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		s.runCcloudTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }

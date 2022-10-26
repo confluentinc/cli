@@ -2,11 +2,14 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"testing"
+
+	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -16,12 +19,126 @@ import (
 )
 
 var (
-	urlPlaceHolder     		= "<URL_PLACEHOLDER>"
-	savedToNetrcOutput 		= fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
-	loggedInAsOutput   		= fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	urlPlaceHolder          = "<URL_PLACEHOLDER>"
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
-	loggedInEnvOutput  		= fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
+
+func (s *CLITestSuite) TestLogin_Help() {
+	s.runIntegrationTest(CLITest{args: "login -h", fixture: "login/help.golden"})
+}
+
+func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
+	s.T().Run("good organization with payment method and has codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "true")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+	})
+
+	s.T().Run("good organization with payment method and no codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "true")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+	})
+
+	s.T().Run("good organization without payment method and has codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "false")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+	})
+
+	s.T().Run("good organization without payment method and no codes login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		os.Setenv("HAS_PAYMENT_METHOD", "false")
+		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
+		defer unsetPaymentAndPromoEnvs()
+
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, loggedInAsWithOrgOutput)
+		require.Contains(tt, output, loggedInEnvOutput)
+		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+	})
+
+	s.T().Run("suspended organization login", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+	})
+
+	s.T().Run("end of free trial suspended organization", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
+	})
+}
+
+func (s *CLITestSuite) TestCcloudErrors() {
+	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
+
+	s.T().Run("invalid user or pass", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 1)
+		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestions))
+	})
+
+	s.T().Run("expired token", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.TokenExpiredMsg)
+		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
+	})
+
+	s.T().Run("malformed token", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+	})
+
+	s.T().Run("invalid jwt", func(tt *testing.T) {
+		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
+		output := runCommand(tt, testBin, env, args, 0)
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
+		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+	})
+}
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
@@ -30,24 +147,20 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "kafka topic create integ",
 			fixture:     "login/err-no-kafka.golden",
 			wantErrCode: 1,
-			login:       "default",
 		},
 		{
 			name:        "error if topic already exists",
 			args:        "kafka topic create topic-exist",
 			fixture:     "login/topic-exists.golden",
 			wantErrCode: 1,
-			login:       "default",
 			useKafka:    "lkc-create-topic",
 			authKafka:   "true",
-			env:         []string{"XX_CCLOUD_USE_KAFKA_REST=true"},
 		},
 		{
 			name:        "error if no api key used",
 			args:        "kafka topic produce integ",
 			fixture:     "login/err-no-api-key.golden",
 			wantErrCode: 1,
-			login:       "default",
 			useKafka:    "lkc-abc123",
 		},
 		{
@@ -55,7 +168,6 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "api-key delete UNKNOWN",
 			fixture:     "login/delete-unknown-key.golden",
 			wantErrCode: 1,
-			login:       "default",
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
 		},
@@ -64,12 +176,12 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			args:        "kafka cluster use lkc-unknown",
 			fixture:     "login/err-use-unknown-kafka.golden",
 			wantErrCode: 1,
-			login:       "default",
 		},
 	}
 
 	for _, tt := range tests {
-		s.runCcloudTest(tt)
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
 
@@ -102,9 +214,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc")
 	for _, tt := range tests {
 		// store existing credentials in netrc to check that they are not corrupted
-		originalNetrc, err := ioutil.ReadFile(netrcInput)
+		originalNetrc, err := os.ReadFile(netrcInput)
 		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -126,11 +238,11 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
+		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
@@ -169,10 +281,10 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 
 	for _, tt := range tests {
 		// store existing credential + the user credential to be updated
-		originalNetrc, err := ioutil.ReadFile(tt.input)
+		originalNetrc, err := os.ReadFile(tt.input)
 		s.NoError(err)
 		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -192,11 +304,11 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
+		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
@@ -216,25 +328,43 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 
 	for _, tt := range tests {
 		tt.loginURL = s.TestBackend.GetMdsUrl()
-		s.runConfluentTest(tt)
+		s.runIntegrationTest(tt)
 	}
 }
 
 func (s *CLITestSuite) TestLogin_CaCertPath() {
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl())},
-		{args: "context list -o yaml", fixture: "login/1.golden", regex: true},
-	}
-
-	env := []string{
-		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformUsername, "on-prem@example.com"),
-		fmt.Sprintf("%s=%s", pauth.ConfluentPlatformPassword, "password"),
+		{
+			env:  []string{"CONFLUENT_PLATFORM_USERNAME=on-prem@example.com", "CONFLUENT_PLATFORM_PASSWORD=password"},
+			args: fmt.Sprintf("login --url %s --ca-cert-path test/fixtures/input/login/test.crt", s.TestBackend.GetMdsUrl()),
+		},
+		{
+			args:    "context list -o yaml",
+			fixture: "login/1.golden",
+			regex:   true,
+		},
 	}
 
 	for _, tt := range tests {
-		out := runCommand(s.T(), testBin, env, tt.args, 0)
-		s.validateTestOutput(tt, s.T(), out)
+		tt.workflow = true
+		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
+	resetConfiguration(s.T(), false)
+
+	tt := CLITest{
+		env:         []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
+		args:        fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
+		fixture:     "login/sso.golden",
+		regex:       true,
+		wantErrCode: 1,
+	}
+
+	// TODO: Accept text input in integration tests
+
+	s.runIntegrationTest(tt)
 }

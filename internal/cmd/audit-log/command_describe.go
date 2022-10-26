@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -46,7 +47,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.RunE = pcmd.NewCLIRunE(c.describe)
+	c.RunE = c.describe
 
 	pcmd.AddOutputFlag(c.Command)
 
@@ -54,21 +55,21 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
-	if _, enabled := pcmd.AreAuditLogsEnabled(c.State); !enabled {
+	if v1.GetAuditLog(c.Context.Context) == nil {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
-	auditLog := c.State.Auth.Organization.AuditLog
+	auditLog := c.Context.GetOrganization().GetAuditLog()
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
 
 	return output.DescribeObject(cmd, &auditLogStruct{
-		ClusterId:        auditLog.ClusterId,
-		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: serviceAccount.ResourceId,
-		TopicName:        auditLog.TopicName,
+		ClusterId:        auditLog.GetClusterId(),
+		EnvironmentId:    auditLog.GetAccountId(),
+		ServiceAccountId: serviceAccount.GetResourceId(),
+		TopicName:        auditLog.GetTopicName(),
 	}, listFields, humanLabelMap, structuredLabelMap)
 }

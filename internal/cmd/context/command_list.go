@@ -20,7 +20,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List all contexts.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	pcmd.AddOutputFlag(cmd)

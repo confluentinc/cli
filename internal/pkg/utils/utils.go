@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -79,6 +78,14 @@ func DoesPathExist(path string) bool {
 	return !os.IsNotExist(err)
 }
 
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	if !DoesPathExist(path) {
 		return nil, errors.Errorf(errors.InvalidFilePathErrorMsg, path)
@@ -88,7 +95,7 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -127,41 +134,6 @@ func Abbreviate(s string, maxLength int) string {
 	return s[0:maxLength] + "..."
 }
 
-func ToMap(configs []string) (map[string]string, error) {
-	configMap := make(map[string]string)
-	for _, cfg := range configs {
-		pair := strings.SplitN(cfg, "=", 2)
-		if len(pair) < 2 {
-			return nil, fmt.Errorf(errors.FailedToParseConfigErrMsg, cfg)
-		}
-		configMap[pair[0]] = pair[1]
-	}
-	return configMap, nil
-}
-
-func ReadConfigsFromFile(configFile string) (map[string]string, error) {
-	if configFile == "" {
-		return map[string]string{}, nil
-	}
-
-	configContents, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-
-	// Create config map from the argument.
-	var configs []string
-	for _, s := range strings.Split(string(configContents), "\n") {
-		// Filter out blank lines
-		spaceTrimmed := strings.TrimSpace(s)
-		if s != "" && spaceTrimmed[0] != '#' {
-			configs = append(configs, spaceTrimmed)
-		}
-	}
-
-	return ToMap(configs)
-}
-
 func CropString(s string, n int) string {
 	const suffix = "..."
 	if n-len(suffix) < len(s) {
@@ -176,4 +148,28 @@ func CropString(s string, n int) string {
 func FormatUnixTime(timeMs int64) string {
 	time := time.Unix(0, timeMs*int64(time.Millisecond))
 	return time.UTC().Format("2006-01-02 15:04:05 MST")
+}
+
+func ArrayToCommaDelimitedString(arr []string) string {
+	size := len(arr)
+	switch size {
+	case 0:
+		return ""
+	case 1:
+		return fmt.Sprintf(`"%s"`, arr[0])
+	case 2:
+		return fmt.Sprintf(`"%s" or "%s"`, arr[0], arr[1])
+	}
+
+	var delimitedStr strings.Builder
+	for _, v := range arr[:size-1] {
+		delimitedStr.WriteString(fmt.Sprintf(`"%s", `, v))
+	}
+	delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
+
+	return delimitedStr.String()
+}
+
+func Int32Ptr(x int32) *int32 {
+	return &x
 }

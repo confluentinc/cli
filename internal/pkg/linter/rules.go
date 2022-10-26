@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type (
@@ -117,6 +118,11 @@ func RequireLengthBetween(field string, minLength, maxLength int) CommandRule {
 func RequireSingular(field string) CommandRule {
 	return func(cmd *cobra.Command) error {
 		fieldValue := getValueByName(cmd, field)
+		if strings.HasSuffix(fieldValue, "quota") {
+			// flect.Singularize("xx-quota") -> xx-quotum
+			// this is a known issue with the package, create an exception for this
+			return nil
+		}
 		if flect.Singularize(fieldValue) != fieldValue {
 			return fmt.Errorf("%s should be singular for `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
@@ -208,6 +214,61 @@ func RequireListRequiredFlagsFirst() CommandRule {
 
 		return errs
 	}
+}
+
+// RequireValidExamples checks that a command's examples have the right flags.
+func RequireValidExamples() CommandRule {
+	return func(cmd *cobra.Command) error {
+		requiredFlags := getRequiredFlags(cmd.Flags())
+		allFlags := getAllFlags(cmd.Flags())
+
+		errs := new(multierror.Error)
+
+		for i, example := range getExampleCodeSnippets(cmd.Example) {
+			for _, flag := range requiredFlags {
+				if !strings.Contains(example, flag) {
+					errs = multierror.Append(errs, fmt.Errorf("%s: required flag `%s` not found in example %d", cmd.CommandPath(), flag, i+1))
+				}
+			}
+
+			re := regexp.MustCompile(`--[a-z\-]+`)
+			for _, match := range re.FindAllString(example, -1) {
+				if !utils.Contains(allFlags, match) {
+					errs = multierror.Append(errs, fmt.Errorf("%s: unknown flag `%s` found in example %d", cmd.CommandPath(), match, i+1))
+				}
+			}
+		}
+
+		return errs
+	}
+}
+
+func getExampleCodeSnippets(example string) []string {
+	var examples []string
+	for _, row := range strings.Split(example, "\n") {
+		if strings.HasPrefix(row, "  $ ") {
+			examples = append(examples, strings.TrimPrefix(row, "  $ "))
+		}
+	}
+	return examples
+}
+
+func getRequiredFlags(flags *pflag.FlagSet) []string {
+	var required []string
+	flags.VisitAll(func(flag *pflag.Flag) {
+		if pcmd.IsFlagRequired(flag) {
+			required = append(required, "--"+flag.Name)
+		}
+	})
+	return required
+}
+
+func getAllFlags(flags *pflag.FlagSet) []string {
+	var all []string
+	flags.VisitAll(func(flag *pflag.Flag) {
+		all = append(all, "--"+flag.Name)
+	})
+	return all
 }
 
 // RequireFlagRealWords checks that a flag uses delimited-real-words, not --smushcaseflags

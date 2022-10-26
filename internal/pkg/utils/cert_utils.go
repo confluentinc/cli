@@ -4,10 +4,11 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
-	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 
@@ -15,9 +16,9 @@ import (
 )
 
 func GetCAClient(caCertPath string) (*http.Client, error) {
-	caCert, err := ioutil.ReadFile(caCertPath)
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
-		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestions)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -97,7 +98,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 			caCertPool = x509.NewCertPool()
 		}
 		// read custom certs
-		caCerts, err := ioutil.ReadAll(caCertReader)
+		caCerts, err := io.ReadAll(caCertReader)
 		if err != nil {
 			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 		}
@@ -136,6 +137,15 @@ func isEmptyClientCert(cert tls.Certificate) bool {
 
 func DefaultTransport() *http.Transport {
 	return &http.Transport{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
 		TLSClientConfig: &tls.Config{
 			MinVersion: tls.VersionTLS12,
 		},

@@ -38,7 +38,7 @@ func (c *eventCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe",
 		Short: "Describe the Connect log events configuration.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -47,22 +47,21 @@ func (c *eventCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
-	if c.State.Auth == nil || c.State.Auth.Organization == nil || c.State.Auth.Organization.AuditLog == nil ||
-		c.State.Auth.Organization.AuditLog.ClusterId == "" {
+	auditLog := c.Context.GetOrganization().GetAuditLog()
+
+	if auditLog.GetClusterId() == "" {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
 
-	auditLog := c.State.Auth.Organization.AuditLog
-
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
 
 	info := &connectLogEventsInfo{
-		ClusterId:        auditLog.ClusterId,
-		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: serviceAccount.ResourceId,
+		ClusterId:        auditLog.GetClusterId(),
+		EnvironmentId:    auditLog.GetAccountId(),
+		ServiceAccountId: serviceAccount.GetResourceId(),
 		TopicName:        "confluent-connect-log-events",
 	}
 

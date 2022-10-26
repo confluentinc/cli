@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -136,7 +137,10 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, suite.conf))
+	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
+		return nil, nil
+	})
+	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -201,8 +205,8 @@ func (suite *KSQLTestSuite) testShouldAlsoConfigureForPro(isApp bool) {
 
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
-	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (cluster2 *schedv1.KafkaCluster, e error) {
-		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(), Enterprise: false}, nil
+	suite.kafkac.DescribeFunc = func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
+		return &schedv1.KafkaCluster{Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId()}, nil
 	}
 
 	err := cmd.Execute()

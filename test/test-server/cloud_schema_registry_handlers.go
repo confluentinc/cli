@@ -1,4 +1,4 @@
-package test_server
+package testserver
 
 import (
 	"io"
@@ -15,7 +15,7 @@ const (
 )
 
 // Handler for: "/api/schema_registries"
-func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")
@@ -32,10 +32,13 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 			endpoint = "SASL_SSL://sr-endpoint"
 		}
 		srCluster := &schedv1.SchemaRegistryCluster{
-			Id:        id,
-			AccountId: accountId,
-			Name:      "account schema-registry",
-			Endpoint:  endpoint,
+			Id:                    id,
+			AccountId:             accountId,
+			Name:                  "account schema-registry",
+			Endpoint:              endpoint,
+			ServiceProvider:       "aws",
+			ServiceProviderRegion: "us-west-2",
+			Package:               "free",
 		}
 		switch r.Method {
 		case http.MethodPost:
@@ -54,7 +57,7 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) func(http.ResponseWri
 }
 
 // Handler for: "/api/schema_registries/{id}"
-func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) func(http.ResponseWriter, *http.Request) {
+func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")

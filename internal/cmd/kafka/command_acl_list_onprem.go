@@ -6,6 +6,7 @@ import (
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
@@ -13,7 +14,7 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 		Use:   "list",
 		Short: "List Kafka ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.listOnPrem),
+		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the local ACLs for the Kafka cluster:",
@@ -50,10 +51,10 @@ func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToListAclReqest(acl)
+	opts := aclutil.AclRequestToListAclRequest(acl)
 	aclGetResp, httpResp, err := restClient.ACLV3Api.GetKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)

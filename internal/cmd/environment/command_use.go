@@ -18,7 +18,7 @@ func (c *command) newUseCommand() *cobra.Command {
 		Short:             "Switch to the specified Confluent Cloud environment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.use),
+		RunE:              c.use,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)

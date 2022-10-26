@@ -5,11 +5,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
-
-type command struct {
-	*pcmd.CLICommand
-}
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
 	cmd := &cobra.Command{
@@ -17,29 +15,23 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 		Short: "Manage Apache Kafka.",
 	}
 
-	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
+	cmd.AddCommand(newAclCommand(cfg, prerunner))
+	cmd.AddCommand(newBrokerCommand(prerunner))
+	cmd.AddCommand(newClientConfigCommand(prerunner, clientID))
+	cmd.AddCommand(newClusterCommand(cfg, prerunner))
+	cmd.AddCommand(newConsumerGroupCommand(prerunner))
+	cmd.AddCommand(newLinkCommand(cfg, prerunner))
+	cmd.AddCommand(newMirrorCommand(prerunner))
+	cmd.AddCommand(newPartitionCommand(prerunner))
+	cmd.AddCommand(newRegionCommand(prerunner))
+	cmd.AddCommand(newReplicaCommand(prerunner))
+	cmd.AddCommand(newTopicCommand(cfg, prerunner, clientID))
 
-	aclCmd := newAclCommand(cfg, prerunner)
-	clusterCmd := newClusterCommand(cfg, prerunner)
-	groupCmd := newConsumerGroupCommand(prerunner)
-	topicCmd := newTopicCommand(cfg, prerunner, clientID)
-
-	c.AddCommand(newBrokerCommand(prerunner))
-	c.AddCommand(newClientConfigCommand(prerunner, clientID))
-	c.AddCommand(newLinkCommand(cfg, prerunner))
-	c.AddCommand(newMirrorCommand(prerunner))
-	c.AddCommand(newPartitionCommand(prerunner))
-	c.AddCommand(newReplicaCommand(prerunner))
-	c.AddCommand(newRegionCommand(prerunner))
-	c.AddCommand(aclCmd.Command)
-	c.AddCommand(clusterCmd.Command)
-	c.AddCommand(groupCmd.Command)
-
-	if topicCmd.hasAPIKeyTopicCommand != nil {
-		c.AddCommand(topicCmd.hasAPIKeyTopicCommand.Command)
-	} else if topicCmd.authenticatedTopicCommand != nil {
-		c.AddCommand(topicCmd.authenticatedTopicCommand.Command)
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(newQuotaCommand(cfg, prerunner))
 	}
 
-	return c.Command
+	return cmd
 }

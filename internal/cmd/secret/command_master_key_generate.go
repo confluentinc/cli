@@ -17,7 +17,7 @@ func (c *command) newGenerateFunction() *cobra.Command {
 		Short: "Generate a master key for Confluent Platform.",
 		Long:  "This command generates a master key. This key is used for encryption and decryption of configuration values.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.generate),
+		RunE:  c.generate,
 	}
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")

@@ -1,47 +1,32 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/go-printer"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
-	"github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
-	SubjectUsage = "Subject of the schema."
+	SubjectUsage              = "Subject of the schema."
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	essentialsPackage         = "essentials"
+	advancedPackage           = "advanced"
+	essentialsPackageInternal = "free"
+	advancedPackageInternal   = "paid"
 )
 
-func GetApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClient(cmd, cfg, ver, "", "")
+var packageDisplayNameMapping = map[string]string{
+	essentialsPackageInternal: essentialsPackage,
+	advancedPackageInternal:   advancedPackage,
 }
 
-func GetAPIClientWithAPIKey(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *cmd.DynamicConfig, ver *version.Version, srAPIKey string, srAPISecret string) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClient(cmd, cfg, ver, srAPIKey, srAPISecret)
-}
-
-func GetAPIClientWithToken(cmd *cobra.Command, srClient *srsdk.APIClient, ver *version.Version, mdsToken string) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
-	return getSchemaRegistryClientWithToken(cmd, ver, mdsToken)
-}
+var packageDisplayNames = []string{essentialsPackage, advancedPackage}
 
 func printVersions(versions []int32) {
 	titleRow := []string{"Version"}
@@ -62,14 +47,26 @@ func convertMapToString(m map[string]string) string {
 	return strings.Join(pairs, "\n")
 }
 
-func getServiceProviderFromUrl(url string) string {
-	if url == "" {
-		return ""
+func getPackageDisplayName(packageName string) string {
+	return packageDisplayNameMapping[packageName]
+}
+
+func getPackageInternalName(inputPackageDisplayName string) (string, error) {
+	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
+	for internalName, displayName := range packageDisplayNameMapping {
+		if displayName == inputPackageDisplayName {
+			return internalName, nil
+		}
 	}
-	// Endpoint URL is of the form https://psrc-<id>.<location>.<service-provider>.<devel/stag/prod/env>.cpdev.cloud
-	stringSlice := strings.Split(url, ".")
-	if len(stringSlice) != 6 {
-		return ""
-	}
-	return strings.Trim(stringSlice[2], ".")
+
+	return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SRInvalidPackageTypeErrorMsg, inputPackageDisplayName),
+		fmt.Sprintf(errors.SRInvalidPackageSuggestions, getCommaDelimitedPackagesString()))
+}
+
+func getCommaDelimitedPackagesString() string {
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+}
+
+func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
+	cmd.Flags().String("package", defaultPackage, fmt.Sprintf("Specify the type of Stream Governance package as %s.", getCommaDelimitedPackagesString()))
 }

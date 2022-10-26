@@ -3,20 +3,22 @@ package kafka
 import (
 	"sort"
 
+	"github.com/confluentinc/go-printer"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/go-printer"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.onPremDescribe),
+		RunE:  c.onPremDescribe,
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -53,7 +55,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	topicData := &TopicData{}
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	} else if partitionsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
@@ -70,7 +72,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 		// For each partition, get replicas
 		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partitionId)
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
@@ -94,7 +96,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	// Get configs
 	configsResp, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	} else if configsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}

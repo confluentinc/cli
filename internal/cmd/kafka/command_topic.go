@@ -2,25 +2,26 @@ package kafka
 
 import (
 	"context"
-	"encoding/binary"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strconv"
+	"net/http"
 	"time"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+const (
+	badRequestErrorCode              = 40002
+	unknownTopicOrPartitionErrorCode = 40403
 )
 
 const (
@@ -28,16 +29,12 @@ const (
 	partitionCount           = "num.partitions"
 )
 
-type kafkaTopicCommand struct {
-	*hasAPIKeyTopicCommand
-	*authenticatedTopicCommand
-}
-
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
 	prerunner pcmd.PreRunner
 	clientID  string
 }
+
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
@@ -54,39 +51,41 @@ type topicData struct {
 	Config    map[string]string `json:"config" yaml:"config"`
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *kafkaTopicCommand {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 
-	c := &kafkaTopicCommand{}
-
-	if cfg.IsCloudLogin() {
-		c.hasAPIKeyTopicCommand = &hasAPIKeyTopicCommand{
-			HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-			prerunner:           prerunner,
-			clientID:            clientID,
-		}
-		c.hasAPIKeyTopicCommand.init()
-
-		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-			prerunner:                     prerunner,
-			clientID:                      clientID,
-		}
-		c.authenticatedTopicCommand.init()
-	} else {
-		c.authenticatedTopicCommand = &authenticatedTopicCommand{
-			AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-			prerunner:                     prerunner,
-			clientID:                      clientID,
-		}
-		c.authenticatedTopicCommand.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
-		c.authenticatedTopicCommand.onPremInit()
+	c := &authenticatedTopicCommand{
+		prerunner: prerunner,
+		clientID:  clientID,
 	}
 
-	return c
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+
+		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(newProduceCommand(prerunner, clientID))
+		cmd.AddCommand(c.newUpdateCommand())
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+
+		cmd.AddCommand(c.newConsumeCommandOnPrem())
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newProduceCommandOnPrem())
+		cmd.AddCommand(c.newUpdateCommandOnPrem())
+	}
+
+	return cmd
 }
 
 func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -118,23 +117,6 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 	return suggestions
 }
 
-func (c *hasAPIKeyTopicCommand) init() {
-	c.AddCommand(c.newProduceCommand())
-	c.AddCommand(c.newConsumeCommand())
-}
-
-func (c *authenticatedTopicCommand) init() {
-	describeCmd := c.newDescribeCommand()
-	updateCmd := c.newUpdateCommand()
-	deleteCmd := c.newDeleteCommand()
-
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(describeCmd)
-	c.AddCommand(updateCmd)
-	c.AddCommand(deleteCmd)
-}
-
 // validate that a topic exists before attempting to produce/consume messages
 func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
@@ -148,7 +130,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	foundTopic := false
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic %s", t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
@@ -162,82 +144,57 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func registerSchemaWithAuth(cmd *cobra.Command, subject, schemaType, schemaPath string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := ioutil.ReadFile(schemaPath)
-	if err != nil {
-		return nil, err
-	}
-
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
-	if err != nil {
-		return nil, err
-	}
-
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		err = output.StructuredOutput(outputFormat, &struct {
-			Id int32 `json:"id" yaml:"id"`
-		}{response.Id})
+func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
-			return nil, err
+			return 0, err
+		}
+
+		partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
+		if err != nil && httpResp != nil {
+			// Kafka REST is available, but there was an error
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+			if parseErr == nil {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
+					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+				}
+			}
+			return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+		if err == nil && httpResp != nil {
+			if httpResp.StatusCode != http.StatusOK {
+				return 0, errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
+					errors.InternalServerErrorSuggestions)
+			}
+
+			return len(partitionsResp.Data), nil
 		}
 	}
 
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(response.Id))
-	metaInfo = append(metaInfo, schemaIdBuffer...)
-	return metaInfo, nil
+	// Fallback to Kafka API
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	if err != nil {
+		return 0, err
+	}
+
+	topic := &schedv1.TopicSpecification{Name: topicName}
+	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	if err != nil {
+		return 0, err
+	}
+
+	return len(resp.Partitions), nil
 }
 
-func readSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
-	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
-		return nil, err
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
-	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(refBlob, &refs)
-		if err != nil {
-			return nil, err
-		}
+	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
-	return refs, nil
-}
-
-func storeSchemaReferences(refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err = os.Mkdir(dir, 0755)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	referencePathMap := map[string]string{}
-	for _, ref := range refs {
-		tempStorePath := filepath.Join(dir, ref.Name)
-		if !fileExists(tempStorePath) {
-			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
-			if err != nil {
-				return nil, err
-			}
-			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
-			if err != nil {
-				return nil, err
-			}
-		}
-		referencePathMap[ref.Name] = tempStorePath
-	}
-
-	return referencePathMap, nil
+	return nil
 }

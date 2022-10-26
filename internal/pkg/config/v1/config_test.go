@@ -2,7 +2,6 @@ package v1
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -26,6 +25,37 @@ var (
 	kafkaClusterID  = "anonymous-id"
 	contextName     = "my-context"
 	accountID       = "acc-123"
+	cloudPlatforms  = []string{
+		"devel.cpdev.cloud",
+		"stag.cpdev.cloud",
+		"confluent.cloud",
+		"premium-oryx.gcp.priv.cpdev.cloud",
+	}
+	account = &orgv1.Account{
+		Id:   accountID,
+		Name: "test-env",
+	}
+	regularOrgContextState = &ContextState{
+		Auth: &AuthConfig{
+			User: &orgv1.User{
+				Id:    123,
+				Email: "test-user@email",
+			},
+			Account: account,
+			Accounts: []*orgv1.Account{
+				account,
+			},
+			Organization: testserver.RegularOrg,
+		},
+		AuthToken: "abc123",
+	}
+	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *ContextState {
+		return &ContextState{
+			Auth: &AuthConfig{
+				Organization: testserver.SuspendedOrg(eventType),
+			},
+		}
+	}
 )
 
 type TestInputs struct {
@@ -63,32 +93,11 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		APIKeyPair:     nil,
 		CredentialType: 0,
 	}
-	account := &orgv1.Account{
-		Id:   accountID,
-		Name: "test-env",
-	}
 	account2 := &orgv1.Account{
 		Id:   "env-flag",
 		Name: "test-env2",
 	}
 	testInputs.account = account
-	state := &ContextState{
-		Auth: &AuthConfig{
-			User: &orgv1.User{
-				Id:    123,
-				Email: "test-user@email",
-			},
-			Account: account,
-			Accounts: []*orgv1.Account{
-				account,
-			},
-			Organization: &orgv1.Organization{
-				Id:   321,
-				Name: "test-org",
-			},
-		},
-		AuthToken: "abc123",
-	}
 	twoEnvState := &ContextState{
 		Auth: &AuthConfig{
 			User: &orgv1.User{
@@ -136,7 +145,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				SrCredentials:          nil,
 			},
 		},
-		State: state,
+		State: regularOrgContextState,
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -168,9 +177,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.statefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -183,16 +191,15 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			contextName: statefulContext,
 		},
 		ContextStates: map[string]*ContextState{
-			contextName: state,
+			contextName: regularOrgContextState,
 		},
 		CurrentContext: contextName,
 		IsTest:         true,
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -212,9 +219,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
-			Params:   &config.Params{},
 			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: Version},
+			Ver:      config.Version{Version: ver},
 		},
 		Platforms: map[string]*Platform{
 			platform.Name: platform,
@@ -278,9 +284,8 @@ func TestConfig_Load(t *testing.T) {
 			name: "should load disable update checks and disable updates",
 			want: &Config{
 				BaseConfig: &config.BaseConfig{
-					Params:   &config.Params{},
 					Filename: "test_json/load_disable_update.json",
-					Ver:      config.Version{Version: Version},
+					Ver:      config.Version{Version: ver},
 				},
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
@@ -294,21 +299,22 @@ func TestConfig_Load(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := New(&config.Params{})
-			c.Filename = tt.file
+			cfg := New()
+			cfg.Filename = tt.file
 			for _, context := range tt.want.Contexts {
 				context.Config = tt.want
 			}
-			if err := c.Load(); (err != nil) != tt.wantErr {
+			if err := cfg.Load(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 
 			// Get around automatically assigned anonymous id and IsTest check
-			tt.want.AnonymousId = c.AnonymousId
-			tt.want.IsTest = c.IsTest
+			tt.want.AnonymousId = cfg.AnonymousId
+			tt.want.IsTest = cfg.IsTest
+			tt.want.Version = cfg.Version
 
-			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
-				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
+			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
+				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
 			}
 		})
 	}
@@ -361,7 +367,7 @@ func TestConfig_Save(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
 			if tt.kafkaOverwrite != "" {
@@ -375,8 +381,8 @@ func TestConfig_Save(t *testing.T) {
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got, _ := ioutil.ReadFile(configFile.Name())
-			want, _ := ioutil.ReadFile(tt.wantFile)
+			got, _ := os.ReadFile(configFile.Name())
+			want, _ := os.ReadFile(tt.wantFile)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 			}
@@ -408,18 +414,18 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			if tt.accountOverwrite != nil {
-				tt.config.SetOverwrittenAccount(tt.config.Context().State.Auth.Account)
+				tt.config.SetOverwrittenAccount(tt.config.Context().GetEnvironment())
 				tt.config.Context().State.Auth.Account = tt.accountOverwrite
 			}
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got, _ := ioutil.ReadFile(configFile.Name())
+			got, _ := os.ReadFile(configFile.Name())
 			got = append(got, '\n') //account for extra newline at the end of the json file
-			want, _ := ioutil.ReadFile(tt.wantFile)
+			want, _ := os.ReadFile(tt.wantFile)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 			}
@@ -532,13 +538,13 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 		{
 			name:          "test no overwrite value",
 			config:        testConfigsCloud.statefulConfig,
-			activeAccount: testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount: testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:           "test with overwrite value",
 			config:         testConfigsCloud.statefulConfig,
 			overwrittenVal: &orgv1.Account{Id: "env-test"},
-			activeAccount:  testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount:  testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:   "test no overwrite value",
@@ -556,20 +562,20 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
 			tempAccount := tt.config.resolveOverwrittenAccount()
 			if tt.overwrittenVal != nil {
-				require.Equal(t, tt.overwrittenVal, tt.config.Context().State.Auth.Account)
+				require.Equal(t, tt.overwrittenVal, tt.config.Context().GetEnvironment())
 				require.Equal(t, tt.activeAccount, tempAccount.Id)
 			}
 			//restore should reset the current context to be the flag value
 			tt.config.restoreOverwrittenAccount(tempAccount)
-			require.Equal(t, tt.activeAccount, tt.config.Context().State.Auth.Account.Id)
+			require.Equal(t, tt.activeAccount, tt.config.Context().GetEnvironment().GetId())
 		}
 		tt.config.overwrittenAccount = nil
 	}
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	c := New(&config.Params{})
-	got := c.GetFilename()
+	cfg := New()
+	got := cfg.GetFilename()
 	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
 	if got != want {
 		t.Errorf("Config.GetFilename() = %v, want %v", got, want)
@@ -652,7 +658,7 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Params: new(config.Params), Ver: config.Version{Version: new(version.Version)}},
+		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*Credential),
@@ -704,12 +710,12 @@ func TestConfig_UseContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := tt.fields.Config
-			if err := c.UseContext(tt.args.name); (err != nil) != tt.wantErr {
+			cfg := tt.fields.Config
+			if err := cfg.UseContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !tt.wantErr {
-				assert.Equal(t, tt.args.name, c.CurrentContext)
+				assert.Equal(t, tt.args.name, cfg.CurrentContext)
 			}
 		})
 	}
@@ -744,10 +750,8 @@ func TestConfig_FindContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
-				Contexts: tt.fields.Contexts,
-			}
-			got, err := c.FindContext(tt.args.name)
+			cfg := &Config{Contexts: tt.fields.Contexts}
+			got, err := cfg.FindContext(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("FindContext() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -760,13 +764,13 @@ func TestConfig_FindContext(t *testing.T) {
 }
 
 func TestConfig_DeleteContext(t *testing.T) {
-	c := &Config{
-		BaseConfig:     config.NewBaseConfig(nil, new(version.Version)),
+	cfg := &Config{
+		BaseConfig:     config.NewBaseConfig(new(version.Version)),
 		Contexts:       map[string]*Context{contextName: {Name: contextName}},
 		CurrentContext: contextName,
 	}
 
-	err := c.DeleteContext(contextName)
+	err := cfg.DeleteContext(contextName)
 	require.NoError(t, err)
 }
 
@@ -802,11 +806,11 @@ func TestConfig_Context(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Config{
+			cfg := &Config{
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
 			}
-			got := c.Context()
+			got := cfg.Context()
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Context() got = %v, want %v", got, tt.want)
 			}
@@ -818,7 +822,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	testInputs := SetupTestInputs(true)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
-	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 
 	// Creating another environment with another kafka cluster
@@ -875,7 +879,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	testInputs := SetupTestInputs(false)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
-	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
@@ -997,16 +1001,13 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 }
 
 func TestConfig_IsCloud_True(t *testing.T) {
-	platforms := []string{
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
-		"confluent.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
-	}
-
-	for _, platform := range platforms {
+	for _, platform := range cloudPlatforms {
+		// test case: org not suspended
 		cfg := &Config{
-			Contexts:       map[string]*Context{"context": {PlatformName: platform}},
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: platform,
+			}},
 			CurrentContext: "context",
 		}
 		require.True(t, cfg.IsCloudLogin(), platform+" should be true")
@@ -1014,6 +1015,7 @@ func TestConfig_IsCloud_True(t *testing.T) {
 }
 
 func TestConfig_IsCloud_False(t *testing.T) {
+	// test case: platform name not cloud
 	configs := []*Config{
 		nil,
 		{
@@ -1024,6 +1026,83 @@ func TestConfig_IsCloud_False(t *testing.T) {
 
 	for _, cfg := range configs {
 		require.False(t, cfg.IsCloudLogin())
+	}
+
+	for _, platform := range cloudPlatforms {
+		// test case: org suspended due to normal reason
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
+
+		// test case: org suspended due to end of free trial
+		cfg = &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		require.False(t, cfg.IsCloudLogin(), platform+" should be false")
+	}
+}
+
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
+	for _, platform := range cloudPlatforms {
+		// test case: org not suspended
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
+
+		// test case: org suspended due to end of free trial
+		cfg = &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded = cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded == nil, platform+" should be true")
+	}
+}
+
+func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
+	// test case: platform name not cloud
+	configs := []*Config{
+		nil,
+		{
+			Contexts:       map[string]*Context{"context": {PlatformName: "https://example.com"}},
+			CurrentContext: "context",
+		},
+	}
+
+	for _, cfg := range configs {
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil)
+	}
+
+	for _, platform := range cloudPlatforms {
+		// test case: org suspended due to normal reason
+		cfg := &Config{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: platform,
+			}},
+			CurrentContext: "context",
+		}
+		isCloudLoginAllowFreeTrialEnded := cfg.CheckIsCloudLoginAllowFreeTrialEnded()
+		require.True(t, isCloudLoginAllowFreeTrialEnded != nil, platform+" should be false")
 	}
 }
 
@@ -1043,7 +1122,24 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 			CurrentContext: "context",
 		},
 		{
-			Contexts:       map[string]*Context{"context": {PlatformName: "confluent.cloud"}},
+			Contexts: map[string]*Context{"context": {
+				State:        regularOrgContextState,
+				PlatformName: "confluent.cloud",
+			}},
+			CurrentContext: "context",
+		},
+		{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				PlatformName: "confluent.cloud",
+			}},
+			CurrentContext: "context",
+		},
+		{
+			Contexts: map[string]*Context{"context": {
+				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				PlatformName: "confluent.cloud",
+			}},
 			CurrentContext: "context",
 		},
 	}

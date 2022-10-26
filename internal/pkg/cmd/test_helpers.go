@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 // ExecuteCommand runs the root command with the given args, and returns the output string or an error.
@@ -20,6 +22,8 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	buf := new(bytes.Buffer)
 	root.SetOut(buf)
 	root.SetArgs(args)
+
+	featureflags.Init(nil, true)
 
 	c, err = root.ExecuteC()
 

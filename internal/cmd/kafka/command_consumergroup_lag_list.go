@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -14,7 +15,7 @@ func (c *lagCommand) newListCommand() *cobra.Command {
 		Short:             "List consumer lags for a Kafka consumer group.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.list),
+		RunE:              c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all consumer lags for consumers in the `my-consumer-group` consumer-group.",
@@ -40,9 +41,9 @@ func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerLags(kafkaREST.Context, lkc, consumerGroupId)
+	lagSummaryResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, lagFields, lagListHumanLabels, lagListStructuredLabels)

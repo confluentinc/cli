@@ -27,7 +27,7 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 		ver:        ver,
 	}
 
-	c.RunE = pcmd.NewCLIRunE(c.version)
+	c.RunE = c.version
 
 	return c.Command
 }

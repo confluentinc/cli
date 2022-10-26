@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -11,7 +12,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -24,7 +27,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
+func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "acl",
 		Short: "Manage Kafka ACLs.",
@@ -33,24 +36,29 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *aclCommand {
 	c := &aclCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	if cfg.IsCloudLogin() {
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.SetPersistentPreRunE(prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand))
-
-		c.AddCommand(c.newCreateCommandOnPrem())
-		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newListCommandOnPrem())
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
-	return c
+	return cmd
 }
 
 // validateAddAndDelete ensures the minimum requirements for acl add and delete are met
 func validateAddAndDelete(binding *ACLConfiguration) {
+	if binding.Entry.Principal == "" {
+		err := fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal")
+		binding.errors = multierror.Append(binding.errors, err)
+	}
+
 	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg))
+		err := fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg)
+		binding.errors = multierror.Append(binding.errors, err)
 	}
 
 	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
@@ -58,8 +66,9 @@ func validateAddAndDelete(binding *ACLConfiguration) {
 	}
 
 	if binding.Pattern == nil || binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
-		binding.errors = multierror.Append(binding.errors, fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
-			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+		err := fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
+			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"}))
+		binding.errors = multierror.Append(binding.errors, err)
 	}
 }
 
@@ -103,19 +112,31 @@ func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
 
 func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
 	for i := 0; i < len(acl); i++ {
-		if acl[i].ACLBinding.Entry.Principal != "" { // it has a service-account flag
-			serviceAccountID := acl[i].ACLBinding.Entry.Principal[5:] // extract service account id
-			if !strings.HasPrefix(serviceAccountID, "sa-") {
-				return errors.New(errors.BadServiceAccountIDErrorMsg)
+		principal := acl[i].ACLBinding.Entry.Principal
+		if principal != "" {
+			resourceId, err := parsePrincipal(principal)
+			if err != nil {
+				return errors.Wrap(err, "failed to parse principal")
 			}
-			userId, ok := idMap[serviceAccountID]
-			if !ok {
-				return fmt.Errorf(errors.ServiceAccountNotFoundErrorMsg, serviceAccountID)
+			if resource.LookupType(resourceId) == resource.User || resource.LookupType(resourceId) == resource.ServiceAccount {
+				userId, ok := idMap[resourceId]
+				if !ok {
+					return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
+				}
+				resourceId = strconv.Itoa(int(userId))
 			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%d", userId) // translate into numeric ID
+			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%s", resourceId)
 		}
 	}
 	return nil
+}
+
+func parsePrincipal(principal string) (string, error) {
+	if !strings.HasPrefix(principal, "User:") {
+		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
+	}
+	resourceId := strings.SplitN(principal, ":", 2)[1]
+	return resourceId, nil
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
@@ -124,8 +145,15 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[int32]string)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
 	}
 	return idMap, nil
@@ -137,9 +165,27 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 		return nil, err
 	}
 
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
 	idMap := make(map[string]int32)
-	for _, sa := range serviceAccounts {
+	for _, sa := range users {
 		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil
+}
+
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
 }

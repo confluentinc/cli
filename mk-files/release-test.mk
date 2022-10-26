@@ -25,9 +25,9 @@ test-installer:
 verify-binaries:
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	@$(aws-authenticate) && \
-	for os in linux darwin windows; do \
+	for os in linux alpine darwin windows; do \
 		for arch in arm64 amd64; do \
-			if [ "$${os}" != "darwin" ] && [ "$${arch}" = "arm64" ] ; then \
+			if [ "$${os}" = "windows" ] && [ "$${arch}" = "arm64" ] ; then \
 				continue; \
 			fi ; \
 			suffix="" ; \

@@ -1,10 +1,12 @@
 package s3
 
 import (
+	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -123,7 +125,7 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 		}
 		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, err
 		}
@@ -236,7 +238,7 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 	objectKey.goarch = r.goarch
 
 	s3URL := objectKey.URLFor(name, version)
-	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
+	downloadVersion := r.getDownloadVersion(s3URL)
 
 	resp, err := r.getHttpResponse(downloadVersion)
 	if err != nil {
@@ -268,7 +270,7 @@ func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) 
 		return "", err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -284,7 +286,7 @@ func (r *PublicRepo) DownloadChecksums(name, version string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -303,11 +305,23 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		defer resp.Body.Close()
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err == nil {
 			log.CliLogger.Tracef("Response from AWS: %s", string(body))
 		}
 		return nil, errors.Errorf(errors.UnexpectedS3ResponseErrorMsg, resp.Status)
 	}
 	return resp, nil
+}
+
+func (r *PublicRepo) getDownloadVersion(s3URL string) string {
+	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
+	cmd := exec.Command("ldd", "--version")
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	_ = cmd.Run()
+	if strings.Contains(stderr.String(), "musl") {
+		return strings.Replace(downloadVersion, "linux", "alpine", 1)
+	}
+	return downloadVersion
 }

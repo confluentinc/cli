@@ -1,8 +1,8 @@
 package iam
 
 import (
-	"context"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
@@ -16,55 +16,62 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type displayStruct struct {
+	Principal   string
+	Email       string
+	ServiceName string
+	PoolName    string
+}
+
 func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List role bindings.",
 		Long:  "List the role bindings for a particular principal and/or role, and a particular scope.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.list),
+		RunE:  c.list,
 	}
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: "To list the role bindings for current user:",
+				Text: "List the role bindings for current user:",
 				Code: "confluent iam rbac role-binding list --current-user",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --principal User:frodo",
+				Text: `List the role bindings for user "u-123456":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --principal User:frodo --role CloudClusterAdmin --environment env-123 --cloud-cluster lkc-1111aaa",
+				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
+				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-123456",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-1111aaa",
+				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
 			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id CID  --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo",
+				Text: "List the role bindings for a specific principal:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user",
 			},
 			examples.Example{
-				Text: "To list the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --principal User:frodo --role DeveloperRead",
+				Text: "List the role bindings for a specific principal, filtered to a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite",
+				Text: "List the principals bound to a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite",
 			},
 			examples.Example{
-				Text: "To list the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster-id $CID --role DeveloperWrite --resource Topic:shire-parties",
+				Text: "List the principals bound to a specific resource with a specific role:",
+				Code: "confluent iam rbac role-binding list --kafka-cluster-id $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic",
 			},
 		)
 	}
@@ -74,15 +81,15 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
 	if c.cfg.IsCloudLogin() {
-		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
-		if c.ccloudRbacDataplaneEnabled {
-			cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-			cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
+		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
+			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
 		}
 	} else {
-		cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for scope of role binding listings.")
 		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for scope of role binding listings.")
@@ -90,6 +97,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, c.CLICommand)
 	}
+
+	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
 
 	pcmd.AddOutputFlag(cmd)
 
@@ -128,7 +137,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 	principal := options.principal
 	if currentUser {
-		principal = "User:" + c.State.Auth.User.ResourceId
+		principal = "User:" + c.Context.GetUser().GetResourceId()
 	}
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(c.createContext(), principal, *scopeV2)
@@ -136,7 +145,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
@@ -229,16 +238,46 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	return outputWriter.Out()
 }
 
-func (c *roleBindingCommand) userIdToEmailMap() (map[string]string, error) {
-	userToEmailMap := make(map[string]string)
-	users, err := c.Client.User.List(context.Background())
+func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
+	providers, err := c.V2Client.ListIdentityProviders()
 	if err != nil {
-		return userToEmailMap, err
+		return map[string]string{}, err
 	}
+	poolToName := make(map[string]string)
+	for _, provider := range providers {
+		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
+		if err != nil {
+			return map[string]string{}, err
+		}
+		for _, pool := range pools {
+			poolToName["User:"+*pool.Id] = *pool.DisplayName
+		}
+	}
+	return poolToName, nil
+}
+
+func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
+	users, err := c.V2Client.ListIamUsers()
+	if err != nil {
+		return nil, err
+	}
+	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmailMap["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.GetId()] = u.GetEmail()
 	}
-	return userToEmailMap, nil
+	return userToEmail, nil
+}
+
+func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
+	if err != nil {
+		return nil, err
+	}
+	serviceAccountToName := make(map[string]string)
+	for _, sa := range serviceAccounts {
+		serviceAccountToName["User:"+sa.GetId()] = sa.GetDisplayName()
+	}
+	return serviceAccountToName, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -247,7 +286,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 
 	var principals []string
 	var err error
-	if c.ccloudRbacDataplaneEnabled && cmd.Flags().Changed("resource") {
+	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
@@ -279,26 +318,37 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 
-	userToEmailMap, err := c.userIdToEmailMap()
+	userToEmailMap, err := c.getUserIdToEmailMap()
 	if err != nil {
 		return err
 	}
 
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
+	if err != nil {
+		return err
+	}
+
+	// TODO: Catch this error once Identity Providers goes GA
+	poolToNameMap, _ := c.getPoolToNameMap()
+
 	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email"}, []string{"Principal", "Email"}, []string{"principal", "email"})
+	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
 	if err != nil {
 		return err
 	}
 	for _, principal := range principals {
+		row := &displayStruct{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
-			displayStruct := &struct {
-				Principal string
-				Email     string
-			}{
-				Principal: principal,
-				Email:     email,
-			}
-			outputWriter.AddElement(displayStruct)
+			row.Email = email
+			outputWriter.AddElement(row)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			row.ServiceName = name
+			outputWriter.AddElement(row)
+		}
+		if name, ok := poolToNameMap[principal]; ok {
+			row.PoolName = name
+			outputWriter.AddElement(row)
 		}
 	}
 	return outputWriter.Out()

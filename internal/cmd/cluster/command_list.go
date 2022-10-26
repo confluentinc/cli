@@ -22,9 +22,8 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Long:  "List clusters that are registered with the MDS cluster registry.",
 	}
 
-	c := &listCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-
-	c.RunE = pcmd.NewCLIRunE(c.list)
+	c := &listCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
+	c.RunE = c.list
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(c.Command)
@@ -33,7 +32,7 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
 	if err != nil {
 		return print.HandleClusterError(err, response)

@@ -21,6 +21,18 @@ func (e *NotLoggedInError) UserFacingError() error {
 	return NewErrorWithSuggestions(NotLoggedInErrorMsg, NotLoggedInSuggestions)
 }
 
+type EndOfFreeTrialError struct {
+	OrgId string
+}
+
+func (e *EndOfFreeTrialError) Error() string {
+	return fmt.Sprintf(EndOfFreeTrialErrorMsg, e.OrgId)
+}
+
+func (e *EndOfFreeTrialError) UserFacingError() error {
+	return NewErrorWithSuggestions(fmt.Sprintf(EndOfFreeTrialErrorMsg, e.OrgId), EndOfFreeTrialSuggestions)
+}
+
 type SRNotAuthenticatedError struct{}
 
 func (e *SRNotAuthenticatedError) Error() string {
@@ -83,7 +95,9 @@ type UnconfiguredAPISecretError struct {
 }
 
 func (e *UnconfiguredAPISecretError) Error() string {
-	return e.APIKey
+	errorMsg := fmt.Sprintf(NoAPISecretStoredErrorMsg, e.APIKey, e.ClusterID)
+	suggestionsMsg := fmt.Sprintf(NoAPISecretStoredSuggestions, e.APIKey, e.ClusterID)
+	return NewErrorWithSuggestions(errorMsg, suggestionsMsg).Error()
 }
 
 func (e *UnconfiguredAPISecretError) UserFacingError() error {

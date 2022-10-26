@@ -6,11 +6,15 @@ import (
 	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
@@ -19,7 +23,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		Short:             "Delete a Kafka topic.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              pcmd.NewCLIRunE(c.delete),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topics "my_topic" and "my_topic_avro". Use this command carefully as data loss can occur.`,
@@ -38,40 +42,42 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
-		lkc := kafkaClusterConfig.ID
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
 
-		httpResp, err := kafkaREST.Client.TopicV3Api.DeleteKafkaTopic(kafkaREST.Context, lkc, topicName)
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusNoContent {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
-			// Topic succesfully deleted
-			utils.Printf(cmd, errors.DeletedTopicMsg, topicName)
+			// Topic successfully deleted
+			utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 			return nil
 		}
 	}
 
 	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := pcmd.KafkaCluster(c.Context)
+	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
 		return err
 	}
@@ -82,6 +88,6 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
-	utils.Printf(cmd, errors.DeletedTopicMsg, topicName)
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

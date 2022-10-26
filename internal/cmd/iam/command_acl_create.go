@@ -16,7 +16,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 		Short: "Create a Kafka ACL.",
 		Long:  "Create a Kafka ACL. This command only works with centralized ACLs.",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.create),
+		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",

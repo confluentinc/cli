@@ -1,17 +1,19 @@
 package kafka
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  pcmd.NewCLIRunE(c.onPremList),
+		RunE:  c.onPremList,
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -39,7 +41,7 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 	// Get Topics
 	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	topicDatas := topicGetResp.Data
 

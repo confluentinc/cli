@@ -1,13 +1,22 @@
 package iam
 
 import (
+	"github.com/antihax/optional"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-func NewRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+var (
+	publicNamespace         = optional.NewString("public")
+	dataGovernanceNamespace = optional.NewString("datagovernance")
+	dataplaneNamespace      = optional.NewString("dataplane")
+	ksqlNamespace           = optional.NewString("ksql")
+)
+
+func newRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rbac",
 		Short: "Manage RBAC permissions.",
@@ -18,4 +27,10 @@ func NewRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(newRoleBindingCommand(cfg, prerunner))
 
 	return cmd
+}
+
+func (c *roleCommand) namespaceRoles(namespace optional.String) ([]mdsv2alpha1.Role, error) {
+	opts := &mdsv2alpha1.RolesOpts{Namespace: namespace}
+	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(c.createContext(), opts)
+	return roles, err
 }

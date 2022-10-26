@@ -36,8 +36,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-
-	c.RunE = pcmd.NewCLIRunE(c.register)
+	c.RunE = c.register
 
 	c.Flags().String("hosts", "", "A comma separated list of hosts.")
 	c.Flags().String("protocol", "", "Security protocol.")
@@ -77,7 +76,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})

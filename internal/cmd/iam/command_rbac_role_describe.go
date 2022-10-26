@@ -19,7 +19,7 @@ func (c *roleCommand) newDescribeCommand() *cobra.Command {
 		Use:   "describe <name>",
 		Short: "Describe the resources and operations allowed for a role.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.describe),
+		RunE:  c.describe,
 	}
 
 	pcmd.AddOutputFlag(cmd)
@@ -41,23 +41,25 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	roleDetail := mdsv2alpha1.RoleDetailOpts{}
-	if c.ccloudRbacDataplaneEnabled {
-		roleDetail.Namespace = dataplaneNamespace
-	}
-	// Currently we don't allow multiple namespace in roleDetail so as a workaround we first check with dataplane
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+
+	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
 	// namespace and if we get an error try without any namespace.
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, &roleDetail)
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
 	if err != nil || r.StatusCode == http.StatusNoContent {
 		details, r, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
 		if err != nil {
 			if r.StatusCode == http.StatusNotFound {
-				availableRoleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
+				publicRolenames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
 				if err != nil {
 					return err
 				}
 
-				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(availableRoleNames, ","))
+				opts := &mdsv2alpha1.RolenamesOpts{Namespace: dataplaneNamespace}
+				dataplaneRolenames, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
+				rolenames := append(publicRolenames, dataplaneRolenames...)
+
+				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(rolenames, ", "))
 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
 			}
 

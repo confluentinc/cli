@@ -1,10 +1,11 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 var (
@@ -87,21 +88,22 @@ type lagDataStruct struct {
 	PartitionId     int32
 }
 
-func newConsumerGroupCommand(prerunner pcmd.PreRunner) *consumerGroupCommand {
+func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "consumer-group",
-		Aliases: []string{"cg"},
-		Short:   "Manage Kafka consumer groups.",
-		Hidden:  true,
+		Use:         "consumer-group",
+		Aliases:     []string{"cg"},
+		Short:       "Manage Kafka consumer groups.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Hidden:      true,
 	}
 
 	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(newLagCommand(prerunner))
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(newLagCommand(prerunner))
+	cmd.AddCommand(c.newListCommand())
 
-	return c
+	return cmd
 }
 
 func (c *consumerGroupCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -135,9 +137,9 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarest
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerGroups(kafkaREST.Context, lkc)
+	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
 	if err != nil {
-		return nil, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return &groupCmdResp, nil

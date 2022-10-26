@@ -5,13 +5,13 @@ It may take up to 1 hour for the Kafka cluster to be ready. The organization adm
 | Type          | DEDICATED                 |
 | Ingress       |                        50 |
 | Egress        |                       150 |
-| Storage       |                     30000 |
+| Storage       | Infinite                  |
 | Provider      | aws                       |
 | Availability  | single-zone               |
 | Region        | us-east-1                 |
 | Status        | PROVISIONING              |
 | Endpoint      | SASL_SSL://kafka-endpoint |
-| API Endpoint  | http://127.0.0.1:12345    |
-| REST Endpoint |                           |
+| API Endpoint  | http://kafka-api-url      |
+| REST Endpoint | https://pkc-endpoint      |
 | Cluster Size  |                         1 |
 +---------------+---------------------------+

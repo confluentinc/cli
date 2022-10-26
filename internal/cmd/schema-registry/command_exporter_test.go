@@ -3,7 +3,6 @@ package schemaregistry
 import (
 	"bytes"
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -47,7 +46,7 @@ func (suite *ExporterTestSuite) SetupSuite() {
 		},
 	}
 	ctx := suite.conf.Context()
-	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
+	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
@@ -102,7 +101,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
@@ -112,7 +111,7 @@ func (suite *ExporterTestSuite) TestCreateExporter() {
 	req.NoError(err)
 	configs := "key1=value1\nkey2=value2"
 	configPath := filepath.Join(dir, "config.txt")
-	req.NoError(ioutil.WriteFile(configPath, []byte(configs), 0644))
+	req.NoError(os.WriteFile(configPath, []byte(configs), 0644))
 	cmd.SetArgs([]string{"exporter", "create", exporterName, "--context-type", "AUTO",
 		"--context", contextName, "--subjects", subjectName, "--config-file", configPath})
 	output := new(bytes.Buffer)
