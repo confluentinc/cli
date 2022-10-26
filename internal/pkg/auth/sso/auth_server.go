@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -25,13 +24,16 @@ The server runs in a goroutine / in the background.
 */
 type authServer struct {
 	server *http.Server
-	cond   *sync.Cond
+	wait   chan bool
 	bgErr  error
 	State  *authState
 }
 
 func newServer(state *authState) *authServer {
-	return &authServer{State: state}
+	return &authServer{
+		wait:  make(chan bool),
+		State: state,
+	}
 }
 
 // Start begins the server including attempting to bind the desired TCP port
@@ -51,7 +53,6 @@ func (s *authServer) startServer() error {
 		return err
 	}
 
-	s.cond = new(sync.Cond)
 	s.server = &http.Server{Handler: mux}
 
 	go func() {
@@ -74,9 +75,9 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 		time.Sleep(timeout)
 		s.bgErr = errors.NewErrorWithSuggestions(errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 		s.server.Close()
-		s.cond.Signal()
+		s.wait <- true
 	}()
-	s.cond.Wait()
+	<-s.wait
 
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
@@ -104,5 +105,5 @@ func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 		s.bgErr = errors.New(errors.LoginFailedQueryStringErrorMsg)
 	}
 
-	s.cond.Signal()
+	s.wait <- true
 }
