@@ -1,4 +1,4 @@
-package chub
+package connect
 
 import (
 	"archive/zip"
@@ -8,9 +8,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/confluentinc/properties"
 	"io"
 	"net/http"
 	"os"
@@ -20,16 +18,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-)
+	"github.com/confluentinc/properties"
 
-type command struct {
-	*pcmd.CLICommand
-}
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
+)
 
 const (
 	archiveInstallation = "ARCHIVE"
@@ -45,9 +40,6 @@ const (
 	componentDirArchiveDefault = "share/confluent-hub-components"
 	componentDirPackageDefault = "/usr/share/confluent-hub-components"
 
-	confluentCurrentEnvVar  = "CONFLUENT_CURRENT"
-	confluentHomeEnvVar     = "CONFLUENT_HOME"
-	tmpDirEnvVar            = "TMPDIR"
 	confluentCommonLocation = "share/java/confluent-common"
 	connectDistributedPath  = "/usr/bin/connect-distributed"
 
@@ -60,47 +52,30 @@ const (
 	connectProcessRegex = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
 )
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *pluginCommand) newInstallCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "hub",
-		Short: "Confluent Hub.",
-		Args:  cobra.NoArgs,
-	}
-	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
-	c.init()
-
-	return c.Command
-}
-
-func (c *command) init() {
-	installCmd := &cobra.Command{
 		Use:   "install <id>",
-		Short: "Install a Confluent Hub component.",
+		Short: "Install a Confluent plugin.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  pcmd.NewCLIRunE(c.install),
+		RunE:  c.install,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Install the latest release of the Datagen connector onto your local Confluent Platform environment, deducing the installation directory from your $CONFLUENT_HOME environment variable",
-				Code: fmt.Sprintf("confluent hub install confluentinc/kafka-connect-datagen:latest"),
+				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest",
 			},
 		),
 	}
-	installCmd.Flags().String("component-dir", "", "The local directory into which components are installed. Defaults to $share/confluent-hub-components when running the client in an archive installation of Confluent Platform, and to /usr/share/confluent-hub-components when running the client in a deb/rpm installation.\n\nThis options value must be a path that must exist on the file system. The provided path must be readable and writable.")
-	installCmd.Flags().String("worker-configs", "", "Path(s) to your Kafka Connect worker config file(s). Multiple paths can be delimited using the colon (':') character. If provided, each worker file will be updated to load plugins from the component directory (in addition to any other directories it is already configured to read)")
-	installCmd.Flags().Bool("dry-run", false, "Dry run mode; no files will be installed onto your Confluent Platform environment")
-	installCmd.Flags().Bool("no-prompt", false, "Force installation without interactively confirming details such as license and component directory")
-	// Already supported by top-level CLI logic. We may want to preserve this flag here just to ease migration from the existing confluent-hub tool
-	// installCmd.Flags().Boolean("verbose", false, "Log extra information about the installation as it takes place")
-	c.AddCommand(installCmd)
 
-	// TODO:
-	//   - Add search command (show components available on Confluent Hub)
-	//   - Add list command (show components already present on worker)
+	cmd.Flags().String("component-dir", "", "The local directory into which components are installed. Defaults to $share/confluent-hub-components when running the client in an archive installation of Confluent Platform, and to /usr/share/confluent-hub-components when running the client in a deb/rpm installation.\n\nThis options value must be a path that must exist on the file system. The provided path must be readable and writable.")
+	cmd.Flags().StringSlice("worker-configs", []string{}, "Path(s) to your Kafka Connect worker config file(s). Multiple paths can be comma-delimited. If provided, each worker file will be updated to load plugins from the component directory (in addition to any other directories it is already configured to read)")
+	cmd.Flags().Bool("dry-run", false, "Dry run mode; no files will be installed onto your Confluent Platform environment")
+	cmd.Flags().Bool("no-prompt", false, "Force installation without interactively confirming details such as license and component directory")
 
+	return cmd
 }
 
-func (c *command) install(cmd *cobra.Command, args []string) error {
-	componentDirRaw, err := cmd.Flags().GetString("component-dir")
+func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
+	componentDir, err := cmd.Flags().GetString("component-dir")
 	if err != nil {
 		return err
 	}
@@ -111,9 +86,8 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 	prompt := !noPrompt
 	input := bufio.NewReader(os.Stdin)
 	var selectedInstallation *Installation
-	var componentDir string
-	if componentDirRaw == "" {
-		selectedInstallation, err = pickInstallation(!noPrompt, input)
+	if componentDir == "" {
+		selectedInstallation, err = pickInstallation(prompt, input)
 		if err != nil {
 			return err
 		}
@@ -122,22 +96,17 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else {
-		if componentDir, err = filepath.Abs(componentDirRaw); err != nil {
-			return fmt.Errorf(
-				"failed to determine absolute path to component directory %s: %w",
-				componentDirRaw,
-				err,
-			)
+		if componentDir, err = filepath.Abs(componentDir); err != nil {
+			return fmt.Errorf("failed to determine absolute path to component directory %s: %w", componentDir, err)
 		}
 	}
-	workerConfigsRaw, err := cmd.Flags().GetString("worker-configs")
+	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configs")
 	if err != nil {
 		return err
 	}
-	var workerConfigs []string
-	if workerConfigsRaw == "" {
+	if len(workerConfigs) == 0 {
 		if selectedInstallation == nil {
-			selectedInstallation, err = pickInstallation(!noPrompt, input)
+			selectedInstallation, err = pickInstallation(prompt, input)
 			if err != nil {
 				return err
 			}
@@ -146,8 +115,6 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	} else {
-		workerConfigs = strings.Split(workerConfigsRaw, ":")
 	}
 	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
@@ -241,7 +208,7 @@ func inferInstallationDirectories() ([]Installation, error) {
 	//   - based on the client
 
 	var result []Installation
-	confluentHome := os.Getenv(confluentHomeEnvVar)
+	confluentHome := os.Getenv("CONFLUENT_HOME")
 	if confluentHome != "" {
 		if exists, err := hasArchiveInstallation(confluentHome); exists && err == nil {
 			installation := Installation{
@@ -368,7 +335,7 @@ func chooseComponentDir(installation *Installation, prompt bool, input *bufio.Re
 		return "", err
 	}
 	if prompt {
-		for /*ever*/ {
+		for {
 			fmt.Printf("Do you want to install this into %s? (yn) ", defaultComponentDir)
 			line, err := readLine(input)
 			if err != nil {
@@ -449,7 +416,7 @@ func chooseWorkerConfigs(installation *Installation, prompt bool, input *bufio.R
 		for i, workerConfig := range workerConfigs {
 			fmt.Printf("  %d. %s (%s)\n", i+1, workerConfig.Path, workerConfig.Use)
 		}
-		for /*ever*/ {
+		for {
 			fmt.Print("Do you want to update all detected configs? (yn) ")
 			line, err := readLine(input)
 			if err != nil {
@@ -479,7 +446,7 @@ func chooseWorkerConfigs(installation *Installation, prompt bool, input *bufio.R
 func chooseIndividualWorkerConfigs(workerConfigs []WorkerConfig, input *bufio.Reader) ([]WorkerConfig, error) {
 	var result []WorkerConfig
 	for i, workerConfig := range workerConfigs {
-		for /*ever*/ {
+		for {
 			fmt.Printf("Do you want to update %d? (yn) ", i+1)
 			line, err := readLine(input)
 			if err != nil {
@@ -490,7 +457,6 @@ func chooseIndividualWorkerConfigs(workerConfigs []WorkerConfig, input *bufio.Re
 			} else if strings.EqualFold("n", line) {
 				break
 			}
-
 		}
 	}
 	return result, nil
@@ -503,55 +469,41 @@ func standardWorkerConfigLocations(installation *Installation) ([]WorkerConfig, 
 	}
 	switch installation.Type {
 	case archiveInstallation:
-		{
-			var result []WorkerConfig
-			for _, workerConfigLocation := range workerConfigLocations {
-				workerConfigPath := filepath.Join(installation.Path, filepath.FromSlash(workerConfigLocation))
-				workerConfig := WorkerConfig{Path: workerConfigPath, Use: "Standard"}
+		var result []WorkerConfig
+		for _, workerConfigLocation := range workerConfigLocations {
+			workerConfigPath := filepath.Join(installation.Path, filepath.FromSlash(workerConfigLocation))
+			workerConfig := WorkerConfig{Path: workerConfigPath, Use: "Standard"}
+			result = append(result, workerConfig)
+		}
+		confluentCurrentDir := os.Getenv("CONFLUENT_CURRENT")
+		if confluentCurrentDir == "" {
+			confluentCurrentDir = os.Getenv("TMPDIR")
+		}
+		confluentCurrentFile := filepath.Join(confluentCurrentDir, confluentCurrentConfigLocation)
+		if exists, err := pathExists(confluentCurrentFile); exists && err == nil {
+			confluentCurrentContent, err := os.ReadFile(confluentCurrentFile)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read possible $CONFLUENT_CURRENT file %s: %w", confluentCurrentFile, err)
+			}
+			confluentCurrentLines := strings.SplitN(string(confluentCurrentContent), "\n", 3)
+			if len(confluentCurrentLines) == 1 {
+				connectCurrentConfigFile := filepath.Join(confluentCurrentLines[0], connectCurrentConfigLocation)
+				workerConfig := WorkerConfig{Path: connectCurrentConfigFile, Use: "Based on $CONFLUENT_CURRENT"}
 				result = append(result, workerConfig)
 			}
-			confluentCurrentDir := os.Getenv(confluentCurrentEnvVar)
-			if confluentCurrentDir == "" {
-				confluentCurrentDir = os.Getenv(tmpDirEnvVar)
-			}
-			confluentCurrentFile := filepath.Join(confluentCurrentDir, confluentCurrentConfigLocation)
-			if exists, err := pathExists(confluentCurrentFile); exists && err == nil {
-				confluentCurrentContent, err := os.ReadFile(confluentCurrentFile)
-				if err != nil {
-					return nil, fmt.Errorf(
-						"failed to read possible CONFLUENT_CURRENT file %s: %w",
-						confluentCurrentFile,
-						err,
-					)
-				}
-				confluentCurrentLines := strings.SplitN(string(confluentCurrentContent), "\n", 3)
-				if len(confluentCurrentLines) == 1 {
-					connectCurrentConfigFile := filepath.Join(confluentCurrentLines[0], connectCurrentConfigLocation)
-					workerConfig := WorkerConfig{Path: connectCurrentConfigFile, Use: "Based on " + confluentCurrentEnvVar}
-					result = append(result, workerConfig)
-				}
-			} else if err != nil {
-				return nil, fmt.Errorf(
-					"failed to check for existence of possible CONFLUENT_CURRENT file %s: %w",
-					confluentCurrentFile,
-					err,
-				)
-			}
-			return result, nil
+		} else if err != nil {
+			return nil, fmt.Errorf("failed to check for existence of possible CONFLUENT_CURRENT file %s: %w", confluentCurrentFile, err)
 		}
+		return result, nil
 	case packageInstallation:
-		{
-			var result []WorkerConfig
-			for _, workerConfigLocation := range workerConfigLocations {
-				workerConfig := WorkerConfig{Path: filepath.FromSlash(workerConfigLocation), Use: "Standard"}
-				result = append(result, workerConfig)
-			}
-			return result, nil
+		var result []WorkerConfig
+		for _, workerConfigLocation := range workerConfigLocations {
+			workerConfig := WorkerConfig{Path: filepath.FromSlash(workerConfigLocation), Use: "Standard"}
+			result = append(result, workerConfig)
 		}
+		return result, nil
 	default:
-		{
-			return nil, errors.New(fmt.Sprintf("unexpected installation type: %s", installation.Type))
-		}
+		return nil, errors.New(fmt.Sprintf("unexpected installation type: %s", installation.Type))
 	}
 }
 
@@ -576,11 +528,7 @@ func runningWorkerConfigLocations() ([]WorkerConfig, error) {
 			} else if matched, err := regexp.MatchString(connectProcessRegex, word); matched && err == nil {
 				reachedArgs = true
 			} else if err != nil {
-				return nil, fmt.Errorf(
-					"failed to match output of `ps` command (%s) against regular expression for Connect worker process: %w",
-					word,
-					err,
-				)
+				return nil, fmt.Errorf("failed to match output of `ps` command (%s) against regular expression for Connect worker process: %w", word, err)
 			} else if reachedArgs && word != daemonOption {
 				// TODO: This doesn't work on workers that were started with relative paths to their config files
 				//		 unless the CLI is run in the same directory that the Connect worker was started in
@@ -616,13 +564,7 @@ func downloadArchive(id *ComponentId) (*Component, error) {
 	} else {
 		versionSuffix = "/versions/" + id.Version
 	}
-	manifestUrl := fmt.Sprintf(
-		"%s/api/plugins/%s/%s%s",
-		confluentHubBackEnd,
-		id.Owner,
-		id.Name,
-		versionSuffix,
-	)
+	manifestUrl := fmt.Sprintf("%s/api/plugins/%s/%s%s", confluentHubBackEnd, id.Owner, id.Name, versionSuffix)
 	manifestBody, err := queryComponentUrl(manifestUrl, id, "read manifest")
 	if manifestBody != nil {
 		defer manifestBody.Close()
@@ -632,19 +574,11 @@ func downloadArchive(id *ComponentId) (*Component, error) {
 	}
 	manifest := Manifest{}
 	if err := json.NewDecoder(manifestBody).Decode(&manifest); err != nil {
-		return nil, fmt.Errorf(
-			"failed to parse manifest for component %s from Confluent Hub: %w",
-			id,
-			err,
-		)
+		return nil, fmt.Errorf("failed to parse manifest for component %s from Confluent Hub: %w", id, err)
 	}
 	archiveBody, err := queryComponentUrl(manifest.Archive.Url, id, "download archive")
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to download archive for component %s from Confluent Hub: %w",
-			id,
-			err,
-		)
+		return nil, fmt.Errorf("failed to download archive for component %s from Confluent Hub: %w", id, err)
 	}
 	if id.Version == "latest" {
 		id.Version = manifest.Version
@@ -659,12 +593,7 @@ func downloadArchive(id *ComponentId) (*Component, error) {
 func queryComponentUrl(url string, id *ComponentId, action string) (io.ReadCloser, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to %s for component %s from Confluent Hub: %w",
-			action,
-			id,
-			err,
-		)
+		return nil, fmt.Errorf("failed to %s for component %s from Confluent Hub: %w", action, id, err)
 	} else if resp.StatusCode == http.StatusNotFound {
 		return nil, errors.New(fmt.Sprintf(
 			"component %s not found in Confluent Hub",
@@ -672,19 +601,10 @@ func queryComponentUrl(url string, id *ComponentId, action string) (io.ReadClose
 		))
 	} else if resp.StatusCode == http.StatusInternalServerError {
 		// TODO: Log full response here? (Perhaps only when verbose mode is enabled?)
-		return nil, errors.New(fmt.Sprintf(
-			"encountered unexpected server-side error from Confluent Hub while attempting to %s for component %s",
-			action,
-			id,
-		))
+		return nil, fmt.Errorf("encountered unexpected server-side error from Confluent Hub while attempting to %s for component %s", action, id)
 	} else if resp.StatusCode != http.StatusOK {
 		// TODO: Does this fail on redirects?
-		return nil, errors.New(fmt.Sprintf(
-			"encountered unexpected error with HTTP status %d from Confluent Hub while attempting to %s for component %s",
-			resp.StatusCode,
-			action,
-			id,
-		))
+		return nil, fmt.Errorf("encountered unexpected error with HTTP status %d from Confluent Hub while attempting to %s for component %s", resp.StatusCode, action, id)
 	} else {
 		return resp.Body, nil
 	}
@@ -693,70 +613,39 @@ func queryComponentUrl(url string, id *ComponentId, action string) (io.ReadClose
 func openLocalArchive(archivePath string) (*Component, error) {
 	archive, err := os.Open(archivePath)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to open local archive file %s: %w",
-			archivePath,
-			err,
-		)
+		return nil, fmt.Errorf("failed to open local archive file %s: %w", archivePath, err)
 	}
 	defer archive.Close()
 	zipContent, err := io.ReadAll(archive)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to read local archive file %s: %w",
-			archivePath,
-			err,
-		)
+		return nil, fmt.Errorf("failed to read local archive file %s: %w", archivePath, err)
 	}
 	zipReader, err := zip.NewReader(bytes.NewReader(zipContent), int64(len(zipContent)))
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to read local archive file %s: %w",
-			archivePath,
-			err,
-		)
+		return nil, fmt.Errorf("failed to read local archive file %s: %w", archivePath, err)
 	}
 	var manifest Manifest
 	for _, zipFile := range zipReader.File {
 		isManifest, err := filepath.Match("*/manifest.json", filepath.ToSlash(zipFile.Name))
 		if err != nil {
-			return nil, fmt.Errorf(
-				"failed to examine file %s inside local archive file %s: %w",
-				zipFile.Name,
-				archivePath,
-				err,
-			)
+			return nil, fmt.Errorf("failed to examine file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 		}
 		if isManifest {
 			manifest = Manifest{}
 			zipFileReader, err := zipFile.Open()
 			if err != nil {
-				return nil, fmt.Errorf(
-					"failed to open manifest file %s inside local archive file %s: %w",
-					zipFile.Name,
-					archivePath,
-					err,
-				)
+				return nil, fmt.Errorf("failed to open manifest file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 			}
 			defer zipFileReader.Close()
 			if err = json.NewDecoder(zipFileReader).Decode(&manifest); err != nil {
-				return nil, fmt.Errorf(
-					"failed to parse manifest file %s inside local archive file %s: %w",
-					zipFile.Name,
-					archivePath,
-					err,
-				)
+				return nil, fmt.Errorf("failed to parse manifest file %s inside local archive file %s: %w", zipFile.Name, archivePath, err)
 			}
 			break
 		}
 	}
 	archiveContent, err := os.Open(archivePath)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"failed to reopen local archive file %s after parsing manifest contents: %w",
-			archivePath,
-			err,
-		)
+		return nil, fmt.Errorf("failed to reopen local archive file %s after parsing manifest contents: %w", archivePath, err)
 	}
 	return &Component{
 		Id:             manifest.id(),
@@ -804,7 +693,7 @@ func maybeRemoveInstallation(pathToComponent string, prompt bool, input *bufio.R
 	if !prompt {
 		fmt.Printf("Automatically uninstalling existing version of the component located at %s", pathToComponent)
 	} else {
-		for /*ever*/ {
+		for {
 			fmt.Printf("Do you want to uninstall an existing version of this component located at %s? (yn) ", pathToComponent)
 			line, err := readLine(input)
 			if err != nil {
@@ -812,11 +701,7 @@ func maybeRemoveInstallation(pathToComponent string, prompt bool, input *bufio.R
 			} else if strings.EqualFold("y", line) {
 				break
 			} else if strings.EqualFold("n", line) {
-				return errors.New(
-					"A version of this component is already installed. " +
-						"If you want to uninstall existing version, " +
-						"confirm or run the command with the \"--no-prompt\" option",
-				)
+				return errors.NewErrorWithSuggestions("a version of this component is already installed", "If you want to uninstall existing version, confirm or run the command with `--no-prompt`")
 			}
 		}
 	}
@@ -828,19 +713,11 @@ func installArchive(component *Component, componentDir string, integrityCheck bo
 	relativeInstallationDir := filepath.Join(componentDir, fmt.Sprintf("%s-%s", id.Owner, id.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to resolve absolute path for directory %s: %w",
-			relativeInstallationDir,
-			err,
-		)
+		return fmt.Errorf("failed to resolve absolute path for directory %s: %w", relativeInstallationDir, err)
 	}
 	zipContent, err := io.ReadAll(component.ArchiveContent)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to read zipped archive for component %s: %w",
-			id,
-			err,
-		)
+		return fmt.Errorf("failed to read zipped archive for component %s: %w", id, err)
 	}
 	if integrityCheck {
 		calculatedMd5Checksum := md5.Sum(zipContent)
@@ -857,11 +734,7 @@ func installArchive(component *Component, componentDir string, integrityCheck bo
 	}
 	zipReader, err := zip.NewReader(bytes.NewReader(zipContent), int64(len(zipContent)))
 	if err != nil {
-		return fmt.Errorf(
-			"failed to read zipped archive for component %s: %w",
-			id,
-			err,
-		)
+		return fmt.Errorf("failed to read zipped archive for component %s: %w", id, err)
 	}
 
 	if dryRun {
@@ -870,21 +743,13 @@ func installArchive(component *Component, componentDir string, integrityCheck bo
 	}
 
 	for _, zipFile := range zipReader.File {
-		var isDir bool
-		var destFileDir string
-		if zipFile.FileInfo().IsDir() {
+		isDir := zipFile.FileInfo().IsDir()
+		destFileDir := filepath.Dir(filepath.Join(installationDir, zipFile.Name))
+		if isDir {
 			destFileDir = filepath.Join(installationDir, zipFile.Name)
-			isDir = true
-		} else {
-			destFileDir = filepath.Dir(filepath.Join(installationDir, zipFile.Name))
-			isDir = false
 		}
 		if err = os.MkdirAll(destFileDir, 0755); err != nil {
-			return fmt.Errorf(
-				"failed to create directory %s on local storage: %w",
-				destFileDir,
-				err,
-			)
+			return fmt.Errorf("failed to create directory %s on local storage: %w", destFileDir, err)
 		}
 		if isDir {
 			continue
@@ -892,11 +757,7 @@ func installArchive(component *Component, componentDir string, integrityCheck bo
 
 		zipFileReader, err := zipFile.Open()
 		if err != nil {
-			return fmt.Errorf(
-				"failed to read file %s from archive: %w",
-				zipFile.Name,
-				err,
-			)
+			return fmt.Errorf("failed to read file %s from archive: %w", zipFile.Name, err)
 		}
 		destFilePath := filepath.Join(installationDir, zipFile.Name)
 		destFile, _ := os.OpenFile(destFilePath, os.O_CREATE|os.O_RDWR, 0644)
@@ -904,12 +765,7 @@ func installArchive(component *Component, componentDir string, integrityCheck bo
 		zipFileReader.Close()
 		destFile.Close()
 		if err != nil {
-			return fmt.Errorf(
-				"failed to copy file %s from archive to local file %s: %w",
-				zipFile.Name,
-				destFilePath,
-				err,
-			)
+			return fmt.Errorf("failed to copy file %s from archive to local file %s: %w", zipFile.Name, destFilePath, err)
 		}
 	}
 	return nil
@@ -919,20 +775,10 @@ func verifyChecksum(id *ComponentId, expectedChecksum string, actualChecksumRaw 
 	if expectedChecksum != "" {
 		actualChecksum := hex.EncodeToString(actualChecksumRaw)
 		if actualChecksum != expectedChecksum {
-			return errors.New(fmt.Sprintf(
-				"%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for component %s",
-				checksumAlgorithm,
-				actualChecksum,
-				expectedChecksum,
-				id,
-			))
+			return fmt.Errorf("%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for component %s", checksumAlgorithm, actualChecksum, expectedChecksum, id)
 		}
 	} else {
-		fmt.Printf(
-			"Warning: no %s checksum found for component %s; the integrity of this download cannot be verified\n",
-			checksumAlgorithm,
-			id,
-		)
+		fmt.Printf("Warning: no %s checksum found for component %s; the integrity of this download cannot be verified\n", checksumAlgorithm, id)
 	}
 	return nil
 }
@@ -944,7 +790,7 @@ func checkLicenseAcceptance(component *Component, prompt bool, input *bufio.Read
 			fmt.Println("Component's license:")
 			fmt.Println(license.Name)
 			fmt.Println(license.Url)
-			for /*ever*/ {
+			for {
 				fmt.Print("I agree to the software license agreement (yn) ")
 				line, err := readLine(input)
 				if err != nil {
@@ -967,11 +813,7 @@ func checkLicenseAcceptance(component *Component, prompt bool, input *bufio.Read
 func updateWorkerConfig(componentDir string, workerConfigPath string, dryRun bool) error {
 	workerConfig, err := properties.LoadFile(workerConfigPath, properties.UTF8)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to parse worker config file %s: %w",
-			workerConfigPath,
-			err,
-		)
+		return fmt.Errorf("failed to parse worker config file %s: %w", workerConfigPath, err)
 	}
 	pluginPath := workerConfig.GetString(pluginPathProperty, "")
 	pluginPathElements := regexp.MustCompile(" *, *").Split(pluginPath, -1)
@@ -984,21 +826,11 @@ func updateWorkerConfig(componentDir string, workerConfigPath string, dryRun boo
 	}
 	newPluginPath := strings.Join(append(pluginPathElements, componentDir), ", ")
 	if _, _, err = workerConfig.Set(pluginPathProperty, newPluginPath); err != nil {
-		return fmt.Errorf(
-			"failed to update %s property to %s for worker config %s: %w",
-			pluginPathProperty,
-			newPluginPath,
-			workerConfigPath,
-			err,
-		)
+		return fmt.Errorf("failed to update %s property to %s for worker config %s: %w", pluginPathProperty, newPluginPath, workerConfigPath, err)
 	}
 	fileInfo, err := os.Stat(workerConfigPath)
 	if err != nil {
-		return fmt.Errorf(
-			"failed to stat worker config file %s: %w",
-			workerConfigPath,
-			err,
-		)
+		return fmt.Errorf("failed to stat worker config file %s: %w", workerConfigPath, err)
 	}
 	if dryRun {
 		fmt.Printf("Skipping update of worker config %s as part of dry run mode\n", workerConfigPath)
@@ -1006,24 +838,12 @@ func updateWorkerConfig(componentDir string, workerConfigPath string, dryRun boo
 	}
 	workerConfigFile, err := os.OpenFile(workerConfigPath, os.O_TRUNC|os.O_RDWR, fileInfo.Mode())
 	if err != nil {
-		return fmt.Errorf(
-			"failed to open worker config file %s before updating with new %s value %s: %w",
-			workerConfigPath,
-			pluginPathProperty,
-			newPluginPath,
-			err,
-		)
+		return fmt.Errorf("failed to open worker config file %s before updating with new %s value %s: %w", workerConfigPath, pluginPathProperty, newPluginPath, err)
 	}
 	defer workerConfigFile.Close()
 	// TODO: This doesn't preserve comment structure perfectly
 	if _, err = workerConfig.WriteFormattedComment(workerConfigFile, properties.UTF8); err != nil {
-		return fmt.Errorf(
-			"failed to update worker config file %s with new %s value %s: %w",
-			workerConfigPath,
-			pluginPathProperty,
-			newPluginPath,
-			err,
-		)
+		return fmt.Errorf("failed to update worker config file %s with new %s value %s: %w", workerConfigPath, pluginPathProperty, newPluginPath, err)
 	}
 	return nil
 }

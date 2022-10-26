@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
-	"github.com/confluentinc/cli/internal/cmd/chub"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
@@ -97,7 +96,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(auditlog.New(prerunner))
-	cmd.AddCommand(chub.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner, cfg.Version.UserAgent, ccloudClientFactory, cfg.IsTest))
 	cmd.AddCommand(completion.New())
