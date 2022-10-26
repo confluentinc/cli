@@ -204,8 +204,8 @@ func TestCredentialsOverride(t *testing.T) {
 	req.NotNil(ctx)
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
 
-	req.Equal(testToken1, ctx.State.AuthToken)
-	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.State.Auth.User)
+	req.Equal(testToken1, ctx.GetAuthToken())
+	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.GetUser())
 }
 
 func TestOrgIdOverride(t *testing.T) {
@@ -261,8 +261,8 @@ func TestOrgIdOverride(t *testing.T) {
 		req.NotNil(ctx)
 		req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
 
-		req.Equal(testToken2, ctx.State.AuthToken)
-		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
+		req.Equal(testToken2, ctx.GetAuthToken())
+		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		verifyLoggedInState(t, cfg, true, org2Id)
 	}
 }
@@ -956,9 +956,9 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	ctx := cfg.Context()
 	req.NotNil(ctx)
 	if orgResourceId == org1Id || orgResourceId == "" {
-		req.Equal(testToken1, ctx.State.AuthToken)
+		req.Equal(testToken1, ctx.GetAuthToken())
 	} else if orgResourceId == org2Id {
-		req.Equal(testToken2, ctx.State.AuthToken)
+		req.Equal(testToken2, ctx.GetAuthToken())
 	}
 	contextName := fmt.Sprintf("login-%s-%s", promptUser, ctx.Platform.Server)
 	credName := fmt.Sprintf("username-%s", ctx.Credential.Username)
@@ -971,8 +971,8 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.State.Auth.User)
-		req.Equal(orgResourceId, ctx.State.Auth.Organization.ResourceId)
+		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
+		req.Equal(orgResourceId, ctx.GetOrganization().GetResourceId())
 		req.Equal(orgResourceId, ctx.Config.GetLastUsedOrgId())
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)

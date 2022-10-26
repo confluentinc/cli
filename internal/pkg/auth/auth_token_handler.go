@@ -156,7 +156,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
-	getMeReply, err := getCCloudUser(client)
+	getMeReply, err := client.Auth.User(context.Background())
 	if err != nil {
 		return err
 	}

@@ -179,7 +179,7 @@ func createACL(resourceType schedv1.ResourceTypes_ResourceType, name string, pat
 }
 
 func getCreateAclRequestDataList(bindings []*schedv1.ACLBinding) kafkarestv3.CreateAclRequestDataList {
-	data := make([]kafkarestv3.CreateAclRequestData, 0)
+	data := make([]kafkarestv3.CreateAclRequestData, len(bindings))
 	for i, binding := range bindings {
 		data[i] = acl.GetCreateAclRequestData(binding)
 	}

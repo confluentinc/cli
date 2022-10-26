@@ -48,6 +48,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID to filter by. Use "cloud" to show only Cloud API keys.`)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -191,7 +192,7 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 	}
 
 	userId := resourceIdToUserIdMap[resourceId]
-	if auditLog := v1.GetAuditLog(c.State); auditLog != nil && auditLog.ServiceAccountId == userId {
+	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil && auditLog.GetServiceAccountId() == userId {
 		return "<auditlog service account>"
 	}
 
