@@ -34,23 +34,20 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
+
+	cmd.Flags().Int32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
 	return cmd
 }
 
 func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
-
-	numPartitions, err := cmd.Flags().GetInt32("partitions")
-	if err != nil {
-		return err
-	}
 
 	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
@@ -93,10 +90,16 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 
 		data := kafkarestv3.CreateTopicRequestData{
-			TopicName:         topicName,
-			PartitionsCount:   &numPartitions,
-			ReplicationFactor: utils.Int32Ptr(defaultReplicationFactor),
-			Configs:           &topicConfigs,
+			TopicName: topicName,
+			Configs:   &topicConfigs,
+		}
+
+		if cmd.Flags().Changed("partitions") {
+			partitions, err := cmd.Flags().GetInt32("partitions")
+			if err != nil {
+				return err
+			}
+			data.PartitionsCount = &partitions
 		}
 
 		_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
@@ -146,12 +149,18 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.Topic{
 		Spec: &schedv1.TopicSpecification{
-			Name:              topicName,
-			NumPartitions:     numPartitions,
-			ReplicationFactor: defaultReplicationFactor,
-			Configs:           configMap,
+			Name:    topicName,
+			Configs: configMap,
 		},
 		Validate: dryRun,
+	}
+
+	if cmd.Flags().Changed("partitions") {
+		partitions, err := cmd.Flags().GetInt32("partitions")
+		if err != nil {
+			return err
+		}
+		topic.Spec.NumPartitions = partitions
 	}
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
