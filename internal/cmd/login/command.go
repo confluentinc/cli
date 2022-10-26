@@ -365,8 +365,6 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 }
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
-	url = strings.Trim(url, "/") // localhost:8091/ --> localhost:8091
-
 	if isCCloud {
 		for _, hostname := range ccloudv2.Hostnames {
 			if strings.Contains(url, hostname) {
@@ -377,6 +375,8 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 				}
 			}
 		}
+	} else {
+		url = strings.Trim(url, "/") // localhost:8091/ --> localhost:8091
 	}
 	protocolRgx, _ := regexp.Compile(`(\w+)://`)
 	portRgx, _ := regexp.Compile(`:(\d+\/?)`)

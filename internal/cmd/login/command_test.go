@@ -846,13 +846,13 @@ func TestValidateUrl(t *testing.T) {
 		},
 		{
 			urlIn:      "test.com",
-			urlOut:     "http://test.com:8090",
-			warningMsg: "http protocol and default MDS port 8090",
+			urlOut:     "https://test.com:8090",
+			warningMsg: "https protocol and default MDS port 8090",
 		},
 		{
 			urlIn:      "test.com:80",
-			urlOut:     "http://test.com:80",
-			warningMsg: "http protocol",
+			urlOut:     "https://test.com:80",
+			warningMsg: "https protocol",
 		},
 		{
 			urlIn:      "http://test.com",
@@ -866,8 +866,8 @@ func TestValidateUrl(t *testing.T) {
 		},
 		{
 			urlIn:      "127.0.0.1",
-			urlOut:     "http://127.0.0.1:8090",
-			warningMsg: "http protocol and default MDS port 8090",
+			urlOut:     "https://127.0.0.1:8090",
+			warningMsg: "https protocol and default MDS port 8090",
 		},
 		{
 			urlIn:      "devel.cpdev.cloud/",
@@ -898,6 +898,7 @@ func TestValidateUrl(t *testing.T) {
 			req.Equal(s.urlOut, url)
 			req.Equal(s.warningMsg, warningMsg)
 		} else {
+			fmt.Println(err.Error())
 			req.Equal(s.errMsg, err.Error())
 		}
 	}
