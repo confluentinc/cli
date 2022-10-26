@@ -25,7 +25,7 @@ The server runs in a goroutine / in the background.
 */
 type authServer struct {
 	server *http.Server
-	wg     *sync.WaitGroup
+	cond   *sync.Cond
 	bgErr  error
 	State  *authState
 }
@@ -51,10 +51,9 @@ func (s *authServer) startServer() error {
 		return err
 	}
 
-	s.wg = &sync.WaitGroup{}
+	s.cond = new(sync.Cond)
 	s.server = &http.Server{Handler: mux}
 
-	s.wg.Add(1)
 	go func() {
 		serverErr := s.server.Serve(lis)
 		// Serve returns ErrServerClosed when the server is gracefully, intentionally closed:
@@ -75,9 +74,9 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 		time.Sleep(timeout)
 		s.bgErr = errors.NewErrorWithSuggestions(errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 		s.server.Close()
-		s.wg.Done()
+		s.cond.Signal()
 	}()
-	s.wg.Wait()
+	s.cond.Wait()
 
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
@@ -105,5 +104,5 @@ func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 		s.bgErr = errors.New(errors.LoginFailedQueryStringErrorMsg)
 	}
 
-	s.wg.Done()
+	s.cond.Signal()
 }
