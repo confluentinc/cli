@@ -9,9 +9,9 @@ Available Commands:
   describe    Describe a connector.
   event       Manage Connect log events configuration.
   list        List connectors.
-  pause       Pause a connector.
+  pause       Pause connectors.
   plugin      Show plugins and their configurations.
-  resume      Resume a connector.
+  resume      Resume connectors.
   update      Update a connector configuration.
 
 Global Flags:
