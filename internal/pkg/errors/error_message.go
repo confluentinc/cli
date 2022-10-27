@@ -157,6 +157,8 @@ const (
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
 	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	BadClusterIDErrorMsg      = "failed parsing cluster: missing required prefix"
+	BadClusterIDSuggestions   = `Cluster prefixes are: Kafka clusters: "lkc-", kSQL clusters: "lksqlc-", Schema Registry clusters: "lsrc-".`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
