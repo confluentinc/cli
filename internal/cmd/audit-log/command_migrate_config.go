@@ -26,7 +26,7 @@ func (c *migrateCmd) newConfigCommand() *cobra.Command {
 			examples.Example{
 				Text: "Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.",
 				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
-					"--bootstrap-servers logs.example.com:9092 --bootstrap-servers logs.example.com:9093 --authority mds.example.com",
+					"--bootstrap-servers logs.example.com:9092,logs.example.com:9093 --authority mds.example.com",
 			},
 		),
 	}
