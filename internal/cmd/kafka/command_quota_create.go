@@ -38,7 +38,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of quota.")
 	cmd.Flags().String("ingress", "", "Ingress throughput limit for client (bytes/second).")
 	cmd.Flags().String("egress", "", "Egress throughput limit for client (bytes/second).")
-	cmd.Flags().StringSlice("principals", []string{}, `A comma delimited list of service accounts to apply quota to. Use "<default>" to apply quota to all service accounts.`)
+	cmd.Flags().StringSlice("principals", []string{}, `A comma-separated list of service accounts to apply the quota to. Use "<default>" to apply the quota to all service accounts.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
