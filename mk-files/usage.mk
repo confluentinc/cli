@@ -38,16 +38,16 @@ update-db:
 	git checkout -b cli-$(BUMPED_VERSION) && \
 	sed -i "" "s|db.url: .*|db.url: postgres://cc_cli_service@127.0.0.1:8432/cli?sslmode=require|" config.yaml && \
 	for pair in stag,237597620434 devel,037803949979 prod,050879227952; do \
-		IFS="," read env arn <<< $$pair; \
+		IFS="," read env arn <<< "$$pair"; \
 		eval $$(gimme-aws-creds --output-format export --roles arn:aws:iam::$${arn}:role/administrator); \
 		cctunnel -e $$env -b cli -i read-write; \
 		make db-migrate-up; \
 		kill -9 $$(lsof -i 4:8432 | awk 'NR > 1 { print $$2 };'); \
 	done && \
 	git add db/schema.sql && \
-	git commit -m "update db for $(BUMPED_VERSION)" && \
+	git commit -m "[ci skip] update db for $(BUMPED_VERSION)" && \
 	git push origin cli-$(BUMPED_VERSION) && \
-	gh pr create -B master --title "Update DB for $(BUMPED_VERSION)" --body ""
+	gh pr create -B master --title "[ci skip] Update DB for $(BUMPED_VERSION)" --body ""
 
 promote:
 	$(eval DIR=$(shell mktemp -d))
