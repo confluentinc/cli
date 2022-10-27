@@ -8,7 +8,6 @@ import (
 	"io"
 	"os"
 	"strings"
-	"syscall"
 
 	"github.com/havoc-io/gopass"
 )
@@ -50,8 +49,8 @@ func (p *RealPrompt) ReadLineMasked() (string, error) {
 
 	pwd, err := gopass.GetPasswdMasked()
 	if err != nil && err.Error() == "interrupted" {
-		_, _ = fmt.Fprint(p.Out, "^C")
-		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+		_, _ = fmt.Fprintln(p.Out, "^C")
+		os.Exit(0)
 	}
 	return string(pwd), err
 }
