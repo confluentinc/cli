@@ -75,15 +75,7 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name:   connectv1.PtrString("az-connector"),
 				},
 			}
-
-			connectorExpansion2 := connectorExpansion
-			connectorExpansion2.Id = &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-456")}
-
-			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{
-				"az-connector":   connectorExpansion,
-				"az-connector-2": connectorExpansion2,
-			})
-		
+			err := json.NewEncoder(w).Encode(map[string]connectv1.ConnectV1ConnectorExpansion{"az-connector": connectorExpansion})
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
 			var request connectv1.InlineObject

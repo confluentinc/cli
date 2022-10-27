@@ -33,7 +33,7 @@ func (s *CLITestSuite) TestConnectPause() {
 	tests := []CLITest{
 		{args: "connect pause --help", fixture: "connect/pause-help.golden"},
 		{args: "connect pause lcc-000000 --cluster lkc-123456", fixture: "connect/pause-unknown.golden", wantErrCode: 1},
-		{args: "connect pause lcc-123 lcc-456 --cluster lkc-123456", fixture: "connect/pause-batch.golden"},
+		{args: "connect pause lcc-123 --cluster lkc-123456", fixture: "connect/pause.golden"},
 	}
 
 	for _, test := range tests {
@@ -46,7 +46,7 @@ func (s *CLITestSuite) TestConnectResume() {
 	tests := []CLITest{
 		{args: "connect resume --help", fixture: "connect/resume-help.golden"},
 		{args: "connect resume lcc-000000 --cluster lkc-123456", fixture: "connect/resume-unknown.golden", wantErrCode: 1},
-		{args: "connect resume lcc-123 lcc-456 --cluster lkc-123456", fixture: "connect/resume-batch.golden"},
+		{args: "connect resume lcc-123 --cluster lkc-123456", fixture: "connect/resume.golden"},
 	}
 
 	for _, test := range tests {

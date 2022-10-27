@@ -5,12 +5,5 @@
     "status": "RUNNING",
     "trace": "",
     "type": "Sink"
-  },
-  {
-    "id": "lcc-456",
-    "name": "az-connector-2",
-    "status": "RUNNING",
-    "trace": "",
-    "type": "Sink"
   }
 ]
