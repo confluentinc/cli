@@ -32,7 +32,7 @@ func (c *migrateCmd) newConfigCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringToString("combine", nil, `A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to that cluster's server.properties file.`)
-	cmd.Flags().StringSlice("bootstrap-servers", nil, `A comma-separated list of public brokers ("hostname:port") in a Kafka cluster that will receive audit log events.`)
+	cmd.Flags().StringSlice("bootstrap-servers", nil, `A comma-separated list of public brokers ("hostname:port") in the Kafka cluster that will receive audit log events.`)
 	cmd.Flags().String("authority", "", `The CRN authority to use in all route patterns.`)
 
 	return cmd
