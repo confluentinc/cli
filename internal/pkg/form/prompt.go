@@ -4,9 +4,11 @@ package form
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/havoc-io/gopass"
 )
@@ -47,6 +49,10 @@ func (p *RealPrompt) ReadLineMasked() (string, error) {
 	}
 
 	pwd, err := gopass.GetPasswdMasked()
+	if err != nil && err.Error() == "interrupted" {
+		_, _ = fmt.Fprint(p.Out, "^C")
+		_ = syscall.Kill(syscall.Getpid(), syscall.SIGINT)
+	}
 	return string(pwd), err
 }
 
