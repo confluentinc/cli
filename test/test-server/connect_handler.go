@@ -67,9 +67,8 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 						State: "RUNNING",
 						Trace: connectv1.PtrString(""),
 					},
-					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{
-						connectv1.ConnectV1ConnectorExpansionStatusTasks{Id: 1, State: "RUNNING"}},
-					Type: "Sink",
+					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
+					Type:  "Sink",
 				},
 				Info: &connectv1.ConnectV1ConnectorExpansionInfo{
 					Config: &map[string]string{},
