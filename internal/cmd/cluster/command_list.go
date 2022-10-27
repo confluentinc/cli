@@ -6,7 +6,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -35,7 +35,7 @@ func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
 	if err != nil {
-		return print.HandleClusterError(err, response)
+		return pcluster.HandleClusterError(err, response)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
@@ -43,5 +43,5 @@ func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return print.PrintCluster(clusterInfos, format)
+	return pcluster.PrintCluster(clusterInfos, format)
 }
