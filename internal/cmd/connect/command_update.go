@@ -39,12 +39,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connectorExpansion.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID, *userConfigs); err != nil {
+	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID, *userConfigs); err != nil {
 		return err
 	}
 
