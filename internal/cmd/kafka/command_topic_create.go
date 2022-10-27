@@ -34,20 +34,22 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
-	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
+
+	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
 	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
 	return cmd
 }
 
 func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	numPartitions, err := cmd.Flags().GetInt32("partitions")
+	partitions, err := cmd.Flags().GetUint32("partitions")
 	if err != nil {
 		return err
 	}
@@ -75,8 +77,8 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
-	if err != nil {
+
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 
@@ -93,14 +95,15 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 
 		data := kafkarestv3.CreateTopicRequestData{
-			TopicName:         topicName,
-			PartitionsCount:   &numPartitions,
-			ReplicationFactor: utils.Int32Ptr(defaultReplicationFactor),
-			Configs:           &topicConfigs,
+			TopicName: topicName,
+			Configs:   &topicConfigs,
+		}
+
+		if cmd.Flags().Changed("partitions") {
+			data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 		}
 
 		_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
-
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
 			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
@@ -146,12 +149,14 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.Topic{
 		Spec: &schedv1.TopicSpecification{
-			Name:              topicName,
-			NumPartitions:     numPartitions,
-			ReplicationFactor: defaultReplicationFactor,
-			Configs:           configMap,
+			Name:    topicName,
+			Configs: configMap,
 		},
 		Validate: dryRun,
+	}
+
+	if cmd.Flags().Changed("partitions") {
+		topic.Spec.NumPartitions = int32(partitions)
 	}
 
 	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {

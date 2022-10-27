@@ -8,7 +8,7 @@ Create a topic named "my_topic" with default options.
   $ confluent kafka topic create my_topic
 
 Flags:
-      --partitions int32     Number of topic partitions. (default 6)
+      --partitions uint32    Number of topic partitions.
       --config strings       A comma-separated list of configuration overrides ("key=value") for the topic being created.
       --dry-run              Run the command without committing changes to Kafka.
       --if-not-exists        Exit gracefully if topic already exists.
