@@ -10,7 +10,7 @@ import (
 
 func (s *CLITestSuite) TestPlugin() {
 	path := os.Getenv("PATH")
-	newPath := "bin:test/fixtures/input/plugin"
+	newPath := "bin:test/fixtures/input/plugin:test/fixtures/input/plugin/test"
 	if runtime.GOOS == "windows" {
 		newPath = strings.ReplaceAll(newPath, ":", ";")
 	}

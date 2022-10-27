@@ -24,8 +24,8 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("ingress", "", "Update ingress limit for quota.")
 	cmd.Flags().String("egress", "", "Update egress limit for quota.")
-	cmd.Flags().StringSlice("add-principals", []string{}, "List of service accounts to add to quota (comma-separated).")
-	cmd.Flags().StringSlice("remove-principals", []string{}, "List of service accounts to remove from quota (comma-separated).")
+	cmd.Flags().StringSlice("add-principals", []string{}, "A comma-separated list of service accounts to add to the quota.")
+	cmd.Flags().StringSlice("remove-principals", []string{}, "A comma-separated list of service accounts to remove from the quota.")
 	cmd.Flags().String("description", "", "Update description.")
 	cmd.Flags().String("name", "", "Update display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
