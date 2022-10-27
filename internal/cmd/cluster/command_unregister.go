@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cluster"
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -46,7 +46,7 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 
 	clusterInfos, httpResp, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
 	if err != nil {
-		return print.HandleClusterError(err, httpResp)
+		return pcluster.HandleClusterError(err, httpResp)
 	}
 	clusterFound := false
 	for _, cluster := range clusterInfos {
