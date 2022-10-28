@@ -156,7 +156,7 @@ const (
 		"Ensure the cluster is not associated with any active Connect clusters."
 	KafkaClusterInaccessibleErrorMsg    = `Kafka cluster "%s" not found or access forbidden`
 	KafkaClusterInaccessibleSuggestions = ChooseRightEnvironmentSuggestions + "\n" +
-		"Forbidden access may result from deleting the active Kafka cluster. A new active cluster can be set using `confluent kafka cluster use`."
+		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg      = `unknown topic "%s"`
