@@ -66,14 +66,3 @@ func LookupType(resourceId string) string {
 
 	return Unknown
 }
-
-func IsClusterResource(resourceId string) bool {
-	if x := strings.SplitN(resourceId, "-", 2); len(x) == 2 {
-		prefix := x[0]
-		if prefix == KafkaClusterPrefix || prefix == KsqlClusterPrefix || prefix == SchemaRegistryClusterPrefix {
-			return true
-		}
-	}
-
-	return false
-}

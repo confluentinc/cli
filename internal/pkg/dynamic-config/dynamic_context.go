@@ -110,8 +110,8 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if !resource.IsClusterResource(clusterId) {
-		return nil, errors.Errorf(errors.BadClusterIDErrorMsg, clusterId)
+	if resource.LookupType(clusterId) != resource.KafkaCluster {
+		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }

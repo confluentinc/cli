@@ -126,7 +126,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
 		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.BadClusterIDErrorMsg, args[0])
+			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
 		}
 		return args[0], nil
 	}
