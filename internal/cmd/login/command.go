@@ -146,8 +146,10 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	if currentEnv != nil {
+		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	}
 
 	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.
 	// otherwise, print remaining free credit upon each login.

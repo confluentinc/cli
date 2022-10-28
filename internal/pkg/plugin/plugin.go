@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -25,39 +24,46 @@ type pluginInfo struct {
 }
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
-func SearchPath(cfg *v1.Config) (map[string][]string, error) {
+func SearchPath(cfg *v1.Config) map[string][]string {
 	log.CliLogger.Debugf("Recursively searching $PATH for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
-	pluginMap := make(map[string][]string)
-	re := regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+(\.[a-z]+)?$`)
 	delimiter := ":"
 	if runtime.GOOS == "windows" {
 		delimiter = ";"
 	}
 
+	plugins := make(map[string][]string)
 	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
-		dirName, err := homedir.Expand(dir)
+		entries, err := os.ReadDir(dir)
 		if err != nil {
-			return nil, err
+			log.CliLogger.Warnf("unable to read directory from $PATH: %s", dir)
+			continue
 		}
-		if err := filepath.WalkDir(dirName, pluginWalkFn(re, pluginMap)); err != nil {
-			return nil, err
+
+		for _, entry := range entries {
+			if name := pluginFromEntry(entry); name != "" {
+				path := filepath.Join(dir, entry.Name())
+				plugins[name] = append(plugins[name], path)
+			}
 		}
 	}
-	return pluginMap, nil
+
+	return plugins
 }
 
-func pluginWalkFn(re *regexp.Regexp, pluginMap map[string][]string) func(string, fs.DirEntry, error) error {
-	return func(path string, entry fs.DirEntry, _ error) error {
-		pluginName := filepath.Base(path)
-		if re.MatchString(pluginName) && isExecutable(entry) {
-			if strings.Contains(pluginName, ".") {
-				pluginName = strings.TrimSuffix(pluginName, filepath.Ext(pluginName))
-			}
-			pluginMap[pluginName] = append(pluginMap[pluginName], path)
-		}
-		return nil
+func pluginFromEntry(entry os.DirEntry) string {
+	if !isExecutable(entry) {
+		return ""
 	}
+
+	name := entry.Name()
+	name = strings.TrimSuffix(name, filepath.Ext(name))
+
+	if !regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+$`).MatchString(name) {
+		return ""
+	}
+
+	return name
 }
 
 func isExecutable(entry fs.DirEntry) bool {
@@ -77,11 +83,8 @@ func isExecutableWindows(name string) bool {
 }
 
 // FindPlugin determines if the arguments passed in are meant for a plugin
-func FindPlugin(cmd *cobra.Command, args []string, cfg *v1.Config) (*pluginInfo, error) {
-	pluginMap, err := SearchPath(cfg)
-	if err != nil {
-		return nil, err
-	}
+func FindPlugin(cmd *cobra.Command, args []string, cfg *v1.Config) *pluginInfo {
+	pluginMap := SearchPath(cfg)
 
 	plugin := newPluginInfo(args)
 	for len(plugin.name) > len(pversion.CLIName) {
@@ -91,13 +94,13 @@ func FindPlugin(cmd *cobra.Command, args []string, cfg *v1.Config) (*pluginInfo,
 				break
 			}
 			plugin.args = append([]string{pluginPathList[0]}, plugin.args...)
-			return plugin, nil
+			return plugin
 		}
 		plugin.args = append([]string{args[plugin.nameSize-1]}, plugin.args...)
 		plugin.nameSize--
 		plugin.name = plugin.name[:strings.LastIndex(plugin.name, "-")]
 	}
-	return nil, err
+	return nil
 }
 
 // newPluginInfo initializes a pluginInfo struct from command line arguments

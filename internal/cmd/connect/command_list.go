@@ -40,13 +40,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectorExpansions, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,status")
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for name, connector := range connectorExpansions {
+	for name, connector := range connectors {
 		list.Add(&connectOut{
 			Name:   name,
 			Id:     connector.Id.GetId(),

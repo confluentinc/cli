@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
@@ -99,7 +100,10 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 		User:  suite.userc,
 		KSQL:  suite.ksqlc,
 	}
-	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf))
+	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
+		return nil, nil
+	})
+	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

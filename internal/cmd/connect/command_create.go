@@ -66,16 +66,16 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&connectCreateOut{
-		Id:         connectorExpansion.Id.GetId(),
+		Id:         connector.Id.GetId(),
 		Name:       connectorInfo.GetName(),
-		ErrorTrace: connectorExpansion.Status.Connector.GetTrace(),
+		ErrorTrace: connector.Status.Connector.GetTrace(),
 	})
 	return table.Print()
 }

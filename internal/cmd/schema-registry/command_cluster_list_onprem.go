@@ -30,7 +30,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	opts := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)

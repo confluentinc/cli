@@ -31,10 +31,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	pluginMap, err := plugin.SearchPath(c.cfg)
-	if err != nil {
-		return err
-	}
+	pluginMap := plugin.SearchPath(c.cfg)
 
 	if len(pluginMap) == 0 && output.GetFormat(cmd) == output.Human {
 		utils.ErrPrintln(cmd, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")

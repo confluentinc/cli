@@ -7,9 +7,8 @@ import (
 	"os"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	ccv2sdkmock "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -21,11 +20,12 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
-	errNotFound = fmt.Errorf("user not found")
+	errUserNotFound = errors.Errorf(errors.InvalidEmailErrorMsg, "notfound@email.com")
 )
 
 const (
@@ -79,33 +79,48 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		},
 	}
-	userMock := &ccsdkmock.User{
-		DescribeFunc: func(arg0 context.Context, arg1 *orgv1.User) (user *orgv1.User, e error) {
-			if arg1.Email == "test@email.com" {
-				return &orgv1.User{
-					Email:      "test@email.com",
-					ResourceId: v1.MockUserResourceId,
-				}, nil
-			} else if arg1.Email == "notfound@email.com" || arg1.ResourceId == "u-noemail" {
-				return nil, errNotFound
-			} else {
-				return &orgv1.User{
-					Email:      arg1.ResourceId + "@email.com",
-					ResourceId: arg1.ResourceId,
-				}, nil
-			}
+	iamUserMock := &iammock.UsersIamV2Api{
+		GetIamV2UserFunc: func(ctx context.Context, id string) iamv2.ApiGetIamV2UserRequest {
+			return iamv2.ApiGetIamV2UserRequest{}
 		},
-		ListFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{{
-				Email:      "test@email.com",
-				ResourceId: v1.MockUserResourceId,
-			}}, nil
+		GetIamV2UserExecuteFunc: func(r iamv2.ApiGetIamV2UserRequest) (iamv2.IamV2User, *http.Response, error) {
+			return iamv2.IamV2User{
+				Email: iamv2.PtrString("test@email.com"),
+				Id:    iamv2.PtrString(v1.MockUserResourceId),
+			}, nil, nil
 		},
-		GetServiceAccountsFunc: func(arg0 context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{{
-				ServiceName: "One Great Service",
-				ResourceId:  "User:sa-123456",
-			}}, nil
+		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
+			return iamv2.ApiListIamV2UsersRequest{}
+		},
+		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
+			return iamv2.IamV2UserList{Data: []iamv2.IamV2User{
+				{
+					Email: iamv2.PtrString("test@email.com"),
+					Id:    iamv2.PtrString(v1.MockUserResourceId),
+				},
+			}}, nil, nil
+		},
+	}
+	iamServiceAccountMock := &iammock.ServiceAccountsIamV2Api{
+		GetIamV2ServiceAccountFunc: func(ctx context.Context, id string) iamv2.ApiGetIamV2ServiceAccountRequest {
+			return iamv2.ApiGetIamV2ServiceAccountRequest{}
+		},
+		GetIamV2ServiceAccountExecuteFunc: func(r iamv2.ApiGetIamV2ServiceAccountRequest) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+			return iamv2.IamV2ServiceAccount{
+				DisplayName: iamv2.PtrString("One Great Service"),
+				Id:          iamv2.PtrString("User:sa-123456"),
+			}, nil, nil
+		},
+		ListIamV2ServiceAccountsFunc: func(ctx context.Context) iamv2.ApiListIamV2ServiceAccountsRequest {
+			return iamv2.ApiListIamV2ServiceAccountsRequest{}
+		},
+		ListIamV2ServiceAccountsExecuteFunc: func(r iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
+			return iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{
+				{
+					DisplayName: iamv2.PtrString("One Great Service"),
+					Id:          iamv2.PtrString("User:sa-123456"),
+				},
+			}}, nil, nil
 		},
 	}
 	providerMock := &ccv2sdkmock.IdentityProvidersIamV2Api{
@@ -128,16 +143,18 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 			return identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{pool}}, nil, nil
 		},
 	}
-	client := &ccloud.Client{
-		User: userMock,
-	}
 	v2client := &ccloudv2.Client{
+		AuthToken: "auth-token",
+		IamClient: &iamv2.APIClient{
+			UsersIamV2Api:           iamUserMock,
+			ServiceAccountsIamV2Api: iamServiceAccountMock,
+		},
 		IdentityProviderClient: &identityproviderv2.APIClient{
 			IdentityPoolsIamV2Api:     poolMock,
 			IdentityProvidersIamV2Api: providerMock,
 		},
 	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(client, v2client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2client, mdsClient, suite.conf))
 }
 
 func TestRoleBindingTestSuite(t *testing.T) {
@@ -167,7 +184,7 @@ var roleBindingListTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
@@ -230,7 +247,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
@@ -256,7 +273,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
@@ -325,7 +342,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
@@ -350,7 +367,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }

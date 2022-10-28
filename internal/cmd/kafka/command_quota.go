@@ -5,8 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
@@ -24,11 +22,6 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	}
 
 	c := &quotaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-
-	dc := dynamicconfig.New(config, nil, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-
-	c.Hidden = !(config.IsTest || launchdarkly.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false))
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
@@ -51,24 +44,24 @@ type quotaOut struct {
 }
 
 func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
-	s := &quotaOut{
+	out := &quotaOut{
 		Id:          quota.GetId(),
-		DisplayName: quota.GetDisplayName(),
-		Description: quota.GetDescription(),
-		Ingress:     quota.Throughput.GetIngressByteRate(),
-		Egress:      quota.Throughput.GetEgressByteRate(),
-		Principals:  principalsToString(quota.GetPrincipals()),
-		Cluster:     quota.Cluster.GetId(),
-		Environment: quota.Environment.GetId(),
+		DisplayName: quota.Spec.GetDisplayName(),
+		Description: quota.Spec.GetDescription(),
+		Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
+		Egress:      quota.Spec.Throughput.GetEgressByteRate(),
+		Principals:  principalsToString(quota.Spec.GetPrincipals()),
+		Cluster:     quota.Spec.Cluster.GetId(),
+		Environment: quota.Spec.Environment.GetId(),
 	}
 	if format == output.Human {
-		s.Ingress += " B/s"
-		s.Egress += " B/s"
+		out.Ingress += " B/s"
+		out.Egress += " B/s"
 	}
-	return s
+	return out
 }
 
-func principalsToString(principals []kafkaquotas.ObjectReference) string {
+func principalsToString(principals []kafkaquotas.GlobalObjectReference) string {
 	principalStr := ""
 	for i, principal := range principals {
 		principalStr += principal.Id

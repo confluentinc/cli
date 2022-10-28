@@ -34,7 +34,7 @@ func (c invitationCommand) newListCommand() *cobra.Command {
 }
 
 func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error {
-	invitations, err := c.Client.User.ListInvitations(context.Background())
+	invitations, err := c.V2Client.ListIamInvitations()
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 
 	list := output.NewList(cmd)
 	for _, invitation := range invitations {
-		user := &orgv1.User{ResourceId: invitation.UserResourceId}
+		user := &orgv1.User{ResourceId: invitation.User.GetId()}
 
 		var firstName, lastName string
 		if user, err = c.Client.User.Describe(context.Background(), user); err == nil {
@@ -55,12 +55,12 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		}
 
 		list.Add(&invitationOut{
-			Id:             invitation.Id,
-			Email:          invitation.Email,
+			Id:             invitation.GetId(),
+			Email:          invitation.GetEmail(),
 			FirstName:      firstName,
 			LastName:       lastName,
-			UserResourceId: invitation.UserResourceId,
-			Status:         invitation.Status,
+			UserResourceId: invitation.User.GetId(),
+			Status:         invitation.GetStatus(),
 		})
 	}
 	return list.Print()

@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -76,7 +77,7 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 		var reassignmentGetResp kafkarestv3.ReassignmentData
 		reassignmentGetResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReassignmentGet(restContext, clusterId, topic, partitionId)
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		if reassignmentGetResp.Kind != "" {
 			reassignmentListResp.Data = []kafkarestv3.ReassignmentData{reassignmentGetResp}
@@ -87,7 +88,7 @@ func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) e
 		reassignmentListResp, resp, err = restClient.PartitionApi.ClustersClusterIdTopicsPartitionsReassignmentGet(restContext, clusterId)
 	}
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)

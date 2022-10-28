@@ -8,12 +8,18 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-type shareOut struct {
-	Id               string    `human:"ID" serialized:"id"`
-	ProviderName     string    `human:"Provider Name" serialized:"provider_name"`
-	Status           string    `human:"Status" serialized:"status"`
-	SharedResourceId string    `human:"Shared Resource ID" serialized:"shared_resource_id"`
-	InviteExpiresAt  time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
+type consumerShareOut struct {
+	Id                         string      `human:"ID" serialized:"id"`
+	ProviderName               string      `human:"Provider Name" serialized:"provider_name"`
+	ProviderOrganizationName   string      `human:"Provider Organization Name" serialized:"provider_organization_name"`
+	Status                     string      `human:"Status" serialized:"status"`
+	InviteExpiresAt            time.Time   `human:"Invite Expires At" serialized:"invite_expires_at"`
+	NetworkDnsDomain           string      `human:"Network DNS Domain" serialized:"network_dns_domain"`
+	NetworkZones               string      `human:"Network Zones" serialized:"network_zones"`
+	NetworkZonalSubdomains     []string    `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
+	NetworkKind                string      `human:"Network Kind" serialized:"network_kind"`
+	NetworkPrivateLinkDataType string      `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     interface{} `human:"Network Private Link Data" serialized:"network_private_link_data"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -54,13 +60,13 @@ func (c *command) autocompleteConsumerShares() []string {
 	return suggestions
 }
 
-func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *shareOut {
-	sharedResource := share.GetSharedResource()
-	return &shareOut{
-		Id:               share.GetId(),
-		ProviderName:     share.GetProviderUserName(),
-		Status:           share.GetStatus(),
-		SharedResourceId: sharedResource.GetId(),
-		InviteExpiresAt:  share.GetInviteExpiresAt(),
+func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShareOut {
+	status := share.GetStatus()
+	return &consumerShareOut{
+		Id:                       share.GetId(),
+		ProviderName:             share.GetProviderUserName(),
+		ProviderOrganizationName: share.GetProviderOrganizationName(),
+		Status:                   status.GetPhase(),
+		InviteExpiresAt:          share.GetInviteExpiresAt(),
 	}
 }

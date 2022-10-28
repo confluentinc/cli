@@ -78,5 +78,5 @@ func (c *command) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpa
 		return nil, err
 	}
 
-	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
+	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 }

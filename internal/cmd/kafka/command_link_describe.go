@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -51,7 +52,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 
 	listLinkConfigsRespData, httpResp, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, linkName)
 	if err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	list := output.NewList(cmd)

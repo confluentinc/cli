@@ -11,6 +11,8 @@ func (c *command) newProviderCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newInviteCommand())
+	cmd.AddCommand(c.newOptInCommand())
+	cmd.AddCommand(c.newOptOutCommand())
 	cmd.AddCommand(c.newProviderShareCommand())
 
 	return cmd

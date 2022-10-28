@@ -54,7 +54,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Id: cmkv2.PtrString("lkc-xyz"),
 	Status: &cmkv2.CmkV2ClusterStatus{
 		Cku:   cmkv2.PtrInt32(1),
-		Phase: "PROVISIONING",
+		Phase: ccloudv2.StatusProvisioning,
 	},
 }
 

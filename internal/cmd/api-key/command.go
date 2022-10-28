@@ -88,8 +88,8 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 		return nil, err
 	}
 
-	if auditLog := v1.GetAuditLog(c.State); auditLog != nil {
-		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
+		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
 			return nil, err
 		}

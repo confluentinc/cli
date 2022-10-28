@@ -58,11 +58,11 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
+func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principalId string) []v1.KafkaQuotasV1ClientQuota {
 	var filteredQuotas []v1.KafkaQuotasV1ClientQuota
 	for _, quota := range quotas {
-		for _, p := range *quota.Principals {
-			if p.Id == principal {
+		for _, principal := range *quota.Spec.Principals {
+			if principal.Id == principalId {
 				filteredQuotas = append(filteredQuotas, quota)
 				// principals can only belong to one quota so break after finding it
 				return filteredQuotas

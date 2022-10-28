@@ -230,26 +230,21 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		userBuilder.Key(key).Anonymous(true)
 		return userBuilder.Build()
 	}
-	user := ctx.GetUser()
 	// Basic user info
-	if user != nil && user.ResourceId != "" {
-		userResourceId := ctx.State.Auth.User.ResourceId
-		userBuilder = lduser.NewUserBuilder(userResourceId)
-		setCustomAttribute(custom, "user.resource_id", ldvalue.String(userResourceId))
+	if id := ctx.GetUser().GetResourceId(); id != "" {
+		userBuilder = lduser.NewUserBuilder(id)
+		setCustomAttribute(custom, "user.resource_id", ldvalue.String(id))
 	} else {
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
-
-	organization := ctx.GetOrganization()
 	// org info
-	if organization != nil && organization.ResourceId != "" {
-		setCustomAttribute(custom, "org.resource_id", ldvalue.String(organization.ResourceId))
+	if id := ctx.GetOrganization().GetResourceId(); id != "" {
+		setCustomAttribute(custom, "org.resource_id", ldvalue.String(id))
 	}
-	environment := ctx.GetEnvironment()
 	// environment (account) info
-	if environment != nil && environment.Id != "" {
-		setCustomAttribute(custom, "environment.id", ldvalue.String(environment.Id))
+	if id := ctx.GetEnvironment().GetId(); id != "" {
+		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
 	}
 	// cluster info
 	cluster, _ := ctx.GetKafkaClusterForCommand()

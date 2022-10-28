@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -43,7 +44,7 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 	// Get Brokers
 	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)

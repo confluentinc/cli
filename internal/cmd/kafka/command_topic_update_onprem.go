@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -24,8 +25,9 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic at specified cluster (providing Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).`,
-				Code: "confluent kafka topic update my_topic --url http://localhost:8082 --config=\"retention.ms=259200000\"",
-			}),
+				Code: `confluent kafka topic update my_topic --url http://localhost:8082 --config "retention.ms=259200000"`,
+			},
+		),
 	}
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics configuration ("key=value") overrides for the topic being created.`)
@@ -72,7 +74,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 	}
 	resp, err := restClient.ConfigsV3Api.UpdateKafkaTopicConfigBatch(restContext, clusterId, topicName, opts)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {

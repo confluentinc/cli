@@ -26,7 +26,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	account := &orgv1.Account{
 		Name:           args[0],
-		OrganizationId: c.State.Auth.Account.OrganizationId,
+		OrganizationId: c.Context.GetOrganization().GetId(),
 	}
 
 	environment, err := c.Client.Account.Create(context.Background(), account)

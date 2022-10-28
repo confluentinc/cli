@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -62,7 +63,7 @@ func (c *partitionCommand) describe(cmd *cobra.Command, args []string) error {
 
 	partition, resp, err := restClient.PartitionV3Api.GetKafkaPartition(restContext, clusterId, topic, partitionId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	table := output.NewTable(cmd)

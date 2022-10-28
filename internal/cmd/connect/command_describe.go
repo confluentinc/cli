@@ -78,7 +78,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorExpansion, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -89,10 +89,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputOption == output.Human.String() {
-		return printHumanDescribe(cmd, connectorExpansion)
+		return printHumanDescribe(cmd, connector)
 	}
 
-	return printSerializedDescribe(cmd, connectorExpansion)
+	return printSerializedDescribe(cmd, connector)
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {

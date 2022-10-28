@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -143,7 +144,7 @@ func getBrokerTasksForCluster(restClient *kafkarestv3.APIClient, restContext con
 		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersTasksGet(restContext, clusterId)
 	}
 	if err != nil {
-		return taskData, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return taskData, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	return taskData, nil
 }
@@ -160,7 +161,7 @@ func getBrokerTasksForBroker(restClient *kafkarestv3.APIClient, restContext cont
 		taskData, resp, err = restClient.BrokerTaskApi.ClustersClusterIdBrokersBrokerIdTasksGet(restContext, clusterId, brokerId)
 	}
 	if err != nil {
-		return taskData, kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return taskData, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	return taskData, nil
 }

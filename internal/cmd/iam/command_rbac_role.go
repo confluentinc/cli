@@ -47,9 +47,9 @@ func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *roleCommand) createContext() context.Context {
 	if c.cfg.IsCloudLogin() {
-		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.State.AuthToken)
+		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.Context.GetAuthToken())
 	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+		return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	}
 }
 

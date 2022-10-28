@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -43,17 +44,21 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
 
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {

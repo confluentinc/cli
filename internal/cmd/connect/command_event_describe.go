@@ -31,23 +31,22 @@ func (c *eventCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
-	if c.State.Auth == nil || c.State.Auth.Organization == nil || c.State.Auth.Organization.AuditLog == nil ||
-		c.State.Auth.Organization.AuditLog.ClusterId == "" {
+	auditLog := c.Context.GetOrganization().GetAuditLog()
+
+	if auditLog.GetClusterId() == "" {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
 
-	auditLog := c.State.Auth.Organization.AuditLog
-
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&eventDescribeOut{
-		ClusterId:        auditLog.ClusterId,
-		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: serviceAccount.ResourceId,
+		ClusterId:        auditLog.GetClusterId(),
+		EnvironmentId:    auditLog.GetAccountId(),
+		ServiceAccountId: serviceAccount.GetResourceId(),
 		TopicName:        "confluent-connect-log-events",
 	})
 	return table.Print()
