@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -19,24 +20,48 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("config", "", "JSON connector config file.")
+	cmd.Flags().StringSlice("config-list", nil, `A comma-separated list of configuration overrides ("key=value") for the connector being updated.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-
-	_ = cmd.MarkFlagRequired("config")
 
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	userConfigs, err := getConfig(cmd)
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
+	var userConfigs *map[string]string
+	if cmd.Flags().Changed("config-list") {
+		configList, err := cmd.Flags().GetStringSlice("config-list")
+		if err != nil {
+			return err
+		}
+		configMap, err := properties.ConfigFlagToMap(configList)
+		if err != nil {
+			return err
+		}
+
+		connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+		if err != nil {
+			return err
+		}
+		currentConfigs := connector.Info.GetConfig()
+
+		for name, value := range configMap {
+			currentConfigs[name] = value
+		}
+		userConfigs = &currentConfigs
+	} else if cmd.Flags().Changed("config") {
+		userConfigs, err = getConfig(cmd)
+		if err != nil {
+			return err
+		}
+	} else {
+		return errors.New("Must specify either config file or config-list.")
 	}
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
