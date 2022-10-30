@@ -53,6 +53,7 @@ const (
 	// connect and connector-catalog commands
 	UnknownConnectorIdErrorMsg         = `unknown connector ID "%s"`
 	EmptyConfigFileErrorMsg            = `connector config file "%s" is empty`
+	ConfigOrConfigListRequiredErrorMsg = `must specify either config file path or config list`
 	MissingRequiredConfigsErrorMsg     = `required configs "name" and "connector.class" missing from connector config file "%s"`
 	InvalidCloudErrorMsg               = "error defining plugin on given Kafka cluster"
 	InvalidCloudSuggestions            = "To list available connector plugin types, use `confluent connect plugin list`."
