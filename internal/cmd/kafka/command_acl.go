@@ -17,12 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	listFieldsOnPrem       = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	humanLabelsOnPrem      = []string{"Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabelsOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
-)
-
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }

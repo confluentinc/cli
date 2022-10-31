@@ -1,6 +1,6 @@
 `confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
 +-------------------------+--------------------------+
-| Id                      | lksqlc-woooo             |
+| ID                      | lksqlc-woooo             |
 | Name                    | kay cee queue elle       |
 | Topic Prefix            | pksqlc-ghjkl             |
 | Kafka                   | lkc-zxcvb                |

@@ -4,12 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"sort"
 	"strconv"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -23,17 +21,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type updateRow struct {
-	Name     string
-	Value    string
-	ReadOnly string
+type topicConfigurationOut struct {
+	Name     string `human:"Name" serialized:"name"`
+	Value    string `human:"Value" serialized:"value"`
+	ReadOnly string `human:"Read-Only" serialized:"read_only"`
 }
-
-var (
-	topicListLabels           = []string{"Name", "Value", "ReadOnly"}
-	topicListHumanLabels      = []string{"Name", "Value", "Read-Only"}
-	topicListStructuredLabels = []string{"name", "value", "read_only"}
-)
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -123,6 +115,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			} else if configsResp.Data == nil {
 				return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 			}
+
 			readOnlyConfigs := set.New()
 			configsValues := make(map[string]string)
 			for _, conf := range configsResp.Data {
@@ -132,11 +125,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				configsValues[conf.Name] = conf.GetValue()
 			}
 
-			// Output writing preparation
-			outputWriter, err := output.NewListOutputWriter(cmd, topicListLabels, topicListHumanLabels, topicListStructuredLabels)
-			if err != nil {
-				return err
-			}
 			if hasNumPartitionsChanged {
 				numPartitions, err := c.getNumPartitions(topicName)
 				if err != nil {
@@ -149,27 +137,21 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
 				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
-			sort.Slice(kafkaRestConfigs.Data, func(i, j int) bool {
-				return kafkaRestConfigs.Data[i].Name < kafkaRestConfigs.Data[j].Name
-			})
 
 			// Write current state of relevant config settings
-			format, err := cmd.Flags().GetString(output.FlagName)
-			if err != nil {
-				return err
-			}
-			if format == output.Human.String() {
+			if output.GetFormat(cmd) == output.Human {
 				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRestMsg, topicName)
 			}
+
+			list := output.NewList(cmd)
 			for _, config := range kafkaRestConfigs.Data {
-				row := &updateRow{
+				list.Add(&topicConfigurationOut{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
 					ReadOnly: strconv.FormatBool(readOnlyConfigs[config.Name]),
-				}
-				outputWriter.AddElement(row)
+				})
 			}
-			return outputWriter.Out()
+			return list.Print()
 		}
 	}
 
@@ -179,28 +161,27 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: args[0], Configs: copyMap(configMap)}
-
-	err = c.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
-	if err != nil {
+	topic := &schedv1.Topic{
+		Spec: &schedv1.TopicSpecification{
+			Name:    args[0],
+			Configs: copyMap(configMap),
+		},
+		Validate: dryRun,
+	}
+	if err := c.Client.Kafka.UpdateTopic(context.Background(), cluster, topic); err != nil {
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}
-	utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
-	var entries [][]string
-	titleRow := []string{"Name", "Value"}
-	for name, value := range configMap {
-		record := &struct {
-			Name  string
-			Value string
-		}{
-			name,
-			value,
-		}
-		entries = append(entries, printer.ToRow(record, titleRow))
+
+	if output.GetFormat(cmd) == output.Human {
+		utils.Printf(cmd, errors.UpdateTopicConfigMsg, args[0])
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i][0] < entries[j][0]
-	})
-	printer.RenderCollectionTable(entries, titleRow)
-	return nil
+	list := output.NewList(cmd)
+	for name, value := range configMap {
+		list.Add(&topicConfigurationOut{
+			Name:  name,
+			Value: value,
+		})
+	}
+	list.Filter([]string{"Name", "Value"})
+	return list.Print()
 }

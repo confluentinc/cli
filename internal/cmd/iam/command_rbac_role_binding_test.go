@@ -2,7 +2,6 @@ package iam
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,7 +19,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
@@ -40,12 +38,6 @@ type roleBindingTest struct {
 	roleName  string
 	scope     mdsv2alpha1.Scope
 	err       error
-}
-
-type myRoleBindingTest struct {
-	scopeRoleBindingMapping []mdsv2alpha1.ScopeRoleBindingMapping
-	mockedListIamUserResult iamv2.IamV2UserList
-	expected                []listDisplay
 }
 
 type expectedListCmdArgs struct {
@@ -238,7 +230,7 @@ var roleBindingListTests = []roleBindingTest{
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprint(tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
@@ -257,265 +249,6 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			err := cmd.Execute()
 			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
-	}
-}
-
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan []mdsv2alpha1.ScopeRoleBindingMapping, mockListIamUserResult chan iamv2.IamV2UserList) *cobra.Command {
-	// Mock MDS Client
-	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
-	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
-		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
-			return <-mockRoleBindingsResult, nil, nil
-		},
-	}
-
-	// Mock User Client
-	iamUserMock := &iammock.UsersIamV2Api{
-		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
-			return iamv2.ApiListIamV2UsersRequest{}
-		},
-		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
-			return <-mockListIamUserResult, nil, nil
-		},
-	}
-	v2Client := &ccloudv2.Client{
-		IamClient: &iamv2.APIClient{UsersIamV2Api: iamUserMock},
-	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, mdsClient, suite.conf))
-}
-
-var myRoleBindingListTests = []myRoleBindingTest{
-	// Principal whose email address is NOT known will be returned without an email address
-	{
-		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:u-epo7ml": {
-						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-		},
-		mockedListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal: "User:u-epo7ml",
-				Role:      "MetricsViewer",
-			},
-		},
-	},
-	// Principal whose email address is known will be returned with email address
-	{
-		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-		},
-		mockedListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal: "User:u-123",
-				Role:      "MetricsViewer",
-				Email:     "test@email.com",
-			},
-		},
-	},
-	// Service Account
-	{
-		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:sa-123": {
-						"MetricsViewer": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-		},
-		mockedListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{},
-		},
-		expected: []listDisplay{
-			{
-				Principal: "User:sa-123",
-				Role:      "MetricsViewer",
-			},
-		},
-	},
-	// Multiple role bindings at various scopes
-	{
-		scopeRoleBindingMapping: []mdsv2alpha1.ScopeRoleBindingMapping{
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"OrganizationAdmin": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet", "environment=Cyberdyne"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"EnvironmentAdmin": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet", "environment=Cyberdyne", "cloud-cluster=t1000"},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"CloudClusterAdmin": []mdsv2alpha1.ResourcePattern{},
-					},
-				},
-			},
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet", "environment=Cyberdyne", "cloud-cluster=t1000"},
-					Clusters: mdsv2alpha1.ScopeClusters{
-						KafkaCluster: "t1000",
-					},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"ResourceOwner": []mdsv2alpha1.ResourcePattern{{
-							ResourceType: "Topic",
-							Name:         "connor",
-							PatternType:  "LITERAL",
-						}, {
-							ResourceType: "Topic",
-							Name:         "john",
-							PatternType:  "PREFIX",
-						}},
-					},
-				},
-			},
-			{
-				Scope: mdsv2alpha1.Scope{
-					Path: []string{"organization=Skynet", "environment=Cyberdyne"},
-					Clusters: mdsv2alpha1.ScopeClusters{
-						SchemaRegistryCluster: "sr1000",
-					},
-				},
-				Rolebindings: map[string]map[string][]mdsv2alpha1.ResourcePattern{
-					"User:" + v1.MockUserResourceId: {
-						"DeveloperRead": []mdsv2alpha1.ResourcePattern{{
-							ResourceType: "Subject",
-							Name:         "terminators",
-							PatternType:  "LITERAL",
-						}},
-					},
-				},
-			},
-		},
-		mockedListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal:    "User:u-123",
-				Role:         "CloudClusterAdmin",
-				Email:        "test@email.com",
-				Environment:  "Cyberdyne",
-				CloudCluster: "t1000",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "DeveloperRead",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				ClusterType:    "Schema Registry",
-				LogicalCluster: "sr1000",
-				ResourceType:   "Subject",
-				Name:           "terminators",
-				PatternType:    "LITERAL",
-			},
-			{
-				Principal:   "User:u-123",
-				Role:        "EnvironmentAdmin",
-				Email:       "test@email.com",
-				Environment: "Cyberdyne",
-			},
-			{
-				Principal: "User:u-123",
-				Role:      "OrganizationAdmin",
-				Email:     "test@email.com",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "ResourceOwner",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				CloudCluster:   "t1000",
-				ClusterType:    "Kafka",
-				LogicalCluster: "t1000",
-				ResourceType:   "Topic",
-				Name:           "connor",
-				PatternType:    "LITERAL",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "ResourceOwner",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				CloudCluster:   "t1000",
-				ClusterType:    "Kafka",
-				LogicalCluster: "t1000",
-				ResourceType:   "Topic",
-				Name:           "john",
-				PatternType:    "PREFIX",
-			},
-		},
-	},
-}
-
-func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockRoleBindingsResult := make(chan []mdsv2alpha1.ScopeRoleBindingMapping)
-	mockListIamUserResult := make(chan iamv2.IamV2UserList)
-	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
-
-		go func() {
-			mockRoleBindingsResult <- tc.scopeRoleBindingMapping
-			mockListIamUserResult <- tc.mockedListIamUserResult
-		}()
-		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
-		assert.Nil(suite.T(), err)
-		var actual []listDisplay
-		err = json.Unmarshal([]byte(output), &actual)
-		assert.Nil(suite.T(), err)
-		assert.Equal(suite.T(), tc.expected, actual)
 	}
 }
 
