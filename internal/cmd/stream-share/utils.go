@@ -14,7 +14,7 @@ import (
 type privateLinkNetworkDetails struct {
 	networkKind         string
 	privateLinkDataType string
-	privateLinkData     interface{}
+	privateLinkData     string
 }
 
 func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
@@ -27,11 +27,11 @@ func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetwor
 	} else if cloud.CdxV1AzureNetwork != nil {
 		details.networkKind = cloud.CdxV1AzureNetwork.Kind
 		details.privateLinkDataType = "Private Link Service Aliases"
-		details.privateLinkData = cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases()
+		details.privateLinkData = fmt.Sprintf("%v", cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases())
 	} else if cloud.CdxV1GcpNetwork != nil {
 		details.networkKind = cloud.CdxV1GcpNetwork.Kind
 		details.privateLinkDataType = "Private Service Connect Service Attachments"
-		details.privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
+		details.privateLinkData = fmt.Sprintf("%v", cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments())
 	}
 	return &details
 }

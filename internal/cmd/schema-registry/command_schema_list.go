@@ -80,16 +80,13 @@ func (c *schemaCommand) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClien
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 	for _, schema := range schemas {
-		outputWriter.AddElement(&row{
+		list.Add(&row{
 			SchemaId: schema.Id,
 			Subject:  schema.Subject,
 			Version:  schema.Version,
 		})
 	}
-	return outputWriter.Out()
+	return list.Print()
 }

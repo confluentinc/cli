@@ -7,7 +7,6 @@ import (
 	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -520,12 +519,13 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
-	table := output.NewTable(cmd)
-
+	userResourceId := strings.TrimLeft(options.principal, "User:")
+	user, err := c.V2Client.GetIamUser(userResourceId)
 	out := &roleBindingOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}
+
 	if options.resource != "" {
 		if len(options.resourcesRequestV2.ResourcePatterns) != 1 {
 			return errors.New("display error: number of resource pattern is not 1")
@@ -535,27 +535,26 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		out.Name = resourcePattern.Name
 		out.PatternType = resourcePattern.PatternType
 	}
-	table.Add(out)
 
-	var fieldsSelected []string
-	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.Client.User.Describe(context.Background(), &orgv1.User{ResourceId: userResourceId})
+	var fields []string
 	if err != nil {
 		if options.resource != "" {
-			fieldsSelected = resourcePatternListFields
+			fields = resourcePatternListFields
 		} else {
-			fieldsSelected = []string{"Principal", "Role"}
+			fields = []string{"Principal", "Role"}
 		}
 	} else {
 		if options.resource != "" {
-			fieldsSelected = ccloudResourcePatternListFields
+			fields = ccloudResourcePatternListFields
 		} else {
 			out.Email = user.GetEmail()
-			fieldsSelected = []string{"Principal", "Email", "Role"}
+			fields = []string{"Principal", "Email", "Role"}
 		}
 	}
-	table.Filter(fieldsSelected)
 
+	table := output.NewTable(cmd)
+	table.Add(out)
+	table.Filter(fields)
 	return table.Print()
 }
 

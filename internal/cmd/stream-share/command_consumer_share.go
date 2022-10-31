@@ -9,17 +9,17 @@ import (
 )
 
 type consumerShareOut struct {
-	Id                         string      `human:"ID" serialized:"id"`
-	ProviderName               string      `human:"Provider Name" serialized:"provider_name"`
-	ProviderOrganizationName   string      `human:"Provider Organization Name" serialized:"provider_organization_name"`
-	Status                     string      `human:"Status" serialized:"status"`
-	InviteExpiresAt            time.Time   `human:"Invite Expires At" serialized:"invite_expires_at"`
-	NetworkDnsDomain           string      `human:"Network DNS Domain" serialized:"network_dns_domain"`
-	NetworkZones               string      `human:"Network Zones" serialized:"network_zones"`
-	NetworkZonalSubdomains     []string    `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
-	NetworkKind                string      `human:"Network Kind" serialized:"network_kind"`
-	NetworkPrivateLinkDataType string      `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
-	NetworkPrivateLinkData     interface{} `human:"Network Private Link Data" serialized:"network_private_link_data"`
+	Id                         string    `human:"ID" serialized:"id"`
+	ProviderName               string    `human:"Provider Name" serialized:"provider_name"`
+	ProviderOrganizationName   string    `human:"Provider Organization Name" serialized:"provider_organization_name"`
+	Status                     string    `human:"Status" serialized:"status"`
+	InviteExpiresAt            time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
+	NetworkDnsDomain           string    `human:"Network DNS Domain" serialized:"network_dns_domain"`
+	NetworkZones               string    `human:"Network Zones" serialized:"network_zones"`
+	NetworkZonalSubdomains     []string  `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
+	NetworkKind                string    `human:"Network Kind" serialized:"network_kind"`
+	NetworkPrivateLinkDataType string    `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string    `human:"Network Private Link Data" serialized:"network_private_link_data"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {

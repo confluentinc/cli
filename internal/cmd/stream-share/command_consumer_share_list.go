@@ -44,5 +44,6 @@ func (c *command) listConsumerShares(cmd *cobra.Command, _ []string) error {
 	for _, share := range consumerShares {
 		list.Add(c.buildConsumerShare(share))
 	}
+	list.Filter([]string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"})
 	return list.Print()
 }
