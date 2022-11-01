@@ -1,4 +1,4 @@
-         |             |    
----------+-------------+----
-  100001 | mysubject-1 | 1  
-  100002 | mysubject-1 | 2  
+  Schema ID |   Subject   | Version  
+------------+-------------+----------
+     100001 | mysubject-1 |       1  
+     100002 | mysubject-1 |       2  
