@@ -18,7 +18,17 @@ import (
 // generateIndexPage creates a file called index.rst which contains the command description and links to subcommands.
 // If there are multiple versions of a single command, tabs are used within index.rst.
 func generateIndexPage(tabs []Tab, dir string) error {
+	cmd := tabs[0].Command
 	rows := printIndexPage(tabs)
+
+	if cmd == cmd.Root() {
+		if err := writeFile(filepath.Join(dir, "overview.rst"), strings.Join(rows, "\n")); err != nil {
+			return err
+		}
+
+		rows = printRootIndexPage(tabs)
+	}
+
 	return writeFile(filepath.Join(dir, "index.rst"), strings.Join(rows, "\n"))
 }
 
@@ -31,6 +41,17 @@ func printIndexPage(tabs []Tab) []string {
 		printTabbedSection("Description", printDescription, tabs),
 		printTableOfContents(tabs),
 		printTabbedSection("Subcommands", printSubcommands, tabs),
+	})
+}
+
+func printRootIndexPage(tabs []Tab) []string {
+	cmd := tabs[0].Command
+
+	return flatten([][]string{
+		printHeader(cmd),
+		printTitle(cmd, "="),
+		printInlineScript(),
+		printTableOfContents(tabs),
 	})
 }
 
@@ -62,6 +83,17 @@ func printTitle(cmd *cobra.Command, underline string) []string {
 	}
 }
 
+func printInlineScript() []string {
+	return []string{
+		".. raw:: html",
+		"",
+		`   <script type="text/javascript">`,
+		"      window.location = 'overview.html';",
+		"   </script>",
+		"",
+	}
+}
+
 func printTableOfContents(tabs []Tab) []string {
 	// Combine subcommands across tabs, removing duplicates
 	linksByName := make(map[string]string)
@@ -84,10 +116,6 @@ func printTableOfContents(tabs []Tab) []string {
 		".. toctree::",
 		"   :hidden:",
 		"",
-	}
-
-	if tabs[0].Command.CommandPath() == "confluent" {
-		rows = append(rows, "   Overview <../command-reference-index>")
 	}
 
 	for _, name := range names {
