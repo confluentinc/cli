@@ -70,7 +70,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	bindings := buildACLBindings(serviceAccountId, cluster, args[1:])
 	if aclsDryRun {
-		return acl.PrintACLs(cmd, bindings, cmd.OutOrStderr())
+		return acl.PrintACLs(cmd, bindings)
 	}
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {

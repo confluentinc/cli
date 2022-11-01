@@ -156,7 +156,7 @@ func convertToFlags(operations ...interface{}) string {
 		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprintf("%v", v)
+		s := fmt.Sprint(v)
 		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}

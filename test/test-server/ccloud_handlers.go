@@ -341,15 +341,23 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := &orgv1.User{
-				Id:                 serviceAccountID,
-				ResourceId:         serviceAccountResourceID,
-				ServiceName:        "service_account",
-				ServiceDescription: "at your service.",
+			res := &orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{
+					{
+						Id:                 serviceAccountID,
+						ResourceId:         serviceAccountResourceID,
+						ServiceName:        "service_account",
+						ServiceDescription: "at your service.",
+					},
+					{
+						Id:                 1,
+						ResourceId:         "sa-00001",
+						ServiceName:        "KSQL.lksqlc-12345",
+						ServiceDescription: "ksqlDB service account",
+					},
+				},
 			}
-			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{serviceAccount},
-			})
+			listReply, err := utilv1.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
@@ -558,6 +566,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 				Name:              "account ksql",
 				Storage:           130,
 				Endpoint:          "SASL_SSL://ksql-endpoint",
+				ServiceAccountId:  1,
 			}
 			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster,
