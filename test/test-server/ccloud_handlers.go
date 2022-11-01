@@ -804,13 +804,11 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":   true,
-			"testString": "string",
-			"testInt":    1,
-			"testJson":   map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{
-				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
-			},
+			"testBool":                 true,
+			"testString":               "string",
+			"testInt":                  1,
+			"testJson":                 map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":  []map[string]interface{}{},
 			"cli.client_quotas.enable": true,
 		}
 
