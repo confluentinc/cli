@@ -13,8 +13,6 @@ import (
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const tab = "   "
@@ -144,7 +142,7 @@ func printLink(cmd *cobra.Command) string {
 func printDescription(cmd *cobra.Command) ([]string, bool) {
 	var rows []string
 
-	if cmd.CommandPath() == version.CLIName {
+	if cmd == cmd.Root() {
 		rows = []string{
 			"The available |confluent| CLI commands are documented here.",
 			"",
