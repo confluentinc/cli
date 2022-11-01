@@ -9,14 +9,14 @@ import (
 func (c *linkCommand) newConfigurationCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configuration",
-		Short: "Manage inter-cluster link configurations.",
+		Short: "Manage cluster link configurations.",
 	}
 
 	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newConfigurationDescribeCommand())
+		cmd.AddCommand(c.newConfigurationListCommand())
 		cmd.AddCommand(c.newConfigurationUpdateCommand())
 	} else {
-		cmd.AddCommand(c.newConfigurationDescribeCommandOnPrem())
+		cmd.AddCommand(c.newConfigurationListCommandOnPrem())
 		cmd.AddCommand(c.newConfigurationUpdateCommandOnPrem())
 	}
 

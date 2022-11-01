@@ -15,9 +15,9 @@ import (
 func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <link>",
-		Short: "Update link configs.",
+		Short: "Update cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		RunE:  c.configurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for the cluster link `my-link`.",
@@ -36,7 +36,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
