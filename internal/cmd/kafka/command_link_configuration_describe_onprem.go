@@ -7,12 +7,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *linkCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <link>",
-		Short: "Describe a previously created cluster link.",
+		Use:   "list <link>",
+		Short: "List cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describeOnPrem,
+		RunE:  c.listOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -22,7 +22,7 @@ func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *linkCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) configurationListOnPrem(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	client, ctx, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

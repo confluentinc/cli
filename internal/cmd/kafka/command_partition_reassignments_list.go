@@ -21,25 +21,25 @@ type getReassignmentsOut struct {
 	RemovingReplicas []int32 `human:"Removing Replicas" serialized:"removing_replicas"`
 }
 
-func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
+func (c *partitionCommand) newReassignmentsListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-reassignments [id]",
-		Short: "Get ongoing replica reassignments.",
-		Long:  "Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
+		Use:   "list [id]",
+		Short: "List ongoing replica reassignments.",
+		Long:  "List ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.getReassignments,
+		RunE:  c.reassignmentsList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Get all replica reassignments for the Kafka cluster.",
-				Code: "confluent kafka partition get-reassignments",
+				Text: "List all replica reassignments for the Kafka cluster.",
+				Code: "confluent kafka partition reassignments list",
 			},
 			examples.Example{
-				Text: `Get replica reassignments for topic "my_topic".`,
-				Code: "confluent kafka partition get-reassignments --topic my_topic",
+				Text: `List replica reassignments for topic "my_topic".`,
+				Code: "confluent kafka partition reassignments list --topic my_topic",
 			},
 			examples.Example{
-				Text: `Get replica reassignments for partition "1" of topic "my_topic".`,
-				Code: "confluent kafka partition get-reassignments 1 --topic my_topic",
+				Text: `List replica reassignments for partition "1" of topic "my_topic".`,
+				Code: "confluent kafka partition reassignments list 1 --topic my_topic",
 			},
 		),
 	}
@@ -51,7 +51,7 @@ func (c *partitionCommand) newGetReassignmentsCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *partitionCommand) getReassignments(cmd *cobra.Command, args []string) error {
+func (c *partitionCommand) reassignmentsList(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
