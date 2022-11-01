@@ -61,7 +61,7 @@ func (s *CLITestSuite) TestKSQL() {
 func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 	tests := []CLITest{
 		{args: "ksql cluster configure-acls --help", fixture: "ksql/cluster/configure-acls-help.golden"},
-		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde --unsafe-trace", fixture: "ksql/cluster/configure-acls.golden"},
+		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde", fixture: "ksql/cluster/configure-acls.golden"},
 		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde --dry-run", fixture: "ksql/cluster/configure-acls-dry-run.golden"},
 	}
 
