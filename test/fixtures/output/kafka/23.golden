@@ -11,5 +11,6 @@
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
   "api_endpoint": "http://kafka-api-url",
-  "rest_endpoint": "https://pkc-endpoint"
+  "rest_endpoint": "https://pkc-endpoint",
+  "topic_count": 0
 }
