@@ -196,6 +196,7 @@ func TestPrintTableOfContents(t *testing.T) {
 		".. toctree::",
 		"   :hidden:",
 		"",
+		"   Overview <overview>",
 		"   a_b1",
 		"   a_b2",
 		"",
