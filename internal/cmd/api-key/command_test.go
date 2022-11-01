@@ -398,7 +398,7 @@ func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
-	req.Contains(out, "auditlog service account")
+	req.Contains(out, "<auditlog service account>")
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {

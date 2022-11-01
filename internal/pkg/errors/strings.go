@@ -30,7 +30,6 @@ const (
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
 
 	// connector commands
-	CreatedConnectorMsg = "Created connector \"%s\" (%s).\n"
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
@@ -87,8 +86,6 @@ const (
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
-	NoSubjectsMsg                       = "No subjects."
-	NoExporterMsg                       = "No exporters."
 	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
 
