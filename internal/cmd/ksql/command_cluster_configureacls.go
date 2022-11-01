@@ -19,10 +19,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
+func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "configure-acls <id> [topic-1] [topic-2] ... [topic-N]",
-		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
+		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB cluster."),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.configureACLs,
