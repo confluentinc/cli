@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -14,7 +13,7 @@ import (
 func (c *ksqlCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: fmt.Sprintf("List ksqlDB clusters."),
+		Short: "List ksqlDB clusters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
