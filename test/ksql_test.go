@@ -8,7 +8,6 @@ func (s *CLITestSuite) TestKSQL() {
 
 	appTests := []CLITest{
 		{args: "ksql app --help", fixture: "ksql/app/help.golden"},
-		{args: "ksql app configure-acls --help", fixture: "ksql/app/configure-acls-help.golden"},
 		{args: "ksql app create --help", fixture: "ksql/app/create-help.golden"},
 		{args: "ksql app create test_ksql --cluster lkc-12345", fixture: "ksql/app/create-result-missing-api-key.golden", wantErrCode: 1},
 		{args: "ksql app create test_ksql --cluster lkc-12345 --api-key key --api-secret secret", fixture: "ksql/app/create-result.golden"},
@@ -31,7 +30,6 @@ func (s *CLITestSuite) TestKSQL() {
 
 	clusterTests := []CLITest{
 		{args: "ksql cluster --help", fixture: "ksql/cluster/help.golden"},
-		{args: "ksql cluster configure-acls --help", fixture: "ksql/cluster/configure-acls-help.golden"},
 		{args: "ksql cluster create --help", fixture: "ksql/cluster/create-help.golden"},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-api-key.golden", wantErrCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345 --api-key key --api-secret secret", fixture: "ksql/cluster/create-result.golden"},
@@ -54,6 +52,19 @@ func (s *CLITestSuite) TestKSQL() {
 
 	tests = append(tests, appTests...)
 	tests = append(tests, clusterTests...)
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
+	tests := []CLITest{
+		{args: "ksql cluster configure-acls --help", fixture: "ksql/cluster/configure-acls-help.golden"},
+		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde", fixture: "ksql/cluster/configure-acls.golden"},
+		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde --dry-run", fixture: "ksql/cluster/configure-acls-dry-run.golden"},
+	}
+
 	for _, tt := range tests {
 		tt.login = "cloud"
 		s.runIntegrationTest(tt)
