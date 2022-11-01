@@ -154,11 +154,25 @@ func (c *Context) GetPlatformServer() string {
 	return ""
 }
 
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuth() *AuthConfig {
 	if c.State != nil {
 		return c.State.Auth
 	}
 	return nil
+}
+
+func (c *Context) SetAuth(auth *AuthConfig) {
+	if c.GetState() == nil {
+		c.State = new(ContextState)
+	}
+	c.GetState().Auth = auth
 }
 
 func (c *Context) GetUser() *orgv1.User {
@@ -186,16 +200,16 @@ func (c *Context) GetEnvironment() *orgv1.Account {
 	return nil
 }
 
+func (c *Context) SetEnvironment(environment *orgv1.Account) {
+	if c.GetAuth() == nil {
+		c.SetAuth(new(AuthConfig))
+	}
+	c.GetAuth().Account = environment
+}
+
 func (c *Context) GetEnvironments() []*orgv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Accounts
-	}
-	return nil
-}
-
-func (c *Context) GetState() *ContextState {
-	if c != nil {
-		return c.State
 	}
 	return nil
 }
