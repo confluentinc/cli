@@ -7,10 +7,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *linkCommand) newConfigurationDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <link>",
-		Short: "Describe a previously created cluster link.",
+		Short: "Describe a previously created cluster link configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describeOnPrem,
 	}

@@ -18,7 +18,7 @@ type linkConfigurationOut struct {
 	Synonyms    []string `human:"Synonyms" serialized:"synonyms"`
 }
 
-func (c *linkCommand) newDescribeCommand() *cobra.Command {
+func (c *linkCommand) newConfigurationDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <link>",
 		Short: "Describe a previously created cluster link.",

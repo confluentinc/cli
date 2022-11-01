@@ -13,16 +13,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *linkCommand) newUpdateCommandOnPrem() *cobra.Command {
+func (c *linkCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <link>",
-		Short: "Update link configs.",
+		Short: "Update link configurations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.updateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for the cluster link `my-link`.",
-				Code: "confluent kafka link update my-link --config-file my-config.txt",
+				Code: "confluent kafka link configuration update my-link --config-file my-config.txt",
 			},
 		),
 	}
