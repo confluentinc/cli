@@ -215,7 +215,7 @@ Helper function to add flags for all the legal scopes/clusters for the command.
 func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
 	if isCloudLogin {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
-		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
@@ -291,7 +291,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
-	if cmd.Flags().Changed("current-env") {
+	if cmd.Flags().Changed("current-environment") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
 	} else if cmd.Flags().Changed("environment") {
 		env, err := cmd.Flags().GetString("environment")
@@ -346,12 +346,12 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
 			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}
 
-	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 		return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 	}
 	return scopeV2, nil

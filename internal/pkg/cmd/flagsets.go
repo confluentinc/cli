@@ -8,7 +8,7 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 	set.String("ca-cert-path", "", "Path to a PEM-encoded CA to verify the Confluent REST Proxy.")
 	set.String("client-cert-path", "", "Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.")
 	set.String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
-	set.Bool("no-auth", false, "Include if requests should be made without authentication headers, and user will not be prompted for credentials.")
+	set.Bool("no-authentication", false, "Include if requests should be made without authentication headers, and user will not be prompted for credentials.")
 	set.Bool("prompt", false, "Bypass use of available login credentials and prompt for Kafka Rest credentials.")
 	set.SortFlags = false
 	return set

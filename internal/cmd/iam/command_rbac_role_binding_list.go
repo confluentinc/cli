@@ -42,7 +42,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
-				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-env --cloud-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --cloud-cluster lkc-123456",
 			},
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
@@ -80,7 +80,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 
 	if c.cfg.IsCloudLogin() {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role binding listings.")
-		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
