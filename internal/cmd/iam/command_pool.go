@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type identityPoolCommand struct {
@@ -18,7 +19,7 @@ type identityPool struct {
 	Filter        string
 }
 
-func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPoolCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pool",
 		Short:       "Manage identity pools.",
@@ -44,7 +45,7 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
-	
+
 	provider, _ := cmd.Flags().GetString("provider")
 	return pcmd.AutocompleteIdentityPools(c.V2Client, provider)
 }

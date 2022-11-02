@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 var providerListFields = []string{"Id", "Name", "Description", "IssuerUri", "JwksUri"}
@@ -20,7 +21,7 @@ type identityProvider struct {
 	JwksUri     string
 }
 
-func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newProviderCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "provider",
 		Short:       "Manage identity providers.",

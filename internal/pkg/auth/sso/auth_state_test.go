@@ -2,7 +2,7 @@ package sso
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -189,7 +189,7 @@ func TestGetOAuthToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
 		require.Equal(t, req.URL.String(), expectedUri)
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
 		require.True(t, len(body) > 0)
 		require.Equal(t, expectedPayload, string(body))
@@ -227,7 +227,7 @@ func TestRefreshOAuthToken(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		// Test request parameters
 		require.Equal(t, req.URL.String(), expectedUri)
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 		require.NoError(t, err)
 		require.True(t, len(body) > 0)
 		require.Equal(t, expectedPayload, string(body))

@@ -62,7 +62,8 @@ gorelease:
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist --timeout 60m -f .goreleaser.yml; \
+	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
@@ -132,12 +133,7 @@ endef
 
 .PHONY: download-licenses
 download-licenses:
-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
-	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
-	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
-	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
-	echo Successfully downloaded licenses
+	go-licenses save ./... --save_path legal/licenses --force || true
 
 .PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.

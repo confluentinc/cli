@@ -8,8 +8,11 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -91,6 +94,31 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
+func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("ksql-cluster", "", "KSQL cluster for the pipeline.")
+	RegisterFlagCompletionFunc(cmd, "ksql-cluster", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return autocompleteKSQLClusters(command.EnvironmentId(), command.Client)
+	})
+}
+
+func autocompleteKSQLClusters(environmentId string, client *ccloud.Client) []string {
+	req := &schedv1.KSQLCluster{AccountId: environmentId}
+	clusters, err := client.KSQL.List(context.Background(), req)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	}
+	return suggestions
+}
+
 func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []string {
 	clusters, err := client.ListKafkaClusters(environmentId)
 	if err != nil {
@@ -146,7 +174,7 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client, command.State)
+		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
 	})
 }
 
@@ -161,7 +189,7 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
-func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, state *v1.ContextState) []string {
+func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
 	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
@@ -169,16 +197,15 @@ func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client
 
 	suggestions := make([]string, len(environments))
 	for i, environment := range environments {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *environment.Id, *environment.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", environment.GetId(), environment.GetDisplayName())
 	}
 
-	if auditLog := v1.GetAuditLog(state); auditLog != nil {
-		auditLogAccountId := auditLog.AccountId
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
+		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLog.GetAccountId()})
 		if err != nil {
 			return nil
 		}
-		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLogAccountId, auditLogAccount.Name))
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), auditLogAccount.GetName()))
 	}
 
 	return suggestions

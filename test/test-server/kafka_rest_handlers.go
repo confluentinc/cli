@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"testing"
@@ -119,7 +118,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
-			reqBody, _ := ioutil.ReadAll(r.Body)
+			reqBody, _ := io.ReadAll(r.Body)
 			var requestData cpkafkarestv3.CreateTopicRequestData
 			err := json.Unmarshal(reqBody, &requestData)
 			require.NoError(t, err)
@@ -128,12 +127,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 				return
 			} else if requestData.TopicName == "topic-exceed-limit" {
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Adding the requested number of partitions will exceed 9000 total partitions."))
-				return
-			} else if requestData.PartitionsCount < -1 || requestData.PartitionsCount == 0 { // check partition
-				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Number of partitions must be larger than 0."))
-				return
-			} else if requestData.ReplicationFactor < -1 || requestData.ReplicationFactor == 0 { // check replication factor
-				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Replication factor must be larger than 0."))
 				return
 			} else if requestData.ReplicationFactor > 3 {
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Replication factor: 4 larger than available brokers: 3."))
@@ -408,7 +401,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		case http.MethodPost:
 			if topicName == "topic-exist" || topicName == "topic-exist-rest" {
 				// Parse Alter Args
-				requestBody, err := ioutil.ReadAll(r.Body)
+				requestBody, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
 				var requestData cpkafkarestv3.AlterConfigBatchRequestData
 				err = json.Unmarshal(requestBody, &requestData)

@@ -31,7 +31,8 @@ type errorResponseBody struct {
 }
 
 type errorDetail struct {
-	Detail string `json:"detail"`
+	Detail     string `json:"detail"`
+	Resolution string `json:"resolution"`
 }
 
 type errorBody struct {
@@ -111,7 +112,7 @@ func catchCoreV1Errors(err error) error {
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestions)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
@@ -163,7 +164,11 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(detail, "\n"))
+			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
+				err = NewErrorWithSuggestions(err.Error(), resolution)
+			}
+			return err
 		}
 	}
 

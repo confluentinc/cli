@@ -72,15 +72,14 @@ generate:
 
 .PHONY: deps
 deps:
-	go install github.com/goreleaser/goreleaser@v1.4.1 && \
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
-	go install github.com/mitchellh/golicense@v0.2.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+	go install github.com/google/go-licenses@v1.4.0 && \
+	go install github.com/goreleaser/goreleaser@v1.11.2 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
-# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v1.4.1
+	go install github.com/goreleaser/goreleaser@v1.11.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
@@ -141,16 +140,6 @@ endef
 fmt:
 	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
-.PHONY: release-ci
-release-ci:
-ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
-	true
-else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
-	make release
-else
-	true
-endif
-
 .PHONY: lint
 lint:
 	make lint-go
@@ -173,12 +162,8 @@ cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 
 .PHONY: lint-licenses
-## Scan and validate third-party dependency licenses
-lint-licenses: build
-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	echo Licenses for confluent binary ; \
-	[ -t 0 ] && args="" || args="-plain" ; \
-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
+lint-licenses:
+	go-licenses report ./...
 
 .PHONY: test-prep
 test-prep:

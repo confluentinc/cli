@@ -10,12 +10,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *mirrorCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "resume <destination-topic-1> <destination-topic-2> ... <destination-topic-N>",
+		Use:   "resume <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
 		Short: "Resume mirror topics.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.resume,
@@ -70,7 +71,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)
