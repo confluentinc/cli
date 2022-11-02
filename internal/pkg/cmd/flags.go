@@ -8,8 +8,6 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -101,20 +99,19 @@ func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(command.EnvironmentId(), command.Client)
+		return autocompleteKSQLClusters(command.EnvironmentId(), command.V2Client)
 	})
 }
 
-func autocompleteKSQLClusters(environmentId string, client *ccloud.Client) []string {
-	req := &schedv1.KSQLCluster{AccountId: environmentId}
-	clusters, err := client.KSQL.List(context.Background(), req)
+func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []string {
+	clusters, err := client.ListKsqlClusters(environmentId)
 	if err != nil {
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.Id, cluster.Name)
+	suggestions := make([]string, len(clusters.Data))
+	for i, cluster := range clusters.Data {
+		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
 	}
 	return suggestions
 }
