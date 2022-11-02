@@ -28,7 +28,7 @@ Suggestions format
 
 examples:
 ```
-> ./ccloud ksql app create kk --cluster lkc-asfdsaf
+> ./confluent ksql cluster create kk --cluster lkc-asfdsaf
 Error: Kafka cluster "lkc-asfdsaf" not found
 
 Suggestions:

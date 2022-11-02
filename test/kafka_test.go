@@ -134,9 +134,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -333,12 +333,12 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partitions/describe.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partitions/describe-json.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partitions/describe-yaml.golden"},
-		{args: "kafka partition get-reassignments -h", fixture: "kafka/partitions/reassignments-help.golden"},
-		{args: "kafka partition get-reassignments", fixture: "kafka/partitions/reassignments.golden"},
-		{args: "kafka partition get-reassignments -o json", fixture: "kafka/partitions/reassignments-json.golden"},
-		{args: "kafka partition get-reassignments --topic topic1", fixture: "kafka/partitions/reassignments-by-topic.golden"},
-		{args: "kafka partition get-reassignments 0 --topic topic1", fixture: "kafka/partitions/reassignments-by-partition.golden"},
-		{args: "kafka partition get-reassignments 0 --topic topic1 -o yaml", fixture: "kafka/partitions/reassignments-by-partition-yaml.golden"},
+		{args: "kafka partition reassignment list -h", fixture: "kafka/partition/reassignment/list-help.golden"},
+		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
+		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
+		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1", fixture: "kafka/partition/reassignment/list-by-partition.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
 	for _, tt := range tests {
 		tt.login = "platform"

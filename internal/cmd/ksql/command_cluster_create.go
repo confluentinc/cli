@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
@@ -14,10 +13,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
+func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
-		Short: fmt.Sprintf("Create a ksqlDB %s.", resource),
+		Short: "Create a ksqlDB cluster.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 	}
