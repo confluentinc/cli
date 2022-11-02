@@ -192,8 +192,6 @@ var vocabWords = []string{
 	"acls",
 	"apac",
 	"api",
-	"apikey",
-	"apisecret",
 	"auth",
 	"avro",
 	"aws",
