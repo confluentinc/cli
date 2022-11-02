@@ -1,11 +1,7 @@
 package pipeline
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -50,12 +46,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate ksql id
-	ksqlReq := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(),
-		Id:        ksqlCluster,
-	}
-
-	if _, err = c.Client.KSQL.Describe(context.Background(), ksqlReq); err != nil {
+	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
 		return err
 	}
 
