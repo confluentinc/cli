@@ -15,10 +15,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-type command struct {
-	*pcmd.CLICommand
-}
-
 type ksqlCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
@@ -43,15 +39,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{pcmd.NewCLICommand(cmd, prerunner)}
+	cmd.AddCommand(newClusterCommand(cfg, prerunner))
 
-	c.AddCommand(newAppCommand(prerunner))
-	c.AddCommand(newClusterCommand(cfg, prerunner))
-
-	return c.Command
+	return cmd
 }
-
-// Some helper functions for the ksql app/cluster commands
 
 func (c *ksqlCommand) updateKsqlClusterForDescribeAndList(cluster *schedv1.KSQLCluster) *ksqlCluster {
 	status := cluster.Status.String()

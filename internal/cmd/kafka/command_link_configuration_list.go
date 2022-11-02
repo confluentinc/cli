@@ -18,12 +18,12 @@ type linkConfigurationOut struct {
 	Synonyms    []string `human:"Synonyms" serialized:"synonyms"`
 }
 
-func (c *linkCommand) newDescribeCommand() *cobra.Command {
+func (c *linkCommand) newConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <link>",
-		Short: "Describe a previously created cluster link.",
+		Use:   "list <link>",
+		Short: "List cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		RunE:  c.configurationList,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -34,7 +34,7 @@ func (c *linkCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()

@@ -12,16 +12,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *linkCommand) newUpdateCommand() *cobra.Command {
+func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <link>",
-		Short: "Update link configs.",
+		Short: "Update cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		RunE:  c.configurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for the cluster link `my-link`.",
-				Code: "confluent kafka link update my-link --config-file my-config.txt",
+				Code: "confluent kafka link configuration update my-link --config-file my-config.txt",
 			},
 		),
 	}
@@ -36,7 +36,7 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
+func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
