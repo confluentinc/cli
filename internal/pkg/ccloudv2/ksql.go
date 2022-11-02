@@ -6,14 +6,13 @@ import (
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	plog "github.com/confluentinc/cli/internal/pkg/log"
 )
 
-func newKsqlClient(baseURL, userAgent string, isTest, unsafeTrace bool) *ksqlv2.APIClient {
+func newKsqlClient(url, userAgent string, unsafeTrace bool) *ksqlv2.APIClient {
 	cfg := ksqlv2.NewConfiguration()
-	cfg.Debug = plog.CliLogger.Level >= plog.DEBUG
+	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
-	cfg.Servers = ksqlv2.ServerConfigurations{{URL: getServerUrl(baseURL, isTest)}}
+	cfg.Servers = ksqlv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
 	return ksqlv2.NewAPIClient(cfg)
@@ -25,17 +24,17 @@ func (c *Client) ksqlApiContext() context.Context {
 
 func (c *Client) ListKsqlClusters(environmentId string) (ksqlv2.KsqldbcmV2ClusterList, error) {
 	clusters, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).Execute()
-	return clusters, errors.CatchV2ErrorDetailWithResponse(err, resp)
+	return clusters, errors.CatchCCloudV2Error(err, resp)
 }
 
 func (c *Client) DeleteKsqlCluster(clusterId, environmentId string) error {
 	resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.DeleteKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
-	return errors.CatchV2ErrorDetailWithResponse(err, resp)
+	return errors.CatchCCloudV2Error(err, resp)
 }
 
 func (c *Client) DescribeKsqlCluster(clusterId, environmentId string) (ksqlv2.KsqldbcmV2Cluster, error) {
 	cluster, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
-	return cluster, errors.CatchV2ErrorDetailWithResponse(err, resp)
+	return cluster, errors.CatchCCloudV2Error(err, resp)
 }
 
 func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, useDetailedProcessingLog bool) (ksqlv2.KsqldbcmV2Cluster, error) {
@@ -51,5 +50,5 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 		},
 	}
 	created, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
-	return created, errors.CatchV2ErrorDetailWithResponse(err, resp)
+	return created, errors.CatchCCloudV2Error(err, resp)
 }

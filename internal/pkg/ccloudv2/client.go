@@ -54,7 +54,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KsqlClient:             newKsqlClient(baseUrl, userAgent, isTest, unsafeTrace),
+		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
