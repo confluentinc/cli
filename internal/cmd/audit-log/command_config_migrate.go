@@ -11,9 +11,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *migrateCmd) newConfigCommand() *cobra.Command {
+func (c *configCommand) newMigrateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "config",
+		Use:   "migrate",
 		Short: "Migrate legacy audit log configurations.",
 		Long: "Migrate legacy audit log configurations. " +
 			"Use `--combine` to read in multiple Kafka broker `server.properties` files, " +
@@ -21,11 +21,11 @@ func (c *migrateCmd) newConfigCommand() *cobra.Command {
 			"and output a combined configuration suitable for centralized audit log " +
 			"management. This is sent to standard output along with any warnings to standard error.",
 		Args: cobra.NoArgs,
-		RunE: c.config,
+		RunE: c.migrate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.",
-				Code: "confluent audit-log migrate config --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
+				Code: "confluent audit-log config migrate --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties " +
 					"--bootstrap-servers logs.example.com:9092,logs.example.com:9093 --authority mds.example.com",
 			},
 		),
@@ -38,7 +38,7 @@ func (c *migrateCmd) newConfigCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *migrateCmd) config(cmd *cobra.Command, _ []string) error {
+func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 	crnAuthority, err := cmd.Flags().GetString("authority")
 	if err != nil {
 		return err
