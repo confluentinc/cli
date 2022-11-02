@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
-	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -175,16 +175,14 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.ksqlmock = &ksqlmock.ClustersKsqldbcmV2Api{
-		GetKsqldbcmV2ClusterFunc: func(context.Context, string) ksql.ApiGetKsqldbcmV2ClusterRequest {
-			return ksql.ApiGetKsqldbcmV2ClusterRequest{}
+		GetKsqldbcmV2ClusterFunc: func(context.Context, string) ksqlv2.ApiGetKsqldbcmV2ClusterRequest {
+			return ksqlv2.ApiGetKsqldbcmV2ClusterRequest{}
 		},
-		GetKsqldbcmV2ClusterExecuteFunc: func(ksql.ApiGetKsqldbcmV2ClusterRequest) (ksql.KsqldbcmV2Cluster, *http.Response, error) {
-			ksqlId := "ksql-123"
-			ksqlName := "ksql"
-			cluster := ksql.KsqldbcmV2Cluster{
-				Id: &ksqlId,
-				Spec: &ksql.KsqldbcmV2ClusterSpec{
-					DisplayName: &ksqlName,
+		GetKsqldbcmV2ClusterExecuteFunc: func(ksqlv2.ApiGetKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *http.Response, error) {
+			cluster := ksqlv2.KsqldbcmV2Cluster{
+				Id: ksqlv2.PtrString("ksql-123"),
+				Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
+					DisplayName: ksqlv2.PtrString("ksql"),
 				},
 			}
 			return cluster, nil, nil
@@ -316,7 +314,7 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		IamClient: &iamv2.APIClient{
 			ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
 		},
-		KsqlClient: &ksql.APIClient{
+		KsqlClient: &ksqlv2.APIClient{
 			ClustersKsqldbcmV2Api: suite.ksqlmock,
 		},
 	}
