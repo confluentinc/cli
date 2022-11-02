@@ -157,6 +157,7 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 						Environment: &ksqlv2.ObjectReference{
 							Id: "25",
 						},
+						CredentialIdentity: ksqlv2.NewObjectReference("sa-12345", "", ""),
 					},
 					Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 						HttpEndpoint: ptrTo("SASL_SSL://ksql-endpoint"),
