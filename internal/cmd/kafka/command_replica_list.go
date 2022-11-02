@@ -26,8 +26,8 @@ type replicaOut struct {
 	IsCaughtUp         bool   `human:"Caught Up" serialized:"is_caught_up"`
 	LogStartOffset     int64  `human:"Log Start Offset" serialized:"log_start_offset"`
 	LogEndOffset       int64  `human:"Log End Offset" serialized:"log_end_offset"`
-	LastCaughtUpTimeMs string `human:"Last Caught Up Time Ms" serialized:"last_caught_up_time_ms"`
-	LastFetchTimeMs    string `human:"Last Fetch Time Ms" serialized:"last_fetch_time_ms"`
+	LastCaughtUpTimeMs string `human:"Last Caught Up Time (ms)" serialized:"last_caught_up_time_ms"`
+	LastFetchTimeMs    string `human:"Last Fetch Time (ms)" serialized:"last_fetch_time_ms"`
 	LinkName           string `human:"Link Name" serialized:"link_name"`
 }
 
