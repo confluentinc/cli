@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -42,6 +43,8 @@ type accountDetails struct {
 	subjects       []string
 	channelDetails channelDetails
 }
+
+const USERAGENT = "User-Agent"
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
@@ -99,6 +102,23 @@ func (d *accountDetails) getTopicDescription() error {
 	}
 	if atlasEntityWithExtInfo.Entity.Attributes["description"] != nil {
 		d.channelDetails.currentTopicDescription = fmt.Sprintf("%v", atlasEntityWithExtInfo.Entity.Attributes["description"])
+	}
+	return nil
+}
+
+func (c *command) countAsyncApiUsage(details *accountDetails) error {
+	req, err := http.NewRequest("PUT", details.srCluster.SchemaRegistryEndpoint+"/asyncapi", nil)
+	if err != nil {
+		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)
+	}
+	req.SetBasicAuth(details.srCluster.SrCredentials.Key, details.srCluster.SrCredentials.Secret)
+	req.Header.Set(USERAGENT, c.Version.UserAgent)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)
+	}
+	if res.StatusCode != 200 {
+		return fmt.Errorf("request failed with status %s", res.Status)
 	}
 	return nil
 }

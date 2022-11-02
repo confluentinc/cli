@@ -26,6 +26,7 @@ const (
 	exporterReset        = "/exporters/{name}/reset"
 	subjectLevelConfig   = "/config/{subject}"
 	modeSubject          = "/mode/{subject}"
+	asyncApi             = "/asyncapi"
 )
 
 type SRRouter struct {
@@ -63,4 +64,5 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(exporterReset, s.HandleSRExporterReset(t))
 	s.HandleFunc(subjectLevelConfig, s.HandleSRSubjectConfig(t))
 	s.HandleFunc(modeSubject, s.HandleSRSubjectMode(t))
+	s.HandleFunc(asyncApi, s.HandleSRAsyncApi(t))
 }

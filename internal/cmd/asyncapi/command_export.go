@@ -124,6 +124,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
+	err = c.countAsyncApiUsage(accountDetails)
+	if err != nil {
+		return err
+	}
 	utils.Printf(cmd, "AsyncAPI specification written to \"%s\".\n", flags.file)
 	return ioutil.WriteFile(flags.file, yaml, 0644)
 }
