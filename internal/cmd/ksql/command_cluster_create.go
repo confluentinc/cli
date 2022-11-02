@@ -59,22 +59,11 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	endpoint := cluster.Status.GetHttpEndpoint()
-	clusterId := *cluster.Id
 
-	err = c.checkClusterHasEndpoint(cmd, endpoint, clusterId)
-	if err != nil {
-		return err
-	}
-
-	//todo bring back formatting
-	return output.DescribeObject(cmd, c.formatClusterForDisplayAndList(&cluster), describeFields, describeHumanRenames, describeStructuredRenames)
-}
-
-func (c *ksqlCommand) checkClusterHasEndpoint(cmd *cobra.Command, endpoint, clusterId string) error {
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
 	for endpoint == "" && count < 3 {
-		res, err := c.V2Client.DescribeKsqlCluster(clusterId, c.EnvironmentId())
+		res, err := c.V2Client.DescribeKsqlCluster(*cluster.Id, c.EnvironmentId())
 		if err != nil {
 			return err
 		}
@@ -86,6 +75,6 @@ func (c *ksqlCommand) checkClusterHasEndpoint(cmd *cobra.Command, endpoint, clus
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(c.updateKsqlClusterForDescribeAndList(cluster))
+	table.Add(c.formatClusterForDisplayAndList(&cluster))
 	return table.Print()
 }

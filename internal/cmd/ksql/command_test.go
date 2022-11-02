@@ -35,10 +35,8 @@ type KSQLTestSuite struct {
 	suite.Suite
 	conf          *v1.Config
 	kafkaCluster  *schedv1.KafkaCluster
-	v1ksqlCluster *schedv1.KSQLCluster
 	ksqlCluster   *ksqlv2.KsqldbcmV2Cluster
 	serviceAcct   *orgv1.User
-	v1ksqlc       *mock.KSQL
 	ksqlc         *ksqlmock.ClustersKsqldbcmV2Api
 	kafkac        *mock.Kafka
 	userc         *mock.User
@@ -61,13 +59,6 @@ func (suite *KSQLTestSuite) SetupSuite() {
 }
 
 func (suite *KSQLTestSuite) SetupTest() {
-	suite.v1ksqlCluster = &schedv1.KSQLCluster{
-		Id:                ksqlClusterID,
-		KafkaClusterId:    suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
-		PhysicalClusterId: outputTopicPrefix,
-		OutputTopicPrefix: outputTopicPrefix,
-		ServiceAccountId:  serviceAcctID,
-	}
 	ksqlClusterId := ksqlClusterID
 	outputTopicPrefix := "pksqlc-abcde"
 	useDetailedProcessingLog := true
@@ -95,12 +86,6 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
 			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
-		},
-	}
-
-	suite.v1ksqlc = &mock.KSQL{
-		CreateFunc: func(arg0 context.Context, arg1 *schedv1.KSQLClusterConfig) (*schedv1.KSQLCluster, error) {
-			return suite.v1ksqlCluster, nil
 		},
 	}
 
@@ -147,7 +132,6 @@ func (suite *KSQLTestSuite) SetupTest() {
 	suite.client = &ccloud.Client{
 		Kafka: suite.kafkac,
 		User:  suite.userc,
-		KSQL:  suite.v1ksqlc,
 	}
 	suite.v2Client = &ccloudv2.Client{
 		KsqlClient: &ksqlv2.APIClient{
@@ -157,15 +141,10 @@ func (suite *KSQLTestSuite) SetupTest() {
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
-		Kafka: suite.kafkac,
-		User:  suite.userc,
-		KSQL:  suite.ksqlc,
-	}
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return nil, nil
 	})
-	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(client, nil, nil, &kafkaRestProvider, suite.conf))
+	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(suite.client, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
