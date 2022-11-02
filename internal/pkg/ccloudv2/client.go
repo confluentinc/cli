@@ -9,6 +9,7 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
@@ -30,6 +31,7 @@ type Client struct {
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
 	KafkaQuotasClient      *kafkaquotas.APIClient
+	MdsClient              *mdsv2.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
@@ -53,6 +55,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
+		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
