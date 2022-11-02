@@ -34,13 +34,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config", "", "JSON connector config file.")
+	cmd.Flags().String("config-file", "", "JSON connector config file.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config")
+	_ = cmd.MarkFlagRequired("config-file")
 
 	return cmd
 }
