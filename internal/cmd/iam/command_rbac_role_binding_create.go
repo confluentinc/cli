@@ -72,10 +72,10 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
 			httpResp, err = c.ccloudCreate(options)
 		} else {
-			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
+			_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		}
 		if err != nil {
-			return errors.CatchRequestNotValidMessageError(err, httpResp)
+			return err
 		}
 	} else {
 		httpResp, err = c.confluentCreate(options)

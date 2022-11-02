@@ -62,7 +62,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
 		}
 		if err != nil {
-			return errors.CatchRequestNotValidMessageError(err, httpResp)
+			return err
 		}
 	} else {
 		httpResp, err = c.confluentDelete(options)
@@ -91,8 +91,8 @@ func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBi
 
 	for _, rolebinding := range roleBindingList {
 		if *rolebinding.CrnPattern == *deleteRoleBinding.CrnPattern {
-			_, httpResp, err = c.V2Client.DeleteIamRoleBinding(*rolebinding.Id)
-			return httpResp, err
+			_, err = c.V2Client.DeleteIamRoleBinding(*rolebinding.Id)
+			return nil, err
 		}
 	}
 	return httpResp, errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)

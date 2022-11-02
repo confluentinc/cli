@@ -21,6 +21,7 @@ import (
 var (
 	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
 	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
+	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
@@ -318,6 +319,7 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
 	w.WriteHeader(http.StatusBadRequest)
 	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
+	return err
 }
 
 func writeUserConflictError(w http.ResponseWriter) error {

@@ -6,7 +6,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -45,8 +44,6 @@ var (
 	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
-
-	dataplaneNamespace = optional.NewString("dataplane")
 
 	literalPatternType  = "LITERAL"
 	prefixedPatternType = "PREFIXED"

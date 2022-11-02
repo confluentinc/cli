@@ -293,7 +293,7 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 	for _, sa := range serviceAccounts {
 		serviceAccountToNameMap["User:"+*sa.Id] = *sa.DisplayName
 	}
-	return serviceAccountToName, nil
+	return serviceAccountToNameMap, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -352,18 +352,16 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 	for _, principal := range principals {
 		row := &displayStruct{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
-			displayStruct := &displayByRoleStruct{
-				Principal: principal,
-				Email:     email,
-			}
-			outputWriter.AddElement(displayStruct)
+			row.Email = email
+			outputWriter.AddElement(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
-			displayStruct := &displayByRoleStruct{
-				Principal:   principal,
-				ServiceName: name,
-			}
-			outputWriter.AddElement(displayStruct)
+			row.ServiceName = name
+			outputWriter.AddElement(row)
+		}
+		if name, ok := poolToNameMap[principal]; ok {
+			row.PoolName = name
+			outputWriter.AddElement(row)
 		}
 	}
 	return outputWriter.Out()
@@ -573,7 +571,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
-		return nil, errors.CatchRequestNotValidMessageError(err, httpResp)
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 	roleBindings := resp.Data
 
@@ -678,7 +676,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 
 	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
 	if err != nil {
-		return nil, errors.CatchRequestNotValidMessageError(err, httpResp)
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 	roleBindings := resp.Data
 
