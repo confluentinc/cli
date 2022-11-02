@@ -39,6 +39,8 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
+	_ = cmd.MarkFlagRequired("environment")
+
 	return cmd
 }
 
