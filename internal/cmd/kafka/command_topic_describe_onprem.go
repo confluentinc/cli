@@ -40,7 +40,7 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
