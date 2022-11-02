@@ -19,12 +19,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	fields           = []string{"Key", "Description", "OwnerResourceId", "OwnerEmail", "ResourceType", "ResourceId", "Created"}
-	humanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	structuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
-)
-
 var resourceKindToType = map[string]string{
 	"Cluster":        "kafka",
 	"ksqlDB":         "ksql",
@@ -58,7 +52,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -113,11 +107,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if !apiKey.Spec.HasOwner() {
@@ -126,7 +116,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 		// Add '*' only in the case where we are printing out tables
 		outputKey := apiKey.GetId()
-		if outputWriter.GetOutputFormat() == output.Human {
+		if output.GetFormat(cmd) == output.Human {
 			if clusterId != "" && apiKey.GetId() == currentKey {
 				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
 			} else {
@@ -147,7 +137,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		for _, res := range resources {
-			outputWriter.AddElement(&row{
+			list.Add(&out{
 				Key:             outputKey,
 				Description:     apiKey.Spec.GetDescription(),
 				OwnerResourceId: ownerId,
@@ -158,8 +148,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			})
 		}
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {

@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
@@ -36,15 +35,16 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
+	environmentId := c.EnvironmentId()
 	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
 	req := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(),
+		AccountId: environmentId,
 		Id:        id,
 	}
 
 	// Check KSQL exists
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -52,24 +52,24 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
 	// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 	// the topics.
-	if cluster.Status == schedv1.ClusterStatus_UP {
+	if c.getClusterStatus(cluster) == "PROVISIONED" {
 		provisioningFailed, err := c.checkProvisioningFailed(cluster)
 		if !provisioningFailed && err != nil {
-			if err := c.deleteTopics(req); err != nil {
+			if err := c.deleteTopics(*cluster.Id, cluster.Status.GetHttpEndpoint()); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := c.Client.KSQL.Delete(context.Background(), req); err != nil {
+	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, id)
 	return nil
 }
 
-func (c *ksqlCommand) deleteTopics(cluster *schedv1.KSQLCluster) error {
+func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
