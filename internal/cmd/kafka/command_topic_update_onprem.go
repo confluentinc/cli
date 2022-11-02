@@ -29,7 +29,8 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics configuration ("key=value") overrides for the topic being created.`)
 	pcmd.AddOutputFlag(cmd)
 
