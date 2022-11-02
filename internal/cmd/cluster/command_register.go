@@ -13,7 +13,6 @@ import (
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type registerCommand struct {
@@ -76,7 +75,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})
@@ -85,7 +84,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintCluster([]mds.ClusterInfo{clusterInfo}, output.Human.String())
+	return print.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
 }
 
 func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {

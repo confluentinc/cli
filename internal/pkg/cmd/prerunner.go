@@ -20,7 +20,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -162,11 +162,11 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.State.AuthToken
+	return c.Context.GetAuthToken()
 }
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
-	return c.State.Auth.Account.Id
+	return c.Context.GetEnvironment().GetId()
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
@@ -197,8 +197,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			}
 			// announcement and deprecation check, print out msg
 			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
-			launchdarkly.PrintAnnouncements(launchdarkly.Announcements, ctx, cmd)
-			launchdarkly.PrintAnnouncements(launchdarkly.DeprecationNotices, ctx, cmd)
+			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
+			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
@@ -238,7 +238,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 }
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
-	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
+	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
 	if !ok {
 		return nil
@@ -444,6 +444,13 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
+		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
+		if err != nil {
+			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		}
+		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+		}
 		if restEndpoint != "" {
 			state, err := ctx.AuthenticatedState()
 			if err != nil {
@@ -455,15 +462,10 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			client, err := createKafkaRESTClient(restEndpoint, unsafeTrace)
-			if err != nil {
-				return nil, err
-			}
-
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewClient(ctx.GetAuthToken(), ctx.GetPlatformServer(), r.Version.UserAgent, unsafeTrace, r.Config.IsTest),
-				Client:      client,
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -1003,7 +1005,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		//nolint
-		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+		utils.ErrPrint(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 
@@ -1031,10 +1033,10 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
-	return kafkarestv3.NewAPIClient(cfg), nil
+	return kafkarestv3.NewAPIClient(cfg)
 }

@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -33,7 +32,7 @@ type RegisterSchemaConfigs struct {
 }
 
 func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := ioutil.ReadFile(*schemaCfg.SchemaPath)
+	schema, err := os.ReadFile(*schemaCfg.SchemaPath)
 	if err != nil {
 		return nil, err
 	}
@@ -43,22 +42,16 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		return nil, err
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		registerSchemaResponse := &registerSchemaResponse{Id: response.Id}
-		err = output.StructuredOutput(outputFormat, registerSchemaResponse)
+	if output.GetFormat(cmd).IsSerialized() {
+		err = output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id})
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	}
 
-	metaInfo := GetMetaInfoFromSchemaId(response.Id)
-	return metaInfo, nil
+	return GetMetaInfoFromSchemaId(response.Id), nil
 }
 
 func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
@@ -68,7 +61,7 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 		return nil, err
 	}
 	if refPath != "" {
-		refBlob, err := ioutil.ReadFile(refPath)
+		refBlob, err := os.ReadFile(refPath)
 		if err != nil {
 			return nil, err
 		}
@@ -93,7 +86,7 @@ func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srCli
 			if err != nil {
 				return nil, err
 			}
-			err = ioutil.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
+			err = os.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
 			if err != nil {
 				return nil, err
 			}
@@ -117,7 +110,7 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 		if err != nil {
 			return "", nil, err
 		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		err = os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
 			return "", nil, err
 		}
@@ -126,13 +119,13 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 		if err != nil {
 			return "", nil, err
 		}
-		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		err = os.WriteFile(tempRefStorePath, refBytes, 0644)
 		if err != nil {
 			return "", nil, err
 		}
 		references = schemaString.References
 	} else {
-		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {
 			return "", nil, err
 		}

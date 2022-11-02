@@ -14,8 +14,6 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect list --cluster lkc-123 -o json", fixture: "connect/list-json.golden"},
 		{args: "connect list --cluster lkc-123 -o yaml", fixture: "connect/list-yaml.golden"},
 		{args: "connect list --cluster lkc-123", fixture: "connect/list.golden"},
-		{args: "connect pause lcc-123 --cluster lkc-123", fixture: "connect/pause.golden"},
-		{args: "connect resume lcc-123 --cluster lkc-123", fixture: "connect/resume.golden"},
 		{args: "connect update lcc-123 --cluster lkc-123 --config test/fixtures/input/connect/config.yaml", fixture: "connect/update.golden"},
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
@@ -28,6 +26,32 @@ func (s *CLITestSuite) TestConnect() {
 	for _, tt := range tests {
 		tt.login = "cloud"
 		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestConnectPause() {
+	tests := []CLITest{
+		{args: "connect pause --help", fixture: "connect/pause-help.golden"},
+		{args: "connect pause lcc-000000 --cluster lkc-123456", fixture: "connect/pause-unknown.golden", wantErrCode: 1},
+		{args: "connect pause lcc-123 --cluster lkc-123456", fixture: "connect/pause.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestConnectResume() {
+	tests := []CLITest{
+		{args: "connect resume --help", fixture: "connect/resume-help.golden"},
+		{args: "connect resume lcc-000000 --cluster lkc-123456", fixture: "connect/resume-unknown.golden", wantErrCode: 1},
+		{args: "connect resume lcc-123 --cluster lkc-123456", fixture: "connect/resume.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 

@@ -4,23 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	poolHumanLabelMap = map[string]string{
-		"Id":            "ID",
-		"DisplayName":   "Display Name",
-		"IdentityClaim": "Identity Claim",
-	}
-	poolStructuredLabelMap = map[string]string{
-		"Id":            "id",
-		"DisplayName":   "display_name",
-		"Description":   "description",
-		"IdentityClaim": "identity_claim",
-		"Filter":        "filter",
-	}
 )
 
 func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
@@ -45,20 +29,18 @@ func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityPoolProfile, httpResp, err := c.V2Client.GetIdentityPool(args[0], provider)
+	identityPoolProfile, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return err
 	}
 
-	describeIdentityPool := &identityPool{
-		Id:            *identityPoolProfile.Id,
-		DisplayName:   *identityPoolProfile.DisplayName,
-		IdentityClaim: *identityPoolProfile.IdentityClaim,
-		Filter:        *identityPoolProfile.Filter,
-	}
-	if identityPoolProfile.Description != nil {
-		describeIdentityPool.Description = *identityPoolProfile.Description
-	}
-
-	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityPoolOut{
+		Id:            identityPoolProfile.GetId(),
+		DisplayName:   identityPoolProfile.GetDisplayName(),
+		Description:   identityPoolProfile.GetDescription(),
+		IdentityClaim: identityPoolProfile.GetIdentityClaim(),
+		Filter:        identityPoolProfile.GetFilter(),
+	})
+	return table.Print()
 }

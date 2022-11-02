@@ -3,7 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -15,6 +15,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
+
+type validateOut struct {
+	IsCompatible bool `human:"Compatibility" serialized:"compatibility"`
+}
 
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -75,7 +79,7 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}
@@ -87,15 +91,12 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 
 	req := srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs}
 
-	resp, httpResp, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
+	compatibilityCheck, httpResp, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"IsCompatible"}, []string{"Compatibility"}, []string{"compatibility"})
-	if err != nil {
-		return err
-	}
-	outputWriter.AddElement(&resp)
-	return outputWriter.Out()
+	list := output.NewList(cmd)
+	list.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
+	return list.Print()
 }

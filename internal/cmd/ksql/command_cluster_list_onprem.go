@@ -9,7 +9,6 @@ import (
 
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const clusterType = "ksql-cluster"
@@ -30,7 +29,7 @@ func (c *ksqlCommand) newListCommandOnPrem() *cobra.Command {
 }
 
 func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	ksqlClusterType := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, ksqlClusterType)
@@ -38,10 +37,5 @@ func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return pcluster.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return pcluster.PrintCluster(clusterInfos, format)
+	return pcluster.PrintClusters(cmd, clusterInfos)
 }

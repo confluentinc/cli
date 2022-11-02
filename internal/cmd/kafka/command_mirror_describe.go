@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -57,16 +58,12 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 
 	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, mirrorTopicName)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, partitionLag := range mirror.MirrorLags {
-		outputWriter.AddElement(&describeMirrorWrite{
+		list.Add(&mirrorOut{
 			LinkName:              mirror.LinkName,
 			MirrorTopicName:       mirror.MirrorTopicName,
 			SourceTopicName:       mirror.SourceTopicName,
@@ -77,6 +74,6 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})
+	return list.Print()
 }

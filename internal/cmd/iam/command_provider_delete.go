@@ -27,8 +27,9 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	if httpResp, err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+	err := c.V2Client.DeleteIdentityProvider(args[0])
+	if err != nil {
+		return err
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.IdentityProvider, args[0])

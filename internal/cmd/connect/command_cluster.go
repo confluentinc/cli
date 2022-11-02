@@ -9,7 +9,6 @@ import (
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const clusterType = "connect-cluster"
@@ -37,7 +36,7 @@ func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	opts := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
@@ -45,10 +44,5 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return print.PrintCluster(clusterInfos, format)
+	return print.PrintClusters(cmd, clusterInfos)
 }

@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -32,10 +31,12 @@ func (c *command) newProviderShareDescribeCommand() *cobra.Command {
 func (c *command) describeProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	provideShare, httpResp, err := c.V2Client.DescribeProviderShare(shareId)
+	provideShare, err := c.V2Client.DescribeProviderShare(shareId)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildProviderShare(provideShare), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(c.buildProviderShare(provideShare))
+	return table.Print()
 }

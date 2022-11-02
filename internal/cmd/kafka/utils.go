@@ -1,23 +1,18 @@
 package kafka
 
 import (
-	"bufio"
-	"log"
 	_nethttp "net/http"
-	"os"
-	"regexp"
-	"strings"
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
-
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
 
 func copyMap(inputMap map[string]string) map[string]string {
 	newMap := make(map[string]string)
@@ -27,12 +22,26 @@ func copyMap(inputMap map[string]string) map[string]string {
 	return newMap
 }
 
-func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.ConfigData {
-	topicConfigs := make([]kafkarestv3.ConfigData, len(topicConfigsMap))
+func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
+	topicConfigs := make([]cckafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
 	for k, v := range topicConfigsMap {
 		val := v
-		topicConfigs[i] = kafkarestv3.ConfigData{
+		topicConfigs[i] = cckafkarestv3.ConfigData{
+			Name:  k,
+			Value: *cckafkarestv3.NewNullableString(&val),
+		}
+		i++
+	}
+	return topicConfigs
+}
+
+func toCreateTopicConfigsOnPrem(topicConfigsMap map[string]string) []cpkafkarestv3.ConfigData {
+	topicConfigs := make([]cpkafkarestv3.ConfigData, len(topicConfigsMap))
+	i := 0
+	for k, v := range topicConfigsMap {
+		val := v
+		topicConfigs[i] = cpkafkarestv3.ConfigData{
 			Name:  k,
 			Value: &val,
 		}
@@ -41,19 +50,32 @@ func toCreateTopicConfigs(topicConfigsMap map[string]string) []kafkarestv3.Confi
 	return topicConfigs
 }
 
-func toAlterConfigBatchRequestData(configsMap map[string]string) []kafkarestv3.AlterConfigBatchRequestDataData {
-	kafkaRestConfigs := make([]kafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+func toAlterConfigBatchRequestData(configsMap map[string]string) cckafkarestv3.AlterConfigBatchRequestData {
+	kafkaRestConfigs := make([]cckafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
 	i := 0
-	for k, v := range configsMap {
-		val := v
-		kafkaRestConfigs[i] = kafkarestv3.AlterConfigBatchRequestDataData{
-			Name:      k,
-			Value:     &val,
-			Operation: nil,
+	for key, val := range configsMap {
+		v := val
+		kafkaRestConfigs[i] = cckafkarestv3.AlterConfigBatchRequestDataData{
+			Name:  key,
+			Value: *cckafkarestv3.NewNullableString(&v),
 		}
 		i++
 	}
-	return kafkaRestConfigs
+	return cckafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
+}
+
+func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkarestv3.AlterConfigBatchRequestData {
+	kafkaRestConfigs := make([]cpkafkarestv3.AlterConfigBatchRequestDataData, len(configsMap))
+	i := 0
+	for key, val := range configsMap {
+		v := val
+		kafkaRestConfigs[i] = cpkafkarestv3.AlterConfigBatchRequestDataData{
+			Name:  key,
+			Value: &v,
+		}
+		i++
+	}
+	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
@@ -64,41 +86,13 @@ func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error)
 	return kafkaClusterConfig.ID, nil
 }
 
-func createTestConfigFile(name string, configs map[string]string) (string, error) {
-	dir, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
-	log.Println("Test config file dir:", dir)
-	file, err := os.Create(name)
-	if err != nil {
-		return "", err
-	}
-
-	path := dir + "/" + name
-
-	write := bufio.NewWriter(file)
-	for key, val := range configs {
-		if _, err = write.WriteString(key + "=" + val + "\n"); err != nil {
-			file.Close()
-			return path, err
-		}
-	}
-
-	if err = write.Flush(); err != nil {
-		return path, err
-	}
-
-	return path, file.Close()
-}
-
-func handleOpenApiError(httpResp *_nethttp.Response, err error, client *kafkarestv3.APIClient) error {
+func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil
 	}
 
 	if httpResp != nil {
-		return kafkaRestError(client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(client.GetConfig().BasePath, err, httpResp)
 	}
 
 	return err
@@ -121,7 +115,7 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 }
 
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
-	if currentCluster.Status.Phase == "PROVISIONING" {
+	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
 	}
 	if isExpanding(currentCluster) {
@@ -202,26 +196,6 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 		return "UP"
 	}
 	return cluster.Status.Phase
-}
-
-func camelToSnake(camels []string) []string {
-	var ret []string
-	for _, camel := range camels {
-		snake := matchFirstCap.ReplaceAllString(camel, "${1}_${2}")
-		snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-		ret = append(ret, strings.ToLower(snake))
-	}
-	return ret
-}
-
-func camelToSpaced(camels []string) []string {
-	var ret []string
-	for _, camel := range camels {
-		snake := matchFirstCap.ReplaceAllString(camel, "${1} ${2}")
-		snake = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
-		ret = append(ret, snake)
-	}
-	return ret
 }
 
 func topicNameStrategy(topic string) string {

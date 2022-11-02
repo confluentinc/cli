@@ -40,26 +40,20 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectorExpansions, _, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "status,info,id")
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,status")
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listFields, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
-	for name, connector := range connectorExpansions {
-		connector := &connectorDescribeDisplay{
+	list := output.NewList(cmd)
+	for name, connector := range connectors {
+		list.Add(&connectOut{
 			Name:   name,
-			ID:     connector.Id.GetId(),
+			Id:     connector.Id.GetId(),
 			Status: connector.Status.Connector.GetState(),
 			Type:   connector.Status.GetType(),
 			Trace:  connector.Status.Connector.GetTrace(),
-		}
-		outputWriter.AddElement(connector)
+		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

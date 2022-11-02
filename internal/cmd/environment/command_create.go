@@ -10,12 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	createFields           = []string{"Name", "Id"}
-	createHumanLabels      = map[string]string{"Name": "Environment Name", "Id": "ID"}
-	createStructuredLabels = map[string]string{"Name": "name", "Id": "id"}
-)
-
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -32,7 +26,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	account := &orgv1.Account{
 		Name:           args[0],
-		OrganizationId: c.State.Auth.Account.OrganizationId,
+		OrganizationId: c.Context.GetOrganization().GetId(),
 	}
 
 	environment, err := c.Client.Account.Create(context.Background(), account)
@@ -40,5 +34,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		Id:   environment.Id,
+		Name: environment.Name,
+	})
+	return table.Print()
 }

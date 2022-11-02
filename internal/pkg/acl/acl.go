@@ -2,7 +2,6 @@ package acl
 
 import (
 	"fmt"
-	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,23 +12,29 @@ import (
 	"github.com/spf13/pflag"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	listFields       = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
-	humanLabels      = []string{"Principal", "Permission", "Operation", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabels = []string{"principal", "permission", "operation", "resource_type", "resource_name", "pattern_type"}
-)
+var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+
+type out struct {
+	Principal    string `human:"Principal" serialized:"principal"`
+	Permission   string `human:"Permission" serialized:"permission"`
+	Operation    string `human:"Operation" serialized:"operation"`
+	Host         string `human:"Host" serialized:"host"`
+	ResourceType string `human:"Resource Type" serialized:"resource_type"`
+	ResourceName string `human:"Resource Name" serialized:"resource_name"`
+	PatternType  string `human:"Pattern Type" serialized:"pattern_type"`
+}
 
 type AclRequestDataWithError struct {
-	ResourceType kafkarestv3.AclResourceType
+	ResourceType cpkafkarestv3.AclResourceType
 	ResourceName string
 	PatternType  string
 	Principal    string
@@ -39,98 +44,49 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, aclGetResp []kafkarestv3.AclData, writer io.Writer, listFields, humanLabels, structuredLabels []string) error {
-	// non list commands which do not have -o flags also uses this function, need to set default
-	_, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		pcmd.AddOutputFlag(cmd)
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
+	list := output.NewList(cmd)
+	for _, acl := range acls {
+		list.Add(&out{
+			Principal:    acl.Principal,
+			Permission:   acl.Permission,
+			Operation:    acl.Operation,
+			Host:         acl.Host,
+			ResourceType: string(acl.ResourceType),
+			ResourceName: acl.ResourceName,
+			PatternType:  acl.PatternType,
+		})
 	}
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
-	if err != nil {
-		return err
-	}
-
-	for _, aclData := range aclGetResp {
-		record := &struct { //TODO remove KafkaAPI field names and move to only Kafka REST ones
-			ServiceAccountId string
-			Principal        string
-			Permission       string
-			Operation        string
-			Host             string
-			Resource         string
-			ResourceType     string
-			Name             string
-			ResourceName     string
-			Type             string
-			PatternType      string
-		}{
-			aclData.Principal,
-			aclData.Principal,
-			aclData.Permission,
-			aclData.Operation,
-			aclData.Host,
-			string(aclData.ResourceType),
-			string(aclData.ResourceType),
-			aclData.ResourceName,
-			aclData.ResourceName,
-			aclData.PatternType,
-			aclData.PatternType,
-		}
-		outputWriter.AddElement(record)
-	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
-func PrintACLs(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer) error {
-	// non list commands which do not have -o flags also uses this function, need to set default
-	_, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		pcmd.AddOutputFlag(cmd)
+func PrintACLs(cmd *cobra.Command, acls []*schedv1.ACLBinding) error {
+	list := output.NewList(cmd)
+	for _, acl := range acls {
+		list.Add(&out{
+			Principal:    acl.GetEntry().GetPrincipal(),
+			Permission:   acl.GetEntry().GetPermissionType().String(),
+			Operation:    acl.GetEntry().GetOperation().String(),
+			ResourceType: acl.GetPattern().GetResourceType().String(),
+			ResourceName: acl.GetPattern().GetName(),
+			PatternType:  acl.GetPattern().GetPatternType().String(),
+		})
 	}
-
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
-	if err != nil {
-		return err
-	}
-
-	for _, binding := range bindingsObj {
-		record := &struct {
-			Principal    string
-			Permission   string
-			Operation    string
-			ResourceType string
-			ResourceName string
-			PatternType  string
-		}{
-			binding.Entry.Principal,
-			binding.Entry.PermissionType.String(),
-			binding.Entry.Operation.String(),
-			binding.Pattern.ResourceType.String(),
-			binding.Pattern.Name,
-			binding.Pattern.PatternType.String(),
-		}
-		outputWriter.AddElement(record)
-	}
-
-	return outputWriter.Out()
+	list.Filter(listFields)
+	return list.Print()
 }
 
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE",
-		"CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
-	flgSet.Bool("cluster-scope", false, `Set the cluster resource. With this option the ACL grants
-access to the provided operations on the Kafka cluster itself.`)
+	flgSet.Bool("cluster-scope", false, "Set the cluster resource. With this option the ACL grants access to the provided operations on the Kafka cluster itself.")
 	flgSet.String("consumer-group", "", "Set the Consumer Group resource.")
 	flgSet.String("transactional-id", "", "Set the TransactionalID resource.")
-	flgSet.String("topic", "", `Set the topic resource. With this option the ACL grants the provided
-operations on the topics that start with that prefix, depending on whether
-the --prefix option was also passed.`)
+	flgSet.String("topic", "", "Set the topic resource. With this option the ACL grants the provided operations on the topics that start with that prefix, depending on whether the --prefix option was also passed.")
 	flgSet.Bool("prefix", false, "Set to match all resource names prefixed with this value.")
 	flgSet.SortFlags = false
 	return flgSet
@@ -194,7 +150,7 @@ func populateAclRequest(conf *AclRequestDataWithError) func(*pflag.Flag) {
 				conf.Operation = op.(string)
 				break
 			}
-			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("Invalid operation value: "+v))
+			conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("invalid operation value: %s", v))
 		}
 	}
 }
@@ -210,8 +166,8 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	if conf.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.Errors = multierror.Append(conf.Errors, fmt.Errorf("exactly one of %v must be set",
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 		return
 	}
 
@@ -220,11 +176,11 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	n = strings.ReplaceAll(n, "-", "_")
 
 	enumUtils := utils.EnumUtils{}
-	enumUtils.Init(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-		kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
-	conf.ResourceType = enumUtils[n].(kafkarestv3.AclResourceType)
+	enumUtils.Init(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+		cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)
+	conf.ResourceType = enumUtils[n].(cpkafkarestv3.AclResourceType)
 
-	if conf.ResourceType == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
+	if conf.ResourceType == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 		conf.PatternType = "LITERAL"
 	}
 	conf.ResourceName = v
@@ -235,13 +191,13 @@ func convertToFlags(operations ...interface{}) string {
 
 	for _, v := range operations {
 		// clean the resources that don't map directly to flag name
-		if v == kafkarestv3.ACLRESOURCETYPE_GROUP {
+		if v == cpkafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
-		if v == kafkarestv3.ACLRESOURCETYPE_CLUSTER {
+		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprintf("%v", v)
+		s := fmt.Sprint(v)
 		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}
@@ -264,15 +220,15 @@ func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithErro
 
 	if aclConfiguration.ResourceType == "" {
 		aclConfiguration.Errors = multierror.Append(aclConfiguration.Errors, errors.Errorf(errors.MustSetResourceTypeErrorMsg,
-			convertToFlags(kafkarestv3.ACLRESOURCETYPE_TOPIC, kafkarestv3.ACLRESOURCETYPE_GROUP,
-				kafkarestv3.ACLRESOURCETYPE_CLUSTER, kafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
+			convertToFlags(cpkafkarestv3.ACLRESOURCETYPE_TOPIC, cpkafkarestv3.ACLRESOURCETYPE_GROUP,
+				cpkafkarestv3.ACLRESOURCETYPE_CLUSTER, cpkafkarestv3.ACLRESOURCETYPE_TRANSACTIONAL_ID)))
 	}
 	return aclConfiguration
 }
 
-func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *kafkarestv3.CreateKafkaAclsOpts {
-	return &kafkarestv3.CreateKafkaAclsOpts{
-		CreateAclRequestData: optional.NewInterface(kafkarestv3.CreateAclRequestData{
+func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.CreateKafkaAclsOpts {
+	return &cpkafkarestv3.CreateKafkaAclsOpts{
+		CreateAclRequestData: optional.NewInterface(cpkafkarestv3.CreateAclRequestData{
 			ResourceType: acl.ResourceType,
 			ResourceName: acl.ResourceName,
 			PatternType:  acl.PatternType,
@@ -286,8 +242,8 @@ func AclRequestToCreateAclRequest(acl *AclRequestDataWithError) *kafkarestv3.Cre
 
 // Functions for converting AclRequestDataWithError into structs for create, delete, and list requests
 
-func AclRequestToListAclRequest(acl *AclRequestDataWithError) *kafkarestv3.GetKafkaAclsOpts {
-	opts := &kafkarestv3.GetKafkaAclsOpts{}
+func AclRequestToListAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.GetKafkaAclsOpts {
+	opts := &cpkafkarestv3.GetKafkaAclsOpts{}
 	if acl.ResourceType != "" {
 		opts.ResourceType = optional.NewInterface(acl.ResourceType)
 	}
@@ -312,8 +268,8 @@ func AclRequestToListAclRequest(acl *AclRequestDataWithError) *kafkarestv3.GetKa
 	return opts
 }
 
-func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *kafkarestv3.DeleteKafkaAclsOpts {
-	return &kafkarestv3.DeleteKafkaAclsOpts{
+func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *cpkafkarestv3.DeleteKafkaAclsOpts {
+	return &cpkafkarestv3.DeleteKafkaAclsOpts{
 		ResourceType: optional.NewInterface(acl.ResourceType),
 		ResourceName: optional.NewString(acl.ResourceName),
 		PatternType:  optional.NewString(acl.PatternType),
@@ -324,8 +280,8 @@ func AclRequestToDeleteAclRequest(acl *AclRequestDataWithError) *kafkarestv3.Del
 	}
 }
 
-func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.AclData {
-	return kafkarestv3.AclData{
+func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.AclData {
+	return cpkafkarestv3.AclData{
 		ResourceType: data.ResourceType,
 		ResourceName: data.ResourceName,
 		PatternType:  data.PatternType,
@@ -336,88 +292,50 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) kafkarestv3.Ac
 	}
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, aclGetResp kafkarestv3.AclDataList, writer io.Writer, idMap map[int32]string) error {
-	// non list commands which do not have -o flags also uses this function, need to set default
-	_, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		pcmd.AddOutputFlag(cmd)
-	}
-
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
-	if err != nil {
-		return err
-	}
-
-	for _, aclData := range aclGetResp.Data {
-		principal := aclData.Principal
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []cckafkarestv3.AclData, idMap map[int32]string) error {
+	list := output.NewList(cmd)
+	for _, acl := range acls {
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Principal, idMap)
 		if err != nil {
 			if err.Error() == errors.UserIdNotValidErrorMsg {
 				continue // skip the entry if not a valid user id
 			}
 			return err
 		}
-		record := &struct {
-			Principal    string
-			Permission   string
-			Operation    string
-			ResourceType string
-			ResourceName string
-			PatternType  string
-		}{
-			prefix + ":" + resourceId,
-			aclData.Permission,
-			aclData.Operation,
-			string(aclData.ResourceType),
-			aclData.ResourceName,
-			aclData.PatternType,
-		}
-		outputWriter.AddElement(record)
+		list.Add(&out{
+			Principal:    prefix + ":" + resourceId,
+			Permission:   acl.Permission,
+			Operation:    acl.Operation,
+			ResourceType: string(acl.ResourceType),
+			ResourceName: acl.ResourceName,
+			PatternType:  acl.PatternType,
+		})
 	}
-
-	return outputWriter.Out()
+	list.Filter(listFields)
+	return list.Print()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, bindingsObj []*schedv1.ACLBinding, writer io.Writer, idMap map[int32]string) error {
-	// non list commands which do not have -o flags also uses this function, need to set default
-	_, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		pcmd.AddOutputFlag(cmd)
-	}
-
-	outputWriter, err := output.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, writer)
-	if err != nil {
-		return err
-	}
-
-	for _, binding := range bindingsObj {
-		principal := binding.Entry.Principal
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(principal, idMap)
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*schedv1.ACLBinding, idMap map[int32]string) error {
+	list := output.NewList(cmd)
+	for _, acl := range acls {
+		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, idMap)
 		if err != nil {
 			if err.Error() == errors.UserIdNotValidErrorMsg {
 				continue // skip the entry if not a valid user id
 			}
 			return err
 		}
-		record := &struct {
-			Principal    string
-			Permission   string
-			Operation    string
-			ResourceType string
-			ResourceName string
-			PatternType  string
-		}{
-			prefix + ":" + resourceId,
-			binding.Entry.PermissionType.String(),
-			binding.Entry.Operation.String(),
-			binding.Pattern.ResourceType.String(),
-			binding.Pattern.Name,
-			binding.Pattern.PatternType.String(),
-		}
-		outputWriter.AddElement(record)
+		list.Add(&out{
+			Principal:    prefix + ":" + resourceId,
+			Permission:   acl.Entry.PermissionType.String(),
+			Operation:    acl.Entry.Operation.String(),
+			ResourceType: acl.Pattern.ResourceType.String(),
+			ResourceName: acl.Pattern.Name,
+			PatternType:  acl.Pattern.PatternType.String(),
+		})
 	}
-
-	return outputWriter.Out()
+	list.Filter(listFields)
+	return list.Print()
 }
 
 func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId map[int32]string) (string, string, error) {
@@ -448,4 +366,30 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 	}
 
 	return prefix, resourceId, nil
+}
+
+func GetCreateAclRequestData(binding *schedv1.ACLBinding) cckafkarestv3.CreateAclRequestData {
+	data := cckafkarestv3.CreateAclRequestData{
+		Host:         binding.GetEntry().GetHost(),
+		Principal:    binding.GetEntry().GetPrincipal(),
+		ResourceName: binding.GetPattern().GetName(),
+	}
+
+	if binding.GetPattern().GetResourceType() != schedv1.ResourceTypes_UNKNOWN {
+		data.ResourceType = cckafkarestv3.AclResourceType(binding.GetPattern().GetResourceType().String())
+	}
+
+	if binding.GetPattern().GetPatternType() != schedv1.PatternTypes_UNKNOWN {
+		data.PatternType = binding.GetPattern().GetPatternType().String()
+	}
+
+	if binding.GetEntry().GetOperation() != schedv1.ACLOperations_UNKNOWN {
+		data.Operation = binding.GetEntry().GetOperation().String()
+	}
+
+	if binding.GetEntry().GetPermissionType() != schedv1.ACLPermissionTypes_UNKNOWN {
+		data.Permission = binding.GetEntry().GetPermissionType().String()
+	}
+
+	return data
 }

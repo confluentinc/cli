@@ -5,7 +5,10 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
+
+const StatusProvisioning = "PROVISIONING"
 
 func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 	cfg := cmkv2.NewConfiguration()
@@ -31,9 +34,10 @@ func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV
 	return c.CmkClient.ClustersCmkV2Api.GetCmkV2ClusterExecute(req)
 }
 
-func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, *http.Response, error) {
+func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, error) {
 	req := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2Cluster(c.cmkApiContext(), clusterId).CmkV2ClusterUpdate(update)
-	return c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
+	resp, httpResp, err := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Response, error) {
@@ -47,9 +51,9 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListClusters(pageToken, environment)
+		page, httpResp, err := c.executeListClusters(pageToken, environment)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -33,26 +34,19 @@ func (c *lagCommand) newListCommand() *cobra.Command {
 }
 
 func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumerLags(kafkaREST.Context, lkc, consumerGroupId)
+	lagSummaryResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(lkc, args[0])
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, lagFields, lagListHumanLabels, lagListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, lagData := range lagSummaryResp.Data {
-		outputWriter.AddElement(convertLagToStruct(lagData))
+		list.Add(convertLagToStruct(lagData))
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

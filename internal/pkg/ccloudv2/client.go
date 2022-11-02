@@ -9,10 +9,13 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
@@ -27,15 +30,19 @@ type Client struct {
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
-	KafkaRestClient        *kafkarestv3.APIClient
 	KsqlClient             *ksql.APIClient
+	KafkaQuotasClient      *kafkaquotas.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
+	StreamDesignerClient   *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
 }
 
-func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *Client {
-	url := getServerUrl(baseUrl, isTest)
+func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
+	url := getServerUrl(baseUrl)
+	if isTest {
+		url = testserver.TestV2CloudURL.String()
+	}
 
 	return &Client{
 		AuthToken: authToken,
@@ -47,10 +54,11 @@ func NewClient(authToken, baseUrl, userAgent string, unsafeTrace, isTest bool) *
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
-		KafkaRestClient:        newKafkaRestClient(url, userAgent, unsafeTrace),
 		KsqlClient:             newKsqlClient(baseUrl, userAgent, isTest, unsafeTrace),
+		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
+		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 	}
 }

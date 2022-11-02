@@ -8,35 +8,18 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-var (
-	consumerShareListFields           = []string{"Id", "ProviderName", "Status", "SharedResourceId", "InviteExpiresAt"}
-	consumerShareListHumanLabels      = []string{"ID", "Provider Name", "Status", "Shared Resource ID", "Invite Expires At"}
-	consumerShareListStructuredLabels = []string{"id", "provider_name", "status", "shared_resource_id", "invite_expires_at"}
-)
-
-var (
-	consumerHumanLabelMap = map[string]string{
-		"Id":               "ID",
-		"ProviderName":     "Provider Name",
-		"Status":           "Status",
-		"SharedResourceId": "Shared Resource ID",
-		"InviteExpiresAt":  "Invite Expires At",
-	}
-	consumerStructuredLabelMap = map[string]string{
-		"Id":               "id",
-		"ProviderName":     "provider_name",
-		"Status":           "status",
-		"SharedResourceId": "shared_resource_id",
-		"InviteExpiresAt":  "invite_expires_at",
-	}
-)
-
-type consumerShare struct {
-	Id               string
-	ProviderName     string
-	Status           string
-	SharedResourceId string
-	InviteExpiresAt  time.Time
+type consumerShareOut struct {
+	Id                         string    `human:"ID" serialized:"id"`
+	ProviderName               string    `human:"Provider Name" serialized:"provider_name"`
+	ProviderOrganizationName   string    `human:"Provider Organization Name" serialized:"provider_organization_name"`
+	Status                     string    `human:"Status" serialized:"status"`
+	InviteExpiresAt            time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
+	NetworkDnsDomain           string    `human:"Network DNS Domain" serialized:"network_dns_domain"`
+	NetworkZones               string    `human:"Network Zones" serialized:"network_zones"`
+	NetworkZonalSubdomains     []string  `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
+	NetworkKind                string    `human:"Network Kind" serialized:"network_kind"`
+	NetworkPrivateLinkDataType string    `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string    `human:"Network Private Link Data" serialized:"network_private_link_data"`
 }
 
 func (c *command) newConsumerShareCommand() *cobra.Command {
@@ -77,13 +60,13 @@ func (c *command) autocompleteConsumerShares() []string {
 	return suggestions
 }
 
-func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShare {
-	sharedResource := share.GetSharedResource()
-	return &consumerShare{
-		Id:               share.GetId(),
-		ProviderName:     share.GetProviderUserName(),
-		Status:           share.GetStatus(),
-		SharedResourceId: sharedResource.GetId(),
-		InviteExpiresAt:  share.GetInviteExpiresAt(),
+func (c *command) buildConsumerShare(share cdxv1.CdxV1ConsumerShare) *consumerShareOut {
+	status := share.GetStatus()
+	return &consumerShareOut{
+		Id:                       share.GetId(),
+		ProviderName:             share.GetProviderUserName(),
+		ProviderOrganizationName: share.GetProviderOrganizationName(),
+		Status:                   status.GetPhase(),
+		InviteExpiresAt:          share.GetInviteExpiresAt(),
 	}
 }

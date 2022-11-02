@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -44,7 +43,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	issuer, err := cmd.Flags().GetString("issuer-uri")
+	issuerUri, err := cmd.Flags().GetString("issuer-uri")
 	if err != nil {
 		return err
 	}
@@ -57,23 +56,21 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
 		DisplayName: identityproviderv2.PtrString(name),
 		Description: identityproviderv2.PtrString(description),
-		Issuer:      identityproviderv2.PtrString(issuer),
+		Issuer:      identityproviderv2.PtrString(issuerUri),
 		JwksUri:     identityproviderv2.PtrString(jwksuri),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	provider, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return err
 	}
 
-	identityProvider := &identityProvider{
-		Id:        *resp.Id,
-		Name:      *resp.DisplayName,
-		IssuerUri: *resp.Issuer,
-		JwksUri:   *resp.JwksUri,
-	}
-	if resp.Description != nil {
-		identityProvider.Description = *resp.Description
-	}
-
-	return output.DescribeObject(cmd, identityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          provider.GetId(),
+		Name:        provider.GetDisplayName(),
+		Description: provider.GetDescription(),
+		IssuerUri:   provider.GetIssuer(),
+		JwksUri:     provider.GetJwksUri(),
+	})
+	return table.Print()
 }

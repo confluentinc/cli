@@ -12,14 +12,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-)
-
-var (
-	listFieldsOnPrem       = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	humanLabelsOnPrem      = []string{"Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabelsOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
 type aclCommand struct {
@@ -176,4 +171,15 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil
+}
+
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
 }

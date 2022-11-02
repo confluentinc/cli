@@ -1,37 +1,25 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	lagSummaryFields       = []string{"ClusterId", "ConsumerGroupId", "TotalLag", "MaxLag", "MaxLagConsumerId", "MaxLagInstanceId", "MaxLagClientId", "MaxLagTopicName", "MaxLagPartitionId"}
-	lagSummaryHumanRenames = map[string]string{
-		"ClusterId":         "Cluster",
-		"ConsumerGroupId":   "ConsumerGroup",
-		"MaxLagConsumerId":  "MaxLagConsumer",
-		"MaxLagInstanceId":  "MaxLagInstance",
-		"MaxLagClientId":    "MaxLagClient",
-		"MaxLagTopicName":   "MaxLagTopic",
-		"MaxLagPartitionId": "MaxLagPartition",
-	}
-	lagSummaryStructuredRenames = map[string]string{
-		"ClusterId":         "cluster",
-		"ConsumerGroupId":   "consumer_group",
-		"TotalLag":          "total_lag",
-		"MaxLag":            "max_lag",
-		"MaxLagConsumerId":  "max_lag_consumer",
-		"MaxLagInstanceId":  "max_lag_instance",
-		"MaxLagClientId":    "max_lag_client",
-		"MaxLagTopicName":   "max_lag_topic",
-		"MaxLagPartitionId": "max_lag_partition",
-	}
-)
+type summarizeOut struct {
+	ClusterId         string `human:"Cluster" serialized:"cluster_id"`
+	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
+	TotalLag          int64  `human:"Total Lag" serialized:"total_lag"`
+	MaxLag            int64  `human:"Max Lag" serialized:"max_lag"`
+	MaxLagConsumerId  string `human:"Max Lag Consumer" serialized:"max_lag_consumer"`
+	MaxLagInstanceId  string `human:"Max Lag Instance" serialized:"max_lag_instance"`
+	MaxLagClientId    string `human:"Max Lag Client" serialized:"max_lag_client"`
+	MaxLagTopicName   string `human:"Max Lag Topic" serialized:"max_lag_topic"`
+	MaxLagPartitionId int32  `human:"Max Lag Partition" serialized:"max_lag_partition"`
+}
 
 func (c *lagCommand) newSummarizeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -65,29 +53,22 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(kafkaREST.Context, lkc, consumerGroupId)
+	summary, httpResp, err := kafkaREST.CloudClient.GetKafkaConsumerGroupLagSummary(lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	return output.DescribeObject(cmd, convertLagSummaryToStruct(lagSummaryResp), lagSummaryFields, lagSummaryHumanRenames, lagSummaryStructuredRenames)
-}
-
-func convertLagSummaryToStruct(lagSummaryData kafkarestv3.ConsumerGroupLagSummaryData) *lagSummaryStruct {
-	maxLagInstanceId := ""
-	if lagSummaryData.MaxLagInstanceId != nil {
-		maxLagInstanceId = *lagSummaryData.MaxLagInstanceId
-	}
-
-	return &lagSummaryStruct{
-		ClusterId:         lagSummaryData.ClusterId,
-		ConsumerGroupId:   lagSummaryData.ConsumerGroupId,
-		TotalLag:          lagSummaryData.TotalLag,
-		MaxLag:            lagSummaryData.MaxLag,
-		MaxLagConsumerId:  lagSummaryData.MaxLagConsumerId,
-		MaxLagInstanceId:  maxLagInstanceId,
-		MaxLagClientId:    lagSummaryData.MaxLagClientId,
-		MaxLagTopicName:   lagSummaryData.MaxLagTopicName,
-		MaxLagPartitionId: lagSummaryData.MaxLagPartitionId,
-	}
+	table := output.NewTable(cmd)
+	table.Add(&summarizeOut{
+		ClusterId:         summary.GetClusterId(),
+		ConsumerGroupId:   summary.GetConsumerGroupId(),
+		TotalLag:          summary.GetTotalLag(),
+		MaxLag:            summary.GetMaxLag(),
+		MaxLagConsumerId:  summary.GetMaxLagConsumerId(),
+		MaxLagInstanceId:  summary.GetMaxLagInstanceId(),
+		MaxLagClientId:    summary.GetMaxLagClientId(),
+		MaxLagTopicName:   summary.GetMaxLagTopicName(),
+		MaxLagPartitionId: summary.GetMaxLagPartitionId(),
+	})
+	return table.Print()
 }

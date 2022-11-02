@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,21 +38,17 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 	if err != nil {
 		return err
 	}
+
 	// Get Topics
-	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
+	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	topicDatas := topicGetResp.Data
 
 	// Create and populate output writer
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, topic := range topicList.Data {
+		list.Add(&topicOut{Name: topic.TopicName})
 	}
-	for _, topicData := range topicDatas {
-		outputWriter.AddElement(&topicData)
-	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

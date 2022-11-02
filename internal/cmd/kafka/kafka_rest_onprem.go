@@ -19,13 +19,13 @@ func initKafkaRest(a *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	if err != nil { // require the flag
 		return nil, nil, err
 	}
-	kafkaRest, err := a.GetKafkaREST()
+	kafkaREST, err := a.GetKafkaREST()
 	if err != nil {
 		return nil, nil, err
 	}
-	kafkaRestClient := kafkaRest.Client
+	kafkaRestClient := kafkaREST.Client
 	setServerURL(cmd, kafkaRestClient, url)
-	return kafkaRestClient, kafkaRest.Context, nil
+	return kafkaRestClient, kafkaREST.Context, nil
 }
 
 // Used for on-prem KafkaRest commands

@@ -44,17 +44,12 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	config := map[string]string{"connector.class": args[0]}
 
-	reply, _, err := c.V2Client.ValidateConnectorPlugin(args[0], c.EnvironmentId(), kafkaCluster.ID, config)
+	reply, err := c.V2Client.ValidateConnectorPlugin(args[0], c.EnvironmentId(), kafkaCluster.ID, config)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputFormat == output.Human.String() {
+	if output.GetFormat(cmd) == output.Human {
 		utils.Println(cmd, "The following are required configs:")
 		utils.Println(cmd, "connector.class : "+args[0])
 		for _, c := range *reply.Configs {
@@ -70,5 +65,5 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
 		}
 	}
-	return output.StructuredOutput(outputFormat, &config)
+	return output.SerializedOutput(cmd, &config)
 }

@@ -248,10 +248,10 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	}
 }
 
-func AddEnvironmentToConfigMock(config *Config, envId string, envName string) {
-	accounts := config.Context().State.Auth.Accounts
-	config.Context().State.Auth.Accounts = append(accounts, &orgv1.Account{
-		Id:   envId,
-		Name: envName,
+func AddEnvironmentToConfigMock(cfg *Config, id, name string) {
+	ctx := cfg.Context()
+	ctx.State.Auth.Accounts = append(ctx.GetEnvironments(), &orgv1.Account{
+		Id:   id,
+		Name: name,
 	})
 }

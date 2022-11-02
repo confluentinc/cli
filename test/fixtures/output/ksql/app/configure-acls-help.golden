@@ -1,7 +1,7 @@
 DEPRECATED: Configure ACLs for a ksqlDB app.
 
 Usage:
-  confluent ksql app configure-acls <id> TOPICS... [flags]
+  confluent ksql app configure-acls <id> [topic-1] [topic-2] ... [topic-N] [flags]
 
 Flags:
       --dry-run              If specified, print the ACLs that will be set and exit.

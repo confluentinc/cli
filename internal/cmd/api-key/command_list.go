@@ -14,14 +14,9 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-)
-
-var (
-	listFields           = []string{"Key", "Description", "UserResourceId", "UserEmail", "ResourceType", "ResourceId", "Created"}
-	listHumanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	listStructuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
 
 var resourceKindToType = map[string]string{
@@ -47,6 +42,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID to filter by. Use "cloud" to show only Cloud API keys.`)
 	cmd.Flags().Bool("current-user", false, "Show only API keys belonging to current user.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -111,11 +107,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if !apiKey.Spec.HasOwner() {
@@ -123,32 +115,40 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		// Add '*' only in the case where we are printing out tables
-		outputKey := *apiKey.Id
-		if outputWriter.GetOutputFormat() == output.Human {
-			if clusterId != "" && *apiKey.Id == currentKey {
-				outputKey = fmt.Sprintf("* %s", *apiKey.Id)
+		outputKey := apiKey.GetId()
+		if output.GetFormat(cmd) == output.Human {
+			if clusterId != "" && apiKey.GetId() == currentKey {
+				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
 			} else {
-				outputKey = fmt.Sprintf("  %s", *apiKey.Id)
+				outputKey = fmt.Sprintf("  %s", apiKey.GetId())
 			}
 		}
 
-		ownerId := apiKey.GetSpec().Owner.GetId()
+		ownerId := apiKey.Spec.Owner.GetId()
 		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
+
+		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
+
+		// Check if multicluster keys are enabled, and if so check the resources field
+		if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
+			resources = apiKey.Spec.GetResources()
+		}
 
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
-		outputWriter.AddElement(&apiKeyRow{
-			Key:            outputKey,
-			Description:    *apiKey.GetSpec().Description,
-			UserResourceId: ownerId,
-			UserEmail:      email,
-			ResourceType:   resourceKindToType[apiKey.GetSpec().Resource.GetKind()],
-			ResourceId:     getApiKeyResourceId(apiKey),
-			Created:        apiKey.GetMetadata().CreatedAt.Format(time.RFC3339),
-		})
+		for _, res := range resources {
+			list.Add(&out{
+				Key:             outputKey,
+				Description:     apiKey.Spec.GetDescription(),
+				OwnerResourceId: ownerId,
+				OwnerEmail:      email,
+				ResourceType:    resourceKindToType[res.GetKind()],
+				ResourceId:      getApiKeyResourceId(res.GetId()),
+				Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+			})
+		}
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {
@@ -181,7 +181,7 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 	}
 
 	userId := resourceIdToUserIdMap[resourceId]
-	if auditLog := v1.GetAuditLog(c.State); auditLog != nil && auditLog.ServiceAccountId == userId {
+	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil && auditLog.GetServiceAccountId() == userId {
 		return "<auditlog service account>"
 	}
 
@@ -192,8 +192,7 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 	return "<deactivated user>"
 }
 
-func getApiKeyResourceId(apiKey apikeysv2.IamV2ApiKey) string {
-	id := apiKey.GetSpec().Resource.GetId()
+func getApiKeyResourceId(id string) string {
 	if id == "cloud" {
 		return ""
 	}

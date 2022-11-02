@@ -1,37 +1,41 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const includeTopicsFlagName = "include-topics"
 
 type link struct {
-	LinkName             string
-	TopicName            string
-	SourceClusterId      string
-	DestinationClusterId string
+	LinkName             string `human:"Name" serialized:"link_name"`
+	TopicName            string `human:"Topic Name" serialized:"topic_name"`
+	SourceClusterId      string `human:"Source Cluster ID" serialized:"source_cluster_id"`
+	DestinationClusterId string `human:"Destination Cluster ID" serialized:"destination_cluster_id"`
+	LinkState            string `human:"State" serialized:"link_state"`
+	LinkError            string `human:"Error" serialized:"link_error"`
+	LinkErrorMessage     string `human:"Error Message" serialized:"link_error_message"`
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
-	l := &link{
-		LinkName:  data.LinkName,
-		TopicName: topic,
+	var linkError string
+	if data.GetLinkError() != "NO_ERROR" {
+		linkError = data.GetLinkError()
 	}
-
-	if data.SourceClusterId != nil {
-		l.SourceClusterId = *data.SourceClusterId
+	return &link{
+		LinkName:             data.LinkName,
+		TopicName:            topic,
+		SourceClusterId:      data.GetSourceClusterId(),
+		DestinationClusterId: data.GetDestinationClusterId(),
+		LinkState:            data.GetLinkState(),
+		LinkError:            linkError,
+		LinkErrorMessage:     data.GetLinkErrorMessage(),
 	}
-
-	if data.DestinationClusterId != nil {
-		l.DestinationClusterId = *data.DestinationClusterId
-	}
-
-	return l
 }
 
 func (c *linkCommand) newListCommand() *cobra.Command {
@@ -44,14 +48,8 @@ func (c *linkCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool(includeTopicsFlagName, false, "If set, will list mirrored topics for the links returned.")
-
-	if c.cfg.IsCloudLogin() {
-		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	}
-
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -64,50 +62,44 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := client.ClusterLinkingV3Api.ListKafkaLinks(ctx, clusterId)
+	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(clusterId)
 	if err != nil {
-		return handleOpenApiError(httpResp, err, client)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	listFields := getListFields(includeTopics, c.cfg.IsCloudLogin())
-	humanLabels := camelToSpaced(listFields)
-	structuredLabels := camelToSnake(listFields)
-
-	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
-		if includeTopics && len(data.TopicsNames) > 0 {
-			for _, topic := range data.TopicsNames {
-				w.AddElement(newLink(data, topic))
+		if includeTopics && len(*data.TopicsNames) > 0 {
+			for _, topic := range *data.TopicsNames {
+				list.Add(newLink(data, topic))
 			}
 		} else {
-			w.AddElement(newLink(data, ""))
+			list.Add(newLink(data, ""))
 		}
 	}
-
-	return w.Out()
+	list.Filter(getListFields(includeTopics))
+	return list.Print()
 }
 
-func getListFields(includeTopics, isCloud bool) []string {
+func getListFields(includeTopics bool) []string {
 	x := []string{"LinkName"}
 
 	if includeTopics {
 		x = append(x, "TopicName")
 	}
 
-	if isCloud {
-		x = append(x, "SourceClusterId")
-	} else {
-		x = append(x, "DestinationClusterId")
-	}
-
-	return x
+	return append(x, "SourceClusterId", "DestinationClusterId", "LinkState", "LinkError", "LinkErrorMessage")
 }

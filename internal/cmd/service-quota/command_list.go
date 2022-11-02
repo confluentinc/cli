@@ -3,8 +3,6 @@ package servicequota
 import (
 	"strconv"
 
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -12,25 +10,19 @@ import (
 )
 
 type quotaValue struct {
-	QuotaCode    string
-	DisplayName  string
-	Scope        string
-	AppliedLimit int32
-	//The usage field is actually an integer, but this field is not a required one.
-	//Set to an empty string if it does not exist.
-	Usage        string
-	Organization string
-	Environment  string
-	KafkaCluster string
-	Network      string
-	User         string
+	QuotaCode    string `human:"Quota Code" serialized:"quota_code"`
+	DisplayName  string `human:"Display Name" serialized:"display_name"`
+	Scope        string `human:"Scope" serialized:"scope"`
+	AppliedLimit int32  `human:"Applied Limit" serialized:"applied_limit"`
+	// The usage field is actually an integer, but this field is not a required one.
+	// Set to an empty string if it does not exist.
+	Usage        string `human:"Usage" serialized:"usage"`
+	Organization string `human:"Organization" serialized:"organization"`
+	Environment  string `human:"Environment" serialized:"environment"`
+	KafkaCluster string `human:"Kafka Cluster" serialized:"kafka_cluster"`
+	Network      string `human:"Network" serialized:"network"`
+	User         string `human:"User" serialized:"user"`
 }
-
-var (
-	listFields           = []string{"QuotaCode", "DisplayName", "Scope", "AppliedLimit", "Usage", "Organization", "Environment", "Network", "KafkaCluster", "User"}
-	listHumanLabels      = []string{"Quota Code", "Display Name", "Scope", "Applied Limit", "Usage", "Organization", "Environment", "Network", "Kafka Cluster", "User"}
-	listStructuredLabels = []string{"quota_code", "display_name", "scope", "applied_limit", "usage", "organization", "environment", "network", "kafka_cluster", "user"}
-)
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -66,65 +58,43 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network)
-	if err != nil {
-		return err
-	}
-
 	quotaCode, err := cmd.Flags().GetString("quota-code")
 	if err != nil {
 		return err
 	}
-	quotas = filterQuotaResults(quotas, quotaCode)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
+	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode)
 	if err != nil {
 		return err
 	}
 
+	list := output.NewList(cmd)
 	for _, quota := range quotas {
-		outQt := &quotaValue{
-			QuotaCode:    *quota.Id,
-			DisplayName:  *quota.DisplayName,
-			Scope:        *quota.Scope,
-			AppliedLimit: *quota.AppliedLimit,
+		out := &quotaValue{
+			QuotaCode:    quota.GetId(),
+			DisplayName:  quota.GetDisplayName(),
+			Scope:        quota.GetScope(),
+			AppliedLimit: quota.GetAppliedLimit(),
 		}
-
 		if quota.Usage != nil {
-			outQt.Usage = strconv.Itoa(int(*quota.Usage))
+			out.Usage = strconv.Itoa(int(quota.GetUsage()))
 		}
-
 		if quota.Organization != nil {
-			outQt.Organization = quota.Organization.Id
+			out.Organization = quota.Organization.GetId()
 		}
 		if quota.Environment != nil {
-			outQt.Environment = quota.Environment.Id
+			out.Environment = quota.Environment.GetId()
 		}
 		if quota.Network != nil {
-			outQt.Network = quota.Network.Id
+			out.Network = quota.Network.GetId()
 		}
 		if quota.KafkaCluster != nil {
-			outQt.KafkaCluster = quota.KafkaCluster.Id
+			out.KafkaCluster = quota.KafkaCluster.GetId()
 		}
 		if quota.User != nil {
-			outQt.User = quota.User.Id
+			out.User = quota.User.GetId()
 		}
-		outputWriter.AddElement(outQt)
+		list.Add(out)
 	}
-
-	return outputWriter.Out()
-}
-
-// TODO: remove this filter func when service-quota api supports filtering by quota code.
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
-	var filteredQuotas []servicequotav1.ServiceQuotaV1AppliedQuota
-	if quotaCode != "" {
-		for _, quota := range quotaList {
-			if *quota.Id == quotaCode {
-				filteredQuotas = append(filteredQuotas, quota)
-			}
-		}
-		quotaList = filteredQuotas
-	}
-	return quotaList
+	return list.Print()
 }

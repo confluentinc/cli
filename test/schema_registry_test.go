@@ -179,6 +179,16 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/schema/describe-refs-subject.golden",
 		},
 		{
+			name:    "schema-registry schema list --subject-prefix mysubject-1",
+			args:    fmt.Sprintf(`schema-registry schema list --subject-prefix mysubject-1 --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			fixture: "schema-registry/schema/list-schemas-subject.golden",
+		},
+		{
+			name:    "schema-registry schema list",
+			args:    fmt.Sprintf(`schema-registry schema list --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			fixture: "schema-registry/schema/list-schemas-default.golden",
+		},
+		{
 			name:    "schema-registry subject list",
 			args:    fmt.Sprintf(`schema-registry subject list --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/subject/list.golden",

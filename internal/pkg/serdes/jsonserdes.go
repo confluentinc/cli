@@ -3,7 +3,7 @@ package serdes
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
@@ -97,7 +97,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojsonschema.Schema, error) {
 	sl := gojsonschema.NewSchemaLoader()
 	for referenceName, referencePath := range referencePathMap {
-		refSchema, err := ioutil.ReadFile(referencePath)
+		refSchema, err := os.ReadFile(referencePath)
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +108,7 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 		}
 	}
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return nil, errors.New(errors.JsonSchemaInvalidErrorMsg)
 	}

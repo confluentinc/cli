@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cluster"
+	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -36,16 +37,30 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 
 	name, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
 	}
 
-	response, err := c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, name)
+	clusterInfos, httpResp, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, &mds.ClusterRegistryListOpts{})
 	if err != nil {
-		return cluster.HandleClusterError(err, response)
+		return pcluster.HandleClusterError(err, httpResp)
+	}
+	clusterFound := false
+	for _, cluster := range clusterInfos {
+		if name == cluster.ClusterName {
+			clusterFound = true
+		}
+	}
+	if !clusterFound {
+		return errors.Errorf(errors.UnknownClusterErrorMsg, name)
+	}
+
+	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, name)
+	if err != nil {
+		return cluster.HandleClusterError(err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.UnregisteredClusterMsg, name)

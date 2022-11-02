@@ -1,13 +1,10 @@
 package iam
 
 import (
-	"context"
 	"net/http"
 	"os"
-	"sort"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -17,11 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type displayStruct struct {
-	Principal   string
-	Email       string
-	ServiceName string
-	PoolName    string
+type roleBindingListOut struct {
+	Principal   string `human:"Principal" serialized:"principal"`
+	Email       string `human:"Email" serialized:"email"`
+	ServiceName string `human:"Service Name" serialized:"service_name"`
+	PoolName    string `human:"Pool Name" serialized:"pool_name"`
 }
 
 func (c *roleBindingCommand) newListCommand() *cobra.Command {
@@ -138,7 +135,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 	principal := options.principal
 	if currentUser {
-		principal = "User:" + c.State.Auth.User.ResourceId
+		principal = "User:" + c.Context.GetUser().GetResourceId()
 	}
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(c.createContext(), principal, *scopeV2)
@@ -151,16 +148,12 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, ccloudResourcePatternListFields, ccloudResourcePatternHumanListLabels, ccloudResourcePatternStructuredListLabels)
-	if err != nil {
-		return err
-	}
-
 	role, err := cmd.Flags().GetString("role")
 	if err != nil {
 		return err
 	}
 
+	list := output.NewList(cmd)
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
 		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
@@ -207,7 +200,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 							continue
 						}
 					}
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&roleBindingOut{
 						Principal:      principalName,
 						Email:          principalEmail,
 						Role:           roleName,
@@ -222,7 +215,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				}
 
 				if len(resourcePatterns) == 0 {
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&roleBindingOut{
 						Principal:    principalName,
 						Email:        principalEmail,
 						Role:         roleName,
@@ -233,22 +226,19 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 			}
 		}
 	}
-
-	outputWriter.StableSort()
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	providers, err := c.V2Client.ListIdentityProviders()
 	if err != nil {
-		return nil, err
+		return map[string]string{}, err
 	}
 	poolToName := make(map[string]string)
 	for _, provider := range providers {
 		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
 		if err != nil {
-			return nil, err
+			return map[string]string{}, err
 		}
 		for _, pool := range pools {
 			poolToName["User:"+*pool.Id] = *pool.DisplayName
@@ -258,25 +248,25 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
-	users, err := c.Client.User.List(context.Background())
+	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return nil, err
 	}
 	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmail["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.GetId()] = u.GetEmail()
 	}
 	return userToEmail, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 	serviceAccountToName := make(map[string]string)
-	for _, u := range users {
-		serviceAccountToName["User:"+u.ResourceId] = u.ServiceName
+	for _, sa := range serviceAccounts {
+		serviceAccountToName["User:"+sa.GetId()] = sa.GetDisplayName()
 	}
 	return serviceAccountToName, nil
 }
@@ -329,32 +319,26 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		return err
 	}
 
-	poolToNameMap, err := c.getPoolToNameMap()
-	if err != nil {
-		return err
-	}
+	// TODO: Catch this error once Identity Providers goes GA
+	poolToNameMap, _ := c.getPoolToNameMap()
 
-	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 	for _, principal := range principals {
-		row := &displayStruct{Principal: principal}
+		row := &roleBindingListOut{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
 			row.Email = email
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
 			row.ServiceName = name
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
 			row.PoolName = name
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 	}
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *roleBindingCommand) confluentList(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -382,16 +366,12 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	principalsRolesResourcePatterns, response, err := c.MDSClient.RBACRoleBindingSummariesApi.LookupResourcesForPrincipal(c.createContext(), principal, *scope)
 	if err != nil {
 		if response != nil && response.StatusCode == http.StatusNotFound {
-			return c.listPrincipalResourcesV1(scope, principal, role)
+			return c.listPrincipalResourcesV1(cmd, scope, principal, role)
 		}
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, resourcePatternListFields, resourcePatternHumanListLabels, resourcePatternStructuredListLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for principalName, rolesResourcePatterns := range principalsRolesResourcePatterns {
 		for roleName, resourcePatterns := range rolesResourcePatterns {
 			if role == "*" || roleName == role {
@@ -406,7 +386,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 						}
 					}
 					if add {
-						outputWriter.AddElement(&listDisplay{
+						list.Add(&roleBindingOut{
 							Principal:    principalName,
 							Role:         roleName,
 							ResourceType: resourcePattern.ResourceType,
@@ -416,56 +396,52 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 					}
 				}
 				if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
-					outputWriter.AddElement(&listDisplay{
+					list.Add(&roleBindingOut{
 						Principal:    principalName,
 						Role:         roleName,
 						ResourceType: "Cluster",
-						Name:         "",
-						PatternType:  "",
 					})
 				}
 			}
 		}
 	}
-
-	outputWriter.StableSort()
-
-	return outputWriter.Out()
+	list.Filter(resourcePatternListFields)
+	return list.Print()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
-		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(
-			c.createContext(),
-			principal,
-			*mdsScope)
+		roleNames, _, err = c.MDSClient.RBACRoleBindingSummariesApi.ScopedPrincipalRolenames(c.createContext(), principal, *mdsScope)
 		if err != nil {
 			return err
 		}
 	}
 
-	var data [][]string
+	list := output.NewList(cmd)
 	for _, roleName := range roleNames {
-		rps, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(
-			c.createContext(),
-			principal,
-			roleName,
-			*mdsScope)
+		resourcePatterns, _, err := c.MDSClient.RBACRoleBindingCRUDApi.GetRoleResourcesForPrincipal(c.createContext(), principal, roleName, *mdsScope)
 		if err != nil {
 			return err
 		}
-		for _, pattern := range rps {
-			data = append(data, []string{roleName, pattern.ResourceType, pattern.Name, pattern.PatternType})
+		for _, pattern := range resourcePatterns {
+			list.Add(&roleBindingOut{
+				Role:         roleName,
+				ResourceType: pattern.ResourceType,
+				Name:         pattern.Name,
+				PatternType:  pattern.PatternType,
+			})
 		}
-		if len(rps) == 0 && clusterScopedRoles[roleName] {
-			data = append(data, []string{roleName, "Cluster", "", ""})
+		if len(resourcePatterns) == 0 && clusterScopedRoles[roleName] {
+			list.Add(&roleBindingOut{
+				Role:         roleName,
+				ResourceType: "Cluster",
+			})
 		}
 	}
-
-	printer.RenderCollectionTable(data, []string{"Role", "ResourceType", "Name", "PatternType"})
-	return nil
+	list.Filter([]string{"Role", "ResourceType", "Name", "PatternType"})
+	return list.Print()
 }
 
 func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -500,19 +476,10 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 		}
 	}
 
-	sort.Strings(principals)
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal"}, []string{"Principal"}, []string{"principal"})
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, principal := range principals {
-		displayStruct := &struct {
-			Principal string
-		}{
-			Principal: principal,
-		}
-		outputWriter.AddElement(displayStruct)
+		list.Add(&roleBindingOut{Principal: principal})
 	}
-	return outputWriter.Out()
+	list.Filter([]string{"Principal"})
+	return list.Print()
 }

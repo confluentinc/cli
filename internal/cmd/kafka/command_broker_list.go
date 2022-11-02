@@ -4,8 +4,16 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+type brokerOut struct {
+	ClusterId string `human:"Cluster ID" serialized:"cluster_id"`
+	BrokerId  int32  `human:"Broker ID" serialized:"broker_id"`
+	Host      string `human:"Host" serialized:"host"`
+	Port      int32  `human:"Port" serialized:"port"`
+}
 
 func (c *brokerCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -36,32 +44,22 @@ func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
 	// Get Brokers
 	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "BrokerId", "Host", "Port"}, []string{"Cluster ID", "Broker ID", "Host", "Port"}, []string{"cluster_id", "broker_id", "host", "port"})
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, data := range brokersGetResp.Data {
-		s := &struct {
-			ClusterId string
-			BrokerId  int32
-			Host      string
-			Port      int32
-		}{
+		broker := &brokerOut{
 			ClusterId: data.ClusterId,
 			BrokerId:  data.BrokerId,
 		}
 		if data.Host != nil {
-			s.Host = *(data.Host)
+			broker.Host = *(data.Host)
 		}
 		if data.Port != nil {
-			s.Port = *(data.Port)
+			broker.Port = *(data.Port)
 		}
-		outputWriter.AddElement(s)
+		list.Add(broker)
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

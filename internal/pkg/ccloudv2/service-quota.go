@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newServiceQuotaClient(url, userAgent string, unsafeTrace bool) *servicequotav1.APIClient {
@@ -21,15 +22,15 @@ func (c *Client) serviceQuotasApiContext() context.Context {
 	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, network string) ([]servicequotav1.ServiceQuotaV1AppliedQuota, error) {
+func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode string) ([]servicequotav1.ServiceQuotaV1AppliedQuota, error) {
 	var list []servicequotav1.ServiceQuotaV1AppliedQuota
 
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network)
+		page, httpResp, err := c.executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network, quotaCode)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
@@ -41,8 +42,8 @@ func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, networ
 	return list, nil
 }
 
-func (c *Client) executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network string) (servicequotav1.ServiceQuotaV1AppliedQuotaList, *http.Response, error) {
-	req := c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.serviceQuotasApiContext()).Scope(quotaScope).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
+func (c *Client) executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, environment, network, quotaCode string) (servicequotav1.ServiceQuotaV1AppliedQuotaList, *http.Response, error) {
+	req := c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.serviceQuotasApiContext()).Scope(quotaScope).KafkaCluster(kafkaCluster).Environment(environment).Network(network).Id(quotaCode)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

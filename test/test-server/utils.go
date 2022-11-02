@@ -21,6 +21,7 @@ var (
 	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
 	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
+	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
 )
 
 type ApiKeyList []*schedv1.ApiKey
@@ -151,7 +152,7 @@ func fillKeyStoreV2() {
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u11"},
-			Description: apikeysv2.PtrString(""),
+			Description: apikeysv2.PtrString("Example description"),
 		},
 	}
 
@@ -161,6 +162,45 @@ func fillKeyStoreV2() {
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-17"},
 			Description: apikeysv2.PtrString(""),
+		},
+	}
+
+	keyStoreV2["MULTICLUSTERKEY1"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY1"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
+			Description: apikeysv2.PtrString("works for two clusters"),
+		},
+	}
+
+	keyStoreV2["MULTICLUSTERKEY2"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY2"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc123", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
+			Description: apikeysv2.PtrString("works for two clusters but on a different sr cluster"),
+		},
+	}
+
+	keyStoreV2["MULTICLUSTERKEY3"] = &apikeysv2.IamV2ApiKey{
+		Id: apikeysv2.PtrString("MULTICLUSTERKEY3"),
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+			Resources: &[]apikeysv2.ObjectReference{
+				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
+				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+			},
+			Owner:       &apikeysv2.ObjectReference{Id: "sa-12345"},
+			Description: apikeysv2.PtrString("works for two clusters and owned by service account"),
 		},
 	}
 
@@ -225,13 +265,26 @@ func apiKeysFilterV2(url *url.URL) *apikeysv2.IamV2ApiKeyList {
 
 	for _, key := range keyStoreV2 {
 		uidFilter := (uid == "") || (uid == key.Spec.Owner.Id)
-		clusterFilter := (resourceId == "") || (resourceId == key.Spec.Resource.Id)
+		clusterFilter := (resourceId == "") || containsResourceId(key, resourceId)
 		if uidFilter && clusterFilter {
 			apiKeys = append(apiKeys, *key)
 		}
 	}
 	sort.Sort(ApiKeyListV2(apiKeys))
 	return &apikeysv2.IamV2ApiKeyList{Data: apiKeys}
+}
+
+func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
+	if len(key.Spec.GetResources()) == 0 {
+		return key.Spec.Resource.Id == resourceId
+	}
+
+	for _, resource := range key.Spec.GetResources() {
+		if resource.Id == resourceId {
+			return true
+		}
+	}
+	return false
 }
 
 func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
@@ -257,6 +310,13 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
+	return err
+}
+
+func writeUserConflictError(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusConflict)
+	_, err := io.WriteString(w, userConflictErrMsg)
 	return err
 }
 
@@ -313,7 +373,7 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 				CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku},
 			},
 			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
-			HttpEndpoint:           cmkv2.PtrString("http://kafka-rest-url"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),
@@ -342,6 +402,15 @@ func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
 		Email:    iamv2.PtrString(email),
 		FullName: iamv2.PtrString(name),
 		Id:       iamv2.PtrString(resourceId),
+	}
+}
+
+func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation {
+	return iamv2.IamV2Invitation{
+		Id:     iamv2.PtrString(id),
+		Email:  iamv2.PtrString(email),
+		User:   &iamv2.GlobalObjectReference{Id: userId},
+		Status: iamv2.PtrString(status),
 	}
 }
 
