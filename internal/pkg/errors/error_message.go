@@ -101,7 +101,7 @@ const (
 	UnauthorizedSuggestions                 = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
 	RoleBindingNotFoundFoundErrorMsg        = "failed to lookup matching rolebinding"
 	RoleBindingNotFoundFoundSuggestions     = "To list rolebindings, use `confluent iam rbac role-binding list`."
-	KsqlOrSchemaRegistryRoleBindingErrorMsg = "caught ksql or schema registry role-binding"
+	KsqlOrSchemaRegistryRoleBindingErrorMsg = "caught ksql or schema registry role-binding. Fall back to v1"
 
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`

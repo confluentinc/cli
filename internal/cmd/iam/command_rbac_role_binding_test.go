@@ -10,6 +10,8 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	ccv2sdkmock "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2/mock"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mdsmock "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2/mock"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
@@ -22,11 +24,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
-	errNotFound = fmt.Errorf("user \"notfound@email.com\" not found")
+	errUserNotFound = errors.Errorf(errors.InvalidEmailErrorMsg, "notfound@email.com")
 )
 
 const (
@@ -152,7 +155,7 @@ type roleBindingTest struct {
 
 type myRoleBindingTest struct {
 	mockRoleBindingsResult mdsv2.IamV2RoleBindingList
-	mockedListUserResult   iamv2.IamV2UserList
+	mockListIamUserResult  iamv2.IamV2UserList
 	expected               []listDisplay
 }
 
@@ -195,9 +198,33 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		},
 	}
+	providerMock := &ccv2sdkmock.IdentityProvidersIamV2Api{
+		ListIamV2IdentityProvidersFunc: func(_ context.Context) identityproviderv2.ApiListIamV2IdentityProvidersRequest {
+			return identityproviderv2.ApiListIamV2IdentityProvidersRequest{}
+		},
+		ListIamV2IdentityProvidersExecuteFunc: func(_ identityproviderv2.ApiListIamV2IdentityProvidersRequest) (identityproviderv2.IamV2IdentityProviderList, *http.Response, error) {
+			id := "op-01"
+			prov := identityproviderv2.IamV2IdentityProvider{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{prov}}, nil, nil
+		},
+	}
+	poolMock := &ccv2sdkmock.IdentityPoolsIamV2Api{
+		ListIamV2IdentityPoolsFunc: func(_ context.Context, _ string) identityproviderv2.ApiListIamV2IdentityPoolsRequest {
+			return identityproviderv2.ApiListIamV2IdentityPoolsRequest{}
+		},
+		ListIamV2IdentityPoolsExecuteFunc: func(_ identityproviderv2.ApiListIamV2IdentityPoolsRequest) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
+			id := "pool-01"
+			pool := identityproviderv2.IamV2IdentityPool{Id: &id, DisplayName: &id}
+			return identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{pool}}, nil, nil
+		},
+	}
 
 	v2Client := &ccloudv2.Client{
 		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock, ServiceAccountsIamV2Api: v2ServiceAccountMock},
+		IdentityProviderClient: &identityproviderv2.APIClient{
+			IdentityPoolsIamV2Api:     poolMock,
+			IdentityProvidersIamV2Api: providerMock,
+		},
 		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: v2RoleBindingMock},
 		AuthToken: "auth-token",
 	}
@@ -282,19 +309,19 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
-				fmt.Println("")
 				expect <- copy
 			}()
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
 		} else {
+			// error case
 			err := cmd.Execute()
 			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
 
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan mdsv2.IamV2RoleBindingList, mockListUserResult chan iamv2.IamV2UserList) *cobra.Command {
+func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan mdsv2.IamV2RoleBindingList, mockListIamUserResult chan iamv2.IamV2UserList) *cobra.Command {
 	v2RoleBindingMock := &mdsmock.RoleBindingsIamV2Api{
 		ListIamV2RoleBindingsFunc: func(_ context.Context) mdsv2.ApiListIamV2RoleBindingsRequest {
 			return mdsv2.ApiListIamV2RoleBindingsRequest{}
@@ -309,7 +336,7 @@ func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindings
 			return iamv2.ApiListIamV2UsersRequest{}
 		},
 		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
-			return <-mockListUserResult, nil, nil
+			return <-mockListIamUserResult, nil, nil
 		},
 	}
 
@@ -330,7 +357,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 					CrnPattern: mdsv2.PtrString("crn_pattern")},
 			},
 		},
-		mockedListUserResult: iamv2.IamV2UserList{
+		mockListIamUserResult: iamv2.IamV2UserList{
 			Data: []iamv2.IamV2User{iamv2.IamV2User{
 				Email: iamv2.PtrString("test@email.com"),
 				Id:    iamv2.PtrString(v1.MockUserResourceId),
@@ -352,7 +379,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 					CrnPattern: mdsv2.PtrString("crn_pattern")},
 			},
 		},
-		mockedListUserResult: iamv2.IamV2UserList{
+		mockListIamUserResult: iamv2.IamV2UserList{
 			Data: []iamv2.IamV2User{iamv2.IamV2User{
 				Email: iamv2.PtrString("test@email.com"),
 				Id:    iamv2.PtrString(v1.MockUserResourceId),
@@ -375,7 +402,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 					CrnPattern: mdsv2.PtrString("crn_pattern")},
 			},
 		},
-		mockedListUserResult: iamv2.IamV2UserList{},
+		mockListIamUserResult: iamv2.IamV2UserList{},
 		expected: []listDisplay{
 			{
 				Principal: "User:sa-123",
@@ -413,7 +440,7 @@ var myRoleBindingListTests = []myRoleBindingTest{
 				},
 			},
 		},
-		mockedListUserResult: iamv2.IamV2UserList{
+		mockListIamUserResult: iamv2.IamV2UserList{
 			Data: []iamv2.IamV2User{iamv2.IamV2User{
 				Email: iamv2.PtrString("test@email.com"),
 				Id:    iamv2.PtrString(v1.MockUserResourceId),
@@ -479,14 +506,14 @@ var myRoleBindingListTests = []myRoleBindingTest{
 }
 
 func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockeRoleBindingsResult := make(chan mdsv2.IamV2RoleBindingList)
-	mockeListUserResult := make(chan iamv2.IamV2UserList)
+	mockRoleBindingsResult := make(chan mdsv2.IamV2RoleBindingList)
+	mockListIamUserResult := make(chan iamv2.IamV2UserList)
 	for _, tc := range myRoleBindingListTests {
 		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
 
 		go func() {
-			mockeRoleBindingsResult <- tc.mockRoleBindingsResult
-			mockeListUserResult <- tc.mockedListUserResult
+			mockRoleBindingsResult <- tc.mockRoleBindingsResult
+			mockListIamUserResult <- tc.mockListIamUserResult
 		}()
 		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
 		assert.Nil(suite.T(), err)

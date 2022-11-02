@@ -78,10 +78,11 @@ type listDisplay struct {
 	PatternType    string `json:"pattern_type"`
 }
 
-type displayByRoleStruct struct {
+type displayStruct struct {
 	Principal   string
 	Email       string
 	ServiceName string
+	PoolName    string
 }
 
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -137,7 +138,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err != nil {
 					return nil, err
 				}
-				principal = "User:" + *user.Id
+				principal = "User:" + user.GetId()
 			}
 		}
 	}
@@ -175,7 +176,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-			} // skip validation when role != "" before migrating to v2 role api
+			} // TODO: validate role and resource after migrating to v2 role api, as now CLI has no way of verifying the display role name vs. actual role name
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
 				Scope:            *scopeV2,
@@ -385,38 +386,6 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 	return result, nil
 }
 
-// func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
-// 	ctx := c.createContext()
-// 	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
-
-// 	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-// 	// namespace and if we get an error try without any namespace.
-// 	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
-// 	if err != nil || resp.StatusCode == http.StatusNoContent {
-// 		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
-// 		if err != nil || resp.StatusCode == http.StatusNoContent {
-// 			if err == nil {
-// 				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-// 			} else {
-// 				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-// 			}
-// 		}
-// 	}
-
-// 	var allResourceTypes []string
-// 	for _, policies := range role.Policies {
-// 		for _, operation := range policies.AllowedOperations {
-// 			allResourceTypes = append(allResourceTypes, operation.ResourceType)
-// 			if operation.ResourceType == resourceType {
-// 				return nil
-// 			}
-// 		}
-// 	}
-
-// 	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
-// 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
-// }
-
 func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 	ctx := c.createContext()
 	roles, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Roles(ctx, nil)
@@ -532,7 +501,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	var fieldsSelected []string
 	structuredRename := map[string]string{"Principal": "principal", "Email": "email", "Role": "role", "ResourceType": "resource_type", "Name": "name", "PatternType": "pattern_type"}
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, _, err := c.V2Client.GetIamUserById(userResourceId)
+	user, err := c.V2Client.GetIamUserById(userResourceId)
 	displayStruct := &listDisplay{
 		Principal: options.principal,
 		Role:      options.role,
@@ -618,7 +587,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 			if err != nil {
 				return nil, err
 			}
-			principal = "User:" + *user.Id
+			principal = "User:" + user.GetId()
 		}
 	}
 
@@ -652,7 +621,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
 				return nil, err
 			}
-		} // skip validation when role != "" before migrating to v2 role api
+		} // TODO: validate role and resource after migrating to v2 role api, as now CLI has no way of verifying the display role name vs. actual role name
 
 		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
 
@@ -734,7 +703,7 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 }
 
 func isSchemaRegistryOrKsqlRoleBinding(roleBinding *mdsv2.IamV2RoleBinding) bool {
-	if strings.Contains(*roleBinding.CrnPattern, "schema-registry") || strings.Contains(*roleBinding.CrnPattern, "ksql") {
+	if strings.Contains(roleBinding.GetCrnPattern(), "schema-registry") || strings.Contains(roleBinding.GetCrnPattern(), "ksql") {
 		return true
 	}
 	return false

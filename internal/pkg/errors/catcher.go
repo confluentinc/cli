@@ -306,28 +306,6 @@ func isResourceNotFoundError(err error) bool {
 	return strings.Contains(err.Error(), "resource not found")
 }
 
-// func CatchRequestNotValidMessageError(err error, r *http.Response) error {
-// 	if err == nil {
-// 		return nil
-// 	}
-
-// 	if r == nil {
-// 		return err
-// 	}
-
-// 	body, _ := io.ReadAll(r.Body)
-// 	var resBody responseBody
-// 	_ = json.Unmarshal(body, &resBody)
-// 	if resBody.Message != "" {
-// 		// Connector error: {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
-// 		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
-
-// 		// Rolebinding error: {"status_code":400,"message":"Cannot bind role OrganizationAdmin with resources.","type":"CLIENT_ERROR"}
-// 		message := strings.TrimSuffix(strings.TrimSuffix(resBody.Message, "\n"), ".")
-// 		return Wrap(err, message)
-// 	}
-// }
-
 /*
 Error: 1 error occurred:
 	* error creating topic bob: Topic 'bob' already exists.

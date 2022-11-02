@@ -71,8 +71,10 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+	if httpResp != nil {
+		if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 	}
 
 	if isCloud {
@@ -90,9 +92,9 @@ func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBi
 	roleBindingList := resp.Data
 
 	for _, rolebinding := range roleBindingList {
-		if *rolebinding.CrnPattern == *deleteRoleBinding.CrnPattern {
-			_, err = c.V2Client.DeleteIamRoleBinding(*rolebinding.Id)
-			return nil, err
+		if rolebinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
+			_, err = c.V2Client.DeleteIamRoleBinding(rolebinding.GetId())
+			return httpResp, err
 		}
 	}
 	return httpResp, errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)

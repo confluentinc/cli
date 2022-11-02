@@ -20,6 +20,8 @@ var (
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
+		buildRoleBinding("pool-12345", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceID),
 		buildRoleBinding("u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("sa-12345", "OrganizationAdmin",
