@@ -41,7 +41,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)

@@ -39,7 +39,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)

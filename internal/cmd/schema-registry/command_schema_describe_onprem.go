@@ -45,7 +45,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-refs")
+	showRefs, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
