@@ -4,9 +4,9 @@ Usage:
   confluent kafka partition [command]
 
 Available Commands:
-  describe      Describe a Kafka partition.
-  list          List Kafka partitions.
-  reassignments Manage ongoing replica reassignments.
+  describe     Describe a Kafka partition.
+  list         List Kafka partitions.
+  reassignment Manage ongoing replica reassignments.
 
 Global Flags:
   -h, --help            Show help for this command.

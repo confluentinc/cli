@@ -333,12 +333,12 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partitions/describe.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partitions/describe-json.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partitions/describe-yaml.golden"},
-		{args: "kafka partition reassignments list -h", fixture: "kafka/partitions/reassignments/list-help.golden"},
-		{args: "kafka partition reassignments list", fixture: "kafka/partitions/reassignments/list.golden"},
-		{args: "kafka partition reassignments list -o json", fixture: "kafka/partitions/reassignments/list-json.golden"},
-		{args: "kafka partition reassignments list --topic topic1", fixture: "kafka/partitions/reassignments/list-by-topic.golden"},
-		{args: "kafka partition reassignments list 0 --topic topic1", fixture: "kafka/partitions/reassignments/list-by-partition.golden"},
-		{args: "kafka partition reassignments list 0 --topic topic1 -o yaml", fixture: "kafka/partitions/reassignments/list-by-partition-yaml.golden"},
+		{args: "kafka partition reassignment list -h", fixture: "kafka/partition/reassignment/list-help.golden"},
+		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
+		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
+		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1", fixture: "kafka/partition/reassignment/list-by-partition.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
 	for _, tt := range tests {
 		tt.login = "platform"

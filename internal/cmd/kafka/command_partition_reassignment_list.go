@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type getReassignmentsOut struct {
+type getReassignmentOut struct {
 	ClusterId        string  `human:"Cluster ID" serialized:"cluster_id"`
 	TopicName        string  `human:"Topic Name" serialized:"topic_name"`
 	PartitionId      int32   `human:"Partition ID" serialized:"partition_id"`
@@ -21,25 +21,25 @@ type getReassignmentsOut struct {
 	RemovingReplicas []int32 `human:"Removing Replicas" serialized:"removing_replicas"`
 }
 
-func (c *partitionCommand) newReassignmentsListCommand() *cobra.Command {
+func (c *partitionCommand) newReassignmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [id]",
 		Short: "List ongoing replica reassignments.",
 		Long:  "List ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.reassignmentsList,
+		RunE:  c.reassignmentList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all replica reassignments for the Kafka cluster.",
-				Code: "confluent kafka partition reassignments list",
+				Code: "confluent kafka partition reassignment list",
 			},
 			examples.Example{
 				Text: `List replica reassignments for topic "my_topic".`,
-				Code: "confluent kafka partition reassignments list --topic my_topic",
+				Code: "confluent kafka partition reassignment list --topic my_topic",
 			},
 			examples.Example{
 				Text: `List replica reassignments for partition "1" of topic "my_topic".`,
-				Code: "confluent kafka partition reassignments list 1 --topic my_topic",
+				Code: "confluent kafka partition reassignment list 1 --topic my_topic",
 			},
 		),
 	}
@@ -51,7 +51,7 @@ func (c *partitionCommand) newReassignmentsListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *partitionCommand) reassignmentsList(cmd *cobra.Command, args []string) error {
+func (c *partitionCommand) reassignmentList(cmd *cobra.Command, args []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (c *partitionCommand) reassignmentsList(cmd *cobra.Command, args []string) 
 
 	list := output.NewList(cmd)
 	for _, reassignment := range reassignmentListResp.Data {
-		list.Add(&getReassignmentsOut{
+		list.Add(&getReassignmentOut{
 			ClusterId:        reassignment.ClusterId,
 			TopicName:        reassignment.TopicName,
 			PartitionId:      reassignment.PartitionId,
