@@ -29,7 +29,7 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())

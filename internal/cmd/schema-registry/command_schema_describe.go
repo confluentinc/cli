@@ -43,8 +43,8 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
