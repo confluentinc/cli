@@ -12,7 +12,7 @@ func (c *linkCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 		Use:   "list <link>",
 		Short: "List cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.listOnPrem,
+		RunE:  c.configurationListOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())

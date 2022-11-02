@@ -23,7 +23,7 @@ func (c *linkCommand) newConfigurationListCommand() *cobra.Command {
 		Use:   "list <link>",
 		Short: "List cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.list,
+		RunE:  c.configurationList,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
