@@ -33,13 +33,6 @@ docs: clean-docs
 
 .PHONY: publish-docs
 publish-docs: docs clone-docs-repos
-	echo -n "Publish docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then \
-		CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-docs-internal; \
-    fi
-
-.PHONY: publish-docs-internal
-publish-docs-internal:
 	@cd $(CONFLUENT_DOCS_DIR); \
 	git checkout -b cli-$(VERSION) origin/$(DOCS_BASE_BRANCH) || exit 1; \
 	rm -rf command-reference; \
@@ -49,7 +42,7 @@ publish-docs-internal:
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
 	git commit -m "[ci skip] chore: update CLI docs for $(VERSION)" || exit 1; \
 	git push origin cli-$(VERSION) || exit 1; \
-	hub pull-request -b $(DOCS_BASE_BRANCH) -m "chore: update CLI docs for $(VERSION)" || exit 1
+	gh pr create -B $(DOCS_BASE_BRANCH) --title "chore: update CLI docs for $(VERSION)" --body "" || exit 1
 
 .PHONY: clean-docs
 clean-docs:

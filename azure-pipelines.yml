@@ -3,9 +3,9 @@ strategy:
     windows:
       imageName: 'windows-2019'
     mac:
-      imageName: 'macOS-10.15'
+      imageName: 'macOS-12'
     linux:
-      imageName: 'ubuntu-18.04'
+      imageName: 'ubuntu-22.04'
 
 pool:
   vmImage: $(imageName)
@@ -55,7 +55,6 @@ steps:
 
 - script: |
     make lint
-  timeoutInMinutes: 15
   displayName: 'make lint'
 
 # make test will build the CLI as part of its work

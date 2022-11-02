@@ -14,20 +14,18 @@ else ifneq (,$(findstring Linux,$(shell uname)))
     else # build for glibc Linux
 		CC=gcc CXX=g++ make cli-builder
     endif
-else
-    ifneq (,$(findstring x86_64,$(shell uname -m))) # build for Darwin/amd64
-		make cli-builder
-    else # build for Darwin/arm64
-		make switch-librdkafka-arm64
-		make cli-builder || true 
-		make restore-librdkafka-amd64
-    endif
+else # build for Darwin
+	make cli-builder
 endif
 
 .PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 cross-build:
-ifeq ($(GOARCH),arm64) # build for darwin/arm64.
-	make build-darwin-arm64
+ifeq ($(GOARCH),arm64)
+    ifeq ($(GOOS),linux)
+		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+    else # build for darwin/arm64
+		CGO_ENABLED=1 make cli-builder
+    endif
 else # build for amd64 arch
     ifeq ($(GOOS),windows)
 		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
@@ -37,12 +35,6 @@ else # build for amd64 arch
 		CGO_ENABLED=1 make cli-builder
     endif
 endif
-
-.PHONY: build-darwin-arm64
-build-darwin-arm64:
-	make switch-librdkafka-arm64
-	CGO_ENABLED=1 make cli-builder || true 
-	make restore-librdkafka-amd64
 
 .PHONY: cli-builder
 cli-builder:
@@ -55,14 +47,14 @@ include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
+include ./mk-files/usage.mk
 include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_VERSION = 1.8.2
-RDKAFKA_PATH := $(shell find $(GOPATH)/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
+RDKAFKA_VERSION = 1.9.3-RC3
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -80,29 +72,17 @@ generate:
 
 .PHONY: deps
 deps:
-	go install github.com/goreleaser/goreleaser@v1.4.1 && \
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.0 && \
-	go install github.com/mitchellh/golicense@v0.2.0
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+	go install github.com/google/go-licenses@v1.4.0 && \
+	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
-# Jenkins only depends on goreleaser, so we omit golangci-lint and golicense
 jenkins-deps:
-	go get github.com/goreleaser/goreleaser@v1.4.1
-
-ifeq ($(shell uname),Darwin)
-    SHASUM ?= gsha256sum
-else ifneq (,$(findstring NT,$(shell uname)))
-# TODO: I highly doubt this works. Completely untested. The output format is likely very different than expected.
-    SHASUM ?= CertUtil SHA256 -hashfile
-else ifneq (,$(findstring Windows,$(shell systeminfo)))
-    SHASUM ?= CertUtil SHA256 -hashfile
-else
-    SHASUM ?= sha256sum
-endif
+	go install github.com/goreleaser/goreleaser@v1.11.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
-	@echo "RDKAFKA_PATH: $(RDKAFKA_PATH)"
 
 #
 # START DEVELOPMENT HELPERS
@@ -125,11 +105,6 @@ run:
 #
 # END DEVELOPMENT HELPERS
 #
-
-.PHONY: build-integ
-build-integ:
-	make build-integ-nonrace
-	make build-integ-race
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
@@ -165,31 +140,10 @@ endef
 fmt:
 	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
 
-.PHONY: release-ci
-release-ci:
-ifneq ($(SEMAPHORE_GIT_PR_BRANCH),)
-	true
-else ifeq ($(SEMAPHORE_GIT_BRANCH),master)
-	make release
-else
-	true
-endif
-
 .PHONY: lint
 lint:
-ifdef CI
-ifeq ($(shell uname),Darwin)
-	true
-else ifneq (,$(findstring NT,$(shell uname)))
-	true
-else
-	@make lint-go
-	@make lint-cli
-endif
-else
-	@make lint-go
-	@make lint-cli
-endif
+	make lint-go
+	make lint-cli
 
 .PHONY: lint-go
 lint-go:
@@ -208,12 +162,8 @@ cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 
 .PHONY: lint-licenses
-## Scan and validate third-party dependency licenses
-lint-licenses: build
-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	echo Licenses for confluent binary ; \
-	[ -t 0 ] && args="" || args="-plain" ; \
-	GITHUB_TOKEN=$(token) golicense $${args} .golicense.hcl ./dist/confluent_$(shell go env GOOS)_$(shell go env GOARCH)/confluent || true
+lint-licenses:
+	go-licenses report ./...
 
 .PHONY: test-prep
 test-prep:
@@ -225,15 +175,13 @@ endif
 ## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 unit-test:
 ifdef CI
-	@# Run unit tests with coverage.
   ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc go test -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   else
-	@GOPRIVATE=github.com/confluentinc go test -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
   endif
 	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
 else
-	@# Run unit tests.
   ifeq "$(OS)" "Windows_NT"
 	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
   else
@@ -244,11 +192,9 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@# Run integration tests with coverage.
-	@INTEG_COVER=on go test -v $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
-	@# Run integration tests.
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
 endif
 

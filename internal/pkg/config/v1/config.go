@@ -3,19 +3,20 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/confluentinc/cli/internal/pkg/log"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
@@ -54,25 +55,40 @@ var (
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
 		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
 	)
+	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
+		"you must log out of Confluent Cloud to use this command",
+		"Log out with \"confluent logout\".\n",
+	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
 		`Log in with "confluent login --url <mds-url>".`,
+	)
+	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
+		"you must enable updates to use this command",
+		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
 	)
 )
 
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck     bool                     `json:"disable_update_check"`
-	DisableUpdates         bool                     `json:"disable_updates"`
-	NoBrowser              bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms              map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials            map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts               map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates          map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext         string                   `json:"current_context"`
-	AnonymousId            string                   `json:"anonymous_id,omitempty"`
-	IsTest                 bool                     `json:"-"`
+
+	DisableUpdateCheck bool                     `json:"disable_update_check"`
+	DisableUpdates     bool                     `json:"disable_updates"`
+	DisablePlugins     bool                     `json:"disable_plugins"`
+	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts           map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
+	CurrentContext     string                   `json:"current_context"`
+	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+
+	// The following configurations are not persisted between runs
+
+	IsTest  bool              `json:"-"`
+	Version *pversion.Version `json:"-"`
+
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -110,6 +126,7 @@ func New() *Config {
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
+		Version:       new(pversion.Version),
 	}
 }
 
@@ -117,7 +134,7 @@ func New() *Config {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	filename := c.GetFilename()
-	input, err := ioutil.ReadFile(filename)
+	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
@@ -190,7 +207,7 @@ func (c *Config) Save() error {
 		return errors.Wrapf(err, errors.CreateConfigDirectoryErrorMsg, filename)
 	}
 
-	if err := ioutil.WriteFile(filename, cfg, 0600); err != nil {
+	if err := os.WriteFile(filename, cfg, 0600); err != nil {
 		return errors.Wrapf(err, errors.CreateConfigFileErrorMsg, filename)
 	}
 
@@ -252,7 +269,7 @@ func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 	ctx := c.Context()
 	var tempAccount *orgv1.Account
 	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
-		tempAccount = ctx.State.Auth.Account
+		tempAccount = ctx.GetEnvironment()
 		ctx.State.Auth.Account = c.overwrittenAccount
 	}
 	return tempAccount
@@ -504,11 +521,11 @@ func (c *Config) CheckIsOnPremLogin() error {
 }
 
 func (c *Config) CheckIsCloudLogin() error {
-	if !c.isCloud() || !c.isContextStatePresent() {
+	if !c.isCloud() {
 		return RequireCloudLoginErr
 	}
 
-	if c.isOrgSuspended() {
+	if c.isContextStatePresent() && c.isOrgSuspended() {
 		if c.isLoginBlockedByOrgSuspension() {
 			return RequireCloudLoginOrgUnsuspendedErr
 		} else {
@@ -520,11 +537,11 @@ func (c *Config) CheckIsCloudLogin() error {
 }
 
 func (c *Config) CheckIsCloudLoginAllowFreeTrialEnded() error {
-	if !c.isCloud() || !c.isContextStatePresent() {
+	if !c.isCloud() {
 		return RequireCloudLoginErr
 	}
 
-	if c.isLoginBlockedByOrgSuspension() {
+	if c.isContextStatePresent() && c.isLoginBlockedByOrgSuspension() {
 		return RequireCloudLoginOrgUnsuspendedErr
 	}
 
@@ -575,6 +592,20 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 	return nil
 }
 
+func (c *Config) CheckIsNonCloudLogin() error {
+	if c.isCloud() {
+		return RequireNonCloudLogin
+	}
+	return nil
+}
+
+func (c *Config) CheckAreUpdatesEnabled() error {
+	if c.DisableUpdates {
+		return RequireUpdatesEnabledErr
+	}
+	return nil
+}
+
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
@@ -607,13 +638,11 @@ func (c *Config) isContextStatePresent() bool {
 }
 
 func (c *Config) isOrgSuspended() bool {
-	status := c.Context().GetSuspensionStatus().GetStatus()
-	return status == orgv1.SuspensionStatusType_SUSPENSION_IN_PROGRESS || status == orgv1.SuspensionStatusType_SUSPENSION_COMPLETED
+	return utils.IsOrgSuspended(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
-	eventType := c.Context().GetSuspensionStatus().GetEventType()
-	return c.isOrgSuspended() && eventType != orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL
+	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
 func (c *Config) GetLastUsedOrgId() string {
@@ -621,4 +650,9 @@ func (c *Config) GetLastUsedOrgId() string {
 		return ctx.LastOrgId
 	}
 	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+}
+
+func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
+	ctx := c.Context()
+	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)
 }

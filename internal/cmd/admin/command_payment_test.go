@@ -14,6 +14,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -128,27 +129,24 @@ func TestPaymentRegexValidation(t *testing.T) {
 	}
 }
 
-func getCommand() (c *command) {
-	c = &command{
+func getCommand() *command {
+	return &command{
 		AuthenticatedCLICommand: &pcmd.AuthenticatedCLICommand{
-			CLICommand: &pcmd.CLICommand{
-				Command: mockAdminCommand(),
-				Config:  nil,
-				Version: nil,
-			},
-			Client: mockClient(),
-			State: &v1.ContextState{
-				Auth: &v1.AuthConfig{
-					User: &orgv1.User{},
-					Organization: &orgv1.Organization{
-						Id: int32(0),
+			Context: &dynamicconfig.DynamicContext{
+				Context: &v1.Context{
+					State: &v1.ContextState{
+						Auth: &v1.AuthConfig{
+							User:         &orgv1.User{},
+							Organization: &orgv1.Organization{Id: int32(0)},
+						},
 					},
 				},
 			},
+			CLICommand: &pcmd.CLICommand{Command: mockAdminCommand()},
+			Client:     mockClient(),
 		},
 		isTest: true,
 	}
-	return
 }
 
 func mockAdminCommand() *cobra.Command {

@@ -35,6 +35,8 @@ const (
 	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  },\n  {\n    \"name\": \"topic-2\"\n  },\n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
+var conf *v1.Config
+
 type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient
@@ -316,7 +318,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 		},
 		{
 			input:                        "create topic-X --url http://localhost:8082 --config retention.ms=1,compression.type=gzip --replication-factor 2 --partitions 4",
-			expectedOutput:               fmt.Sprintf(errors.CreatedTopicMsg, "topic-X"),
+			expectedOutput:               "Created topic \"topic-X\".\n",
 			createTopicName:              "topic-X",
 			createTopicPartitionsCount:   4,
 			createTopicReplicationFactor: 2,

@@ -3,41 +3,64 @@ package dynamicconfig
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-type contextClient struct {
-	context *DynamicContext
-}
-
-// NewContextClient returns a new contextClient, with the specified context and a client.
-func NewContextClient(ctx *DynamicContext) *contextClient {
-	return &contextClient{context: ctx}
-}
-
-func (c *contextClient) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
-	envId, err := c.context.AuthenticatedEnvId()
+func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
+	environmentId, err := d.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}
 
-	req := &schedv1.KafkaCluster{AccountId: envId, Id: clusterId}
-	cluster, err := c.context.Client.Kafka.Describe(context.Background(), req)
+	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return nil, errors.CatchKafkaNotFoundError(err, clusterId)
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
-	return cluster, nil
+	apiEndpoint, err := getKafkaApiEndpoint(d.Client, clusterId, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &v1.KafkaClusterConfig{
+		ID:           *cluster.Id,
+		Name:         *cluster.Spec.DisplayName,
+		Bootstrap:    strings.TrimPrefix(*cluster.Spec.KafkaBootstrapEndpoint, "SASL_SSL://"),
+		APIEndpoint:  apiEndpoint,
+		RestEndpoint: *cluster.Spec.HttpEndpoint,
+		APIKeys:      make(map[string]*v1.APIKeyPair),
+		LastUpdate:   time.Now(),
+	}
+
+	return config, nil
 }
 
-func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error {
-	// check if this is API key exists server-side
-	key, _, err := c.context.V2Client.GetApiKey(apiKey)
+func getKafkaApiEndpoint(client *ccloud.Client, clusterId, environmentId string) (string, error) {
+	cluster := &schedv1.KafkaCluster{
+		Id:        clusterId,
+		AccountId: environmentId,
+	}
+
+	cluster, err := client.Kafka.Describe(context.Background(), cluster)
 	if err != nil {
-		return err
+		return "", err
+	}
+
+	return cluster.ApiEndpoint, nil
+}
+
+func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
+	// check if this is API key exists server-side
+	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
+	if err != nil {
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	// check if the key is for the right cluster
 	ok := key.Spec.Resource.Id == clusterID
@@ -47,12 +70,12 @@ func (c *contextClient) FetchAPIKeyError(apiKey string, clusterID string) error 
 		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
-	// this means the requested api-key exists, but we just don't have the secret saved locally
+	// the requested api-key exists, but the secret is not saved locally
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := c.context.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
+	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -65,8 +88,8 @@ func (c *contextClient) FetchSchemaRegistryByAccountId(context context.Context, 
 	return nil, errors.NewSRNotEnabledError()
 }
 
-func (c *contextClient) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := c.context.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
+	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

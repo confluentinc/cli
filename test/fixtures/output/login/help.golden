@@ -23,6 +23,23 @@ Even with the environment variables set, you can force an interactive login usin
 Usage:
   confluent login [flags]
 
+Examples:
+Log in to Confluent Cloud.
+
+  $ confluent login
+
+Log in to a specific organization in Confluent Cloud.
+
+  $ confluent login --organization-id 00000000-0000-0000-0000-000000000000
+
+Log in to Confluent Platform with a MDS URL.
+
+  $ confluent login --url http://localhost:8090
+
+Log in to Confluent Platform with a MDS URL and CA certificate.
+
+  $ confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt
+
 Flags:
       --url string               Metadata Service (MDS) URL, for on-prem deployments.
       --ca-cert-path string      Self-signed certificate chain in PEM format, for on-prem deployments.
@@ -33,4 +50,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

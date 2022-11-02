@@ -1,14 +1,14 @@
 package kafka
 
 import (
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -26,16 +26,9 @@ func (c *linkCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. "+
-		"Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
-
-	if c.cfg.IsCloudLogin() {
-		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	}
-
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = cmd.MarkFlagRequired(configFileFlagName)
@@ -63,21 +56,25 @@ func (c *linkCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.EmptyConfigErrorMsg)
 	}
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	opts := &kafkarestv3.UpdateKafkaLinkConfigBatchOpts{
-		AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{
-			Data: toAlterConfigBatchRequestData(configMap),
-		}),
+	data := toAlterConfigBatchRequestData(configMap)
+
+	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(clusterId, linkName, data); err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	if httpResp, err := client.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(ctx, clusterId, linkName, opts); err != nil {
-		return handleOpenApiError(httpResp, err, client)
-	}
-
-	utils.Printf(cmd, errors.UpdatedLinkMsg, linkName)
+	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

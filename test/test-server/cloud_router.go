@@ -36,7 +36,6 @@ const (
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
 	usageLimits         = "/api/usage_limits"
-	metricsApi          = "/{version}/metrics/{view}/{query}"
 	accessTokens        = "/api/access_tokens"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
@@ -82,17 +81,19 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addUserRoutes(t)
 	c.addV2AlphaRoutes(t)
 	c.addUsageLimitRoutes(t)
-	c.addMetricsQueryRoutes(t)
+	c.addJwtTokenRoutes(t)
 	c.addServiceAccountRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
 	c.HandleFunc(v2alphaAuthenticate, c.HandleV2Authenticate(t))
-	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies, v2RbacRoles)
+	c.addRoutesAndReplies(t, v2Base, v2RoutesAndReplies)
 }
 
-func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies, rbacRoles map[string]string) {
-	addRoles(base, routesAndReplies, rbacRoles)
+func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndReplies map[string]string) {
+	jsonRolesMap := rolesListToJsonMap(rbacPublicRoles())
+	addRoles(base, routesAndReplies, jsonRolesMap)
+
 	for route, reply := range routesAndReplies {
 		s := reply
 		c.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
@@ -101,6 +102,8 @@ func (c CloudRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRep
 			require.NoError(t, err)
 		})
 	}
+
+	c.HandleFunc(base, c.HandleAllRolesRoute(t))
 }
 
 func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
@@ -143,8 +146,7 @@ func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
 	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
 }
 
-func (c *CloudRouter) addMetricsQueryRoutes(t *testing.T) {
-	c.HandleFunc(metricsApi, c.HandleMetricsQuery(t))
+func (c *CloudRouter) addJwtTokenRoutes(t *testing.T) {
 	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }
 

@@ -3,7 +3,7 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -261,8 +261,13 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		return configFile, nil
 	}
 
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return "", err
+	}
+
 	// validate that the key pair matches with the cluster
-	if err := c.validateSchemaRegistryCredentials(srCluster); err != nil {
+	if err := c.validateSchemaRegistryCredentials(srCluster, unsafeTrace); err != nil {
 		return "", err
 	}
 
@@ -319,7 +324,7 @@ func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterCo
 	return nil
 }
 
-func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster) error {
+func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
 
 	// set BasePath of srConfig
@@ -334,6 +339,7 @@ func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRe
 	srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
 	srConfig.UserAgent = c.Version.UserAgent
+	srConfig.Debug = unsafeTrace
 	srClient := srsdk.NewAPIClient(srConfig)
 
 	// Test credentials
@@ -358,7 +364,7 @@ func fetchConfigFile(configId string) (string, error) {
 
 	defer resp.Body.Close()
 
-	configFile, err := ioutil.ReadAll(resp.Body)
+	configFile, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

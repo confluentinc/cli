@@ -9,7 +9,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -46,8 +45,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
 	ctx := context.Background()
 
-	ctxClient := dynamicconfig.NewContextClient(c.Context)
-	cluster, err := ctxClient.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -75,7 +73,7 @@ func confirmDeletion(cmd *cobra.Command, environmentId string, prompt form.Promp
 	f := form.New(
 		form.Field{
 			ID:        "confirmation",
-			Prompt:    fmt.Sprintf(`Are you sure you want to delete the Schema Registry cluster for environment "%s"?`, environmentId),
+			Prompt:    fmt.Sprintf(`Are you sure you want to permanently delete the Schema Registry cluster for environment "%s", along with all of its data?`, environmentId),
 			IsYesOrNo: true,
 		},
 	)

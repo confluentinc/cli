@@ -1,11 +1,14 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestAPIKey() {
@@ -131,12 +134,33 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create", fixture: "api-key/54.golden", wantErrCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
+
+		// test multicluster keys
+		{name: "listing multicluster api keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
+		{name: "listing multicluster api keys with --resource field", args: "api-key list --resource lsrc-abc", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
+		{name: "listing multicluster api keys with --current-user field", args: "api-key list --current-user", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/58.golden"},
+		{name: "listing multicluster api keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/59.golden"},
 	}
 
-	resetConfiguration(s.T())
+	resetConfiguration(s.T(), false)
 
 	for _, tt := range tests {
 		tt.workflow = true
+		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestApiKeyDescribe() {
+	resetConfiguration(s.T(), false)
+
+	tests := []CLITest{
+		{args: "api-key describe MYKEY1", fixture: "api-key/describe.golden"},
+		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
+		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
 		s.runIntegrationTest(tt)
 	}
 }

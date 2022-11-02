@@ -84,7 +84,7 @@ func (c *Context) HasBasicMDSLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		return c.State != nil && c.State.AuthToken != ""
+		return c.GetAuthToken() != ""
 	case APIKey:
 		return false
 	default:
@@ -100,7 +100,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		return c.State != nil && c.State.AuthToken != "" && c.State.Auth != nil && c.State.Auth.Account != nil && c.State.Auth.Account.Id != ""
+		return c.GetAuthToken() != "" && c.GetEnvironment().GetId() != ""
 	case APIKey:
 		return false
 	default:
@@ -119,14 +119,6 @@ func (c *Context) DeleteUserAuth() error {
 
 	err := c.Save()
 	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
-}
-
-func (c *Context) GetCurrentEnvironmentId() string {
-	// non environment contexts
-	if c.State.Auth == nil {
-		return ""
-	}
-	return c.State.Auth.Account.Id
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
@@ -148,11 +140,39 @@ func (c *Context) IsCloud(isTest bool) bool {
 	return false
 }
 
+func (c *Context) GetPlatform() *Platform {
+	if c != nil {
+		return c.Platform
+	}
+	return nil
+}
+
+func (c *Context) GetPlatformServer() string {
+	if platform := c.GetPlatform(); platform != nil {
+		return platform.Server
+	}
+	return ""
+}
+
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuth() *AuthConfig {
 	if c.State != nil {
 		return c.State.Auth
 	}
 	return nil
+}
+
+func (c *Context) SetAuth(auth *AuthConfig) {
+	if c.GetState() == nil {
+		c.State = new(ContextState)
+	}
+	c.GetState().Auth = auth
 }
 
 func (c *Context) GetUser() *orgv1.User {
@@ -180,9 +200,23 @@ func (c *Context) GetEnvironment() *orgv1.Account {
 	return nil
 }
 
+func (c *Context) SetEnvironment(environment *orgv1.Account) {
+	if c.GetAuth() == nil {
+		c.SetAuth(new(AuthConfig))
+	}
+	c.GetAuth().Account = environment
+}
+
+func (c *Context) GetEnvironments() []*orgv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Accounts
+	}
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
-	if c.State != nil {
-		return c.State.AuthToken
+	if state := c.GetState(); state != nil {
+		return state.AuthToken
 	}
 	return ""
 }
@@ -194,11 +228,17 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags() map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 	if c.FeatureFlags == nil {
 		return map[string]interface{}{}
 	}
-	return c.FeatureFlags.Values
+
+	switch client {
+	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
+		return c.FeatureFlags.CcloudValues
+	default:
+		return c.FeatureFlags.Values
+	}
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

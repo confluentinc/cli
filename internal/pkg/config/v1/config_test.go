@@ -2,7 +2,6 @@ package v1
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -312,6 +311,7 @@ func TestConfig_Load(t *testing.T) {
 			// Get around automatically assigned anonymous id and IsTest check
 			tt.want.AnonymousId = cfg.AnonymousId
 			tt.want.IsTest = cfg.IsTest
+			tt.want.Version = cfg.Version
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
@@ -367,7 +367,7 @@ func TestConfig_Save(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
 			if tt.kafkaOverwrite != "" {
@@ -381,8 +381,8 @@ func TestConfig_Save(t *testing.T) {
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got, _ := ioutil.ReadFile(configFile.Name())
-			want, _ := ioutil.ReadFile(tt.wantFile)
+			got, _ := os.ReadFile(configFile.Name())
+			want, _ := os.ReadFile(tt.wantFile)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 			}
@@ -414,18 +414,18 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			if tt.accountOverwrite != nil {
-				tt.config.SetOverwrittenAccount(tt.config.Context().State.Auth.Account)
+				tt.config.SetOverwrittenAccount(tt.config.Context().GetEnvironment())
 				tt.config.Context().State.Auth.Account = tt.accountOverwrite
 			}
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got, _ := ioutil.ReadFile(configFile.Name())
+			got, _ := os.ReadFile(configFile.Name())
 			got = append(got, '\n') //account for extra newline at the end of the json file
-			want, _ := ioutil.ReadFile(tt.wantFile)
+			want, _ := os.ReadFile(tt.wantFile)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 			}
@@ -538,13 +538,13 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 		{
 			name:          "test no overwrite value",
 			config:        testConfigsCloud.statefulConfig,
-			activeAccount: testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount: testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:           "test with overwrite value",
 			config:         testConfigsCloud.statefulConfig,
 			overwrittenVal: &orgv1.Account{Id: "env-test"},
-			activeAccount:  testConfigsCloud.statefulConfig.Context().State.Auth.Account.Id,
+			activeAccount:  testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
 			name:   "test no overwrite value",
@@ -562,12 +562,12 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
 			tempAccount := tt.config.resolveOverwrittenAccount()
 			if tt.overwrittenVal != nil {
-				require.Equal(t, tt.overwrittenVal, tt.config.Context().State.Auth.Account)
+				require.Equal(t, tt.overwrittenVal, tt.config.Context().GetEnvironment())
 				require.Equal(t, tt.activeAccount, tempAccount.Id)
 			}
 			//restore should reset the current context to be the flag value
 			tt.config.restoreOverwrittenAccount(tempAccount)
-			require.Equal(t, tt.activeAccount, tt.config.Context().State.Auth.Account.Id)
+			require.Equal(t, tt.activeAccount, tt.config.Context().GetEnvironment().GetId())
 		}
 		tt.config.overwrittenAccount = nil
 	}
@@ -822,7 +822,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	testInputs := SetupTestInputs(true)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
-	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 
 	// Creating another environment with another kafka cluster
@@ -879,7 +879,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	testInputs := SetupTestInputs(false)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
-	configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
+	configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{

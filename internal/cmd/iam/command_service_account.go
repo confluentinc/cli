@@ -30,6 +30,7 @@ func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
 
@@ -50,7 +51,7 @@ func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []s
 
 func requireLen(val string, maxLen int, field string) error {
 	if len(val) > maxLen {
-		return fmt.Errorf(field+" length should not exceed %d characters.", maxLen)
+		return fmt.Errorf("%s length should not exceed %d characters", field, maxLen)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz alpine_amd64.tar.gz windows_amd64.zip
+ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_arm64.tar.gz alpine_amd64.tar.gz alpine_arm64.tar.gz windows_amd64.zip
 
 .PHONY: release
 release: check-branch commit-release tag-release
@@ -8,7 +8,6 @@ release: check-branch commit-release tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	@VERSION=$(VERSION) make publish-docs
-	git checkout go.sum
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
@@ -22,7 +21,6 @@ check-branch:
 .PHONY: release-to-stag
 release-to-stag:
 	@make gorelease
-	git checkout go.sum
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
@@ -45,27 +43,16 @@ define copy-stag-content-to-prod
 	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
 endef
 
-.PHONY: switch-librdkafka-arm64
-switch-librdkafka-arm64:
-	@if [ ! -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
-		echo "Attempting to replace librdkafka with Darwin/arm64 version (sudo required)" ;\
-		sudo mv $(RDKAFKA_PATH)/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_amd64.a ;\
-		sudo cp lib/librdkafka_darwin.a $(RDKAFKA_PATH)/librdkafka_darwin.a ;\
-	fi
-
-.PHONY: restore-librdkafka-amd64
-restore-librdkafka-amd64:
-	@if [ -f $(RDKAFKA_PATH)/librdkafka_amd64.a ]; then \
-        echo "Attempting to restore librdkafka to Darwin/amd64 version (sudo required)";\
-		sudo mv $(RDKAFKA_PATH)/librdkafka_amd64.a $(RDKAFKA_PATH)/librdkafka_darwin.a;\
-	fi
-
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-linux-glibc
 gorelease-linux-glibc:
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-linux-glibc.yml
 
+.PHONY: gorelease-linux-glibc-arm64
+gorelease-linux-glibc-arm64:
+	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
+	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 # Uploading linux glibc files because its goreleaser file has set release disabled
@@ -75,13 +62,16 @@ gorelease:
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser.yml; \
-	make restore-librdkafka-amd64 && \
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist --timeout 60m -f .goreleaser.yml; \
+	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
 	./build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
+	aws s3 cp dist/confluent_$(VERSION)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_arm64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
+	aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64 && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
@@ -93,7 +83,6 @@ gorelease:
 .PHONY: goreleaser-patches
 goreleaser-patches:
 	make set-acls
-	make rename-archives-checksums
 
 # goreleaser does not yet support setting ACLs for cloud storage
 # We have to set `public-read` manually by copying the file in place
@@ -106,14 +95,6 @@ set-acls:
 		echo "SETTING ACLS: $${folder_path}"; \
 		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
 	done
-
-# goreleaser uploads the checksum for archives as confluent_1.19.0_checksums.txt but the installer script expects version with 'v', i.e. confluent_v1.19.0_checksums.txt
-# Chose not to change install script to expect no-v because older versions use the format with 'v'.
-.PHONY: rename-archives-checksums
-rename-archives-checksums:
-	$(aws-authenticate); \
-	folder=$(S3_STAG_PATH)/confluent-cli/archives/$(CLEAN_VERSION); \
-	aws s3 mv $${folder}/confluent_$(CLEAN_VERSION)_checksums.txt $${folder}/confluent_v$(CLEAN_VERSION)_checksums.txt --acl public-read
 
 # Update latest archives folder for staging
 # Also used by unrelease to fix latest archives folder so have to be careful about the version variable used
@@ -152,12 +133,7 @@ endef
 
 .PHONY: download-licenses
 download-licenses:
-	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	@# we'd like to use golicense -plain but the exit code is always 0 then so CI won't actually fail on illegal licenses
-	@ echo Downloading third-party licenses for $(LICENSE_BIN) binary ; \
-	GITHUB_TOKEN=$(token) golicense .golicense.hcl $(LICENSE_BIN_PATH) | GITHUB_TOKEN=$(token) go run cmd/golicense-downloader/main.go -F .golicense-downloader.json -l legal/licenses -n legal/notices ; \
-	[ -z "$$(ls -A legal/licenses)" ] && { echo "ERROR: licenses folder not populated" && exit 1; }; \
-	echo Successfully downloaded licenses
+	go-licenses save ./... --save_path legal/licenses --force || true
 
 .PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
@@ -168,6 +144,10 @@ publish-installer:
 .PHONY: upload-linux-build-to-github
 ## upload local copy of glibc linux build to github
 upload-linux-build-to-github:
-	hub release edit --attach dist/confluent_$(VERSION)_linux_amd64.tar.gz $(VERSION) -m "" && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_amd64.tar.gz && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_arm64.tar.gz && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	hub release edit --attach dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 $(VERSION) -m ""
+	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
+	gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
+	gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
+	gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt

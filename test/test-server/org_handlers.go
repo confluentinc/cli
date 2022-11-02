@@ -23,6 +23,17 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		envId := vars["id"]
 		w.Header().Set("Content-Type", "application/json")
+
+		if r.Method == http.MethodGet {
+			environment := &orgv2.OrgV2Environment{
+				Id:          orgv2.PtrString(envId),
+				DisplayName: orgv2.PtrString("default"),
+			}
+			err := json.NewEncoder(w).Encode(environment)
+			require.NoError(t, err)
+			return
+		}
+
 		if env := isValidOrgEnvironmentId(OrgEnvironments, envId); env != nil {
 			switch r.Method {
 			case http.MethodDelete:
@@ -36,7 +47,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			}
 		} else {
 			// env not found
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusForbidden)
 		}
 	}
 }

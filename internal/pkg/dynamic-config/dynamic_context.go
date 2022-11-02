@@ -3,12 +3,11 @@ package dynamicconfig
 import (
 	"context"
 	"fmt"
-	"strings"
+	"time"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -24,6 +23,9 @@ type DynamicContext struct {
 }
 
 func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+	if context == nil {
+		return nil
+	}
 	return &DynamicContext{
 		Context:  context,
 		Client:   client,
@@ -89,7 +91,7 @@ func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Acc
 func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
-			d.Config.SetOverwrittenAccount(d.State.Auth.Account)
+			d.Config.SetOverwrittenAccount(d.GetEnvironment())
 			d.State.Auth.Account = env
 			return true
 		}
@@ -101,46 +103,42 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	if d.KafkaClusterContext == nil {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
+
 	clusterId := d.KafkaClusterContext.GetActiveKafkaClusterId()
 	if clusterId == "" {
 		return nil, errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.NoKafkaSelectedSuggestions)
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	return cluster, errors.CatchKafkaNotFoundError(err, clusterId)
+	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
 func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
-	if cluster := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); cluster != nil {
-		return cluster, nil
+	if config := d.KafkaClusterContext.GetKafkaClusterConfig(clusterId); config != nil && config.Bootstrap != "" {
+		if clusterId == "anonymous-id" {
+			return config, nil
+		}
+		const week = 7 * 24 * time.Hour
+		if time.Now().Before(config.LastUpdate.Add(week)) {
+			return config, nil
+		}
 	}
 
-	if d.Client == nil {
-		return nil, errors.Errorf(errors.FindKafkaNoClientErrorMsg, clusterId)
+	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
+	if d.Client == nil || d.V2Client == nil {
+		return nil, nil
 	}
 
 	// Resolve cluster details if not found locally.
-	kcc, err := NewContextClient(d).FetchCluster(clusterId)
+	config, err := d.FetchCluster(clusterId)
 	if err != nil {
 		return nil, err
 	}
 
-	cluster := KafkaClusterToKafkaClusterConfig(kcc, make(map[string]*v1.APIKeyPair))
-	d.KafkaClusterContext.AddKafkaClusterConfig(cluster)
+	d.KafkaClusterContext.AddKafkaClusterConfig(config)
 	err = d.Save()
 
-	return cluster, err
-}
-
-func KafkaClusterToKafkaClusterConfig(kcc *schedv1.KafkaCluster, apiKeys map[string]*v1.APIKeyPair) *v1.KafkaClusterConfig {
-	return &v1.KafkaClusterConfig{
-		ID:           kcc.Id,
-		Name:         kcc.Name,
-		Bootstrap:    strings.TrimPrefix(kcc.Endpoint, "SASL_SSL://"),
-		APIEndpoint:  kcc.ApiEndpoint,
-		APIKeys:      apiKeys,
-		RestEndpoint: kcc.RestEndpoint,
-	}
+	return config, err
 }
 
 func (d *DynamicContext) SetActiveKafkaCluster(clusterId string) error {
@@ -162,9 +160,7 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 		return err
 	}
 	if _, ok := kcc.APIKeys[apiKey]; !ok {
-		// Fetch API key error.
-		ctxClient := NewContextClient(d)
-		return ctxClient.FetchAPIKeyError(apiKey, clusterId)
+		return d.FetchAPIKeyError(apiKey, clusterId)
 	}
 	kcc.APIKey = apiKey
 	return d.Save()
@@ -182,17 +178,16 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 		return nil, err
 	}
 
-	ctxClient := NewContextClient(d)
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
-	if resourceType == resource.SchemaRegistry {
+	if resourceType == resource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
 			if srCluster.Id == resourceId {
 				cluster = srCluster
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryById(context.Background(), resourceId, envId)
+			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resourceId, envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
@@ -202,7 +197,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := ctxClient.FetchSchemaRegistryByAccountId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByAccountId(context.Background(), envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
@@ -219,17 +214,13 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	return cluster, nil
 }
 
-func (d *DynamicContext) HasLogin() (bool, error) {
+func (d *DynamicContext) HasLogin() bool {
 	credType := d.Credential.CredentialType
 	switch credType {
 	case v1.Username:
-		_, err := d.resolveEnvironmentId()
-		if err != nil {
-			return false, err
-		}
-		return d.State.AuthToken != "", nil
+		return d.GetAuthToken() != ""
 	case v1.APIKey:
-		return false, nil
+		return false
 	default:
 		panic(fmt.Sprintf("unknown credential type %d in context '%s'", credType, d.Name))
 	}
@@ -247,11 +238,7 @@ func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
 // A view of the state is returned, rather than a pointer to the actual state. Changing the state
 // should be done by accessing the state field directly.
 func (d *DynamicContext) AuthenticatedState() (*v1.ContextState, error) {
-	hasLogin, err := d.HasLogin()
-	if err != nil {
-		return nil, err
-	}
-	if !hasLogin {
+	if !d.HasLogin() {
 		return nil, new(errors.NotLoggedInError)
 	}
 	return d.State, nil
@@ -299,16 +286,6 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	}
 
 	return key, secret, nil
-}
-
-func (d *DynamicContext) resolveEnvironmentId() (string, error) {
-	if d.State == nil || d.State.Auth == nil {
-		return "", new(errors.NotLoggedInError)
-	}
-	if d.State.Auth.Account == nil || d.State.Auth.Account.Id == "" {
-		return "", new(errors.NotLoggedInError)
-	}
-	return d.State.Auth.Account.Id, nil
 }
 
 func missingDetails(cluster *v1.SchemaRegistryCluster) bool {

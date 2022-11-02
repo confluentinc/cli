@@ -228,7 +228,7 @@ var roleBindingListTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:     []string{"--role", "OrganizationAdmin"},
@@ -289,7 +289,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			assert.Nil(suite.T(), err)
 		} else {
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
@@ -482,7 +482,7 @@ func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
 	mockeRoleBindingsResult := make(chan mdsv2.IamV2RoleBindingList)
 	mockeListUserResult := make(chan iamv2.IamV2UserList)
 	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockeRoleBindingsResult, mockeListUserResult)
+		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
 
 		go func() {
 			mockeRoleBindingsResult <- tc.mockRoleBindingsResult
@@ -536,7 +536,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
-		err:  errNotFound,
+		err:  errUserNotFound,
 	},
 	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
@@ -586,7 +586,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }
@@ -610,7 +610,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 		} else {
 			// error case
 			err := cmd.Execute()
-			assert.Equal(suite.T(), tc.err, err)
+			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
 }

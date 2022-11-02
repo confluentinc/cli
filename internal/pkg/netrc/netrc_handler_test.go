@@ -1,7 +1,6 @@
 package netrc
 
 import (
-	"io/ioutil"
 	"os"
 	"testing"
 
@@ -332,11 +331,11 @@ func TestNetrcWriter(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempFile, _ := ioutil.TempFile("", "tempNetrc.json")
+			tempFile, _ := os.CreateTemp("", "tempNetrc.json")
 
-			originalNetrc, err := ioutil.ReadFile(tt.inputFile)
+			originalNetrc, err := os.ReadFile(tt.inputFile)
 			require.NoError(t, err)
-			err = ioutil.WriteFile(tempFile.Name(), originalNetrc, 0600)
+			err = os.WriteFile(tempFile.Name(), originalNetrc, 0600)
 			require.NoError(t, err)
 
 			netrcHandler := NewNetrcHandler(tempFile.Name())
@@ -344,11 +343,11 @@ func TestNetrcWriter(t *testing.T) {
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
-			gotBytes, err := ioutil.ReadFile(tempFile.Name())
+			gotBytes, err := os.ReadFile(tempFile.Name())
 			require.NoError(t, err)
 			got := utils.NormalizeNewLines(string(gotBytes))
 
-			wantBytes, err := ioutil.ReadFile(tt.wantFile)
+			wantBytes, err := os.ReadFile(tt.wantFile)
 			require.NoError(t, err)
 			want := utils.NormalizeNewLines(string(wantBytes))
 

@@ -302,9 +302,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 }
 
 func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
-	scopeV2 := &mdsv2alpha1.Scope{}
-	orgResourceId := c.State.Auth.Organization.GetResourceId()
-	scopeV2.Path = []string{"organization=" + orgResourceId}
+	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
 	if cmd.Flags().Changed("current-env") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
@@ -563,7 +561,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if options.resource != "" {
 			fieldsSelected = ccloudResourcePatternListFields
 		} else {
-			displayStruct.Email = *user.Email
+			displayStruct.Email = user.GetEmail()
 			fieldsSelected = []string{"Principal", "Email", "Role"}
 		}
 	}

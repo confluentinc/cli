@@ -1,11 +1,12 @@
 package testserver
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +15,7 @@ import (
 	"github.com/gogo/protobuf/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
 	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
@@ -34,7 +36,7 @@ var (
 	keyIndex           = int32(1)
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
-	resourceTypeToKind = map[string]string{resource.Kafka: "Cluster", resource.Ksql: "ksqlDB", resource.SchemaRegistry: "SchemaRegistry", resource.Cloud: "Cloud"}
+	resourceTypeToKind = map[string]string{resource.KafkaCluster: "Cluster", resource.KsqlCluster: "ksqlDB", resource.SchemaRegistryCluster: "SchemaRegistry", resource.Cloud: "Cloud"}
 
 	RegularOrg = &orgv1.Organization{
 		Id:   321,
@@ -62,13 +64,17 @@ const (
 	exampleRegion       = "us-east-1"
 	exampleUnit         = "GB"
 
-	serviceAccountID         = int32(12345)
-	serviceAccountResourceID = "sa-12345"
-	deactivatedUserID        = int32(6666)
-	deactivatedResourceID    = "sa-6666"
+	serviceAccountID           = int32(12345)
+	serviceAccountResourceID   = "sa-12345"
+	identityProviderResourceID = "op-12345"
+	identityPoolResourceID     = "pool-12345"
+	deactivatedUserID          = int32(6666)
+	deactivatedResourceID      = "sa-6666"
 
 	auditLogServiceAccountID         = int32(1337)
 	auditLogServiceAccountResourceID = "sa-1337"
+
+	PromoTestCode = "PromoTestCode"
 )
 
 // Fill API keyStore with default data
@@ -78,16 +84,22 @@ func init() {
 
 // Handler for: "/api/me"
 func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
-	org := &orgv1.Organization{Id: 42, ResourceId: "abc-123", Name: "Confluent"}
-	if !isAuditLogEnabled {
-		org.AuditLog = &orgv1.AuditLog{
-			ClusterId:        "lkc-ab123",
-			AccountId:        "env-987zy",
-			ServiceAccountId: auditLogServiceAccountID,
-			TopicName:        "confluent-audit-log-events",
-		}
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		orgResourceId := os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
+		if orgResourceId == "" {
+			orgResourceId = "abc-123"
+		}
+
+		org := &orgv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		if !isAuditLogEnabled {
+			org.AuditLog = &orgv1.AuditLog{
+				ClusterId:        "lkc-ab123",
+				AccountId:        "env-987zy",
+				ServiceAccountId: auditLogServiceAccountID,
+				TopicName:        "confluent-audit-log-events",
+			}
+		}
+
 		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
 			User: &orgv1.User{
 				Id:         23,
@@ -225,10 +237,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 					ExpMonth:   "01",
 					ExpYear:    "99",
 				},
-				Organization: &orgv1.Organization{
-					Id: 0,
-				},
-				Error: nil,
+				Organization: &orgv1.Organization{Id: 0},
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -265,13 +274,26 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
+			var res *billingv1.GetPromoCodeClaimsReply
+
 			var tenDollars int64 = 10 * 10000
 
 			// The time is set to noon so that all time zones display the same local time
 			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
 			expiration := &types.Timestamp{Seconds: date.Unix()}
 
-			res := &billingv1.GetPromoCodeClaimsReply{
+			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
+				Claims: []*billingv1.PromoCodeClaim{
+					{
+						Code:                 PromoTestCode,
+						Amount:               400 * 10000,
+						Balance:              0,
+						CreditExpirationDate: expiration,
+					},
+				},
+			}
+
+			regularCodes := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
 					{
 						Code:                 "PROMOCODE1",
@@ -286,6 +308,19 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 						CreditExpirationDate: expiration,
 					},
 				},
+			}
+
+			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
+			switch hasPromoCodeClaims {
+			case "false":
+				res = &billingv1.GetPromoCodeClaimsReply{}
+			case "onlyFreeTrialCode":
+				res = freeTrialCode
+			case "multiCodes":
+				res = &billingv1.GetPromoCodeClaimsReply{}
+				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
+			default:
+				res = regularCodes
 			}
 
 			listReply, err := utilv1.MarshalJSONToBytes(res)
@@ -455,10 +490,29 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
+		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
+			Id:                    "lksqlc-woooo",
+			AccountId:             "25",
+			KafkaClusterId:        "lkc-zxcvb",
+			OutputTopicPrefix:     "pksqlc-ghjkl",
+			Name:                  "kay cee queue elle",
+			Storage:               123,
+			Endpoint:              "SASL_SSL://ksql-endpoint",
+			DetailedProcessingLog: &types.BoolValue{Value: false},
+		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
+			require.NoError(t, err)
+			req := &schedv1.CreateKSQLClusterRequest{}
+			err = utilv1.UnmarshalJSON(r.Body, req)
+			require.NoError(t, err)
+			if !req.Config.DetailedProcessingLog.Value {
+				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+					Cluster: ksqlClusterForDetailedProcessingLogFalse,
+				})
+			}
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
@@ -512,7 +566,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		default:
-			err := writeResourceNotFoundError(w)
+			err := writeV1ResourceNotFoundError(w)
 			require.NoError(t, err)
 		}
 	}
@@ -629,7 +683,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/organizations/{id}/invites"
 func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		bs := string(body)
 		var res flowv1.SendInviteReply
 		switch {
@@ -665,7 +719,7 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
-			body, _ := ioutil.ReadAll(r.Body)
+			body, _ := io.ReadAll(r.Body)
 			bs := string(body)
 			var res flowv1.CreateInvitationReply
 			if strings.Contains(bs, "user@exists.com") {
@@ -730,12 +784,33 @@ func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.Resp
 }
 
 // Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
-func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		ldUserData, err := base64.StdEncoding.DecodeString(vars["user"])
+		require.NoError(t, err)
+
+		ldUser := lduser.User{}
+		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
+
 		w.Header().Set("Content-Type", "application/json")
-		jsonVal := map[string]interface{}{"key": "val"}
-		flags := map[string]interface{}{"testBool": true, "testString": "string", "testInt": 1, "testJson": jsonVal}
-		err := json.NewEncoder(w).Encode(&flags)
+		flags := map[string]interface{}{
+			"testBool":   true,
+			"testString": "string",
+			"testInt":    1,
+			"testJson":   map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices": []map[string]interface{}{
+				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
+			},
+			"cli.client_quotas.enable": true,
+		}
+
+		val, ok := ldUser.GetCustom("org.resource_id")
+		if ok && val.StringValue() == "multicluster-key-org" {
+			flags["cli.multicluster-api-keys.enable"] = true
+		}
+
+		err = json.NewEncoder(w).Encode(&flags)
 		require.NoError(t, err)
 	}
 }

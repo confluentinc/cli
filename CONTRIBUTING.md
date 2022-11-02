@@ -8,7 +8,7 @@ Start by following these steps to set up your computer for CLI development:
 
 #### Go Version
 
-This repo requires go1.17.6. We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
+We recommend you use [goenv](https://github.com/syndbg/goenv) to manage your Go versions.
 There's a `.go-version` file in this repo with the exact version we use (and test against in CI).
 
 We recommend cloning the `goenv` repo directly to ensure that you have access to the latest version of Go. If you've
@@ -24,7 +24,7 @@ Then, add the following to your shell profile:
 
     export GOENV_ROOT="$HOME/.goenv"
     export PATH="$GOENV_ROOT/bin:$PATH"
-    eval $(goenv init -)
+    eval "$(goenv init -)"
     export PATH="$PATH:$GOPATH/bin"
 
 Finally, you can install the appropriate version of Go by running the following command inside the root directory of the repository:
@@ -176,7 +176,6 @@ import (
 
     "github.com/spf13/cobra"
 
-    pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
     "github.com/confluentinc/cli/internal/pkg/errors"
     "github.com/confluentinc/cli/internal/pkg/utils"
 )

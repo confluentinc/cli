@@ -4,7 +4,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -194,7 +193,7 @@ func (ch *ConfluentHomeManager) ReadServiceConfig(service string) ([]byte, error
 		}
 	}
 
-	return ioutil.ReadFile(file)
+	return os.ReadFile(file)
 }
 
 func (ch *ConfluentHomeManager) ReadServicePort(service string) (int, error) {

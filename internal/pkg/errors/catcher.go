@@ -24,13 +24,19 @@ import (
 
 const quotaExceededRegex = ".* is currently limited to .*"
 
-type responseBody struct {
-	Error   []errorDetail `json:"errors"`
+type errorResponseBody struct {
+	Errors  []errorDetail `json:"errors"`
+	Error   errorBody     `json:"error"`
 	Message string        `json:"message"`
 }
 
 type errorDetail struct {
-	Detail string `json:"detail"`
+	Detail     string `json:"detail"`
+	Resolution string `json:"resolution"`
+}
+
+type errorBody struct {
+	Message string `json:"message"`
 }
 
 func catchTypedErrors(err error) error {
@@ -106,7 +112,7 @@ func catchCoreV1Errors(err error) error {
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestion)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
@@ -141,15 +147,42 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	CCLOUD-SDK-GO CLIENT ERROR CATCHING
 */
 
-func CatchQuotaExceedError(err error, body []byte) error {
-	var resBody responseBody
+func CatchCCloudV2Error(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r == nil {
+		return err
+	}
+
+	body, _ := io.ReadAll(r.Body)
+	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
+	if len(resBody.Errors) > 0 {
+		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+		} else if detail != "" {
+			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
+				err = NewErrorWithSuggestions(err.Error(), resolution)
+			}
+			return err
 		}
 	}
+
+	if resBody.Message != "" {
+		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
+	}
+
+	if resBody.Error.Message != "" {
+		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
+			return c == rune('.') || c == rune('\n')
+		})
+		return Wrap(err, errorMessage)
+	}
+
 	return err
 }
 
@@ -157,27 +190,45 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	if err == nil {
 		return nil
 	}
-	_, isKafkaNotFound := err.(*KafkaClusterNotFoundError)
-	if isResourceNotFoundError(err) || isKafkaNotFound {
+
+	if _, ok := err.(*KafkaClusterNotFoundError); ok || isResourceNotFoundError(err) {
 		errorMsg := fmt.Sprintf(ResourceNotFoundErrorMsg, resourceId)
 		suggestionsMsg := fmt.Sprintf(ResourceNotFoundSuggestions, resourceId)
 		return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
+
 	return err
 }
 
-func CatchEnvironmentNotFoundError(err error, envId string) error {
-	return NewWrapErrorWithSuggestions(err, "Environment not found or access forbidden", EnvNotFoundSuggestions)
+func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusForbidden {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
+	}
+
+	return CatchCCloudV2Error(err, r)
 }
 
-func CatchKafkaNotFoundError(err error, clusterId string) error {
+func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
 	if isResourceNotFoundError(err) {
 		return &KafkaClusterNotFoundError{ClusterID: clusterId}
 	}
-	return NewWrapErrorWithSuggestions(err, "Kafka cluster not found or access forbidden", ChooseRightEnvironmentSuggestions)
+
+	if r != nil && r.StatusCode == http.StatusForbidden {
+		suggestions := ChooseRightEnvironmentSuggestions
+		if r.Request.Method == http.MethodDelete {
+			suggestions = KafkaClusterDeletingSuggestions
+		}
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Kafka cluster not found or access forbidden", suggestions)
+	}
+
+	return CatchCCloudV2Error(err, r)
 }
 
 func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
@@ -189,19 +240,19 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 		return err
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "CKU must be greater") {
+	err = CatchCCloudV2Error(err, r)
+	if strings.Contains(err.Error(), "CKU must be greater") {
 		return New(InvalidCkuErrorMsg)
 	}
 
-	return CatchQuotaExceedError(err, body)
+	return err
 }
 
-func CatchApiKeyForbiddenAccessError(err error, operation string) error {
-	if err.Error() == "403 Forbidden" {
-		return NewWrapErrorWithSuggestions(err, fmt.Sprintf("error %s api key", operation), APIKeyNotFoundSuggestions)
+func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
+	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
-	return err
+	return CatchCCloudV2Error(err, r)
 }
 
 func CatchKSQLNotFoundError(err error, clusterId string) error {
@@ -224,13 +275,13 @@ func CatchServiceNameInUseError(err error, r *http.Response, serviceName string)
 		return err
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Service name is already in use") {
+	err = CatchCCloudV2Error(err, r)
+	if strings.Contains(err.Error(), "Service name is already in use") {
 		errorMsg := fmt.Sprintf(ServiceNameInUseErrorMsg, serviceName)
 		return NewErrorWithSuggestions(errorMsg, ServiceNameInUseSuggestions)
 	}
 
-	return CatchQuotaExceedError(err, body)
+	return err
 }
 
 func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccountId string) error {
@@ -238,56 +289,21 @@ func CatchServiceAccountNotFoundError(err error, r *http.Response, serviceAccoun
 		return nil
 	}
 
-	if r == nil {
-		return err
+	if r != nil {
+		switch r.StatusCode {
+		case http.StatusNotFound:
+			errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
+			return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
+		case http.StatusForbidden:
+			return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+		}
 	}
 
-	body, _ := io.ReadAll(r.Body)
-	if strings.Contains(string(body), "Service Account Not Found") {
-		errorMsg := fmt.Sprintf(ServiceAccountNotFoundErrorMsg, serviceAccountId)
-		return NewErrorWithSuggestions(errorMsg, ServiceAccountNotFoundSuggestions)
-	}
-
-	return NewWrapErrorWithSuggestions(err, "Service account not found or access forbidden", ServiceAccountNotFoundSuggestions)
+	return CatchCCloudV2Error(err, r)
 }
 
-func CatchRequestNotValidMessageError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	body, _ := io.ReadAll(r.Body)
-	var resBody responseBody
-	_ = json.Unmarshal(body, &resBody)
-	if resBody.Message != "" {
-		// Connector error: {"error_code":400,"message":"Connector configuration is invalid and contains 1 validation error(s).
-		// Errors: quickstart: Value \"CLICKM\" is not a valid \"Select a template\" type\n"}
-
-		// Rolebinding error: {"status_code":400,"message":"Cannot bind role OrganizationAdmin with resources.","type":"CLIENT_ERROR"}
-		message := strings.TrimSuffix(strings.TrimSuffix(resBody.Message, "\n"), ".")
-		return Wrap(err, message)
-	}
-
-	return err
-}
-
-/*
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error describing kafka cluster: resource not found
-Error: 1 error occurred:
-	* error listing schema-registry cluster: resource not found
-Error: 1 error occurred:
-	* error describing ksql cluster: resource not found
-*/
 func isResourceNotFoundError(err error) bool {
-	resourceNotFoundRegex := regexp.MustCompile(`error .* cluster: resource not found`)
-	return resourceNotFoundRegex.MatchString(err.Error())
+	return strings.Contains(err.Error(), "resource not found")
 }
 
 /*

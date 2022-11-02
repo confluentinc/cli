@@ -6,6 +6,7 @@ import (
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -51,10 +52,10 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	opts := aclutil.AclRequestToDeleteAclReqest(acl)
+	opts := aclutil.AclRequestToDeleteAclRequest(acl)
 	aclDeleteResp, httpResp, err := restClient.ACLV3Api.DeleteKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)

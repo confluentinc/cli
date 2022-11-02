@@ -5,8 +5,10 @@
   principal: User:u-22bbb
   service_name: ""
 - email: u-33ccc@confluent.io
+  pool_name: ""
   principal: User:u-33ccc
   service_name: ""
 - email: mhe@confluent.io
+  pool_name: ""
   principal: User:u-44ddd
   service_name: ""

@@ -20,7 +20,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -51,7 +51,6 @@ type PreRun struct {
 	LoginCredentialsManager pauth.LoginCredentialsManager
 	AuthTokenHandler        pauth.AuthTokenHandler
 	JWTValidator            JWTValidator
-	IsTest                  bool
 }
 
 type CLICommand struct {
@@ -138,24 +137,24 @@ func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand
 	return c
 }
 
-func NewCLICommand(command *cobra.Command, prerunner PreRunner) *CLICommand {
+func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 	return &CLICommand{
 		Config:    &dynamicconfig.DynamicConfig{},
-		Command:   command,
+		Command:   cmd,
 		prerunner: prerunner,
 	}
 }
 
-func (s *AuthenticatedStateFlagCommand) AddCommand(command *cobra.Command) {
-	s.AuthenticatedCLICommand.AddCommand(command)
+func (s *AuthenticatedStateFlagCommand) AddCommand(cmd *cobra.Command) {
+	s.AuthenticatedCLICommand.AddCommand(cmd)
 }
 
-func (c *AuthenticatedCLICommand) AddCommand(command *cobra.Command) {
-	c.Command.AddCommand(command)
+func (c *AuthenticatedCLICommand) AddCommand(cmd *cobra.Command) {
+	c.Command.AddCommand(cmd)
 }
 
-func (s *StateFlagCommand) AddCommand(command *cobra.Command) {
-	s.Command.AddCommand(command)
+func (s *StateFlagCommand) AddCommand(cmd *cobra.Command) {
+	s.Command.AddCommand(cmd)
 }
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
@@ -163,11 +162,11 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.State.AuthToken
+	return c.Context.GetAuthToken()
 }
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
-	return c.State.Auth.Account.Id
+	return c.Context.GetEnvironment().GetId()
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
@@ -192,15 +191,26 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
 		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
 		// check for cloud login (since it is not executed from cloud context)
-		if (!isOnPremLoginCmd(command, r.IsTest) && r.Config.IsCloudLogin()) || CommandRequiresCloudAuth(command.Command, command.Config.Config) || isCloudLoginCmd(command, r.IsTest) {
+		if (!isOnPremLoginCmd(command, r.Config.IsTest) && r.Config.IsCloudLogin()) || CommandRequiresCloudAuth(command.Command, command.Config.Config) || isCloudLoginCmd(command, r.Config.IsTest) {
 			if err := checkCliDisable(command, r.Config); err != nil {
 				return err
 			}
+			// announcement and deprecation check, print out msg
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
+			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
 
 		verbosity, err := cmd.Flags().GetCount("verbose")
 		if err != nil {
 			return err
+		}
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+		if unsafeTrace {
+			verbosity = int(log.TRACE)
 		}
 		log.CliLogger.SetVerbosity(verbosity)
 		log.CliLogger.Flush()
@@ -211,7 +221,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 		if r.Config != nil {
 			ctx := command.Config.Context()
-			err := r.ValidateToken(cmd, command.Config)
+			err := r.ValidateToken(command.Config, unsafeTrace)
 			switch err.(type) {
 			case *ccloud.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
@@ -227,8 +237,8 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 	}
 }
 
-func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
-	ldDisableJson := launchdarkly.Manager.JsonVariation("cli.disable", cmd.Config.Context(), nil)
+func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
+	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
 	ldDisable, ok := ldDisableJson.(map[string]interface{})
 	if !ok {
 		return nil
@@ -238,7 +248,7 @@ func checkCliDisable(cmd *CLICommand, config *v1.Config) error {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
-			if err := ErrIfMissingRunRequirement(cmd.Command, config); err != nil && err == v1.RequireOnPremLoginErr {
+			if err := ErrIfMissingRunRequirement(cmd.Command, cfg); err != nil && err == v1.RequireOnPremLoginErr {
 				return err
 			}
 			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
@@ -294,7 +304,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 					netrcMachineName = ctx.NetrcMachineName
 				}
 
-				if err := r.ccloudAutoLogin(cmd, netrcMachineName); err != nil {
+				if err := r.ccloudAutoLogin(netrcMachineName); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
@@ -313,7 +323,12 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return setContextErr
 		}
 
-		if err := r.ValidateToken(cmd, command.Config); err != nil {
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+
+		if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
 			return err
 		}
 
@@ -354,9 +369,9 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 	return nil
 }
 
-func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
+func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	credentials, err := r.getCCloudCredentials(cmd, netrcMachineName, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -379,7 +394,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
@@ -387,7 +402,7 @@ func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgR
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
@@ -406,6 +421,7 @@ func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgR
 
 func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
+
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
@@ -413,7 +429,14 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.Client = ccloudClient
 	cliCmd.Context.Client = ccloudClient
 	cliCmd.Config.Client = ccloudClient
-	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version)
+
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version, unsafeTrace)
+
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 		ctx := cliCmd.Config.Context()
 
@@ -421,22 +444,31 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
+		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
+		if err != nil {
+			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		}
+		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+		}
 		if restEndpoint != "" {
-			result := &KafkaREST{}
-			result.Client, err = createKafkaRESTClient(restEndpoint)
-			if err != nil {
-				return nil, err
-			}
 			state, err := ctx.AuthenticatedState()
 			if err != nil {
 				return nil, err
 			}
+
 			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
 			if err != nil {
 				return nil, err
 			}
-			result.Context = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken)
-			return result, nil
+
+			kafkaRest := &KafkaREST{
+				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
+			}
+
+			return kafkaRest, nil
 		}
 		return nil, nil
 	})
@@ -450,7 +482,21 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 		return new(errors.NotLoggedInError)
 	}
 
-	v2Client := ccloudv2.NewClient(ctx.Platform.Server, cliCmd.Version.UserAgent, r.IsTest, cliCmd.AuthToken())
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	v2Client := cliCmd.Config.GetCloudClientV2(unsafeTrace)
+	state, err := ctx.AuthenticatedState()
+	if err != nil {
+		return err
+	}
+	jwtToken, err := pauth.GetJwtTokenForV2Client(state, ctx.Platform.Server)
+	if err != nil {
+		return err
+	}
+	v2Client.JwtToken = jwtToken
 
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.V2Client = v2Client
@@ -463,33 +509,12 @@ func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, er
 		return "", "", nil
 	}
 
-	clusterConfig, err := ctx.GetKafkaClusterForCommand()
-	if err != nil {
-		return "", "", err
-	}
-	if clusterConfig.RestEndpoint != "" {
-		return clusterConfig.RestEndpoint, clusterConfig.ID, nil
-	}
-
-	// if clusterConfig.RestEndpoint is empty, fetch the cluster to ensure config isn't just out of date
-	// potentially remove this once Rest Proxy is enabled across prod
-	client := dynamicconfig.NewContextClient(ctx)
-	kafkaCluster, err := client.FetchCluster(clusterConfig.ID)
+	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
 	}
 
-	// no need to update the config if it's still empty
-	if kafkaCluster.RestEndpoint == "" {
-		return "", clusterConfig.ID, nil
-	}
-
-	// update config to have updated cluster if rest endpoint is no longer ""
-	clusterConfig = dynamicconfig.KafkaClusterToKafkaClusterConfig(kafkaCluster, clusterConfig.APIKeys)
-	ctx.KafkaClusterContext.AddKafkaClusterConfig(clusterConfig)
-	err = ctx.Save()
-
-	return kafkaCluster.RestEndpoint, clusterConfig.ID, err
+	return config.RestEndpoint, config.ID, err
 }
 
 // Converts a ccloud base URL to the appropriate Metrics URL.
@@ -559,7 +584,12 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			return setContextErr
 		}
 
-		return r.ValidateToken(cmd, command.Config)
+		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return err
+		}
+
+		return r.ValidateToken(command.Config, unsafeTrace)
 	}
 }
 
@@ -570,7 +600,13 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
-	r.setConfluentClient(cliCommand)
+
+	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	r.setConfluentClient(cliCommand, unsafeTrace)
 	return nil
 }
 
@@ -606,7 +642,12 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 		return "", nil, err
 	}
 
-	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return "", nil, err
+	}
+
+	client, err := r.MDSClientManager.GetMDSClient(credentials.PrerunLoginURL, credentials.PrerunLoginCaCertPath, unsafeTrace)
 	if err != nil {
 		return "", nil, err
 	}
@@ -618,17 +659,15 @@ func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachin
 	return token, credentials, err
 }
 
-func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand) {
+func (r *PreRun) setConfluentClient(cliCmd *AuthenticatedCLICommand, unsafeTrace bool) {
 	ctx := cliCmd.Config.Context()
-	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version)
+	cliCmd.MDSClient = r.createMDSClient(ctx, cliCmd.Version, unsafeTrace)
 }
 
-func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mds.APIClient {
+func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mds.APIClient {
 	mdsConfig := mds.NewConfiguration()
 	mdsConfig.HTTPClient = utils.DefaultClient()
-	if log.CliLogger.Level >= log.DEBUG {
-		mdsConfig.Debug = true
-	}
+	mdsConfig.Debug = unsafeTrace
 	if ctx == nil {
 		return mds.NewAPIClient(mdsConfig)
 	}
@@ -660,6 +699,13 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 
 		provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
 			cfg := kafkarestv3.NewConfiguration()
+
+			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+			cfg.Debug = unsafeTrace
+
 			restFlags, err := resolveOnPremKafkaRestFlags(cmd)
 			if err != nil {
 				return nil, err
@@ -781,7 +827,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		case v1.APIKey:
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
-			if err := r.ValidateToken(cmd, command.Config); err != nil {
+			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return err
+			}
+
+			if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
 				return err
 			}
 
@@ -789,7 +840,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			if err != nil {
 				return err
 			}
-			v2Client := ccloudv2.NewClient(ctx.Platform.Server, command.Version.UserAgent, r.IsTest, ctx.State.AuthToken)
+
+			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
 			ctx.Client = client
 			command.Config.Client = client
@@ -816,7 +868,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 					cluster.APIKeys[key] = &v1.APIKeyPair{Key: key, Secret: secret}
 				} else if cluster.APIKeys[key] == nil {
 					return errors.NewErrorWithSuggestions(
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, key, clusterId),
+						fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, key, clusterId),
 						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
 				}
 			}
@@ -836,7 +888,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 	}
 }
 
-func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamicconfig.DynamicConfig) error {
+func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace bool) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -850,24 +902,24 @@ func (r *PreRun) ValidateToken(cmd *cobra.Command, config *dynamicconfig.Dynamic
 	}
 	switch err.(type) {
 	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), cmd, ctx)
+		return r.updateToken(new(ccloud.InvalidTokenError), ctx, unsafeTrace)
 	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), cmd, ctx)
+		return r.updateToken(new(ccloud.ExpiredTokenError), ctx, unsafeTrace)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), cmd, ctx)
+		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx, unsafeTrace)
 	} else {
-		return r.updateToken(err, cmd, ctx)
+		return r.updateToken(err, ctx, unsafeTrace)
 	}
 }
 
-func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
+func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
 	if ctx == nil {
 		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
 		return tokenError
 	}
 	log.CliLogger.Debug("Updating auth tokens")
-	token, refreshToken, err := r.getUpdatedAuthToken(cmd, ctx)
+	token, refreshToken, err := r.getUpdatedAuthToken(ctx, unsafeTrace)
 	if err != nil || token == "" {
 		log.CliLogger.Debug("Failed to update auth tokens")
 		return tokenError
@@ -879,14 +931,14 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicc
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, string, error) {
+func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.NetrcMachineName,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(params),
 	)
 	if err != nil {
 		return "", "", err
@@ -897,7 +949,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.Dyna
 		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
-		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath)
+		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)
 		if err != nil {
 			return "", "", err
 		}
@@ -913,7 +965,7 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicConte
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
-	if !r.shouldCheckForUpdates(cmd) || r.IsTest {
+	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
 		return
 	}
 
@@ -953,14 +1005,14 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		//nolint
-		utils.ErrPrintln(cmd, errors.LocalCommandDevOnlyMsg)
+		utils.ErrPrint(cmd, errors.LocalCommandDevOnlyMsg)
 	}
 }
 
-func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version) *mdsv2alpha1.APIClient {
+func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *version.Version, unsafeTrace bool) *mdsv2alpha1.APIClient {
 	mdsv2Config := mdsv2alpha1.NewConfiguration()
 	mdsv2Config.HTTPClient = utils.DefaultClient()
-	mdsv2Config.Debug = log.CliLogger.Level >= log.DEBUG
+	mdsv2Config.Debug = unsafeTrace
 	if ctx == nil {
 		return mdsv2alpha1.NewAPIClient(mdsv2Config)
 	}
@@ -981,10 +1033,10 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string) (*kafkarestv3.APIClient, error) {
+func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
-	cfg.Debug = log.CliLogger.Level >= log.DEBUG
+	cfg.Debug = unsafeTrace
 	cfg.BasePath = kafkaRestURL + "/kafka/v3"
-	return kafkarestv3.NewAPIClient(cfg), nil
+	return kafkarestv3.NewAPIClient(cfg)
 }

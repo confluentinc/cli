@@ -75,14 +75,14 @@ func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCe
 
 func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
-	user, err := getCCloudUser(client)
+	user, err := client.Auth.User(context.Background())
 	if err != nil {
 		return nil, nil, err
 	}
 	state := getCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	err = addOrUpdateContext(config, ctxName, credentials.Username, url, state, "", user.Organization.ResourceId)
-	return state.Auth.Account, user.Organization, err
+	err = addOrUpdateContext(config, ctxName, credentials.Username, url, state, "", user.GetOrganization().GetResourceId())
+	return state.Auth.Account, user.GetOrganization(), err
 }
 
 func addOrUpdateContext(config *v1.Config, ctxName, username, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
@@ -147,28 +147,17 @@ func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken strin
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false
 	if state.Auth.Account != nil {
-		for _, acc := range state.Auth.Accounts {
-			if acc.Id == state.Auth.Account.Id {
+		for _, account := range state.Auth.Accounts {
+			if account.Id == state.Auth.Account.Id {
 				hasGoodEnv = true
 			}
 		}
 	}
-	if !hasGoodEnv {
+	if !hasGoodEnv && len(state.Auth.Accounts) > 0 {
 		state.Auth.Account = state.Auth.Accounts[0]
 	}
 
 	return state
-}
-
-func getCCloudUser(client *ccloud.Client) (*flowv1.GetMeReply, error) {
-	user, err := client.Auth.User(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	if len(user.Accounts) == 0 {
-		return nil, errors.Errorf(errors.NoEnvironmentFoundErrorMsg)
-	}
-	return user, nil
 }
 
 func GenerateCloudContextName(username string, url string) string {
@@ -203,6 +192,21 @@ func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId strin
 	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses)
 	if err != nil {
 		return "", err
+	}
+	return responses.Token, nil
+}
+
+func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) (string, error) {
+	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
+	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
+
+	responses := new(response)
+	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
+	if err != nil {
+		return "", err
+	}
+	if responses.Error != "" {
+		return "", errors.New(responses.Error)
 	}
 	return responses.Token, nil
 }
