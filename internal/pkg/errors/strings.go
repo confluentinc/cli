@@ -146,5 +146,7 @@ const (
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
 	// Stream Sharing commands
-	ResendInviteMsg = `Sent invitation for "%s".`
+	ResendInviteMsg = "Sent invitation for \"%s\".\n"
+	OptInMsg        = "Successfully opted in to Stream Sharing.\n"
+	OptOutMsg       = "Successfully opted out of Stream Sharing.\n"
 )

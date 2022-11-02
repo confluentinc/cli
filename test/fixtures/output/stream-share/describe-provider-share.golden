@@ -2,11 +2,8 @@
 | ID                         | ss-12345                      |
 | Consumer Name              | consumer                      |
 | Consumer Organization Name | consumer org                  |
-| Provider Name              | provider                      |
 | Status                     | active                        |
 | Delivery Method            | email                         |
-| ServiceAccountId           | sa-123456                     |
-| SharedResourceId           | sr-12345                      |
 | Invited At                 | 2022-07-20 22:08:41 +0000 UTC |
 | Redeemed At                | 2022-07-21 22:08:41 +0000 UTC |
 | Invite Expires At          | 2022-07-22 22:08:41 +0000 UTC |

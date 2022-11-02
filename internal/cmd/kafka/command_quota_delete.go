@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/resource"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"

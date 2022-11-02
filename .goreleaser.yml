@@ -17,7 +17,7 @@ builds:
       - -mod=readonly
       - -tags=musl
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -38,7 +38,7 @@ builds:
       - -mod=readonly
       - -tags=musl
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -58,7 +58,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -77,7 +77,7 @@ builds:
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
         - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in dist/confluent-windows-amd64_windows_amd64/confluent.exe -out dist/confluent-windows-amd64_windows_amd64/confluent.exe
+        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
         - cmd: rm CLIEVCodeSigningCertificate2.pfx
   - binary: confluent
     id: signed-amd64
@@ -85,7 +85,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -97,7 +97,8 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: gon gon_confluent_amd64.hcl
+        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} amd64
+        - cmd: gon dist/gon_confluent_amd64.hcl
   - binary: confluent
     id: signed-arm64
     main: cmd/confluent/main.go
@@ -106,7 +107,7 @@ builds:
     env:
       - CGO_ENABLED=1
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -117,7 +118,8 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: gon gon_confluent_arm64.hcl
+        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
+        - cmd: gon dist/gon_confluent_arm64.hcl
 
 archives:
   - id: binary

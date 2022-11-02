@@ -13,6 +13,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -235,6 +237,10 @@ func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (
 }
 
 func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {
+	if getCmkClusterStatus(cluster) == ccloudv2.StatusProvisioning {
+		return 0, nil
+	}
+
 	lkc := *cluster.Id
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
@@ -255,7 +261,10 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 	}
 
 	// Kafka REST is not available, fall back to KafkaAPI, to be deprecated
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
+	req, err := dynamicconfig.KafkaCluster(c.Context)
+	if err != nil {
+		return 0, err
+	}
 	resp, err := c.Client.Kafka.ListTopics(context.Background(), req)
 	return len(resp), err
 }

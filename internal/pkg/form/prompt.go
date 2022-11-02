@@ -4,6 +4,7 @@ package form
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -47,6 +48,10 @@ func (p *RealPrompt) ReadLineMasked() (string, error) {
 	}
 
 	pwd, err := gopass.GetPasswdMasked()
+	if err != nil && err.Error() == "interrupted" {
+		_, _ = fmt.Fprintln(p.Out, "^C")
+		os.Exit(0)
+	}
 	return string(pwd), err
 }
 

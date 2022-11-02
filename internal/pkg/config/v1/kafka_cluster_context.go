@@ -39,7 +39,7 @@ func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[str
 	}
 	kafkaClusterContext := &KafkaClusterContext{
 		EnvContext:       true,
-		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironmentId(): kafkaEnvContext},
+		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetEnvironment().GetId(): kafkaEnvContext},
 		Context:          ctx,
 	}
 	return kafkaClusterContext
@@ -129,7 +129,7 @@ func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 }
 
 func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
-	curEnv := k.Context.GetCurrentEnvironmentId()
+	curEnv := k.Context.GetEnvironment().GetId()
 	if k.KafkaEnvContexts[curEnv] == nil {
 		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{
 			ActiveKafkaCluster:  "",

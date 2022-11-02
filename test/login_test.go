@@ -20,7 +20,7 @@ import (
 
 var (
 	urlPlaceHolder          = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "netrc_test")
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
@@ -104,7 +104,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestions))
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.InvalidLoginErrorSuggestions))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {

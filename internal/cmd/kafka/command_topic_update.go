@@ -45,7 +45,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
-				Code: `confluent kafka topic update my_topic --config="retention.ms=259200000"`,
+				Code: `confluent kafka topic update my_topic --config "retention.ms=259200000"`,
 			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
@@ -78,6 +78,15 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
+
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
 		_, hasNumPartitionsChanged := configMap["num.partitions"]
@@ -85,11 +94,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			delete(configMap, "num.partitions")
 		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
-
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
 
 		data := toAlterConfigBatchRequestData(configMap)
 		httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
