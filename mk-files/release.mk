@@ -46,14 +46,14 @@ endef
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-linux-glibc
 gorelease-linux-glibc:
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) goreleaser release --rm-dist -f .goreleaser-linux-glibc.yml
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) goreleaser release --rm-dist -f .goreleaser-linux-glibc.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
 else
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
+	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
