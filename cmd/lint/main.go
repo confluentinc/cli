@@ -138,8 +138,6 @@ var flagRules = []linter.FlagRule{
 			"source-api-secret",
 			"source-bootstrap-server",
 			"source-cluster-id",
-			"sr-api-key",
-			"sr-api-secret",
 		),
 	),
 }
@@ -240,7 +238,6 @@ var vocabWords = []string{
 	"schemas",
 	"signup",
 	"sql",
-	"sr",
 	"ssl",
 	"sso",
 	"stdin",

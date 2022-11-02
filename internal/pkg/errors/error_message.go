@@ -436,7 +436,7 @@ const (
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token"
-	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--schema-registry-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		AvoidTimeoutSuggestions
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +

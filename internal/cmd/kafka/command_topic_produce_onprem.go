@@ -46,7 +46,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
