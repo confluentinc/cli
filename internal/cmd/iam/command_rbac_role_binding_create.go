@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/spf13/cobra"
 )
 
 func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
@@ -64,18 +63,29 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 
 	isCloud := c.cfg.IsCloudLogin()
 
-	var resp *http.Response
+	var httpResp *http.Response
 	if isCloud {
-		resp, err = c.ccloudCreate(options)
+		createRoleBinding, err := c.parseV2RoleBinding(cmd)
+		if err != nil {
+			return err
+		}
+		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
+			httpResp, err = c.ccloudCreate(options)
+		} else {
+			_, httpResp, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
+		}
+		if err != nil {
+			return errors.CatchRequestNotValidMessageError(err, httpResp)
+		}
 	} else {
-		resp, err = c.confluentCreate(options)
-	}
-	if err != nil {
-		return err
+		httpResp, err = c.confluentCreate(options)
+		if err != nil {
+			return err
+		}
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, resp.StatusCode), errors.HTTPStatusCodeSuggestions)
+	if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	if isCloud {

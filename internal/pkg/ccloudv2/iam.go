@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -91,6 +92,25 @@ func (c *Client) GetIamUser(id string) (iamv2.IamV2User, error) {
 	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
 	resp, httpResp, err := c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
+	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext())
+	resp, _, err := c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+	if err != nil {
+		return iamv2.IamV2User{}, err
+	}
+	for _, user := range resp.Data {
+		if email == *user.Email {
+			return user, nil
+		}
+	}
+	return iamv2.IamV2User{}, fmt.Errorf(errors.InvalidEmailErrorMsg, email)
+}
+
+func (c *Client) GetIamUserById(id string) (iamv2.IamV2User, *http.Response, error) {
+	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
+	return c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
