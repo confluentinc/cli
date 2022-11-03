@@ -12,6 +12,7 @@
     "name": "srUpdate"
   },
   {
+    "is_current": true,
     "id": "not-595",
     "name": "new-other-name"
   }

@@ -25,6 +25,7 @@ var (
 )
 
 type describeStruct struct {
+	IsCurrent          bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
 	Id                 string `human:"ID" serialized:"id"`
 	Name               string `human:"Name" serialized:"name"`
 	Type               string `human:"Type" serialized:"type"`

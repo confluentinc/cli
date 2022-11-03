@@ -15,6 +15,7 @@ import (
 )
 
 type out struct {
+	IsCurrent       bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
 	Key             string `human:"Key" serialized:"key"`
 	Description     string `human:"Description" serialized:"description"`
 	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
