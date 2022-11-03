@@ -131,7 +131,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 }
 
 func getListFieldsOnPrem(includeTopics bool) []string {
-	x := []string{"LinkName"}
+	x := []string{"Name"}
 
 	if includeTopics {
 		x = append(x, "TopicName")

@@ -13,13 +13,13 @@ import (
 const includeTopicsFlagName = "include-topics"
 
 type link struct {
-	LinkName             string `human:"Name" serialized:"link_name"`
+	Name                 string `human:"Name" serialized:"link_name"`
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster ID" serialized:"source_cluster_id"`
 	DestinationClusterId string `human:"Destination Cluster ID" serialized:"destination_cluster_id"`
-	LinkState            string `human:"State" serialized:"link_state"`
-	LinkError            string `human:"Error" serialized:"link_error"`
-	LinkErrorMessage     string `human:"Error Message" serialized:"link_error_message"`
+	State                string `human:"State" serialized:"state"`
+	Error                string `human:"Error" serialized:"error"`
+	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
@@ -28,13 +28,13 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 		linkError = data.GetLinkError()
 	}
 	return &link{
-		LinkName:             data.LinkName,
+		Name:                 data.LinkName,
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
-		LinkState:            data.GetLinkState(),
-		LinkError:            linkError,
-		LinkErrorMessage:     data.GetLinkErrorMessage(),
+		State:                data.GetLinkState(),
+		Error:                linkError,
+		ErrorMessage:         data.GetLinkErrorMessage(),
 	}
 }
 
@@ -95,11 +95,11 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func getListFields(includeTopics bool) []string {
-	x := []string{"LinkName"}
+	x := []string{"Name"}
 
 	if includeTopics {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "LinkState", "LinkError", "LinkErrorMessage")
+	return append(x, "SourceClusterId", "DestinationClusterId", "State", "Error", "ErrorMessage")
 }
