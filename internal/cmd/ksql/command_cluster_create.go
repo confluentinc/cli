@@ -18,7 +18,8 @@ func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 	}
-	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with kafka.`)
+	
+	cmd.Flags().String("credential-identity", "", `User account ID or service account ID to be associated with this cluster. We will create an API key associated with this identity and use it to authenticate the ksqlDB cluster with Kafka.`)
 	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
 	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
