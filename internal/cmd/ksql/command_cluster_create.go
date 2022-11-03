@@ -2,11 +2,13 @@ package ksql
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -61,6 +63,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	endpoint := cluster.Status.GetHttpEndpoint()
 
+	log.CliLogger.Trace("Polling ksqlDB cluster")
+
+	timer := time.NewTimer(100 * time.Millisecond)
 	// use count to prevent the command from hanging too long waiting for the endpoint value
 	count := 0
 	for endpoint == "" && count < 3 {
@@ -74,6 +79,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	if endpoint == "" {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
+	<-timer.C
 
 	table := output.NewTable(cmd)
 	table.Add(c.formatClusterForDisplayAndList(&cluster))
