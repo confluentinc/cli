@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -25,11 +25,11 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		s.runIntegrationTest(test)
 	}
 	s.FileExistsf("./asyncapi-spec.yaml", "Spec file not generated.")
-	file, err := ioutil.ReadFile("asyncapi-spec.yaml")
+	file, err := os.ReadFile("asyncapi-spec.yaml")
 	if err != nil {
 		s.Errorf(err, "Cannot read file asyncapi-spec.yaml")
 	}
-	testfile, _ := ioutil.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
+	testfile, _ := os.ReadFile("test/fixtures/output/asyncapi/asyncapi-spec.yaml")
 	testfile1 := strings.ReplaceAll(string(testfile), "\r", "")
 	index1 := strings.Index(string(file), "cluster:")
 	index2 := strings.Index(string(file), "confluentSchemaRegistry")

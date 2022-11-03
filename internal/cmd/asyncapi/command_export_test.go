@@ -105,7 +105,7 @@ func newCmd() (*command, error) {
 						"lkc-asyncapi": {
 							ID:           "lkc-asyncapi",
 							Name:         "AsyncAPI Cluster",
-							Bootstrap:    "",
+							Bootstrap:    "kafka-endpoint",
 							APIEndpoint:  "kafka-endpoint",
 							RestEndpoint: "kafka-endpoint",
 							APIKeys: map[string]*v1.APIKeyPair{
@@ -115,8 +115,6 @@ func newCmd() (*command, error) {
 							LastUpdate: time.Now(),
 						},
 					},
-					KafkaEnvContexts: nil,
-					Context:          nil,
 				},
 			},
 		},

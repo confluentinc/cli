@@ -10,7 +10,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/swaggest/go-asyncapi/spec-2.4.0"
+	spec "github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -44,7 +44,7 @@ type accountDetails struct {
 	channelDetails channelDetails
 }
 
-const USERAGENT = "User-Agent"
+const UserAgent = "User-Agent"
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
@@ -112,7 +112,7 @@ func (c *command) countAsyncApiUsage(details *accountDetails) error {
 		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)
 	}
 	req.SetBasicAuth(details.srCluster.SrCredentials.Key, details.srCluster.SrCredentials.Secret)
-	req.Header.Set(USERAGENT, c.Version.UserAgent)
+	req.Header.Set(UserAgent, c.Version.UserAgent)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)

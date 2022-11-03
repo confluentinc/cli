@@ -3,7 +3,7 @@ package asyncapi
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,8 +13,8 @@ import (
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
-	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
-	"github.com/swaggest/go-asyncapi/spec-2.4.0"
+	asyncapi "github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
+	spec "github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -129,7 +129,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 		return err
 	}
 	utils.Printf(cmd, "AsyncAPI specification written to \"%s\".\n", flags.file)
-	return ioutil.WriteFile(flags.file, yaml, 0644)
+	return os.WriteFile(flags.file, yaml, 0644)
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
