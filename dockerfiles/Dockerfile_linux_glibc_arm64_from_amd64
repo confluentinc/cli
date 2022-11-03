@@ -1,4 +1,4 @@
-FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:arm64
+FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:latest
 
 COPY . /go/src/github.com/confluentinc/cli/
 
