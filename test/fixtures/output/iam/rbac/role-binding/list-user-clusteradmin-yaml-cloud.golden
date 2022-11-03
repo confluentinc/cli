@@ -1,8 +1,6 @@
 - principal: User:u-33ccc
+  name: 33 Ccc
   email: u-33ccc@confluent.io
-  service_name: ""
-  pool_name: ""
 - principal: User:u-44ddd
+  name: Muwei He
   email: mhe@confluent.io
-  service_name: ""
-  pool_name: ""
