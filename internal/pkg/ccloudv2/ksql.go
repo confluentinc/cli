@@ -43,10 +43,9 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 			DisplayName:              &displayName,
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
 			Csu:                      &csus,
-			// TODO: remove cat (See https://github.com/confluentinc/cli/pull/1371/files#r949420697)
-			KafkaCluster:       &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "cat", ResourceName: "cat"},
-			CredentialIdentity: &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "cat", ResourceName: "cat"},
-			Environment:        &ksqlv2.ObjectReference{Id: environmentId, Related: "cat", ResourceName: "cat"},
+			KafkaCluster:       &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "-", ResourceName: "-"},
+			CredentialIdentity: &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "-", ResourceName: "-"},
+			Environment:        &ksqlv2.ObjectReference{Id: environmentId, Related: "-", ResourceName: "-"},
 		},
 	}
 	created, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
