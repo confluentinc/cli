@@ -90,7 +90,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusCreated {
+			if httpResp.StatusCode != http.StatusNoContent {
 				msg := fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode)
 				return errors.NewErrorWithSuggestions(msg, errors.InternalServerErrorSuggestions)
 			}
