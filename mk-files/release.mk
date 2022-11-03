@@ -66,7 +66,7 @@ gorelease:
 	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist --timeout 60m -f .goreleaser.yml; \
 	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
-	./build_linux_glibc.sh && \
+	scripts/build_linux_glibc.sh && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
 	aws s3 cp dist/confluent_$(VERSION)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_arm64.tar.gz && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
