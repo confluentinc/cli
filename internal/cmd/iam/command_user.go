@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 
@@ -28,9 +30,8 @@ type userCommand struct {
 
 type userOut struct {
 	Id                   string `human:"ID" serialized:"id"`
+	Name                 string `human:"Name" serialized:"name"`
 	Email                string `human:"Email" serialized:"email"`
-	FirstName            string `human:"First Name" serialized:"first_name"`
-	LastName             string `human:"Last Name" serialized:"last_name"`
 	Status               string `human:"Status" serialized:"status"`
 	AuthenticationMethod string `human:"Authentication Method" serialized:"authentication_method"`
 }
@@ -51,4 +52,12 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
+}
+
+func getName(user *flowv1.UserProfile) string {
+	name := user.GetFirstName()
+	if last := user.GetLastName(); last != "" {
+		name += fmt.Sprintf(" %s", last)
+	}
+	return name
 }
