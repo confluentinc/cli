@@ -54,8 +54,8 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2Cluster) *ksqlCluster {
 	detailedProcessingLog := true
-	if cluster.Spec.UseDetailedProcessingLog != nil {
-		detailedProcessingLog = *cluster.Spec.UseDetailedProcessingLog
+	if cluster.Spec.HasUseDetailedProcessingLog() {
+		detailedProcessingLog = cluster.Spec.GetUseDetailedProcessingLog()
 	}
 
 	return &ksqlCluster{
@@ -63,7 +63,7 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 		Name:                  cluster.Spec.GetDisplayName(),
 		OutputTopicPrefix:     cluster.Status.GetTopicPrefix(),
 		KafkaClusterId:        cluster.Spec.KafkaCluster.GetId(),
-		Storage:               cluster.Status.Storage,
+		Storage:               cluster.Status.GetStorage(),
 		Endpoint:              cluster.Status.GetHttpEndpoint(),
 		Status:                c.getClusterStatus(cluster),
 		DetailedProcessingLog: detailedProcessingLog,
@@ -75,7 +75,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	if cluster.Status.IsPaused {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(*cluster.Id, cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.GetId(), cluster.Status.GetHttpEndpoint())
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -137,7 +137,7 @@ func autocompleteClusters(environment string, client *ccloudv2.Client) []string 
 
 	suggestions := make([]string, len(clusters.Data))
 	for i, cluster := range clusters.Data {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), *cluster.Spec.DisplayName)
 	}
 	return suggestions
 }

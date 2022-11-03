@@ -38,7 +38,6 @@ func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	return cmd
 }
 
-
 func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	// Get the Kafka Cluster
 	kafkaCluster, err := dynamicconfig.KafkaCluster(c.Context)
@@ -52,7 +51,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
 	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId)
 	if err != nil {
-		return err;
+		return err
 	}
 
 	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
@@ -111,11 +110,11 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
 
 	for _, user := range users {
-		if user.ServiceName == fmt.Sprintf("KSQL.%s", *cluster.Id) || user.ResourceId == credentialIdentity {
+		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.GetId()) || user.ResourceId == credentialIdentity {
 			return strconv.Itoa(int(user.Id)), nil
 		}
 	}
-	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, *cluster.Id)
+	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.GetId())
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*schedv1.ACLBinding {

@@ -105,7 +105,7 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v2client *ccloudv2.Client) (string, string, string, error) {
+func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v2Client *ccloudv2.Client) (string, string, string, error) {
 	resourceId, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return "", "", "", err
@@ -130,11 +130,11 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
 	case resource.KsqlCluster:
-		cluster, err := v2client.DescribeKsqlCluster(resourceId, c.EnvironmentId())
+		cluster, err := v2Client.DescribeKsqlCluster(resourceId, c.EnvironmentId())
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
 		}
-		clusterId = *cluster.Id
+		clusterId = cluster.GetId()
 	case resource.SchemaRegistryCluster:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
