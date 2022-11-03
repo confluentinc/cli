@@ -18,6 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -125,6 +126,9 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
+		if resource.LookupType(args[0]) != resource.KafkaCluster {
+			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+		}
 		return args[0], nil
 	}
 
