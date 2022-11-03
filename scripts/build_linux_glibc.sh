@@ -8,7 +8,7 @@ docker container create --name cli-linux-glibc-builder cli-linux-glibc-builder-i
 docker container cp cli-linux-glibc-builder:/go/src/github.com/confluentinc/cli/dist/. ./dist/
 docker container rm cli-linux-glibc-builder
 
-#build arm64
+# Build linux/arm64
 architecture=$(uname -m)
 if [ "$architecture" == 'x86_64' ]; then
   docker build . -f ./dockerfiles/Dockerfile_linux_glibc_arm64_from_amd64 -t cli-linux-glibc-arm64-builder-image
