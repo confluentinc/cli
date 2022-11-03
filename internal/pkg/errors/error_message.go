@@ -88,7 +88,7 @@ const (
 	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
 	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
+	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster to uniquely identify the scope"
 	SpecifyCloudClusterErrorMsg     = "must specify cloud-cluster flag to indicate role binding scope"
 	SpecifyEnvironmentErrorMsg      = "must specify environment flag to indicate role binding scope"
 	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"

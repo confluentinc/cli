@@ -217,16 +217,16 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
 		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+			cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
 		}
 	} else {
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
-		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
+		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for the role binding.")
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, cliCommand)
 	}
@@ -251,15 +251,15 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
-		case "kafka-cluster-id":
+		case "kafka-cluster":
 			scope.KafkaCluster = flag.Value.String()
-		case "schema-registry-cluster-id":
+		case "schema-registry-cluster":
 			scope.SchemaRegistryCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case "ksql-cluster-id":
+		case "ksql-cluster":
 			scope.KsqlCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case "connect-cluster-id":
+		case "connect-cluster":
 			scope.ConnectCluster = flag.Value.String()
 			nonKafkaScopesSet++
 		}
@@ -309,29 +309,29 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
 	}
 
-	if cmd.Flags().Changed("kafka-cluster-id") {
-		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+	if cmd.Flags().Changed("kafka-cluster") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.KafkaCluster = kafkaCluster
 
-		// Users should not have to pass both --kafka-cluster-id and --cloud-cluster.
+		// Users should not have to pass both --kafka-cluster and --cloud-cluster.
 		if !cmd.Flags().Changed("cloud-cluster") {
 			scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+kafkaCluster)
 		}
 	}
 
-	if cmd.Flags().Changed("schema-registry-cluster-id") {
-		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+	if cmd.Flags().Changed("schema-registry-cluster") {
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+	if cmd.Flags().Changed("ksql-cluster") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
 		if err != nil {
 			return nil, err
 		}
