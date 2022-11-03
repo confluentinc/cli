@@ -421,6 +421,8 @@ github.com/blizzy78/varnamelen v0.8.0/go.mod h1:V9TzQZ4fLJ1DSrjVDfl89H7aMnTvKkAp
 github.com/bmizerany/assert v0.0.0-20160611221934-b7ed37b82869/go.mod h1:Ekp36dRnpXw/yCqJaO+ZrUyxD+3VXMFFr56k5XYrpB4=
 github.com/bombsimon/wsl/v3 v3.3.0 h1:Mka/+kRLoQJq7g2rggtgQsjuI/K5Efd87WX96EWFxjM=
 github.com/bombsimon/wsl/v3 v3.3.0/go.mod h1:st10JtZYLE4D5sC7b8xV4zTKZwAQjCH/Hy2Pm1FNZIc=
+github.com/bool64/dev v0.2.20 h1:9eIRGdcg2kQW2NGza++QbOKidNNaK+KfWuUXcZFDejE=
+github.com/bool64/shared v0.1.5 h1:fp3eUhBsrSjNCQPcSdQqZxxh9bBwrYiZ+zOKFkM0/2E=
 github.com/bradfitz/go-smtpd v0.0.0-20170404230938-deb6d6237625/go.mod h1:HYsPBTaaSFSlLx/70C2HPIMNZpVV8+vt/A+FMnYP11g=
 github.com/breml/bidichk v0.2.3 h1:qe6ggxpTfA8E75hdjWPZ581sY3a2lnl0IRxLQFelECI=
 github.com/breml/bidichk v0.2.3/go.mod h1:8u2C6DnAy0g2cEq+k/A2+tr9O1s+vHGxWn0LTc70T2A=
@@ -714,8 +716,8 @@ github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65/go.mo
 github.com/confluentinc/protoc-gen-ccloud v0.0.4 h1:cQkU/EJe1ZeSMNyIr2EZkcyJx4rhhR5v7Ierj3toxbo=
 github.com/confluentinc/protoc-gen-ccloud v0.0.4/go.mod h1:c5l+BPASYdK6SttAYW8yrGx0NNhB+4xpKID+w/MXp/8=
 github.com/confluentinc/prototools v0.0.4/go.mod h1:V4b4Enz2JM192RaRXFyN3yBMXAToleg+dTpCOu4fnhE=
-github.com/confluentinc/schema-registry-sdk-go v0.0.13 h1:5aFdsOpbKwzIqnwnhQ5cNwjulTPAeV/u6mu0xh/Sqck=
-github.com/confluentinc/schema-registry-sdk-go v0.0.13/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
+github.com/confluentinc/schema-registry-sdk-go v0.0.16 h1:BJtRiQR/gvELxFW9gN/0eKmiPOA/zRdIP9CINacRHBI=
+github.com/confluentinc/schema-registry-sdk-go v0.0.16/go.mod h1:76A1PsiAYSQGULQzyj1FrIsZNJ2MowdmfEsQaSCSddk=
 github.com/containerd/aufs v0.0.0-20200908144142-dab0cbea06f4/go.mod h1:nukgQABAEopAHvB6j7cnP5zJ+/3aVcE7hCYqvIwAHyE=
 github.com/containerd/aufs v0.0.0-20201003224125-76a6863f2989/go.mod h1:AkGGQs9NM2vtYHaUen+NljV0/baGCAPELGm2q9ZXpWU=
 github.com/containerd/aufs v0.0.0-20210316121734-20793ff83c97/go.mod h1:kL5kd6KM5TzQjR79jljyi4olc1Vrx6XBlcyj3gNv2PU=
@@ -2215,6 +2217,13 @@ github.com/stripe/stripe-go v70.15.0+incompatible/go.mod h1:A1dQZmO/QypXmsL0T8ax
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/subosito/gotenv v1.4.0 h1:yAzM1+SmVcz5R4tXGsNMu1jUl2aOJXoiWUCEwwnGrvs=
 github.com/subosito/gotenv v1.4.0/go.mod h1:mZd6rFysKEcUhUHXJk0C/08wAgyDBFuwEYL7vWWGaGo=
+github.com/swaggest/assertjson v1.7.0 h1:SKw5Rn0LQs6UvmGrIdaKQbMR1R3ncXm5KNon+QJ7jtw=
+github.com/swaggest/go-asyncapi v0.8.0 h1:aze7YL3o/4fkxx9ZL8ubKdyYCqFJy+9+JHpwLyF10H4=
+github.com/swaggest/go-asyncapi v0.8.0/go.mod h1:s1urrZuYPcNPJrRUU/kF1eOnIBU02O4JfXCDS09wONI=
+github.com/swaggest/jsonschema-go v0.3.39 h1:qX+a/LiK44xppnwUTZqJWNFcICxdWKeT27aFh4RvkEk=
+github.com/swaggest/jsonschema-go v0.3.39/go.mod h1:ipIOmoFP64QyRUgyPyU/P9tayq2m2TlvUhyZHrhe3S4=
+github.com/swaggest/refl v1.1.0 h1:a+9a75Kv6ciMozPjVbOfcVTEQe81t2R3emvaD9oGQGc=
+github.com/swaggest/refl v1.1.0/go.mod h1:g3Qa6ki0A/L2yxiuUpT+cuBURuRaltF5SDQpg1kMZSY=
 github.com/sylvia7788/contextcheck v1.0.6 h1:o2EZgVPyMKE/Mtoqym61DInKEjwEbsmyoxg3VrmjNO4=
 github.com/sylvia7788/contextcheck v1.0.6/go.mod h1:9XDxwvxyuKD+8N+a7Gs7bfWLityh5t70g/GjdEt2N2M=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
@@ -2319,6 +2328,8 @@ github.com/yagipy/maintidx v1.0.0 h1:h5NvIsCz+nRDapQ0exNv4aJ0yXSI0420omVANTv3GJM
 github.com/yagipy/maintidx v1.0.0/go.mod h1:0qNf/I/CCZXSMhsRsrEPDZ+DkekpKLXAJfsTACwgXLk=
 github.com/yeya24/promlinter v0.2.0 h1:xFKDQ82orCU5jQujdaD8stOHiv8UN68BSdn2a8u8Y3o=
 github.com/yeya24/promlinter v0.2.0/go.mod h1:u54lkmBOZrpEbQQ6gox2zWKKLKu2SGe+2KOiextY+IA=
+github.com/yudai/gojsondiff v1.0.0 h1:27cbfqXLVEJ1o8I6v3y9lg8Ydm53EKqHXAOMxEGlCOA=
+github.com/yudai/golcs v0.0.0-20170316035057-ecda9a501e82 h1:BHyfKlQyqbsFN5p3IfnEUduWvb9is428/nNb5L3U01M=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
