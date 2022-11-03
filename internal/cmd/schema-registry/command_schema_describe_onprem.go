@@ -30,9 +30,9 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
-	cmd.Flags().Bool("show-refs", false, "Display the entire schema graph, including references.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
+	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -45,7 +45,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-refs")
+	showRefs, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
