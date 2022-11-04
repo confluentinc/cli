@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -32,17 +33,24 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
+	lcc := args[0]
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(lcc, c.EnvironmentId(), kafkaCluster.ID)
+	if err != nil {
+		return err
+	}
+
+	err = form.ConfirmDeletion(cmd, resource.Connector, lcc, connector.Info.GetName())
 	if err != nil {
 		return err
 	}
@@ -51,6 +59,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Connector, args[0])
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Connector, lcc)
 	return nil
 }
