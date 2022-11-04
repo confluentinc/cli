@@ -57,7 +57,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
-				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
 			},
 		),
 	}
@@ -365,47 +365,28 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 }
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
-	if isCCloud {
-		for _, hostname := range ccloudv2.Hostnames {
-			if strings.Contains(url, hostname) {
-				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
-					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
-				} else {
-					break
-				}
-			}
-		}
+	if strings.Contains(url, ccloudv2.Hostnames[0]) {
+		return "", "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
 	}
-	protocolRgx, _ := regexp.Compile(`(\w+)://`)
-	portRgx, _ := regexp.Compile(`:(\d+\/?)`)
-
-	protocolMatch := protocolRgx.MatchString(url)
-	portMatch := portRgx.MatchString(url)
 
 	var msg []string
-	if !protocolMatch {
-		if isCCloud {
-			url = "https://" + url
-			msg = append(msg, "https protocol")
-		} else {
-			url = "http://" + url
-			msg = append(msg, "http protocol")
-		}
+	if !regexp.MustCompile(`(\w+)://`).MatchString(url) {
+		url = "https://" + url
+		msg = append(msg, "https protocol")
 	}
-	if !portMatch && !isCCloud {
+	if !isCCloud && !regexp.MustCompile(`:(\d+\/?)`).MatchString(url) {
 		url = url + ":8090"
 		msg = append(msg, "default MDS port 8090")
 	}
 
-	var pattern string
+	var pattern *regexp.Regexp
 	if isCCloud {
-		pattern = `^\w+://[^/ ]+`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+`)
 	} else {
-		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
 	}
-	matched, _ := regexp.MatchString(pattern, url)
-	if !matched {
-		return url, "", errors.New(errors.InvalidLoginURLErrorMsg)
+	if !pattern.MatchString(url) {
+		return "", "", errors.New(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil
