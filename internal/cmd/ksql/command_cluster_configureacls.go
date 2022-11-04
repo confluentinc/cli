@@ -10,8 +10,8 @@ import (
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -46,19 +46,18 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	ksqlCluster := args[0]
-	environmentId := c.EnvironmentId()
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId)
+	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
 	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
-		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, args[0], cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
+		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
 	}
 
-	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
+	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
 	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
 		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, ksqlCluster)
 	}
@@ -107,7 +106,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 		return "", err
 	}
 
-	credentialIdentity := cluster.Spec.GetCredentialIdentity().Id
+	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
 
 	for _, user := range users {
 		if user.ServiceName == fmt.Sprintf("KSQL.%s", cluster.GetId()) || user.ResourceId == credentialIdentity {

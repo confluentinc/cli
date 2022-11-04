@@ -71,7 +71,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		if count != 0 {
 			<-ticker.C
 		}
-		res, err := c.V2Client.DescribeKsqlCluster(*cluster.Id, c.EnvironmentId())
+		res, err := c.V2Client.DescribeKsqlCluster(cluster.GetId(), c.EnvironmentId())
 		if err != nil {
 			return err
 		}

@@ -9,6 +9,7 @@ import (
 	"golang.org/x/oauth2"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
@@ -71,8 +72,8 @@ func (c *ksqlCommand) formatClusterForDisplayAndList(cluster *ksqlv2.KsqldbcmV2C
 }
 
 func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string {
-	status := cluster.Status.Phase
-	if cluster.Status.IsPaused {
+	status := cluster.Status.GetPhase()
+	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
 		provisioningFailed, err := c.checkProvisioningFailed(cluster.GetId(), cluster.Status.GetHttpEndpoint())
@@ -137,7 +138,7 @@ func autocompleteClusters(environment string, client *ccloudv2.Client) []string 
 
 	suggestions := make([]string, len(clusters.Data))
 	for i, cluster := range clusters.Data {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), *cluster.Spec.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }

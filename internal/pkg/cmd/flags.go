@@ -111,7 +111,7 @@ func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []s
 
 	suggestions := make([]string, len(clusters.Data))
 	for i, cluster := range clusters.Data {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }
@@ -124,7 +124,7 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.Spec.DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }
@@ -137,7 +137,7 @@ func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []st
 
 	suggestions := make([]string, len(clusters))
 	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", *cluster.Id, *cluster.GetSpec().DisplayName)
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
 }

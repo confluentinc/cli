@@ -35,11 +35,10 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
-	environmentId := c.EnvironmentId()
 	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
 	// Check KSQL exists
-	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
+	cluster, err := c.V2Client.DescribeKsqlCluster(id, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -48,12 +47,12 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 	// the topics.
 	if c.getClusterStatus(&cluster) == "PROVISIONED" {
-		if err := c.deleteTopics(*cluster.Id, cluster.Status.GetHttpEndpoint()); err != nil {
+		if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
 			return err
 		}
 	}
 
-	if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
+	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
 		return err
 	}
 
