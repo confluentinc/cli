@@ -885,11 +885,6 @@ func TestValidateUrl(t *testing.T) {
 			isCCloud: true,
 			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
 		},
-		{
-			urlIn:    "https://devel.cpdev.cloud//",
-			isCCloud: true,
-			errMsg:   errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions).Error(),
-		},
 	}
 	for _, s := range suite {
 		url, warningMsg, err := validateURL(s.urlIn, s.isCCloud)
@@ -898,7 +893,6 @@ func TestValidateUrl(t *testing.T) {
 			req.Equal(s.urlOut, url)
 			req.Equal(s.warningMsg, warningMsg)
 		} else {
-			fmt.Println(err.Error())
 			req.Equal(s.errMsg, err.Error())
 		}
 	}
