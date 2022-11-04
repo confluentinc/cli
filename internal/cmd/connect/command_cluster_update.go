@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newUpdateCommand() *cobra.Command {
+func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <id>",
 		Short:       "Update a connector configuration.",
@@ -28,7 +28,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) update(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

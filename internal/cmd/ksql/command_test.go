@@ -3,9 +3,8 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"testing"
-
 	"net/http"
+	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -149,20 +148,10 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	return cmd
 }
 
-func (suite *KSQLTestSuite) TestAppShouldNotConfigureAclsWhenUser() {
-	suite.testShouldNotConfigureAclsWhenUser(true)
-}
-
-func (suite *KSQLTestSuite) TestClusterShouldNotConfigureAclsWhenUser() {
-	suite.testShouldNotConfigureAclsWhenUser(false)
-}
-
-func (suite *KSQLTestSuite) testShouldNotConfigureAclsWhenUser(isApp bool) {
-	commandName := getCommandName(isApp)
-
+func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 	cmd := suite.newCMD()
 	suite.ksqlCluster.Spec.CredentialIdentity.Id = "u-123"
-	cmd.SetArgs([]string{commandName, "configure-acls", ksqlClusterID})
+	cmd.SetArgs([]string{"cluster", "configure-acls", ksqlClusterID})
 
 	err := cmd.Execute()
 
@@ -171,18 +160,9 @@ func (suite *KSQLTestSuite) testShouldNotConfigureAclsWhenUser(isApp bool) {
 	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 
-func (suite *KSQLTestSuite) TestDescribeKSQLApp() {
-	suite.testDescribeKSQL(true)
-}
-
-func (suite *KSQLTestSuite) TestDescribeKSQLCluster() {
-	suite.testDescribeKSQL(false)
-}
-
-func (suite *KSQLTestSuite) testDescribeKSQL(isApp bool) {
-	commandName := getCommandName(isApp)
+func (suite *KSQLTestSuite) TestDescribeKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "describe", ksqlClusterID})
+	cmd.SetArgs([]string{"cluster", "describe", ksqlClusterID})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -192,18 +172,9 @@ func (suite *KSQLTestSuite) testDescribeKSQL(isApp bool) {
 	req.Equal(ksqlClusterID, suite.ksqlc.GetKsqldbcmV2ClusterCalls()[0].Id)
 }
 
-func (suite *KSQLTestSuite) TestListKSQLApp() {
-	suite.testListKSQL(true)
-}
-
-func (suite *KSQLTestSuite) TestListKSQLCluster() {
-	suite.testListKSQL(false)
-}
-
-func (suite *KSQLTestSuite) testListKSQL(isApp bool) {
-	commandName := getCommandName(isApp)
+func (suite *KSQLTestSuite) TestListKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "list"})
+	cmd.SetArgs([]string{"cluster", "list"})
 
 	err := cmd.Execute()
 	req := require.New(suite.T())
@@ -212,32 +183,15 @@ func (suite *KSQLTestSuite) testListKSQL(isApp bool) {
 	req.True(suite.ksqlc.ListKsqldbcmV2ClustersExecuteCalled())
 }
 
-func (suite *KSQLTestSuite) TestDeleteKSQLApp() {
-	suite.testDeleteKSQL(true)
-}
-
-func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
-	suite.testDeleteKSQL(false)
-}
-
-func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
-	commandName := getCommandName(isApp)
+func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "delete", ksqlClusterID})
+	cmd.SetArgs([]string{"cluster", "delete", ksqlClusterID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.ksqlc.DeleteKsqldbcmV2ClusterCalled())
 	req.True(suite.ksqlc.DeleteKsqldbcmV2ClusterExecuteCalled())
 	req.Equal(ksqlClusterID, suite.ksqlc.DeleteKsqldbcmV2ClusterCalls()[0].Id)
-}
-
-func getCommandName(isApp bool) string {
-	if isApp {
-		return "app"
-	} else {
-		return "cluster"
-	}
 }
 
 func TestKsqlTestSuite(t *testing.T) {

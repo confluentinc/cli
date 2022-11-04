@@ -1,18 +1,16 @@
 package ksql
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
+func (c *ksqlCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: fmt.Sprintf("List ksqlDB %ss.", resource),
+		Short: "List ksqlDB clusters.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
