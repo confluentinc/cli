@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newPauseCommand() *cobra.Command {
+func (c *clusterCommand) newPauseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "pause <id-1> [id-2] ... [id-N]",
 		Short:             "Pause connectors.",
@@ -21,7 +21,7 @@ func (c *command) newPauseCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Pause connectors "lcc-000001" and "lcc-000002":`,
-				Code: "confluent connect pause lcc-000001 lcc-000002",
+				Code: "confluent connect cluster pause lcc-000001 lcc-000002",
 			},
 		),
 	}
@@ -33,7 +33,7 @@ func (c *command) newPauseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) pause(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

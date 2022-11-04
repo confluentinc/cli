@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newResumeCommand() *cobra.Command {
+func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "resume <id-1> [id-2] ... [id-N]",
 		Short:             "Resume connectors.",
@@ -21,7 +21,7 @@ func (c *command) newResumeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Resume connectors "lcc-000001" and "lcc-000002":`,
-				Code: "confluent connect resume lcc-000001 lcc-000002",
+				Code: "confluent connect cluster resume lcc-000001 lcc-000002",
 			},
 		),
 	}
@@ -33,7 +33,7 @@ func (c *command) newResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) resume(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
