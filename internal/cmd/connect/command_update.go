@@ -19,8 +19,8 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.Flags().String("config", "", "JSON connector config file.")
-	cmd.Flags().StringSlice("config-list", nil, `A comma-separated list of configuration overrides ("key=value") for the connector being updated.`)
+	cmd.Flags().String("config-file", "", "JSON connector config file.")
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the connector being updated.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -35,8 +35,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	var userConfigs *map[string]string
-	if cmd.Flags().Changed("config-list") {
-		configList, err := cmd.Flags().GetStringSlice("config-list")
+	if cmd.Flags().Changed("config") {
+		configList, err := cmd.Flags().GetStringSlice("config")
 		if err != nil {
 			return err
 		}
@@ -55,13 +55,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			currentConfigs[name] = value
 		}
 		userConfigs = &currentConfigs
-	} else if cmd.Flags().Changed("config") {
+	} else if cmd.Flags().Changed("config-file") {
 		userConfigs, err = getConfig(cmd)
 		if err != nil {
 			return err
 		}
 	} else {
-		return errors.New("Must specify either config file or config-list.")
+		return errors.New("one of `--config` or `--config-file` must be specified")
 	}
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
