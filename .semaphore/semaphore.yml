@@ -78,6 +78,24 @@ blocks:
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
+              
+            - go version
+            - echo $PATH
+            - echo $GOPATH
+            - echo $GOROOT
+            - go env GOPATH
+            - go env GOROOT
+            
+            - eval "$(goenv init -)"
+            - export PATH="$GOROOT/bin:$PATH"
+            - export PATH="$PATH:$GOPATH/bin"
+              
+            - go version
+            - echo $PATH
+            - echo $GOPATH
+            - echo $GOROOT
+            - go env GOPATH
+            - go env GOROOT
 
             # Run tests
             - make deps
@@ -102,7 +120,6 @@ blocks:
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
-            - choco install base64 -y
             - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
             
             # Set up Go
@@ -118,7 +135,6 @@ blocks:
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
 
             # Run tests
-            - choco install make
             - make deps
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
