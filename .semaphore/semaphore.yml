@@ -73,30 +73,13 @@ blocks:
             # Set up Go
             - checkout
             - goenv install --skip-existing
+            - eval "$(goenv init -)"
             - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
               
-            - go version
-            - echo $PATH
-            - echo $GOPATH
-            - echo $GOROOT
-            - go env GOPATH
-            - go env GOROOT
-            
-            - eval "$(goenv init -)"
-            - export PATH="$GOROOT/bin:$PATH"
-            - export PATH="$PATH:$GOPATH/bin"
-              
-            - go version
-            - echo $PATH
-            - echo $GOPATH
-            - echo $GOROOT
-            - go env GOPATH
-            - go env GOROOT
-
             # Run tests
             - make deps
             - ulimit -n 2048
