@@ -1,9 +1,6 @@
 package ksql
 
 import (
-	"context"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,13 +25,12 @@ func (c *ksqlCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(c.updateKsqlClusterForDescribeAndList(cluster))
+	table.Add(c.formatClusterForDisplayAndList(&cluster))
 	return table.Print()
 }
