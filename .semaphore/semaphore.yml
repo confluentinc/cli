@@ -85,6 +85,17 @@ blocks:
             - echo $GOROOT
             - go env GOPATH
             - go env GOROOT
+            
+            - eval "$(goenv init -)"
+            - export PATH="$GOROOT/bin:$PATH"
+            - export PATH="$PATH:$GOPATH/bin"
+              
+            - go version
+            - echo $PATH
+            - echo $GOPATH
+            - echo $GOROOT
+            - go env GOPATH
+            - go env GOROOT
 
             # Run tests
             - make deps
