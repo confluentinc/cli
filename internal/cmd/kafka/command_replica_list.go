@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -14,21 +13,38 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type replicaOut struct {
-	ClusterId          string `human:"Cluster" serialized:"cluster_id"`
-	TopicName          string `human:"Topic Name" serialized:"topic_name"`
-	BrokerId           int32  `human:"Broker ID" serialized:"broker_id"`
-	PartitionId        int32  `human:"Partition ID" serialized:"partition_id"`
-	IsLeader           bool   `human:"Leader" serialized:"is_leader"`
-	IsObserver         bool   `human:"Observer" serialized:"is_observer"`
-	IsIsrEligible      bool   `human:"ISR Eligible" serialized:"is_isr_eligible"`
-	IsInIsr            bool   `human:"In ISR" serialized:"is_in_isr"`
-	IsCaughtUp         bool   `human:"Caught Up" serialized:"is_caught_up"`
-	LogStartOffset     int64  `human:"Log Start Offset" serialized:"log_start_offset"`
-	LogEndOffset       int64  `human:"Log End Offset" serialized:"log_end_offset"`
-	LastCaughtUpTimeMs string `human:"Last Caught Up Time (ms)" serialized:"last_caught_up_time_ms"`
-	LastFetchTimeMs    string `human:"Last Fetch Time (ms)" serialized:"last_fetch_time_ms"`
-	LinkName           string `human:"Link Name" serialized:"link_name"`
+type replicaHumanOut struct {
+	ClusterId          string `human:"Cluster"`
+	TopicName          string `human:"Topic Name"`
+	BrokerId           int32  `human:"Broker ID"`
+	PartitionId        int32  `human:"Partition ID"`
+	IsLeader           bool   `human:"Leader"`
+	IsObserver         bool   `human:"Observer"`
+	IsIsrEligible      bool   `human:"ISR Eligible"`
+	IsInIsr            bool   `human:"In ISR"`
+	IsCaughtUp         bool   `human:"Caught Up"`
+	LogStartOffset     int64  `human:"Log Start Offset"`
+	LogEndOffset       int64  `human:"Log End Offset"`
+	LastCaughtUpTimeMs string `human:"Last Caught Up Time (ms)"`
+	LastFetchTimeMs    string `human:"Last Fetch Time (ms)"`
+	LinkName           string `human:"Link Name"`
+}
+
+type replicaSerializedOut struct {
+	ClusterId          string `serialized:"cluster_id"`
+	TopicName          string `serialized:"topic_name"`
+	BrokerId           int32  `serialized:"broker_id"`
+	PartitionId        int32  `serialized:"partition_id"`
+	IsLeader           bool   `serialized:"is_leader"`
+	IsObserver         bool   `serialized:"is_observer"`
+	IsIsrEligible      bool   `serialized:"is_isr_eligible"`
+	IsInIsr            bool   `serialized:"is_in_isr"`
+	IsCaughtUp         bool   `serialized:"is_caught_up"`
+	LogStartOffset     int64  `serialized:"log_start_offset"`
+	LogEndOffset       int64  `serialized:"log_end_offset"`
+	LastCaughtUpTimeMs int64  `serialized:"last_caught_up_time_ms"`
+	LastFetchTimeMs    int64  `serialized:"last_fetch_time_ms"`
+	LinkName           string `serialized:"link_name"`
 }
 
 func (c *replicaCommand) newListCommand() *cobra.Command {
@@ -89,27 +105,41 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, data := range replicaStatusDataList.Data {
-		out := &replicaOut{
-			ClusterId:          data.ClusterId,
-			TopicName:          data.TopicName,
-			BrokerId:           data.BrokerId,
-			PartitionId:        data.PartitionId,
-			IsLeader:           data.IsLeader,
-			IsObserver:         data.IsObserver,
-			IsIsrEligible:      data.IsIsrEligible,
-			IsInIsr:            data.IsInIsr,
-			IsCaughtUp:         data.IsCaughtUp,
-			LogStartOffset:     data.LogStartOffset,
-			LogEndOffset:       data.LogEndOffset,
-			LastCaughtUpTimeMs: fmt.Sprint(data.LastCaughtUpTimeMs),
-			LastFetchTimeMs:    fmt.Sprint(data.LastFetchTimeMs),
-			LinkName:           data.LinkName,
-		}
 		if output.GetFormat(cmd) == output.Human {
-			out.LastCaughtUpTimeMs = utils.FormatUnixTime(data.LastCaughtUpTimeMs)
-			out.LastFetchTimeMs = utils.FormatUnixTime(data.LastFetchTimeMs)
+			list.Add(&replicaHumanOut{
+				ClusterId:          data.ClusterId,
+				TopicName:          data.TopicName,
+				BrokerId:           data.BrokerId,
+				PartitionId:        data.PartitionId,
+				IsLeader:           data.IsLeader,
+				IsObserver:         data.IsObserver,
+				IsIsrEligible:      data.IsIsrEligible,
+				IsInIsr:            data.IsInIsr,
+				IsCaughtUp:         data.IsCaughtUp,
+				LogStartOffset:     data.LogStartOffset,
+				LogEndOffset:       data.LogEndOffset,
+				LastCaughtUpTimeMs: utils.FormatUnixTime(data.LastCaughtUpTimeMs),
+				LastFetchTimeMs:    utils.FormatUnixTime(data.LastFetchTimeMs),
+				LinkName:           data.LinkName,
+			})
+		} else {
+			list.Add(&replicaSerializedOut{
+				ClusterId:          data.ClusterId,
+				TopicName:          data.TopicName,
+				BrokerId:           data.BrokerId,
+				PartitionId:        data.PartitionId,
+				IsLeader:           data.IsLeader,
+				IsObserver:         data.IsObserver,
+				IsIsrEligible:      data.IsIsrEligible,
+				IsInIsr:            data.IsInIsr,
+				IsCaughtUp:         data.IsCaughtUp,
+				LogStartOffset:     data.LogStartOffset,
+				LogEndOffset:       data.LogEndOffset,
+				LastCaughtUpTimeMs: data.LastCaughtUpTimeMs,
+				LastFetchTimeMs:    data.LastFetchTimeMs,
+				LinkName:           data.LinkName,
+			})
 		}
-		list.Add(out)
 	}
 	return list.Print()
 }
