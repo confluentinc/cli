@@ -78,6 +78,13 @@ blocks:
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
+              
+            - go version
+            - echo $PATH
+            - echo $GOPATH
+            - echo $GOROOT
+            - go env GOPATH
+            - go env GOROOT
 
             # Run tests
             - make deps
