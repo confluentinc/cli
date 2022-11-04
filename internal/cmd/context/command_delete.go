@@ -5,22 +5,31 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "delete <context>",
 		Short:             "Delete a context.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+
+	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	ctx, err := c.Config.FindContext(args[0])
+	if err != nil {
+		return err
+	}
+
+	err = form.ConfirmDeletion(cmd, resource.Context, ctx.Name, "CONFIRM")
 	if err != nil {
 		return err
 	}
