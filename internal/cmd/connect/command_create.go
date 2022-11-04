@@ -26,21 +26,21 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect create --config config.json",
+				Code: "confluent connect create --config-file config.json",
 			},
 			examples.Example{
-				Code: "confluent connect create --config config.json --cluster lkc-123456",
+				Code: "confluent connect create --config-file config.json --cluster lkc-123456",
 			},
 		),
 	}
 
-	cmd.Flags().String("config", "", "JSON connector config file.")
+	cmd.Flags().String("config-file", "", "JSON connector config file.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config")
+	_ = cmd.MarkFlagRequired("config-file")
 
 	return cmd
 }
