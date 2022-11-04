@@ -9,7 +9,7 @@ import (
 )
 
 type brokerOut struct {
-	ClusterId string `human:"Cluster ID" serialized:"cluster_id"`
+	ClusterId string `human:"Cluster" serialized:"cluster_id"`
 	BrokerId  int32  `human:"Broker ID" serialized:"broker_id"`
 	Host      string `human:"Host" serialized:"host"`
 	Port      int32  `human:"Port" serialized:"port"`

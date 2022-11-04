@@ -12,11 +12,11 @@ import (
 )
 
 type invitationOut struct {
-	Id             string `human:"ID" serialized:"id"`
-	Name           string `human:"Name" serialized:"name"`
-	Email          string `human:"Email" serialized:"email"`
-	UserResourceId string `human:"User ID" serialized:"user_resource_id"`
-	Status         string `human:"Status" serialized:"status"`
+	Id     string `human:"ID" serialized:"id"`
+	Name   string `human:"Name" serialized:"name"`
+	Email  string `human:"Email" serialized:"email"`
+	UserId string `human:"User" serialized:"user_id"`
+	Status string `human:"Status" serialized:"status"`
 }
 
 func (c invitationCommand) newListCommand() *cobra.Command {
@@ -53,11 +53,11 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		}
 
 		list.Add(&invitationOut{
-			Id:             invitation.GetId(),
-			Name:           name,
-			Email:          invitation.GetEmail(),
-			UserResourceId: invitation.User.GetId(),
-			Status:         invitation.GetStatus(),
+			Id:     invitation.GetId(),
+			Name:   name,
+			Email:  invitation.GetEmail(),
+			UserId: invitation.User.GetId(),
+			Status: invitation.GetStatus(),
 		})
 	}
 	return list.Print()

@@ -128,14 +128,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// needs to be added here to determine the resource type.
 		for _, res := range resources {
 			list.Add(&out{
-				IsCurrent:       clusterId != "" && apiKey.GetId() == currentKey,
-				Key:             apiKey.GetId(),
-				Description:     apiKey.Spec.GetDescription(),
-				OwnerResourceId: ownerId,
-				OwnerEmail:      email,
-				ResourceType:    resourceKindToType[res.GetKind()],
-				ResourceId:      getApiKeyResourceId(res.GetId()),
-				Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
+				Key:          apiKey.GetId(),
+				Description:  apiKey.Spec.GetDescription(),
+				OwnerId:      ownerId,
+				OwnerEmail:   email,
+				ResourceType: resourceKindToType[res.GetKind()],
+				ResourceId:   getApiKeyResourceId(res.GetId()),
+				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}

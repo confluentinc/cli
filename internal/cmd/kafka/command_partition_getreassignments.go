@@ -14,7 +14,7 @@ import (
 )
 
 type getReassignmentsOut struct {
-	ClusterId        string  `human:"Cluster ID" serialized:"cluster_id"`
+	ClusterId        string  `human:"Cluster" serialized:"cluster_id"`
 	TopicName        string  `human:"Topic Name" serialized:"topic_name"`
 	PartitionId      int32   `human:"Partition ID" serialized:"partition_id"`
 	AddingReplicas   []int32 `human:"Adding Replicas" serialized:"adding_replicas"`

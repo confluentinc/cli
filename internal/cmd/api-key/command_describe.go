@@ -15,14 +15,14 @@ import (
 )
 
 type out struct {
-	IsCurrent       bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
-	Key             string `human:"Key" serialized:"key"`
-	Description     string `human:"Description" serialized:"description"`
-	OwnerResourceId string `human:"Owner Resource ID" serialized:"owner_resource_id"`
-	OwnerEmail      string `human:"Owner Email" serialized:"owner_email"`
-	ResourceType    string `human:"Resource Type" serialized:"resource_type"`
-	ResourceId      string `human:"Resource ID" serialized:"resource_id"`
-	Created         string `human:"Created" serialized:"created"`
+	IsCurrent    bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
+	Key          string `human:"Key" serialized:"key"`
+	Description  string `human:"Description" serialized:"description"`
+	OwnerId      string `human:"Owner" serialized:"owner_id"`
+	OwnerEmail   string `human:"Owner Email" serialized:"owner_email"`
+	ResourceType string `human:"Resource Type" serialized:"resource_type"`
+	ResourceId   string `human:"Resource" serialized:"resource_id"`
+	Created      string `human:"Created" serialized:"created"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -79,13 +79,13 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	// needs to be added here to determine the resource type.
 	for _, res := range resources {
 		list.Add(&out{
-			Key:             apiKey.GetId(),
-			Description:     apiKey.Spec.GetDescription(),
-			OwnerResourceId: ownerId,
-			OwnerEmail:      email,
-			ResourceType:    resourceKindToType[res.GetKind()],
-			ResourceId:      getApiKeyResourceId(res.GetId()),
-			Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+			Key:          apiKey.GetId(),
+			Description:  apiKey.Spec.GetDescription(),
+			OwnerId:      ownerId,
+			OwnerEmail:   email,
+			ResourceType: resourceKindToType[res.GetKind()],
+			ResourceId:   getApiKeyResourceId(res.GetId()),
+			Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 		})
 	}
 	return list.Print()
