@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newDeleteCommand() *cobra.Command {
+func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a connector.",
@@ -21,10 +21,10 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Delete a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect delete",
+				Code: "confluent connect cluster delete",
 			},
 			examples.Example{
-				Code: "confluent connect delete --cluster lkc-123456",
+				Code: "confluent connect cluster delete --cluster lkc-123456",
 			},
 		),
 	}
@@ -36,7 +36,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) delete(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

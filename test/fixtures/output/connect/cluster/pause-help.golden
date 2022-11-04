@@ -1,12 +1,12 @@
-Resume connectors.
+Pause connectors.
 
 Usage:
-  confluent connect resume <id-1> [id-2] ... [id-N] [flags]
+  confluent connect cluster pause <id-1> [id-2] ... [id-N] [flags]
 
 Examples:
-Resume connectors "lcc-000001" and "lcc-000002":
+Pause connectors "lcc-000001" and "lcc-000002":
 
-  $ confluent connect resume lcc-000001 lcc-000002
+  $ confluent connect cluster pause lcc-000001 lcc-000002
 
 Flags:
       --cluster string       Kafka cluster ID.

@@ -45,7 +45,7 @@ type serializedConfigsOut struct {
 	Value  string `json:"value" yaml:"value"`
 }
 
-func (c *command) newDescribeCommand() *cobra.Command {
+func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe a connector.",
@@ -56,10 +56,10 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe connector and task level details of a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect describe lcc-123456",
+				Code: "confluent connect cluster describe lcc-123456",
 			},
 			examples.Example{
-				Code: "confluent connect describe lcc-123456 --cluster lkc-123456",
+				Code: "confluent connect cluster describe lcc-123456 --cluster lkc-123456",
 			},
 		),
 	}
@@ -72,7 +72,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
