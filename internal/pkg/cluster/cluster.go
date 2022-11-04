@@ -20,12 +20,12 @@ const (
 )
 
 type prettyCluster struct {
-	Name     string `human:"Name" serialized:"name"`
-	Type     string `human:"Type" serialized:"type"`
-	Id       string `human:"Kafka ID" serialized:"id"`
-	Cid      string `human:"Component ID" serialized:"cid"`
-	Hosts    string `human:"Hosts" serialized:"hosts"`
-	Protocol string `human:"Protocol" serialized:"protocol"`
+	Name           string `human:"Name" serialized:"name"`
+	Type           string `human:"Type" serialized:"type"`
+	KafkaClusterId string `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
+	ComponentId    string `human:"Component ID" serialized:"component_id"`
+	Hosts          string `human:"Hosts" serialized:"hosts"`
+	Protocol       string `human:"Protocol" serialized:"protocol"`
 }
 
 func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
@@ -79,12 +79,12 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 	}
 	p = createPrettyProtocol(clusterInfo.Protocol)
 	return &prettyCluster{
-		clusterInfo.ClusterName,
-		t,
-		id,
-		cid,
-		strings.Join(hosts, ", "),
-		p,
+		Name:           clusterInfo.ClusterName,
+		Type:           t,
+		KafkaClusterId: id,
+		ComponentId:    cid,
+		Hosts:          strings.Join(hosts, ", "),
+		Protocol:       p,
 	}, nil
 }
 

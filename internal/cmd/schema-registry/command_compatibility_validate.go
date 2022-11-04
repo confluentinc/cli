@@ -17,7 +17,7 @@ import (
 )
 
 type validateOut struct {
-	IsCompatible bool `human:"Compatibility" serialized:"compatibility"`
+	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
@@ -96,7 +96,7 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	list := output.NewList(cmd)
-	list.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
-	return list.Print()
+	table := output.NewTable(cmd)
+	table.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
+	return table.Print()
 }

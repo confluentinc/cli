@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -15,10 +16,9 @@ import (
 )
 
 type roleBindingListOut struct {
-	Principal   string `human:"Principal" serialized:"principal"`
-	Email       string `human:"Email" serialized:"email"`
-	ServiceName string `human:"Service Name" serialized:"service_name"`
-	PoolName    string `human:"Pool Name" serialized:"pool_name"`
+	Principal string `human:"Principal" serialized:"principal"`
+	Name      string `human:"Name" serialized:"name"`
+	Email     string `human:"Email" serialized:"email"`
 }
 
 func (c *roleBindingCommand) newListCommand() *cobra.Command {
@@ -143,7 +143,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 		return err
 	}
 
-	userToEmailMap, err := c.getUserIdToEmailMap()
+	principalToUser, err := c.getPrincipalToUserMap()
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 	for _, scopedRoleBindingMapping := range scopedRoleBindingMappings {
 		roleBindingScope := scopedRoleBindingMapping.Scope
 		for principalName, roleBindings := range scopedRoleBindingMapping.Rolebindings {
-			principalEmail := userToEmailMap[principalName]
+			user := principalToUser[principalName]
 			for roleName, resourcePatterns := range roleBindings {
 				if role != "" && role != roleName {
 					continue
@@ -202,7 +202,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					}
 					list.Add(&roleBindingOut{
 						Principal:      principalName,
-						Email:          principalEmail,
+						Email:          user.GetEmail(),
 						Role:           roleName,
 						Environment:    envName,
 						CloudCluster:   cloudClusterName,
@@ -217,7 +217,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 				if len(resourcePatterns) == 0 {
 					list.Add(&roleBindingOut{
 						Principal:    principalName,
-						Email:        principalEmail,
+						Email:        user.GetEmail(),
 						Role:         roleName,
 						Environment:  envName,
 						CloudCluster: cloudClusterName,
@@ -247,16 +247,16 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	return poolToName, nil
 }
 
-func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
+func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]iamv2.IamV2User, error) {
 	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return nil, err
 	}
-	userToEmail := make(map[string]string)
+	principalToUser := make(map[string]iamv2.IamV2User)
 	for _, u := range users {
-		userToEmail["User:"+u.GetId()] = u.GetEmail()
+		principalToUser["User:"+u.GetId()] = u
 	}
-	return userToEmail, nil
+	return principalToUser, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
@@ -309,7 +309,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		}
 	}
 
-	userToEmailMap, err := c.getUserIdToEmailMap()
+	principalToUser, err := c.getPrincipalToUserMap()
 	if err != nil {
 		return err
 	}
@@ -325,16 +325,17 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 	list := output.NewList(cmd)
 	for _, principal := range principals {
 		row := &roleBindingListOut{Principal: principal}
-		if email, ok := userToEmailMap[principal]; ok {
-			row.Email = email
+		if user, ok := principalToUser[principal]; ok {
+			row.Name = user.GetFullName()
+			row.Email = user.GetEmail()
 			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
-			row.ServiceName = name
+			row.Name = name
 			list.Add(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
-			row.PoolName = name
+			row.Name = name
 			list.Add(row)
 		}
 	}
