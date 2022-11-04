@@ -34,7 +34,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0], nil)
 	}
-	err = form.ConfirmDeletion(cmd, args[0], cluster.Name, resource.KafkaCluster)
+	err = form.ConfirmDeletion(cmd, resource.KafkaCluster, args[0], cluster.Name)
 	if err != nil {
 		return err
 	}

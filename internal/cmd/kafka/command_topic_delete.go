@@ -53,7 +53,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		err = form.ConfirmDeletion(cmd, topicName, topicName, resource.Topic)
+		err = form.ConfirmDeletion(cmd, resource.Topic, topicName, topicName)
 		if err != nil {
 			return err
 		}

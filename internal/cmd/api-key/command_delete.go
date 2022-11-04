@@ -33,7 +33,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	err = form.ConfirmDeletion(cmd, apiKey, apiKey, resource.ApiKey)
+	err = form.ConfirmDeletion(cmd, resource.ApiKey, apiKey, "CONFIRM")
 	if err != nil {
 		return err
 	}

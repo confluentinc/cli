@@ -83,7 +83,7 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 }
 
 // TODO: find a better place for this
-func ConfirmDeletion(cmd *cobra.Command, resourceId, resourceName, resourceType string) error {
+func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceId, resourceName string) error {
 	utils.Printf(cmd, errors.DeleteResourceConfirmMsg, resourceType, resourceId, resourceName)
 
 	prompt := NewPrompt(os.Stdin)
