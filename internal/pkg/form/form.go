@@ -84,16 +84,16 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 
 // TODO: find a better place for this
 func ConfirmDeletion(cmd *cobra.Command, resourceId, resourceName, resourceType string) error {
-	utils.Printf(cmd, errors.DeleteResourceConfirmationMsg, resourceId, resourceType)
+	utils.Printf(cmd, errors.DeleteResourceConfirmMsg, resourceType, resourceId, resourceName)
 
 	prompt := NewPrompt(os.Stdin)
-	f := New(Field{ID: "Name", Prompt: "Name"})
+	f := New(Field{ID: "Confirm", Prompt: "Confirm"})
 	if err := f.Prompt(cmd, prompt); err != nil {
 		return err
 	}
 
-	if f.Responses["Name"].(string) != resourceName {
-		return errors.New("Name must match.")
+	if f.Responses["Confirm"].(string) != resourceName {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.DeleteResourceConfirmErrorMsg, resourceName), errors.DeleteResourceConfirmSuggestions)
 	}
 
 	return nil

@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -30,6 +31,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	key, httpResp, err := c.V2Client.GetApiKey(apiKey)
 	if err != nil {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
+	}
+
+	err = form.ConfirmDeletion(cmd, apiKey, apiKey, resource.ApiKey)
+	if err != nil {
+		return err
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {
