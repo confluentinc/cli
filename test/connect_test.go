@@ -14,7 +14,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster list --cluster lkc-123 -o json", fixture: "connect/cluster/list-json.golden"},
 		{args: "connect cluster list --cluster lkc-123 -o yaml", fixture: "connect/cluster/list-yaml.golden"},
 		{args: "connect cluster list --cluster lkc-123", fixture: "connect/cluster/list.golden"},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update.golden"},
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
 		//Tests based on new config
