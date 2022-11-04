@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -614,7 +616,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 				resourceName = "kafka-cluster"
 				patternType = literalPatternType
 			default:
-				resourceType = strings.Title(prefix)
+				resourceType = cases.Title(language.Und).String(prefix)
 				resourceName = strings.TrimSuffix(content, "*")
 				patternType = literalPatternType
 			}
