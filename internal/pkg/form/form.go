@@ -2,6 +2,7 @@ package form
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -76,6 +77,23 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 		}
 
 		f.Responses[field.ID] = res
+	}
+
+	return nil
+}
+
+// TODO: find a better place for this
+func ConfirmDeletion(cmd *cobra.Command, resourceId, resourceName, resourceType string) error {
+	utils.Printf(cmd, errors.DeleteResourceConfirmationMsg, resourceId, resourceType)
+
+	prompt := NewPrompt(os.Stdin)
+	f := New(Field{ID: "Name", Prompt: "Name"})
+	if err := f.Prompt(cmd, prompt); err != nil {
+		return err
+	}
+
+	if f.Responses["Name"].(string) != resourceName {
+		return errors.New("Name must match.")
 	}
 
 	return nil
