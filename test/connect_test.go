@@ -4,9 +4,9 @@ func (s *CLITestSuite) TestConnect() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "connect --help", fixture: "connect/help.golden"},
-		{args: "connect cluster create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml -o json", fixture: "connect/cluster/create-json.golden"},
-		{args: "connect cluster create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/cluster/create-yaml.golden"},
-		{args: "connect cluster create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/create.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml -o json", fixture: "connect/cluster/create-json.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/cluster/create-yaml.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/create.golden"},
 		{args: "connect cluster delete lcc-123 --cluster lkc-123", fixture: "connect/cluster/delete.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/cluster/describe-json.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/cluster/describe-yaml.golden"},
@@ -18,9 +18,9 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
 		//Tests based on new config
-		{args: "connect cluster create --cluster lkc-123 --config test/fixtures/input/connect/config-new-format.json -o json", fixture: "connect/cluster/create-new-config-json.golden"},
-		{args: "connect cluster create --cluster lkc-123 --config test/fixtures/input/connect/config-new-format.json -o yaml", fixture: "connect/cluster/create-yaml.golden"},
-		{args: "connect cluster update lcc-123 --cluster lkc-123 --config test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o json", fixture: "connect/cluster/create-new-config-json.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o yaml", fixture: "connect/cluster/create-yaml.golden"},
+		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
 	}
 
 	for _, tt := range tests {
