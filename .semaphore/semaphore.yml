@@ -80,7 +80,7 @@ blocks:
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
-              
+
             # Run tests
             - make deps
             - ulimit -n 2048
