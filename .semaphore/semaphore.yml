@@ -74,7 +74,8 @@ blocks:
             - checkout
             - goenv install --skip-existing
             - eval "$(goenv init -)"
-            - export "PATH=$(go env GOPATH)/bin:$PATH"
+            - export "PATH=$GOROOT/bin:$PATH"
+            - export "PATH=$GOPATH/bin:$PATH"
 
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
