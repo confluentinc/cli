@@ -38,38 +38,30 @@ func (c *partitionCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
 	}
+
 	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
 	}
+
 	partitionListResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topic)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	partitionDatas := partitionListResp.Data
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"ClusterId", "TopicName", "PartitionId", "LeaderId"}, []string{"Cluster ID", "Topic Name", "Partition ID", "Leader ID"}, []string{"cluster_id", "topic_name", "partition_id", "leader_id"})
-	if err != nil {
-		return err
-	}
-	for _, partition := range partitionDatas {
-		s := &struct {
-			ClusterId   string
-			TopicName   string
-			PartitionId int32
-			LeaderId    int32
-		}{
+	list := output.NewList(cmd)
+	for _, partition := range partitionListResp.Data {
+		list.Add(&partitionOut{
 			ClusterId:   partition.ClusterId,
 			TopicName:   partition.TopicName,
 			PartitionId: partition.PartitionId,
 			LeaderId:    parseLeaderId(partition.Leader),
-		}
-		outputWriter.AddElement(s)
+		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

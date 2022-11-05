@@ -1,20 +1,20 @@
 [
   {
     "link_name": "link-1",
-    "max_per_partition_mirror_lag": "571428",
-    "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
-    "num_partition": "3",
     "source_topic_name": "src-topic-1",
-    "status_time_ms": "111111111"
+    "mirror_status": "active",
+    "status_time_ms": 111111111,
+    "num_partition": 3,
+    "max_per_partition_mirror_lag": 571428
   },
   {
     "link_name": "link-2",
-    "max_per_partition_mirror_lag": "0",
-    "mirror_status": "stopped",
     "mirror_topic_name": "dest-topic-2",
-    "num_partition": "2",
     "source_topic_name": "src-topic-2",
-    "status_time_ms": "222222222"
+    "mirror_status": "stopped",
+    "status_time_ms": 222222222,
+    "num_partition": 2,
+    "max_per_partition_mirror_lag": 0
   }
 ]

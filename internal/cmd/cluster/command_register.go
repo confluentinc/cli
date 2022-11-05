@@ -13,7 +13,6 @@ import (
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type registerCommand struct {
@@ -85,7 +84,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintCluster([]mds.ClusterInfo{clusterInfo}, output.Human.String())
+	return print.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
 }
 
 func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {
