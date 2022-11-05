@@ -653,6 +653,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.11.0 h1:/TllkWqorcn5LLZ26w
 github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.11.0/go.mod h1:UZB+e0EXNFKNT8yPIHcQMDy0QvNvJzL55VOEnM9bMoY=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0 h1:g6OHa1iW3HO3N/YiTAL9Q6Y7rdjMBAjOPYK37akTt0M=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0/go.mod h1:0LAvd4VqlaRwKU4yvDEkVCtV43yNezt56+hBe9Lmg7Q=
+github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 h1:jIXXhGi+Xn+XYFCErnMvd035QijbYXla1Bo8W7V7lFM=
+github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0/go.mod h1:ufn9In8kDsyJ7Nru2ygpAaWdGw7DSDTOTtDhQVSmZjs=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0 h1:TWwZHdfo2XNKrnGOuxXx4LF8WgahqqDC47Ap51L4thM=
 github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0/go.mod h1:odGsHChrn2l+jaOvx4Gib5//U4a3Id79wstQVkNh8v0=
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6lqvR3OQ2k/VrReF75g=

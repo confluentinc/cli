@@ -1,14 +1,26 @@
 [
   {
-    "principal": "User:u-33ccc",
-    "email": "u-33ccc@confluent.io",
-    "service_name": "",
-    "pool_name": ""
+    "Principal": "User:u-11aaa",
+    "Email": "u-11aaa@confluent.io",
+    "ServiceName": "",
+    "PoolName": ""
   },
   {
-    "principal": "User:u-44ddd",
-    "email": "mhe@confluent.io",
-    "service_name": "",
-    "pool_name": ""
+    "Principal": "User:u-22bbb",
+    "Email": "u-22bbb@confluent.io",
+    "ServiceName": "",
+    "PoolName": ""
+  },
+  {
+    "Principal": "User:u-33ccc",
+    "Email": "u-33ccc@confluent.io",
+    "ServiceName": "",
+    "PoolName": ""
+  },
+  {
+    "Principal": "User:u-44ddd",
+    "Email": "mhe@confluent.io",
+    "ServiceName": "",
+    "PoolName": ""
   }
 ]

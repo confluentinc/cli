@@ -5,8 +5,11 @@ import (
 	"os"
 	"strings"
 
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -97,11 +100,15 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-
+	cmd.Flags().Bool("inclusive", true, "List all role bindings in a specific scope and its nested scopes.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
+
+var (
+	ksqlOrSchemaRegistryRoleBindingError = errors.New(errors.KsqlOrSchemaRegistryRoleBindingErrorMsg)
+)
 
 func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
@@ -110,7 +117,16 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	if c.cfg.IsCloudLogin() {
-		return c.ccloudList(cmd, options)
+		listRoleBinding, err := c.parseV2RoleBinding(cmd)
+		if err != nil {
+			return err
+		}
+		err = c.ccloudListV2(cmd, listRoleBinding)
+		if err == ksqlOrSchemaRegistryRoleBindingError {
+			return c.ccloudList(cmd, options)
+		} else {
+			return err
+		}
 	} else {
 		return c.confluentList(cmd, options)
 	}
@@ -236,27 +252,27 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 	}
 	poolToName := make(map[string]string)
 	for _, provider := range providers {
-		pools, err := c.V2Client.ListIdentityPools(*provider.Id)
+		pools, err := c.V2Client.ListIdentityPools(provider.GetId())
 		if err != nil {
 			return map[string]string{}, err
 		}
 		for _, pool := range pools {
-			poolToName["User:"+*pool.Id] = *pool.DisplayName
+			poolToName["User:"+pool.GetId()] = pool.GetDisplayName()
 		}
 	}
 	return poolToName, nil
 }
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
+	userToEmailMap := make(map[string]string)
 	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return nil, err
 	}
-	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmail["User:"+u.GetId()] = u.GetEmail()
+		userToEmailMap["User:"+u.GetId()] = u.GetEmail()
 	}
-	return userToEmail, nil
+	return userToEmailMap, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
@@ -264,11 +280,12 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 	if err != nil {
 		return nil, err
 	}
-	serviceAccountToName := make(map[string]string)
+
+	serviceAccountToNameMap := make(map[string]string)
 	for _, sa := range serviceAccounts {
-		serviceAccountToName["User:"+sa.GetId()] = sa.GetDisplayName()
+		serviceAccountToNameMap["User:"+sa.GetId()] = sa.GetDisplayName()
 	}
-	return serviceAccountToName, nil
+	return serviceAccountToNameMap, nil
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
@@ -286,10 +303,7 @@ func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, option
 		if err != nil {
 			return err
 		}
-		err = c.validateRoleAndResourceTypeV2(role, resource.ResourceType)
-		if err != nil {
-			return err
-		}
+		//  skip validation when role != "" before migrating to v2 role api
 		principals, _, err = c.MDSv2Client.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(
 			c.createContext(),
 			role,
@@ -481,5 +495,187 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 		list.Add(&roleBindingOut{Principal: principal})
 	}
 	list.Filter([]string{"Principal"})
+	return list.Print()
+}
+
+func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
+		return c.listMyRoleBindingsV2(cmd, listRoleBinding)
+	} else if cmd.Flags().Changed("role") {
+		return c.ccloudListRolePrincipalsV2(cmd, listRoleBinding)
+	}
+	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
+}
+
+func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	currentUser, err := cmd.Flags().GetBool("current-user")
+	if err != nil {
+		return err
+	}
+
+	if currentUser {
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.State.Auth.User.GetResourceId())
+	}
+
+	inclusive, err := cmd.Flags().GetBool("inclusive")
+	if err != nil {
+		return err
+	}
+
+	if inclusive {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern() + "/*")
+	} else {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
+	}
+
+	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
+	if err != nil {
+		return errors.CatchCCloudV2Error(err, httpResp)
+	}
+	roleBindings := resp.Data
+
+	userToEmailMap, err := c.getUserIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	role, err := cmd.Flags().GetString("role")
+	if err != nil {
+		return err
+	}
+
+	list := output.NewList(cmd)
+
+	for _, rolebinding := range roleBindings {
+		roleName := rolebinding.GetRoleName()
+		if role != "" && role != roleName {
+			continue
+		}
+
+		principalName := rolebinding.GetPrincipal()
+		principalEmail := userToEmailMap[principalName]
+
+		crnPattern := rolebinding.GetCrnPattern()
+		if strings.Contains(crnPattern, "ksql") || strings.Contains(crnPattern, "schema") {
+			return ksqlOrSchemaRegistryRoleBindingError
+		}
+
+		var envName, cloudClusterName, clusterType, logicalCluster, resourceType, resourceName, patternType string
+		for _, elem := range strings.Split(crnPattern, "/") {
+			elemParts := strings.Split(elem, "=")
+			if len(elemParts) < 2 {
+				continue
+			}
+
+			prefix := elemParts[0]
+			content := elemParts[1]
+
+			switch prefix {
+			case "organization":
+				continue
+			case "environment":
+				envName = content
+			case "cloud-cluster":
+				cloudClusterName = content
+			case "ksql":
+				clusterType = "ksqlDB"
+				logicalCluster = content
+			case "schema-registry":
+				clusterType = "Schema Registry"
+				logicalCluster = content
+			case "kafka":
+				clusterType = "Kafka"
+				logicalCluster = content
+				resourceType = "Cluster"
+				resourceName = "kafka-cluster"
+				patternType = literalPatternType
+			default:
+				resourceType = cases.Title(language.Und).String(prefix)
+				resourceName = strings.TrimSuffix(content, "*")
+				patternType = literalPatternType
+			}
+		}
+
+		if strings.Contains(crnPattern, "*") {
+			patternType = prefixedPatternType
+		}
+
+		list.Add(&roleBindingOut{
+			Principal:      principalName,
+			Email:          principalEmail,
+			Role:           roleName,
+			Environment:    envName,
+			CloudCluster:   cloudClusterName,
+			ClusterType:    clusterType,
+			LogicalCluster: logicalCluster,
+			ResourceType:   resourceType,
+			Name:           resourceName,
+			PatternType:    patternType,
+		})
+	}
+
+	return list.Print()
+}
+
+func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+	inclusive, err := cmd.Flags().GetBool("inclusive")
+	if err != nil {
+		return err
+	}
+
+	if inclusive {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern() + "/*")
+	} else {
+		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
+	}
+
+	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
+	if err != nil {
+		return errors.CatchCCloudV2Error(err, httpResp)
+	}
+	roleBindings := resp.Data
+
+	principals := make(map[string]bool)
+	principalStrings := []string{}
+
+	for i := 0; i < len(roleBindings); i++ {
+		if strings.Contains(roleBindings[i].GetCrnPattern(), "ksql") || strings.Contains(roleBindings[i].GetCrnPattern(), "schema") {
+			return ksqlOrSchemaRegistryRoleBindingError
+		}
+		if !principals[roleBindings[i].GetPrincipal()] {
+			principals[roleBindings[i].GetPrincipal()] = true
+			principalStrings = append(principalStrings, roleBindings[i].GetPrincipal())
+		}
+	}
+
+	userToEmailMap, err := c.getUserIdToEmailMap()
+	if err != nil {
+		return err
+	}
+
+	serviceAccountToNameMap, err := c.getServiceAccountIdToNameMap()
+	if err != nil {
+		return err
+	}
+
+	// TODO: Catch this error once Identity Providers goes GA
+	poolToNameMap, _ := c.getPoolToNameMap()
+
+	list := output.NewList(cmd)
+	for _, principal := range principalStrings {
+		row := &displayStruct{Principal: principal}
+		if email, ok := userToEmailMap[principal]; ok {
+			row.Email = email
+			list.Add(row)
+		}
+		if name, ok := serviceAccountToNameMap[principal]; ok {
+			row.ServiceName = name
+			list.Add(row)
+		}
+		if name, ok := poolToNameMap[principal]; ok {
+			row.PoolName = name
+			list.Add(row)
+		}
+	}
 	return list.Print()
 }
