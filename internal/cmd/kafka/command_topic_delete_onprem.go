@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -24,6 +25,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 			}),
 	}
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -39,6 +41,12 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
+
+	err = form.ConfirmDeletion(cmd, resource.Topic, topicName, topicName)
+	if err != nil {
+		return err
+	}
+
 	// Delete Topic
 	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {

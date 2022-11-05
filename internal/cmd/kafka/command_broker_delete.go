@@ -13,6 +13,7 @@ import (
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Args:  cobra.ExactArgs(1),

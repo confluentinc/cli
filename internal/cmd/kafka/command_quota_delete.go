@@ -3,10 +3,10 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/resource"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -18,12 +18,22 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteKafkaQuota(args[0])
+	_, err := c.V2Client.DescribeKafkaQuota(args[0]) // check that quota exists before prompt
+	if err != nil {
+		return err
+	}
+	err = form.ConfirmDeletion(cmd, resource.ClientQuota, args[0], args[0])
+	if err != nil {
+		return err
+	}
+
+	err = c.V2Client.DeleteKafkaQuota(args[0])
 	if err != nil {
 		return err
 	}

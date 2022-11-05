@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -21,6 +22,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -37,6 +39,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	if err != nil {
+		return err
+	}
+
+	err = form.ConfirmDeletion(cmd, resource.ClusterLink, linkName, linkName)
 	if err != nil {
 		return err
 	}

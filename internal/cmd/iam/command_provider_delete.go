@@ -5,14 +5,14 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
-	// TODO: ADD CONFIRM
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete an identity provider.",
 		Args:              cobra.ExactArgs(1),
@@ -25,10 +25,22 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+
+	return cmd
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	err := c.V2Client.DeleteIdentityProvider(args[0])
+	provider, err := c.V2Client.GetIdentityProvider(args[0])
+	if err != nil {
+		return err
+	}
+	err = form.ConfirmDeletion(cmd, resource.IdentityProvider, args[0], provider.GetDisplayName())
+	if err != nil {
+		return err
+	}
+
+	err = c.V2Client.DeleteIdentityProvider(args[0])
 	if err != nil {
 		return err
 	}
