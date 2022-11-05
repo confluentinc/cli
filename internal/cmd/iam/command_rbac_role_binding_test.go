@@ -2,7 +2,6 @@ package iam
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -22,7 +21,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
@@ -151,12 +149,6 @@ type roleBindingTest struct {
 	roleName  string
 	scope     mdsv2alpha1.Scope
 	err       error
-}
-
-type myRoleBindingTest struct {
-	mockRoleBindingsResult mdsv2.IamV2RoleBindingList
-	mockListIamUserResult  iamv2.IamV2UserList
-	expected               []listDisplay
 }
 
 type expectedListCmdArgs struct {
@@ -301,7 +293,7 @@ var roleBindingListTests = []roleBindingTest{
 func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingListTests {
-		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprintf("%v", tc.args))
+		cmd := suite.newMockIamRoleBindingCmd(expect, fmt.Sprint(tc.args))
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "list"}, tc.args...))
 
 		if tc.err == nil {
@@ -318,209 +310,6 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			err := cmd.Execute()
 			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
-	}
-}
-
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan mdsv2.IamV2RoleBindingList, mockListIamUserResult chan iamv2.IamV2UserList) *cobra.Command {
-	v2RoleBindingMock := &mdsmock.RoleBindingsIamV2Api{
-		ListIamV2RoleBindingsFunc: func(_ context.Context) mdsv2.ApiListIamV2RoleBindingsRequest {
-			return mdsv2.ApiListIamV2RoleBindingsRequest{}
-		},
-		ListIamV2RoleBindingsExecuteFunc: func(_ mdsv2.ApiListIamV2RoleBindingsRequest) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-			return <-mockRoleBindingsResult, nil, nil
-		},
-	}
-
-	v2UserMock := &iammock.UsersIamV2Api{
-		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
-			return iamv2.ApiListIamV2UsersRequest{}
-		},
-		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
-			return <-mockListIamUserResult, nil, nil
-		},
-	}
-
-	v2Client := &ccloudv2.Client{
-		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock},
-		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: v2RoleBindingMock},
-		AuthToken: "auth-token",
-	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, nil, suite.conf))
-}
-
-var myRoleBindingListTests = []myRoleBindingTest{
-	{
-		mockRoleBindingsResult: mdsv2.IamV2RoleBindingList{
-			Data: []mdsv2.IamV2RoleBinding{
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:u-epo7ml"),
-					RoleName:   mdsv2.PtrString("MetricsViewer"),
-					CrnPattern: mdsv2.PtrString("crn_pattern")},
-			},
-		},
-		mockListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{iamv2.IamV2User{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal: "User:u-epo7ml",
-				Role:      "MetricsViewer",
-			},
-		},
-	},
-	// Principal whose email address is known will be returned with email address
-	{
-		mockRoleBindingsResult: mdsv2.IamV2RoleBindingList{
-			Data: []mdsv2.IamV2RoleBinding{
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("MetricsViewer"),
-					CrnPattern: mdsv2.PtrString("crn_pattern")},
-			},
-		},
-		mockListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{iamv2.IamV2User{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal: "User:u-123",
-				Role:      "MetricsViewer",
-				Email:     "test@email.com",
-			},
-		},
-	},
-	// Service Account
-	{
-		mockRoleBindingsResult: mdsv2.IamV2RoleBindingList{
-			Data: []mdsv2.IamV2RoleBinding{
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:sa-123"),
-					RoleName:   mdsv2.PtrString("MetricsViewer"),
-					CrnPattern: mdsv2.PtrString("crn_pattern")},
-			},
-		},
-		mockListIamUserResult: iamv2.IamV2UserList{},
-		expected: []listDisplay{
-			{
-				Principal: "User:sa-123",
-				Role:      "MetricsViewer",
-			},
-		},
-	},
-	// Multiple role bindings at various scopes
-	{
-		mockRoleBindingsResult: mdsv2.IamV2RoleBindingList{
-			Data: []mdsv2.IamV2RoleBinding{
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("OrganizationAdmin"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet"),
-				},
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("EnvironmentAdmin"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet/environment=Cyberdyne"),
-				},
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("CloudClusterAdmin"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet/environment=Cyberdyne/cloud-cluster=t1000"),
-				},
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("ResourceOwner"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet/environment=Cyberdyne/cloud-cluster=t1000/kafka=t1000/topic=connor"),
-				},
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("ResourceOwner"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet/environment=Cyberdyne/cloud-cluster=t1000/kafka=t1000/topic=john*"),
-				},
-				mdsv2.IamV2RoleBinding{Principal: mdsv2.PtrString("User:" + v1.MockUserResourceId),
-					RoleName:   mdsv2.PtrString("DeveloperRead"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=Skynet/environment=Cyberdyne/cloud-cluster=t1000/connector=c1000"),
-				},
-			},
-		},
-		mockListIamUserResult: iamv2.IamV2UserList{
-			Data: []iamv2.IamV2User{iamv2.IamV2User{
-				Email: iamv2.PtrString("test@email.com"),
-				Id:    iamv2.PtrString(v1.MockUserResourceId),
-			}},
-		},
-		expected: []listDisplay{
-			{
-				Principal:    "User:u-123",
-				Role:         "CloudClusterAdmin",
-				Email:        "test@email.com",
-				Environment:  "Cyberdyne",
-				CloudCluster: "t1000",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "DeveloperRead",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				CloudCluster:   "t1000",
-				ClusterType:    "",
-				LogicalCluster: "",
-				ResourceType:   "Connector",
-				Name:           "c1000",
-				PatternType:    "LITERAL",
-			},
-			{
-				Principal:   "User:u-123",
-				Role:        "EnvironmentAdmin",
-				Email:       "test@email.com",
-				Environment: "Cyberdyne",
-			},
-			{
-				Principal: "User:u-123",
-				Role:      "OrganizationAdmin",
-				Email:     "test@email.com",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "ResourceOwner",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				CloudCluster:   "t1000",
-				ClusterType:    "Kafka",
-				LogicalCluster: "t1000",
-				ResourceType:   "Topic",
-				Name:           "connor",
-				PatternType:    "LITERAL",
-			},
-			{
-				Principal:      "User:u-123",
-				Role:           "ResourceOwner",
-				Email:          "test@email.com",
-				Environment:    "Cyberdyne",
-				CloudCluster:   "t1000",
-				ClusterType:    "Kafka",
-				LogicalCluster: "t1000",
-				ResourceType:   "Topic",
-				Name:           "john",
-				PatternType:    "PREFIXED",
-			},
-		},
-	},
-}
-
-func (suite *RoleBindingTestSuite) TestMyRoleBindingsList() {
-	mockRoleBindingsResult := make(chan mdsv2.IamV2RoleBindingList)
-	mockListIamUserResult := make(chan iamv2.IamV2UserList)
-	for _, tc := range myRoleBindingListTests {
-		cmd := suite.newMockIamListRoleBindingCmd(mockRoleBindingsResult, mockListIamUserResult)
-
-		go func() {
-			mockRoleBindingsResult <- tc.mockRoleBindingsResult
-			mockListIamUserResult <- tc.mockListIamUserResult
-		}()
-		output, err := pcmd.ExecuteCommand(cmd, "rbac", "role-binding", "list", "--current-user", "-ojson")
-		assert.Nil(suite.T(), err)
-		var actual []listDisplay
-		err = json.Unmarshal([]byte(output), &actual)
-		assert.Nil(suite.T(), err)
-		assert.Equal(suite.T(), tc.expected, actual)
 	}
 }
 

@@ -1,4 +1,4 @@
-     Principal    |        Email         |  Service Name   |   Pool Name    
+                  |                      |                 |                
 ------------------+----------------------+-----------------+----------------
   User:pool-12345 |                      |                 | identity_pool  
   User:sa-12345   |                      | service_account |                

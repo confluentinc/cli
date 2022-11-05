@@ -1,13 +1,16 @@
 package secret
 
 import (
-	"os"
-
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type rotateOut struct {
+	MasterKey string `human:"Master Key" serialized:"master_key"`
+}
 
 func (c *command) newRotateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -69,8 +72,10 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		utils.ErrPrintln(cmd, "Save the Master Key. It is not retrievable later.")
-		return printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+		utils.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
+		table := output.NewTable(cmd)
+		table.Add(&rotateOut{MasterKey: masterKey})
+		return table.Print()
 	} else {
 		passphraseSource, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
