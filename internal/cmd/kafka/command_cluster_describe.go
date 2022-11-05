@@ -14,9 +14,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -85,6 +87,9 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
+		if resource.LookupType(args[0]) != resource.KafkaCluster {
+			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+		}
 		return args[0], nil
 	}
 
@@ -220,7 +225,10 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 	}
 
 	// Kafka REST is not available, fall back to KafkaAPI, to be deprecated
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
+	req, err := dynamicconfig.KafkaCluster(c.Context)
+	if err != nil {
+		return 0, err
+	}
 	resp, err := c.Client.Kafka.ListTopics(context.Background(), req)
 	return len(resp), err
 }
