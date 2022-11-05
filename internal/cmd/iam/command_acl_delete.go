@@ -8,6 +8,7 @@ import (
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a Kafka ACL.",

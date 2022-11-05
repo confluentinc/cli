@@ -11,6 +11,7 @@ import (
 )
 
 func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete an identity pool.",

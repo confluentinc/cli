@@ -6,17 +6,21 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c userCommand) newDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Short: "Delete a user from your organization.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+
+	return cmd
 }
 
 func (c userCommand) delete(cmd *cobra.Command, args []string) error {
@@ -25,7 +29,16 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
-	err := c.V2Client.DeleteIamUser(resourceId)
+	user, err := c.V2Client.GetIamUser(resourceId)
+	if err != nil {
+		return err
+	}
+	err = form.ConfirmDeletion(cmd, resource.User, resourceId, user.GetFullName())
+	if err != nil {
+		return err
+	}
+
+	err = c.V2Client.DeleteIamUser(resourceId)
 	if err != nil {
 		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err)
 	}

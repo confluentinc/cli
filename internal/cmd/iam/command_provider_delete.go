@@ -11,6 +11,7 @@ import (
 )
 
 func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	return &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete an identity provider.",

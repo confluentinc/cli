@@ -12,6 +12,7 @@ import (
 )
 
 func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a role binding.",
