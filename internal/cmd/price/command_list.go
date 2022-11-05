@@ -63,12 +63,20 @@ var (
 	networkTypes   = mapToSlice(formatNetworkType)
 )
 
-type out struct {
-	Metric       string `human:"Metric" serialized:"metric"`
-	ClusterType  string `human:"Cluster Type" serialized:"cluster_type"`
-	Availability string `human:"Availability" serialized:"availability"`
-	NetworkType  string `human:"Network Type" serialized:"network_type"`
-	Price        string `human:"Price" serialized:"price"`
+type humanOut struct {
+	Metric       string `human:"Metric"`
+	ClusterType  string `human:"Cluster Type"`
+	Availability string `human:"Availability"`
+	NetworkType  string `human:"Network Type"`
+	Price        string `human:"Price"`
+}
+
+type serializedOut struct {
+	Metric       string  `serialized:"metric"`
+	ClusterType  string  `serialized:"cluster_type"`
+	Availability string  `serialized:"availability"`
+	NetworkType  string  `serialized:"network_type"`
+	Price        float64 `serialized:"price"`
 }
 
 type row struct {
@@ -234,7 +242,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 	list := output.NewList(cmd)
 	for _, row := range rows {
 		if output.GetFormat(cmd) == output.Human {
-			list.Add(&out{
+			list.Add(&humanOut{
 				Metric:       formatMetric[row.metric],
 				ClusterType:  formatClusterType[row.clusterType],
 				Availability: formatAvailability[row.availability],
@@ -242,12 +250,12 @@ func printTable(cmd *cobra.Command, rows []row) error {
 				Price:        formatPrice(row.price, row.unit),
 			})
 		} else {
-			list.Add(&out{
+			list.Add(&serializedOut{
 				Metric:       row.metric,
 				ClusterType:  row.clusterType,
 				Availability: row.availability,
 				NetworkType:  row.networkType,
-				Price:        fmt.Sprint(row.price),
+				Price:        row.price,
 			})
 		}
 	}

@@ -1,8 +1,7 @@
 +-----------------------+------------------------+
 | ID                    | u-17                   |
+| Name                  | Miles Todzo            |
 | Email                 | mtodzo@confluent.io    |
-| First Name            | Miles                  |
-| Last Name             | Todzo                  |
 | Status                | Unverified             |
 | Authentication Method | Username/Password, SSO |
 +-----------------------+------------------------+

@@ -19,8 +19,8 @@ import (
 )
 
 type createOut struct {
-	Key    string `human:"API Key" serialized:"key"`
-	Secret string `human:"Secret" serialized:"secret"`
+	ApiKey    string `human:"API Key" serialized:"api_key"`
+	ApiSecret string `human:"API Secret" serialized:"api_secret"`
 }
 
 var resourceTypeToKind = map[string]string{
@@ -129,8 +129,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&createOut{
-		Key:    userKey.Key,
-		Secret: userKey.Secret,
+		ApiKey:    userKey.Key,
+		ApiSecret: userKey.Secret,
 	})
 	if err := table.Print(); err != nil {
 		return err

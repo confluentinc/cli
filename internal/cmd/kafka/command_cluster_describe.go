@@ -24,10 +24,10 @@ import (
 var (
 	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
-	basicDescribeFieldsWithKAPI        = append(basicDescribeFields, "KAPI")
 )
 
 type describeStruct struct {
+	IsCurrent          bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
 	Id                 string `human:"ID" serialized:"id"`
 	Name               string `human:"Name" serialized:"name"`
 	Type               string `human:"Type" serialized:"type"`
@@ -44,7 +44,6 @@ type describeStruct struct {
 	ApiEndpoint        string `human:"API Endpoint" serialized:"api_endpoint"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	KAPI               string `human:"KAPI" serialized:"kapi"`
 	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
 }
 
@@ -59,7 +58,6 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.Flags().Bool("all", false, "List all properties of a Kafka cluster.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -70,11 +68,6 @@ func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		return err
-	}
-
 	lkc, err := c.getLkcForDescribe(args)
 	if err != nil {
 		return err
@@ -89,7 +82,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
-	return c.outputKafkaClusterDescriptionWithKAPI(cmd, &cluster, all)
+	return c.outputKafkaClusterDescriptionWithKAPI(cmd, &cluster)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -108,7 +101,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return lkc, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, all bool) error {
+func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
 	out := convertClusterToDescribeStruct(cluster)
 	filter := getKafkaClusterDescribeFields(cluster, basicDescribeFields, true)
 
@@ -117,15 +110,6 @@ func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Comman
 		return err
 	}
 	out.TopicCount = topicCount
-
-	if all { // expose KAPI when --all flag is set
-		kAPI, err := c.getCmkClusterApiEndpoint(cluster)
-		if err != nil {
-			return err
-		}
-		out.KAPI = kAPI
-		filter = getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithKAPI, true)
-	}
 
 	table := output.NewTable(cmd)
 	table.Add(out)
