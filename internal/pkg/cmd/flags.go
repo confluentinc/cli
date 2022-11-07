@@ -323,7 +323,7 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	arr := []string{"string", "avro", "protobuf", "jsonschema"}
+	arr := []string{"string", "avro", "jsonschema", "protobuf"}
 	str := utils.ArrayToCommaDelimitedString(arr)
 
 	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format of message value as %s. Note that schema references are not supported for avro.", str))
