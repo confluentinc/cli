@@ -16,12 +16,6 @@ const (
 	descriptionLength = 128
 )
 
-var (
-	describeFields            = []string{"ResourceId", "Name", "Description"}
-	describeHumanRenames      = map[string]string{"ResourceId": "ID"}
-	describeStructuredRenames = map[string]string{"ResourceId": "id", "Name": "name", "Description": "description"}
-)
-
 func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
@@ -64,12 +58,16 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		DisplayName: iamv2.PtrString(name),
 		Description: iamv2.PtrString(description),
 	}
-	resp, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
+	serviceAccount, httpResp, err := c.V2Client.CreateIamServiceAccount(createServiceAccount)
 	if err != nil {
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	describeServiceAccount := &serviceAccount{ResourceId: *resp.Id, Name: *resp.DisplayName, Description: *resp.Description}
-
-	return output.DescribeObject(cmd, describeServiceAccount, describeFields, describeHumanRenames, describeStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(&serviceAccountOut{
+		ResourceId:  serviceAccount.GetId(),
+		Name:        serviceAccount.GetDisplayName(),
+		Description: serviceAccount.GetDescription(),
+	})
+	return table.Print()
 }

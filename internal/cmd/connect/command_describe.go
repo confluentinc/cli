@@ -1,9 +1,6 @@
 package connect
 
 import (
-	"os"
-
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
@@ -14,20 +11,38 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type taskDescribeDisplay struct {
+type serializedDescribeOut struct {
+	Connector *serializedConnectorOut `json:"connector" yaml:"connector"`
+	Tasks     []serializedTasksOut    `json:"tasks" yaml:"tasks"`
+	Configs   []serializedConfigsOut  `json:"configs" yaml:"configs"`
+}
+
+type serializedConnectorOut struct {
+	Id     string `json:"id" yaml:"id"`
+	Name   string `json:"name" yaml:"name"`
+	Status string `json:"status" yaml:"status"`
+	Type   string `json:"type" yaml:"type"`
+	Trace  string `json:"trace,omitempty" yaml:"trace,omitempty"`
+}
+
+type taskDescribeOut struct {
+	TaskId int32  `human:"Task ID"`
+	State  string `human:"State"`
+}
+
+type serializedTasksOut struct {
 	TaskId int32  `json:"task_id" yaml:"task_id"`
 	State  string `json:"state" yaml:"state"`
 }
 
-type configDescribeDisplay struct {
-	Config string `json:"config" yaml:"config"`
-	Value  string `json:"value" yaml:"value"`
+type configDescribeOut struct {
+	Config string `human:"Config"`
+	Value  string `human:"Value"`
 }
 
-type structuredDescribeDisplay struct {
-	Connector *connectorDescribeDisplay `json:"connector" yaml:"connector"`
-	Tasks     []taskDescribeDisplay     `json:"tasks" yaml:"task"`
-	Configs   []configDescribeDisplay   `json:"configs" yaml:"configs"`
+type serializedConfigsOut struct {
+	Config string `json:"config" yaml:"config"`
+	Value  string `json:"value" yaml:"value"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -74,65 +89,70 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if outputOption == output.Human.String() {
-		printHumanDescribe(cmd, connector)
-		return nil
+		return printHumanDescribe(cmd, connector)
 	}
 
-	return printStructuredDescribe(connector, outputOption)
+	return printSerializedDescribe(cmd, connector)
 }
 
-func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) {
+func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
 	utils.Println(cmd, "Connector Details")
-	data := &connectorDescribeDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&connectOut{
 		Name:   connector.Status.GetName(),
-		ID:     connector.Id.GetId(),
+		Id:     connector.Id.GetId(),
 		Status: connector.Status.Connector.GetState(),
 		Type:   connector.Status.GetType(),
 		Trace:  connector.Status.Connector.GetTrace(),
+	})
+	if err := table.Print(); err != nil {
+		return err
 	}
-	_ = printer.RenderTableOut(data, listFields, map[string]string{}, os.Stdout)
 
 	utils.Println(cmd, "\n\nTask Level Details")
-	var tasks [][]string
+	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
-		row := printer.ToRow(&taskDescribeDisplay{task.Id, task.State}, []string{"TaskId", "State"})
-		tasks = append(tasks, row)
-	}
-	printer.RenderCollectionTable(tasks, []string{"Task ID", "State"})
-
-	utils.Println(cmd, "\n\nConfiguration Details")
-	var configs [][]string
-	titleRow := []string{"Config", "Value"}
-	for name, value := range connector.Info.GetConfig() {
-		row := printer.ToRow(&configDescribeDisplay{name, value}, titleRow)
-		configs = append(configs, row)
-	}
-	printer.RenderCollectionTable(configs, titleRow)
-}
-
-func printStructuredDescribe(connector *connectv1.ConnectV1ConnectorExpansion, format string) error {
-	structuredDisplay := &structuredDescribeDisplay{
-		Connector: &connectorDescribeDisplay{
-			Name:   connector.Status.GetName(),
-			ID:     connector.Id.GetId(),
-			Status: connector.Status.Connector.GetState(),
-			Type:   connector.Status.GetType(),
-			Trace:  connector.Status.Connector.GetTrace(),
-		},
-		Tasks:   []taskDescribeDisplay{},
-		Configs: []configDescribeDisplay{},
-	}
-	for _, task := range connector.Status.GetTasks() {
-		structuredDisplay.Tasks = append(structuredDisplay.Tasks, taskDescribeDisplay{
-			TaskId: task.Id,
-			State:  task.State,
+		list.Add(&taskDescribeOut{
+			TaskId: task.GetId(),
+			State:  task.GetState(),
 		})
 	}
+	if err := list.Print(); err != nil {
+		return err
+	}
+
+	utils.Println(cmd, "\n\nConfiguration Details")
+	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
-		structuredDisplay.Configs = append(structuredDisplay.Configs, configDescribeDisplay{
+		list.Add(&configDescribeOut{
 			Config: name,
 			Value:  value,
 		})
 	}
-	return output.StructuredOutput(format, structuredDisplay)
+	return list.Print()
+}
+
+func printSerializedDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
+	tasks := make([]serializedTasksOut, 0)
+	for _, task := range connector.Status.GetTasks() {
+		tasks = append(tasks, serializedTasksOut{TaskId: task.Id, State: task.State})
+	}
+
+	configs := make([]serializedConfigsOut, 0)
+	for name, value := range connector.Info.GetConfig() {
+		configs = append(configs, serializedConfigsOut{Config: name, Value: value})
+	}
+
+	out := &serializedDescribeOut{
+		Connector: &serializedConnectorOut{
+			Id:     connector.Id.GetId(),
+			Name:   connector.Status.GetName(),
+			Status: connector.Status.Connector.GetState(),
+			Type:   connector.Status.GetType(),
+			Trace:  connector.Status.Connector.GetTrace(),
+		},
+		Tasks:   tasks,
+		Configs: configs,
+	}
+	return output.SerializedOutput(cmd, out)
 }

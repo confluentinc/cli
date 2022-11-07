@@ -80,6 +80,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster}/acls:batch"
+func (r KafkaRestProxyRouter) HandleKafkaRPACLsBatch(_ *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

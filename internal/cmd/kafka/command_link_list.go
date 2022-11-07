@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
@@ -15,13 +13,13 @@ import (
 const includeTopicsFlagName = "include-topics"
 
 type link struct {
-	LinkName             string
-	TopicName            string
-	SourceClusterId      string
-	DestinationClusterId string
-	LinkState            string
-	LinkError            string
-	LinkErrorMessage     string
+	LinkName             string `human:"Name" serialized:"link_name"`
+	TopicName            string `human:"Topic Name" serialized:"topic_name"`
+	SourceClusterId      string `human:"Source Cluster ID" serialized:"source_cluster_id"`
+	DestinationClusterId string `human:"Destination Cluster ID" serialized:"destination_cluster_id"`
+	LinkState            string `human:"State" serialized:"link_state"`
+	LinkError            string `human:"Error" serialized:"link_error"`
+	LinkErrorMessage     string `human:"Error Message" serialized:"link_error_message"`
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
@@ -82,30 +80,18 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	listFields := getListFields(includeTopics)
-	camelToSpacedListFields := camelToSpaced(listFields)
-	var humanLabels []string
-	for _, humanLabel := range camelToSpacedListFields {
-		humanLabels = append(humanLabels, strings.TrimPrefix(humanLabel, "Link "))
-	}
-	structuredLabels := camelToSnake(listFields)
-
-	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics && len(*data.TopicsNames) > 0 {
 			for _, topic := range *data.TopicsNames {
-				w.AddElement(newLink(data, topic))
+				list.Add(newLink(data, topic))
 			}
 		} else {
-			w.AddElement(newLink(data, ""))
+			list.Add(newLink(data, ""))
 		}
 	}
-
-	return w.Out()
+	list.Filter(getListFields(includeTopics))
+	return list.Print()
 }
 
 func getListFields(includeTopics bool) []string {
