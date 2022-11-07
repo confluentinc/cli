@@ -312,17 +312,23 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []str
 }
 
 func AddSchemaTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("type", "", `Specify the schema type as "AVRO", "PROTOBUF", or "JSON".`)
+	arr := []string{"avro", "json", "protobuf"}
+	str := utils.ArrayToCommaDelimitedString(arr)
+
+	cmd.Flags().String("type", "", fmt.Sprintf("Specify the schema type as %s.", str))
 
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string {
-		return []string{"AVRO", "PROTOBUF", "JSON"}
+		return arr
 	})
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	cmd.Flags().String("value-format", "string", `Format of message value as string, avro, protobuf, or jsonschema. Note that schema references are not supported for avro.`)
+	arr := []string{"string", "avro", "protobuf", "jsonschema"}
+	str := utils.ArrayToCommaDelimitedString(arr)
+
+	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format of message value as %s. Note that schema references are not supported for avro.", str))
 
 	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
-		return []string{"string", "avro", "protobuf", "jsonschema"}
+		return arr
 	})
 }

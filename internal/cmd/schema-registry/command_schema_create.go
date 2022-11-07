@@ -29,7 +29,7 @@ func (c *schemaCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type AVRO", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type avro", pversion.CLIName),
 			},
 			examples.Example{
 				Text: "Where `schemafilepath` may include these contents:",
