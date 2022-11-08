@@ -100,6 +100,8 @@ blocks:
       jobs:
         - name: windows/amd64
           commands:
+            - choco uninstall mingw
+            
             # Get GitHub SSH key from Vault
             - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
