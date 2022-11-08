@@ -5,13 +5,14 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newProviderShareDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a provider share.",
 		Args:              cobra.ExactArgs(1),
@@ -24,12 +25,24 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+
+	return cmd
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	err := c.V2Client.DeleteProviderShare(shareId)
+	_, err := c.V2Client.DescribeProviderShare(shareId)
+	if err != nil {
+		return err
+	}
+	err = form.ConfirmDeletion(cmd, resource.ProviderShare, shareId, "CONFIRM")
+	if err != nil {
+		return err
+	}
+
+	err = c.V2Client.DeleteProviderShare(shareId)
 	if err != nil {
 		return err
 	}

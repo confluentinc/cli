@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -38,6 +39,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -50,14 +52,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	isDeleteConfirmed, err := confirmDeletion(cmd, c.EnvironmentId(), prompt)
+	promptStr := resource.SchemaRegistryCluster + " " + cluster.Id + " for " + resource.Environment
+	err = form.ConfirmDeletion(cmd, promptStr, c.EnvironmentId(), "CONFIRM")
 	if err != nil {
 		return err
-	}
-
-	if !isDeleteConfirmed {
-		utils.Println(cmd, "Operation terminated.")
-		return nil
 	}
 
 	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
@@ -67,18 +65,4 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 
 	utils.Printf(cmd, errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
 	return nil
-}
-
-func confirmDeletion(cmd *cobra.Command, environmentId string, prompt form.Prompt) (bool, error) {
-	f := form.New(
-		form.Field{
-			ID:        "confirmation",
-			Prompt:    fmt.Sprintf(`Are you sure you want to permanently delete the Schema Registry cluster for environment "%s", along with all of its data?`, environmentId),
-			IsYesOrNo: true,
-		},
-	)
-	if err := f.Prompt(cmd, prompt); err != nil {
-		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
-	}
-	return f.Responses["confirmation"].(bool), nil
 }

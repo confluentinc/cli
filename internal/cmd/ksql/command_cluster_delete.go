@@ -14,6 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -30,6 +31,7 @@ func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -47,6 +49,10 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
+	}
+	err = form.ConfirmDeletion(cmd, resource.KsqlCluster, id, cluster.GetName())
+	if err != nil {
+		return err
 	}
 
 	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster

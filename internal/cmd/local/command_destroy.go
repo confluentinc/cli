@@ -10,6 +10,7 @@ import (
 )
 
 func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
+	// TODO: ADD CONFIRM
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "destroy",

@@ -17,6 +17,7 @@ import (
 )
 
 func (c *schemaCommand) newDeleteCommand() *cobra.Command {
+	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",

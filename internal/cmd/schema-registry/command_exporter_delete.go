@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -25,12 +26,22 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
 
 func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	if err != nil {
+		return err
+	}
+
+	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, args[0])
+	if err != nil {
+		return err
+	}
+	err = form.ConfirmDeletion(cmd, resource.SchemaExporter, info.Name, info.Name)
 	if err != nil {
 		return err
 	}
