@@ -163,7 +163,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-			} // TODO: validate role and resource after migrating to v2 role api, as now CLI has no way of verifying the display role name vs. actual role name
+			} // TODO: [CLI-2091]
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
 				Scope:            *scopeV2,
@@ -611,9 +611,9 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
 				return nil, err
 			}
-		} // TODO: validate role and resource after migrating to v2 role api, as now CLI has no way of verifying the display role name vs. actual role name
+		} // TODO: [CLI-2091]
 
-		crnPattern += "/" + strings.ToLower(resourceType) + "=" + resourceName
+		crnPattern += fmt.Sprintf("/%s=%s", strings.ToLower(resourceType), resourceName)
 
 		if prefix {
 			crnPattern += "*"
@@ -624,7 +624,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		Principal:  mdsv2.PtrString(principal),
 		RoleName:   mdsv2.PtrString(role),
 		CrnPattern: mdsv2.PtrString(crnPattern),
-	}, err
+	}, nil
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {

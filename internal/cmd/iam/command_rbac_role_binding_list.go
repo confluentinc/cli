@@ -644,13 +644,13 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 	principals := make(map[string]bool)
 	principalStrings := []string{}
 
-	for i := 0; i < len(roleBindings); i++ {
-		if strings.Contains(roleBindings[i].GetCrnPattern(), "ksql") || strings.Contains(roleBindings[i].GetCrnPattern(), "schema") {
+	for _, roleBinding := range roleBindings {
+		if strings.Contains(roleBinding.GetCrnPattern(), "ksql") || strings.Contains(roleBinding.GetCrnPattern(), "schema") {
 			return ksqlOrSchemaRegistryRoleBindingError
 		}
-		if !principals[roleBindings[i].GetPrincipal()] {
-			principals[roleBindings[i].GetPrincipal()] = true
-			principalStrings = append(principalStrings, roleBindings[i].GetPrincipal())
+		if !principals[roleBinding.GetPrincipal()] {
+			principals[roleBinding.GetPrincipal()] = true
+			principalStrings = append(principalStrings, roleBinding.GetPrincipal())
 		}
 	}
 
