@@ -606,6 +606,9 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		}
 		resourceType := parts[0]
 		resourceName := parts[1]
+		if resourceType == "Cluster" {
+			resourceType = "kafka"
+		}
 
 		if role == "" {
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
