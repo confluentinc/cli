@@ -159,8 +159,9 @@ const (
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	UnknownTopicErrorMsg      = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	UnknownTopicErrorMsg              = `unknown topic "%s"`
+	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
@@ -197,8 +198,8 @@ const (
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB app, "%s", because it was created with user-level access to the Kafka cluster`
-	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB app "%s" due to "%s"`
+	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
+	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -386,8 +387,6 @@ const (
 	// Flag Errors
 	FlagRequiredErrorMsg              = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
@@ -468,7 +467,7 @@ const (
 	ClusterFlagWithApiLoginErrorMsg     = `"cluster" flag should not be passed for API key context, cluster is inferred`
 
 	// Partition command errors
-	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
+	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"

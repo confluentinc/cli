@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	removedFromNetrcOutput = "Removed credentials for user \"good@user.com\" from netrc file \"/tmp/netrc_test\""
+	removedFromNetrcOutput = `Removed credentials for user "good@user.com" from netrc file "netrc_test"`
 	loggedOutOutput        = fmt.Sprintf(errors.LoggedOutMsg)
 )
 

@@ -10,7 +10,7 @@
   pool_name: ""
   principal: User:u-33ccc
   service_name: ""
-- email: mhe@confluent.io
-  pool_name: ""
-  principal: User:u-44ddd
+- principal: User:u-44ddd
+  email: mhe@confluent.io
   service_name: ""
+  pool_name: ""
