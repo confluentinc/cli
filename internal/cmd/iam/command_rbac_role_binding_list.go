@@ -106,11 +106,6 @@ var (
 )
 
 func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	if c.cfg.IsCloudLogin() {
 		listRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
@@ -118,11 +113,19 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		err = c.ccloudListV2(cmd, listRoleBinding)
 		if err == ksqlOrSchemaRegistryRoleBindingError {
+			options, err := c.parseCommon(cmd)
+			if err != nil {
+				return err
+			}
 			return c.ccloudList(cmd, options)
 		} else {
 			return err
 		}
 	} else {
+		options, err := c.parseCommon(cmd)
+		if err != nil {
+			return err
+		}
 		return c.confluentList(cmd, options)
 	}
 }
