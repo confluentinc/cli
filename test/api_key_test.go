@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/23.golden"},
 
 		// delete api key that is in use
-		{args: "api-key delete MYKEY5", fixture: "api-key/24.golden"},
+		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an api-key for kafka cluster

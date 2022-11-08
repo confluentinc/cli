@@ -65,6 +65,12 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 		},
 	}
 	orgClientMock := &orgmock.EnvironmentsOrgV2Api{
+		GetOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiGetOrgV2EnvironmentRequest {
+			return orgv2.ApiGetOrgV2EnvironmentRequest{}
+		},
+		GetOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiGetOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
+			return orgEnvironment, nil, nil
+		},
 		ListOrgV2EnvironmentsFunc: func(_ context.Context) orgv2.ApiListOrgV2EnvironmentsRequest {
 			return orgv2.ApiListOrgV2EnvironmentsRequest{}
 		},
@@ -133,7 +139,7 @@ func (suite *EnvironmentTestSuite) TestListEnvironments() {
 
 func (suite *EnvironmentTestSuite) TestDeleteEnvironment() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", environmentID})
+	cmd.SetArgs([]string{"delete", environmentID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

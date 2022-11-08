@@ -7,7 +7,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml -o json", fixture: "connect/create-json.golden"},
 		{args: "connect create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/create-yaml.golden"},
 		{args: "connect create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml", fixture: "connect/create.golden"},
-		{args: "connect delete lcc-123 --cluster lkc-123", fixture: "connect/delete.golden"},
+		{args: "connect delete lcc-123 --cluster lkc-123 --force", fixture: "connect/delete.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/describe-json.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/describe-yaml.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123", fixture: "connect/describe.golden"},

@@ -49,9 +49,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster update lkc-update-dedicated-shrink-multi --cku 1", fixture: "kafka/cluster/update-dedicated-shrink-error.golden", wantErrCode: 1},
 		{args: "kafka cluster update lkc-update --cku 1", fixture: "kafka/cluster/update-resize-error.golden", wantErrCode: 1},
 
-		{args: "kafka cluster delete", fixture: "kafka/3.golden", wantErrCode: 1},
-		{args: "kafka cluster delete lkc-unknown", fixture: "kafka/cluster/delete-unknown-error.golden", wantErrCode: 1},
-		{args: "kafka cluster delete lkc-def973", fixture: "kafka/5.golden"},
+		{args: "kafka cluster delete --force", fixture: "kafka/3.golden", wantErrCode: 1},
+		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", wantErrCode: 1},
+		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
 
 		{args: "kafka cluster use a-595", fixture: "kafka/40.golden"},
 
@@ -119,11 +119,11 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic describe topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic/describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic describe topic2", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-not-found-topic2.golden", wantErrCode: 1},
 
-		{args: "kafka topic delete", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete.golden", wantErrCode: 1},
-		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic-kafka-api", fixture: "kafka/topic/delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-success.golden"},
-		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic/delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
-		{args: "kafka topic delete topic2", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", wantErrCode: 1},
+		{args: "kafka topic delete --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete.golden", wantErrCode: 1},
+		{args: "kafka topic delete topic-exist --force", useKafka: "lkc-delete-topic-kafka-api", fixture: "kafka/topic/delete-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic delete topic-exist --force", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-success.golden"},
+		{args: "kafka topic delete topic1 --cluster lkc-create-topic-kafka-api --force", login: "cloud", fixture: "kafka/topic/delete-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic delete topic2 --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", wantErrCode: 1},
 
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
@@ -420,9 +420,9 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 func (s *CLITestSuite) TestKafkaTopicDelete() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: fmt.Sprintf("kafka topic delete --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
-		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/delete-topic-success.golden", name: "deleting existing topic with correct url should delete successfully"},
-		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", wantErrCode: 1, name: "deleting a non-existent topic should fail"},
+		{args: fmt.Sprintf("kafka topic delete --url %s --no-auth --force", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "missing topic-name should return error"},
+		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-auth --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-success.golden", name: "deleting existing topic with correct url should delete successfully"},
+		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-auth --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", wantErrCode: 1, name: "deleting a non-existent topic should fail"},
 	}
 
 	for _, clitest := range tests {
@@ -510,7 +510,7 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
-		{args: "kafka quota delete cq-123", fixture: "kafka/quota/delete.golden"},
+		{args: "kafka quota delete cq-123 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota update cq-123 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
 	}
 

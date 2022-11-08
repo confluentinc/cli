@@ -281,7 +281,7 @@ func (suite *KSQLTestSuite) TestDeleteKSQLCluster() {
 func (suite *KSQLTestSuite) testDeleteKSQL(isApp bool) {
 	commandName := getCommandName(isApp)
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{commandName, "delete", ksqlClusterID})
+	cmd.SetArgs([]string{commandName, "delete", ksqlClusterID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

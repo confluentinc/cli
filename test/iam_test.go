@@ -171,7 +171,7 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
-		{args: "iam service-account delete sa-12345", fixture: "iam/service-account/delete.golden"},
+		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
@@ -181,7 +181,7 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account describe sa-6789", fixture: "iam/service-account/service-account-not-found.golden", wantErrCode: 1},
 		{args: "iam service-account update sa-12345 --description new-description", fixture: "iam/service-account/update.golden"},
 		{args: "iam service-account update sa-12345 --description new-description-2", fixture: "iam/service-account/update-2.golden"},
-		{args: "iam service-account delete sa-12345", fixture: "iam/service-account/delete.golden"},
+		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
 	}
 
 	for _, tt := range tests {
@@ -216,9 +216,9 @@ func (s *CLITestSuite) TestIAMUserDescribe() {
 
 func (s *CLITestSuite) TestIAMUserDelete() {
 	tests := []CLITest{
-		{args: "iam user delete u-0", fixture: "iam/user/delete.golden"},
-		{args: "iam user delete 0", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
-		{args: "iam user delete u-1", fixture: "iam/user/delete-dne.golden", wantErrCode: 1},
+		{args: "iam user delete u-0 --force", fixture: "iam/user/delete.golden"},
+		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
+		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {
@@ -277,8 +277,8 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 
 func (s *CLITestSuite) TestIAMProviderDelete() {
 	tests := []CLITest{
-		{args: "iam provider delete op-55555", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-1", fixture: "iam/identity-provider/delete-dne.golden", wantErrCode: 1},
+		{args: "iam provider delete op-55555 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {
@@ -333,8 +333,8 @@ func (s *CLITestSuite) TestIAMPoolCreate() {
 
 func (s *CLITestSuite) TestIAMPoolDelete() {
 	tests := []CLITest{
-		{args: "iam pool delete pool-55555 --provider op-12345 ", fixture: "iam/identity-pool/delete.golden"},
-		{args: "iam pool delete pool-1 --provider op-12345 ", fixture: "iam/identity-pool/delete-dne.golden", wantErrCode: 1},
+		{args: "iam pool delete pool-55555 --provider op-12345 --force", fixture: "iam/identity-pool/delete.golden"},
+		{args: "iam pool delete pool-1 --provider op-12345 --force", fixture: "iam/identity-pool/delete-dne.golden", wantErrCode: 1},
 	}
 
 	for _, test := range tests {

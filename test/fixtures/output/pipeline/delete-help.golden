@@ -11,6 +11,7 @@ Request to delete Stream Designer pipeline "pipe-12345".
 Flags:
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
+      --force                Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.

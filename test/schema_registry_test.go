@@ -231,7 +231,7 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry exporter delete",
-			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/delete.golden",
 		},
 		{

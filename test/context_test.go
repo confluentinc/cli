@@ -27,8 +27,8 @@ func (s *CLITestSuite) TestContextDelete() {
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
-		{fixture: "context/delete/0.golden", args: "context delete 0"},
-		{fixture: "context/delete/1.golden", args: "context delete 1", wantErrCode: 1},
+		{fixture: "context/delete/0.golden", args: "context delete 0 --force"},
+		{fixture: "context/delete/1.golden", args: "context delete 1 --force", wantErrCode: 1},
 	}
 
 	for _, tt := range tests {
