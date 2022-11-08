@@ -151,12 +151,6 @@ type roleBindingTest struct {
 	err       error
 }
 
-type myRoleBindingTest struct {
-	mockRoleBindingsResult mdsv2.IamV2RoleBindingList
-	mockListIamUserResult  iamv2.IamV2UserList
-	expected               []roleBindingOut
-}
-
 type expectedListCmdArgs struct {
 	principal string
 	roleName  string
@@ -317,33 +311,6 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 			assert.Equal(suite.T(), tc.err.Error(), err.Error())
 		}
 	}
-}
-
-func (suite *RoleBindingTestSuite) newMockIamListRoleBindingCmd(mockRoleBindingsResult chan mdsv2.IamV2RoleBindingList, mockListIamUserResult chan iamv2.IamV2UserList) *cobra.Command {
-	v2RoleBindingMock := &mdsmock.RoleBindingsIamV2Api{
-		ListIamV2RoleBindingsFunc: func(_ context.Context) mdsv2.ApiListIamV2RoleBindingsRequest {
-			return mdsv2.ApiListIamV2RoleBindingsRequest{}
-		},
-		ListIamV2RoleBindingsExecuteFunc: func(_ mdsv2.ApiListIamV2RoleBindingsRequest) (mdsv2.IamV2RoleBindingList, *http.Response, error) {
-			return <-mockRoleBindingsResult, nil, nil
-		},
-	}
-
-	v2UserMock := &iammock.UsersIamV2Api{
-		ListIamV2UsersFunc: func(ctx context.Context) iamv2.ApiListIamV2UsersRequest {
-			return iamv2.ApiListIamV2UsersRequest{}
-		},
-		ListIamV2UsersExecuteFunc: func(r iamv2.ApiListIamV2UsersRequest) (iamv2.IamV2UserList, *http.Response, error) {
-			return <-mockListIamUserResult, nil, nil
-		},
-	}
-
-	v2Client := &ccloudv2.Client{
-		IamClient: &iamv2.APIClient{UsersIamV2Api: v2UserMock},
-		MdsClient: &mdsv2.APIClient{RoleBindingsIamV2Api: v2RoleBindingMock},
-		AuthToken: "auth-token",
-	}
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, nil, suite.conf))
 }
 
 var roleBindingCreateDeleteTests = []roleBindingTest{
