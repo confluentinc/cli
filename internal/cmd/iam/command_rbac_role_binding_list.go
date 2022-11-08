@@ -124,9 +124,8 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 				return err
 			}
 			return c.ccloudList(cmd, options)
-		} else {
-			return err
 		}
+		return err
 	} else {
 		options, err := c.parseCommon(cmd)
 		if err != nil {
@@ -534,9 +533,9 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
 	}
 
-	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
+	resp, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName(), listRoleBinding.GetCrnPattern())
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 	roleBindings := resp.Data
 
@@ -635,9 +634,9 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
 	}
 
-	resp, httpResp, err := c.V2Client.ListIamRoleBindings(listRoleBinding)
+	resp, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName(), listRoleBinding.GetCrnPattern())
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, httpResp)
+		return err
 	}
 	roleBindings := resp.Data
 

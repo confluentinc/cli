@@ -163,7 +163,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
-			} // TODO: [CLI-2091]
+			}
 
 			resourcesRequestV2 = mdsv2alpha1.ResourcesRequest{
 				Scope:            *scopeV2,
@@ -569,6 +569,12 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 	if err != nil {
 		return nil, err
 	}
+	if cmd.Flags().Changed("principal") {
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	if strings.HasPrefix(principal, "User:") {
 		principalValue := strings.TrimLeft(principal, "User:")
@@ -578,13 +584,6 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 				return nil, err
 			}
 			principal = "User:" + user.GetId()
-		}
-	}
-
-	if cmd.Flags().Changed("principal") {
-		err = c.validatePrincipalFormat(principal)
-		if err != nil {
-			return nil, err
 		}
 	}
 
@@ -614,7 +613,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 			if err := c.validateResourceTypeV2(resourceType); err != nil {
 				return nil, err
 			}
-		} // TODO: [CLI-2091]
+		}
 
 		crnPattern += fmt.Sprintf("/%s=%s", strings.ToLower(resourceType), resourceName)
 

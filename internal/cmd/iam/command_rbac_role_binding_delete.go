@@ -59,7 +59,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
 			httpResp, err = c.ccloudDelete(options)
 		} else {
-			httpResp, err = c.ccloudDeleteV2(deleteRoleBinding)
+			err = c.ccloudDeleteV2(deleteRoleBinding)
 		}
 		if err != nil {
 			return err
@@ -71,10 +71,8 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if httpResp != nil {
-		if httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-		}
+	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
 	}
 
 	if isCloud {
@@ -84,20 +82,20 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 }
 
-func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) (*http.Response, error) {
-	resp, httpResp, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding)
+func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
+	resp, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName(), deleteRoleBinding.GetCrnPattern())
 	if err != nil {
-		return httpResp, err
+		return err
 	}
 	roleBindingList := resp.Data
 
 	for _, rolebinding := range roleBindingList {
 		if rolebinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
 			_, err = c.V2Client.DeleteIamRoleBinding(rolebinding.GetId())
-			return httpResp, err
+			return err
 		}
 	}
-	return httpResp, errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
+	return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
 }
 
 func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {
