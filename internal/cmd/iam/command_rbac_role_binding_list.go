@@ -512,10 +512,7 @@ func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *m
 }
 
 func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, ccloudResourcePatternListFields, ccloudResourcePatternHumanListLabels, ccloudResourcePatternStructuredListLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
 	if err != nil {
@@ -606,8 +603,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 		if strings.Contains(crnPattern, "*") {
 			patternType = prefixedPatternType
 		}
-
-		outputWriter.AddElement(&listDisplay{
+		list.Add(&roleBindingOut{
 			Principal:      principalName,
 			Email:          principalEmail,
 			Role:           roleName,
@@ -620,16 +616,13 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 			PatternType:    patternType,
 		})
 	}
-	outputWriter.StableSort()
 
-	return outputWriter.Out()
+	list.Sort(true)
+	return list.Print()
 }
 
 func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Principal", "Email", "ServiceName", "PoolName"}, []string{"Principal", "Email", "Service Name", "Pool Name"}, []string{"principal", "email", "service_name", "pool_name"})
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")
 	if err != nil {
@@ -676,19 +669,20 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 
 	sort.Strings(principalStrings)
 	for _, principal := range principalStrings {
-		row := &displayStruct{Principal: principal}
+		row := &roleBindingListOut{Principal: principal}
 		if email, ok := userToEmailMap[principal]; ok {
 			row.Email = email
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 		if name, ok := serviceAccountToNameMap[principal]; ok {
 			row.ServiceName = name
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 		if name, ok := poolToNameMap[principal]; ok {
 			row.PoolName = name
-			outputWriter.AddElement(row)
+			list.Add(row)
 		}
 	}
-	return outputWriter.Out()
+
+	return list.Print()
 }

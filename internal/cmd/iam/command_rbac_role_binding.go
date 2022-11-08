@@ -74,13 +74,6 @@ type roleBindingOut struct {
 	PatternType    string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
-type displayStruct struct {
-	Principal   string
-	Email       string
-	ServiceName string
-	PoolName    string
-}
-
 func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "role-binding",
@@ -494,7 +487,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	userResourceId := strings.TrimLeft(options.principal, "User:")
 	user, err := c.V2Client.GetIamUserById(userResourceId)
-	displayStruct := &listDisplay{
+	out := &roleBindingOut{
 		Principal: options.principal,
 		Role:      options.role,
 	}
