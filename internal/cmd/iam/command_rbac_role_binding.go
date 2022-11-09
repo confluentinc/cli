@@ -3,11 +3,10 @@ package iam
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -41,6 +40,9 @@ var (
 	environmentScopedRoles = map[string]bool{
 		"EnvironmentAdmin": true,
 	}
+
+	literalPatternType  = "LITERAL"
+	prefixedPatternType = "PREFIXED"
 )
 
 type roleBindingOptions struct {
@@ -119,7 +121,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		if strings.HasPrefix(principal, "User:") {
 			principalValue := strings.TrimLeft(principal, "User:")
 			if strings.Contains(principalValue, "@") {
-				user, err := c.GetIamUserByEmail(principalValue)
+				user, err := c.V2Client.GetIamUserByEmail(principalValue)
 				if err != nil {
 					return nil, err
 				}
@@ -157,11 +159,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			// Resource types are defined under roles' access policies, so if no role is specified,
 			// we have to loop over the possible resource types for all roles (this is what
 			// validateResourceTypeV2 does).
-			if role != "" {
-				if err := c.validateRoleAndResourceTypeV2(role, parsedResourcePattern.ResourceType); err != nil {
-					return nil, err
-				}
-			} else {
+			if role == "" {
 				if err := c.validateResourceTypeV2(parsedResourcePattern.ResourceType); err != nil {
 					return nil, err
 				}
@@ -215,18 +213,18 @@ Helper function to add flags for all the legal scopes/clusters for the command.
 func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLICommand) {
 	if isCloudLogin {
 		cmd.Flags().String("environment", "", "Environment ID for scope of role-binding operation.")
-		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
+		cmd.Flags().Bool("current-environment", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+			cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
 		}
 	} else {
-		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
-		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-		cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
-		cmd.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID for the role binding.")
+		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
+		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
+		cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID for the role binding.")
 		cmd.Flags().String("cluster-name", "", "Cluster name to uniquely identify the cluster for role binding listings.")
 		pcmd.AddContextFlag(cmd, cliCommand)
 	}
@@ -251,15 +249,15 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
-		case "kafka-cluster-id":
+		case "kafka-cluster":
 			scope.KafkaCluster = flag.Value.String()
-		case "schema-registry-cluster-id":
+		case "schema-registry-cluster":
 			scope.SchemaRegistryCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case "ksql-cluster-id":
+		case "ksql-cluster":
 			scope.KsqlCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case "connect-cluster-id":
+		case "connect-cluster":
 			scope.ConnectCluster = flag.Value.String()
 			nonKafkaScopesSet++
 		}
@@ -291,7 +289,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
-	if cmd.Flags().Changed("current-env") {
+	if cmd.Flags().Changed("current-environment") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
 	} else if cmd.Flags().Changed("environment") {
 		env, err := cmd.Flags().GetString("environment")
@@ -309,29 +307,29 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+cluster)
 	}
 
-	if cmd.Flags().Changed("kafka-cluster-id") {
-		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+	if cmd.Flags().Changed("kafka-cluster") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.KafkaCluster = kafkaCluster
 
-		// Users should not have to pass both --kafka-cluster-id and --cloud-cluster.
+		// Users should not have to pass both --kafka-cluster and --cloud-cluster.
 		if !cmd.Flags().Changed("cloud-cluster") {
 			scopeV2.Path = append(scopeV2.Path, "cloud-cluster="+kafkaCluster)
 		}
 	}
 
-	if cmd.Flags().Changed("schema-registry-cluster-id") {
-		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+	if cmd.Flags().Changed("schema-registry-cluster") {
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+	if cmd.Flags().Changed("ksql-cluster") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
 		if err != nil {
 			return nil, err
 		}
@@ -346,12 +344,12 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
 			return nil, errors.New(errors.SpecifyCloudClusterErrorMsg)
 		}
-		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 			return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 		}
 	}
 
-	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-env") && !cmd.Flags().Changed("environment") {
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
 		return nil, errors.New(errors.SpecifyEnvironmentErrorMsg)
 	}
 	return scopeV2, nil
@@ -373,38 +371,6 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 	result.Name = parts[1]
 
 	return result, nil
-}
-
-func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
-	ctx := c.createContext()
-	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
-
-	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
-	if err != nil || resp.StatusCode == http.StatusNoContent {
-		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
-		if err != nil || resp.StatusCode == http.StatusNoContent {
-			if err == nil {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-			} else {
-				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-			}
-		}
-	}
-
-	var allResourceTypes []string
-	for _, policies := range role.Policies {
-		for _, operation := range policies.AllowedOperations {
-			allResourceTypes = append(allResourceTypes, operation.ResourceType)
-			if operation.ResourceType == resourceType {
-				return nil
-			}
-		}
-	}
-
-	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
-	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 }
 
 func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
@@ -520,7 +486,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOptions) error {
 	userResourceId := strings.TrimLeft(options.principal, "User:")
-	user, err := c.V2Client.GetIamUser(userResourceId)
+	user, err := c.V2Client.GetIamUserById(userResourceId)
 	out := &roleBindingOut{
 		Principal: options.principal,
 		Role:      options.role,
@@ -593,15 +559,144 @@ func (c *roleBindingCommand) createContext() context.Context {
 	}
 }
 
-func (c *roleBindingCommand) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	users, err := c.V2Client.ListIamUsers()
+func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV2RoleBinding, error) {
+	role, err := cmd.Flags().GetString("role")
 	if err != nil {
-		return iamv2.IamV2User{}, err
+		return nil, err
 	}
-	for _, user := range users {
-		if user.GetEmail() == email {
-			return user, nil
+
+	principal, err := cmd.Flags().GetString("principal")
+	if err != nil {
+		return nil, err
+	}
+	if cmd.Flags().Changed("principal") {
+		err = c.validatePrincipalFormat(principal)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return iamv2.IamV2User{}, errors.Errorf(errors.InvalidEmailErrorMsg, email)
+
+	if strings.HasPrefix(principal, "User:") {
+		principalValue := strings.TrimLeft(principal, "User:")
+		if strings.Contains(principalValue, "@") {
+			user, err := c.V2Client.GetIamUserByEmail(principalValue)
+			if err != nil {
+				return nil, err
+			}
+			principal = "User:" + user.GetId()
+		}
+	}
+
+	crnPattern, err := c.parseV2BaseCrnPattern(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	prefix, _ := cmd.Flags().GetBool("prefix")
+
+	resource, err := cmd.Flags().GetString("resource")
+	if err != nil {
+		return nil, err
+	}
+	if resource != "" {
+		parts := strings.SplitN(resource, ":", 2)
+		if len(parts) != 2 {
+			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+		}
+		resourceType := parts[0]
+		resourceName := parts[1]
+		if resourceType == "Cluster" {
+			resourceType = "kafka"
+		}
+
+		if role == "" {
+			if err := c.validateResourceTypeV2(resourceType); err != nil {
+				return nil, err
+			}
+		}
+
+		crnPattern += fmt.Sprintf("/%s=%s", strings.ToLower(resourceType), resourceName)
+
+		if prefix {
+			crnPattern += "*"
+		}
+	}
+
+	return &mdsv2.IamV2RoleBinding{
+		Principal:  mdsv2.PtrString(principal),
+		RoleName:   mdsv2.PtrString(role),
+		CrnPattern: mdsv2.PtrString(crnPattern),
+	}, nil
+}
+
+func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
+	orgResourceId := c.State.Auth.Organization.GetResourceId()
+	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
+
+	if cmd.Flags().Changed("current-environment") {
+		crnPattern += "/environment=" + c.EnvironmentId()
+	} else if cmd.Flags().Changed("environment") {
+		env, err := cmd.Flags().GetString("environment")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/environment=" + env
+	}
+
+	if cmd.Flags().Changed("cloud-cluster") {
+		cluster, err := cmd.Flags().GetString("cloud-cluster")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/cloud-cluster=" + cluster
+	}
+
+	if cmd.Flags().Changed("schema-registry-cluster-id") { // route not implemented yet
+		srCluster, err := cmd.Flags().GetString("schema-registry-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/schema-registry=" + srCluster
+	}
+
+	if cmd.Flags().Changed("ksql-cluster-id") { // route not implemented yet
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/ksql=" + ksqlCluster
+	}
+
+	if cmd.Flags().Changed("kafka-cluster-id") {
+		kafkaCluster, err := cmd.Flags().GetString("kafka-cluster-id")
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/kafka=" + kafkaCluster
+	}
+
+	if cmd.Flags().Changed("role") {
+		role, err := cmd.Flags().GetString("role")
+		if err != nil {
+			return "", err
+		}
+		if clusterScopedRolesV2[role] && !cmd.Flags().Changed("cloud-cluster") {
+			return "", errors.New(errors.SpecifyCloudClusterErrorMsg)
+		}
+		if (environmentScopedRoles[role] || clusterScopedRolesV2[role]) && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+			return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+		}
+	}
+
+	if cmd.Flags().Changed("cloud-cluster") && !cmd.Flags().Changed("current-environment") && !cmd.Flags().Changed("environment") {
+		return "", errors.New(errors.SpecifyEnvironmentErrorMsg)
+	}
+	return crnPattern, nil
+}
+
+func isSchemaRegistryOrKsqlRoleBinding(roleBinding *mdsv2.IamV2RoleBinding) bool {
+	if strings.Contains(roleBinding.GetCrnPattern(), "schema-registry") || strings.Contains(roleBinding.GetCrnPattern(), "ksql") {
+		return true
+	}
+	return false
 }

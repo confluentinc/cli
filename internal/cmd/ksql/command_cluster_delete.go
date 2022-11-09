@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -18,10 +17,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *ksqlCommand) newDeleteCommand(resource string) *cobra.Command {
+func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
-		Short:             fmt.Sprintf("Delete a ksqlDB %s.", resource),
+		Short:             "Delete a ksqlDB cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,

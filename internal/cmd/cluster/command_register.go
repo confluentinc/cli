@@ -19,13 +19,6 @@ type registerCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-const (
-	kafkaClusterId   = "kafka-cluster-id"
-	srClusterId      = "schema-registry-cluster-id"
-	ksqlClusterId    = "ksql-cluster-id"
-	connectClusterId = "connect-cluster-id"
-)
-
 func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register",
@@ -40,14 +33,14 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().String("hosts", "", "A comma separated list of hosts.")
 	c.Flags().String("protocol", "", "Security protocol.")
 	c.Flags().String("cluster-name", "", "Cluster name.")
-	c.Flags().String("kafka-cluster-id", "", "Kafka cluster ID.")
-	c.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID.")
-	c.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID.")
-	c.Flags().String("connect-cluster-id", "", "Kafka Connect cluster ID.")
+	c.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
+	c.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
+	c.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
+	c.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = c.MarkFlagRequired("cluster-name")
-	_ = c.MarkFlagRequired("kafka-cluster-id")
+	_ = c.MarkFlagRequired("kafka-cluster")
 	_ = c.MarkFlagRequired("hosts")
 	_ = c.MarkFlagRequired("protocol")
 
@@ -94,15 +87,15 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		switch flag.Name {
-		case kafkaClusterId:
+		case "kafka-cluster":
 			scope.KafkaCluster = flag.Value.String()
-		case srClusterId:
+		case "schema-registry-cluster":
 			scope.SchemaRegistryCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case ksqlClusterId:
+		case "ksql-cluster":
 			scope.KsqlCluster = flag.Value.String()
 			nonKafkaScopesSet++
-		case connectClusterId:
+		case "connect-cluster":
 			scope.ConnectCluster = flag.Value.String()
 			nonKafkaScopesSet++
 		}
