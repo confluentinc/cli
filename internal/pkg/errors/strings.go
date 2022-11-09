@@ -137,9 +137,9 @@ const (
 	// General
 	CreatedResourceMsg                = "Created %s \"%s\".\n"
 	DeletedResourceMsg                = "Deleted %s \"%s\".\n"
-	DeleteResourceConfirmMsg          = "Are you sure you want to delete %s %s?\nTo confirm, enter \"%s\". To cancel, use Ctrl-C.\n"
-	DeleteResourceConfirmYesNoMsg     = "Are you sure you want to delete %s %s?\n"
-	DeleteResourceConfirmNoIdYesNoMsg = "Are you sure you want to delete this %s?\n"
+	DeleteResourceConfirmMsg          = "Are you sure you want to delete %s %s?\nTo confirm, enter \"%s\". To cancel, use Ctrl-C."
+	DeleteResourceConfirmYesNoMsg     = "Are you sure you want to delete %s %s?"
+	DeleteResourceConfirmNoIdYesNoMsg = "Are you sure you want to delete this %s?"
 	RequestedDeleteResourceMsg        = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg                = "Updated %s \"%s\".\n"
 

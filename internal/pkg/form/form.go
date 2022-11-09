@@ -112,7 +112,7 @@ func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType, resourceId string) (
 	if resourceId != "" {
 		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, resourceId)
 	} else {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType)
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmNoIdYesNoMsg, resourceType)
 	}
 	f := New(
 		Field{
