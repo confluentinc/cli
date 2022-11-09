@@ -95,9 +95,8 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		}
 
 		data := kafkarestv3.CreateTopicRequestData{
-			TopicName:         topicName,
-			Configs:           &topicConfigs,
-			ReplicationFactor: utils.Int32Ptr(3),
+			TopicName: topicName,
+			Configs:   &topicConfigs,
 		}
 
 		if cmd.Flags().Changed("partitions") {

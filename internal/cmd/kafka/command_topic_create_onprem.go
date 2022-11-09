@@ -38,7 +38,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
-	cmd.Flags().Uint32("replication-factor", 3, "Number of replicas.")
+	cmd.Flags().Uint32("replication-factor", 0, "Number of replicas.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
@@ -94,13 +94,16 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 	}
 
 	data := kafkarestv3.CreateTopicRequestData{
-		TopicName:         topicName,
-		Configs:           topicConfigs,
-		ReplicationFactor: int32(replicationFactor),
+		TopicName: topicName,
+		Configs:   topicConfigs,
 	}
 
 	if cmd.Flags().Changed("partitions") {
 		data.PartitionsCount = int32(partitions)
+	}
+
+	if cmd.Flags().Changed("replication-factor") {
+		data.ReplicationFactor = int32(replicationFactor)
 	}
 
 	opts := &kafkarestv3.CreateKafkaTopicOpts{CreateTopicRequestData: optional.NewInterface(data)}
