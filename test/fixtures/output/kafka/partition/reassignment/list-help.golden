@@ -1,20 +1,20 @@
-Get ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.
+List ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.
 
 Usage:
-  confluent kafka partition get-reassignments [id] [flags]
+  confluent kafka partition reassignment list [id] [flags]
 
 Examples:
-Get all replica reassignments for the Kafka cluster.
+List all replica reassignments for the Kafka cluster.
 
-  $ confluent kafka partition get-reassignments
+  $ confluent kafka partition reassignment list
 
-Get replica reassignments for topic "my_topic".
+List replica reassignments for topic "my_topic".
 
-  $ confluent kafka partition get-reassignments --topic my_topic
+  $ confluent kafka partition reassignment list --topic my_topic
 
-Get replica reassignments for partition "1" of topic "my_topic".
+List replica reassignments for partition "1" of topic "my_topic".
 
-  $ confluent kafka partition get-reassignments 1 --topic my_topic
+  $ confluent kafka partition reassignment list 1 --topic my_topic
 
 Flags:
       --topic string              Topic name to search by.

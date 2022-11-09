@@ -397,10 +397,10 @@ const (
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
-		"To list KSQL clusters, use `confluent ksql app list`."
+		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
-	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql app list`."
+	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"

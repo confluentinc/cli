@@ -16,7 +16,7 @@ type connectCreateOut struct {
 	ErrorTrace string `human:"Error Trace,omitempty" serialized:"error_trace,omitempty"`
 }
 
-func (c *command) newCreateCommand() *cobra.Command {
+func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a connector.",
@@ -26,10 +26,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a connector in the current or specified Kafka cluster context.",
-				Code: "confluent connect create --config-file config.json",
+				Code: "confluent connect cluster create --config-file config.json",
 			},
 			examples.Example{
-				Code: "confluent connect create --config-file config.json --cluster lkc-123456",
+				Code: "confluent connect cluster create --config-file config.json --cluster lkc-123456",
 			},
 		),
 	}
@@ -45,7 +45,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) create(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
