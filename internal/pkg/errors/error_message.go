@@ -80,25 +80,28 @@ const (
 	UnknownRoleSuggestions = "The available roles are: %s."
 
 	// iam rbac role-binding commands
-	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
-	ResourceFormatErrorMsg          = "incorrect resource format specified"
-	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg              = `failed to lookup role "%s"`
-	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
-	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
-	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
-	SpecifyCloudClusterErrorMsg     = "must specify cloud-cluster flag to indicate role binding scope"
-	SpecifyEnvironmentErrorMsg      = "must specify environment flag to indicate role binding scope"
-	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
-	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
-	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
-	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
-	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
-	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
-	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+	PrincipalFormatErrorMsg                 = "incorrect principal format specified"
+	PrincipalFormatSuggestions              = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
+	ResourceFormatErrorMsg                  = "incorrect resource format specified"
+	ResourceFormatSuggestions               = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
+	LookUpRoleErrorMsg                      = "failed to lookup role \"%s\""
+	LookUpRoleSuggestions                   = "To check for valid roles, use `confluent iam rbac role list`."
+	InvalidResourceTypeErrorMsg             = "invalid resource type \"%s\""
+	InvalidResourceTypeSuggestions          = "The available resource types are: %s"
+	SpecifyKafkaIDErrorMsg                  = "must also specify a --kafka-cluster-id to uniquely identify the scope"
+	SpecifyCloudClusterErrorMsg             = "must specify cloud-cluster flag to indicate role binding scope"
+	SpecifyEnvironmentErrorMsg              = "must specify environment flag to indicate role binding scope"
+	BothClusterNameAndScopeErrorMsg         = "cannot specify both cluster name and cluster scope"
+	SpecifyClusterErrorMsg                  = "must specify either cluster ID to indicate role binding scope or the cluster name"
+	MoreThanOneNonKafkaErrorMsg             = "cannot specify more than one non-Kafka cluster ID for a scope"
+	PrincipalOrRoleRequiredErrorMsg         = "must specify either principal or role"
+	HTTPStatusCodeErrorMsg                  = "no error but received HTTP status code %d"
+	HTTPStatusCodeSuggestions               = "Please file a support ticket with details."
+	UnauthorizedErrorMsg                    = "user is unauthorized to perform this action"
+	UnauthorizedSuggestions                 = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+	RoleBindingNotFoundFoundErrorMsg        = "failed to lookup matching rolebinding"
+	RoleBindingNotFoundFoundSuggestions     = "To list rolebindings, use `confluent iam rbac role-binding list`."
+	KsqlOrSchemaRegistryRoleBindingErrorMsg = "caught ksql or schema registry role-binding. Fall back to v1"
 
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
@@ -195,8 +198,8 @@ const (
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB app, "%s", because it was created with user-level access to the Kafka cluster`
-	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB app "%s" due to "%s"`
+	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
+	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -384,8 +387,6 @@ const (
 	// Flag Errors
 	FlagRequiredErrorMsg              = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
@@ -466,7 +467,7 @@ const (
 	ClusterFlagWithApiLoginErrorMsg     = `"cluster" flag should not be passed for API key context, cluster is inferred`
 
 	// Partition command errors
-	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
+	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"

@@ -1,21 +1,13 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	describeFields            = []string{"Id", "Name", "OutputTopicPrefix", "KafkaClusterId", "Storage", "Endpoint", "Status", "DetailedProcessingLog"}
-	describeHumanRenames      = map[string]string{"KafkaClusterId": "Kafka", "OutputTopicPrefix": "Topic Prefix", "DetailedProcessingLog": "Detailed Processing Log"}
-	describeStructuredRenames = map[string]string{"KafkaClusterId": "kafka", "OutputTopicPrefix": "topic_prefix", "DetailedProcessingLog": "detailed_processing_log"}
 )
 
 func (c *ksqlCommand) newDescribeCommand(resource string) *cobra.Command {
@@ -35,11 +27,12 @@ func (c *ksqlCommand) newDescribeCommand(resource string) *cobra.Command {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
-	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
 
-	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(c.formatClusterForDisplayAndList(&cluster))
+	return table.Print()
 }
