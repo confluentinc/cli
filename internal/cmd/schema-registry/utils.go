@@ -13,7 +13,7 @@ import (
 
 const (
 	SubjectUsage              = "Subject of the schema."
-	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>"
 	essentialsPackage         = "essentials"
 	advancedPackage           = "advanced"
 	essentialsPackageInternal = "free"
