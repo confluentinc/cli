@@ -1,6 +1,12 @@
+- principal: User:u-11aaa
+  name: ""
+  email: mhe@confluent.io
+- principal: User:u-22bbb
+  name: ""
+  email: mhe@confluent.io
 - principal: User:u-33ccc
-  name: 33 Ccc
-  email: u-33ccc@confluent.io
+  name: ""
+  email: mhe@confluent.io
 - principal: User:u-44ddd
-  name: Muwei He
+  name: ""
   email: mhe@confluent.io
