@@ -25,7 +25,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)

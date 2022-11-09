@@ -762,7 +762,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
-	noAuth, _ := cmd.Flags().GetBool("no-auth")
+	noAuth, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {

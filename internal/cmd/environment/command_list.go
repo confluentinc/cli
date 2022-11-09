@@ -9,17 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields           = []string{"Id", "Name"}
-	listHumanLabels      = []string{"ID", "Name"}
-	listStructuredLabels = []string{"id", "name"}
-)
-
-type environmentRow struct {
-	Id   string
-	Name string
-}
-
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -40,24 +29,21 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-	for _, env := range environments {
-		// Add '*' only in the case where we are printing out tables
-		envRow := &environmentRow{
-			Id:   *env.Id,
-			Name: *env.DisplayName,
-		}
-		if outputWriter.GetOutputFormat() == output.Human {
-			if envRow.Id == c.EnvironmentId() {
-				envRow.Id = fmt.Sprintf("* %s", envRow.Id)
+	list := output.NewList(cmd)
+	for _, environment := range environments {
+		id := *environment.Id
+		if output.GetFormat(cmd) == output.Human {
+			if *environment.Id == c.EnvironmentId() {
+				id = fmt.Sprintf("* %s", id)
 			} else {
-				envRow.Id = fmt.Sprintf("  %s", envRow.Id)
+				id = fmt.Sprintf("  %s", id)
 			}
 		}
-		outputWriter.AddElement(envRow)
+
+		list.Add(&out{
+			Id:   id,
+			Name: *environment.DisplayName,
+		})
 	}
-	return outputWriter.Out()
+	return list.Print()
 }
