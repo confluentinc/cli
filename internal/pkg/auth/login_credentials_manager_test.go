@@ -29,9 +29,6 @@ const (
 	netrcUsername = "netrc-username"
 	netrcPassword = "netrc-password"
 
-	ssoUsername  = "sso-username"
-	refreshToken = "refresh-token"
-
 	promptUsername = "prompt-chrissy"
 	promptPassword = "  prompt-password  "
 
@@ -57,11 +54,6 @@ var (
 		Username: netrcUsername,
 		Password: netrcPassword,
 		IsSSO:    false,
-	}
-	ssoCredentials = &Credentials{
-		Username:         ssoUsername,
-		AuthRefreshToken: refreshToken,
-		IsSSO:            true,
 	}
 	promptCredentials = &Credentials{
 		Username: promptUsername,
