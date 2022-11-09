@@ -134,9 +134,9 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link describe --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -324,21 +324,21 @@ func (s *CLITestSuite) TestKafkaBroker() {
 func (s *CLITestSuite) TestKafkaPartitions() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka partition --help", fixture: "kafka/partitions/help.golden"},
-		{args: "kafka partition list -h", fixture: "kafka/partitions/list-help.golden"},
-		{args: "kafka partition list --topic topic1", fixture: "kafka/partitions/list.golden"},
-		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partitions/list-json.golden"},
-		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partitions/list-yaml.golden"},
-		{args: "kafka partition describe -h", fixture: "kafka/partitions/describe-help.golden"},
-		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partitions/describe.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partitions/describe-json.golden"},
-		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partitions/describe-yaml.golden"},
-		{args: "kafka partition get-reassignments -h", fixture: "kafka/partitions/reassignments-help.golden"},
-		{args: "kafka partition get-reassignments", fixture: "kafka/partitions/reassignments.golden"},
-		{args: "kafka partition get-reassignments -o json", fixture: "kafka/partitions/reassignments-json.golden"},
-		{args: "kafka partition get-reassignments --topic topic1", fixture: "kafka/partitions/reassignments-by-topic.golden"},
-		{args: "kafka partition get-reassignments 0 --topic topic1", fixture: "kafka/partitions/reassignments-by-partition.golden"},
-		{args: "kafka partition get-reassignments 0 --topic topic1 -o yaml", fixture: "kafka/partitions/reassignments-by-partition-yaml.golden"},
+		{args: "kafka partition --help", fixture: "kafka/partition/help.golden"},
+		{args: "kafka partition list -h", fixture: "kafka/partition/list-help.golden"},
+		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
+		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json.golden"},
+		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml.golden"},
+		{args: "kafka partition describe -h", fixture: "kafka/partition/describe-help.golden"},
+		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json.golden"},
+		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml.golden"},
+		{args: "kafka partition reassignment list -h", fixture: "kafka/partition/reassignment/list-help.golden"},
+		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
+		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
+		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1", fixture: "kafka/partition/reassignment/list-by-partition.golden"},
+		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
 	for _, tt := range tests {
 		tt.login = "platform"
@@ -383,8 +383,6 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o yaml --no-auth", kafkaRestURL), fixture: "kafka/topic/list-yaml.golden"},
 		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-auth", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
-		// Invalid format string should throw error
-		{args: fmt.Sprintf("kafka topic list --url %s -o hello --no-auth", kafkaRestURL), fixture: "kafka/topic/list-output-error.golden", wantErrCode: 1, name: "invalid format string should throw error"},
 	}
 
 	for _, clitest := range tests {
@@ -459,8 +457,6 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 		// Topic name errors
 		{args: fmt.Sprintf("kafka topic describe --url %s --no-auth", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", wantErrCode: 1, name: "<topic> arg missing should lead to error"},
 		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-auth", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", wantErrCode: 1, name: "describing a non-existant topic should lead to error"},
-		// -o errors
-		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o asdf --no-auth", kafkaRestURL), contains: "Error: invalid value \"asdf\" for flag `--output`\n\nSuggestions:\n    The possible values for flag `output` are: human, json, yaml.", wantErrCode: 1, name: "bad output format flag should lead to error"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-auth", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exist & human arg should lead to success"},
