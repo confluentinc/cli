@@ -82,16 +82,14 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	return nil
 }
 
-// TODO: find a better place for this
 func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceId, resourceName string) error {
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil || force {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeleteResourceConfirmMsg, resourceType, resourceId, resourceName)
 	prompt := NewPrompt(os.Stdin)
-	f := New(Field{ID: "Confirm", Prompt: "Confirm"})
+	f := New(Field{ID: "Confirm", Prompt: fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, resourceId, resourceName)})
 	if err := f.Prompt(cmd, prompt); err != nil {
 		return err
 	}
@@ -101,6 +99,34 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceId, resourceName 
 	}
 
 	return nil
+}
+
+func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType, resourceId string) (bool, error) {
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil || force {
+		return true, err
+	}
+
+	prompt := NewPrompt(os.Stdin)
+	var promptMsg string
+	if resourceId != "" {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, resourceId)
+	} else {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType)
+	}
+	f := New(
+		Field{
+			ID: "confirm",
+			Prompt: promptMsg,
+			IsYesOrNo: true,
+		},
+	)
+
+	if err := f.Prompt(cmd, prompt); err != nil {
+		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
+	}
+
+	return f.Responses["confirm"].(bool), nil
 }
 
 func show(cmd *cobra.Command, field Field) {

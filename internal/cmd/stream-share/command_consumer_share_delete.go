@@ -37,9 +37,10 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = form.ConfirmDeletion(cmd, resource.ConsumerShare, shareId, "CONFIRM")
-	if err != nil {
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, shareId); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	err = c.V2Client.DeleteConsumerShare(shareId)

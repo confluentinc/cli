@@ -36,9 +36,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	err = form.ConfirmDeletion(cmd, resource.ApiKey, apiKey, "CONFIRM")
-	if err != nil {
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, apiKey); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {

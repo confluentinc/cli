@@ -29,9 +29,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = form.ConfirmDeletion(cmd, resource.Context, ctx.Name, "CONFIRM")
-	if err != nil {
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, resource.Context, ctx.Name); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	if err := c.Config.DeleteContext(ctx.Name); err != nil {
