@@ -17,7 +17,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.`,
-				Code: "confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *",
+				Code: "confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *",
 			},
 		),
 	}
@@ -25,7 +25,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster-id")
+	_ = cmd.MarkFlagRequired("kafka-cluster")
 	_ = cmd.MarkFlagRequired("principal")
 	_ = cmd.MarkFlagRequired("operation")
 	_ = cmd.MarkFlagRequired("host")
