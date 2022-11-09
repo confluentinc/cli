@@ -56,7 +56,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 
 func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refPath, err := cmd.Flags().GetString("references")
 	if err != nil {
 		return nil, err
 	}
