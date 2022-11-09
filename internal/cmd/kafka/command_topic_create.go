@@ -149,8 +149,9 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.Topic{
 		Spec: &schedv1.TopicSpecification{
-			Name:    topicName,
-			Configs: configMap,
+			Name:              topicName,
+			Configs:           configMap,
+			ReplicationFactor: 3,
 		},
 		Validate: dryRun,
 	}
