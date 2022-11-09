@@ -97,7 +97,7 @@ var (
 	}
 	mockNetrcHandler = &pmock.MockNetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(_, _ bool, _, _, _ string) error {
+		WriteNetrcCredentialsFunc: func(_ bool, _, _, _ string) error {
 			return nil
 		},
 		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
