@@ -354,7 +354,7 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 			return nil
 		}
 
-		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
+		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
 
