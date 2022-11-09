@@ -390,13 +390,13 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "create"}, tc.args...))
 
 		if tc.err == nil {
-			go func() {
+			go func(tc roleBindingTest) {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
 				fmt.Println("")
 				expect <- copy
-			}()
+			}(tc)
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
 		} else {
@@ -414,13 +414,13 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
 
 		if tc.err == nil {
-			go func() {
+			go func(tc roleBindingTest) {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.scope,
 				}
 				fmt.Println("")
 				expect <- copy
-			}()
+			}(tc)
 			err := cmd.Execute()
 			assert.Nil(suite.T(), err)
 		} else {
