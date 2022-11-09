@@ -84,11 +84,11 @@ const (
 	PrincipalFormatSuggestions              = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
 	ResourceFormatErrorMsg                  = "incorrect resource format specified"
 	ResourceFormatSuggestions               = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg                      = "failed to lookup role \"%s\""
+	LookUpRoleErrorMsg                      = `failed to lookup role "%s"`
 	LookUpRoleSuggestions                   = "To check for valid roles, use `confluent iam rbac role list`."
-	InvalidResourceTypeErrorMsg             = "invalid resource type \"%s\""
-	InvalidResourceTypeSuggestions          = "The available resource types are: %s"
-	SpecifyKafkaIDErrorMsg                  = "must also specify a --kafka-cluster-id to uniquely identify the scope"
+	InvalidResourceTypeErrorMsg             = `invalid resource type "%s"`
+	InvalidResourceTypeSuggestions          = "The available resource types are: %s."
+	SpecifyKafkaIDErrorMsg                  = "must also specify a --kafka-cluster to uniquely identify the scope"
 	SpecifyCloudClusterErrorMsg             = "must specify cloud-cluster flag to indicate role binding scope"
 	SpecifyEnvironmentErrorMsg              = "must specify environment flag to indicate role binding scope"
 	BothClusterNameAndScopeErrorMsg         = "cannot specify both cluster name and cluster scope"
@@ -124,7 +124,7 @@ const (
 		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
 		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
 	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
-	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--sr-apikey` and --sr-apisecret`."
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and --schema-registry-api-secret`."
 
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
@@ -440,7 +440,7 @@ const (
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
 	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token"
-	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--schema-registry-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		AvoidTimeoutSuggestions
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
