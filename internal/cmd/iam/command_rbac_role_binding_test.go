@@ -255,7 +255,7 @@ var roleBindingListTests = []roleBindingTest{
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
 	},
 	{
-		args:     []string{"--role", "EnvironmentAdmin", "--current-env"},
+		args:     []string{"--role", "EnvironmentAdmin", "--current-environment"},
 		roleName: "EnvironmentAdmin",
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
@@ -265,7 +265,7 @@ var roleBindingListTests = []roleBindingTest{
 		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--kafka-cluster-id", "lkc-123"},
+		args:      []string{"--current-user", "--environment", "env-123", "--kafka-cluster", "lkc-123"},
 		principal: "User:" + v1.MockUserResourceId,
 		scope: mdsv2alpha1.Scope{
 			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
@@ -273,7 +273,7 @@ var roleBindingListTests = []roleBindingTest{
 		},
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
 		principal: "User:" + v1.MockUserResourceId,
 		scope: mdsv2alpha1.Scope{
 			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
@@ -281,7 +281,7 @@ var roleBindingListTests = []roleBindingTest{
 		},
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster", "sr-777"},
 		principal: "User:" + v1.MockUserResourceId,
 		scope: mdsv2alpha1.Scope{
 			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
@@ -315,24 +315,6 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 
 var roleBindingCreateDeleteTests = []roleBindingTest{
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "ResourceOwner",
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
-		},
-	},
-	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster-id", "sr-777"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "ResourceOwner",
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
-		},
-	},
-	{
 		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "OrganizationAdmin"},
 		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "OrganizationAdmin",
@@ -355,7 +337,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		err:  errUserNotFound,
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-env"},
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-environment"},
 		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "EnvironmentAdmin",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
@@ -367,7 +349,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--kafka-cluster-id", "lkc-123"},
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--kafka-cluster", "lkc-123"},
 		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "ResourceOwner",
 		scope: mdsv2alpha1.Scope{

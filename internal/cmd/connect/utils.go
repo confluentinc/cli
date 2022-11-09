@@ -18,7 +18,7 @@ const (
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	fileName, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		return nil, errors.Wrap(err, "error reading `--config-file` as string")
+		return nil, err
 	}
 
 	options, err := parseConfigFile(fileName)
