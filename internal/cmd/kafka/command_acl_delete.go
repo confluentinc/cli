@@ -11,13 +11,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
-	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a Kafka ACL.",
@@ -29,6 +29,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -37,6 +38,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
 		return err
+	}
+
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, "ACL", ""); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	userIdMap, err := c.mapResourceIdToUserId()

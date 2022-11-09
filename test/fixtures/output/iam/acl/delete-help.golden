@@ -24,6 +24,7 @@ Flags:
                                   the --prefix option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
       --context string            CLI context name.
+      --force                     Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.

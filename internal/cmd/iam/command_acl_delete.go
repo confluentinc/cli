@@ -5,10 +5,10 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
-	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete a Kafka ACL.",
@@ -25,6 +25,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	_ = cmd.MarkFlagRequired("kafka-cluster-id")
 	_ = cmd.MarkFlagRequired("principal")
@@ -38,6 +39,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acl := parse(cmd)
 	if acl.errors != nil {
 		return acl.errors
+	}
+
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, "ACL", ""); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))

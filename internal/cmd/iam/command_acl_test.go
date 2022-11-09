@@ -229,7 +229,7 @@ func (suite *ACLTestSuite) TestMdsCreateACL() {
 func (suite *ACLTestSuite) TestMdsDeleteACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*"},
+		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*", "--force"},
 			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsACLEntries {
 			cmd := suite.newMockIamCmd(expect, "")
