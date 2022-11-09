@@ -35,7 +35,15 @@ var (
 		"ClusterLinkingWrite":   "Cluster linking write",
 	}
 
-	formatClusterType = map[string]string{
+	formatClusterTypeSerialized = map[string]string{
+		"basic":       "basic",
+		"custom":      "custom",
+		"dedicated":   "dedicated",
+		"standard":    "basic-legacy",
+		"standard_v2": "standard",
+	}
+
+	formatClusterTypeHuman = map[string]string{
 		"basic":       "Basic",
 		"custom":      "Legacy - Custom",
 		"dedicated":   "Dedicated",
@@ -57,10 +65,10 @@ var (
 )
 
 var (
-	metrics        = mapToSlice(formatMetric)
-	clusterTypes   = mapToSlice(formatClusterType)
-	availabilities = mapToSlice(formatAvailability)
-	networkTypes   = mapToSlice(formatNetworkType)
+	metrics        = getKeys(formatMetric)
+	clusterTypes   = getValues(formatClusterTypeSerialized)
+	availabilities = getKeys(formatAvailability)
+	networkTypes   = getKeys(formatNetworkType)
 )
 
 type out struct {
@@ -221,10 +229,19 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 	return filteredTable, nil
 }
 
-func mapToSlice(m map[string]string) []string {
+func getKeys(m map[string]string) []string {
 	var slice []string
 	for key := range m {
 		slice = append(slice, key)
+	}
+	sort.Strings(slice)
+	return slice
+}
+
+func getValues(m map[string]string) []string {
+	var slice []string
+	for _, value := range m {
+		slice = append(slice, value)
 	}
 	sort.Strings(slice)
 	return slice
@@ -236,7 +253,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 		if output.GetFormat(cmd) == output.Human {
 			list.Add(&out{
 				Metric:       formatMetric[row.metric],
-				ClusterType:  formatClusterType[row.clusterType],
+				ClusterType:  formatClusterTypeHuman[row.clusterType],
 				Availability: formatAvailability[row.availability],
 				NetworkType:  formatNetworkType[row.networkType],
 				Price:        formatPrice(row.price, row.unit),
@@ -244,7 +261,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 		} else {
 			list.Add(&out{
 				Metric:       row.metric,
-				ClusterType:  row.clusterType,
+				ClusterType:  formatClusterTypeSerialized[row.clusterType],
 				Availability: row.availability,
 				NetworkType:  row.networkType,
 				Price:        fmt.Sprint(row.price),
