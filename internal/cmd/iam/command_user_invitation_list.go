@@ -11,19 +11,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	invitationListFields       = []string{"Id", "Email", "FirstName", "LastName", "UserResourceId", "Status"}
-	invitationHumanLabels      = []string{"ID", "Email", "First Name", "Last Name", "User ID", "Status"}
-	invitationStructuredLabels = []string{"id", "email", "first_name", "last_name", "user_resource_id", "status"}
-)
-
-type invitationStruct struct {
-	Id             string
-	Email          string
-	FirstName      string
-	LastName       string
-	UserResourceId string
-	Status         string
+type invitationOut struct {
+	Id             string `human:"ID" serialized:"id"`
+	Email          string `human:"Email" serialized:"email"`
+	FirstName      string `human:"First Name" serialized:"first_name"`
+	LastName       string `human:"Last Name" serialized:"last_name"`
+	UserResourceId string `human:"User ID" serialized:"user_resource_id"`
+	Status         string `human:"Status" serialized:"status"`
 }
 
 func (c invitationCommand) newListCommand() *cobra.Command {
@@ -50,11 +44,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return nil
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, invitationListFields, invitationHumanLabels, invitationStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, invitation := range invitations {
 		user := &orgv1.User{ResourceId: invitation.User.GetId()}
 
@@ -64,7 +54,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 			lastName = user.LastName
 		}
 
-		outputWriter.AddElement(&invitationStruct{
+		list.Add(&invitationOut{
 			Id:             invitation.GetId(),
 			Email:          invitation.GetEmail(),
 			FirstName:      firstName,
@@ -73,6 +63,5 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 			Status:         invitation.GetStatus(),
 		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
