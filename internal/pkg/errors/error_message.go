@@ -80,25 +80,28 @@ const (
 	UnknownRoleSuggestions = "The available roles are: %s."
 
 	// iam rbac role-binding commands
-	PrincipalFormatErrorMsg         = "incorrect principal format specified"
-	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
-	ResourceFormatErrorMsg          = "incorrect resource format specified"
-	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg              = `failed to lookup role "%s"`
-	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
-	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
-	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster to uniquely identify the scope"
-	SpecifyCloudClusterErrorMsg     = "must specify cloud-cluster flag to indicate role binding scope"
-	SpecifyEnvironmentErrorMsg      = "must specify environment flag to indicate role binding scope"
-	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
-	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
-	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
-	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
-	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
-	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
-	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+	PrincipalFormatErrorMsg                 = "incorrect principal format specified"
+	PrincipalFormatSuggestions              = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
+	ResourceFormatErrorMsg                  = "incorrect resource format specified"
+	ResourceFormatSuggestions               = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
+	LookUpRoleErrorMsg                      = `failed to lookup role "%s"`
+	LookUpRoleSuggestions                   = "To check for valid roles, use `confluent iam rbac role list`."
+	InvalidResourceTypeErrorMsg             = `invalid resource type "%s"`
+	InvalidResourceTypeSuggestions          = "The available resource types are: %s."
+	SpecifyKafkaIDErrorMsg                  = "must also specify a --kafka-cluster to uniquely identify the scope"
+	SpecifyCloudClusterErrorMsg             = "must specify cloud-cluster flag to indicate role binding scope"
+	SpecifyEnvironmentErrorMsg              = "must specify environment flag to indicate role binding scope"
+	BothClusterNameAndScopeErrorMsg         = "cannot specify both cluster name and cluster scope"
+	SpecifyClusterErrorMsg                  = "must specify either cluster ID to indicate role binding scope or the cluster name"
+	MoreThanOneNonKafkaErrorMsg             = "cannot specify more than one non-Kafka cluster ID for a scope"
+	PrincipalOrRoleRequiredErrorMsg         = "must specify either principal or role"
+	HTTPStatusCodeErrorMsg                  = "no error but received HTTP status code %d"
+	HTTPStatusCodeSuggestions               = "Please file a support ticket with details."
+	UnauthorizedErrorMsg                    = "user is unauthorized to perform this action"
+	UnauthorizedSuggestions                 = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+	RoleBindingNotFoundFoundErrorMsg        = "failed to lookup matching rolebinding"
+	RoleBindingNotFoundFoundSuggestions     = "To list rolebindings, use `confluent iam rbac role-binding list`."
+	KsqlOrSchemaRegistryRoleBindingErrorMsg = "caught ksql or schema registry role-binding. Fall back to v1"
 
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
@@ -156,8 +159,9 @@ const (
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	UnknownTopicErrorMsg      = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	UnknownTopicErrorMsg              = `unknown topic "%s"`
+	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
@@ -393,10 +397,10 @@ const (
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
-		"To list KSQL clusters, use `confluent ksql app list`."
+		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
-	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql app list`."
+	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
