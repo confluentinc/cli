@@ -56,16 +56,16 @@ To list all available versions:
 
 For example, to list all available packages for version v2.3.1:
 
-    VERSION=3.0.0 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
+    VERSION=v3.0.0 # or latest
+    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
 For example, to download a tarball for Darwin/amd64:
 
-    VERSION=3.0.0 # or latest
+    VERSION=v3.0.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=confluent_${VERSION}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION}/${FILE} -o ${FILE}
+    FILE=confluent_${VERSION#v}_${OS}_${ARCH}.tar.gz
+    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI from a tarball:
 
