@@ -94,6 +94,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations WRITE,ALTER --topic test-topic", fixture: "kafka/acl/create-principal.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations WRITE,ALTER --topic test-topic", fixture: "kafka/acl/create-principal.golden"},
+		{args: "kafka acl create --principal User:12345 --operations WRITE", fixture: "kafka/acl/create-err-numeric-id.golden", wantErrCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/invalid-service-account.golden", wantErrCode: 1},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/delete-cloud.golden"},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/delete-cloud.golden"},
