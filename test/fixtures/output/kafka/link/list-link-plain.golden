@@ -1,4 +1,4 @@
-   Name  | Source Cluster Id | Destination Cluster Id |    State    |        Error         |         Error Message           
+   Name  | Source Cluster ID | Destination Cluster ID |    State    |        Error         |         Error Message           
 ---------+-------------------+------------------------+-------------+----------------------+---------------------------------
   link-1 | cluster-1         | cluster-2              |             |                      |                                 
   link-2 | cluster-1         | cluster-2              | AVAILABLE   |                      |                                 

@@ -1,8 +1,8 @@
-- broker_id: "1"
-  cluster_id: cluster-1
+- cluster_id: cluster-1
+  broker_id: 1
   host: kafka1
-  port: "1"
-- broker_id: "2"
-  cluster_id: cluster-1
+  port: 1
+- cluster_id: cluster-1
+  broker_id: 2
   host: kafka2
-  port: "2"
+  port: 2

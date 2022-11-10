@@ -341,15 +341,23 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := &orgv1.User{
-				Id:                 serviceAccountID,
-				ResourceId:         serviceAccountResourceID,
-				ServiceName:        "service_account",
-				ServiceDescription: "at your service.",
+			res := &orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{
+					{
+						Id:                 serviceAccountID,
+						ResourceId:         serviceAccountResourceID,
+						ServiceName:        "service_account",
+						ServiceDescription: "at your service.",
+					},
+					{
+						Id:                 1,
+						ResourceId:         "sa-00001",
+						ServiceName:        "KSQL.lksqlc-12345",
+						ServiceDescription: "ksqlDB service account",
+					},
+				},
 			}
-			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{serviceAccount},
-			})
+			listReply, err := utilv1.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
@@ -470,6 +478,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/ksqls"
+// We only implement create here, as the v2 api takes over the other endpoints
 func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
@@ -479,15 +488,6 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			OutputTopicPrefix: "pksqlc-abcde",
 			Name:              "account ksql",
 			Storage:           101,
-			Endpoint:          "SASL_SSL://ksql-endpoint",
-		}
-		ksqlCluster2 := &schedv1.KSQLCluster{
-			Id:                "lksqlc-woooo",
-			AccountId:         "25",
-			KafkaClusterId:    "lkc-zxcvb",
-			OutputTopicPrefix: "pksqlc-ghjkl",
-			Name:              "kay cee queue elle",
-			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
@@ -516,58 +516,10 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
-		} else if r.Method == http.MethodGet {
-			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
-				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(listReply))
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for: "/api/ksqls/{id}"
-func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		ksqlId := vars["id"]
-		switch ksqlId {
-		case "lksqlc-ksql1":
-			ksqlCluster := &schedv1.KSQLCluster{
-				Id:                "lksqlc-ksql1",
-				AccountId:         "25",
-				KafkaClusterId:    "lkc-12345",
-				OutputTopicPrefix: "pksqlc-abcde",
-				Name:              "account ksql",
-				Storage:           101,
-				Endpoint:          "SASL_SSL://ksql-endpoint",
-			}
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
-				Cluster: ksqlCluster,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
-			require.NoError(t, err)
-		case "lksqlc-12345":
-			ksqlCluster := &schedv1.KSQLCluster{
-				Id:                "lksqlc-12345",
-				AccountId:         "25",
-				KafkaClusterId:    "lkc-abcde",
-				OutputTopicPrefix: "pksqlc-zxcvb",
-				Name:              "account ksql",
-				Storage:           130,
-				Endpoint:          "SASL_SSL://ksql-endpoint",
-			}
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
-				Cluster: ksqlCluster,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(reply))
-			require.NoError(t, err)
-		default:
+		} else {
 			err := writeV1ResourceNotFoundError(w)
 			require.NoError(t, err)
+			return
 		}
 	}
 }
@@ -795,13 +747,11 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":   true,
-			"testString": "string",
-			"testInt":    1,
-			"testJson":   map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{
-				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
-			},
+			"testBool":                 true,
+			"testString":               "string",
+			"testInt":                  1,
+			"testJson":                 map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":  []map[string]interface{}{},
 			"cli.client_quotas.enable": true,
 		}
 

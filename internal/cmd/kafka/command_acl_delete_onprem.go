@@ -58,5 +58,5 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data)
 }

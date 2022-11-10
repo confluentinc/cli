@@ -41,20 +41,15 @@ func aclConfigFlags() *pflag.FlagSet {
 
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
-	operationHelpOneLine := fmt.Sprintf("The ACL Operation: (%s).\nNote: This flag may be specified more than once.",
-		listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"}))
-	operationHelpParts := strings.SplitAfter(operationHelpOneLine, "delete, ")
-	operationHelp := operationHelpParts[0] + "\n" + operationHelpParts[1]
-
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	flgSet.StringSlice("operation", []string{""}, operationHelp)
+	flgSet.StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
 	flgSet.Bool("deny", false, "Access to the resource is denied.")
 	flgSet.SortFlags = false
 
-	_ = cobra.MarkFlagRequired(flgSet, "operation")
+	_ = cobra.MarkFlagRequired(flgSet, "operations")
 
 	return flgSet
 }
@@ -83,7 +78,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 		return aclConfigs, nil
 	}
 
-	operations, err := cmd.Flags().GetStringSlice("operation")
+	operations, err := cmd.Flags().GetStringSlice("operations")
 	if err != nil {
 		return nil, err
 	}
