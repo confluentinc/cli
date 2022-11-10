@@ -74,29 +74,24 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-			configs := make(map[string]string)
-
-			for _, config := range configsResp.Data {
-				configs[config.Name] = config.GetValue()
-			}
 			numPartitions, err := c.getNumPartitions(topicName)
 			if err != nil {
 				return err
 			}
-			configs[partitionCount] = strconv.Itoa(numPartitions)
-
-			if output.GetFormat(cmd).IsSerialized() {
-				return output.SerializedOutput(cmd, configs)
-			}
 
 			list := output.NewList(cmd)
-			for name, value := range configs {
-				list.Add(&configOut{
-					Name:  name,
-					Value: value,
+			for _, config := range configsResp.Data {
+				list.Add(&topicConfigurationOut{
+					Name:     config.GetName(),
+					Value:    config.GetValue(),
+					ReadOnly: config.GetIsReadOnly(),
 				})
 			}
-			list.Filter([]string{"Name", "Value"})
+			list.Add(&topicConfigurationOut{
+				Name:     partitionCount,
+				Value:    strconv.Itoa(numPartitions),
+				ReadOnly: false,
+			})
 			return list.Print()
 		}
 	}
