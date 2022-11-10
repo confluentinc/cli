@@ -37,7 +37,7 @@ var (
 
 	formatClusterTypeSerialized = map[string]string{
 		"basic":       "basic",
-		"custom":      "custom",
+		"custom":      "custom-legacy",
 		"dedicated":   "dedicated",
 		"standard":    "basic-legacy",
 		"standard_v2": "standard",
