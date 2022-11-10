@@ -308,10 +308,8 @@ func TestGetMachineNameRegex(t *testing.T) {
 			},
 			matchNames: []string{
 				getNetrcMachineName(true, ccloudCtxName),
-				getNetrcMachineName(true, ccloudCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
 				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
 				getNetrcMachineName(false, ccloudCtxName),
 			},
@@ -323,7 +321,6 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
 				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
@@ -367,10 +364,8 @@ func TestGetMachineNameRegex(t *testing.T) {
 			},
 			matchNames: []string{
 				getNetrcMachineName(true, specialCharsCtxName),
-				getNetrcMachineName(true, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, ccloudCtxName),
 				getNetrcMachineName(true, ccloudCtxName),
 			},
 		},

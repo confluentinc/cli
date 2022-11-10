@@ -272,14 +272,7 @@ func (n *NetrcHandlerImpl) CheckCredentialExist(isCloud bool, ctxName string) (b
 	if err != nil {
 		return false, err
 	}
-	machineName1 := getNetrcMachineName(isCloud, ctxName)
-	machine1 := netrcFile.FindMachine(machineName1)
 
-	machineName2 := getNetrcMachineName(isCloud, ctxName)
-	machine2 := netrcFile.FindMachine(machineName2)
-
-	if machine1 == nil && machine2 == nil {
-		return false, nil
-	}
-	return true, nil
+	name := getNetrcMachineName(isCloud, ctxName)
+	return netrcFile.FindMachine(name) != nil, nil
 }
