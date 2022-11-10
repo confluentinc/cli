@@ -127,10 +127,16 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 
 func parsePrincipal(principal string) (string, error) {
 	if !strings.HasPrefix(principal, "User:") {
-		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
+		return "", fmt.Errorf(`principal must begin with "User:"`)
 	}
-	resourceId := strings.SplitN(principal, ":", 2)[1]
-	return resourceId, nil
+
+	id := strings.TrimPrefix(principal, "User:")
+
+	if _, err := strconv.Atoi(id); err == nil {
+		return "", fmt.Errorf("numeric IDs are not supported")
+	}
+
+	return id, nil
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
