@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"regexp"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -48,7 +50,28 @@ func main() {
 		panic(err)
 	}
 
+	removeDocumentation()
+
 	if err := os.Setenv("HOME", currentHOME); err != nil {
+		panic(err)
+	}
+}
+
+// removeDocumentation hides documentation for unreleased features
+func removeDocumentation() {
+	out, err := os.ReadFile(filepath.Join("docs", "index.rst"))
+	if err != nil {
+		panic(err)
+	}
+
+	re := regexp.MustCompile(`\s{3}stream-share/index\n`)
+	out = re.ReplaceAll(out, []byte(""))
+
+	if err := os.WriteFile(filepath.Join("docs", "index.rst"), out, 0644); err != nil {
+		panic(err)
+	}
+
+	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
 		panic(err)
 	}
 }
