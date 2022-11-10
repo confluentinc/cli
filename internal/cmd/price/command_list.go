@@ -194,11 +194,11 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 		}
 
 		for key, price := range val.Prices {
-			args := strings.Split(key, ":")
+			fields := strings.Split(key, ":")
 
 			shouldContinue := false
 			for i, val := range filters {
-				if val != "" && args[i] != val {
+				if val != "" && fields[i] != val {
 					shouldContinue = true
 				}
 			}
@@ -207,7 +207,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, args[3]) && !legacy {
+			if utils.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
