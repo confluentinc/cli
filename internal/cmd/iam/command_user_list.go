@@ -11,11 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	humanLabels      = []string{"ID", "Email", "First Name", "Last Name", "Status", "Authentication Method"}
-	structuredLabels = []string{"id", "email", "first_name", "last_name", "status", "authentication_method"}
-)
-
 func (c userCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -35,11 +30,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, user := range users {
 		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
@@ -53,13 +44,11 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		var authMethods []string
-		if userProfile.GetAuthConfig() != nil {
-			for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-				authMethods = append(authMethods, authMethodFormats[method])
-			}
+		for _, method := range userProfile.GetAuthConfig().GetAllowedAuthMethods() {
+			authMethods = append(authMethods, authMethodFormats[method])
 		}
 
-		outputWriter.AddElement(&userStruct{
+		list.Add(&userOut{
 			Id:                   userProfile.ResourceId,
 			Email:                userProfile.Email,
 			FirstName:            userProfile.FirstName,
@@ -68,6 +57,5 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 			AuthenticationMethod: strings.Join(authMethods, ", "),
 		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

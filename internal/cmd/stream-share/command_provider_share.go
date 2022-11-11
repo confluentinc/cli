@@ -1,10 +1,23 @@
 package streamshare
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
+
+type providerShareOut struct {
+	Id                       string    `human:"ID" serialized:"id"`
+	ConsumerName             string    `human:"Consumer Name" serialized:"consumer_name"`
+	ConsumerOrganizationName string    `human:"Consumer Organization Name" serialized:"consumer_organization_name"`
+	Status                   string    `human:"Status" serialized:"status"`
+	DeliveryMethod           string    `human:"Delivery Method" serialized:"delivery_method"`
+	RedeemedAt               string    `human:"Redeemed At" serialized:"redeemed_at"`
+	InvitedAt                time.Time `human:"Invited At" serialized:"invited_at"`
+	InviteExpiresAt          time.Time `human:"Invite Expires At" serialized:"invite_expires_at"`
+}
 
 func (c *command) newProviderShareCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,9 +57,9 @@ func (c *command) autocompleteProviderShares() []string {
 	return suggestions
 }
 
-func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShare {
+func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerShareOut {
 	status := share.GetStatus()
-	element := &providerShare{
+	out := &providerShareOut{
 		Id:                       share.GetId(),
 		ConsumerName:             share.GetConsumerUserName(),
 		ConsumerOrganizationName: share.GetConsumerOrganizationName(),
@@ -57,7 +70,7 @@ func (c *command) buildProviderShare(share cdxv1.CdxV1ProviderShare) *providerSh
 	}
 
 	if val, ok := share.GetRedeemedAtOk(); ok && !val.IsZero() {
-		element.RedeemedAt = val.String()
+		out.RedeemedAt = val.String()
 	}
-	return element
+	return out
 }

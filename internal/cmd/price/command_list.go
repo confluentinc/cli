@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	poutput "github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -35,7 +35,15 @@ var (
 		"ClusterLinkingWrite":   "Cluster linking write",
 	}
 
-	formatClusterType = map[string]string{
+	formatClusterTypeSerialized = map[string]string{
+		"basic":       "basic",
+		"custom":      "custom-legacy",
+		"dedicated":   "dedicated",
+		"standard":    "basic-legacy",
+		"standard_v2": "standard",
+	}
+
+	formatClusterTypeHuman = map[string]string{
 		"basic":       "Basic",
 		"custom":      "Legacy - Custom",
 		"dedicated":   "Dedicated",
@@ -57,17 +65,19 @@ var (
 )
 
 var (
-	metrics        = mapToSlice(formatMetric)
-	clusterTypes   = mapToSlice(formatClusterType)
-	availabilities = mapToSlice(formatAvailability)
-	networkTypes   = mapToSlice(formatNetworkType)
+	metrics        = getKeys(formatMetric)
+	clusterTypes   = getValues(formatClusterTypeSerialized)
+	availabilities = getKeys(formatAvailability)
+	networkTypes   = getKeys(formatNetworkType)
 )
 
-var (
-	listFields       = []string{"metric", "clusterType", "availability", "networkType", "price"}
-	humanLabels      = []string{"Metric", "Cluster Type", "Availability", "Network Type", "Price"}
-	structuredLabels = []string{"metric", "cluster_type", "availability", "network_type", "price"}
-)
+type out struct {
+	Metric       string `human:"Metric" serialized:"metric"`
+	ClusterType  string `human:"Cluster Type" serialized:"cluster_type"`
+	Availability string `human:"Availability" serialized:"availability"`
+	NetworkType  string `human:"Network Type" serialized:"network_type"`
+	Price        string `human:"Price" serialized:"price"`
+}
 
 type row struct {
 	metric       string
@@ -76,22 +86,6 @@ type row struct {
 	networkType  string
 	price        float64
 	unit         string
-}
-
-type humanRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        string
-}
-
-type structuredRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        float64
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -200,11 +194,11 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 		}
 
 		for key, price := range val.Prices {
-			args := strings.Split(key, ":")
+			fields := strings.Split(key, ":")
 
 			shouldContinue := false
 			for i, val := range filters {
-				if val != "" && args[i] != val {
+				if val != "" && fields[i] != val {
 					shouldContinue = true
 				}
 			}
@@ -213,7 +207,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, args[3]) && !legacy {
+			if utils.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
@@ -235,7 +229,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 	return filteredTable, nil
 }
 
-func mapToSlice(m map[string]string) []string {
+func getKeys(m map[string]string) []string {
 	var slice []string
 	for key := range m {
 		slice = append(slice, key)
@@ -244,40 +238,41 @@ func mapToSlice(m map[string]string) []string {
 	return slice
 }
 
-func printTable(cmd *cobra.Command, rows []row) error {
-	output, _ := cmd.Flags().GetString("output")
-
-	w, err := poutput.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, cmd.OutOrStdout())
-	if err != nil {
-		return err
+func getValues(m map[string]string) []string {
+	var slice []string
+	for _, value := range m {
+		slice = append(slice, value)
 	}
+	sort.Strings(slice)
+	return slice
+}
 
+func printTable(cmd *cobra.Command, rows []row) error {
+	list := output.NewList(cmd)
 	for _, row := range rows {
-		if output == poutput.Human.String() {
-			w.AddElement(&humanRow{
-				metric:       formatMetric[row.metric],
-				clusterType:  formatClusterType[row.clusterType],
-				availability: formatAvailability[row.availability],
-				networkType:  formatNetworkType[row.networkType],
-				price:        formatPrice(row.price, row.unit),
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&out{
+				Metric:       formatMetric[row.metric],
+				ClusterType:  formatClusterTypeHuman[row.clusterType],
+				Availability: formatAvailability[row.availability],
+				NetworkType:  formatNetworkType[row.networkType],
+				Price:        formatPrice(row.price, row.unit),
 			})
 		} else {
-			w.AddElement(&structuredRow{
-				metric:       row.metric,
-				clusterType:  row.clusterType,
-				availability: row.availability,
-				networkType:  row.networkType,
-				price:        row.price,
+			list.Add(&out{
+				Metric:       row.metric,
+				ClusterType:  formatClusterTypeSerialized[row.clusterType],
+				Availability: row.availability,
+				NetworkType:  row.networkType,
+				Price:        fmt.Sprint(row.price),
 			})
 		}
 	}
-
-	w.StableSort()
-	return w.Out()
+	return list.Print()
 }
 
 func formatPrice(price float64, unit string) string {
-	priceStr := fmt.Sprintf("%v", price)
+	priceStr := fmt.Sprint(price)
 
 	// Require >= 2 digits after the decimal
 	if strings.Contains(priceStr, ".") {

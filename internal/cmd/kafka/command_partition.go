@@ -25,7 +25,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newGetReassignmentsCommand())
+	cmd.AddCommand(c.newReassignmentCommand())
 	cmd.AddCommand(c.newListCommand())
 
 	return cmd
