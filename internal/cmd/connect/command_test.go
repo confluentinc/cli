@@ -154,12 +154,12 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 	}
 	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock},
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
-	return New(prerunner)
+	return New(suite.conf, prerunner)
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"pause", connectorID})
+	cmd.SetArgs([]string{"cluster", "pause", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -169,7 +169,7 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"resume", connectorID})
+	cmd.SetArgs([]string{"cluster", "resume", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -179,7 +179,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", connectorID})
+	cmd.SetArgs([]string{"cluster", "delete", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -189,7 +189,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"list"})
+	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -202,7 +202,7 @@ func (suite *ConnectTestSuite) TestListConnectors() {
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"describe", connectorID})
+	cmd.SetArgs([]string{"cluster", "describe", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -212,7 +212,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config.yaml"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -225,7 +225,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-new-format.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-new-format.json"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -238,7 +238,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-malformed-new.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-malformed-new.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -247,7 +247,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-malformed-old.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-malformed-old.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -256,7 +256,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	cmd.SetArgs([]string{"cluster", "update", connectorID, "--config-file", "../../../test/fixtures/input/connect/config.yaml"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
