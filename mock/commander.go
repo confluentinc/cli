@@ -10,6 +10,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -22,6 +23,7 @@ import (
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
 	Client            *ccloud.Client
+	PublicClient      *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
@@ -33,7 +35,7 @@ type Commander struct {
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloud.Client, publicClient *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -41,6 +43,7 @@ func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClien
 	return &Commander{
 		FlagResolver:      flagResolverMock,
 		Client:            client,
+		PublicClient:      publicClient,
 		V2Client:          v2Client,
 		MDSClient:         mdsClient,
 		KafkaRESTProvider: kafkaRESTProvider,
@@ -151,6 +154,7 @@ func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) fun
 
 func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.Client = c.Client
+	command.PublicClient = c.PublicClient
 	command.V2Client = c.V2Client
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client

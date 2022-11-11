@@ -7,10 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -18,16 +16,16 @@ import (
 )
 
 func TestPromoAdd(t *testing.T) {
-	client := &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) (*billingv1.PromoCodeClaim, error) {
+	publicClient := &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			ClaimPromoCodeFunc: func(_ context.Context, _ *ccloudv1.Organization, _ string) (*ccloudv1.PromoCodeClaim, error) {
 				return nil, nil
 			},
 		},
 	}
 
 	cfg := v1.AuthenticatedCloudConfigMock()
-	cmd := New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
+	cmd := New(climock.NewPreRunnerMock(nil, publicClient, nil, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "add", "XXXXX")
 	require.NoError(t, err)
@@ -44,7 +42,7 @@ func TestPromoListEmpty(t *testing.T) {
 	}
 
 	cfg := v1.AuthenticatedCloudConfigMock()
-	cmd := New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
+	cmd := New(climock.NewPreRunnerMock(nil, publicClient, nil, nil, nil, cfg), true)
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "list")
 	require.NoError(t, err)
