@@ -180,7 +180,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
-		authorizedClientPublic := c.clientFactory.JwtHTTPClientFactoryPublic(context.Background(), res.Token, client.BaseURL)
+		publicAuthorizedClient := c.clientFactory.PublicJwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fEmailName.Responses["email"].(string),
 			AuthToken:        res.Token,
@@ -192,7 +192,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return nil
 		}
 
-		c.printFreeTrialAnnouncement(cmd, authorizedClientPublic, currentOrg)
+		c.printFreeTrialAnnouncement(cmd, publicAuthorizedClient, currentOrg)
 
 		utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, fEmailName.Responses["email"].(string), currentOrg.ResourceId, currentOrg.Name)
 		return nil

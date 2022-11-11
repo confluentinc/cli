@@ -139,7 +139,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
-	publicClient := c.ccloudClientFactory.JwtHTTPClientFactoryPublic(context.Background(), token, url)
+	publicClient := c.ccloudClientFactory.PublicJwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 

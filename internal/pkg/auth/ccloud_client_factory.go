@@ -13,7 +13,7 @@ import (
 type CCloudClientFactory interface {
 	AnonHTTPClientFactory(baseURL string) *ccloud.Client
 	JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client
-	JwtHTTPClientFactoryPublic(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
+	PublicJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
 }
 
 type CCloudClientFactoryImpl struct {
@@ -34,6 +34,6 @@ func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt 
 	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
-func (c *CCloudClientFactoryImpl) JwtHTTPClientFactoryPublic(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client {
+func (c *CCloudClientFactoryImpl) PublicJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client {
 	return ccloudv1.NewClientWithJWT(ctx, jwt, &ccloudv1.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
