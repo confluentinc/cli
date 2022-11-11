@@ -6,12 +6,14 @@ import (
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type CCloudClientFactory interface {
 	AnonHTTPClientFactory(baseURL string) *ccloud.Client
 	JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client
+	JwtHTTPClientFactoryPublic(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
 }
 
 type CCloudClientFactoryImpl struct {
@@ -30,4 +32,8 @@ func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloud.
 
 func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
 	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
+}
+
+func (c *CCloudClientFactoryImpl) JwtHTTPClientFactoryPublic(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client {
+	return ccloudv1.NewClientWithJWT(ctx, jwt, &ccloudv1.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }

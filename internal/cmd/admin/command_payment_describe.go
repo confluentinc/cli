@@ -3,8 +3,9 @@ package admin
 import (
 	"context"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -19,9 +20,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
+	card, err := c.PublicClient.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
