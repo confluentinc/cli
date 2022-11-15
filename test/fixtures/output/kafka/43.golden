@@ -1,3 +1,4 @@
+is_current: true
 id: lkc-describe-infinite
 name: kafka-cluster
 type: DEDICATED
@@ -10,5 +11,6 @@ region: us-west-2
 availability: single-zone
 status: UP
 endpoint: SASL_SSL://kafka-endpoint
+api_endpoint: http://127.0.0.1:50448
 rest_endpoint: http://127.0.0.1:1025
 topic_count: 2
