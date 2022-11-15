@@ -50,28 +50,36 @@ func main() {
 		panic(err)
 	}
 
-	removeDocumentation()
+	removeUnreleasedDocs()
 
 	if err := os.Setenv("HOME", currentHOME); err != nil {
 		panic(err)
 	}
 }
 
-// removeDocumentation hides documentation for unreleased features
-func removeDocumentation() {
-	out, err := os.ReadFile(filepath.Join("docs", "index.rst"))
-	if err != nil {
+// removeUnreleasedDocs hides documentation for unreleased features
+func removeUnreleasedDocs() {
+	if err := removeLineFromFile(`\s{3}stream-share/index\n`, filepath.Join("docs", "index.rst")); err != nil {
 		panic(err)
 	}
 
-	re := regexp.MustCompile(`\s{3}stream-share/index\n`)
-	out = re.ReplaceAll(out, []byte(""))
-
-	if err := os.WriteFile(filepath.Join("docs", "index.rst"), out, 0644); err != nil {
+	if err := removeLineFromFile("\\s{7}:ref:`confluent_stream-share`\\s+.+\\s+\n", filepath.Join("docs", "overview.rst")); err != nil {
 		panic(err)
 	}
 
 	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
 		panic(err)
 	}
+}
+
+func removeLineFromFile(line, file string) error {
+	out, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	re := regexp.MustCompile(line)
+	out = re.ReplaceAll(out, []byte(""))
+
+	return os.WriteFile(file, out, 0644)
 }
