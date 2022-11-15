@@ -33,10 +33,10 @@ func TestPromoAdd(t *testing.T) {
 }
 
 func TestPromoListEmpty(t *testing.T) {
-	client := &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			GetClaimedPromoCodesFunc: func(_ context.Context, _ *orgv1.Organization, _ bool) ([]*billingv1.PromoCodeClaim, error) {
-				return []*billingv1.PromoCodeClaim{}, nil
+	publicClient := &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			GetClaimedPromoCodesFunc: func(_ context.Context, _ *ccloudv1.Organization, _ bool) ([]*ccloudv1.PromoCodeClaim, error) {
+				return []*ccloudv1.PromoCodeClaim{}, nil
 			},
 		},
 	}
