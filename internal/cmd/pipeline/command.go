@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type out struct {
@@ -24,7 +23,7 @@ type command struct {
 	prerunner pcmd.PreRunner
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pipeline",
 		Short:       "Manage Stream Designer pipelines.",
