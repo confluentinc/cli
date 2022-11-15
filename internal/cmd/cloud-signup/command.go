@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
@@ -179,6 +180,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
+		publicAuthorizedClient := c.clientFactory.PublicJwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fEmailName.Responses["email"].(string),
 			AuthToken:        res.Token,
@@ -190,20 +192,20 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			return nil
 		}
 
-		c.printFreeTrialAnnouncement(cmd, authorizedClient, currentOrg)
+		c.printFreeTrialAnnouncement(cmd, publicAuthorizedClient, currentOrg)
 
 		utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, fEmailName.Responses["email"].(string), currentOrg.ResourceId, currentOrg.Name)
 		return nil
 	}
 }
 
-func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, publicClient *ccloudv1.Client, currentOrg *orgv1.Organization) {
 	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	org := &ccloudv1.Organization{Id: currentOrg.Id}
+	promoCodes, err := publicClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to print free trial announcement: %v", err)
 		return

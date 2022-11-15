@@ -5,10 +5,9 @@ import (
 	"context"
 	"testing"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -142,30 +141,30 @@ func getCommand() *command {
 					},
 				},
 			},
-			CLICommand: &pcmd.CLICommand{Command: mockAdminCommand()},
-			Client:     mockClient(),
+			CLICommand:   &pcmd.CLICommand{Command: mockAdminCommand()},
+			PublicClient: mockPublicClient(),
 		},
 		isTest: true,
 	}
 }
 
 func mockAdminCommand() *cobra.Command {
-	client := mockClient()
+	publicClient := mockPublicClient()
 	cfg := v1.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
+	return New(climock.NewPreRunnerMock(nil, publicClient, nil, nil, nil, cfg), true)
 }
 
-func mockClient() (client *ccloud.Client) {
-	client = &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			GetPaymentInfoFunc: func(_ context.Context, _ *orgv1.Organization) (*billingv1.Card, error) {
-				card := &billingv1.Card{
+func mockPublicClient() (publicClient *ccloudv1.Client) {
+	publicClient = &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			GetPaymentInfoFunc: func(_ context.Context, _ *ccloudv1.Organization) (*ccloudv1.Card, error) {
+				card := &ccloudv1.Card{
 					Brand: "Visa",
 					Last4: "4242",
 				}
 				return card, nil
 			},
-			UpdatePaymentInfoFunc: func(_ context.Context, _ *orgv1.Organization, _ string) error {
+			UpdatePaymentInfoFunc: func(_ context.Context, _ *ccloudv1.Organization, _ string) error {
 				return nil
 			},
 		},

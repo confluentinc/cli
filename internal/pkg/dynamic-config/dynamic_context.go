@@ -8,6 +8,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -18,18 +19,20 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	Client   *ccloud.Client
-	V2Client *ccloudv2.Client
+	Client       *ccloud.Client
+	PublicClient *ccloudv1.Client
+	V2Client     *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloud.Client, publicClient *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
-		Context:  context,
-		Client:   client,
-		V2Client: v2Client,
+		Context:      context,
+		Client:       client,
+		PublicClient: publicClient,
+		V2Client:     v2Client,
 	}
 }
 

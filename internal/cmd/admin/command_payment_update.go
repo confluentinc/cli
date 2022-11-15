@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -43,9 +43,8 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 		return err
 	}
 
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
-
-	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	if err := c.PublicClient.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
 		return err
 	}
 
