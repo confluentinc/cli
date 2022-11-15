@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -107,18 +106,12 @@ func (d *accountDetails) getTopicDescription() error {
 }
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	req, err := http.NewRequest("PUT", details.srCluster.SchemaRegistryEndpoint+"/asyncapi", nil)
+	response, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext)
 	if err != nil {
-		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)
+		return fmt.Errorf("error in accessing AsyncApi metric endpoint: %v", err)
 	}
-	req.SetBasicAuth(details.srCluster.SrCredentials.Key, details.srCluster.SrCredentials.Secret)
-	req.Header.Set(UserAgent, c.Version.UserAgent)
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("unable to access AsyncApi metric endpoint: %v", err)
-	}
-	if res.StatusCode != 200 {
-		return fmt.Errorf("request failed with status %s", res.Status)
+	if response.StatusCode != 200 {
+		return fmt.Errorf("request failed with status %s", response.Status)
 	}
 	return nil
 }

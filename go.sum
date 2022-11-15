@@ -716,8 +716,8 @@ github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65/go.mo
 github.com/confluentinc/protoc-gen-ccloud v0.0.4 h1:cQkU/EJe1ZeSMNyIr2EZkcyJx4rhhR5v7Ierj3toxbo=
 github.com/confluentinc/protoc-gen-ccloud v0.0.4/go.mod h1:c5l+BPASYdK6SttAYW8yrGx0NNhB+4xpKID+w/MXp/8=
 github.com/confluentinc/prototools v0.0.4/go.mod h1:V4b4Enz2JM192RaRXFyN3yBMXAToleg+dTpCOu4fnhE=
-github.com/confluentinc/schema-registry-sdk-go v0.0.16 h1:BJtRiQR/gvELxFW9gN/0eKmiPOA/zRdIP9CINacRHBI=
-github.com/confluentinc/schema-registry-sdk-go v0.0.16/go.mod h1:76A1PsiAYSQGULQzyj1FrIsZNJ2MowdmfEsQaSCSddk=
+github.com/confluentinc/schema-registry-sdk-go v0.0.18 h1:u1klTcE1yPtRh367e5jrA4fyrIcXd0Ctf2/fFgrqBjA=
+github.com/confluentinc/schema-registry-sdk-go v0.0.18/go.mod h1:wS+qdKbvuAhZYwkAaH3mLV1qGe5WME6Ty7bW/Vpm8P0=
 github.com/containerd/aufs v0.0.0-20200908144142-dab0cbea06f4/go.mod h1:nukgQABAEopAHvB6j7cnP5zJ+/3aVcE7hCYqvIwAHyE=
 github.com/containerd/aufs v0.0.0-20201003224125-76a6863f2989/go.mod h1:AkGGQs9NM2vtYHaUen+NljV0/baGCAPELGm2q9ZXpWU=
 github.com/containerd/aufs v0.0.0-20210316121734-20793ff83c97/go.mod h1:kL5kd6KM5TzQjR79jljyi4olc1Vrx6XBlcyj3gNv2PU=
