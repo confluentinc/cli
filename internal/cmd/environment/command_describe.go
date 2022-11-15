@@ -9,7 +9,7 @@ import (
 )
 
 type out struct {
-	IsCurrent bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
 	Id        string `human:"ID" serialized:"id"`
 	Name      string `human:"Name" serialized:"name"`
 }
@@ -36,8 +36,9 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   *environment.Id,
-		Name: *environment.DisplayName,
+		IsCurrent: *environment.Id == c.EnvironmentId(),
+		Id:        *environment.Id,
+		Name:      *environment.DisplayName,
 	})
 	return table.Print()
 }

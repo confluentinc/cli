@@ -1,9 +1,6 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -45,11 +42,9 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 
 	list := output.NewList(cmd)
 	for _, invitation := range invitations {
-		user := &orgv1.User{ResourceId: invitation.User.GetId()}
-
 		var name string
-		if userProfile, err := c.Client.User.GetUserProfile(context.Background(), user); err == nil {
-			name = getName(userProfile)
+		if user, err := c.V2Client.GetIamUserById(invitation.User.GetId()); err == nil {
+			name = user.GetFullName()
 		}
 
 		list.Add(&invitationOut{

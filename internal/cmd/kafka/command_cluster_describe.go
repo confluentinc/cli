@@ -21,13 +21,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	basicDescribeFields                = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
-	basicDescribeFieldsWithApiEndpoint = []string{"Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
-)
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "ApiEndpoint", "RestEndpoint"}
 
 type describeStruct struct {
-	IsCurrent          bool   `human:"Current,omitempty" serialized:"is_current,omitempty"`
+	IsCurrent          bool   `human:"Current" serialized:"is_current"`
 	Id                 string `human:"ID" serialized:"id"`
 	Name               string `human:"Name" serialized:"name"`
 	Type               string `human:"Type" serialized:"type"`
@@ -82,7 +79,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
 
-	return c.outputKafkaClusterDescriptionWithKAPI(cmd, &cluster)
+	return c.outputKafkaClusterDescription(cmd, &cluster, true)
 }
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
@@ -101,30 +98,14 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	return lkc, nil
 }
 
-func (c *clusterCommand) outputKafkaClusterDescriptionWithKAPI(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster) error {
-	out := convertClusterToDescribeStruct(cluster)
-	filter := getKafkaClusterDescribeFields(cluster, basicDescribeFields, true)
-
-	topicCount, err := c.getTopicCountForKafkaCluster(cluster)
-	if err != nil {
-		return err
-	}
-	out.TopicCount = topicCount
-
-	table := output.NewTable(cmd)
-	table.Add(out)
-	table.Filter(filter)
-	return table.Print()
-}
-
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	kAPI, err := c.getCmkClusterApiEndpoint(cluster)
+	apiEndpoint, err := c.getCmkClusterApiEndpoint(cluster)
 	if err != nil {
 		return err
 	}
 
-	out := convertClusterToDescribeStruct(cluster)
-	out.ApiEndpoint = kAPI
+	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
+	out.ApiEndpoint = apiEndpoint
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
@@ -136,15 +117,16 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 
 	table := output.NewTable(cmd)
 	table.Add(out)
-	table.Filter(getKafkaClusterDescribeFields(cluster, basicDescribeFieldsWithApiEndpoint, true))
+	table.Filter(getKafkaClusterDescribeFields(cluster, basicDescribeFields, getTopicCount))
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *v1.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgress(cluster)
 
 	return &describeStruct{
+		IsCurrent:          *cluster.Id == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Id:                 *cluster.Id,
 		Name:               *cluster.Spec.DisplayName,
 		Type:               getCmkClusterType(cluster),
