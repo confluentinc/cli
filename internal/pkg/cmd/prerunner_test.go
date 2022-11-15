@@ -103,7 +103,7 @@ func getPreRunBase() *pcmd.PreRun {
 				return &ccloud.Client{}
 			},
 		},
-		MDSClientManager: &cliMock.MDSClientManager{
+		MDSClientManager: &cliMock.MockMDSClientManager{
 			GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 				return &mds.APIClient{}, nil
 			},
