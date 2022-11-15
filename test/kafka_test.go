@@ -259,7 +259,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", wantErrCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
 
 		{args: "kafka broker delete -h", fixture: "kafka/broker/delete-help.golden"},
-		{args: "kafka broker delete 1", fixture: "kafka/broker/delete.golden"},
+		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
 
 		{args: "kafka broker get-tasks -h", fixture: "kafka/broker/get-tasks-help.golden"},
 		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},

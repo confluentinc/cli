@@ -9,11 +9,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
-	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
 		Args:  cobra.ExactArgs(1),
@@ -22,6 +22,7 @@ func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	return cmd
 }
@@ -42,6 +43,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
+	}
+
+	if confirm, err := form.ConfirmDeletionYesNo(cmd, "broker", brokerIdStr); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
