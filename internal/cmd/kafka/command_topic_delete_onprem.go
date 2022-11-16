@@ -42,7 +42,7 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	err = form.ConfirmDeletion(cmd, resource.Topic, topicName, topicName)
+	_, err = form.ConfirmDeletion(cmd, resource.Topic, topicName, topicName)
 	if err != nil {
 		return err
 	}

@@ -41,7 +41,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	if confirm, err := form.ConfirmDeletionYesNo(cmd, "ACL", ""); err != nil {
+	if confirm, err := form.ConfirmDeletion(cmd, "ACL", ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

@@ -45,7 +45,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletionYesNo(cmd, "broker", brokerIdStr); err != nil {
+	if confirm, err := form.ConfirmDeletion(cmd, "broker", "", brokerIdStr); err != nil {
 		return err
 	} else if !confirm {
 		return nil

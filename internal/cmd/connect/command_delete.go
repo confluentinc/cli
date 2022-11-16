@@ -50,7 +50,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = form.ConfirmDeletion(cmd, resource.Connector, lcc, connector.Info.GetName())
+	_, err = form.ConfirmDeletion(cmd, resource.Connector, connector.Info.GetName(), lcc)
 	if err != nil {
 		return err
 	}

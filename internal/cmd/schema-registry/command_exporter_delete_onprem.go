@@ -34,7 +34,7 @@ func (c *exporterCommand) onPremDelete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	err = form.ConfirmDeletion(cmd, resource.SchemaExporter, info.Name, info.Name)
+	_, err = form.ConfirmDeletion(cmd, resource.SchemaExporter, info.Name, info.Name)
 	if err != nil {
 		return err
 	}

@@ -44,7 +44,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = form.ConfirmDeletion(cmd, resource.IdentityPool, args[0], pool.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, resource.IdentityPool, pool.GetDisplayName(), args[0])
 	if err != nil {
 		return err
 	}

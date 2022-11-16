@@ -42,7 +42,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = form.ConfirmDeletion(cmd, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, resource.Pipeline, pipeline.Spec.GetDisplayName(), pipeline.GetId())
 	if err != nil {
 		return err
 	}

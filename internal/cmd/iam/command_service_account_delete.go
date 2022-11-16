@@ -41,7 +41,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
-	err = form.ConfirmDeletion(cmd, resource.ServiceAccount, serviceAccountId, serviceAccount.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, resource.ServiceAccount, serviceAccount.GetDisplayName(), serviceAccountId)
 	if err != nil {
 		return err
 	}

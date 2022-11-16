@@ -49,7 +49,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletionYesNo(cmd, "role binding", ""); err != nil {
+	if confirm, err := form.ConfirmDeletion(cmd, "role binding", ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

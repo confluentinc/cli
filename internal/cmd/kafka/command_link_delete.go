@@ -43,7 +43,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = form.ConfirmDeletion(cmd, resource.ClusterLink, linkName, linkName)
+	_, err = form.ConfirmDeletion(cmd, resource.ClusterLink, linkName, linkName)
 	if err != nil {
 		return err
 	}

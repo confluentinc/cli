@@ -82,51 +82,55 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceId, resourceName string) error {
+func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id ...string) (bool, error) {
 	force, err := cmd.Flags().GetBool("force")
-	if err != nil || force {
-		return err
+	if err != nil {
+		return false, err
+	}
+	if force {
+		return true, nil
 	}
 
 	prompt := NewPrompt(os.Stdin)
-	f := New(Field{ID: "Confirm", Prompt: fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, resourceId, resourceName)})
-	if err := f.Prompt(cmd, prompt); err != nil {
-		return err
-	}
 
-	if f.Responses["Confirm"].(string) != resourceName {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.DeleteResourceConfirmErrorMsg, resourceName), errors.DeleteResourceConfirmSuggestions)
-	}
-
-	return nil
-}
-
-func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType, resourceId string) (bool, error) {
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil || force {
-		return true, err
-	}
-
-	prompt := NewPrompt(os.Stdin)
 	var promptMsg string
-	if resourceId != "" {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, resourceId)
+	yesNo := true
+	idList := strings.Join(id, ", ")
+	if len(id) > 1 {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, utils.Plural(resourceType), idList)
+	} else if len(id) == 1 && resourceName != "" {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, idList, resourceName)
+		yesNo = false
+	} else if len(id) == 1 {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList)
 	} else {
 		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmNoIdYesNoMsg, resourceType)
 	}
+
 	f := New(
 		Field{
 			ID: "confirm",
 			Prompt: promptMsg,
-			IsYesOrNo: true,
+			IsYesOrNo: yesNo,
 		},
 	)
-
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(cmd, prompt); err != nil && yesNo {
 		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
+	} else if err != nil {
+		return false, err
 	}
 
-	return f.Responses["confirm"].(bool), nil
+	if !yesNo {
+		if f.Responses["confirm"].(string) != resourceName {
+			return false, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.DeleteResourceConfirmErrorMsg, resourceName), errors.DeleteResourceConfirmSuggestions)
+		} else {
+			return true, nil
+		}
+	} else {
+		return f.Responses["confirm"].(bool), nil
+	}
+
+	return false, nil
 }
 
 func show(cmd *cobra.Command, field Field) {

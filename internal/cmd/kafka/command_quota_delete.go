@@ -28,7 +28,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	err = form.ConfirmDeletion(cmd, resource.ClientQuota, args[0], args[0])
+	_, err = form.ConfirmDeletion(cmd, resource.ClientQuota, args[0], args[0])
 	if err != nil {
 		return err
 	}

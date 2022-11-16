@@ -50,7 +50,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
-	err = form.ConfirmDeletion(cmd, resource.KsqlCluster, id, cluster.GetName())
+	_, err = form.ConfirmDeletion(cmd, resource.KsqlCluster, cluster.GetName(), id)
 	if err != nil {
 		return err
 	}
