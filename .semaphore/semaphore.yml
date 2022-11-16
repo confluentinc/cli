@@ -139,5 +139,5 @@ blocks:
 #          - test-results gen-pipeline-report
 
 promotions:
-  - name: Release for Linux (APT)
+  - name: Release to APT
     pipeline_file: release-apt.yml

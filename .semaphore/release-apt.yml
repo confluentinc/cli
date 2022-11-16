@@ -14,4 +14,13 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            - echo "Releasing for Linux!"
+            - checkout
+            - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
+            - git checkout -b debian-2.32.1
+            - dch --newversion 2.32.1 "Release version 2.32.1" --urgency low
+            - dch --release --distribution unstable ""
+            - git commit -am "Tag Debian release."
+            - git-buildpackage -us -uc --git-debian-branch=debian-$VERSION --git-upstream-tree=$BRANCH --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=$APPLY_PATCHES --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=$CLI_VERSION --set-envvar=VERSION=$VERSION --set-envvar=SKIP_TESTS=$SKIP_TESTS -i -I"
+            - echo $SIGN
+            - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent-cli_*.changes); fi
+            - cp confluent-cli_*.build confluent-cli_*.changes confluent-cli_*.tar.gz confluent-cli_*.dsc confluent-cli_*.deb /vagrant/output/
