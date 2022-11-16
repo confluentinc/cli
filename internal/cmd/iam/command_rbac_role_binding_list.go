@@ -203,7 +203,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 							break
 						}
 					}
-					// When empty for KSQL so fill it up
+					// When empty, fill it up as printout depends on this
 					if len(resourcePatterns) == 0 {
 						resourcePatterns = append(resourcePatterns, mdsv2alpha1.ResourcePattern{
 							ResourceType: "KSQL",
