@@ -154,6 +154,25 @@ var v2RoutesAndReplies = map[string]string{
 				}
 		  	}
 		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-66ffa": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=2345",
+						"environment=b-595",
+						"cloud-cluster=lkc-1111abc"
+					],
+					"clusters": {
+						"ksql-cluster": "ksqlDB_cluster_name"
+					}
+				},
+				"rolebindings": {
+					"User:u-66ffa": {
+						"KsqlAdmin": []
+					}
+				}
+		  	}
+		]`,
 	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-77ggg": `[
 		  	{
 				"scope": {
