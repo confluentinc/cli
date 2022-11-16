@@ -25,7 +25,7 @@ blocks:
           commands:
             - checkout
             - git checkout -b debian-2.32.1
-            - sudo apt install devscripts
+            - sudo apt install devscripts -y
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
             - debchange --newversion 2.32.1 "Release version 2.32.1" --urgency low
             - debchange --release --distribution unstable ""
