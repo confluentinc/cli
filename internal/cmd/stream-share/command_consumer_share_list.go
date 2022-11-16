@@ -40,15 +40,10 @@ func (c *command) listConsumerShares(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, consumerShareListFields, consumerShareListHumanLabels, consumerShareListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, share := range consumerShares {
-		element := c.buildConsumerShare(share)
-		outputWriter.AddElement(element)
+		list.Add(c.buildConsumerShare(share))
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"})
+	return list.Print()
 }

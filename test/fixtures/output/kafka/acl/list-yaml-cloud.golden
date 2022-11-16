@@ -1,6 +1,6 @@
-- operation: READ
-  pattern_type: LITERAL
+- principal: User:sa-12345
   permission: ALLOW
-  principal: User:sa-12345
-  resource_name: test-topic
+  operation: READ
   resource_type: TOPIC
+  resource_name: test-topic
+  pattern_type: LITERAL

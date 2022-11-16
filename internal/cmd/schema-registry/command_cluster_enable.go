@@ -17,12 +17,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var (
-	enableLabels            = []string{"Id", "SchemaRegistryEndpoint"}
-	enableHumanRenames      = map[string]string{"ID": "Cluster ID", "SchemaRegistryEndpoint": "Endpoint URL"}
-	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
-	availableGeos           = []string{"us", "eu", "apac"}
-)
+type enableOut struct {
+	Id          string `human:"ID" serialized:"id"`
+	EndpointUrl string `human:"Endpoint URL" serialized:"endpoint_url"`
+}
+
+var availableGeos = []string{"us", "eu", "apac"}
 
 func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -98,8 +98,8 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		Name: "account schema-registry",
 	}
 
+	var out *enableOut
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
-	var clusterOutput *v1.SchemaRegistryCluster
 	if err != nil {
 		// If it already exists, return the existing one
 		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
@@ -108,18 +108,20 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		clusterOutput = &v1.SchemaRegistryCluster{
-			Id:                     existingCluster.Id,
-			SchemaRegistryEndpoint: existingCluster.Endpoint,
+		out = &enableOut{
+			Id:          existingCluster.Id,
+			EndpointUrl: existingCluster.Endpoint,
 		}
 	} else {
-		clusterOutput = &v1.SchemaRegistryCluster{
-			Id:                     newCluster.Id,
-			SchemaRegistryEndpoint: newCluster.Endpoint,
+		out = &enableOut{
+			Id:          newCluster.Id,
+			EndpointUrl: newCluster.Endpoint,
 		}
 	}
 
-	return output.DescribeObject(cmd, clusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
 }
 
 func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
