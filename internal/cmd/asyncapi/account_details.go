@@ -106,12 +106,9 @@ func (d *accountDetails) getTopicDescription() error {
 }
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	response, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext)
+	_, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext)
 	if err != nil {
-		return fmt.Errorf("error in accessing AsyncApi metric endpoint: %v", err)
-	}
-	if response.StatusCode != 200 {
-		return fmt.Errorf("request failed with status %s", response.Status)
+		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
 	}
 	return nil
 }
