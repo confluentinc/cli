@@ -130,8 +130,6 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 	} else {
 		return f.Responses["confirm"].(bool), nil
 	}
-
-	return false, nil
 }
 
 func show(cmd *cobra.Command, field Field) {
