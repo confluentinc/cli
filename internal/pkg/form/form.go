@@ -91,20 +91,21 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 		return true, nil
 	}
 
-	prompt := NewPrompt(os.Stdin)
+	idList := strings.Join(id, ", ")
+	DeleteResourceConfirmYesNoMsg := "Are you sure you want to delete %s %s?" // arguments are: resource(s), id list
 
+	prompt := NewPrompt(os.Stdin)
 	var promptMsg string
 	yesNo := true
-	idList := strings.Join(id, ", ")
 	if len(id) > 1 {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, utils.Plural(resourceType), idList)
+		promptMsg = fmt.Sprintf(DeleteResourceConfirmYesNoMsg, utils.Plural(resourceType), idList)
 	} else if len(id) == 1 && resourceName != "" {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, idList, resourceName)
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?\nTo confirm, enter \"%s\". To cancel, use Ctrl-C", resourceType, idList, resourceName)
 		yesNo = false
 	} else if len(id) == 1 {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList)
+		promptMsg = fmt.Sprintf(DeleteResourceConfirmYesNoMsg, resourceType, idList)
 	} else {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmNoIdYesNoMsg, resourceType)
+		promptMsg = fmt.Sprintf("Are you sure you want to delete this %s?", resourceType)
 	}
 
 	f := New(
@@ -115,7 +116,7 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 		},
 	)
 	if err := f.Prompt(cmd, prompt); err != nil && yesNo {
-		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
+		return false, errors.New("failed to read your deletion confirmation")
 	} else if err != nil {
 		return false, err
 	}
