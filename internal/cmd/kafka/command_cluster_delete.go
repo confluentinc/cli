@@ -33,7 +33,8 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.FindKafkaCluster(args[0])
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, args[0], nil)
+		// Replace the suggestions w/ the suggestions specific to delete requests
+		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterDeletingSuggestions)
 	}
 	_, err = form.ConfirmDeletion(cmd, resource.KafkaCluster, cluster.Name, args[0])
 	if err != nil {
