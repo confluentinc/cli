@@ -72,7 +72,6 @@ const (
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg          = `ensure principal begins with "User:"`
 	PrincipalNotFoundErrorMsg     = `user or service account "%s" not found`
 
 	// iam rbac role commands
