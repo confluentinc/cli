@@ -17,7 +17,7 @@ type exporterOut struct {
 	SubjectFormat string `human:"Subject Format" serialized:"subject_format"`
 	ContextType   string `human:"Context Type" serialized:"context_type"`
 	Context       string `human:"Context" serialized:"context"`
-	Config        string `human:"Remote Schema Registry Configs" serialized:"config"`
+	Config        string `human:"Config" serialized:"config"`
 }
 
 func (c *exporterCommand) newDescribeCommand() *cobra.Command {

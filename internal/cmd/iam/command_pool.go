@@ -13,7 +13,7 @@ type identityPoolCommand struct {
 
 type identityPoolOut struct {
 	Id            string `human:"ID" serialized:"id"`
-	DisplayName   string `human:"Display Name" serialized:"display_name"`
+	DisplayName   string `human:"Name" serialized:"name"`
 	Description   string `human:"Description" serialized:"description"`
 	IdentityClaim string `human:"Identity Claim" serialized:"identity_claim"`
 	Filter        string `human:"Filter" serialized:"filter"`
