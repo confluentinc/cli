@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -38,7 +37,6 @@ type describeStruct struct {
 	Availability       string `human:"Availability" serialized:"availability"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
-	ApiEndpoint        string `human:"API Endpoint" serialized:"api_endpoint"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
 	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
@@ -99,13 +97,7 @@ func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 }
 
 func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, cluster *cmkv2.CmkV2Cluster, getTopicCount bool) error {
-	apiEndpoint, err := c.getCmkClusterApiEndpoint(cluster)
-	if err != nil {
-		return err
-	}
-
 	out := convertClusterToDescribeStruct(cluster, c.Context.Context)
-	out.ApiEndpoint = apiEndpoint
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
@@ -170,16 +162,6 @@ func getKafkaClusterDescribeFields(cluster *cmkv2.CmkV2Cluster, basicFields []st
 	}
 
 	return describeFields
-}
-
-func (c *clusterCommand) getCmkClusterApiEndpoint(cluster *cmkv2.CmkV2Cluster) (string, error) { // TODO: remove this function when KAPI is fully deprecated
-	lkc := *cluster.Id
-	req := &schedv1.KafkaCluster{AccountId: c.EnvironmentId(), Id: lkc}
-	kafkaCluster, err := c.Client.Kafka.Describe(context.Background(), req)
-	if err != nil {
-		return "", errors.CatchKafkaNotFoundError(err, lkc, nil)
-	}
-	return kafkaCluster.ApiEndpoint, nil
 }
 
 func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluster) (int, error) {

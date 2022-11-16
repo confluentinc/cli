@@ -24,7 +24,6 @@ Please confirm you've authorized the key for this identity: id-xyz (y/n): It may
 | Availability      | single-zone               |
 | Status            | PROVISIONING              |
 | Endpoint          | SASL_SSL://kafka-endpoint |
-| API Endpoint      | http://kafka-api-url      |
 | Encryption Key ID | xyz                       |
 | REST Endpoint     | https://pkc-endpoint      |
 +-------------------+---------------------------+

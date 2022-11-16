@@ -10,5 +10,4 @@ region: us-east-1
 availability: single-zone
 status: PROVISIONING
 endpoint: SASL_SSL://kafka-endpoint
-api_endpoint: http://kafka-api-url
 rest_endpoint: https://pkc-endpoint

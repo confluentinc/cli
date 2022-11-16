@@ -13,7 +13,6 @@
   "availability": "single-zone",
   "status": "EXPANDING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://127.0.0.1:50448",
   "rest_endpoint": "http://127.0.0.1:1025",
   "topic_count": 2
 }
