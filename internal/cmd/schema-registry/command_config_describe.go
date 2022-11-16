@@ -76,7 +76,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
-	list := output.NewList(cmd)
-	list.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
-	return list.Print()
+	table := output.NewTable(cmd)
+	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
+	return table.Print()
 }

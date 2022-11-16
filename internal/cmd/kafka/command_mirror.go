@@ -18,7 +18,7 @@ type mirrorOut struct {
 	MirrorTopicName          string `human:"Mirror Topic Name" serialized:"mirror_topic_name"`
 	SourceTopicName          string `human:"Source Topic Name" serialized:"source_topic_name"`
 	MirrorStatus             string `human:"Mirror Status" serialized:"mirror_status"`
-	StatusTimeMs             int64  `human:"Status Time Ms" serialized:"status_time_ms"`
+	StatusTimeMs             int64  `human:"Status Time (ms)" serialized:"status_time_ms"`
 	Partition                int32  `human:"Partition" serialized:"partition"`
 	NumPartition             int32  `human:"Num Partition" serialized:"num_partition"`
 	PartitionMirrorLag       int64  `human:"Partition Mirror Lag" serialized:"partition_mirror_lag"`

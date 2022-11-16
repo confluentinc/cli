@@ -10,7 +10,7 @@ import (
 )
 
 type partitionOut struct {
-	ClusterId   string `human:"Cluster ID" serialized:"cluster_id"`
+	ClusterId   string `human:"Cluster" serialized:"cluster_id"`
 	TopicName   string `human:"Topic Name" serialized:"topic_name"`
 	PartitionId int32  `human:"Partition ID" serialized:"partition_id"`
 	LeaderId    int32  `human:"Leader ID" serialized:"leader_id"`
