@@ -101,7 +101,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("resource", "", "If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.")
-	cmd.Flags().Bool("inclusive", true, "List all role bindings in a specific scope and its nested scopes.")
+	cmd.Flags().Bool("inclusive", false, "List all role bindings in a specific scope and its nested scopes.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -534,11 +534,10 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
 	}
 
-	resp, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName(), listRoleBinding.GetCrnPattern())
+	roleBindings, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetCrnPattern(), listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName())
 	if err != nil {
 		return err
 	}
-	roleBindings := resp.Data
 
 	principalToUser, err := c.getPrincipalToUserMap()
 	if err != nil {
@@ -635,11 +634,10 @@ func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, list
 		listRoleBinding.CrnPattern = mdsv2.PtrString(listRoleBinding.GetCrnPattern())
 	}
 
-	resp, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName(), listRoleBinding.GetCrnPattern())
+	roleBindings, err := c.V2Client.ListIamRoleBindings(listRoleBinding.GetCrnPattern(), listRoleBinding.GetPrincipal(), listRoleBinding.GetRoleName())
 	if err != nil {
 		return err
 	}
-	roleBindings := resp.Data
 
 	principals := make(map[string]bool)
 	principalStrings := []string{}
