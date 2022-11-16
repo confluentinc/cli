@@ -1,12 +1,12 @@
 version: v1.0
-name: Release for Linux (APT)
+name: Release to APT
 agent:
   machine:
     type: s1-prod-ubuntu20-04-amd64-1
 blocks:
-  - name: Release
+  - name: linux/amd64
     task:
       jobs:
-        - name: Release
+        - name: linux/amd64
           commands:
             - echo "Releasing for Linux!"
