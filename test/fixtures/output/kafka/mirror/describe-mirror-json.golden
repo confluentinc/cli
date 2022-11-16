@@ -1,32 +1,32 @@
 [
   {
-    "last_source_fetch_offset": "1293009",
     "link_name": "link-1",
-    "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
-    "partition": "0",
-    "partition_mirror_lag": "142857",
     "source_topic_name": "src-topic-1",
-    "status_time_ms": "111111111"
+    "mirror_status": "active",
+    "status_time_ms": 111111111,
+    "partition": 0,
+    "partition_mirror_lag": 142857,
+    "last_source_fetch_offset": 1293009
   },
   {
-    "last_source_fetch_offset": "28340404",
     "link_name": "link-1",
-    "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
-    "partition": "1",
-    "partition_mirror_lag": "285714",
     "source_topic_name": "src-topic-1",
-    "status_time_ms": "111111111"
+    "mirror_status": "active",
+    "status_time_ms": 111111111,
+    "partition": 1,
+    "partition_mirror_lag": 285714,
+    "last_source_fetch_offset": 28340404
   },
   {
-    "last_source_fetch_offset": "5739304",
     "link_name": "link-1",
-    "mirror_status": "active",
     "mirror_topic_name": "dest-topic-1",
-    "partition": "2",
-    "partition_mirror_lag": "571428",
     "source_topic_name": "src-topic-1",
-    "status_time_ms": "111111111"
+    "mirror_status": "active",
+    "status_time_ms": 111111111,
+    "partition": 2,
+    "partition_mirror_lag": 571428,
+    "last_source_fetch_offset": 5739304
   }
 ]
