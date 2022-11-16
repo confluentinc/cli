@@ -1,8 +1,13 @@
 version: v1.0
 name: Release to APT
+
 agent:
   machine:
     type: s1-prod-ubuntu20-04-amd64-1
+
+execution_time_limit:
+  hours: 1
+
 blocks:
   - name: linux/amd64
     task:

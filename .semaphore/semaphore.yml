@@ -16,7 +16,7 @@ global_job_config:
 execution_time_limit:
   hours: 1
 
-#blocks:
+blocks:
 #  - name: linux/amd64
 #    dependencies: []
 #    task:
