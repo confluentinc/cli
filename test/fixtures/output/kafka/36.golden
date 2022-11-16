@@ -1,4 +1,5 @@
 +-------------------+----------------------------------------+
+| Current           | true                                   |
 | ID                | lkc-describe-dedicated-with-encryption |
 | Name              | kafka-cluster                          |
 | Type              | DEDICATED                              |

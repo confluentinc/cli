@@ -1,5 +1,6 @@
 [
   {
+    "is_current": false,
     "id": "lkc-123",
     "name": "abc",
     "type": "BASIC",
@@ -9,6 +10,7 @@
     "status": "PROVISIONING"
   },
   {
+    "is_current": false,
     "id": "lkc-456",
     "name": "def",
     "type": "BASIC",

@@ -1,4 +1,5 @@
 +---------------+---------------------------+
+| Current       | true                      |
 | ID            | lkc-describe              |
 | Name          | kafka-cluster             |
 | Type          | BASIC                     |
