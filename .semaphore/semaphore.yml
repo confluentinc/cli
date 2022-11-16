@@ -23,7 +23,18 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            - echo "Hello, World"
+            - checkout
+            - git checkout -b debian-2.32.1
+            - apt install devscripts
+            - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
+            - debchange --newversion 2.32.1 "Release version 2.32.1" --urgency low
+            - debchange --release --distribution unstable ""
+            - git commit -am "Tag Debian release."
+            - git-buildpackage -us -uc --git-debian-branch=debian-$VERSION --git-upstream-tree=$BRANCH --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=$APPLY_PATCHES --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=$CLI_VERSION --set-envvar=VERSION=$VERSION --set-envvar=SKIP_TESTS=$SKIP_TESTS -i -I"
+            - echo $SIGN
+            - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent-cli_*.changes); fi
+            - cp confluent-cli_*.build confluent-cli_*.changes confluent-cli_*.tar.gz confluent-cli_*.dsc confluent-cli_*.deb /vagrant/output/
+
 #            # Get GitHub SSH key from Vault
 #            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
 #            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
