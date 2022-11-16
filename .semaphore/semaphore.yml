@@ -34,6 +34,7 @@ blocks:
             - git config user.name "Brian Strauch"
             - git commit -am "Tag Debian release."
             
+            - sudo apt update --yes
             - sudo apt install git-buildpackage --yes
             - git-buildpackage -us -uc --git-debian-branch=debian-2.32.1 --git-upstream-tree=main --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=2.32.1 --set-envvar=VERSION=2.32.1 --set-envvar=SKIP_TESTS=yes -i -I"
             - echo $SIGN
