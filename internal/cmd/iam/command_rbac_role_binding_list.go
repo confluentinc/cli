@@ -1,6 +1,9 @@
 package iam
 
 import (
+	"context"
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"net/http"
 	"os"
 	"sort"
@@ -187,7 +190,24 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					logicalCluster = roleBindingScope.Clusters.ConnectCluster
 				} else if roleBindingScope.Clusters.KsqlCluster != "" {
 					clusterType = "ksqlDB"
-					logicalCluster = roleBindingScope.Clusters.KsqlCluster
+					clusterName := roleBindingScope.Clusters.KsqlCluster
+					// Get all Ksqls within Env
+					listKsqlReq := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+					clusterList, err := c.Client.KSQL.List(context.Background(), listKsqlReq)
+					if err != nil {
+						return err
+					}
+					for _, ksql := range clusterList {
+						if ksql.KafkaClusterId == cloudClusterName && ksql.Name == clusterName {
+							logicalCluster = clusterList[0].PhysicalClusterId
+						}
+					}
+					// Will be empty for KSQL so fill it up
+					resourcePatterns = append(resourcePatterns, mdsv2alpha1.ResourcePattern{
+						ResourceType: "KSQL",
+						Name:         clusterName,
+						PatternType:  "LITERAL",
+					})
 				} else if roleBindingScope.Clusters.SchemaRegistryCluster != "" {
 					clusterType = "Schema Registry"
 					logicalCluster = roleBindingScope.Clusters.SchemaRegistryCluster
