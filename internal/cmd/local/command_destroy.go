@@ -5,7 +5,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -24,7 +23,6 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 				},
 			),
 		}, prerunner)
-	c.Command.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 
 	c.Command.RunE = c.runDestroyCommand
 	return c.Command
@@ -33,12 +31,6 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 func (c *Command) runDestroyCommand(cmd *cobra.Command, _ []string) error {
 	if !c.cc.HasTrackingFile() {
 		return errors.New(errors.NothingToDestroyErrorMsg)
-	}
-
-	if confirm, err := form.ConfirmDeletionYesNo(cmd, "Confluent Platform run", ""); err != nil {
-		return err
-	} else if !confirm {
-		return nil
 	}
 
 	if err := c.runServicesStopCommand(cmd, []string{}); err != nil {

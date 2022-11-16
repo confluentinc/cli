@@ -19,7 +19,7 @@ func (c *exporterCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

@@ -27,7 +27,7 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("provider")
 

@@ -25,7 +25,7 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 			},
 		),
 	}
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

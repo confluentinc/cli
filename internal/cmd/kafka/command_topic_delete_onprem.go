@@ -25,7 +25,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 			}),
 	}
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

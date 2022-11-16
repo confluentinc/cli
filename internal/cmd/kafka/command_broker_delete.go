@@ -22,7 +22,7 @@ func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

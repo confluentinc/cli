@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -18,7 +19,7 @@ func (c userCommand) newDeleteCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

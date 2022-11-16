@@ -35,7 +35,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("principal")
 	_ = cmd.MarkFlagRequired("role")

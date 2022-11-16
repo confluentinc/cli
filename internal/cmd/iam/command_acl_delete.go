@@ -25,7 +25,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("kafka-cluster-id")
 	_ = cmd.MarkFlagRequired("principal")

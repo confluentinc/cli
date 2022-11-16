@@ -15,9 +15,9 @@ func (s *CLITestSuite) TestLocalLifecycle() {
 	defer s.destroy()
 
 	tests := []CLITest{
-		{args: "local destroy --force", fixture: "local/destroy-error.golden", login: "cloud", wantErrCode: 1},
+		{args: "local destroy", fixture: "local/destroy-error.golden", login: "cloud", wantErrCode: 1},
 		{args: "local current", fixture: "local/current.golden", regex: true},
-		{args: "local destroy --force", fixture: "local/destroy.golden", regex: true},
+		{args: "local destroy", fixture: "local/destroy.golden", regex: true},
 	}
 
 	for _, tt := range tests {
