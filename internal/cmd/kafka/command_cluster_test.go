@@ -252,15 +252,14 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	req.True(suite.cmkClusterApi.CreateCmkV2ClusterCalled())
 }
 
-// TODO: Fix this
-/*func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
+func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId})
+	cmd.SetArgs([]string{"delete", clusterId, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.cmkClusterApi.DeleteCmkV2ClusterCalled())
-}*/
+}
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
