@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
@@ -22,11 +23,11 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Grant the role "CloudClusterAdmin" to the principal "User:u-123456" in the environment "env-12345" for the cloud cluster "lkc-123456":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --resources CloudCluster:lkc-123456",
 			},
 			examples.Example{
 				Text: `Grant the role "ResourceOwner" to the principal "User:u-123456", in the environment "env-12345" for the Kafka cluster "lkc-123456" on the resource "Topic:my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resource Topic:my-topic --environment env-12345 --kafka-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --resources Kafka:lkc-123456,Topic:my-topic --environment env-12345",
 			},
 			examples.Example{
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
@@ -37,7 +38,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a role binding for the principal permitting it produce to topic "my-topic":`,
-				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID",
+				Code: "confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resources Kafka:$KAFKA_CLUSTER_ID,Topic:my-topic",
 			},
 		)
 	}

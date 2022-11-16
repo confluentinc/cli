@@ -46,34 +46,34 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `List the role bindings for principals with role "CloudClusterAdmin":`,
-				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --cloud-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding list --role CloudClusterAdmin --current-environment --resources CloudCluster:lkc-123456",
 			},
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
-				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --resources CloudCluster:lkc-123456",
 			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
 				Text: "Only use the `--resource` flag when specifying a `--role` with no `--principal` specified. If specifying a `--principal`, then the `--resource` flag is ignored. To list role bindings for a specific role on an identified resource:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperRead --resource Topic",
+				Code: "confluent iam rbac role-binding list --resources Kafka:$KAFKA_CLUSTER_ID,Topic:my-topic --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user",
+				Code: "confluent iam rbac role-binding list --resources Kafka:$KAFKA_CLUSTER_ID --principal User:my-user",
 			},
 			examples.Example{
 				Text: "List the role bindings for a specific principal, filtered to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
+				Code: "confluent iam rbac role-binding list --resources Kafka:$KAFKA_CLUSTER_ID --principal User:my-user --role DeveloperRead",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite",
+				Code: "confluent iam rbac role-binding list --resources Kafka:$KAFKA_CLUSTER_ID --role DeveloperWrite",
 			},
 			examples.Example{
 				Text: "List the principals bound to a specific resource with a specific role:",
-				Code: "confluent iam rbac role-binding list --kafka-cluster $KAFKA_CLUSTER_ID --role DeveloperWrite --resource Topic:my-topic",
+				Code: "confluent iam rbac role-binding list --resources Kafka:$KAFKA_CLUSTER_ID,Topic:my-topic --role DeveloperWrite",
 			},
 		)
 	}
