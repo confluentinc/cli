@@ -25,12 +25,16 @@ blocks:
           commands:
             - checkout
             - git checkout -b debian-2.32.1
-            - sudo apt install devscripts -y
-            - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
-            - debchange --newversion 2.32.1 "Release version 2.32.1" --urgency low
+            
+            - sudo apt install devscripts --yes
+            - DEBEMAIL="Confluent Packaging <packages@confluent.io>" debchange --newversion 2.32.1 "Release version 2.32.1"
             - debchange --release --distribution unstable ""
+            
+            - git config user.email "bstrauch@confluent.io"
+            - git config user.name "Brian Strauch"
             - git commit -am "Tag Debian release."
-            - git-buildpackage -us -uc --git-debian-branch=debian-$VERSION --git-upstream-tree=$BRANCH --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=$APPLY_PATCHES --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=$CLI_VERSION --set-envvar=VERSION=$VERSION --set-envvar=SKIP_TESTS=$SKIP_TESTS -i -I"
+            
+            - git-buildpackage -us -uc --git-debian-branch=debian-2.32.1 --git-upstream-tree=main --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=2.32.1 --set-envvar=VERSION=2.32.1 --set-envvar=SKIP_TESTS=yes -i -I"
             - echo $SIGN
             - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent-cli_*.changes); fi
             - cp confluent-cli_*.build confluent-cli_*.changes confluent-cli_*.tar.gz confluent-cli_*.dsc confluent-cli_*.deb /vagrant/output/
