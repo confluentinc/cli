@@ -24,7 +24,7 @@ blocks:
         - name: linux/amd64
           commands:
             - sudo apt update
-            - sudo apt install -y devscripts git-buildpackage
+            - sudo apt install -y debhelper devscripts git-buildpackage
 
             - checkout
             - git checkout -b debian
