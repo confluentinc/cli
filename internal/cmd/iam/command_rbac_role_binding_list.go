@@ -10,7 +10,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
-	"github.com/confluentinc/go-printer"
+	printer "github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
@@ -199,7 +199,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					}
 					for _, ksql := range clusterList {
 						if ksql.KafkaClusterId == cloudClusterName && ksql.Name == clusterName {
-							logicalCluster = clusterList[0].PhysicalClusterId
+							logicalCluster = ksql.PhysicalClusterId
 							break
 						}
 					}
