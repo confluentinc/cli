@@ -1,5 +1,11 @@
 package test
 
+import (
+	"strings"
+
+	"github.com/confluentinc/bincover"
+)
+
 func (s *CLITestSuite) TestSDPipeline() {
 	tests := []CLITest{
 		{args: "pipeline list --help", fixture: "pipeline/list-help.golden"},
@@ -11,6 +17,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},
 		{args: "pipeline delete --help", fixture: "pipeline/delete-help.golden"},
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
+		{args: "pipeline delete pipe-12345", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("testPipeline\n"))}, fixture: "pipeline/delete-prompt.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
 		{args: "pipeline activate pipeline-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate --help", fixture: "pipeline/deactivate-help.golden"},

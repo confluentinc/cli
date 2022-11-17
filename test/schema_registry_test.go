@@ -235,6 +235,12 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/exporter/delete.golden",
 		},
 		{
+			name:        "schema-registry exporter delete prompt",
+			args:        fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("myexporter\n"))},
+			fixture:     "schema-registry/exporter/delete-prompt.golden",
+		},
+		{
 			name:    "schema-registry exporter get-status",
 			args:    fmt.Sprintf(`schema-registry exporter get-status myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/get-status.golden",

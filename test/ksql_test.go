@@ -1,5 +1,11 @@
 package test
 
+import (
+	"strings"
+
+	"github.com/confluentinc/bincover"
+)
+
 func (s *CLITestSuite) TestKSQL() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -18,6 +24,7 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql app create test_ksql_yaml --cluster lkc-processLogFalse --api-key key --api-secret secret --log-exclude-rows -o yaml", fixture: "ksql/app/create-result-yaml-log-exclude-rows.golden"},
 		{args: "ksql app delete --help", fixture: "ksql/app/delete-help.golden"},
 		{args: "ksql app delete lksqlc-12345 --force", fixture: "ksql/app/delete-result.golden"},
+		{args: "ksql app delete lksqlc-12345", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("account ksql\n"))}, fixture: "ksql/app/delete-result-prompt.golden"},
 		{args: "ksql app describe --help", fixture: "ksql/app/describe-help.golden"},
 		{args: "ksql app describe lksqlc-12345 -o json", fixture: "ksql/app/describe-result-json.golden"},
 		{args: "ksql app describe lksqlc-12345 -o yaml", fixture: "ksql/app/describe-result-yaml.golden"},
@@ -40,6 +47,7 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-processLogFalse --api-key key --api-secret secret --log-exclude-rows -o yaml", fixture: "ksql/cluster/create-result-yaml-log-exclude-rows.golden"},
 		{args: "ksql cluster delete --help", fixture: "ksql/cluster/delete-help.golden"},
 		{args: "ksql cluster delete lksqlc-12345 --force", fixture: "ksql/cluster/delete-result.golden"},
+		{args: "ksql cluster delete lksqlc-12345", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("account ksql\n"))}, fixture: "ksql/cluster/delete-result-prompt.golden"},
 		{args: "ksql cluster describe --help", fixture: "ksql/cluster/describe-help.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o json", fixture: "ksql/cluster/describe-result-json.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o yaml", fixture: "ksql/cluster/describe-result-yaml.golden"},

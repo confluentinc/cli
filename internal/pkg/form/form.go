@@ -105,7 +105,7 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 	} else if len(id) == 1 {
 		promptMsg = fmt.Sprintf(DeleteResourceConfirmYesNoMsg, resourceType, idList)
 	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete this %s?", resourceType)
+		promptMsg = fmt.Sprintf("Are you sure you want to delete the %s?", resourceType)
 	}
 
 	f := New(

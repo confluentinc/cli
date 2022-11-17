@@ -1,5 +1,11 @@
 package test
 
+import (
+	"strings"
+
+	"github.com/confluentinc/bincover"
+)
+
 func (s *CLITestSuite) TestConnect() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -8,6 +14,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/create-yaml.golden"},
 		{args: "connect create --cluster lkc-123 --config test/fixtures/input/connect/config.yaml", fixture: "connect/create.golden"},
 		{args: "connect delete lcc-123 --cluster lkc-123 --force", fixture: "connect/delete.golden"},
+		{args: "connect delete lcc-123 --cluster lkc-123", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("az-connector\n"))}, fixture: "connect/delete-prompt.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/describe-json.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/describe-yaml.golden"},
 		{args: "connect describe lcc-123 --cluster lkc-123", fixture: "connect/describe.golden"},

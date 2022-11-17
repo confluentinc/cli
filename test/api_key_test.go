@@ -2,8 +2,10 @@ package test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -59,6 +61,7 @@ func (s *CLITestSuite) TestAPIKey() {
 
 		// delete api key that is in use
 		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
+		{args: "api-key delete MYKEY5", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "api-key/24-prompt.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an api-key for kafka cluster
