@@ -6,7 +6,6 @@ require (
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
@@ -174,6 +173,7 @@ require (
 	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
