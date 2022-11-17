@@ -12,11 +12,11 @@ import (
 )
 
 type getStatusOut struct {
-	Name      string `human:"Name" serialized:"name"`
-	State     string `human:"Exporter State" serialized:"state"`
-	Offset    string `human:"Exporter Offset" serialized:"offset"`
-	Timestamp string `human:"Exporter Timestamp" serialized:"timestamp"`
-	Trace     string `human:"Error Trace" serialized:"trace"`
+	Name       string `human:"Name" serialized:"name"`
+	State      string `human:"State" serialized:"state"`
+	Offset     string `human:"Offset" serialized:"offset"`
+	Timestamp  string `human:"Timestamp" serialized:"timestamp"`
+	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
 }
 
 func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
@@ -53,11 +53,11 @@ func getExporterStatus(cmd *cobra.Command, name string, srClient *srsdk.APIClien
 
 	table := output.NewTable(cmd)
 	table.Add(&getStatusOut{
-		Name:      status.Name,
-		State:     status.State,
-		Offset:    strconv.FormatInt(status.Offset, 10),
-		Timestamp: strconv.FormatInt(status.Ts, 10),
-		Trace:     status.Trace,
+		Name:       status.Name,
+		State:      status.State,
+		Offset:     strconv.FormatInt(status.Offset, 10),
+		Timestamp:  strconv.FormatInt(status.Ts, 10),
+		ErrorTrace: status.Trace,
 	})
 	return table.Print()
 }

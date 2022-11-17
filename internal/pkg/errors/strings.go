@@ -65,7 +65,7 @@ const (
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 
 	// ksql commands
-	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
+	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
 	// local commands
@@ -99,11 +99,10 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg        = "Your token has expired. You are now logged out."
-	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
-	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\nNOT for production usage. https://docs.confluent.io/current/cli/index.html\n\n"
-	AutoLoginMsg           = "Successful auto log in with non-interactive credentials.\n"
+	TokenExpiredMsg      = "Your token has expired. You are now logged out."
+	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
+	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
+	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"

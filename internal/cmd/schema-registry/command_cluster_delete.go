@@ -34,12 +34,12 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		),
 	}
 
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddForceFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("environment")
 
 	return cmd
 }

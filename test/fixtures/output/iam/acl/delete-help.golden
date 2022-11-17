@@ -6,10 +6,10 @@ Usage:
 Examples:
 Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.
 
-  $ confluent iam acl delete --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *
+  $ confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *
 
 Flags:
-      --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
+      --kafka-cluster string      REQUIRED: Kafka cluster ID for scope of ACL commands.
       --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
       --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --host string               REQUIRED: Set host for access. Only IP addresses are supported. (default "*")

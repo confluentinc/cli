@@ -1,5 +1,5 @@
    Principal   | Email |     Role      | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type |  Name   | Pattern Type  
 ---------------+-------+---------------+-------------+---------------+--------------+-----------------+---------------+---------+---------------
   User:u-55eee |       | ResourceOwner | a-595       | lkc-1111aaa   | Kafka        | lkc-1111aaa     | Group         | readers | LITERAL       
-  User:u-55eee |       | ResourceOwner | a-595       | lkc-1111aaa   | Kafka        | lkc-1111aaa     | Topic         | clicks- | PREFIX        
+  User:u-55eee |       | ResourceOwner | a-595       | lkc-1111aaa   | Kafka        | lkc-1111aaa     | Topic         | clicks- | PREFIXED      
   User:u-55eee |       | ResourceOwner | a-595       | lkc-1111aaa   | Kafka        | lkc-1111aaa     | Topic         | payroll | LITERAL       

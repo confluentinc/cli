@@ -1,4 +1,5 @@
 {
+  "is_current": false,
   "id": "lkc-def963",
   "name": "my-new-cluster",
   "type": "BASIC",
@@ -10,7 +11,5 @@
   "availability": "single-zone",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://kafka-api-url",
-  "rest_endpoint": "https://pkc-endpoint",
-  "topic_count": 0
+  "rest_endpoint": "https://pkc-endpoint"
 }

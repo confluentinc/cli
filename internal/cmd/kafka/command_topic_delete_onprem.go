@@ -24,7 +24,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

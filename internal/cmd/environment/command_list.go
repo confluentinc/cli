@@ -1,8 +1,6 @@
 package environment
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,18 +29,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, environment := range environments {
-		id := *environment.Id
-		if output.GetFormat(cmd) == output.Human {
-			if *environment.Id == c.EnvironmentId() {
-				id = fmt.Sprintf("* %s", id)
-			} else {
-				id = fmt.Sprintf("  %s", id)
-			}
-		}
-
 		list.Add(&out{
-			Id:   id,
-			Name: *environment.DisplayName,
+			IsCurrent: *environment.Id == c.EnvironmentId(),
+			Id:        *environment.Id,
+			Name:      *environment.DisplayName,
 		})
 	}
 	return list.Print()

@@ -1,3 +1,0 @@
-`confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
-Are you sure you want to delete kSQL cluster lksqlc-12345?
-To confirm, enter "account ksql". To cancel, use Ctrl-C: Deleted kSQL cluster "lksqlc-12345".

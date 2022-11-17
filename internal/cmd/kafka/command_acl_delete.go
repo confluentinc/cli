@@ -40,12 +40,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, "ACL(s)", ""); err != nil {
-		return err
-	} else if !confirm {
-		return nil
-	}
-
 	userIdMap, err := c.mapResourceIdToUserId()
 	if err != nil {
 		return err
@@ -53,6 +47,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
+	}
+
+	if confirm, err := form.ConfirmDeletion(cmd, "ACL(s)", ""); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	var filters []*schedv1.ACLFilter

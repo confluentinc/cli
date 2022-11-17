@@ -17,7 +17,7 @@ import (
 )
 
 type validateOut struct {
-	IsCompatible bool `human:"Compatibility" serialized:"compatibility"`
+	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
 func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
@@ -30,7 +30,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest", pversion.CLIName),
 			},
 		),
 	}
@@ -39,7 +39,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -96,7 +96,7 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	list := output.NewList(cmd)
-	list.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
-	return list.Print()
+	table := output.NewTable(cmd)
+	table.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
+	return table.Print()
 }

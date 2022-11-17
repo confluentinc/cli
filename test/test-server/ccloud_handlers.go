@@ -478,6 +478,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/ksqls"
+// We only implement create here, as the v2 api takes over the other endpoints
 func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
@@ -495,6 +496,24 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			KafkaClusterId:    "lkc-zxcvb",
 			OutputTopicPrefix: "pksqlc-ghjkl",
 			Name:              "kay cee queue elle",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster3 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-v80wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1111aaa",
+			OutputTopicPrefix: "pksqlc-2222aaa",
+			Name:              "ksql-cluster-name-2222bbb",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster4 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-a90wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1234abc",
+			OutputTopicPrefix: "pksqlc-1234a",
+			Name:              "ksqlDB_cluster_name",
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
@@ -526,7 +545,7 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
 			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
-				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2, ksqlCluster3, ksqlCluster4},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
@@ -566,7 +585,6 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 				Name:              "account ksql",
 				Storage:           130,
 				Endpoint:          "SASL_SSL://ksql-endpoint",
-				ServiceAccountId:  1,
 			}
 			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster,
@@ -804,13 +822,11 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":   true,
-			"testString": "string",
-			"testInt":    1,
-			"testJson":   map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{
-				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
-			},
+			"testBool":                 true,
+			"testString":               "string",
+			"testInt":                  1,
+			"testJson":                 map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":  []map[string]interface{}{},
 			"cli.client_quotas.enable": true,
 		}
 

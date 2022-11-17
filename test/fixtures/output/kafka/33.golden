@@ -1,4 +1,5 @@
 +----------------------+--------------------------------+
+| Current              | true                           |
 | ID                   | lkc-describe-dedicated-pending |
 | Name                 | kafka-cluster                  |
 | Type                 | DEDICATED                      |

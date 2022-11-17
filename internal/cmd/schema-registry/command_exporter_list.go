@@ -11,7 +11,7 @@ import (
 )
 
 type listOut struct {
-	Exporter string `human:"Exporter" serialized:"Exporter"`
+	Exporter string `human:"Exporter" serialized:"exporter"`
 }
 
 func (c *exporterCommand) newListCommand() *cobra.Command {

@@ -19,8 +19,8 @@ import (
 )
 
 type createOut struct {
-	Key    string `human:"API Key" serialized:"key"`
-	Secret string `human:"Secret" serialized:"secret"`
+	ApiKey    string `human:"API Key" serialized:"api_key"`
+	ApiSecret string `human:"API Secret" serialized:"api_secret"`
 }
 
 var resourceTypeToKind = map[string]string{
@@ -63,7 +63,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -129,8 +129,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&createOut{
-		Key:    userKey.Key,
-		Secret: userKey.Secret,
+		ApiKey:    userKey.Key,
+		ApiSecret: userKey.Secret,
 	})
 	if err := table.Print(); err != nil {
 		return err

@@ -30,7 +30,7 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
-	user, err := c.V2Client.GetIamUser(resourceId)
+	user, err := c.V2Client.GetIamUserById(resourceId)
 	if err != nil {
 		return err
 	}
