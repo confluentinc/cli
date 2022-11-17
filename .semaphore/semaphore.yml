@@ -33,7 +33,6 @@ blocks:
             - export VERSION=$(git describe --tags --abbrev=0)
             
             - dch --newversion ${VERSION#v}-1 "Release version $VERSION" --urgency low && dch --release --distribution unstable ""
-            - dch --release --distribution unstable ""
             
             - git config user.email "bstrauch@confluent.io"
             - git config user.name "Brian Strauch"
