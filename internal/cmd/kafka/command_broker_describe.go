@@ -19,9 +19,9 @@ const abbreviationLength = 25
 type configOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
-	IsDefault   bool   `human:"Is Default" serialized:"is_default"`
-	IsReadOnly  bool   `human:"Is Read Only" serialized:"is_read_only"`
-	IsSensitive bool   `human:"Is Sensitive" serialized:"is_sensitive"`
+	IsDefault   bool   `human:"Default" serialized:"is_default"`
+	IsReadOnly  bool   `human:"Read Only" serialized:"is_read_only"`
+	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {

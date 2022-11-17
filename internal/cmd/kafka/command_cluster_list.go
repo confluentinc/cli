@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"fmt"
-
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
 
@@ -55,16 +53,8 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, cluster := range clusters {
-		// Add '*' only in the case where we are printing out tables
-		if output.GetFormat(cmd) == output.Human {
-			if *cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
-				*cluster.Id = fmt.Sprintf("* %s", *cluster.Id)
-			} else {
-				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
-			}
-		}
-		list.Add(convertClusterToDescribeStruct(&cluster))
+		list.Add(convertClusterToDescribeStruct(&cluster, c.Context.Context))
 	}
-	list.Filter([]string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
+	list.Filter([]string{"IsCurrent", "Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
 	return list.Print()
 }

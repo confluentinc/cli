@@ -12,10 +12,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type out struct {
-	Code       string `human:"Code" serialized:"code"`
-	Balance    string `human:"Balance" serialized:"balance"`
-	Expiration string `human:"Expiration" serialized:"expiration"`
+type humanOut struct {
+	Code       string `human:"Code"`
+	Balance    string `human:"Balance"`
+	Expiration string `human:"Expiration"`
+}
+
+type serializedOut struct {
+	Code       string  `serialized:"code"`
+	Balance    float64 `serialized:"balance"`
+	Expiration int64   `serialized:"expiration"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -41,17 +47,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, code := range codes {
-		if output.GetFormat(cmd).IsSerialized() {
-			list.Add(&out{
-				Code:       code.GetCode(),
-				Balance:    fmt.Sprint(ConvertToUSD(code.GetBalance())),
-				Expiration: fmt.Sprint(code.GetCreditExpirationDate().GetSeconds()),
-			})
-		} else {
-			list.Add(&out{
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
 				Code:       code.GetCode(),
 				Balance:    formatBalance(code.GetBalance(), code.GetAmount()),
 				Expiration: formatExpiration(code.GetCreditExpirationDate().GetSeconds()),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Code:       code.GetCode(),
+				Balance:    ConvertToUSD(code.GetBalance()),
+				Expiration: code.GetCreditExpirationDate().GetSeconds(),
 			})
 		}
 	}

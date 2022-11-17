@@ -51,9 +51,8 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&userOut{
 		Id:                   userProfile.ResourceId,
+		Name:                 getName(userProfile),
 		Email:                userProfile.Email,
-		FirstName:            userProfile.FirstName,
-		LastName:             userProfile.LastName,
 		Status:               userStatus,
 		AuthenticationMethod: strings.Join(authMethods, ", "),
 	})

@@ -15,7 +15,7 @@ import (
 )
 
 type out struct {
-	KafkaClusterId string                `human:"Kafka Cluster ID" serialized:"kafka_cluster_id"`
+	KafkaClusterId string                `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
 	Principal      string                `human:"Principal" serialized:"principal"`
 	Permission     mds.AclPermissionType `human:"Permission" serialized:"permission"`
 	Operation      mds.AclOperation      `human:"Operation" serialized:"operation"`

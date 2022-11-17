@@ -10,7 +10,7 @@ import (
 
 func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
 	l := &link{
-		LinkName:  data.LinkName,
+		Name:      data.LinkName,
 		TopicName: topic,
 	}
 
