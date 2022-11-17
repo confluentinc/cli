@@ -11,17 +11,17 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *schemaCommand) newDeleteCommand() *cobra.Command {
-	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:         "delete",
-		Short:       "Delete one or more schemas.",
-		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
+		Short:       "Delete one or more schema versions.",
+		Long:        "Delete one or more schema versions. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
 		RunE:        c.delete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -40,6 +40,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")
@@ -65,6 +66,16 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
 		return err
+	}
+
+	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
+	if err != nil {
+		return errors.CatchSchemaNotFoundError(err, httpResp)
+	}
+	if confirm, err := form.ConfirmDeletion(cmd, "schema", subject, subject + " (version " + version + ")"); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	permanent, err := cmd.Flags().GetBool("permanent")
