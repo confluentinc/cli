@@ -68,7 +68,13 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
-	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
+	var checkVersion string
+	if version == "all" { // check that at least one version for the input subject exists
+		checkVersion = "latest"
+	} else {
+		checkVersion = version
+	}
+	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}

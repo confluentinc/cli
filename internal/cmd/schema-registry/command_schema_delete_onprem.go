@@ -11,7 +11,6 @@ import (
 )
 
 func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
-	// TODO: ADD CONFIRM
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",
@@ -32,6 +31,7 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")
