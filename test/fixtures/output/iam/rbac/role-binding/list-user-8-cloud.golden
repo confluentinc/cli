@@ -1,0 +1,3 @@
+   Principal   | Email |   Role    | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type |        Name         | Pattern Type  
+---------------+-------+-----------+-------------+---------------+--------------+-----------------+---------------+---------------------+---------------
+  User:u-66ffa |       | KsqlAdmin | b-595       | lkc-1234abc   | ksqlDB       | lksqlc-a90wnz   | KSQL          | ksqlDB_cluster_name | LITERAL       
