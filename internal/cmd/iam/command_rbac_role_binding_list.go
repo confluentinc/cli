@@ -199,7 +199,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					}
 					for _, ksql := range clusterList {
 						if ksql.KafkaClusterId == cloudClusterName && ksql.Name == clusterName {
-							logicalCluster = ksql.PhysicalClusterId
+							logicalCluster = ksql.Id
 							break
 						}
 					}

@@ -491,20 +491,18 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		ksqlCluster3 := &schedv1.KSQLCluster{
-			Id:                "lksqlc-woooo",
+			Id:                "lksqlc-v80wnz",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-1111aaa",
-			PhysicalClusterId: "pksqlc-2222aaa",
 			OutputTopicPrefix: "pksqlc-2222aaa",
 			Name:              "ksql-cluster-name-2222bbb",
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
 		ksqlCluster4 := &schedv1.KSQLCluster{
-			Id:                "lksqlc-woooo",
+			Id:                "lksqlc-a90wnz",
 			AccountId:         "25",
 			KafkaClusterId:    "lkc-1234abc",
-			PhysicalClusterId: "pksqlc-1234a",
 			OutputTopicPrefix: "pksqlc-1234a",
 			Name:              "ksqlDB_cluster_name",
 			Storage:           123,
