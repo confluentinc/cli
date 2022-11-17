@@ -10,6 +10,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -138,6 +139,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	publicClient := c.ccloudClientFactory.PublicJwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
@@ -158,19 +160,19 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		c.printRemainingFreeCredit(cmd, client, currentOrg)
+		c.printRemainingFreeCredit(cmd, publicClient, currentOrg)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, publicClient *ccloudv1.Client, currentOrg *orgv1.Organization) {
 	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	org := &ccloudv1.Organization{Id: currentOrg.Id}
+	promoCodes, err := publicClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
 		return

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,9 +38,9 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	codes, err := c.PublicClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		return err
 	}

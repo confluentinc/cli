@@ -15,6 +15,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -65,6 +66,7 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 type AuthenticatedCLICommand struct {
 	*CLICommand
 	Client            *ccloud.Client
+	PublicClient      *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
@@ -196,7 +198,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil, nil)
 			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -333,6 +335,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		}
 
 		if err := r.setV2Clients(command); err != nil {
+			return err
+		}
+
+		if err := r.setPublicCCloudClient(command); err != nil {
 			return err
 		}
 
@@ -476,6 +482,27 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
+func (r *PreRun) setPublicCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+	ctx := cliCmd.Config.Context()
+
+	ccloudClient, err := r.createPublicCCloudClient(ctx, cliCmd.Version)
+	if err != nil {
+		return err
+	}
+	cliCmd.PublicClient = ccloudClient
+	cliCmd.Context.PublicClient = ccloudClient
+	cliCmd.Config.PublicClient = ccloudClient
+
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version, unsafeTrace)
+
+	return nil
+}
+
 func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 	if ctx == nil {
@@ -546,6 +573,24 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 		userAgent = ver.UserAgent
 	}
 	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
+		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
+	}), nil
+}
+
+func (r *PreRun) createPublicCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
+	var baseURL string
+	var authToken string
+	var userAgent string
+	if ctx != nil {
+		baseURL = ctx.Platform.Server
+		state, err := ctx.AuthenticatedState()
+		if err != nil {
+			return nil, err
+		}
+		authToken = state.AuthToken
+		userAgent = ver.UserAgent
+	}
+	return ccloudv1.NewClientWithJWT(context.Background(), authToken, &ccloudv1.Params{
 		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
 	}), nil
 }
