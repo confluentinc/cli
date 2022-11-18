@@ -3,10 +3,10 @@ package iam
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"strings"
 
+	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -383,34 +383,45 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 }
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
+	allResourceTypes := make(map[string]bool)
+	var notFoundErr error
 	ctx := c.createContext()
-	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
+	namespaces := []optional.String{publicNamespace, dataGovernanceNamespace, dataplaneNamespace, ksqlNamespace}
+	found := false
 
-	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	role, resp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
-	if err != nil || resp.StatusCode == http.StatusNoContent {
-		role, resp, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, nil)
-		if err != nil || resp.StatusCode == http.StatusNoContent {
-			if err == nil {
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
-			} else {
-				return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+	for _, namespace := range namespaces {
+		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: ns}
+		role, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
+		if err != nil {
+			notFoundErr = err
+		}
+		if role.Name != "" { // Check if resource type is supported in this particular role
+			found = true
+			for _, policies := range role.Policies {
+				for _, operation := range policies.AllowedOperations {
+					allResourceTypes[operation.ResourceType] = true
+					if operation.ResourceType == resourceType {
+						return nil
+					}
+				}
 			}
 		}
 	}
 
-	var allResourceTypes []string
-	for _, policies := range role.Policies {
-		for _, operation := range policies.AllowedOperations {
-			allResourceTypes = append(allResourceTypes, operation.ResourceType)
-			if operation.ResourceType == resourceType {
-				return nil
-			}
+	if !found {
+		if notFoundErr == nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
+		} else {
+			return errors.NewWrapErrorWithSuggestions(notFoundErr, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)
 		}
 	}
 
-	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(allResourceTypes, ", "))
+	var uniqueResourceTypes []string
+	for resourceType := range allResourceTypes {
+		uniqueResourceTypes = append(uniqueResourceTypes, rt)
+	}
+
+	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidResourceTypeErrorMsg, resourceType), suggestionsMsg)
 }
 
