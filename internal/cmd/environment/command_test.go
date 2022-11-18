@@ -88,7 +88,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 }
 
 func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
-	client := &ccloud.Client{
+	privateClient := &ccloud.Client{
 		Account: suite.accountClientMock,
 	}
 	orgClient := &orgv2.APIClient{
@@ -98,11 +98,11 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 		Out: os.Stdout,
 	}
 	prerunner := &cliMock.Commander{
-		FlagResolver: resolverMock,
-		Client:       client,
-		MDSClient:    nil,
-		V2Client:     &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
-		Config:       suite.conf,
+		FlagResolver:  resolverMock,
+		PrivateClient: privateClient,
+		MDSClient:     nil,
+		V2Client:      &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
+		Config:        suite.conf,
 	}
 	return New(prerunner)
 }

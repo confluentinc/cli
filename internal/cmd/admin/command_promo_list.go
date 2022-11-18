@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/spf13/cobra"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 type humanOut struct {
@@ -38,7 +37,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
