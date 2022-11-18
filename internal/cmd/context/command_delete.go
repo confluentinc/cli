@@ -32,10 +32,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
-	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	if err := c.Config.DeleteContext(ctx.Name); err != nil {

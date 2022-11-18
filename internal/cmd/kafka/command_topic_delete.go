@@ -58,8 +58,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
-	_, err = form.ConfirmDeletion(cmd, promptMsg, topicName)
-	if err != nil {
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
 		return err
 	}
 

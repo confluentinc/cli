@@ -51,10 +51,8 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := "Are you sure you want to delete this role binding?"
-	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	isCloud := c.cfg.IsCloudLogin()

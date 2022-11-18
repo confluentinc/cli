@@ -42,10 +42,8 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))

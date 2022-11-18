@@ -41,20 +41,19 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	lcc := args[0]
+	clusterId := args[0]
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(lcc, c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(clusterId, c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, lcc, connector.Info.GetName())
-	_, err = form.ConfirmDeletion(cmd, promptMsg, connector.Info.GetName())
-	if err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, clusterId, connector.Info.GetName())
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, connector.Info.GetName()); err != nil {
 		return err
 	}
 
@@ -62,6 +61,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Connector, lcc)
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Connector, clusterId)
 	return nil
 }

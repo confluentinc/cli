@@ -150,7 +150,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 					Version: 1,
 				}}
 			}
-			err = json.NewEncoder(w).Encode(schema)
+			err := json.NewEncoder(w).Encode(schema)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(int32(1))

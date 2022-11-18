@@ -26,13 +26,12 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	_, err := c.V2Client.DescribeKafkaQuota(args[0]) // check that quota exists before prompt
+	_, err := c.V2Client.DescribeKafkaQuota(args[0])
 	if err != nil {
 		return err
 	}
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClientQuota, args[0], args[0])
-	_, err = form.ConfirmDeletion(cmd, promptMsg, args[0])
-	if err != nil {
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, args[0]); err != nil {
 		return err
 	}
 

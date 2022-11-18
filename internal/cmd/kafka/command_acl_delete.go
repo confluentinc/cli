@@ -49,10 +49,8 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	var filters []*schedv1.ACLFilter

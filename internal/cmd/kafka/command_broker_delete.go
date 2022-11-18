@@ -47,10 +47,8 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, "broker", brokerIdStr)
-	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}

@@ -33,8 +33,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Environment, id, *environment.DisplayName)
-	_, err = form.ConfirmDeletion(cmd, promptMsg, *environment.DisplayName)
-	if err != nil {
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, *environment.DisplayName); err != nil {
 		return err
 	}
 

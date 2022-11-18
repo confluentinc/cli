@@ -40,10 +40,8 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
-	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	err = c.V2Client.DeleteProviderShare(shareId)

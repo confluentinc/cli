@@ -39,10 +39,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, apiKey)
-	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	if isSchemaRegistryOrKsqlApiKey(key) {
