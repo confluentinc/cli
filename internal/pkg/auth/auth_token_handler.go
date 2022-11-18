@@ -45,7 +45,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				OrgResourceId: orgResourceId,
 			}
 			if res, err := privateClient.Auth.Login(context.Background(), req); err == nil {
-				return res.Token, res.RefreshToken, nil
+				return res.GetToken(), res.GetRefreshToken(), nil
 			}
 		}
 	}
