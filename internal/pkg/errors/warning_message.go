@@ -50,6 +50,6 @@ const (
 		" router configuration, but different retention times. The maximum specified retention time will be used."
 
 	// ksql create
-	SrRoleBindingRequiredForKSQLWarning = "Please ensure the right Schema Registry role bindings are created in order" +
-		" to access Schema Registry from KSQL."
+	SrRoleBindingRequiredForKSQLWarning = "IMPORTANT: Confirm that the user or service account has the required privileges" +
+		" to access Schema Registry."
 )
