@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a schema.
-  delete      Delete one or more schemas.
+  delete      Delete one or more schema versions.
   describe    Get schema either by schema ID, or by subject/version.
   list        List schemas for a given subject prefix.
 
