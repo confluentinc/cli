@@ -82,7 +82,7 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletion(cmd *cobra.Command, promptMsg, confirmStr string) (bool, error) {
+func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return false, err
