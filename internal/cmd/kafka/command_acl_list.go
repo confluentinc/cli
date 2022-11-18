@@ -89,7 +89,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
+	resp, err := c.PrivateClient.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 	if err != nil {
 		return err
 	}

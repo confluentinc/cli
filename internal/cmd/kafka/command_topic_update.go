@@ -168,7 +168,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		},
 		Validate: dryRun,
 	}
-	if err := c.Client.Kafka.UpdateTopic(context.Background(), cluster, topic); err != nil {
+	if err := c.PrivateClient.Kafka.UpdateTopic(context.Background(), cluster, topic); err != nil {
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}
 

@@ -29,11 +29,11 @@ func NewAuthTokenHandler() AuthTokenHandler {
 }
 
 func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory, url string, credentials *Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
-	client := clientFactory.AnonHTTPClientFactory(url)
+	privateClient := clientFactory.PrivateAnonHTTPClientFactory(url)
 
 	if credentials.AuthRefreshToken != "" {
 		if credentials.IsSSO {
-			if token, refreshToken, err := a.refreshCCloudSSOToken(client, credentials.AuthRefreshToken, orgResourceId); err == nil {
+			if token, refreshToken, err := a.refreshCCloudSSOToken(privateClient, credentials.AuthRefreshToken, orgResourceId); err == nil {
 				return token, refreshToken, nil
 			}
 		} else {
@@ -44,25 +44,25 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: orgResourceId,
 			}
-			if res, err := client.Auth.Login(context.Background(), req); err == nil {
-				return res.GetToken(), res.GetRefreshToken(), nil
+			if res, err := privateClient.Auth.Login(context.Background(), req); err == nil {
+				return res.Token, res.RefreshToken, nil
 			}
 		}
 	}
 
 	// If SSO refresh token is missing or expired, ask for a new one
 	if credentials.IsSSO {
-		token, refreshToken, err := a.getCCloudSSOToken(client, noBrowser, credentials.Username, orgResourceId)
+		token, refreshToken, err := a.getCCloudSSOToken(privateClient, noBrowser, credentials.Username, orgResourceId)
 		if err != nil {
 			return "", "", err
 		}
 
-		client = clientFactory.JwtHTTPClientFactory(context.Background(), token, url)
-		err = a.checkSSOEmailMatchesLogin(client, credentials.Username)
+		privateClient = clientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
+		err = a.checkSSOEmailMatchesLogin(privateClient, credentials.Username)
 		return token, refreshToken, err
 	}
 
-	client.HttpClient.Timeout = 30 * time.Second
+	privateClient.HttpClient.Timeout = 30 * time.Second
 	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
 
 	req := &flowv1.AuthenticateRequest{
@@ -71,7 +71,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := privateClient.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
@@ -84,8 +84,8 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	return res.GetToken(), res.GetRefreshToken(), nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
-	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
+func (a *AuthTokenHandlerImpl) getCCloudSSOToken(privateClient *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
+	userSSO, err := a.getCCloudUserSSO(privateClient, email, orgResourceId)
 	if err != nil {
 		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
 		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
@@ -94,14 +94,14 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
 
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
+	idToken, refreshToken, err := sso.Login(privateClient.BaseURL, noBrowser, userSSO)
 	if err != nil {
 		return "", "", err
 	}
 
 	req := &flowv1.AuthenticateRequest{IdToken: idToken}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := privateClient.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
@@ -109,14 +109,14 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
-	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(privateClient *ccloud.Client, email, orgResourceId string) (string, error) {
+	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(privateClient.BaseURL)
 	req := &flowv1.GetLoginRealmRequest{
 		Email:         email,
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgResourceId,
 	}
-	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
+	loginRealmReply, err := privateClient.User.LoginRealm(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
@@ -126,8 +126,8 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, or
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
-	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(privateClient *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
+	idToken, refreshToken, err := sso.RefreshTokens(privateClient.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
@@ -137,7 +137,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := privateClient.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
@@ -155,8 +155,8 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 	return resp.AuthToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
-	getMeReply, err := client.Auth.User(context.Background())
+func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(privateClient *ccloud.Client, loginEmail string) error {
+	getMeReply, err := privateClient.Auth.User(context.Background())
 	if err != nil {
 		return err
 	}
