@@ -20,6 +20,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
+
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
