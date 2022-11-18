@@ -82,7 +82,7 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id ...string) (bool, error) {
+func ConfirmDeletion(cmd *cobra.Command, promptMsg, confirmStr string) (bool, error) {
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return false, err
@@ -91,27 +91,12 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 		return true, nil
 	}
 
-	idList := strings.Join(id, ", ")
-	DeleteResourceConfirmYesNoMsg := "Are you sure you want to delete %s %s?" // arguments are: resource(s), id list
-
 	prompt := NewPrompt(os.Stdin)
-	var promptMsg string
-	yesNo := true
-	if len(id) > 1 {
-		promptMsg = fmt.Sprintf(DeleteResourceConfirmYesNoMsg, utils.Plural(resourceType), idList)
-	} else if len(id) == 1 && resourceName != "" {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %s %s?\nTo confirm, enter \"%s\". To cancel, use Ctrl-C", resourceType, idList, resourceName)
-		yesNo = false
-	} else if len(id) == 1 {
-		promptMsg = fmt.Sprintf(DeleteResourceConfirmYesNoMsg, resourceType, idList)
-	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete the %s?", resourceType)
-	}
-
+	yesNo := confirmStr == ""
 	f := New(
 		Field{
-			ID: "confirm",
-			Prompt: promptMsg,
+			ID:        "confirm",
+			Prompt:    promptMsg,
 			IsYesOrNo: yesNo,
 		},
 	)
@@ -122,8 +107,9 @@ func ConfirmDeletion(cmd *cobra.Command, resourceType, resourceName string, id .
 	}
 
 	if !yesNo {
-		if f.Responses["confirm"].(string) != resourceName {
-			return false, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.DeleteResourceConfirmErrorMsg, resourceName), errors.DeleteResourceConfirmSuggestions)
+		if f.Responses["confirm"].(string) != confirmStr {
+			DeleteResourceConfirmSuggestions := "Do not include the quotation marks in the confirmation string.\nUse the `--force` flag to delete without a confirmation prompt."
+			return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match %s`, confirmStr), DeleteResourceConfirmSuggestions)
 		} else {
 			return true, nil
 		}

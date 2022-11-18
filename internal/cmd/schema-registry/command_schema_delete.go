@@ -78,10 +78,10 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
-	if confirm, err := form.ConfirmDeletion(cmd, "schema", subject, subject + " (version " + version + ")"); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, "schema", subject + " (version " + version + ")", subject)
+	_, err = form.ConfirmDeletion(cmd, promptMsg, subject)
+	if err != nil {
 		return err
-	} else if !confirm {
-		return nil
 	}
 
 	permanent, err := cmd.Flags().GetBool("permanent")

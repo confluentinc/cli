@@ -1,7 +1,10 @@
 package schemaregistry
 
 import (
+	"fmt"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/spf13/cobra"
@@ -34,7 +37,8 @@ func (c *exporterCommand) onPremDelete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.SchemaExporter, info.Name, info.Name)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SchemaExporter, info.Name, info.Name)
+	_, err = form.ConfirmDeletion(cmd, promptMsg, info.Name)
 	if err != nil {
 		return err
 	}

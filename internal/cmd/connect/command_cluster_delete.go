@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -50,7 +52,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	_, err = form.ConfirmDeletion(cmd, resource.Connector, connector.Info.GetName(), lcc)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, lcc, connector.Info.GetName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, connector.Info.GetName())
 	if err != nil {
 		return err
 	}

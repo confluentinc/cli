@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,7 +38,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		// Replace the suggestions w/ the suggestions specific to delete requests
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterDeletingSuggestions)
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.KafkaCluster, cluster.GetName(), args[0])
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KafkaCluster, args[0], cluster.GetName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, cluster.GetName())
 	if err != nil {
 		return err
 	}

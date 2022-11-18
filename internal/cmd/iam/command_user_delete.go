@@ -34,7 +34,8 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.User, user.GetFullName(), resourceId)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.User, resourceId, user.GetFullName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, user.GetFullName())
 	if err != nil {
 		return err
 	}

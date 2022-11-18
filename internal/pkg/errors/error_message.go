@@ -481,10 +481,8 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg           = `failed to delete %s "%s": %v`
-	DeleteResourceConfirmErrorMsg    = `input does not match %s`
-	DeleteResourceConfirmSuggestions = "Do not include the quotation marks in the confirmation string.\n" +
-		"Use the `--force` flag to delete without a confirmation prompt."
-	UpdateResourceErrorMsg       = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg = "must specify both `--%s` and `--%s`"
+	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
+	DeleteResourceConfirmErrorMsg = `input does not match %s`
+	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
+	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )

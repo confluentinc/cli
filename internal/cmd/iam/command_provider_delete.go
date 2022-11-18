@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,7 +37,8 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.IdentityProvider, provider.GetDisplayName(), args[0])
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityProvider, args[0], provider.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, provider.GetDisplayName())
 	if err != nil {
 		return err
 	}

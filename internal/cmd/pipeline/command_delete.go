@@ -1,6 +1,8 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -42,7 +44,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.Pipeline, pipeline.Spec.GetDisplayName(), pipeline.GetId())
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, pipeline.Spec.GetDisplayName())
 	if err != nil {
 		return err
 	}

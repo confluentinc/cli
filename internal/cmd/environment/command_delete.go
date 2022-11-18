@@ -1,6 +1,8 @@
 package environment
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -30,7 +32,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.Environment, *environment.DisplayName, id)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Environment, id, *environment.DisplayName)
+	_, err = form.ConfirmDeletion(cmd, promptMsg, *environment.DisplayName)
 	if err != nil {
 		return err
 	}

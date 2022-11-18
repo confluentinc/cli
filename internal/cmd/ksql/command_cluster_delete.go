@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -43,7 +44,8 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.KsqlCluster, cluster.Spec.GetDisplayName(), id)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KsqlCluster, id, cluster.Spec.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, cluster.Spec.GetDisplayName())
 	if err != nil {
 		return err
 	}

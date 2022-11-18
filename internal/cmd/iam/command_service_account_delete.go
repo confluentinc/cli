@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -41,7 +43,8 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.ServiceAccount, serviceAccount.GetDisplayName(), serviceAccountId)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ServiceAccount, serviceAccountId, serviceAccount.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, serviceAccount.GetDisplayName())
 	if err != nil {
 		return err
 	}

@@ -224,8 +224,8 @@ func (s *CLITestSuite) TestIAMUserDescribe() {
 
 func (s *CLITestSuite) TestIAMUserDelete() {
 	tests := []CLITest{
-		{args: "iam user delete u-0 --force", fixture: "iam/user/delete.golden"},
-		{args: "iam user delete u-0", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "iam/user/delete-prompt.golden"},
+		{args: "iam user delete u-2 --force", fixture: "iam/user/delete.golden"},
+		{args: "iam user delete u-2", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("2\n"))}, fixture: "iam/user/delete-prompt.golden"},
 		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id.golden", wantErrCode: 1},
 		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", wantErrCode: 1},
 	}

@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,7 +30,8 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.ClientQuota, args[0], args[0])
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClientQuota, args[0], args[0])
+	_, err = form.ConfirmDeletion(cmd, promptMsg, args[0])
 	if err != nil {
 		return err
 	}

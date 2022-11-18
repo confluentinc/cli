@@ -1,6 +1,8 @@
 package streamshare
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -37,7 +39,8 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if confirm, err := form.ConfirmDeletion(cmd, resource.ProviderShare, "", shareId); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

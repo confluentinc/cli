@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -36,7 +37,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, resource.ApiKey, "", apiKey); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, apiKey)
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

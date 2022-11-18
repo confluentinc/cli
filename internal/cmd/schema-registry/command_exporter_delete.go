@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -41,7 +42,8 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	_, err = form.ConfirmDeletion(cmd, resource.SchemaExporter, info.Name, info.Name)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SchemaExporter, info.Name, info.Name)
+	_, err = form.ConfirmDeletion(cmd, promptMsg, info.Name)
 	if err != nil {
 		return err
 	}

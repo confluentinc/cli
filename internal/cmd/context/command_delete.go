@@ -1,6 +1,8 @@
 package context
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -29,7 +31,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, resource.Context, "", ctx.Name); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

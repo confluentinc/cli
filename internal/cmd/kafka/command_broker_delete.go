@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -45,7 +46,8 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if confirm, err := form.ConfirmDeletion(cmd, "broker", "", brokerIdStr); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, "broker", brokerIdStr)
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil

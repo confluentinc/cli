@@ -52,8 +52,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	resourceStr := resource.SchemaRegistryCluster + " " + cluster.Id + " for " + resource.Environment
-	if confirm, err := form.ConfirmDeletion(cmd, resourceStr, "", c.EnvironmentId()); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.SchemaRegistryCluster, cluster.Id + " for " + resource.Environment + " " + c.EnvironmentId())
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
 		return err
 	} else if !confirm {
 		return nil
