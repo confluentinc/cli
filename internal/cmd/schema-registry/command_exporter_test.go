@@ -268,7 +268,7 @@ func (suite *ExporterTestSuite) TestResetExporter() {
 
 func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "delete", exporterName})
+	cmd.SetArgs([]string{"exporter", "delete", exporterName, "--force"})
 	output := new(bytes.Buffer)
 	cmd.SetOut(output)
 	err := cmd.Execute()
