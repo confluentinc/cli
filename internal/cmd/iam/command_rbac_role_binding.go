@@ -391,9 +391,9 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	found := false
 
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		namespaces = publicAndDataplaneNamespaces
-	} else {
 		namespaces = allNamespaces
+	} else {
+		namespaces = publicAndDataplaneNamespaces
 	}
 
 	for _, namespace := range namespaces {
