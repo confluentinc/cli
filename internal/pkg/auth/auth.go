@@ -140,9 +140,9 @@ func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken strin
 	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
-	state.Auth.User = user.User
-	state.Auth.Accounts = user.Accounts
-	state.Auth.Organization = user.Organization
+	state.Auth.User = user.GetUser()
+	state.Auth.Accounts = user.GetAccounts()
+	state.Auth.Organization = user.GetOrganization()
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false

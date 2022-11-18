@@ -45,7 +45,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				OrgResourceId: orgResourceId,
 			}
 			if res, err := client.Auth.Login(context.Background(), req); err == nil {
-				return res.Token, res.RefreshToken, nil
+				return res.GetToken(), res.GetRefreshToken(), nil
 			}
 		}
 	}
@@ -78,10 +78,10 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 
 	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
 		log.CliLogger.Debugf(errors.EndOfFreeTrialErrorMsg, res.GetOrganization().GetSuspensionStatus())
-		return res.Token, res.RefreshToken, &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
+		return res.GetToken(), res.GetRefreshToken(), &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
 	}
 
-	return res.Token, res.RefreshToken, nil
+	return res.GetToken(), res.GetRefreshToken(), nil
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
@@ -106,7 +106,7 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 		return "", "", err
 	}
 
-	return res.Token, refreshToken, err
+	return res.GetToken(), refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
@@ -142,7 +142,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 		return "", "", err
 	}
 
-	return res.Token, refreshToken, err
+	return res.GetToken(), refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
@@ -160,8 +160,8 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, 
 	if err != nil {
 		return err
 	}
-	if getMeReply.User.Email != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.User.Email), errors.SSOCredentialsDoNotMatchSuggestions)
+	if getMeReply.GetUser().GetEmail() != loginEmail {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.GetUser().GetEmail()), errors.SSOCredentialsDoNotMatchSuggestions)
 	}
 	return nil
 }

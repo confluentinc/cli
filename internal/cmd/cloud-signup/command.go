@@ -176,11 +176,11 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
-		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
+		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.GetToken(), client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fNameCompanyEmail.Responses["email"].(string),
-			AuthToken:        res.Token,
-			AuthRefreshToken: res.RefreshToken,
+			AuthToken:        res.GetToken(),
+			AuthRefreshToken: res.GetRefreshToken(),
 		}
 		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
 		if err != nil {
