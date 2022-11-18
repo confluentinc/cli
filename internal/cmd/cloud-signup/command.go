@@ -70,7 +70,7 @@ func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
-	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl+C to quit at any time.")
+	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl-C to quit at any time.")
 	fNameCompanyEmail := form.New(
 		form.Field{ID: "name", Prompt: "Full name"},
 		form.Field{ID: "company", Prompt: "Company"},

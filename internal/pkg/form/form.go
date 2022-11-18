@@ -170,7 +170,7 @@ func validate(field Field, val string) (interface{}, error) {
 
 func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl+C.")
+		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false
