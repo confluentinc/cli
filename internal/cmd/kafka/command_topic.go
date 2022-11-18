@@ -177,7 +177,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
-	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	resp, err := c.PrivateClient.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return 0, err
 	}

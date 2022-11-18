@@ -25,6 +25,7 @@ import (
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
@@ -691,7 +692,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -921,12 +922,12 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			},
 		}
 	}
-	ccloudClientFactory := &cliMock.MockCCloudClientFactory{
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+	ccloudClientFactory := &cliMock.CCloudClientFactory{
+		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 			req.Equal("https://confluent.cloud", baseURL)
 			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}, Auth: auth, User: user}
 		},
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: auth, User: user, Billing: &sdkMock.Billing{
 				GetClaimedPromoCodesFunc: func(_ context.Context, _ *orgv1.Organization, _ bool) ([]*billingv1.PromoCodeClaim, error) {
 					var claims []*billingv1.PromoCodeClaim
@@ -934,20 +935,27 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 				},
 			}}
 		},
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+			req.Equal("https://confluent.cloud", baseURL)
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}}
+		},
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{}
+		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
 		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.PrivateAnonHTTPClientFactory(ccloudURL), ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
-	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 
