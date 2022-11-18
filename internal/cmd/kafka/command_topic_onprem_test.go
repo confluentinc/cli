@@ -408,11 +408,11 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDeleteTopic() {
 		message             string
 	}{
 		{
-			input:          "delete topicDelete --url http://localhost:8082",
+			input:          "delete topicDelete --url http://localhost:8082 --force",
 			expectedOutput: "Deleted topic \"topicDelete\".\n",
 		},
 		{
-			input:               "delete --topic --url http://localhost:8082",
+			input:               "delete --topic --url http://localhost:8082 --force",
 			expectError:         true,
 			errorMsgContainsAll: []string{"unknown flag: --topic"},
 		},

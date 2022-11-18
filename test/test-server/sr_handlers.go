@@ -91,8 +91,14 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			versionStr := vars["version"]
-			version64, err := strconv.ParseInt(versionStr, 10, 32)
-			require.NoError(t, err)
+			var version64 int64
+			if versionStr == "latest" {
+				version64 = 1
+			} else {
+				var err error
+				version64, err = strconv.ParseInt(versionStr, 10, 32)
+				require.NoError(t, err)
+			}
 			subject := vars["subject"]
 			schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "record"}
 			switch subject {
@@ -144,7 +150,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 					Version: 1,
 				}}
 			}
-			err = json.NewEncoder(w).Encode(schema)
+			err := json.NewEncoder(w).Encode(schema)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			err := json.NewEncoder(w).Encode(int32(1))

@@ -254,7 +254,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId})
+	cmd.SetArgs([]string{"delete", clusterId, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
