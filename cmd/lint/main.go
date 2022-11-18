@@ -140,6 +140,7 @@ var flagRules = []linter.FlagRule{
 			"source-cluster-id",
 			"sr-api-key",
 			"sr-api-secret",
+			"kafka-api-key",
 		),
 	),
 }
