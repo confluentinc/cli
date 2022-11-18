@@ -52,7 +52,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client, c.V2Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.PrivateClient, c.V2Client)
 	if err != nil {
 		return err
 	}

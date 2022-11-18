@@ -67,7 +67,7 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 			},
 			Config: &v1.Config{BaseConfig: &config.BaseConfig{Ver: config.Version{Version: &version.Version{}}}},
 		},
-		Client: &ccloud.Client{
+		PrivateClient: &ccloud.Client{
 			Kafka: &mock.Kafka{
 				DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
 					return &schedv1.KafkaCluster{}, nil
@@ -188,7 +188,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 }
 
 func buildCcloudMockClient() *ccloud.Client {
-	client := pmock.NewClientMock()
+	client := pmock.NewPrivateClientMock()
 	client.Account = &mock.Account{ListFunc: func(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
 		return []*orgv1.Account{{Id: apiEnvironment}}, nil
 	}}
@@ -197,12 +197,12 @@ func buildCcloudMockClient() *ccloud.Client {
 
 func getBaseContext() *DynamicContext {
 	cfg := v1.AuthenticatedCloudConfigMock()
-	return NewDynamicContext(cfg.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
+	return NewDynamicContext(cfg.Context(), pmock.NewPrivateClientMock(), pmock.NewClientMock(), pmock.NewV2ClientMock())
 }
 
 func getClusterFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
-	clusterFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
+	clusterFlagContext := NewDynamicContext(config.Context(), pmock.NewPrivateClientMock(), pmock.NewClientMock(), pmock.NewV2ClientMock())
 	// create cluster that will be used in "--cluster" flag value
 	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &v1.KafkaClusterConfig{
 		ID:   flagCluster,
@@ -213,14 +213,14 @@ func getClusterFlagContext() *DynamicContext {
 
 func getEnvFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
-	envFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
+	envFlagContext := NewDynamicContext(config.Context(), pmock.NewPrivateClientMock(), pmock.NewClientMock(), pmock.NewV2ClientMock())
 	envFlagContext.State.Auth.Accounts = append(envFlagContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
 	return envFlagContext
 }
 
 func getEnvAndClusterFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
-	envAndClusterFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
+	envAndClusterFlagContext := NewDynamicContext(config.Context(), pmock.NewPrivateClientMock(), pmock.NewClientMock(), pmock.NewV2ClientMock())
 
 	envAndClusterFlagContext.State.Auth.Accounts = append(envAndClusterFlagContext.State.Auth.Accounts, &orgv1.Account{Name: flagEnvironment, Id: flagEnvironment})
 	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{

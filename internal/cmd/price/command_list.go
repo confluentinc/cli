@@ -6,8 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -142,7 +141,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {
@@ -193,8 +192,8 @@ func (c *command) list(filters []string, metric string, legacy bool) ([]row, err
 	return rows, nil
 }
 
-func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*billingv1.UnitPrices, error) {
-	filteredTable := make(map[string]*billingv1.UnitPrices)
+func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*ccloudv1.UnitPrices, error) {
+	filteredTable := make(map[string]*ccloudv1.UnitPrices)
 
 	for service, val := range table {
 		if metric != "" && service != metric {
@@ -224,7 +223,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			if _, ok := filteredTable[service]; !ok {
-				filteredTable[service] = &billingv1.UnitPrices{
+				filteredTable[service] = &ccloudv1.UnitPrices{
 					Prices: make(map[string]float64),
 					Unit:   val.Unit,
 				}

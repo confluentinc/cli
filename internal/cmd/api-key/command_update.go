@@ -59,11 +59,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) updateV1(apiKey, description string) error {
-	key, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
+	key, err := c.PrivateClient.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return err
 	}
 
 	key.Description = description
-	return c.Client.APIKey.Update(context.Background(), key)
+	return c.PrivateClient.APIKey.Update(context.Background(), key)
 }
