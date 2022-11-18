@@ -2,6 +2,7 @@ package form
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -79,6 +80,42 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	}
 
 	return nil
+}
+
+func ConfirmDeletion(cmd *cobra.Command, promptMsg, confirmStr string) (bool, error) {
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return false, err
+	}
+	if force {
+		return true, nil
+	}
+
+	prompt := NewPrompt(os.Stdin)
+	yesNo := confirmStr == ""
+	f := New(
+		Field{
+			ID:        "confirm",
+			Prompt:    promptMsg,
+			IsYesOrNo: yesNo,
+		},
+	)
+	if err := f.Prompt(cmd, prompt); err != nil && yesNo {
+		return false, errors.New("failed to read your deletion confirmation")
+	} else if err != nil {
+		return false, err
+	}
+
+	if !yesNo {
+		if f.Responses["confirm"].(string) != confirmStr {
+			DeleteResourceConfirmSuggestions := "Do not include the quotation marks in the confirmation string.\nUse the `--force` flag to delete without a confirmation prompt."
+			return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match %s`, confirmStr), DeleteResourceConfirmSuggestions)
+		} else {
+			return true, nil
+		}
+	} else {
+		return f.Responses["confirm"].(bool), nil
+	}
 }
 
 func show(cmd *cobra.Command, field Field) {

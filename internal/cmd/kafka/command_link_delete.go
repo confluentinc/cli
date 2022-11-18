@@ -1,10 +1,13 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -21,6 +24,7 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
@@ -37,6 +41,12 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClusterLink, linkName, linkName)
+	_, err = form.ConfirmDeletion(cmd, promptMsg, linkName)
 	if err != nil {
 		return err
 	}

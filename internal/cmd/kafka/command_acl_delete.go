@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -28,6 +29,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
@@ -45,6 +47,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
+	}
+
+	if confirm, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	var filters []*schedv1.ACLFilter
