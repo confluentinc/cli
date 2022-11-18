@@ -52,7 +52,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	promptMsg := fmt.Sprintf("Are you sure you want to delete %s \"%s\" for %s \"%s\"?", resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId())
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId())
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}

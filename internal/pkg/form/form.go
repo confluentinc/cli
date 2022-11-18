@@ -103,13 +103,16 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	if yesNo {
 		return f.Responses["confirm"].(bool), nil
 	}
-	
+
 	if f.Responses["confirm"].(string) == stringToType {
 		return true, nil
 	}
-	
-	DeleteResourceConfirmSuggestions := "Do not include the quotation marks in the confirmation string.\nUse the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match %s`, stringToType), DeleteResourceConfirmSuggestions)
+
+	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
+	if f.Responses["confirm"].(string) == `"` + stringToType + `"` {
+		DeleteResourceConfirmSuggestions += "\nDo not include the quotation marks in the confirmation string."
+	}
+	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
 func show(cmd *cobra.Command, field Field) {
