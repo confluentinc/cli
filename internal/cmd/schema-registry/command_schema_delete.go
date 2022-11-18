@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -19,8 +20,8 @@ import (
 func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
-		Short:       "Delete one or more schemas.",
-		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
+		Short:       "Delete one or more schema versions.",
+		Long:        "Delete one or more schema versions. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
 		RunE:        c.delete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -39,6 +40,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")
@@ -63,6 +65,22 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 
 	version, err := cmd.Flags().GetString("version")
 	if err != nil {
+		return err
+	}
+
+	var checkVersion string
+	if version == "all" { // check that at least one version for the input subject exists
+		checkVersion = "latest"
+	} else {
+		checkVersion = version
+	}
+	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil)
+	if err != nil {
+		return errors.CatchSchemaNotFoundError(err, httpResp)
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, "schema", subject + " (version " + version + ")", subject)
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, subject); err != nil {
 		return err
 	}
 

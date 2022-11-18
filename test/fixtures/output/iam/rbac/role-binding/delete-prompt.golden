@@ -1,0 +1,5 @@
+Are you sure you want to delete this role binding? (y/n): +-----------+----------------------+
+| Principal | User:u-11aaa         |
+| Email     | u-11aaa@confluent.io |
+| Role      | CloudClusterAdmin    |
++-----------+----------------------+

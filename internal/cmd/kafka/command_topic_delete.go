@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -35,6 +36,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
@@ -48,6 +50,16 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
 	if err != nil {
+		return err
+	}
+
+	err = c.checkTopicExists(kafkaClusterConfig.ID, topicName)
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
 		return err
 	}
 
@@ -89,5 +101,24 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
+	return nil
+}
+
+func (c *authenticatedTopicCommand) checkTopicExists(lkc, name string) error {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		// Get topic config
+		_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
+		if err != nil && httpResp != nil {
+			// Kafka REST is available, but there was an error
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+			if parseErr == nil {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
+					return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
+				}
+			}
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+	}
+
 	return nil
 }
