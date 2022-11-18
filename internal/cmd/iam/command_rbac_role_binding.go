@@ -383,14 +383,13 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 }
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
-	var allResourceTypes = make(map[string]bool)
+	allResourceTypes := make(map[string]bool)
 	var notFoundErr error
 	ctx := c.createContext()
 	namespaces := []optional.String{publicNamespace, dataGovernanceNamespace, dataplaneNamespace, ksqlNamespace}
 	found := false
 
-	// We only have roleName to find the role, so we need to check all namespaces
-	for _, ns := range namespaces {
+	for _, namespace := range namespaces {
 		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: ns}
 		role, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 		if err != nil {
@@ -418,7 +417,7 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	}
 
 	var uniqueResourceTypes []string
-	for rt := range allResourceTypes {
+	for resourceType := range allResourceTypes {
 		uniqueResourceTypes = append(uniqueResourceTypes, rt)
 	}
 
