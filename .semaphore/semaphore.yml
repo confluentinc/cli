@@ -26,7 +26,7 @@ blocks:
             - sudo apt update
             - sudo apt install -y debhelper devscripts git-buildpackage
 
-            - export MAIN_BRANCH="release-linux-apt"
+            - export MAIN_BRANCH="main"
             
             - checkout
             - git checkout -b debian $MAIN_BRANCH
