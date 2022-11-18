@@ -92,10 +92,10 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			versionStr := vars["version"]
 			var version64 int64
-			var err error
 			if versionStr == "latest" {
 				version64 = 1
 			} else {
+				var err error
 				version64, err = strconv.ParseInt(versionStr, 10, 32)
 				require.NoError(t, err)
 			}
