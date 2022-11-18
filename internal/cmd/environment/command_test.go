@@ -68,25 +68,25 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 		GetOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiGetOrgV2EnvironmentRequest {
 			return orgv2.ApiGetOrgV2EnvironmentRequest{}
 		},
-		GetOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiGetOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
+		GetOrgV2EnvironmentExecuteFunc: func(_ orgv2.ApiGetOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
 			return orgEnvironment, nil, nil
 		},
 		ListOrgV2EnvironmentsFunc: func(_ context.Context) orgv2.ApiListOrgV2EnvironmentsRequest {
 			return orgv2.ApiListOrgV2EnvironmentsRequest{}
 		},
-		ListOrgV2EnvironmentsExecuteFunc: func(req orgv2.ApiListOrgV2EnvironmentsRequest) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
+		ListOrgV2EnvironmentsExecuteFunc: func(_ orgv2.ApiListOrgV2EnvironmentsRequest) (orgv2.OrgV2EnvironmentList, *http.Response, error) {
 			return orgv2.OrgV2EnvironmentList{Data: []orgv2.OrgV2Environment{orgEnvironment, orgEnvironmentUpdated}}, nil, nil
 		},
 		UpdateOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiUpdateOrgV2EnvironmentRequest {
 			return orgv2.ApiUpdateOrgV2EnvironmentRequest{}
 		},
-		UpdateOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiUpdateOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
+		UpdateOrgV2EnvironmentExecuteFunc: func(_ orgv2.ApiUpdateOrgV2EnvironmentRequest) (orgv2.OrgV2Environment, *http.Response, error) {
 			return orgEnvironmentUpdated, nil, nil
 		},
 		DeleteOrgV2EnvironmentFunc: func(_ context.Context, _ string) orgv2.ApiDeleteOrgV2EnvironmentRequest {
 			return orgv2.ApiDeleteOrgV2EnvironmentRequest{}
 		},
-		DeleteOrgV2EnvironmentExecuteFunc: func(req orgv2.ApiDeleteOrgV2EnvironmentRequest) (*http.Response, error) {
+		DeleteOrgV2EnvironmentExecuteFunc: func(_ orgv2.ApiDeleteOrgV2EnvironmentRequest) (*http.Response, error) {
 			return nil, nil
 		},
 	}
