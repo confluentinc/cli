@@ -1,0 +1,7 @@
+Are you sure you want to delete this role binding? (y/n): +---------------+-----------------+
+| Principal     | User:bob        |
+| Role          | DeveloperRead   |
+| Resource Type | Topic           |
+| Name          | connect-configs |
+| Pattern Type  | LITERAL         |
++---------------+-----------------+

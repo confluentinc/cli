@@ -1,10 +1,13 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -26,12 +29,23 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	if err != nil {
+		return err
+	}
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, pipeline.Spec.GetDisplayName())
 	if err != nil {
 		return err
 	}
