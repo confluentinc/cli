@@ -153,7 +153,7 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 		case "u-2":
-			user := buildIamUser("u-2@confluent.io", "bono", "u-2")
+			user := buildIamUser("u-2@confluent.io", "Bono", "u-2")
 			err := json.NewEncoder(w).Encode(user)
 			require.NoError(t, err)
 		case "u-11aaa":
