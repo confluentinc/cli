@@ -27,10 +27,9 @@ PREFIX=/usr
 SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 endif
 
-all:
-	OS=linux ARCH=amd64 make install-single
+all: install
 
-archive: install
+archive: install-all
 	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
 
@@ -45,7 +44,7 @@ LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
 # Install a single binary, specified with $CLI_VERSION, $OS and $ARCH
-install-single: apply-patches
+install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
@@ -65,7 +64,7 @@ install-single: apply-patches
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
 # Install all OS/arch combinations and bundle with packaging/confluent.sh for OS/arch-agnostic TAR/ZIP archives
-install: apply-patches
+install-all: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
