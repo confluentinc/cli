@@ -29,7 +29,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		OrganizationId: c.Context.GetOrganization().GetId(),
 	}
 
-	environment, err := c.Client.Account.Create(context.Background(), account)
+	environment, err := c.PrivateClient.Account.Create(context.Background(), account)
 	if err != nil {
 		return err
 	}
