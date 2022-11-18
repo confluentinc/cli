@@ -46,6 +46,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityPool, args[0], pool.GetDisplayName())
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, pool.GetDisplayName()); err != nil {
 		return err

@@ -39,6 +39,7 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err

@@ -42,6 +42,7 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SchemaExporter, info.Name, info.Name)
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, info.Name); err != nil {
 		return err

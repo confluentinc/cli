@@ -30,6 +30,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClientQuota, args[0], args[0])
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, args[0]); err != nil {
 		return err

@@ -37,6 +37,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 	if err != nil {
 		return err
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityProvider, args[0], provider.GetDisplayName())
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, provider.GetDisplayName()); err != nil {
 		return err

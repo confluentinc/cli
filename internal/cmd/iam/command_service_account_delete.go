@@ -43,6 +43,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	if err != nil {
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ServiceAccount, serviceAccountId, serviceAccount.GetDisplayName())
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, serviceAccount.GetDisplayName()); err != nil {
 		return err

@@ -38,6 +38,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		// Replace the suggestions w/ the suggestions specific to delete requests
 		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterDeletingSuggestions)
 	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KafkaCluster, args[0], cluster.GetName())
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, cluster.GetName()); err != nil {
 		return err
