@@ -38,9 +38,9 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")

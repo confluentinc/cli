@@ -28,9 +28,9 @@ func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

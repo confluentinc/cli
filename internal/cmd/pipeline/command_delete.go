@@ -27,9 +27,9 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

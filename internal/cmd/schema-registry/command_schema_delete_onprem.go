@@ -30,8 +30,8 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = cmd.MarkFlagRequired("subject")
 	_ = cmd.MarkFlagRequired("version")

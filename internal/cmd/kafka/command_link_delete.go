@@ -21,10 +21,10 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	return cmd
 }

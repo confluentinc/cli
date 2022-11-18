@@ -27,6 +27,7 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

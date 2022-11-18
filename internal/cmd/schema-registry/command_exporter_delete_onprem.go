@@ -20,9 +20,9 @@ func (c *exporterCommand) newDeleteCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
-	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

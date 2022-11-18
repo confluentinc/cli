@@ -27,6 +27,7 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

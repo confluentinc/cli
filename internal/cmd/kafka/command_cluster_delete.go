@@ -23,11 +23,11 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	}
-	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

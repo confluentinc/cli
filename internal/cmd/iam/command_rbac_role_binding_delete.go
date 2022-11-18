@@ -30,13 +30,13 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 		)
 	}
 
+	pcmd.AddForceFlag(cmd)
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
 	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
-	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("principal")
 	_ = cmd.MarkFlagRequired("role")

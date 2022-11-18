@@ -27,6 +27,7 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

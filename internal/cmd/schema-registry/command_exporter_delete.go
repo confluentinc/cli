@@ -24,10 +24,10 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }

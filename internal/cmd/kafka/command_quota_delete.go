@@ -19,8 +19,9 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}
-	pcmd.AddOutputFlag(cmd)
+
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

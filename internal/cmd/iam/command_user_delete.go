@@ -19,6 +19,7 @@ func (c userCommand) newDeleteCommand() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}
+
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
