@@ -160,7 +160,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		topic.Spec.NumPartitions = int32(partitions)
 	}
 
-	if err := c.Client.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
+	if err := c.PrivateClient.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
 		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExists)
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err

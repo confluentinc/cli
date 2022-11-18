@@ -96,10 +96,10 @@ func getPreRunBase() *pcmd.PreRun {
 			Out:    os.Stdout,
 		},
 		CCloudClientFactory: &cliMock.CCloudClientFactory{
-			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 				return &ccloud.Client{}
 			},
-			AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 				return &ccloud.Client{}
 			},
 		},
@@ -377,7 +377,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r := getPreRunBase()
 			r.Config = cfg
 			r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+				PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 					return &ccloud.Client{Auth: &sdkMock.Auth{
 						UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 							return &flowv1.GetMeReply{
@@ -392,7 +392,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						},
 					}}
 				},
-				AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+				PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 					return &ccloud.Client{}
 				},
 			}
@@ -486,7 +486,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	r := getPreRunBase()
 	r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: &sdkMock.Auth{
 				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
 					return &flowv1.GetMeReply{
@@ -501,7 +501,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				},
 			}}
 		},
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 			return &ccloud.Client{}
 		},
 	}

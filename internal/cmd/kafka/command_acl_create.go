@@ -125,7 +125,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.Client.Kafka.CreateACLs(context.Background(), cluster, bindings); err != nil {
+	if err := c.PrivateClient.Kafka.CreateACLs(context.Background(), cluster, bindings); err != nil {
 		return err
 	}
 

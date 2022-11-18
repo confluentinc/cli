@@ -65,8 +65,8 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloud.Client
-	PublicClient      *ccloudv1.Client
+	PrivateClient     *ccloud.Client
+	Client            *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
@@ -338,18 +338,18 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		if err := r.setPublicCCloudClient(command); err != nil {
+		if err := r.setCCloudClient(command); err != nil {
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		return r.setPrivateCCloudClient(command)
 	}
 }
 
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.Client)
+		return ctx.ParseFlagsIntoContext(cmd, command.PrivateClient)
 	}
 }
 
@@ -387,8 +387,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return nil
 	}
 
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
+	privateClient := r.CCloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, privateClient, pauth.CCloudURL, credentials)
 	if err != nil {
 		return err
 	}
@@ -425,16 +425,16 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*
 	return credentials, nil
 }
 
-func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setPrivateCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
+	ccloudClient, err := r.createPrivateCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
 	}
-	cliCmd.Client = ccloudClient
-	cliCmd.Context.Client = ccloudClient
-	cliCmd.Config.Client = ccloudClient
+	cliCmd.PrivateClient = ccloudClient
+	cliCmd.Context.PrivateClient = ccloudClient
+	cliCmd.Config.PrivateClient = ccloudClient
 
 	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -482,23 +482,16 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setPublicCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 
-	ccloudClient, err := r.createPublicCCloudClient(ctx, cliCmd.Version)
+	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
 	}
-	cliCmd.PublicClient = ccloudClient
-	cliCmd.Context.PublicClient = ccloudClient
-	cliCmd.Config.PublicClient = ccloudClient
-
-	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
-	}
-
-	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version, unsafeTrace)
+	cliCmd.Client = ccloudClient
+	cliCmd.Context.Client = ccloudClient
+	cliCmd.Config.Client = ccloudClient
 
 	return nil
 }
@@ -559,7 +552,7 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	return baseURL
 }
 
-func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
+func (r *PreRun) createPrivateCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
 	var baseURL string
 	var authToken string
 	var userAgent string
@@ -577,7 +570,7 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 	}), nil
 }
 
-func (r *PreRun) createPublicCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
+func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
 	var baseURL string
 	var authToken string
 	var userAgent string
@@ -881,19 +874,19 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			client, err := r.createCCloudClient(ctx, command.Version)
+			privateClient, err := r.createPrivateCCloudClient(ctx, command.Version)
 			if err != nil {
 				return err
 			}
 
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
-			ctx.Client = client
-			command.Config.Client = client
+			ctx.PrivateClient = privateClient
+			command.Config.PrivateClient = privateClient
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.PrivateClient); err != nil {
 				return err
 			}
 

@@ -108,7 +108,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	topic := &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicName}}
-	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, topic)
+	resp, err := c.PrivateClient.Kafka.DescribeTopic(context.Background(), cluster, topic)
 	if err != nil {
 		return err
 	}

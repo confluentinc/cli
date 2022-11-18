@@ -11,10 +11,10 @@ import (
 )
 
 type CCloudClientFactory interface {
-	AnonHTTPClientFactory(baseURL string) *ccloud.Client
-	JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client
-	AnonPublicHTTPClientFactory(baseURL string) *ccloudv1.Client
-	PublicJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
+	PrivateAnonHTTPClientFactory(baseURL string) *ccloud.Client
+	PrivateJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client
+	AnonHTTPClientFactory(baseURL string) *ccloudv1.Client
+	JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
 }
 
 type CCloudClientFactoryImpl struct {
@@ -27,18 +27,18 @@ func NewCCloudClientFactory(userAgent string) CCloudClientFactory {
 	}
 }
 
-func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloud.Client {
+func (c *CCloudClientFactoryImpl) PrivateAnonHTTPClientFactory(baseURL string) *ccloud.Client {
 	return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
-func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
+func (c *CCloudClientFactoryImpl) PrivateJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
 	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
-func (c *CCloudClientFactoryImpl) AnonPublicHTTPClientFactory(baseURL string) *ccloudv1.Client {
+func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloudv1.Client {
 	return ccloudv1.NewClient(&ccloudv1.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
-func (c *CCloudClientFactoryImpl) PublicJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client {
+func (c *CCloudClientFactoryImpl) JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client {
 	return ccloudv1.NewClientWithJWT(ctx, jwt, &ccloudv1.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }

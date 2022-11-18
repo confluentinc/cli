@@ -138,12 +138,12 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
+	privateClient := c.ccloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
-	publicClient := c.ccloudClientFactory.PublicJwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateClient, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -160,19 +160,19 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		c.printRemainingFreeCredit(cmd, publicClient, currentOrg)
+		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, publicClient *ccloudv1.Client, currentOrg *orgv1.Organization) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
 	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
 		return
 	}
 
 	org := &ccloudv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := publicClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
 		return
@@ -193,8 +193,8 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, publicClient *ccl
 // Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
-	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	c.loginCredentialsManager.SetCloudClient(client)
+	privateClient := c.ccloudClientFactory.PrivateAnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(privateClient)
 
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {

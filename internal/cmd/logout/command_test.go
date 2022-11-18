@@ -178,18 +178,18 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		}
 	}
 	ccloudClientFactory := &cliMock.CCloudClientFactory{
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 			req.Equal("https://confluent.cloud", baseURL)
 			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}, Auth: auth, User: user}
 		},
-		AnonPublicHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
 			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}}
 		},
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: auth, User: user}
 		},
-		PublicJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Billing: &ccloudv1Mock.Billing{
 				GetClaimedPromoCodesFunc: func(_ context.Context, _ *ccloudv1.Organization, _ bool) ([]*ccloudv1.PromoCodeClaim, error) {
 					var claims []*ccloudv1.PromoCodeClaim
@@ -203,7 +203,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), ccloudClientFactory.AnonPublicHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.PrivateAnonHTTPClientFactory(ccloudURL), ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	return loginCmd, cfg
 }

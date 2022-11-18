@@ -83,7 +83,7 @@ func mockSingleRowCommand() *cobra.Command {
 }
 
 func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string) *cobra.Command {
-	publicClient := &ccloudv1.Client{
+	client := &ccloudv1.Client{
 		Billing: &ccloudv1mock.Billing{
 			GetPriceTableFunc: func(_ context.Context, organization *ccloudv1.Organization, _ string) (*ccloudv1.PriceTable, error) {
 				table := &ccloudv1.PriceTable{
@@ -98,7 +98,7 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 
 	cfg := v1.AuthenticatedCloudConfigMock()
 
-	return New(mock.NewPreRunnerMock(nil, publicClient, nil, nil, nil, cfg))
+	return New(mock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg))
 }
 
 func TestFormatPrice(t *testing.T) {

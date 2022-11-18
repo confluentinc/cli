@@ -97,11 +97,11 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return c.Client.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
+	return c.PrivateClient.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}

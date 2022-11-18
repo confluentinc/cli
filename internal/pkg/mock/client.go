@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
-func NewClientMock() *ccloud.Client {
+func NewPrivateClientMock() *ccloud.Client {
 	return &ccloud.Client{
 		Auth:           &mock.Auth{},
 		Account:        &mock.Account{},
@@ -30,7 +30,7 @@ func NewClientMock() *ccloud.Client {
 	}
 }
 
-func NewPublicClientMock() *ccloudv1.Client {
+func NewClientMock() *ccloudv1.Client {
 	return &ccloudv1.Client{
 		Billing: &ccloudv1mock.Billing{},
 	}

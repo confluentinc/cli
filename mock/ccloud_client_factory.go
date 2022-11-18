@@ -14,19 +14,27 @@ import (
 
 // CCloudClientFactory is a mock of CCloudClientFactory interface
 type CCloudClientFactory struct {
+	lockPrivateAnonHTTPClientFactory sync.Mutex
+	PrivateAnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
+
+	lockPrivateJwtHTTPClientFactory sync.Mutex
+	PrivateJwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
+
 	lockAnonHTTPClientFactory sync.Mutex
-	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
+	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 
 	lockJwtHTTPClientFactory sync.Mutex
-	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
-
-	lockAnonPublicHTTPClientFactory sync.Mutex
-	AnonPublicHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
-
-	lockPublicJwtHTTPClientFactory sync.Mutex
-	PublicJwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 
 	calls struct {
+		PrivateAnonHTTPClientFactory []struct {
+			BaseURL string
+		}
+		PrivateJwtHTTPClientFactory []struct {
+			Ctx     context.Context
+			Jwt     string
+			BaseURL string
+		}
 		AnonHTTPClientFactory []struct {
 			BaseURL string
 		}
@@ -35,19 +43,93 @@ type CCloudClientFactory struct {
 			Jwt     string
 			BaseURL string
 		}
-		AnonPublicHTTPClientFactory []struct {
-			BaseURL string
-		}
-		PublicJwtHTTPClientFactory []struct {
-			Ctx     context.Context
-			Jwt     string
-			BaseURL string
-		}
 	}
 }
 
+// PrivateAnonHTTPClientFactory mocks base method by wrapping the associated func.
+func (m *CCloudClientFactory) PrivateAnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
+	m.lockPrivateAnonHTTPClientFactory.Lock()
+	defer m.lockPrivateAnonHTTPClientFactory.Unlock()
+
+	if m.PrivateAnonHTTPClientFactoryFunc == nil {
+		panic("mocker: CCloudClientFactory.PrivateAnonHTTPClientFactoryFunc is nil but CCloudClientFactory.PrivateAnonHTTPClientFactory was called.")
+	}
+
+	call := struct {
+		BaseURL string
+	}{
+		BaseURL: baseURL,
+	}
+
+	m.calls.PrivateAnonHTTPClientFactory = append(m.calls.PrivateAnonHTTPClientFactory, call)
+
+	return m.PrivateAnonHTTPClientFactoryFunc(baseURL)
+}
+
+// PrivateAnonHTTPClientFactoryCalled returns true if PrivateAnonHTTPClientFactory was called at least once.
+func (m *CCloudClientFactory) PrivateAnonHTTPClientFactoryCalled() bool {
+	m.lockPrivateAnonHTTPClientFactory.Lock()
+	defer m.lockPrivateAnonHTTPClientFactory.Unlock()
+
+	return len(m.calls.PrivateAnonHTTPClientFactory) > 0
+}
+
+// PrivateAnonHTTPClientFactoryCalls returns the calls made to PrivateAnonHTTPClientFactory.
+func (m *CCloudClientFactory) PrivateAnonHTTPClientFactoryCalls() []struct {
+	BaseURL string
+} {
+	m.lockPrivateAnonHTTPClientFactory.Lock()
+	defer m.lockPrivateAnonHTTPClientFactory.Unlock()
+
+	return m.calls.PrivateAnonHTTPClientFactory
+}
+
+// PrivateJwtHTTPClientFactory mocks base method by wrapping the associated func.
+func (m *CCloudClientFactory) PrivateJwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
+	m.lockPrivateJwtHTTPClientFactory.Lock()
+	defer m.lockPrivateJwtHTTPClientFactory.Unlock()
+
+	if m.PrivateJwtHTTPClientFactoryFunc == nil {
+		panic("mocker: CCloudClientFactory.PrivateJwtHTTPClientFactoryFunc is nil but CCloudClientFactory.PrivateJwtHTTPClientFactory was called.")
+	}
+
+	call := struct {
+		Ctx     context.Context
+		Jwt     string
+		BaseURL string
+	}{
+		Ctx:     ctx,
+		Jwt:     jwt,
+		BaseURL: baseURL,
+	}
+
+	m.calls.PrivateJwtHTTPClientFactory = append(m.calls.PrivateJwtHTTPClientFactory, call)
+
+	return m.PrivateJwtHTTPClientFactoryFunc(ctx, jwt, baseURL)
+}
+
+// PrivateJwtHTTPClientFactoryCalled returns true if PrivateJwtHTTPClientFactory was called at least once.
+func (m *CCloudClientFactory) PrivateJwtHTTPClientFactoryCalled() bool {
+	m.lockPrivateJwtHTTPClientFactory.Lock()
+	defer m.lockPrivateJwtHTTPClientFactory.Unlock()
+
+	return len(m.calls.PrivateJwtHTTPClientFactory) > 0
+}
+
+// PrivateJwtHTTPClientFactoryCalls returns the calls made to PrivateJwtHTTPClientFactory.
+func (m *CCloudClientFactory) PrivateJwtHTTPClientFactoryCalls() []struct {
+	Ctx     context.Context
+	Jwt     string
+	BaseURL string
+} {
+	m.lockPrivateJwtHTTPClientFactory.Lock()
+	defer m.lockPrivateJwtHTTPClientFactory.Unlock()
+
+	return m.calls.PrivateJwtHTTPClientFactory
+}
+
 // AnonHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
+func (m *CCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
 	m.lockAnonHTTPClientFactory.Lock()
 	defer m.lockAnonHTTPClientFactory.Unlock()
 
@@ -85,7 +167,7 @@ func (m *CCloudClientFactory) AnonHTTPClientFactoryCalls() []struct {
 }
 
 // JwtHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client {
+func (m *CCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
 	m.lockJwtHTTPClientFactory.Lock()
 	defer m.lockJwtHTTPClientFactory.Unlock()
 
@@ -128,100 +210,18 @@ func (m *CCloudClientFactory) JwtHTTPClientFactoryCalls() []struct {
 	return m.calls.JwtHTTPClientFactory
 }
 
-// AnonPublicHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) AnonPublicHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
-	m.lockAnonPublicHTTPClientFactory.Lock()
-	defer m.lockAnonPublicHTTPClientFactory.Unlock()
-
-	if m.AnonPublicHTTPClientFactoryFunc == nil {
-		panic("mocker: CCloudClientFactory.AnonPublicHTTPClientFactoryFunc is nil but CCloudClientFactory.AnonPublicHTTPClientFactory was called.")
-	}
-
-	call := struct {
-		BaseURL string
-	}{
-		BaseURL: baseURL,
-	}
-
-	m.calls.AnonPublicHTTPClientFactory = append(m.calls.AnonPublicHTTPClientFactory, call)
-
-	return m.AnonPublicHTTPClientFactoryFunc(baseURL)
-}
-
-// AnonPublicHTTPClientFactoryCalled returns true if AnonPublicHTTPClientFactory was called at least once.
-func (m *CCloudClientFactory) AnonPublicHTTPClientFactoryCalled() bool {
-	m.lockAnonPublicHTTPClientFactory.Lock()
-	defer m.lockAnonPublicHTTPClientFactory.Unlock()
-
-	return len(m.calls.AnonPublicHTTPClientFactory) > 0
-}
-
-// AnonPublicHTTPClientFactoryCalls returns the calls made to AnonPublicHTTPClientFactory.
-func (m *CCloudClientFactory) AnonPublicHTTPClientFactoryCalls() []struct {
-	BaseURL string
-} {
-	m.lockAnonPublicHTTPClientFactory.Lock()
-	defer m.lockAnonPublicHTTPClientFactory.Unlock()
-
-	return m.calls.AnonPublicHTTPClientFactory
-}
-
-// PublicJwtHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) PublicJwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
-	m.lockPublicJwtHTTPClientFactory.Lock()
-	defer m.lockPublicJwtHTTPClientFactory.Unlock()
-
-	if m.PublicJwtHTTPClientFactoryFunc == nil {
-		panic("mocker: CCloudClientFactory.PublicJwtHTTPClientFactoryFunc is nil but CCloudClientFactory.PublicJwtHTTPClientFactory was called.")
-	}
-
-	call := struct {
-		Ctx     context.Context
-		Jwt     string
-		BaseURL string
-	}{
-		Ctx:     ctx,
-		Jwt:     jwt,
-		BaseURL: baseURL,
-	}
-
-	m.calls.PublicJwtHTTPClientFactory = append(m.calls.PublicJwtHTTPClientFactory, call)
-
-	return m.PublicJwtHTTPClientFactoryFunc(ctx, jwt, baseURL)
-}
-
-// PublicJwtHTTPClientFactoryCalled returns true if PublicJwtHTTPClientFactory was called at least once.
-func (m *CCloudClientFactory) PublicJwtHTTPClientFactoryCalled() bool {
-	m.lockPublicJwtHTTPClientFactory.Lock()
-	defer m.lockPublicJwtHTTPClientFactory.Unlock()
-
-	return len(m.calls.PublicJwtHTTPClientFactory) > 0
-}
-
-// PublicJwtHTTPClientFactoryCalls returns the calls made to PublicJwtHTTPClientFactory.
-func (m *CCloudClientFactory) PublicJwtHTTPClientFactoryCalls() []struct {
-	Ctx     context.Context
-	Jwt     string
-	BaseURL string
-} {
-	m.lockPublicJwtHTTPClientFactory.Lock()
-	defer m.lockPublicJwtHTTPClientFactory.Unlock()
-
-	return m.calls.PublicJwtHTTPClientFactory
-}
-
 // Reset resets the calls made to the mocked methods.
 func (m *CCloudClientFactory) Reset() {
+	m.lockPrivateAnonHTTPClientFactory.Lock()
+	m.calls.PrivateAnonHTTPClientFactory = nil
+	m.lockPrivateAnonHTTPClientFactory.Unlock()
+	m.lockPrivateJwtHTTPClientFactory.Lock()
+	m.calls.PrivateJwtHTTPClientFactory = nil
+	m.lockPrivateJwtHTTPClientFactory.Unlock()
 	m.lockAnonHTTPClientFactory.Lock()
 	m.calls.AnonHTTPClientFactory = nil
 	m.lockAnonHTTPClientFactory.Unlock()
 	m.lockJwtHTTPClientFactory.Lock()
 	m.calls.JwtHTTPClientFactory = nil
 	m.lockJwtHTTPClientFactory.Unlock()
-	m.lockAnonPublicHTTPClientFactory.Lock()
-	m.calls.AnonPublicHTTPClientFactory = nil
-	m.lockAnonPublicHTTPClientFactory.Unlock()
-	m.lockPublicJwtHTTPClientFactory.Lock()
-	m.calls.PublicJwtHTTPClientFactory = nil
-	m.lockPublicJwtHTTPClientFactory.Unlock()
 }

@@ -14,7 +14,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221115193319-eb1b73c55090
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221115212529-5debfa201d7b
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.4
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -375,7 +375,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.6.2 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.0 // indirect
 	github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 // indirect
-	github.com/ugorji/go/codec v1.2.5 // indirect
+	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ultraware/funlen v0.0.3 // indirect
 	github.com/ultraware/whitespace v0.0.5 // indirect

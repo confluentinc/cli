@@ -6,10 +6,9 @@ import (
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 type humanOut struct {
@@ -40,7 +39,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	codes, err := c.PublicClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		return err
 	}

@@ -143,12 +143,12 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
 	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	kafkaPricesReply, err := c.PublicClient.Billing.GetPriceTable(context.Background(), org, "kafka")
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {
 		return nil, err
 	}
 
-	clusterLinkPricesReply, err := c.PublicClient.Billing.GetPriceTable(context.Background(), org, "cluster-link")
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "cluster-link")
 	if err != nil {
 		return nil, err
 	}
