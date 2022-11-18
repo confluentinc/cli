@@ -458,8 +458,7 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
-	FailedToReadOptOutConfirmationErrorMsg   = "failed to read your opt out confirmation"
+	FailedToReadOptOutConfirmationErrorMsg = "failed to read your opt out confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`
@@ -482,7 +481,8 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg       = `failed to delete %s "%s": %v`
-	UpdateResourceErrorMsg       = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg = "must specify both `--%s` and `--%s`"
+	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
+	DeleteResourceConfirmErrorMsg = `input does not match %s`
+	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
+	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )

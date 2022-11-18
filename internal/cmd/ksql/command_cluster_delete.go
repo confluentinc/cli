@@ -2,6 +2,7 @@ package ksql
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -12,6 +13,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -28,6 +30,7 @@ func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
@@ -40,6 +43,11 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	cluster, err := c.V2Client.DescribeKsqlCluster(id, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
+	}
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KsqlCluster, id, cluster.Spec.GetDisplayName())
+	_, err = form.ConfirmDeletion(cmd, promptMsg, cluster.Spec.GetDisplayName())
+	if err != nil {
+		return err
 	}
 
 	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
