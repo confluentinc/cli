@@ -387,13 +387,11 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	var namespaces []optional.String
 	allResourceTypes := make(map[string]bool)
 	ctx := c.createContext()
-	publicAndDataplaneNamespaces := []optional.String{publicNamespace, dataplaneNamespace}
 	found := false
 
+	namespaces := []optional.String{publicNamespace, dataplaneNamespace}
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 		namespaces = allNamespaces
-	} else {
-		namespaces = publicAndDataplaneNamespaces
 	}
 
 	for _, namespace := range namespaces {
