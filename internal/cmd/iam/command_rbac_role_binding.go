@@ -383,14 +383,21 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 }
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
-	allResourceTypes := make(map[string]bool)
 	var notFoundErr error
+	var namespaces []optional.String
+	allResourceTypes := make(map[string]bool)
 	ctx := c.createContext()
-	namespaces := []optional.String{publicNamespace, dataGovernanceNamespace, dataplaneNamespace, ksqlNamespace}
+	publicAndDataplaneNamespaces := []optional.String{publicNamespace, dataplaneNamespace}
 	found := false
 
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+		namespaces = publicAndDataplaneNamespaces
+	} else {
+		namespaces = allNamespaces
+	}
+
 	for _, namespace := range namespaces {
-		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: ns}
+		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespace}
 		role, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 		if err != nil {
 			notFoundErr = err
@@ -418,7 +425,7 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 
 	var uniqueResourceTypes []string
 	for resourceType := range allResourceTypes {
-		uniqueResourceTypes = append(uniqueResourceTypes, rt)
+		uniqueResourceTypes = append(uniqueResourceTypes, resourceType)
 	}
 
 	suggestionsMsg := fmt.Sprintf(errors.InvalidResourceTypeSuggestions, strings.Join(uniqueResourceTypes, ", "))
