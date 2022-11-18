@@ -50,7 +50,6 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	// Delete Topic
 	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
