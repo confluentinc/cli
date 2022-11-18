@@ -29,7 +29,7 @@ endif
 
 all: install
 
-archive: install-all
+archive: install
 	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
 
@@ -60,8 +60,6 @@ install: apply-patches
 
 	cp LICENSE $(DOCPATH)/COPYRIGHT
 	$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DOCPATH)/version.txt
-
-	chown -R root:root $(DESTDIR)$(PREFIX)
 
 # Install all OS/arch combinations and bundle with packaging/confluent.sh for OS/arch-agnostic TAR/ZIP archives
 install-all: apply-patches
