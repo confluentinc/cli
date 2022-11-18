@@ -373,7 +373,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", apiKeyVal})
+	cmd.SetArgs([]string{"delete", apiKeyVal, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
