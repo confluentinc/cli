@@ -92,7 +92,7 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	}
 
 	prompt := NewPrompt(os.Stdin)
-	yesNo := confirmStr == ""
+	yesNo := stringToType == ""
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: yesNo})
 	if err := f.Prompt(cmd, prompt); err != nil && yesNo {
 		return false, errors.New("failed to read your deletion confirmation")
@@ -104,12 +104,12 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 		return f.Responses["confirm"].(bool), nil
 	}
 	
-	if f.Responses["confirm"].(string) == confirmStr {
+	if f.Responses["confirm"].(string) == stringToType {
 		return true, nil
 	}
 	
 	DeleteResourceConfirmSuggestions := "Do not include the quotation marks in the confirmation string.\nUse the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match %s`, confirmStr), DeleteResourceConfirmSuggestions)
+	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match %s`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
 func show(cmd *cobra.Command, field Field) {
@@ -167,7 +167,7 @@ func validate(field Field, val string) (interface{}, error) {
 
 func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
+		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl+C.")
 		return true
 	}
 	return false

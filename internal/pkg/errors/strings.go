@@ -47,9 +47,9 @@ const (
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
-	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl+C or Ctrl+D to exit."
 	StoppingConsumerMsg      = "Stopping Consumer."
-	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
+	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl+C to exit."
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
@@ -136,7 +136,7 @@ const (
 	// General
 	CreatedResourceMsg            = "Created %s \"%s\".\n"
 	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
-	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s %s?\nTo confirm, enter \"%s\". To cancel, use Ctrl-C"
+	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl+C"
 	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
 	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACL(s) corresponding to these parameters?"
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"

@@ -1,2 +1,2 @@
-Are you sure you want to delete kSQL cluster lksqlc-12345?
-To confirm, enter "account ksql". To cancel, use Ctrl-C: Deleted kSQL cluster "lksqlc-12345".
+Are you sure you want to delete kSQL cluster "lksqlc-12345"?
+To confirm, type "account ksql". To cancel, press Ctrl+C: Deleted kSQL cluster "lksqlc-12345".
