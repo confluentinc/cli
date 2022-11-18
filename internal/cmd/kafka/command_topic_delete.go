@@ -54,17 +54,17 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	err = c.checkTopicExists(kafkaClusterConfig.ID, topicName)
-	if err != nil {
-		return err
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
-		return err
-	}
-
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		err = c.checkTopicExists(kafkaREST, kafkaClusterConfig.ID, topicName)
+		if err != nil {
+			return err
+		}
+
+		promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
+		if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
+			return err
+		}
+
 		httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -105,20 +105,18 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return nil
 }
 
-func (c *authenticatedTopicCommand) checkTopicExists(lkc, name string) error {
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		// Get topic config
-		_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but there was an error
-			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-			if parseErr == nil {
-				if restErr.Code == unknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
-				}
+func (c *authenticatedTopicCommand) checkTopicExists(kafkaREST *pcmd.KafkaREST, lkc, name string) error {
+	// Get topic config
+	_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
+	if err != nil && httpResp != nil {
+		// Kafka REST is available, but there was an error
+		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+		if parseErr == nil {
+			if restErr.Code == unknownTopicOrPartitionErrorCode {
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
 			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return nil
