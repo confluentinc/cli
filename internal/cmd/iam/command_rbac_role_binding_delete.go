@@ -10,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
@@ -35,6 +36,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddForceFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("principal")
 	_ = cmd.MarkFlagRequired("role")
@@ -46,6 +48,13 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	options, err := c.parseCommon(cmd)
 	if err != nil {
 		return err
+	}
+
+	promptMsg := "Are you sure you want to delete this role binding?"
+	if confirm, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil {
+		return err
+	} else if !confirm {
+		return nil
 	}
 
 	isCloud := c.cfg.IsCloudLogin()

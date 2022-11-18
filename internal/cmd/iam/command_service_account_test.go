@@ -39,6 +39,12 @@ var iamServiceAccount = iamv2.IamV2ServiceAccount{
 func (suite *ServiceAccountTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.iamServiceAccountMock = &iamMock.ServiceAccountsIamV2Api{
+		GetIamV2ServiceAccountFunc: func(_ context.Context, _ string) iamv2.ApiGetIamV2ServiceAccountRequest {
+			return iamv2.ApiGetIamV2ServiceAccountRequest{}
+		},
+		GetIamV2ServiceAccountExecuteFunc: func(req iamv2.ApiGetIamV2ServiceAccountRequest) (iamv2.IamV2ServiceAccount, *http.Response, error) {
+			return iamServiceAccount, nil, nil
+		},
 		CreateIamV2ServiceAccountFunc: func(_ context.Context) iamv2.ApiCreateIamV2ServiceAccountRequest {
 			return iamv2.ApiCreateIamV2ServiceAccountRequest{}
 		},
@@ -73,7 +79,7 @@ func (suite *ServiceAccountTestSuite) TestCreateServiceAccountService() {
 
 func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", serviceAccountId})
+	cmd.SetArgs([]string{"delete", serviceAccountId, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
