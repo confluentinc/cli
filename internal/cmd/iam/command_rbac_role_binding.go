@@ -384,7 +384,6 @@ func parseAndValidateResourcePatternV2(resource string, prefix bool) (mdsv2alpha
 
 func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, resourceType string) error {
 	var notFoundErr error
-	var namespaces []optional.String
 	allResourceTypes := make(map[string]bool)
 	ctx := c.createContext()
 	found := false
