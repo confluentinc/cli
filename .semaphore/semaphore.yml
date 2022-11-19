@@ -37,7 +37,7 @@ blocks:
             - git config user.name "Brian Strauch"
             - git commit -am "Tag Debian release $VERSION."
             
-            - gbp buildpackage -us -uc --git-debian-branch=debian --git-upstream-tree=release-linux-apt --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I" || cat /tmp/confluent_2.32.1-1.diff.*
+            - gbp buildpackage -us -uc --git-debian-branch=debian --git-upstream-tree=main --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I" || cat /tmp/confluent_2.32.1-1.diff.*
             - echo $SIGN
             - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent_*.changes); fi
             - cp confluent_*.build confluent_*.changes confluent_*.tar.gz confluent_*.dsc confluent_*.deb /vagrant/output/
