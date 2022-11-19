@@ -49,10 +49,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil || !ok {
-		return err
-	}
-
 	var filters []*schedv1.ACLFilter
 	for _, acl := range acls {
 		validateAddAndDelete(acl)
@@ -72,6 +68,27 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		aclCount := 0
+		for _, acl := range acls {
+			aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
+			if err != nil && httpResp != nil {
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			} else if len(aclDataList.Data) == 0 {
+				return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", "To check for valid ACLs, use `confluent kafka acl list`")
+			}
+			aclCount += len(aclDataList.Data)
+		}
+
+		var promptMsg string
+		if aclCount == 1 {
+			promptMsg = errors.DeleteACLsConfirmMsg
+		} else {
+			promptMsg = errors.DeleteACLsPluralConfirmMsg
+		}
+		if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+			return err
+		}
+
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
