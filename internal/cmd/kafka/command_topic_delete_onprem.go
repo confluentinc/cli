@@ -45,12 +45,17 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return err
 	}
 
+	_, resp, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, topicName)
+	if err != nil {
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+	}
+
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
 		return err
 	}
 
-	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
+	resp, err = restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
