@@ -249,6 +249,19 @@ func (suite *ACLTestSuite) TestMdsDeleteACL() {
 						},
 					},
 				)
+				expect <- convertToACLFilterRequest(
+					&mds.CreateAclRequest{
+						Scope: mds.KafkaScope{
+							Clusters: mds.KafkaScopeClusters{
+								KafkaCluster: "testcluster",
+							},
+						},
+						AclBinding: mds.AclBinding{
+							Pattern: mdsResourcePattern.pattern,
+							Entry:   mdsAclEntry.entry,
+						},
+					},
+				)
 			}()
 
 			err := cmd.Execute()

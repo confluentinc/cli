@@ -42,11 +42,22 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	if ok, err := form.ConfirmDeletion(cmd, errors.DeleteACLsConfirmMsg, ""); err != nil || !ok {
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	if err != nil {
+		return c.handleACLError(cmd, err, response)
+	}
+
+	var promptMsg string
+	if len(bindings) == 1 {
+		promptMsg = errors.DeleteACLConfirmMsg
+	} else {
+		promptMsg = errors.DeleteACLsConfirmMsg
+	}
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 	if err != nil {
 		return c.handleACLError(cmd, err, response)
 	}
