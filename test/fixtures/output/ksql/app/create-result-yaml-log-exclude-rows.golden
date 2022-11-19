@@ -1,4 +1,5 @@
 `confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
+IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 detailed_processing_log: false
 endpoint: SASL_SSL://ksql-endpoint
 id: lksqlc-woooo
