@@ -104,5 +104,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
+	utils.ErrPrintln(cmd, errors.SrRoleBindingRequiredForKSQLWarning)
+
 	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
