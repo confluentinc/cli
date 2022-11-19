@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-2
+    type: s1-prod-ubuntu20-04-amd64-1
 
 auto_cancel:
   running:
@@ -23,116 +23,139 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
+            - sudo apt update
+            - sudo apt install -y debhelper devscripts git-buildpackage
 
-            # Set up Go
             - checkout
-            - goenv install --skip-existing
-            - export "PATH=$(go env GOPATH)/bin:$PATH"
+            - git checkout -b debian
 
-            # Try to restore cached dependencies
-            - cache restore linux-$(checksum go.sum)
-
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
-            # Run tests
-            - make generate-packaging-patch
-            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - make deps
-            - make lint
-            - ulimit -n 2048
-            - make test
-            - make test-installer
-
-            # Cache Go dependencies
-            - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "linux/amd64"
-
-  - name: darwin/amd64
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-macos
-      jobs:
-        - name: darwin/amd64
-          commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-
-            # Set up Go
-            - checkout
-            - goenv install --skip-existing
-            - eval "$(goenv init -)"
-            - export "PATH=$GOROOT/bin:$PATH"
-            - export "PATH=$GOPATH/bin:$PATH"
-
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
-            # Run tests
-            - make deps
-            - ulimit -n 2048
-            - make test
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "darwin/amd64"
-            - rm *.xml
-
-  - name: windows/amd64
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-windows
-      jobs:
-        - name: windows/amd64
-          commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
-            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
+            - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
+            - export VERSION=$(git describe --tags --abbrev=0)
+            - dch --newversion ${VERSION#v}-1 "Release version $VERSION" --urgency low && dch --release --distribution unstable ""
             
-            # Set up Go
-            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
+            - git config user.email "bstrauch@confluent.io"
+            - git config user.name "Brian Strauch"
+            - git commit -am "Tag Debian release $VERSION."
             
-            # Set up Git
-            - checkout
-            - $Env:GOPRIVATE = "github.com/confluentinc"
-            # TODO: https://confluentinc.atlassian.net/browse/DP-8234
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - gbp buildpackage -us -uc --git-debian-branch=debian --git-upstream-tree=main --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I" || cat /tmp/confluent_2.32.1-1.diff.*
+            - echo $SIGN
+            - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent_*.changes); fi
+            - cp confluent_*.build confluent_*.changes confluent_*.tar.gz confluent_*.dsc confluent_*.deb /vagrant/output/
 
-            # Try to restore cached dependencies
-            - cache restore windows-$($(Get-FileHash go.sum).Hash)
+#            # Get GitHub SSH key from Vault
+#            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+#            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+#            - source script.sh
+#
+#            # Set up Go
+#            - checkout
+#            - goenv install --skip-existing
+#            - export "PATH=$(go env GOPATH)/bin:$PATH"
+#
+#            # Try to restore cached dependencies
+#            - cache restore linux-$(checksum go.sum)
+#
+#            # Set up Git
+#            - export "GOPRIVATE=github.com/confluentinc"
+#            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+#
+#            # Run tests
+#            - make generate-packaging-patch
+#            - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
+#            - make deps
+#            - make lint
+#            - ulimit -n 2048
+#            - make test
+#            - make test-installer
+#
+#            # Cache Go dependencies
+#            - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
+#      epilogue:
+#        always:
+#          commands:
+#            - test-results publish . -N "linux/amd64"
+#
+#  - name: darwin/amd64
+#    dependencies: []
+#    task:
+#      agent:
+#        machine:
+#          type: s1-prod-macos
+#      jobs:
+#        - name: darwin/amd64
+#          commands:
+#            # Get GitHub SSH key from Vault
+#            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+#            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+#            - source script.sh
+#
+#            # Set up Go
+#            - checkout
+#            - goenv install --skip-existing
+#            - eval "$(goenv init -)"
+#            - export "PATH=$GOROOT/bin:$PATH"
+#            - export "PATH=$GOPATH/bin:$PATH"
+#
+#            # Set up Git
+#            - export "GOPRIVATE=github.com/confluentinc"
+#            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+#
+#            # Run tests
+#            - make deps
+#            - ulimit -n 2048
+#            - make test
+#      epilogue:
+#        always:
+#          commands:
+#            - test-results publish . -N "darwin/amd64"
+#            - rm *.xml
+#
+#  - name: windows/amd64
+#    dependencies: []
+#    task:
+#      agent:
+#        machine:
+#          type: s1-prod-windows
+#      jobs:
+#        - name: windows/amd64
+#          commands:
+#            # Get GitHub SSH key from Vault
+#            - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
+#            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+#            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
+#            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
+#            
+#            # Set up Go
+#            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
+#            
+#            # Set up Git
+#            - checkout
+#            - $Env:GOPRIVATE = "github.com/confluentinc"
+#            # TODO: https://confluentinc.atlassian.net/browse/DP-8234
+#            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+#
+#            # Try to restore cached dependencies
+#            - cache restore windows-$($(Get-FileHash go.sum).Hash)
+#
+#            # Run tests
+#            - make deps
+#            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
+#            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
+#          
+#            # Cache Go dependencies
+#            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
+#      epilogue:
+#        always:
+#          commands:
+#            - test-results publish . -N "windows/amd64"
+#
+#after_pipeline:
+#  task:
+#    jobs:
+#      - name: Publish Results
+#        commands:
+#          - test-results gen-pipeline-report
 
-            # Run tests
-            - make deps
-            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
-            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
-          
-            # Cache Go dependencies
-            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "windows/amd64"
-
-after_pipeline:
-  task:
-    jobs:
-      - name: Publish Results
-        commands:
-          - test-results gen-pipeline-report
+promotions:
+  - name: Release to APT
+    pipeline_file: release-apt.yml
