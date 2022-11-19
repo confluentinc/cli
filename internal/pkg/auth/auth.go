@@ -9,7 +9,7 @@ import (
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	"github.com/dghubble/sling"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -73,7 +73,7 @@ func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCe
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
+func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/mock"

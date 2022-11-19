@@ -6,7 +6,7 @@ import (
 
 	ccloud "github.com/confluentinc/ccloud-sdk-go-v1"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 

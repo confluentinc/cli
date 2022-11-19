@@ -10,7 +10,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

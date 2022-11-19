@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"

@@ -14,7 +14,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221115212529-5debfa201d7b
+	github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud v0.0.0-20221118235742-6f8535084354
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.4
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0

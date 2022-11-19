@@ -10,7 +10,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"

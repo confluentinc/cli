@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
 )

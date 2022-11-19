@@ -9,7 +9,7 @@ import (
 	sync "sync"
 
 	github_com_confluentinc_ccloud_sdk_go_v1 "github.com/confluentinc/ccloud-sdk-go-v1"
-	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 )
 
 // CCloudClientFactory is a mock of CCloudClientFactory interface
@@ -21,10 +21,10 @@ type CCloudClientFactory struct {
 	PrivateJwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1.Client
 
 	lockAnonHTTPClientFactory sync.Mutex
-	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+	AnonHTTPClientFactoryFunc func(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client
 
 	lockJwtHTTPClientFactory sync.Mutex
-	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
+	JwtHTTPClientFactoryFunc func(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client
 
 	calls struct {
 		PrivateAnonHTTPClientFactory []struct {
@@ -129,7 +129,7 @@ func (m *CCloudClientFactory) PrivateJwtHTTPClientFactoryCalls() []struct {
 }
 
 // AnonHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
+func (m *CCloudClientFactory) AnonHTTPClientFactory(baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client {
 	m.lockAnonHTTPClientFactory.Lock()
 	defer m.lockAnonHTTPClientFactory.Unlock()
 
@@ -167,7 +167,7 @@ func (m *CCloudClientFactory) AnonHTTPClientFactoryCalls() []struct {
 }
 
 // JwtHTTPClientFactory mocks base method by wrapping the associated func.
-func (m *CCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public.Client {
+func (m *CCloudClientFactory) JwtHTTPClientFactory(ctx context.Context, jwt, baseURL string) *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client {
 	m.lockJwtHTTPClientFactory.Lock()
 	defer m.lockJwtHTTPClientFactory.Unlock()
 
