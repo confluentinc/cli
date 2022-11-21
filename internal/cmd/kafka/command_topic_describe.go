@@ -88,7 +88,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 				})
 			}
 			list.Add(&topicConfigurationOut{
-				Name:     partitionCount,
+				Name:     numPartitionsKey,
 				Value:    strconv.Itoa(numPartitions),
 				ReadOnly: false,
 			})
@@ -113,7 +113,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		for _, entry := range resp.Config {
 			out[entry.Name] = entry.Value
 		}
-		out[partitionCount] = strconv.Itoa(len(resp.Partitions))
+		out[numPartitionsKey] = strconv.Itoa(len(resp.Partitions))
 		return output.SerializedOutput(cmd, out)
 	}
 
@@ -125,7 +125,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		})
 	}
 	list.Add(&configOut{
-		Name:  partitionCount,
+		Name:  numPartitionsKey,
 		Value: strconv.Itoa(len(resp.Partitions)),
 	})
 	list.Filter([]string{"Name", "Value"})

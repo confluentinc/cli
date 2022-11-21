@@ -81,9 +81,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
-		_, hasNumPartitionsChanged := configMap[partitionCount]
+		_, hasNumPartitionsChanged := configMap[numPartitionsKey]
 		if hasNumPartitionsChanged {
-			delete(configMap, partitionCount)
+			delete(configMap, numPartitionsKey)
 		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
@@ -132,9 +132,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				}
 
 				readOnlyConfigs.Add(numPartitionsKey)
-				configsValues[partitionCount] = strconv.Itoa(numPartitions)
+				configsValues[numPartitionsKey] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
-				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: partitionCount}
+				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
 
