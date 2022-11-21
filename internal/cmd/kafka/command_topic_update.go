@@ -131,7 +131,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					return err
 				}
 
-				readOnlyConfigs.Add(partitionCount)
+				readOnlyConfigs.Add(numPartitionsKey)
 				configsValues[partitionCount] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: partitionCount}
