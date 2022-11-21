@@ -319,11 +319,11 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
 	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if cluster.Endpoint == "" {
-		cluster.Endpoint = cluster.ApiEndpoint
-	}
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
+	}
+	if cluster.Endpoint == "" {
+		cluster.Endpoint = cluster.ApiEndpoint
 	}
 	if flags.kafkaApiKey != "" {
 		err := c.Context.UseAPIKey(flags.kafkaApiKey, cluster.Id)
