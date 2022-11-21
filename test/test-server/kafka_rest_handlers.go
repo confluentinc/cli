@@ -201,8 +201,9 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 							Value: stringPtr("delete"),
 						},
 						cpkafkarestv3.TopicConfigData{
-							Name:  "compression.type",
-							Value: stringPtr("producer"),
+							Name:       "compression.type",
+							Value:      stringPtr("producer"),
+							IsReadOnly: true,
 						},
 						cpkafkarestv3.TopicConfigData{
 							Name:  "retention.ms",

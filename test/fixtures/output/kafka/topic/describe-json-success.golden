@@ -7,7 +7,7 @@
   {
     "name": "compression.type",
     "value": "producer",
-    "read_only": false
+    "read_only": true
   },
   {
     "name": "num.partitions",
