@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
@@ -104,7 +105,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	utils.ErrPrintln(cmd, errors.SrRoleBindingRequiredForKSQLWarning)
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+		utils.ErrPrintln(cmd, errors.SrRoleBindingRequiredForKSQLWarning)
+	}
 
 	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
 }
