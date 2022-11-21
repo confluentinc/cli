@@ -69,7 +69,6 @@ func (d *accountDetails) getTags() error {
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
 	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
