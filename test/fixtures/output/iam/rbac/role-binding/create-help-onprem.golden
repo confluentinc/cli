@@ -6,20 +6,20 @@ Usage:
 Examples:
 Create a role binding for the principal permitting it produce to topic "my-topic":
 
-  $ confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster-id $KAFKA_CLUSTER_ID
+  $ confluent iam rbac role-binding create --principal User:appSA --role DeveloperWrite --resource Topic:my-topic --kafka-cluster $KAFKA_CLUSTER_ID
 
 Flags:
-      --role string                         REQUIRED: Role name of the new role binding.
-      --principal string                    REQUIRED: Qualified principal name for the role binding.
-      --kafka-cluster-id string             Kafka cluster ID for the role binding.
-      --schema-registry-cluster-id string   Schema Registry cluster ID for the role binding.
-      --ksql-cluster-id string              ksqlDB cluster ID for the role binding.
-      --connect-cluster-id string           Kafka Connect cluster ID for the role binding.
-      --cluster-name string                 Cluster name to uniquely identify the cluster for role binding listings.
-      --context string                      CLI context name.
-      --resource string                     Qualified resource name for the role binding.
-      --prefix                              Whether the provided resource name is treated as a prefix pattern.
-  -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
+      --role string                      REQUIRED: Role name of the new role binding.
+      --principal string                 REQUIRED: Qualified principal name for the role binding.
+      --kafka-cluster string             Kafka cluster ID for the role binding.
+      --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
+      --ksql-cluster string              ksqlDB cluster ID for the role binding.
+      --connect-cluster string           Kafka Connect cluster ID for the role binding.
+      --cluster-name string              Cluster name to uniquely identify the cluster for role binding listings.
+      --context string                   CLI context name.
+      --resource string                  Qualified resource name for the role binding.
+      --prefix                           Whether the provided resource name is treated as a prefix pattern.
+  -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

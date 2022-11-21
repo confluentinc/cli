@@ -137,10 +137,10 @@ func newCmd() (*command, error) {
 	}
 	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
 	c.State = cfg.Context().State
-	c.Config = dynamicconfig.New(cfg, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
-	c.Client = &ccloud.Client{
+	c.PrivateClient = &ccloud.Client{
 		Account: &ccsdkmock.Account{
 			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
 				return nil, nil
@@ -239,7 +239,7 @@ func newCmd() (*command, error) {
 func TestGetTopicDescription(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	err = details.getTopicDescription()
@@ -266,7 +266,7 @@ func TestGetSchemaRegistry(t *testing.T) {
 func TestGetSchemaDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
@@ -278,7 +278,7 @@ func TestGetSchemaDetails(t *testing.T) {
 func TestGetChannelDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
@@ -291,7 +291,7 @@ func TestGetChannelDetails(t *testing.T) {
 func TestGetBindings(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	topics, _ := c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	_, err = c.getBindings(details.cluster, topics[0])
 	require.NoError(t, err)
 }

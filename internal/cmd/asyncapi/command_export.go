@@ -13,8 +13,8 @@ import (
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
-	asyncapi "github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
-	spec "github.com/swaggest/go-asyncapi/spec-2.4.0"
+	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
+	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -262,7 +262,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 
 func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription) (*bindings, error) {
 	topic := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicDescription.Name}}
-	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
+	configs, err := c.PrivateClient.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get topic configs: %v", err)
 	}
@@ -331,7 +331,7 @@ func (c *command) getClusterDetails(details *accountDetails) error {
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster", "Set an API key pair for the Kafka cluster using `confluent api-key create`")
 	}
-	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
+	topics, err := c.PrivateClient.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
 		return fmt.Errorf("failed to get topics: %v", err)
 	}

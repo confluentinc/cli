@@ -239,7 +239,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, &provider, conf)
 	return newTopicCommand(conf, testPrerunner, "")
 }
 
@@ -274,8 +274,6 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentListTopics() {
 		{input: "list --url http://localhos:8082", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"no such host"}, message: "incorrect host in url should throw ierror"},
 		{input: "list --url http://localhost:808", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"connection refused"}, message: "incorrect port in url should throw error"},
 		{input: "list --url http://localhost:808a", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"invalid port"}, message: "invalid url should throw error"},
-		// Invalid format string should throw error
-		{input: "list --url http://localhost:8082 -o hello --no-auth", expectedOutput: "", expectError: true, errorMsgContainsAll: []string{"invalid value", "--output", "hello"}, message: "invalid format string should throw error"},
 	}
 
 	// Test test cases
@@ -357,8 +355,6 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentCreateTopic() {
 }
 
 func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
-	retentionValue := "1"
-	compressionValue := "gzip"
 	// Define test cases
 	cases := []struct {
 		input               string
@@ -379,22 +375,7 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
 		{
 			input:           "update topic-X --url http://localhost:8082",
 			updateTopicName: "topic-X",
-			expectedOutput:  fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-X"),
-		},
-		{
-			input:           "update topic-Y --url http://localhost:8082 --config retention.ms=1,compression.type=gzip",
-			expectedOutput:  fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-Y"), // update table gets printed to stdout so dont include in expect
-			updateTopicName: "topic-Y",
-			updateTopicData: []kafkarestv3.AlterConfigBatchRequestDataData{
-				{
-					Name:  "retention.ms",
-					Value: &retentionValue,
-				},
-				{
-					Name:  "compression.type",
-					Value: &compressionValue,
-				},
-			},
+			expectedOutput:  fmt.Sprintf(errors.UpdateTopicConfigMsg, "topic-X") + "None found.\n",
 		},
 	}
 
@@ -402,43 +383,6 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentUpdateTopic() {
 	for _, testCase := range cases {
 		suite.updateTopicName = testCase.updateTopicName
 		suite.updateTopicData = testCase.updateTopicData
-		topicCommand := suite.createCommand()
-		_, output, err := executeCommand(topicCommand, strings.Split(testCase.input, " "))
-
-		if testCase.expectError == false {
-			require.NoError(suite.T(), err, testCase.message)
-			require.Equal(suite.T(), testCase.expectedOutput, output, testCase.message)
-		} else {
-			require.Error(suite.T(), err, testCase.message)
-			for _, errorMsgContains := range testCase.errorMsgContainsAll {
-				require.Contains(suite.T(), err.Error(), errorMsgContains, testCase.message)
-			}
-		}
-	}
-}
-
-func (suite *KafkaTopicOnPremTestSuite) TestConfluentDescribeTopic() {
-	// Define test cases
-	cases := []struct {
-		input               string
-		expectedOutput      string
-		expectError         bool
-		errorMsgContainsAll []string
-		message             string
-	}{
-		{
-			input:          "describe topic --url http://localhost:8082",
-			expectedOutput: "Topic: topic\nPartitionCount: 3\nReplicationFactor: 1\n\n\nConfiguration\n\n",
-		},
-		{
-			input:               "describe --topic --url http://localhost:8082",
-			expectError:         true,
-			errorMsgContainsAll: []string{"unknown flag: --topic"},
-		},
-	}
-
-	// Test test cases
-	for _, testCase := range cases {
 		topicCommand := suite.createCommand()
 		_, output, err := executeCommand(topicCommand, strings.Split(testCase.input, " "))
 

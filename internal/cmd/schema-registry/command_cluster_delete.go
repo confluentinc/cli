@@ -33,11 +33,11 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		),
 	}
 
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("environment")
 
 	return cmd
 }
@@ -60,7 +60,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return nil
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
+	err = c.PrivateClient.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
 	if err != nil {
 		return err
 	}
