@@ -196,7 +196,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -267,7 +267,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = dynamicconfig.New(cfg, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

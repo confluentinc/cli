@@ -113,7 +113,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", wantErrCode: 1},
 
 		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe.golden", wantErrCode: 1},
-		{args: "kafka topic describe topic-exist", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic/describe-success.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
+		{args: "kafka topic describe topic-exist", login: "cloud", useKafka: "lkc-describe-topic-kafka-api", fixture: "kafka/topic/describe-success-kapi.golden", env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},
 		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-success.golden"},
 		{args: "kafka topic describe topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-json-success.golden"},
 		{args: "kafka topic describe topic1 --cluster lkc-create-topic-kafka-api", login: "cloud", fixture: "kafka/topic/describe-not-found.golden", wantErrCode: 1, env: []string{"XX_CCLOUD_USE_KAFKA_API=true"}},

@@ -175,7 +175,7 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
+		return AutocompleteEnvironments(command.PrivateClient, command.V2Client, command.Context)
 	})
 }
 
@@ -232,12 +232,12 @@ func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
-		return autocompleteRegions(command.Client, cloud)
+		return autocompleteRegions(command.PrivateClient, cloud)
 	})
 }
 
-func autocompleteRegions(client *ccloud.Client, cloud string) []string {
-	regions, err := kafka.ListRegions(client, cloud)
+func autocompleteRegions(privateClient *ccloud.Client, cloud string) []string {
+	regions, err := kafka.ListRegions(privateClient, cloud)
 	if err != nil {
 		return nil
 	}

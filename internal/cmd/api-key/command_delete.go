@@ -57,7 +57,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) deleteV1(apiKey string) error {
-	userKey, err := c.Client.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
+	userKey, err := c.PrivateClient.APIKey.Get(context.Background(), &schedv1.ApiKey{Key: apiKey, AccountId: c.EnvironmentId()})
 	if err != nil {
 		return err
 	}
@@ -69,5 +69,5 @@ func (c *command) deleteV1(apiKey string) error {
 		UserResourceId: userKey.UserResourceId,
 	}
 
-	return c.Client.APIKey.Delete(context.Background(), key)
+	return c.PrivateClient.APIKey.Delete(context.Background(), key)
 }

@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -242,95 +241,6 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 			_, err = w.Write(data)
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for "/api/organizations/"
-func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		prices := map[string]float64{
-			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
-		}
-
-		res := &billingv1.GetPriceTableReply{
-			PriceTable: &billingv1.PriceTable{
-				PriceTable: map[string]*billingv1.UnitPrices{
-					exampleMetric: {Unit: exampleUnit, Prices: prices},
-				},
-			},
-		}
-
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			var res *billingv1.GetPromoCodeClaimsReply
-
-			var tenDollars int64 = 10 * 10000
-
-			// The time is set to noon so that all time zones display the same local time
-			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
-			expiration := &types.Timestamp{Seconds: date.Unix()}
-
-			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 PromoTestCode,
-						Amount:               400 * 10000,
-						Balance:              0,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			regularCodes := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 "PROMOCODE1",
-						Amount:               tenDollars,
-						Balance:              tenDollars,
-						CreditExpirationDate: expiration,
-					},
-					{
-						Code:                 "PROMOCODE2",
-						Balance:              tenDollars,
-						Amount:               tenDollars,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
-			switch hasPromoCodeClaims {
-			case "false":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-			case "onlyFreeTrialCode":
-				res = freeTrialCode
-			case "multiCodes":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
-			default:
-				res = regularCodes
-			}
-
-			listReply, err := utilv1.MarshalJSONToBytes(res)
-			require.NoError(t, err)
-			_, err = w.Write(listReply)
-			require.NoError(t, err)
-		case http.MethodPost:
-			res := &billingv1.ClaimPromoCodeReply{}
-
-			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
 	}

@@ -83,20 +83,20 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *command) getAllUsers() ([]*orgv1.User, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
-		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+		serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
 			return nil, err
 		}
 		users = append(users, serviceAccount)
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
+	adminUsers, err := c.PrivateClient.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
