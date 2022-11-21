@@ -334,13 +334,13 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster config: %v`, err)
+		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create` "+
-				"and then pass it in flag kafka-api-key")
+			"Set an API key pair for the Kafka cluster using `confluent api-key create "+
+				"--resource <cluster-id>` and then use it with `--kafka-api-key`.")
 	}
 	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
@@ -400,14 +400,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error {
 	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(c.Command)
-	/*err := c.Flags().Set("api-key", flags.srApiKey)
-	if err != nil {
-		return fmt.Errorf("error in setting flag api-key: %v", err)
-	}
-	err = c.Flags().Set("api-secret", flags.srApiSecret)
-	if err != nil {
-		return fmt.Errorf("error in setting flag api-secret: %v", err)
-	}*/
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(c.Command)
 	if err != nil {
 		if strings.Contains(err.Error(), "Schema Registry not enabled") {
