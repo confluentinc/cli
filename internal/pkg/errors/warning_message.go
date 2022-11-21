@@ -49,7 +49,7 @@ const (
 		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
 		" router configuration, but different retention times. The maximum specified retention time will be used."
 
-	// ksql create
-	SrRoleBindingRequiredForKSQLWarning = "IMPORTANT: Confirm that the users or service accounts that will interact " +
+	// ksql cluster create
+	SchemaRegistryRoleBindingRequiredForKsqlWarning = "IMPORTANT: Confirm that the users or service accounts that will interact " +
 		"with this cluster have the required privileges to access Schema Registry."
 )

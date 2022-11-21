@@ -108,7 +108,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 		srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
 		if srCluster != nil {
-			utils.ErrPrintln(cmd, errors.SrRoleBindingRequiredForKSQLWarning)
+			utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 		}
 	}
 
