@@ -29,15 +29,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		OrganizationId: c.Context.GetOrganization().GetId(),
 	}
 
-	environment, err := c.Client.Account.Create(context.Background(), account)
+	environment, err := c.PrivateClient.Account.Create(context.Background(), account)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   environment.Id,
-		Name: environment.Name,
+		IsCurrent: environment.Id == c.EnvironmentId(),
+		Id:        environment.Id,
+		Name:      environment.Name,
 	})
 	return table.Print()
 }

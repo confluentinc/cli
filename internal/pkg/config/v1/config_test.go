@@ -10,6 +10,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/hashicorp/go-version"
+	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -574,12 +575,10 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	cfg := New()
-	got := cfg.GetFilename()
-	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
-	if got != want {
-		t.Errorf("Config.GetFilename() = %v, want %v", got, want)
-	}
+	home, err := homedir.Dir()
+	require.NoError(t, err)
+	path := filepath.Join(home, ".confluent", "config.json")
+	require.Equal(t, path, New().GetFilename())
 }
 
 func TestConfig_AddContext(t *testing.T) {

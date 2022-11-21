@@ -5,17 +5,22 @@ import (
 	"fmt"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/spf13/cobra"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
 )
 
-type out struct {
-	Code       string `human:"Code" serialized:"code"`
-	Balance    string `human:"Balance" serialized:"balance"`
-	Expiration string `human:"Expiration" serialized:"expiration"`
+type humanOut struct {
+	Code       string `human:"Code"`
+	Balance    string `human:"Balance"`
+	Expiration string `human:"Expiration"`
+}
+
+type serializedOut struct {
+	Code       string  `serialized:"code"`
+	Balance    float64 `serialized:"balance"`
+	Expiration int64   `serialized:"expiration"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -32,7 +37,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
@@ -41,17 +46,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, code := range codes {
-		if output.GetFormat(cmd).IsSerialized() {
-			list.Add(&out{
-				Code:       code.GetCode(),
-				Balance:    fmt.Sprint(ConvertToUSD(code.GetBalance())),
-				Expiration: fmt.Sprint(code.GetCreditExpirationDate().GetSeconds()),
-			})
-		} else {
-			list.Add(&out{
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
 				Code:       code.GetCode(),
 				Balance:    formatBalance(code.GetBalance(), code.GetAmount()),
 				Expiration: formatExpiration(code.GetCreditExpirationDate().GetSeconds()),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Code:       code.GetCode(),
+				Balance:    ConvertToUSD(code.GetBalance()),
+				Expiration: code.GetCreditExpirationDate().GetSeconds(),
 			})
 		}
 	}

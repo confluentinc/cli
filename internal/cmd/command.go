@@ -8,8 +8,6 @@ import (
 	shell "github.com/brianstrauch/cobra-shell"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
@@ -48,6 +46,7 @@ import (
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/spf13/cobra"
 )
 
 func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
@@ -100,7 +99,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(cloudsignup.New(prerunner, cfg.Version.UserAgent, ccloudClientFactory, cfg.IsTest))
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
-	cmd.AddCommand(connect.New(prerunner))
+	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
@@ -108,6 +107,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
@@ -118,13 +118,10 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
-	}
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.stream_designer", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(pipeline.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)
@@ -210,13 +207,13 @@ func catchErrors(cmd *cobra.Command) {
 
 func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
 	if cfg.IsCloudLogin() {
-		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+		return ccloudClientFactory.PrivateAnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil, nil)
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {

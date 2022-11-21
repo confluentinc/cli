@@ -20,7 +20,7 @@ import (
 
 var (
 	urlPlaceHolder          = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "netrc_test")
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")

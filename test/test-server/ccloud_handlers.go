@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
@@ -247,95 +246,6 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for "/api/organizations/"
-func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		prices := map[string]float64{
-			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
-		}
-
-		res := &billingv1.GetPriceTableReply{
-			PriceTable: &billingv1.PriceTable{
-				PriceTable: map[string]*billingv1.UnitPrices{
-					exampleMetric: {Unit: exampleUnit, Prices: prices},
-				},
-			},
-		}
-
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			var res *billingv1.GetPromoCodeClaimsReply
-
-			var tenDollars int64 = 10 * 10000
-
-			// The time is set to noon so that all time zones display the same local time
-			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
-			expiration := &types.Timestamp{Seconds: date.Unix()}
-
-			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 PromoTestCode,
-						Amount:               400 * 10000,
-						Balance:              0,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			regularCodes := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 "PROMOCODE1",
-						Amount:               tenDollars,
-						Balance:              tenDollars,
-						CreditExpirationDate: expiration,
-					},
-					{
-						Code:                 "PROMOCODE2",
-						Balance:              tenDollars,
-						Amount:               tenDollars,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
-			switch hasPromoCodeClaims {
-			case "false":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-			case "onlyFreeTrialCode":
-				res = freeTrialCode
-			case "multiCodes":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
-			default:
-				res = regularCodes
-			}
-
-			listReply, err := utilv1.MarshalJSONToBytes(res)
-			require.NoError(t, err)
-			_, err = w.Write(listReply)
-			require.NoError(t, err)
-		case http.MethodPost:
-			res := &billingv1.ClaimPromoCodeReply{}
-
-			err := json.NewEncoder(w).Encode(res)
-			require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/api/service_accounts"
 func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -478,6 +388,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/ksqls"
+// We only implement create here, as the v2 api takes over the other endpoints
 func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
@@ -495,6 +406,24 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			KafkaClusterId:    "lkc-zxcvb",
 			OutputTopicPrefix: "pksqlc-ghjkl",
 			Name:              "kay cee queue elle",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster3 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-v80wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1111aaa",
+			OutputTopicPrefix: "pksqlc-2222aaa",
+			Name:              "ksql-cluster-name-2222bbb",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster4 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-a90wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1234abc",
+			OutputTopicPrefix: "pksqlc-1234a",
+			Name:              "ksqlDB_cluster_name",
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
@@ -526,7 +455,7 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
 			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
-				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2, ksqlCluster3, ksqlCluster4},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
@@ -566,7 +495,6 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 				Name:              "account ksql",
 				Storage:           130,
 				Endpoint:          "SASL_SSL://ksql-endpoint",
-				ServiceAccountId:  1,
 			}
 			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster,
@@ -804,13 +732,11 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":   true,
-			"testString": "string",
-			"testInt":    1,
-			"testJson":   map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{
-				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
-			},
+			"testBool":                 true,
+			"testString":               "string",
+			"testInt":                  1,
+			"testJson":                 map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":  []map[string]interface{}{},
 			"cli.client_quotas.enable": true,
 		}
 

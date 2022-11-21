@@ -32,7 +32,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, user := range users {
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
+		userProfile, err := c.PrivateClient.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
 			return err
 		}
@@ -50,9 +50,8 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 
 		list.Add(&userOut{
 			Id:                   userProfile.ResourceId,
+			Name:                 getName(userProfile),
 			Email:                userProfile.Email,
-			FirstName:            userProfile.FirstName,
-			LastName:             userProfile.LastName,
 			Status:               userStatus,
 			AuthenticationMethod: strings.Join(authMethods, ", "),
 		})

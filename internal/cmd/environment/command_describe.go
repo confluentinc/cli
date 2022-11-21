@@ -9,8 +9,9 @@ import (
 )
 
 type out struct {
-	Id   string `human:"ID" serialized:"id"`
-	Name string `human:"Name" serialized:"name"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Id        string `human:"ID" serialized:"id"`
+	Name      string `human:"Name" serialized:"name"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -35,8 +36,9 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   *environment.Id,
-		Name: *environment.DisplayName,
+		IsCurrent: *environment.Id == c.EnvironmentId(),
+		Id:        *environment.Id,
+		Name:      *environment.DisplayName,
 	})
 	return table.Print()
 }

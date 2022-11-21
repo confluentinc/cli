@@ -8,6 +8,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -18,18 +19,20 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	Client   *ccloud.Client
-	V2Client *ccloudv2.Client
+	PrivateClient *ccloud.Client
+	Client        *ccloudv1.Client
+	V2Client      *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloud.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, privateClient *ccloud.Client, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
-		Context:  context,
-		Client:   client,
-		V2Client: v2Client,
+		Context:       context,
+		PrivateClient: privateClient,
+		Client:        client,
+		V2Client:      v2Client,
 	}
 }
 
@@ -110,6 +113,9 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
+	if resource.LookupType(clusterId) != resource.KafkaCluster {
+		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
+	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
@@ -125,7 +131,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
-	if d.Client == nil || d.V2Client == nil {
+	if d.PrivateClient == nil || d.V2Client == nil {
 		return nil, nil
 	}
 

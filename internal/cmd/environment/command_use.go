@@ -29,11 +29,11 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	account, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
+	environment, err := c.PrivateClient.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
 	}
-	c.Context.State.Auth.Account = account
+	c.Context.SetEnvironment(environment)
 
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
