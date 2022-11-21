@@ -24,7 +24,7 @@ const (
 	unknownTopicOrPartitionErrorCode = 40403
 )
 
-const partitionCount = "num.partitions"
+const numPartitionsKey = "num.partitions"
 
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
@@ -36,16 +36,6 @@ type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	prerunner pcmd.PreRunner
 	clientID  string
-}
-
-type structuredDescribeDisplay struct {
-	TopicName string            `json:"topic_name" yaml:"topic_name"`
-	Config    map[string]string `json:"config" yaml:"config"`
-}
-
-type topicData struct {
-	TopicName string            `json:"topic_name" yaml:"topic_name"`
-	Config    map[string]string `json:"config" yaml:"config"`
 }
 
 func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
@@ -177,7 +167,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
-	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	resp, err := c.PrivateClient.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		return 0, err
 	}
