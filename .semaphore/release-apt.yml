@@ -32,4 +32,3 @@ blocks:
             - echo $SIGN
             - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent_*.changes); fi
             - ls
-#            - cp confluent_*.build confluent_*.changes confluent_*.tar.gz confluent_*.dsc confluent_*.deb /vagrant/output/
