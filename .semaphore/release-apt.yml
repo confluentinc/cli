@@ -18,7 +18,7 @@ blocks:
             - sudo apt install -y debhelper devscripts git-buildpackage
 
             - checkout
-            - git checkout -b debian main
+            - git checkout -b debian
 
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
             - export VERSION=$(git describe --tags --abbrev=0)
@@ -28,7 +28,7 @@ blocks:
             - git config user.name "Brian Strauch"
             - git commit -am "Tag Debian release $VERSION."
 
-            - gbp buildpackage -us -uc --git-debian-branch=debian --git-upstream-tree=main --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I"
+            - gbp buildpackage -us -uc --git-debian-branch=debian --git-upstream-tree=$VERSION --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I"
             - echo $SIGN
             - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent_*.changes); fi
             - ls
