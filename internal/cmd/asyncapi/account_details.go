@@ -47,6 +47,7 @@ const UserAgent = "User-Agent"
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
+	d.channelDetails.topicLevelTags = nil
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
 		return catchOpenAPIError(err)
@@ -56,6 +57,7 @@ func (d *accountDetails) getTags() error {
 	}
 
 	// Get schema level tags
+	d.channelDetails.schemaLevelTags = nil
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return catchOpenAPIError(err)
