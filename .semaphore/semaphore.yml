@@ -27,6 +27,7 @@ blocks:
             - sudo apt install -y debhelper devscripts git-buildpackage
 
             - git clone git@github.com:confluentinc/cli.git
+            - cd cli
             - git checkout -b tmp-debian debian
 
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
