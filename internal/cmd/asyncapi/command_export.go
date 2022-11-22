@@ -13,9 +13,9 @@ import (
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
+	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
+	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
-	asyncapi "github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
-	spec "github.com/swaggest/go-asyncapi/spec-2.4.0"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -264,7 +264,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 
 func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription) (*bindings, error) {
 	topic := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicDescription.Name}}
-	configs, err := c.Client.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
+	configs, err := c.PrivateClient.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get topic configs: %v", err)
 	}
@@ -317,7 +317,6 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 	return bindings, nil
 }
 
-
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
 	cluster, err := dynamicconfig.KafkaCluster(c.Context)
 	if err != nil {
@@ -334,18 +333,15 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		}
 	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
-
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
 	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
-			"Set an API key pair for the Kafka cluster using `confluent api-key create "+
-				"--resource <cluster-id>` and then use it with `--kafka-api-key`.")
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
 	}
-	topics, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
-
+	topics, err := c.PrivateClient.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
 		return fmt.Errorf("failed to get topics: %v", err)
 	}
@@ -396,7 +392,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		kafkaApiKey:     kafkaApiKey,
 		srApiKey:        srApiKey,
 		srApiSecret:     srApiSecret,
-
 		valueFormat:     valueFormat,
 	}, nil
 }
@@ -416,7 +411,6 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 		flags.srApiSecret = schemaCluster.SrCredentials.Secret
 	}
 	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.srApiKey, flags.srApiSecret)
-
 	if err != nil {
 		return err
 	}
