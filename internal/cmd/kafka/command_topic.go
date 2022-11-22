@@ -24,7 +24,7 @@ const (
 	unknownTopicOrPartitionErrorCode = 40403
 )
 
-const partitionCount = "num.partitions"
+const numPartitionsKey = "num.partitions"
 
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
