@@ -9,4 +9,4 @@ Homepage: https://docs.confluent.io/confluent-cli/current/overview.html
 Package: confluent
 Architecture: any
 Depends: ${misc:Depends}
-Description: Command Line Interface for managing Confluent Cloud and Confluent Platform
+Description: CLI for Confluent Cloud and Confluent Platform
