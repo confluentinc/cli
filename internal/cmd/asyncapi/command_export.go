@@ -74,9 +74,9 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
-	c.Flags().String("kafka-api-key", "", "API Key for Kafka cluster.")
-	c.Flags().String("sr-api-key", "", "API Key for Schema Registry.")
-	c.Flags().String("sr-api-secret", "", "API Secret for Schema Registry.")
+	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -325,18 +325,19 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if cluster.Endpoint == "" {
 		cluster.Endpoint = cluster.ApiEndpoint
 	}
-	if flags.kafkaApiKey != "" {
-		err := c.Context.UseAPIKey(flags.kafkaApiKey, cluster.Id)
-		if err != nil {
-			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg,
-				fmt.Sprintf(errors.APIKeyUseFailedSuggestions, flags.kafkaApiKey))
-		}
-	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
-	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
+	var clusterCreds *v1.APIKeyPair
+	if flags.kafkaApiKey != "" {
+		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
+			return c.Context.FetchAPIKeyError(flags.kafkaApiKey, clusterConfig.ID)
+		}
+		clusterCreds = clusterConfig.APIKeys[flags.kafkaApiKey]
+	} else {
+		clusterCreds = clusterConfig.APIKeys[clusterConfig.APIKey]
+	}
 	if clusterCreds == nil {
 		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
 			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
@@ -372,11 +373,11 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	srApiKey, err := cmd.Flags().GetString("sr-api-key")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
-	srApiSecret, err := cmd.Flags().GetString("sr-api-secret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
@@ -390,8 +391,8 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		consumeExamples: consumeExamples,
 		specVersion:     specVersion,
 		kafkaApiKey:     kafkaApiKey,
-		srApiKey:        srApiKey,
-		srApiSecret:     srApiSecret,
+		srApiKey:        schemaRegistryApiKey,
+		srApiSecret:     schemaRegistryApiSecret,
 		valueFormat:     valueFormat,
 	}, nil
 }
