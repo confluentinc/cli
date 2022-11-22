@@ -28,6 +28,7 @@ blocks:
 
             - git clone git@github.com:confluentinc/cli.git
             - cd cli
+            - git fetch --all
             - git checkout -b tmp-debian debian --no-guess
 
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
