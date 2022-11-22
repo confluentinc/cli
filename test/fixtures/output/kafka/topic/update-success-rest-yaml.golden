@@ -1,6 +1,6 @@
 - name: compression.type
-  read_only: "false"
   value: gzip
+  read_only: false
 - name: retention.ms
-  read_only: "false"
   value: "1"
+  read_only: false

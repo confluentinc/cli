@@ -14,25 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	humanLabelMap = map[string]string{
-		"Id":                   "ID",
-		"Email":                "Email",
-		"FirstName":            "First Name",
-		"LastName":             "Last Name",
-		"Status":               "Status",
-		"AuthenticationMethod": "Authentication Method",
-	}
-	structuredLabelMap = map[string]string{
-		"Id":                   "id",
-		"Email":                "email",
-		"FirstName":            "first_name",
-		"LastName":             "last_name",
-		"Status":               "status",
-		"AuthenticationMethod": "authentication_method",
-	}
-)
-
 func (c userCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
@@ -51,7 +32,7 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
-	userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: args[0]})
+	userProfile, err := c.PrivateClient.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: args[0]})
 	if err != nil {
 		return err
 	}
@@ -63,18 +44,17 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	var authMethods []string
-	if userProfile.GetAuthConfig() != nil {
-		for _, method := range userProfile.GetAuthConfig().AllowedAuthMethods {
-			authMethods = append(authMethods, authMethodFormats[method])
-		}
+	for _, method := range userProfile.GetAuthConfig().GetAllowedAuthMethods() {
+		authMethods = append(authMethods, authMethodFormats[method])
 	}
 
-	return output.DescribeObject(cmd, &userStruct{
+	table := output.NewTable(cmd)
+	table.Add(&userOut{
 		Id:                   userProfile.ResourceId,
+		Name:                 getName(userProfile),
 		Email:                userProfile.Email,
-		FirstName:            userProfile.FirstName,
-		LastName:             userProfile.LastName,
 		Status:               userStatus,
 		AuthenticationMethod: strings.Join(authMethods, ", "),
-	}, listFields, humanLabelMap, structuredLabelMap)
+	})
+	return table.Print()
 }
