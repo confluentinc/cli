@@ -47,10 +47,8 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return c.handleACLError(cmd, err, response)
 	}
 
-	var promptMsg string
-	if len(bindings) == 1 {
-		promptMsg = errors.DeleteACLConfirmMsg
-	} else {
+	promptMsg := errors.DeleteACLConfirmMsg
+	if len(bindings) > 1 {
 		promptMsg = errors.DeleteACLsConfirmMsg
 	}
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
