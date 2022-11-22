@@ -19,8 +19,6 @@ blocks:
 
             - checkout
             - git checkout -b tmp-debian main
-            - git fetch origin
-            - git merge --no-edit origin/debian
 
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
             - export VERSION=$(git describe --tags --abbrev=0)
