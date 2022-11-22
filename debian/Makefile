@@ -39,33 +39,52 @@ ifeq ($(APPLY_PATCHES),yes)
 	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
 endif
 
-BINPATH=$(PREFIX)/bin
-LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
-DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
+BINPATH=$(DESTDIR)$(PREFIX)/bin
+LIBPATH=$(DESTDIR)$(PREFIX)/libexec/$(PACKAGE_TITLE)
+DOCPATH=$(DESTDIR)$(PREFIX)/share/doc/$(PACKAGE_TITLE)
 
+# Install a single binary, specified with $CLI_VERSION, $OS and $ARCH
 install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
-	mkdir -p $(DESTDIR)$(BINPATH)
-	mkdir -p $(DESTDIR)$(LIBPATH)
-	mkdir -p $(DESTDIR)$(DOCPATH)
-	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+	mkdir -p $(BINPATH)
+	mkdir -p $(DOCPATH)
+	mkdir -p $(SYSCONFDIR)
 
-	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+	cp packaging/confluent.sh $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
 
-	cd $(DESTDIR)$(LIBPATH) ; \
-	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$(OS)_$(ARCH) -o $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
+
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DOCPATH)/version.txt
+
+# Install all OS/arch combinations and bundle with packaging/confluent.sh for OS/arch-agnostic TAR/ZIP archives
+install-all: apply-patches
+	rm -rf $(DESTDIR)$(PREFIX)
+	mkdir -p $(DESTDIR)$(PREFIX)
+
+	mkdir -p $(BINPATH)
+	mkdir -p $(LIBPATH)
+	mkdir -p $(DOCPATH)
+	mkdir -p $(SYSCONFDIR)
+
+	cp packaging/confluent.sh $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
+
+	cd $(LIBPATH) ; \
+	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
 		mkdir -p $${dir} ; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
 		filepath=$${dir}/confluent$${ext} ; \
-		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
+		curl -f https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
 		chmod 755 $${filepath} ; \
 	done
 
-	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DOCPATH)/version.txt
 
 	chown -R root:root $(DESTDIR)$(PREFIX)
 
