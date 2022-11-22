@@ -18,6 +18,8 @@ blocks:
             - sudo apt install -y debhelper devscripts git-buildpackage
 
             - checkout
+            - git remote
+            - git branch
             - git checkout -b tmp-debian debian
 
             - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
