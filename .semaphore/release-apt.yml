@@ -1,0 +1,35 @@
+version: v1.0
+name: Release to APT
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-1
+
+execution_time_limit:
+  hours: 1
+
+blocks:
+  - name: linux/amd64
+    task:
+      jobs:
+        - name: linux/amd64
+          commands:
+            - sudo apt update
+            - sudo apt install -y debhelper devscripts git-buildpackage
+
+            - checkout
+            - git checkout -b debian
+
+            - export DEBEMAIL="Confluent Packaging <packages@confluent.io>"
+            - export VERSION=$(git describe --tags --abbrev=0)
+            - dch --newversion ${VERSION#v}-1 "Release version $VERSION" --urgency low && dch --release --distribution unstable ""
+
+            - git config user.email "bstrauch@confluent.io"
+            - git config user.name "Brian Strauch"
+            - git commit -am "Tag Debian release $VERSION."
+
+            # TODO: Remove -b
+            - gbp buildpackage -b -us -uc --git-debian-branch=debian --git-upstream-tree=$VERSION --git-verbose --git-builder="debuild --set-envvar=APPLY_PATCHES=yes --set-envvar=PACKAGE_TYPE=deb --set-envvar=CLI_VERSION=${VERSION#v} --set-envvar=SKIP_TESTS=yes -i -I"
+            - echo $SIGN
+            - if [ "x$SIGN" == "xyes" ]; then sudo --login debsign $(readlink -f confluent_*.changes); fi
+            - ls
