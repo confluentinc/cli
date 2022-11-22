@@ -1,17 +1,17 @@
-Summary: Command Line Interface for managing Confluent Cloud and Confluent Platform
+Summary: CLI for Confluent Cloud and Confluent Platform
 Name: confluent
 Version: ##RPMVERSION##
 Release: ##RPMRELEASE##
 Group: Applications/Internet
 License: Confluent License Agreement
-Source0: confluent-%{version}.tar.gz
+Source0: confluent-cli-%{version}.tar.gz
 URL: http://confluent.io
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Vendor: Confluent, Inc.
 Packager: Confluent Packaging <packages@confluent.io>
 
 %description
-The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
+The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
 %define __jar_repack %{nil}
 %define _binaries_in_noarch_packages_terminate_build 0
