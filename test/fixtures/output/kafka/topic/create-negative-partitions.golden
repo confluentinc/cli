@@ -3,6 +3,10 @@ Usage:
   confluent kafka topic create <topic> [flags]
 
 Examples:
+Create a topic named `my_topic` with default options at specified cluster (providing embedded Kafka REST Proxy endpoint).
+
+  $ confluent kafka topic create my_topic --url http://localhost:8090/kafka
+
 Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).
 
   $ confluent kafka topic create my_topic --url http://localhost:8082

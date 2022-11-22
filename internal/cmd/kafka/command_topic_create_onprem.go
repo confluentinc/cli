@@ -26,6 +26,10 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 		RunE:  c.onPremCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
+				Text: "Create a topic named `my_topic` with default options at specified cluster (providing embedded Kafka REST Proxy endpoint).",
+				Code: "confluent kafka topic create my_topic --url http://localhost:8090/kafka",
+			},
+			examples.Example{
 				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic create my_topic --url http://localhost:8082",
 			},
