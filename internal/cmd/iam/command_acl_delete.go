@@ -4,7 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
@@ -23,6 +25,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclFlags())
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = cmd.MarkFlagRequired("kafka-cluster")
@@ -39,7 +42,20 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return acl.errors
 	}
 
-	bindings, response, err := c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	bindings, response, err := c.MDSClient.KafkaACLManagementApi.SearchAclBinding(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
+	if err != nil {
+		return c.handleACLError(cmd, err, response)
+	}
+
+	promptMsg := errors.DeleteACLConfirmMsg
+	if len(bindings) > 1 {
+		promptMsg = errors.DeleteACLsConfirmMsg
+	}
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+		return err
+	}
+
+	bindings, response, err = c.MDSClient.KafkaACLManagementApi.RemoveAclBindings(c.createContext(), convertToACLFilterRequest(acl.CreateAclRequest))
 	if err != nil {
 		return c.handleACLError(cmd, err, response)
 	}
