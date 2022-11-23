@@ -142,12 +142,12 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry schema delete latest",
-			args:    fmt.Sprintf(`schema-registry schema delete --subject payments --version latest --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			args:    fmt.Sprintf(`schema-registry schema delete --subject payments --version latest --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
 			fixture: "schema-registry/schema/delete.golden",
 		},
 		{
 			name:    "schema-registry schema delete all",
-			args:    fmt.Sprintf(`schema-registry schema delete --subject payments --version all --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			args:    fmt.Sprintf(`schema-registry schema delete --subject payments --version all --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
 			fixture: "schema-registry/schema/delete-all.golden",
 		},
 		{args: "schema-registry schema describe --subject payments", wantErrCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
@@ -231,8 +231,14 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 		{
 			name:    "schema-registry exporter delete",
-			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/delete.golden",
+		},
+		{
+			name:        "schema-registry exporter delete prompt",
+			args:        fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("myexporter\n"))},
+			fixture:     "schema-registry/exporter/delete-prompt.golden",
 		},
 		{
 			name:    "schema-registry exporter get-status",

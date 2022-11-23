@@ -16,3 +16,10 @@ type KafkaClusterConfig struct {
 	APIKey     string    `json:"api_key,omitempty" hcl:"api_key"`
 	LastUpdate time.Time `json:"last_update,omitempty" hcl:"last_update"`
 }
+
+func (k *KafkaClusterConfig) GetName() string {
+	if o == nil {
+		return ""
+	}
+	return o.Name
+}
