@@ -95,7 +95,7 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	isYesNo := stringToType == ""
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
 	if err := f.Prompt(cmd, prompt); err != nil && isYesNo {
-		return false, errors.New("failed to read your deletion confirmation")
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	} else if err != nil {
 		return false, err
 	}

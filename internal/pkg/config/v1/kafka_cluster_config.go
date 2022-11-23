@@ -18,8 +18,8 @@ type KafkaClusterConfig struct {
 }
 
 func (k *KafkaClusterConfig) GetName() string {
-	if o == nil {
+	if k == nil {
 		return ""
 	}
-	return o.Name
+	return k.Name
 }
