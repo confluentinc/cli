@@ -125,13 +125,13 @@ func newCmd() (*command, error) {
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
 	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	c.Command.Flags().String("sr-api-key", "ASYNCAPIKEY", "API Key for schema registry")
-	c.Command.Flags().String("sr-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
-	err := c.Command.Flags().Set("sr-api-key", "ASYNCAPIKEY")
+	c.Command.Flags().String("schema-registry-api-key", "ASYNCAPIKEY", "API Key for schema registry")
+	c.Command.Flags().String("schema-registry-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
+	err := c.Command.Flags().Set("schema-registry-api-key", "ASYNCAPIKEY")
 	if err != nil {
 		return nil, err
 	}
-	err = c.Command.Flags().Set("sr-api-secret", "ASYNCAPISECRET")
+	err = c.Command.Flags().Set("schema-registry-api-secret", "ASYNCAPISECRET")
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +263,7 @@ func TestGetClusterDetails(t *testing.T) {
 func TestGetSchemaRegistry(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	flags := &flags{srApiKey: "ASYNCAPIKEY", srApiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
 	utils.Println(c.Command, "")
 	require.Error(t, err)
@@ -289,7 +289,7 @@ func TestGetChannelDetails(t *testing.T) {
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
-	flags := &flags{srApiKey: "ASYNCAPIKEY", srApiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
 }

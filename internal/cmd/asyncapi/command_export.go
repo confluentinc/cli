@@ -50,14 +50,14 @@ type bindings struct {
 }
 
 type flags struct {
-	file            string
-	groupId         string
-	consumeExamples bool
-	specVersion     string
-	kafkaApiKey     string
-	srApiKey        string
-	srApiSecret     string
-	valueFormat     string
+	file                    string
+	groupId                 string
+	consumeExamples         bool
+	specVersion             string
+	kafkaApiKey             string
+	schemaRegistryApiKey    string
+	schemaRegistryApiSecret string
+	valueFormat             string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -386,20 +386,18 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		return nil, err
 	}
 	return &flags{
-		file:            file,
-		groupId:         groupId,
-		consumeExamples: consumeExamples,
-		specVersion:     specVersion,
-		kafkaApiKey:     kafkaApiKey,
-		srApiKey:        schemaRegistryApiKey,
-		srApiSecret:     schemaRegistryApiSecret,
-		valueFormat:     valueFormat,
+		file:                    file,
+		groupId:                 groupId,
+		consumeExamples:         consumeExamples,
+		specVersion:             specVersion,
+		kafkaApiKey:             kafkaApiKey,
+		schemaRegistryApiKey:    schemaRegistryApiKey,
+		schemaRegistryApiSecret: schemaRegistryApiSecret,
+		valueFormat:             valueFormat,
 	}, nil
 }
 
 func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error {
-	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(c.Command)
 	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(c.Command)
 	if err != nil {
 		if strings.Contains(err.Error(), "Schema Registry not enabled") {
@@ -407,11 +405,11 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 		}
 		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
 	}
-	if flags.srApiKey == "" && flags.srApiSecret == "" && schemaCluster.SrCredentials != nil {
-		flags.srApiKey = schemaCluster.SrCredentials.Key
-		flags.srApiSecret = schemaCluster.SrCredentials.Secret
+	if flags.schemaRegistryApiKey == "" && flags.schemaRegistryApiSecret == "" && schemaCluster.SrCredentials != nil {
+		flags.schemaRegistryApiKey = schemaCluster.SrCredentials.Key
+		flags.schemaRegistryApiSecret = schemaCluster.SrCredentials.Secret
 	}
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.srApiKey, flags.srApiSecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.schemaRegistryApiKey, flags.schemaRegistryApiSecret)
 	if err != nil {
 		return err
 	}
