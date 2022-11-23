@@ -36,8 +36,7 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	_, err := c.V2Client.DescribeConsumerShare(shareId)
-	if err != nil {
+	if _, err := c.V2Client.DescribeConsumerShare(shareId); err != nil {
 		return err
 	}
 
