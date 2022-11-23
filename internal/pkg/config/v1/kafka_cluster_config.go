@@ -17,7 +17,7 @@ type KafkaClusterConfig struct {
 	LastUpdate time.Time `json:"last_update,omitempty" hcl:"last_update"`
 }
 
-func (o *KafkaClusterConfig) GetName() string {
+func (k *KafkaClusterConfig) GetName() string {
 	if o == nil {
 		return ""
 	}
