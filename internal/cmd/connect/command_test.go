@@ -178,7 +178,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"cluster", "delete", connectorID})
+	cmd.SetArgs([]string{"cluster", "delete", connectorID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
