@@ -183,6 +183,14 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 				ReplicationFactor: topicCreateData.ReplicationFactor,
 			}, nil, nil
 		},
+		GetKafkaTopicFunc: func(_ context.Context, _, _ string) (kafkarestv3.TopicData, *http.Response, error) {
+			// Check if URL is valid
+			err := checkURL(suite.testClient.GetConfig().BasePath)
+			if err != nil {
+				return kafkarestv3.TopicData{}, nil, err
+			}
+			return kafkarestv3.TopicData{}, nil, nil
+		},
 		DeleteKafkaTopicFunc: func(ctx context.Context, clusterId string, topicName string) (*http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
@@ -408,11 +416,11 @@ func (suite *KafkaTopicOnPremTestSuite) TestConfluentDeleteTopic() {
 		message             string
 	}{
 		{
-			input:          "delete topicDelete --url http://localhost:8082",
+			input:          "delete topicDelete --url http://localhost:8082 --force",
 			expectedOutput: "Deleted topic \"topicDelete\".\n",
 		},
 		{
-			input:               "delete --topic --url http://localhost:8082",
+			input:               "delete --topic --url http://localhost:8082 --force",
 			expectError:         true,
 			errorMsgContainsAll: []string{"unknown flag: --topic"},
 		},
