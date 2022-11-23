@@ -183,7 +183,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 				ReplicationFactor: topicCreateData.ReplicationFactor,
 			}, nil, nil
 		},
-		GetKafkaTopicFunc: func(ctx context.Context, clusterId string, topicName string) (kafkarestv3.TopicData, *http.Response, error) {
+		GetKafkaTopicFunc: func(_ context.Context, _, _ string) (kafkarestv3.TopicData, *http.Response, error) {
 			// Check if URL is valid
 			err := checkURL(suite.testClient.GetConfig().BasePath)
 			if err != nil {
