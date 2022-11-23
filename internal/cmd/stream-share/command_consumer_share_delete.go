@@ -45,7 +45,7 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteConsumerShare(shareId)
+	err := c.V2Client.DeleteConsumerShare(shareId)
 	if err != nil {
 		return err
 	}
