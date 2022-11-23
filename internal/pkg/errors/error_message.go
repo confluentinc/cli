@@ -482,7 +482,7 @@ const (
 
 	// General
 	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
-	DeleteResourceConfirmErrorMsg = `input does not match %s`
+	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
 	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
 	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )
