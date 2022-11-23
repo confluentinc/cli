@@ -50,13 +50,14 @@ type bindings struct {
 }
 
 type flags struct {
-	file            string
-	groupId         string
-	consumeExamples bool
-	specVersion     string
-	apiKey          string
-	apiSecret       string
-	valueFormat     string
+	file                    string
+	groupId                 string
+	consumeExamples         bool
+	specVersion             string
+	kafkaApiKey             string
+	schemaRegistryApiKey    string
+	schemaRegistryApiSecret string
+	valueFormat             string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -73,8 +74,9 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
+	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -170,7 +172,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 
 func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
-	err := c.getClusterDetails(details)
+	err := c.getClusterDetails(details, flags)
 	if err != nil {
 		return nil, err
 	}
@@ -315,21 +317,30 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 	return bindings, nil
 }
 
-func (c *command) getClusterDetails(details *accountDetails) error {
-	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster config: %v`, err)
-	}
+func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
 	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if cluster.Endpoint == "" {
-		cluster.Endpoint = cluster.ApiEndpoint
-	}
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
-	clusterCreds := clusterConfig.APIKeys[clusterConfig.APIKey]
+	if cluster.Endpoint == "" {
+		cluster.Endpoint = cluster.ApiEndpoint
+	}
+	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
+	}
+	var clusterCreds *v1.APIKeyPair
+	if flags.kafkaApiKey != "" {
+		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
+			return c.Context.FetchAPIKeyError(flags.kafkaApiKey, clusterConfig.ID)
+		}
+		clusterCreds = clusterConfig.APIKeys[flags.kafkaApiKey]
+	} else {
+		clusterCreds = clusterConfig.APIKeys[clusterConfig.APIKey]
+	}
 	if clusterCreds == nil {
-		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster", "Set an API key pair for the Kafka cluster using `confluent api-key create`")
+		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
+			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
 	}
 	topics, err := c.PrivateClient.Kafka.ListTopics(context.Background(), cluster)
 	if err != nil {
@@ -358,11 +369,15 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	apiKey, err := cmd.Flags().GetString("api-key")
+	kafkaApiKey, err := cmd.Flags().GetString("kafka-api-key")
 	if err != nil {
 		return nil, err
 	}
-	apiSecret, err := cmd.Flags().GetString("api-secret")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	if err != nil {
+		return nil, err
+	}
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
@@ -371,13 +386,14 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		return nil, err
 	}
 	return &flags{
-		file:            file,
-		groupId:         groupId,
-		consumeExamples: consumeExamples,
-		specVersion:     specVersion,
-		apiKey:          apiKey,
-		apiSecret:       apiSecret,
-		valueFormat:     valueFormat,
+		file:                    file,
+		groupId:                 groupId,
+		consumeExamples:         consumeExamples,
+		specVersion:             specVersion,
+		kafkaApiKey:             kafkaApiKey,
+		schemaRegistryApiKey:    schemaRegistryApiKey,
+		schemaRegistryApiSecret: schemaRegistryApiSecret,
+		valueFormat:             valueFormat,
 	}, nil
 }
 
@@ -389,11 +405,11 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 		}
 		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
 	}
-	if flags.apiKey == "" && flags.apiSecret == "" && schemaCluster.SrCredentials != nil {
-		flags.apiKey = schemaCluster.SrCredentials.Key
-		flags.apiSecret = schemaCluster.SrCredentials.Secret
+	if flags.schemaRegistryApiKey == "" && flags.schemaRegistryApiSecret == "" && schemaCluster.SrCredentials != nil {
+		flags.schemaRegistryApiKey = schemaCluster.SrCredentials.Key
+		flags.schemaRegistryApiSecret = schemaCluster.SrCredentials.Secret
 	}
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.apiKey, flags.apiSecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.schemaRegistryApiKey, flags.schemaRegistryApiSecret)
 	if err != nil {
 		return err
 	}
