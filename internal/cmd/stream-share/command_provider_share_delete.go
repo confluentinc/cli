@@ -1,17 +1,20 @@
 package streamshare
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newProviderShareDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a provider share.",
 		Args:              cobra.ExactArgs(1),
@@ -24,12 +27,26 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 			},
 		),
 	}
+
+	pcmd.AddForceFlag(cmd)
+
+	return cmd
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	err := c.V2Client.DeleteProviderShare(shareId)
+	_, err := c.V2Client.DescribeProviderShare(shareId)
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+		return err
+	}
+
+	err = c.V2Client.DeleteProviderShare(shareId)
 	if err != nil {
 		return err
 	}
