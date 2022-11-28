@@ -1,5 +1,7 @@
 module github.com/confluentinc/cli
 
+replace github.com/confluentinc/ccloud-sdk-go-v1-public => ../ccloud-sdk-go-v1-public
+
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.43.31
