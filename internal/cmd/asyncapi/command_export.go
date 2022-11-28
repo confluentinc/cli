@@ -71,7 +71,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.RunE = c.export
 	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	c.Flags().String("group-id", "consumerApplication", "Group ID for Kafka binding.")
+	c.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
 	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
