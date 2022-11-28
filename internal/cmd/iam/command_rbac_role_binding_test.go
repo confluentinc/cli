@@ -410,6 +410,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 	expect := make(chan expectedListCmdArgs)
 	for _, tc := range roleBindingCreateDeleteTests {
+		tc.args = append(tc.args, "--force")
 		cmd := suite.newMockIamRoleBindingCmd(expect, "")
 		cmd.SetArgs(append([]string{"rbac", "role-binding", "delete"}, tc.args...))
 
