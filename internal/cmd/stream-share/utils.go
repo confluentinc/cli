@@ -55,7 +55,7 @@ func confirmOptOut(cmd *cobra.Command) (bool, error) {
 		},
 	)
 	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
-		return false, errors.New(errors.FailedToReadOptOutConfirmationErrorMsg)
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }
