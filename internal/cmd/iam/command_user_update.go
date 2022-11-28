@@ -37,9 +37,9 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 
 	update := iamv2.IamV2UserUpdate{FullName: &fullName}
 
-	_, httpResp, err := c.V2Client.UpdateIamUser(resourceId, update)
+	_, err = c.V2Client.UpdateIamUser(resourceId, update)
 	if err != nil {
-		return errors.Errorf(`failed to update user "%s": %v`, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
+		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, err)
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)

@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -96,7 +95,7 @@ func LoadPropertiesFile(path string) (*properties.Properties, error) {
 	loader.Encoding = properties.UTF8
 	loader.PreserveFormatting = true
 
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -169,4 +168,8 @@ func ArrayToCommaDelimitedString(arr []string) string {
 	delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
 
 	return delimitedStr.String()
+}
+
+func Int32Ptr(x int32) *int32 {
+	return &x
 }

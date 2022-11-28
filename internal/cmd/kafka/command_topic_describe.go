@@ -15,6 +15,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -53,26 +54,28 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return output.NewInvalidOutputFormatFlagError(outputOption)
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
-		lkc := kafkaClusterConfig.ID
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
 
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		// Get topic config
-		configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+		configsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
@@ -83,12 +86,13 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-			topicData := &topicData{}
-			topicData.TopicName = topicName
+			topicData := &topicData{
+				TopicName: topicName,
+				Config:    make(map[string]string),
+			}
 
-			topicData.Config = make(map[string]string)
 			for _, config := range configsResp.Data {
-				topicData.Config[config.Name] = *config.Value
+				topicData.Config[config.Name] = config.GetValue()
 			}
 			numPartitions, err := c.getNumPartitions(topicName)
 			if err != nil {

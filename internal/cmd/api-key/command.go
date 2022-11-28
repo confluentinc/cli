@@ -24,14 +24,14 @@ type command struct {
 	flagResolver pcmd.FlagResolver
 }
 
-type apiKeyRow struct {
-	Key            string
-	Description    string
-	UserResourceId string
-	UserEmail      string
-	ResourceType   string
-	ResourceId     string
-	Created        string
+type row struct {
+	Key             string
+	Description     string
+	OwnerResourceId string
+	OwnerEmail      string
+	ResourceType    string
+	ResourceId      string
+	Created         string
 }
 
 const resourceFlagName = "resource"
@@ -45,7 +45,7 @@ const (
 func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.FlagResolver) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "api-key",
-		Short:       "Manage the API keys.",
+		Short:       "Manage API keys.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -57,6 +57,7 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 
 	c.AddCommand(c.newCreateCommand())
 	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newListCommand())
 	c.AddCommand(c.newStoreCommand())
 	c.AddCommand(c.newUpdateCommand())
@@ -97,8 +98,8 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 		return nil, err
 	}
 
-	if auditLog := v1.GetAuditLog(c.State); auditLog != nil {
-		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
+		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
 			return nil, err
 		}

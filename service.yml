@@ -1,8 +1,11 @@
 name: cli
 lang: go
-lang_version: 1.17.6
+lang_version: 1.19.0
+git:
+  enable: true
 github:
   enable: true
   repo_name: confluentinc/cli
 semaphore:
   enable: true
+  pipeline_enable: false

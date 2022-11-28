@@ -26,11 +26,6 @@ const (
 	AssumingHttpProtocol  = "Assuming http protocol.\n"
 	AssumingHttpsProtocol = "Assuming https protocol.\n"
 
-	// ksql create warning
-	KSQLCreateDeprecateWarning = "(DEPRECATED) In a future release, api-key and api-secret will be required flags when creating a ksql cluster."
-	KSQLAppDeprecateWarning    = "In the next major release, the `confluent ksql app` commands will be removed. " +
-		"Use the equivalent `confluent ksql cluster` commands instead."
-
 	// audit log migration
 	OtherCategoryWarning = "\\“Other\\” Category Warning: The OTHER event category rule from the route %q " +
 		"for cluster %q has been dropped because it contains a MANAGEMENT event category. The OTHER event " +
@@ -53,4 +48,8 @@ const (
 	RetentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
 		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
 		" router configuration, but different retention times. The maximum specified retention time will be used."
+
+	// ksql cluster create
+	SchemaRegistryRoleBindingRequiredForKsqlWarning = "IMPORTANT: Confirm that the users or service accounts that will interact " +
+		"with this cluster have the required privileges to access Schema Registry."
 )

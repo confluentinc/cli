@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
@@ -26,6 +26,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
+	c.AddCommand(c.newConsumerCommand())
 	c.AddCommand(c.newProviderCommand())
 
 	return c.Command

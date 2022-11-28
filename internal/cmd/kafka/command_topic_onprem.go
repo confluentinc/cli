@@ -10,6 +10,7 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -32,7 +33,7 @@ type TopicData struct {
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
 	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {
-		return "", kafkaRestError(client.GetConfig().BasePath, err, resp)
+		return "", kafkarest.NewError(client.GetConfig().BasePath, err, resp)
 	}
 	if clusters.Data == nil || len(clusters.Data) == 0 {
 		return "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
@@ -51,7 +52,7 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 
 	var foundTopic bool
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("validateTopic: found topic " + t.Topic)
+		log.CliLogger.Tracef("validateTopic: found topic %s", t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}

@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -61,6 +60,8 @@ type CLITest struct {
 	disableAuditLog bool
 	// True iff fixture represents a regex
 	regex bool
+	// True iff testing plugins
+	arePluginsEnabled bool
 	// Fixed string to check if output contains
 	contains string
 	// Fixed string to check that output does not contain
@@ -123,6 +124,9 @@ func (s *CLITestSuite) SetupSuite() {
 		} else {
 			makeArgs = "build-integ-nonrace"
 		}
+		if runtime.GOOS == "windows" {
+			makeArgs += "-windows"
+		}
 		makeCmd := exec.Command("make", makeArgs)
 		output, err := makeCmd.CombinedOutput()
 		if err != nil {
@@ -157,15 +161,27 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if !tt.workflow {
-			resetConfiguration(t)
+			resetConfiguration(t, tt.arePluginsEnabled)
 		}
 
 		// Executes login command if test specifies
 		switch tt.login {
 		case "cloud":
-			loginURL := s.getLoginURL(true, tt)
-			env := []string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			for _, e := range env {
+				keyVal := strings.Split(e, "=")
+				os.Setenv(keyVal[0], keyVal[1])
+			}
+
+			defer func() {
+				for _, e := range env {
+					keyVal := strings.Split(e, "=")
+					os.Unsetenv(keyVal[0])
+				}
+			}()
+
+			output := runCommand(t, testBin, env, loginString, 0)
 			if *debug {
 				fmt.Println(output)
 			}
@@ -271,7 +287,7 @@ func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, 
 // takes an io.Reader with the desired input read into it
 func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	return func(cmd *exec.Cmd) error {
-		buf, err := ioutil.ReadAll(stdinInput)
+		buf, err := io.ReadAll(stdinInput)
 		fmt.Printf("%s", buf)
 		if err != nil {
 			return err
@@ -295,17 +311,17 @@ func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
 	}
 }
 
-func resetConfiguration(t *testing.T) {
+func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
 	cfg := v1.New()
-
+	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := ioutil.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
+	err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

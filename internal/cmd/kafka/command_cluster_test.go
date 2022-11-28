@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -24,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -55,7 +54,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Id: cmkv2.PtrString("lkc-xyz"),
 	Status: &cmkv2.CmkV2ClusterStatus{
 		Cku:   cmkv2.PtrInt32(1),
-		Phase: "PROVISIONING",
+		Phase: ccloudv2.StatusProvisioning,
 	},
 }
 

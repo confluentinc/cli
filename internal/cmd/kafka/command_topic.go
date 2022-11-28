@@ -10,17 +10,21 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 const (
-	defaultReplicationFactor = 3
-	partitionCount           = "num.partitions"
+	badRequestErrorCode              = 40002
+	unknownTopicOrPartitionErrorCode = 40403
 )
+
+const partitionCount = "num.partitions"
 
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
@@ -123,7 +127,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	foundTopic := false
 	for _, t := range metadata.Topics {
-		log.CliLogger.Tracef("Validate topic: found topic " + t.Topic)
+		log.CliLogger.Tracef("Validate topic: found topic %s", t.Topic)
 		if topic == t.Topic {
 			foundTopic = true // no break so that we see all topics from the above printout
 		}
@@ -138,23 +142,22 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 }
 
 func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
 		if err != nil {
 			return 0, err
 		}
 
-		partitionsResp, httpResp, err := kafkaREST.Client.PartitionV3Api.ListKafkaPartitions(kafkaREST.Context, kafkaClusterConfig.ID, topicName)
+		partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but there was an error
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
 					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return 0, kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusOK {
@@ -180,4 +183,15 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 	}
 
 	return len(resp.Partitions), nil
+}
+
+func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
 }

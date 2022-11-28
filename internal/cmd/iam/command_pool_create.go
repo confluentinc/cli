@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -25,10 +24,10 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("description", "", "Description of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("filter")
@@ -67,9 +66,9 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return err
 	}
 
 	identityPool := &identityPool{

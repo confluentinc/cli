@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -17,13 +18,8 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
-	if c.cfg.IsCloudLogin() {
-		pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	}
-
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
@@ -32,13 +28,21 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	client, ctx, clusterId, err := c.getKafkaRestComponents(cmd)
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return err
+		}
+		return errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	if httpResp, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, linkName, nil); err != nil {
-		return handleOpenApiError(httpResp, err, client)
+	if httpResp, err := kafkaREST.CloudClient.DeleteKafkaLink(clusterId, linkName); err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClusterLink, linkName)

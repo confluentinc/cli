@@ -10,6 +10,7 @@
   "availability": "single-zone",
   "status": "UP",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "rest_endpoint": "http://kafka-rest-url",
-  "kapi": "http://kafka-api-url"
+  "rest_endpoint": "http://127.0.0.1:1025",
+  "kapi": "http://kafka-api-url",
+  "topic_count": 2
 }

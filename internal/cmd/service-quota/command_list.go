@@ -1,11 +1,7 @@
 package servicequota
 
 import (
-	"context"
-	"net/url"
 	"strconv"
-
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 
 	"github.com/spf13/cobra"
 
@@ -52,17 +48,9 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createContext() context.Context {
-	return context.WithValue(context.Background(), servicequotav1.ContextAccessToken, c.State.AuthToken)
-}
-
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	quotaScope := args[0]
 
-	quotaCode, err := cmd.Flags().GetString("quota-code")
-	if err != nil {
-		return err
-	}
 	kafkaCluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
@@ -76,40 +64,22 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	token := ""
-	quotaList := []servicequotav1.ServiceQuotaV1AppliedQuota{}
-	// Since we use paginated results, get all results by iterating the list.
-	for {
-		req := c.V2Client.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotas(c.createContext()).
-			Scope(quotaScope).PageToken(token).KafkaCluster(kafkaCluster).Environment(environment).Network(network)
-		lsResult, _, err := req.Execute()
-		if err != nil {
-			return err
-		}
-		quotaList = append(quotaList, lsResult.Data...)
-
-		token = ""
-		if md, ok := lsResult.GetMetadataOk(); ok && md.GetNext() != "" {
-			url, err := url.Parse(*md.Next.Get())
-			if err != nil {
-				return err
-			}
-			token = url.Query().Get("page_token")
-		}
-
-		if token == "" {
-			break
-		}
+	quotaCode, err := cmd.Flags().GetString("quota-code")
+	if err != nil {
+		return err
 	}
 
-	quotaList = filterQuotaResults(quotaList, quotaCode)
+	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode)
+	if err != nil {
+		return err
+	}
 
 	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
 	if err != nil {
 		return err
 	}
 
-	for _, quota := range quotaList {
+	for _, quota := range quotas {
 		outQt := &quotaValue{
 			QuotaCode:    *quota.Id,
 			DisplayName:  *quota.DisplayName,
@@ -140,18 +110,4 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	}
 
 	return outputWriter.Out()
-}
-
-// TODO: remove this filter func when service-quota api supports filtering by quota code.
-func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
-	filteredQuotas := []servicequotav1.ServiceQuotaV1AppliedQuota{}
-	if quotaCode != "" {
-		for _, quota := range quotaList {
-			if *quota.Id == quotaCode {
-				filteredQuotas = append(filteredQuotas, quota)
-			}
-		}
-		quotaList = filteredQuotas
-	}
-	return quotaList
 }

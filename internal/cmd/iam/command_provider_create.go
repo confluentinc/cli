@@ -6,7 +6,6 @@ import (
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -25,9 +24,9 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("description", "", "Description of the identity provider.")
 	cmd.Flags().String("issuer-uri", "", "URI of the identity provider issuer.")
 	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
+	cmd.Flags().String("description", "", "Description of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("issuer-uri")
@@ -60,9 +59,9 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		Issuer:      identityproviderv2.PtrString(issuer),
 		JwksUri:     identityproviderv2.PtrString(jwksuri),
 	}
-	resp, httpResp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	resp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return err
 	}
 
 	identityProvider := &identityProvider{

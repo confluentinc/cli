@@ -3,6 +3,7 @@ package dynamicconfig
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"testing"
 	"time"
 
@@ -10,10 +11,13 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -35,7 +39,7 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 		Context: &v1.Context{
 			KafkaClusterContext: &v1.KafkaClusterContext{
 				KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{
-					"lkc-123456": {LastUpdate: update},
+					"lkc-123456": {LastUpdate: update, Bootstrap: "pkc-abc12.us-west-2.aws.confluent.cloud:1234"},
 				},
 			},
 		},
@@ -70,11 +74,35 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 				},
 			},
 		},
+		V2Client: &ccloudv2.Client{
+			CmkClient: &cmkv2.APIClient{
+				ClustersCmkV2Api: &cmkmock.ClustersCmkV2Api{
+					GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+						return cmkv2.ApiGetCmkV2ClusterRequest{}
+					},
+					GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+						cluster := cmkv2.CmkV2Cluster{
+							Id: stringPtr("lkc-123456"),
+							Spec: &cmkv2.CmkV2ClusterSpec{
+								DisplayName:            stringPtr(""),
+								KafkaBootstrapEndpoint: stringPtr(""),
+								HttpEndpoint:           stringPtr(""),
+							},
+						}
+						return cluster, nil, nil
+					},
+				},
+			},
+		},
 	}
 
 	config, err := d.FindKafkaCluster("lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.After(update))
+}
+
+func stringPtr(s string) *string {
+	return &s
 }
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
@@ -132,7 +160,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 		err := cmd.ParseFlags([]string{"--cluster", tt.cluster, "--environment", tt.environment})
 		require.NoError(t, err)
-		initialEnvId := tt.ctx.GetCurrentEnvironmentId()
+		initialEnvId := tt.ctx.GetEnvironment().GetId()
 		initialActiveKafkaId := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 		err = tt.ctx.ParseFlagsIntoContext(cmd, client)
 		if tt.errMsg != "" {
@@ -143,7 +171,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 		} else {
 			require.NoError(t, err)
-			finalEnv := tt.ctx.GetCurrentEnvironmentId()
+			finalEnv := tt.ctx.GetEnvironment().GetId()
 			finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 			if tt.environment != "" {
 				require.Equal(t, tt.environment, finalEnv)
