@@ -492,9 +492,10 @@ func (s *CLITestSuite) TestKafkaACL() {
 		// error case: bad operation, specified more than one resource type, allow/deny not set
 		{args: fmt.Sprintf("kafka acl delete --principal User:Alice --host '*' --operation fake --topic Test --consumer-group Group:Test --url %s --no-authentication", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/acl/delete-errors.golden", wantErrCode: 1},
 		// success cases
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-authentication", kafkaRestURL), name: "acl delete output human", fixture: "kafka/acl/delete.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-authentication", kafkaRestURL), name: "acl delete output json", fixture: "kafka/acl/delete-json.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-authentication", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output human", fixture: "kafka/acl/delete.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-authentication", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, name: "acl delete output human", fixture: "kafka/acl/delete-prompt.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output json", fixture: "kafka/acl/delete-json.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
 	}
 
 	for _, clitest := range tests {
