@@ -410,7 +410,7 @@ func (c *SRRouter) HandleSRCompatibility(t *testing.T) http.HandlerFunc {
 	}
 }
 
-//Handler for: "/asyncapi"
+// Handler for: "/asyncapi"
 func (c *SRRouter) HandleSRAsyncApi(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
