@@ -1,4 +1,4 @@
-Source: confluent-cli
+Source: confluent
 Section: misc
 Priority: optional
 Maintainer: Confluent Packaging <packages@confluent.io>
