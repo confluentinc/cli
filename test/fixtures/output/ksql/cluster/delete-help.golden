@@ -4,6 +4,7 @@ Usage:
   confluent ksql cluster delete <id> [flags]
 
 Flags:
+      --force                Skip the deletion confirmation prompt.
       --context string       CLI context name.
       --environment string   Environment ID.
 
