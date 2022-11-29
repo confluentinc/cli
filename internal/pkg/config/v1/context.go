@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -175,39 +175,39 @@ func (c *Context) SetAuth(auth *AuthConfig) {
 	c.GetState().Auth = auth
 }
 
-func (c *Context) GetUser() *orgv1.User {
+func (c *Context) GetUser() *ccloudv1.User {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.User
 	}
 	return nil
 }
 
-func (c *Context) GetOrganization() *orgv1.Organization {
+func (c *Context) GetOrganization() *ccloudv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
 	}
 	return nil
 }
 
-func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
-func (c *Context) GetEnvironment() *orgv1.Account {
+func (c *Context) GetEnvironment() *ccloudv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account
 	}
 	return nil
 }
 
-func (c *Context) SetEnvironment(environment *orgv1.Account) {
+func (c *Context) SetEnvironment(environment *ccloudv1.Account) {
 	if c.GetAuth() == nil {
 		c.SetAuth(new(AuthConfig))
 	}
 	c.GetAuth().Account = environment
 }
 
-func (c *Context) GetEnvironments() []*orgv1.Account {
+func (c *Context) GetEnvironments() []*ccloudv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Accounts
 	}

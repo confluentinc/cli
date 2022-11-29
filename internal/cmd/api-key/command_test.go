@@ -10,6 +10,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
@@ -149,7 +150,7 @@ func (suite *APITestSuite) SetupTest() {
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	// Set up audit logs
-	ctx.State.Auth.Organization.AuditLog = &orgv1.AuditLog{
+	ctx.State.Auth.Organization.AuditLog = &ccloudv1.AuditLog{
 		ClusterId:        cluster.ID,
 		AccountId:        "env-zy987",
 		ServiceAccountId: auditLogServiceAccountId,

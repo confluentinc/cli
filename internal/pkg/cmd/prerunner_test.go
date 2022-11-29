@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -243,7 +243,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -386,7 +386,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 									Email:     "",
 									FirstName: "",
 								},
-								Organization: &orgv1.Organization{ResourceId: "o-123"},
+								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
 								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
@@ -409,7 +409,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var ccloudNetrcCalled bool
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
-			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+			r.LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
@@ -495,7 +495,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 							Email:     "",
 							FirstName: "",
 						},
-						Organization: &orgv1.Organization{ResourceId: "o-123"},
+						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
 						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
 					}, nil
 				},
@@ -511,7 +511,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 			return validAuthToken, "", nil
 		},
 	}
-	r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	r.LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCredentialsFromNetrcFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcFunc,
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -567,7 +567,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 
 			var envVarCalled bool
 			var netrcCalled bool
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						envVarCalled = true
@@ -726,7 +726,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
-		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+		mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil

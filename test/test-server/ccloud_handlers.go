@@ -22,6 +22,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
@@ -30,23 +31,23 @@ import (
 )
 
 var (
-	environments       = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	environments       = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
 	keyStore           = map[int32]*schedv1.ApiKey{}
 	keyIndex           = int32(1)
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 	resourceTypeToKind = map[string]string{resource.KafkaCluster: "Cluster", resource.KsqlCluster: "ksqlDB", resource.SchemaRegistryCluster: "SchemaRegistry", resource.Cloud: "Cloud"}
 
-	RegularOrg = &orgv1.Organization{
+	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
 		Name: "test-org",
 	}
-	SuspendedOrg = func(eventType orgv1.SuspensionEventType) *orgv1.Organization {
-		return &orgv1.Organization{
+	SuspendedOrg = func(eventType ccloudv1.SuspensionEventType) *ccloudv1.Organization {
+		return &ccloudv1.Organization{
 			Id:   321,
 			Name: "test-org",
-			SuspensionStatus: &orgv1.SuspensionStatus{
-				Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+			SuspensionStatus: &ccloudv1.SuspensionStatus{
+				Status:    ccloudv1.SuspensionStatusType_SUSPENSION_COMPLETED,
 				EventType: eventType,
 			},
 		}
@@ -89,9 +90,9 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			orgResourceId = "abc-123"
 		}
 
-		org := &orgv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
 		if !isAuditLogEnabled {
-			org.AuditLog = &orgv1.AuditLog{
+			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",
 				ServiceAccountId: auditLogServiceAccountID,
@@ -99,8 +100,8 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			}
 		}
 
-		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
-			User: &orgv1.User{
+		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
+			User: &ccloudv1.User{
 				Id:         23,
 				Email:      "cody@confluent.io",
 				FirstName:  "Cody",
@@ -118,21 +119,21 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 // Handler for: "/api/sessions"
 func handleLogin(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := new(flowv1.AuthenticateRequest)
+		req := new(ccloudv1.AuthenticateRequest)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
 
-		res := new(flowv1.AuthenticateReply)
+		res := new(ccloudv1.AuthenticateReply)
 
 		switch req.Email {
 		case "incorrect@user.com":
 			w.WriteHeader(http.StatusForbidden)
 		case "suspended@user.com":
 			w.WriteHeader(http.StatusForbidden)
-			res.Error = &corev1.Error{Message: errors.SuspendedOrganizationSuggestions}
+			res.Error = &ccloudv1.Error{Message: errors.SuspendedOrganizationSuggestions}
 		case "end-of-free-trial-suspended@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
-			res.Organization = SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
+			res.Organization = SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
@@ -171,16 +172,16 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
 			case http.MethodGet: // called by `environment use`
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 			case http.MethodPut: // called by `environment create`
-				req := &orgv1.UpdateAccountRequest{}
+				req := &ccloudv1.CreateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
 				env.Name = req.Account.Name
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
@@ -196,15 +197,15 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			req := &orgv1.CreateAccountRequest{}
+			req := &ccloudv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
-			account := &orgv1.Account{
+			account := &ccloudv1.Account{
 				Id:             "a-5555",
 				Name:           req.Account.Name,
 				OrganizationId: 0,
 			}
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
+			b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{
 				Account: account,
 			})
 			require.NoError(t, err)
@@ -219,24 +220,24 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost: //admin payment update
-			req := &orgv1.UpdatePaymentInfoRequest{}
+			req := &ccloudv1.UpdatePaymentInfoRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
 
-			res := &orgv1.UpdatePaymentInfoReply{}
+			res := &ccloudv1.UpdatePaymentInfoReply{}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			res := orgv1.GetPaymentInfoReply{
-				Card: &orgv1.Card{
+			res := ccloudv1.GetPaymentInfoReply{
+				Card: &ccloudv1.Card{
 					Cardholder: "Miles Todzo",
 					Brand:      "Visa",
 					Last4:      "4242",
 					ExpMonth:   "01",
 					ExpYear:    "99",
 				},
-				Organization: &orgv1.Organization{Id: 0},
+				Organization: &ccloudv1.Organization{Id: 0},
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
@@ -247,7 +248,8 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
+func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc { // is this being used?
+	fmt.Println("called HandleServiceAccounts")
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -276,7 +278,8 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/service_accounts/{id}"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
+func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc { // is this still being used?
+	fmt.Println("called HandleServiceAccount")
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, err := strconv.ParseInt(idStr, 10, 32)
@@ -510,7 +513,8 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/users"
-func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
+func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc { // this still used?
+	fmt.Println("called HandleUsers")
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
@@ -696,13 +700,13 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/signup"
 func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &orgv1.SignupRequest{}
+		req := &ccloudv1.SignupRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
 		require.NotEmpty(t, req.Organization.Name)
 		require.NotEmpty(t, req.User)
 		require.NotEmpty(t, req.Credentials)
-		signupReply := &orgv1.SignupReply{Organization: &orgv1.Organization{}}
+		signupReply := &ccloudv1.SignupReply{Organization: &ccloudv1.Organization{}}
 		reply, err := utilv1.MarshalJSONToBytes(signupReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
