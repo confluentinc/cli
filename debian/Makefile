@@ -52,9 +52,6 @@ install: apply-patches
 	mkdir -p $(DESTDIR)$(DOCPATH)
 	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 
-	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-
 	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_darwin_amd64 -o $(DESTDIR)$(BINPATH)/confluent
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
