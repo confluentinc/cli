@@ -88,11 +88,14 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 
 func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
 	roleBindings, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetCrnPattern(), deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName())
+	if err != nil {
+		return err
+	}
 
 	var roleBindingToDelete *mdsv2.IamV2RoleBinding
-	for _, rolebinding := range roleBindings {
-		if rolebinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = &rolebinding
+	for _, roleBinding := range roleBindings {
+		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
+			roleBindingToDelete = &roleBinding
 			break
 		}
 	}
