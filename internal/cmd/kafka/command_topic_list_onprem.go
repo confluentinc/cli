@@ -24,7 +24,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 
 			examples.Example{
 				// on-prem examples are ccloud examples + "of a specified cluster (providing Kafka REST Proxy endpoint)."
-				Text: `List all topics for a specified cluster (providing Kafka REST Proxy endpoint).`,
+				Text: "List all topics for a specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
