@@ -28,7 +28,16 @@ func (s *CLITestSuite) TestStreamShare() {
 		},
 
 		{args: "stream-share consumer share list --shared-resource sr-12345", fixture: "stream-share/list-consumer-shares.golden"},
-		{args: "stream-share consumer share delete ss-12345", fixture: "stream-share/delete-consumer-share.golden"},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
+			args:        "stream-share consumer share delete ss-12345",
+			fixture:     "stream-share/delete-consumer-share-accept.golden",
+		},
+		{
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
+			args:        "stream-share consumer share delete ss-12345",
+			fixture:     "stream-share/delete-consumer-share-reject.golden",
+		},
 		{args: "stream-share consumer share describe ss-12345", fixture: "stream-share/describe-consumer-share.golden"},
 
 		{args: "stream-share consumer redeem stream-share-token", fixture: "stream-share/redeem-share.golden"},
