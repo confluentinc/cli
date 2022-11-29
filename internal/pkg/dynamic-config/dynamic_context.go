@@ -277,6 +277,9 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 }
 
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
+	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
+		return "", "", nil
+	}
 	key, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return "", "", err
