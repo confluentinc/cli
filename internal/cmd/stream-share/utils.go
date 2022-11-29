@@ -10,6 +10,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	DeleteProviderShareMsg = "Are you sure you want to permanently delete the share? You will not be able to access the shared topic again after deletion."
+	DeleteConsumerShareMsg = "Are you sure you want to permanently delete the share? The consumer will not be able to access the shared topic again after deletion."
+)
+
 func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
 	cloud := network.GetCloud()
 	var details privateLinkNetworkDetails
@@ -45,17 +50,16 @@ func mapSubdomainsToList(m map[string]string) []string {
 	return subdomains
 }
 
-func confirmOptOut(cmd *cobra.Command) (bool, error) {
+func confirmDeleteShare(cmd *cobra.Command, msg string) (bool, error) {
 	f := form.New(
 		form.Field{
-			ID: "confirmation",
-			Prompt: "Are you sure you want to disable Stream Sharing for your organization? " +
-				"Existing shares in your organization will not be accessible if Stream Sharing is disabled.",
+			ID:        "confirmation",
+			Prompt:    msg,
 			IsYesOrNo: true,
 		},
 	)
 	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
-		return false, errors.New(errors.FailedToReadOptOutConfirmationErrorMsg)
+		return false, errors.New(errors.FailedToReadDeletionConfirmationErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }
