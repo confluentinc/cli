@@ -2,12 +2,8 @@ package streamshare
 
 import (
 	"fmt"
-	"os"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/spf13/cobra"
 )
 
 func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
@@ -43,19 +39,4 @@ func mapSubdomainsToList(m map[string]string) []string {
 	}
 
 	return subdomains
-}
-
-func confirmOptOut(cmd *cobra.Command) (bool, error) {
-	f := form.New(
-		form.Field{
-			ID: "confirmation",
-			Prompt: "Are you sure you want to disable Stream Sharing for your organization? " +
-				"Existing shares in your organization will not be accessible if Stream Sharing is disabled.",
-			IsYesOrNo: true,
-		},
-	)
-	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
-		return false, errors.New(errors.FailedToReadOptOutConfirmationErrorMsg)
-	}
-	return f.Responses["confirmation"].(bool), nil
 }
