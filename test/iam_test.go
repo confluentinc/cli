@@ -146,6 +146,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-33ccc", fixture: "iam/rbac/role-binding/list-user-3-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-44ddd", fixture: "iam/rbac/role-binding/list-user-4-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee", fixture: "iam/rbac/role-binding/list-user-5-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee --resource Group:readers", fixture: "iam/rbac/role-binding/list-user-5-cloud-resource-filter.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-66fff", fixture: "iam/rbac/role-binding/list-user-6-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-77ggg", fixture: "iam/rbac/role-binding/list-user-7-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1234 --principal User:u-66ffa", fixture: "iam/rbac/role-binding/list-user-8-cloud.golden"},
