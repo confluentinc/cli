@@ -143,7 +143,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return nil, nil
 	})
-	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(suite.client, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
+	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(suite.client, nil, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
@@ -185,7 +185,7 @@ func (suite *KSQLTestSuite) TestListKSQL() {
 
 func (suite *KSQLTestSuite) TestDeleteKSQL() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"cluster", "delete", ksqlClusterID})
+	cmd.SetArgs([]string{"cluster", "delete", ksqlClusterID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

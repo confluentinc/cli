@@ -89,7 +89,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
 }
 
@@ -148,7 +148,7 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 
 func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -160,7 +160,7 @@ func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 
 func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -173,7 +173,7 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

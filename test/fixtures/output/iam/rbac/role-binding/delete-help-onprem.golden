@@ -6,6 +6,7 @@ Usage:
 Flags:
       --role string                      REQUIRED: Role name of the existing role binding.
       --principal string                 REQUIRED: Qualified principal name associated with the role binding.
+      --force                            Skip the deletion confirmation prompt.
       --kafka-cluster string             Kafka cluster ID for the role binding.
       --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
       --ksql-cluster string              ksqlDB cluster ID for the role binding.

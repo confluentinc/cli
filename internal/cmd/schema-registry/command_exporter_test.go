@@ -101,7 +101,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
@@ -268,7 +268,7 @@ func (suite *ExporterTestSuite) TestResetExporter() {
 
 func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "delete", exporterName})
+	cmd.SetArgs([]string{"exporter", "delete", exporterName, "--force"})
 	output := new(bytes.Buffer)
 	cmd.SetOut(output)
 	err := cmd.Execute()

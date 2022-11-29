@@ -193,6 +193,6 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 	if err != nil {
 		return 0, err
 	}
-	resp, err := c.Client.Kafka.ListTopics(context.Background(), req)
+	resp, err := c.PrivateClient.Kafka.ListTopics(context.Background(), req)
 	return len(resp), err
 }
