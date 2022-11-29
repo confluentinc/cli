@@ -140,7 +140,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
+	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {

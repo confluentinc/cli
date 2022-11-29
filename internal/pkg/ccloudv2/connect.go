@@ -48,12 +48,12 @@ func (c *Client) ListConnectorsWithExpansions(environmentId, kafkaClusterId, exp
 }
 
 func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+	connectors, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "id,info,status")
 	if err != nil {
 		return nil, err
 	}
 
-	for _, connector := range connectorExpansions {
+	for _, connector := range connectors {
 		if connector.Id.GetId() == connectorId {
 			return &connector, nil
 		}
@@ -63,14 +63,14 @@ func (c *Client) GetConnectorExpansionById(connectorId, environmentId, kafkaClus
 }
 
 func (c *Client) GetConnectorExpansionByName(connectorName, environmentId, kafkaClusterId string) (*connectv1.ConnectV1ConnectorExpansion, error) {
-	connectorExpansions, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "status,info,id")
+	connectors, err := c.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "id,status")
 	if err != nil {
 		return nil, err
 	}
 
-	for name, connector := range connectorExpansions {
+	for name, connector := range connectors {
 		if name == connectorName {
-			return &connector, err
+			return &connector, nil
 		}
 	}
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -48,7 +49,7 @@ func (c *Client) listQuotas(clusterId, envId, pageToken string) (kafkaquotasv1.K
 	if pageToken != "" {
 		req.PageToken(pageToken)
 	}
-	req = req.Cluster(clusterId).Environment(envId)
+	req = req.SpecCluster(clusterId).Environment(envId)
 	return c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.ListKafkaQuotasV1ClientQuotasExecute(req)
 }
 

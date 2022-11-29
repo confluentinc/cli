@@ -132,5 +132,5 @@ func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclB
 }
 
 func (c *aclCommand) createContext() context.Context {
-	return context.WithValue(context.Background(), mds.ContextAccessToken, c.State.AuthToken)
+	return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 }

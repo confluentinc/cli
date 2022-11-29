@@ -142,14 +142,33 @@ var v2RoutesAndReplies = map[string]string{
 						"cloud-cluster=lkc-1111aaa"
 					],
 					"clusters": {
-						"ksql-cluster": "lksqlc-2222bbb"
+						"ksql-cluster": "ksql-cluster-name-2222bbb"
 					}
 				},
 				"rolebindings": {
 					"User:u-66fff": {
 						"ResourceOwner": [
-							{ "resourceType": "Cluster", "name": "lksqlc-2222bbb", "patternType": "LITERAL" }
+							{ "resourceType": "Cluster", "name": "ksql-cluster-name-2222bbb", "patternType": "LITERAL" }
 						]
+					}
+				}
+		  	}
+		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-66ffa": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=2345",
+						"environment=b-595",
+						"cloud-cluster=lkc-1234abc"
+					],
+					"clusters": {
+						"ksql-cluster": "ksqlDB_cluster_name"
+					}
+				},
+				"rolebindings": {
+					"User:u-66ffa": {
+						"KsqlAdmin": []
 					}
 				}
 		  	}

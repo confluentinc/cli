@@ -8,6 +8,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
+const StatusProvisioning = "PROVISIONING"
+
 func newCmkClient(url, userAgent string, unsafeTrace bool) *cmkv2.APIClient {
 	cfg := cmkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace

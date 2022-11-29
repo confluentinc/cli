@@ -38,8 +38,8 @@ func TestCollectFlags(t *testing.T) {
 	flags.Int("int-use", 1, "")
 	flags.String("string-skip", "", "")
 	flags.String("string-use", "example", "")
-	flags.StringArray("string-array-skip", []string{}, "")
-	flags.StringArray("string-array-use", []string{"A", "B"}, "")
+	flags.StringSlice("string-array-skip", []string{}, "")
+	flags.StringSlice("string-array-use", []string{"A", "B"}, "")
 
 	defaults := map[string]interface{}{
 		"bool-skip":         false,

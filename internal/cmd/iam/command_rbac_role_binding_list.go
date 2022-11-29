@@ -7,6 +7,9 @@ import (
 	"sort"
 	"strings"
 
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+
 	"github.com/confluentinc/go-printer"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
@@ -138,7 +141,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 
 	principal := options.principal
 	if currentUser {
-		principal = "User:" + c.State.Auth.User.ResourceId
+		principal = "User:" + c.Context.GetUser().GetResourceId()
 	}
 
 	scopedRoleBindingMappings, _, err := c.MDSv2Client.RBACRoleBindingSummariesApi.MyRoleBindings(c.createContext(), principal, *scopeV2)
@@ -188,7 +191,26 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					logicalCluster = roleBindingScope.Clusters.ConnectCluster
 				} else if roleBindingScope.Clusters.KsqlCluster != "" {
 					clusterType = "ksqlDB"
-					logicalCluster = roleBindingScope.Clusters.KsqlCluster
+					clusterName := roleBindingScope.Clusters.KsqlCluster
+					req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
+					clusterList, err := c.Client.KSQL.List(context.Background(), req)
+					if err != nil {
+						return err
+					}
+					for _, ksql := range clusterList {
+						if ksql.KafkaClusterId == cloudClusterName && ksql.Name == clusterName {
+							logicalCluster = ksql.Id
+							break
+						}
+					}
+					// When empty, fill it up as printout depends on this
+					if len(resourcePatterns) == 0 {
+						resourcePatterns = append(resourcePatterns, mdsv2alpha1.ResourcePattern{
+							ResourceType: "KSQL",
+							Name:         clusterName,
+							PatternType:  "LITERAL",
+						})
+					}
 				} else if roleBindingScope.Clusters.SchemaRegistryCluster != "" {
 					clusterType = "Schema Registry"
 					logicalCluster = roleBindingScope.Clusters.SchemaRegistryCluster
@@ -258,25 +280,25 @@ func (c *roleBindingCommand) getPoolToNameMap() (map[string]string, error) {
 }
 
 func (c *roleBindingCommand) getUserIdToEmailMap() (map[string]string, error) {
-	users, err := c.Client.User.List(context.Background())
+	users, err := c.V2Client.ListIamUsers()
 	if err != nil {
 		return nil, err
 	}
 	userToEmail := make(map[string]string)
 	for _, u := range users {
-		userToEmail["User:"+u.ResourceId] = u.Email
+		userToEmail["User:"+u.GetId()] = u.GetEmail()
 	}
 	return userToEmail, nil
 }
 
 func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 	serviceAccountToName := make(map[string]string)
-	for _, u := range users {
-		serviceAccountToName["User:"+u.ResourceId] = u.ServiceName
+	for _, sa := range serviceAccounts {
+		serviceAccountToName["User:"+sa.GetId()] = sa.GetDisplayName()
 	}
 	return serviceAccountToName, nil
 }

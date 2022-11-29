@@ -47,7 +47,7 @@ func aclEntryFlags() *pflag.FlagSet {
 	operationHelp := operationHelpParts[0] + "\n" + operationHelpParts[1]
 
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	flgSet.StringArray("operation", []string{""}, operationHelp)
+	flgSet.StringSlice("operation", []string{""}, operationHelp)
 	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
@@ -83,7 +83,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 		return aclConfigs, nil
 	}
 
-	operations, err := cmd.Flags().GetStringArray("operation")
+	operations, err := cmd.Flags().GetStringSlice("operation")
 	if err != nil {
 		return nil, err
 	}

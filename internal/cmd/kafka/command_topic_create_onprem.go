@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -21,21 +22,27 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
-		Args:  cobra.ExactArgs(1), // <topic>
+		Args:  cobra.ExactArgs(1),
 		RunE:  c.onPremCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a topic named `my_topic` with default options at specified cluster (providing Kafka REST Proxy endpoint).",
+				Text: `Create a topic named "my_topic" with default options for the current specified cluster (providing embedded Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic create my_topic --url http://localhost:8090/kafka",
+			},
+			examples.Example{
+				Text: `Create a topic named "my_topic" with default options at specified cluster (providing Kafka REST Proxy endpoint).`,
 				Code: "confluent kafka topic create my_topic --url http://localhost:8082",
 			},
 			examples.Example{
-				Text: "Create a topic named `my_topic_2` with specified configuration parameters.",
+				Text: `Create a topic named "my_topic_2" with specified configuration parameters.`,
 				Code: "confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip",
-			}),
+			},
+		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
-	cmd.Flags().Int32("partitions", 6, "Number of topic partitions.")
-	cmd.Flags().Int32("replication-factor", 3, "Number of replicas.")
+
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
+	cmd.Flags().Uint32("replication-factor", 0, "Number of replicas.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
@@ -43,25 +50,28 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []string) error {
-	// Parse arguments
 	topicName := args[0]
+
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
+
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
 	}
-	// Parse remaining arguments
-	numPartitions, err := cmd.Flags().GetInt32("partitions")
+
+	partitions, err := cmd.Flags().GetUint32("partitions")
 	if err != nil {
 		return err
 	}
-	replicationFactor, err := cmd.Flags().GetInt32("replication-factor")
+
+	replicationFactor, err := cmd.Flags().GetUint32("replication-factor")
 	if err != nil {
 		return err
 	}
+
 	ifNotExists, err := cmd.Flags().GetBool("if-not-exists")
 	if err != nil {
 		return err
@@ -75,6 +85,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
+
 	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
 	i := 0
 	for k, v := range configMap {
@@ -85,16 +96,24 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		}
 		i++
 	}
+
+	data := kafkarestv3.CreateTopicRequestData{
+		TopicName: topicName,
+		Configs:   topicConfigs,
+	}
+
+	if cmd.Flags().Changed("partitions") {
+		data.PartitionsCount = int32(partitions)
+	}
+
+	if cmd.Flags().Changed("replication-factor") {
+		data.ReplicationFactor = int32(replicationFactor)
+	}
+
+	opts := &kafkarestv3.CreateKafkaTopicOpts{CreateTopicRequestData: optional.NewInterface(data)}
+
 	// Create new topic
-	_, resp, err := restClient.TopicV3Api.CreateKafkaTopic(restContext, clusterId, &kafkarestv3.CreateKafkaTopicOpts{
-		CreateTopicRequestData: optional.NewInterface(kafkarestv3.CreateTopicRequestData{
-			TopicName:         topicName,
-			PartitionsCount:   numPartitions,
-			ReplicationFactor: replicationFactor,
-			Configs:           topicConfigs,
-		}),
-	})
-	if err != nil {
+	if _, resp, err := restClient.TopicV3Api.CreateKafkaTopic(restContext, clusterId, opts); err != nil {
 		// catch topic exists error
 		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 			var decodedError kafkarest.V3Error

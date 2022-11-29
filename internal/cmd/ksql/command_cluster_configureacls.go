@@ -21,7 +21,7 @@ import (
 
 func (c *ksqlCommand) newConfigureAclsCommand(resource string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "configure-acls <id> TOPICS...",
+		Use:               "configure-acls <id> [topic-1] [topic-2] ... [topic-N]",
 		Short:             fmt.Sprintf("Configure ACLs for a ksqlDB %s.", resource),
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -84,7 +84,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusCreated {
+			if httpResp.StatusCode != http.StatusNoContent {
 				msg := fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode)
 				return errors.NewErrorWithSuggestions(msg, errors.InternalServerErrorSuggestions)
 			}
@@ -179,7 +179,7 @@ func createACL(resourceType schedv1.ResourceTypes_ResourceType, name string, pat
 }
 
 func getCreateAclRequestDataList(bindings []*schedv1.ACLBinding) kafkarestv3.CreateAclRequestDataList {
-	data := make([]kafkarestv3.CreateAclRequestData, 0)
+	data := make([]kafkarestv3.CreateAclRequestData, len(bindings))
 	for i, binding := range bindings {
 		data[i] = acl.GetCreateAclRequestData(binding)
 	}

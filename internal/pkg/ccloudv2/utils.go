@@ -37,6 +37,9 @@ func newRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
 		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
 	}
 	return client.StandardClient()
@@ -50,6 +53,7 @@ func getServerUrl(baseURL string) string {
 
 	if utils.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
 		u.Host = "api." + u.Host
+		u.Path = ""
 	} else {
 		u.Path = "api"
 	}
