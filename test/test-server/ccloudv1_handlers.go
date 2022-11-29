@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
@@ -112,7 +111,7 @@ func (c *CloudRouter) HandleFreeTrialInfo(t *testing.T) http.HandlerFunc {
 				res = &ccloudv1.GetFreeTrialInfoReply{}
 			}
 
-			reply, err := utilv1.MarshalJSONToBytes(res)
+			reply, err := ccloudv1.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = w.Write(reply)
 			require.NoError(t, err)
