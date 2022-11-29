@@ -203,9 +203,9 @@ func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloudv
 	hasFreeTrialCode := false
 	freeTrialPromoCodeAmount := int64(0)
 	for _, promoCodeClaim := range promoCodeClaims {
-		if promoCodeClaim.IsFreeTrialPromoCode {
+		if promoCodeClaim.GetIsFreeTrialPromoCode() {
 			hasFreeTrialCode = true
-			freeTrialPromoCodeAmount = promoCodeClaim.Amount
+			freeTrialPromoCodeAmount = promoCodeClaim.GetAmount()
 			break
 		}
 	}
