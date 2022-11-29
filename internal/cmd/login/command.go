@@ -182,7 +182,7 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
 	for _, promoCodeClaim := range promoCodeClaims {
-		remainingFreeCredit += promoCodeClaim.Balance
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
