@@ -19,7 +19,11 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 		RunE:  c.onPremDelete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the topic "my_topic" at specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
+				Text: `Delete the topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
+				Code: "confluent kafka topic delete my_topic --url http://localhost:8090/kafka",
+			},
+			examples.Example{
+				Text: `Delete the topic "my_topic" for the specified cluster (providing Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
 				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
