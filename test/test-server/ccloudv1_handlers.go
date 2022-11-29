@@ -40,26 +40,13 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			var res *ccloudv1.GetPromoCodeClaimsReply
-
 			var tenDollars int64 = 10 * 10000
 
 			// The time is set to noon so that all time zones display the same local time
 			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
 			expiration := &types.Timestamp{Seconds: date.Unix()}
 
-			freeTrialCode := &ccloudv1.GetPromoCodeClaimsReply{
-				Claims: []*ccloudv1.PromoCodeClaim{
-					{
-						Code:                 PromoTestCode,
-						Amount:               400 * 10000,
-						Balance:              0,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			regularCodes := &ccloudv1.GetPromoCodeClaimsReply{
+			res := &ccloudv1.GetPromoCodeClaimsReply{
 				Claims: []*ccloudv1.PromoCodeClaim{
 					{
 						Code:                 "PROMOCODE1",
@@ -76,19 +63,6 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 				},
 			}
 
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
-			switch hasPromoCodeClaims {
-			case "false":
-				res = &ccloudv1.GetPromoCodeClaimsReply{}
-			case "onlyFreeTrialCode":
-				res = freeTrialCode
-			case "multiCodes":
-				res = &ccloudv1.GetPromoCodeClaimsReply{}
-				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
-			default:
-				res = regularCodes
-			}
-
 			listReply, err := ccloudv1.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = w.Write(listReply)
@@ -97,6 +71,49 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 			res := &ccloudv1.ClaimPromoCodeReply{}
 
 			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for: "/api/growth/v1/free-trial-info"
+func (c *CloudRouter) HandleFreeTrialInfo(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
+			expiration := &types.Timestamp{Seconds: date.Unix()}
+
+			var res *ccloudv1.GetFreeTrialInfoReply
+
+			hasPromoCodeClaims := os.Getenv("IS_ON_FREE_TRIAL")
+			switch hasPromoCodeClaims {
+			case "true":
+				res = &ccloudv1.GetFreeTrialInfoReply{
+					PromoCodeClaims: []*ccloudv1.GrowthPromoCodeClaim{
+						{
+							Amount:               400 * 10000, // $400
+							Balance:              20 * 10000,  // $20
+							ClaimDate:            expiration,
+							CreditExpirationDate: expiration,
+							IsFreeTrialPromoCode: true,
+						},
+						{
+							Amount:               20 * 10000, // $20
+							Balance:              20 * 10000, // $20
+							ClaimDate:            expiration,
+							CreditExpirationDate: expiration,
+							IsFreeTrialPromoCode: true,
+						},
+					},
+				}
+			default:
+				res = &ccloudv1.GetFreeTrialInfoReply{}
+			}
+
+			reply, err := ccloudv1.MarshalJSONToBytes(res)
+			require.NoError(t, err)
+			_, err = w.Write(reply)
 			require.NoError(t, err)
 		}
 	}
