@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"sort"
@@ -238,7 +239,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 						if err != nil {
 							return err
 						}
-						if resource != resourcePattern.ResourceType {
+						if resource != fmt.Sprintf("%s:%s", resourcePattern.ResourceType, resourcePattern.Name) {
 							continue
 						}
 					}
