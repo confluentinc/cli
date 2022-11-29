@@ -190,9 +190,9 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return &ccloud.Client{Auth: auth, User: user}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Billing: &ccloudv1Mock.Billing{
-				GetClaimedPromoCodesFunc: func(_ context.Context, _ *ccloudv1.Organization, _ bool) ([]*ccloudv1.PromoCodeClaim, error) {
-					var claims []*ccloudv1.PromoCodeClaim
+			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
+				GetFreeTrialInfoFunc: func(_ context.Context, orgId int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
+					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil
 				},
 			}}
