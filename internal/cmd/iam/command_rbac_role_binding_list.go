@@ -306,10 +306,11 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
 	scopeV2 := &options.scopeV2
 	role := options.role
+	resource := options.resource
 
 	var principals []string
 	var err error
-	if cmd.Flags().Changed("resource") {
+	if resource != "" {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
