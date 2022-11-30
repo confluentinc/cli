@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"sort"
@@ -238,7 +239,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 						if err != nil {
 							return err
 						}
-						if resource != resourcePattern.ResourceType {
+						if resource != fmt.Sprintf("%s:%s", resourcePattern.ResourceType, resourcePattern.Name) {
 							continue
 						}
 					}
@@ -295,8 +296,8 @@ func (c *roleBindingCommand) getPrincipalToUserMap() (map[string]*iamv2.IamV2Use
 		return nil, err
 	}
 	principalToUser := make(map[string]*iamv2.IamV2User)
-	for _, user := range users {
-		principalToUser["User:"+user.GetId()] = &user
+	for i := range users {
+		principalToUser["User:"+users[i].GetId()] = &users[i]
 	}
 	return principalToUser, nil
 }
