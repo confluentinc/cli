@@ -6,8 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -23,13 +22,13 @@ var (
 
 	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 		},
 	}
 
 	normalSuspendedOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 		},
 	}
 

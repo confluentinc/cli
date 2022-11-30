@@ -8,10 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
@@ -377,23 +376,23 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r := getPreRunBase()
 			r.Config = cfg
 			r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-				PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-					return &ccloud.Client{Auth: &sdkMock.Auth{
-						UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-							return &flowv1.GetMeReply{
-								User: &orgv1.User{
+				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+					return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+							return &ccloudv1.GetMeReply{
+								User: &ccloudv1.User{
 									Id:        23,
 									Email:     "",
 									FirstName: "",
 								},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
 					}}
 				},
-				PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-					return &ccloud.Client{}
+				AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+					return &ccloudv1.Client{}
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
@@ -486,23 +485,23 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	r := getPreRunBase()
 	r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-			return &ccloud.Client{Auth: &sdkMock.Auth{
-				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
-					return &flowv1.GetMeReply{
-						User: &orgv1.User{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+					return &ccloudv1.GetMeReply{
+						User: &ccloudv1.User{
 							Id:        23,
 							Email:     "",
 							FirstName: "",
 						},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
-						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+						Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 					}, nil
 				},
 			}}
 		},
-		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-			return &ccloud.Client{}
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{}
 		},
 	}
 	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
