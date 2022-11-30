@@ -18,11 +18,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	createFields            = []string{"Key", "Secret"}
-	createHumanRenames      = map[string]string{"Key": "API Key"}
-	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
-)
+type createOut struct {
+	ApiKey    string `human:"API Key" serialized:"api_key"`
+	ApiSecret string `human:"API Secret" serialized:"api_secret"`
+}
 
 var resourceTypeToKind = map[string]string{
 	resource.KafkaCluster:          "Cluster",
@@ -64,7 +63,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -128,8 +127,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
 	}
 
-	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
-	if err != nil {
+	table := output.NewTable(cmd)
+	table.Add(&createOut{
+		ApiKey:    userKey.Key,
+		ApiSecret: userKey.Secret,
+	})
+	if err := table.Print(); err != nil {
 		return err
 	}
 
@@ -157,7 +160,7 @@ func (c *command) createV1(ownerResourceId, clusterId, resourceType, description
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 
-	schedv1ApiKey, err := c.Client.APIKey.Create(context.Background(), key)
+	schedv1ApiKey, err := c.PrivateClient.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return nil, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
 	}
@@ -214,7 +217,7 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 
 	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
 	if isInvalid && clusterId == auditLog.GetClusterId() {
-		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+		auditLogServiceAccount, err2 := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err2 != nil {
 			return err
 		}

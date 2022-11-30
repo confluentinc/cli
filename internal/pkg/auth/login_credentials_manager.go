@@ -195,11 +195,6 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc
 
 		log.CliLogger.Warnf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 
-		// TODO: Deprecate the use of SSO tokens in the netrc. They should be tracked in the user's config file instead.
-		if netrcMachine.IsSSO {
-			return &Credentials{Username: netrcMachine.User, AuthRefreshToken: netrcMachine.Password, IsSSO: true}, nil
-		}
-
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 	}
 }
@@ -318,7 +313,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 		}
 		// TODO: change to verbosity level logging
 		utils.ErrPrintf(cmd, errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, IsSSO: netrcMachine.IsSSO, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
+		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password, PrerunLoginURL: machineContextInfo.URL, PrerunLoginCaCertPath: machineContextInfo.CaCertPath}, nil
 	}
 }
 

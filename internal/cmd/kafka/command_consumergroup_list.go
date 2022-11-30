@@ -9,12 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	groupListFields           = []string{"ClusterId", "ConsumerGroupId", "IsSimple", "State"}
-	groupListHumanLabels      = []string{"Cluster", "Consumer Group", "Simple", "State"}
-	groupListStructuredLabels = []string{"cluster", "consumer_group", "simple", "state"}
-)
-
 func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -49,14 +43,16 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, groupListFields, groupListHumanLabels, groupListStructuredLabels)
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, group := range groupCmdResp.Data {
+		list.Add(&consumerGroupOut{
+			ClusterId:         group.GetClusterId(),
+			ConsumerGroupId:   group.GetConsumerGroupId(),
+			Coordinator:       getStringBroker(group.GetCoordinator()),
+			IsSimple:          group.GetIsSimple(),
+			PartitionAssignor: group.GetPartitionAssignor(),
+			State:             group.GetState(),
+		})
 	}
-
-	for _, groupData := range groupCmdResp.Data {
-		outputWriter.AddElement(&groupData)
-	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
