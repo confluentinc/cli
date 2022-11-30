@@ -147,7 +147,15 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	if !isCloud {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
-		scopeV2, err = c.parseAndValidateScopeV2(cmd)
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			scopeV2, err = c.parseAndValidateScopeV2(cmd, resource)
+
+			// KsqlCluster resource gets added to the scope instead of resource
+			if strings.HasPrefix(resource, "KsqlCluster:") {
+				resource = ""
+			}
+		}
+		scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
 	}
 	if err != nil {
 		return nil, err
@@ -227,7 +235,6 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
 		}
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
@@ -295,7 +302,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
-func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
+func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resource string) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
 	if cmd.Flags().Changed("current-env") {
@@ -337,12 +344,13 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
-		if err != nil {
-			return nil, err
+	if strings.HasPrefix(resource, "KsqlCluster") {
+		ksqlCluster := strings.SplitN(resource, ":", 2)
+		if len(ksqlCluster) != 2 {
+			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 		}
-		scopeV2.Clusters.KsqlCluster = ksqlCluster
+
+		scopeV2.Clusters.KsqlCluster = ksqlCluster[1]
 	}
 
 	if cmd.Flags().Changed("role") {
