@@ -248,8 +248,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc { // is this being used?
-	fmt.Println("called HandleServiceAccounts")
+func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -278,8 +277,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc { // 
 }
 
 // Handler for: "/api/service_accounts/{id}"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc { // is this still being used?
-	fmt.Println("called HandleServiceAccount")
+func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, err := strconv.ParseInt(idStr, 10, 32)
@@ -513,8 +511,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/users"
-func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc { // this still used?
-	fmt.Println("called HandleUsers")
+func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []*orgv1.User{
