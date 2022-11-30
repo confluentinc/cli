@@ -568,7 +568,7 @@ func TestLoginFail(t *testing.T) {
 		},
 		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
-				return nil, &ccloud.InvalidLoginError{}
+				return nil, &ccloudv1.InvalidLoginError{}
 			}
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
@@ -576,7 +576,7 @@ func TestLoginFail(t *testing.T) {
 	loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
-	req.Equal(new(ccloud.InvalidLoginError), err)
+	req.Equal(new(ccloudv1.InvalidLoginError), err)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {
