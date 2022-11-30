@@ -22,7 +22,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 

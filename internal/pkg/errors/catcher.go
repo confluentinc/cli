@@ -11,7 +11,7 @@ import (
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"

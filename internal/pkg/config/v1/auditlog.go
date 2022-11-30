@@ -1,7 +1,7 @@
 package v1
 
 import (
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
 func GetAuditLog(context *Context) *ccloudv1.AuditLog {

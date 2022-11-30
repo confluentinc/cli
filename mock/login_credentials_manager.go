@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	github_com_confluentinc_ccloud_sdk_go_v1_public "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	github_com_confluentinc_cli_internal_pkg_auth "github.com/confluentinc/cli/internal/pkg/auth"
 	github_com_confluentinc_cli_internal_pkg_config_v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	github_com_confluentinc_cli_internal_pkg_netrc "github.com/confluentinc/cli/internal/pkg/netrc"
@@ -44,7 +44,7 @@ type LoginCredentialsManager struct {
 	GetOnPremPrerunCredentialsFromNetrcFunc func(arg0 *github_com_spf13_cobra.Command, arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockSetCloudClient sync.Mutex
-	SetCloudClientFunc func(client *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client)
+	SetCloudClientFunc func(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client)
 
 	calls struct {
 		GetCloudCredentialsFromEnvVar []struct {
@@ -75,7 +75,7 @@ type LoginCredentialsManager struct {
 			Arg1 github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		SetCloudClient []struct {
-			Client *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client
+			Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 		}
 	}
 }
@@ -421,7 +421,7 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalls() []s
 }
 
 // SetCloudClient mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client) {
+func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client) {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()
 
@@ -430,7 +430,7 @@ func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc
 	}
 
 	call := struct {
-		Client *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client
+		Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 	}{
 		Client: client,
 	}
@@ -450,7 +450,7 @@ func (m *LoginCredentialsManager) SetCloudClientCalled() bool {
 
 // SetCloudClientCalls returns the calls made to SetCloudClient.
 func (m *LoginCredentialsManager) SetCloudClientCalls() []struct {
-	Client *github_com_confluentinc_ccloud_sdk_go_v1_public_ccloud.Client
+	Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 } {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()

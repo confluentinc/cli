@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/dghubble/sling"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"

@@ -1,6 +1,6 @@
 package v1
 
-import ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+import ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 // AuthConfig represents an authenticated user.
 type AuthConfig struct {

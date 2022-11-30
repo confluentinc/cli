@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -172,7 +172,6 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloudv
 
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
-		// privateAuthorizedClient := c.clientFactory.PrivateJwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fNameCompanyEmail.Responses["email"].(string),

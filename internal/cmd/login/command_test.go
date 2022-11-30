@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
-	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 

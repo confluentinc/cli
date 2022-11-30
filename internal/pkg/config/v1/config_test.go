@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
