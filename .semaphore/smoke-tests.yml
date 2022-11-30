@@ -1,0 +1,21 @@
+version: v1.0
+name: Smoke Tests
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-1
+
+blocks:
+  - name: Smoke Tests
+    task:
+      jobs:
+        - name: Smoke Tests
+          commands:
+            - checkout
+            - make build
+            - # TODO: Get email and password from Vault
+            - email="bstrauch@confluent.io"
+            - password="password"
+            - # TODO: Clone and use headless-sso plugin
+            - bash test/smoke/login-basic.sh $email $password
+            - bash test/smoke/login-sso.sh $email
