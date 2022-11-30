@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/mock"

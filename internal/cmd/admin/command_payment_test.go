@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
