@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -80,7 +79,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 					errors.InternalServerErrorSuggestions)
 			}
 			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList, cmd.OutOrStdout(), resourceIdMap)
+			return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, resourceIdMap)
 		}
 	}
 
@@ -90,10 +89,10 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resp, err := c.Client.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
+	resp, err := c.PrivateClient.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
 	if err != nil {
 		return err
 	}
 
-	return aclutil.PrintACLsWithResourceIdMap(cmd, resp, os.Stdout, resourceIdMap)
+	return aclutil.PrintACLsWithResourceIdMap(cmd, resp, resourceIdMap)
 }
