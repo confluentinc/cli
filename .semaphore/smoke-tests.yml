@@ -1,0 +1,15 @@
+version: v1.0
+name: Smoke Tests
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-1
+
+blocks:
+  - name: Smoke Tests
+    task:
+      jobs:
+        - name: Smoke Tests
+          commands:
+            - checkout
+            - bash test/smoke/login-basic.sh
