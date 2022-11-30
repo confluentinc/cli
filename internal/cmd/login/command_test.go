@@ -919,9 +919,9 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, LoginRealm: loginRealm}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Billing: &ccloudv1Mock.Billing{
-				GetClaimedPromoCodesFunc: func(_ context.Context, _ *ccloudv1.Organization, _ bool) ([]*ccloudv1.PromoCodeClaim, error) {
-					var claims []*ccloudv1.PromoCodeClaim
+			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
+				GetFreeTrialInfoFunc: func(_ context.Context, orgId int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
+					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil
 				},
 			}, Auth: auth, LoginRealm: loginRealm}
