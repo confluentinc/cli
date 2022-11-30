@@ -14,8 +14,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
 	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221129020623-05bed3f2e1b6
-	github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud v0.0.0-20221129020623-05bed3f2e1b6
+	github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud v0.0.0-20221130053732-4c70bfbd82dc
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.4
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -181,6 +180,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
 	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221129200057-fcec26d70dbc // indirect
 	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect

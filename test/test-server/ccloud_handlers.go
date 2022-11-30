@@ -155,7 +155,7 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.URL.Query().Get("email")
 
-		res := &flowv1.GetLoginRealmReply{
+		res := &ccloudv1.GetLoginRealmReply{
 			IsSso: strings.Contains(email, "sso"),
 			Realm: "realm",
 		}

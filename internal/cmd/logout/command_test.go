@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -175,16 +174,9 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 		}
 	}
 	ccloudClientFactory := &cliMock.CCloudClientFactory{
-		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}}
-		},
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
 			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, LoginRealm: loginRealm}
-		},
-		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-			return &ccloud.Client{}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Billing: &ccloudv1Mock.Billing{
@@ -200,7 +192,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.PrivateAnonHTTPClientFactory(ccloudURL), ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	return loginCmd, cfg
 }

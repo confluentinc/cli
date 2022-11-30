@@ -8,7 +8,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud"
 	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/ccloud/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -95,11 +94,11 @@ func getPreRunBase() *pcmd.PreRun {
 			Out:    os.Stdout,
 		},
 		CCloudClientFactory: &cliMock.CCloudClientFactory{
-			PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-				return &ccloud.Client{}
+			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+				return &ccloudv1.Client{}
 			},
-			PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-				return &ccloud.Client{}
+			AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+				return &ccloudv1.Client{}
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
