@@ -154,8 +154,9 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			if strings.HasPrefix(resource, "KsqlCluster:") {
 				resource = ""
 			}
+		} else {
+			scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
 		}
-		scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
 	}
 	if err != nil {
 		return nil, err
