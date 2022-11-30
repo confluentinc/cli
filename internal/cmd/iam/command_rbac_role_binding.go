@@ -147,12 +147,15 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	if !isCloud {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
-		scopeV2, err = c.parseAndValidateScopeV2(cmd, resource)
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			scopeV2, err = c.parseAndValidateScopeV2(cmd, resource)
 
-		// KsqlCluster resource gets added to the scope instead of resource
-		if strings.HasPrefix(resource, "KsqlCluster:") {
-			resource = ""
+			// KsqlCluster resource gets added to the scope instead of resource
+			if strings.HasPrefix(resource, "KsqlCluster:") {
+				resource = ""
+			}
 		}
+		scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
 	}
 	if err != nil {
 		return nil, err
