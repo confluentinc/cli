@@ -167,21 +167,22 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 }
 
 func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
 	}
 
-	org := &ccloudv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
-	if err != nil {
-		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+	// the org is not on free trial or there is no promo code claims
+	if len(promoCodeClaims) == 0 {
+		log.CliLogger.Debugf("Skip printing remaining free credit")
 		return
 	}
 
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
-	for _, promoCode := range promoCodes {
-		remainingFreeCredit += promoCode.Balance
+	for _, promoCodeClaim := range promoCodeClaims {
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
