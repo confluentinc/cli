@@ -140,3 +140,5 @@ after_pipeline:
 promotions:
   - name: Smoke Tests
     pipeline_file: smoke-tests.yml
+    auto_promote:
+      when: "result = 'passed' AND tag =~ '^v\d+\.\d+\.\d+$'"

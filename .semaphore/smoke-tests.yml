@@ -12,4 +12,10 @@ blocks:
         - name: Smoke Tests
           commands:
             - checkout
-            - bash test/smoke/login-basic.sh
+            - make build
+            - # TODO: Get email and password from Vault
+            - email="bstrauch@confluent.io"
+            - password="password"
+            - # TODO: Clone and use headless-sso plugin
+            - bash test/smoke/login-basic.sh $email $password
+            - bash test/smoke/login-sso.sh $email
