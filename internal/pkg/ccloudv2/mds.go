@@ -72,7 +72,7 @@ func (c *Client) executeListIamV2RoleBindings(crnPattern, principal, roleName, p
 }
 
 func extractMdsNextPageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
+	if !nextPageUrlStringNullable.IsSet() || nextPageUrlStringNullable.Get() == nil {
 		return "", true, nil
 	}
 	nextPageUrlString := *nextPageUrlStringNullable.Get()
