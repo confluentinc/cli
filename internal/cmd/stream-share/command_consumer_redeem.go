@@ -4,77 +4,29 @@ import (
 	"fmt"
 	"strings"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/spf13/cobra"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	redeemTokenFields            = []string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"}
-	redeemTokenPrivateLinkFields = []string{"NetworkDnsDomain", "NetworkZones", "NetworkZonalSubdomains", "NetworkKind",
-		"NetworkPrivateLinkDataType", "NetworkPrivateLinkData"}
-	redeemTokenHumanLabelMap = map[string]string{
-		"Id":                   "ID",
-		"ApiKey":               "API Key",
-		"ApiSecret":            "API Secret",
-		"KafkaBootstrapUrl":    "Kafka Bootstrap URL",
-		"SchemaRegistryApiKey": "Schema Registry API Key",
-		"SchemaRegistrySecret": "Schema Registry Secret",
-		"SchemaRegistryUrl":    "Schema Registry URL",
-		"Resources":            "Resources",
-	}
-	redeemTokenPrivateLinkHumanLabelMap = map[string]string{
-		"NetworkDnsDomain":           "Network DNS Domain",
-		"NetworkZones":               "Network Zones",
-		"NetworkZonalSubdomains":     "Network Zonal Subdomains",
-		"NetworkKind":                "Network Kind",
-		"NetworkPrivateLinkDataType": "Network Private Link Data Type",
-		"NetworkPrivateLinkData":     "Network Private Link Data",
-	}
-	redeemTokenStructuredLabelMap = map[string]string{
-		"Id":                   "id",
-		"ApiKey":               "api_key",
-		"ApiSecret":            "secret",
-		"KafkaBootstrapUrl":    "kafka_bootstrap_url",
-		"SchemaRegistryApiKey": "schema_registry_api_key",
-		"SchemaRegistrySecret": "schema_registry_secret",
-		"SchemaRegistryUrl":    "schema_registry_url",
-		"Resources":            "resources",
-	}
-	redeemTokenPrivateLinkStructuredLabelMap = map[string]string{
-		"NetworkDnsDomain":           "network_dns_domain",
-		"NetworkZones":               "network_zones",
-		"NetworkZonalSubdomains":     "network_zonal_subdomains",
-		"NetworkKind":                "network_kind",
-		"NetworkPrivateLinkDataType": "network_private_link_data_type",
-		"NetworkPrivateLinkData":     "network_private_link_data",
-	}
-)
-
-type privateLinkNetworkDetails struct {
-	networkKind         string
-	privateLinkDataType string
-	privateLinkData     interface{}
-}
-
-type redeemToken struct {
-	Id                         string
-	ApiKey                     string
-	ApiSecret                  string
-	KafkaBootstrapUrl          string
-	SchemaRegistryApiKey       string
-	SchemaRegistrySecret       string
-	SchemaRegistryUrl          string
-	Resources                  []string
-	NetworkDnsDomain           string
-	NetworkZones               string
-	NetworkZonalSubdomains     []string
-	NetworkKind                string
-	NetworkPrivateLinkDataType string
-	NetworkPrivateLinkData     interface{}
+type redeemOut struct {
+	Id                         string   `human:"ID" serialized:"id"`
+	ApiKey                     string   `human:"API Key" serialized:"api_key"`
+	ApiSecret                  string   `human:"API Secret" serialized:"api_secret"`
+	KafkaBootstrapUrl          string   `human:"Kafka Bootstrap URL" serialized:"kafka_bootstrap_url"`
+	SchemaRegistryApiKey       string   `human:"Schema Registry API Key" serialized:"schema_registry_api_key"`
+	SchemaRegistrySecret       string   `human:"Schema Registry Secret" serialized:"schema_registry_secret"`
+	SchemaRegistryUrl          string   `human:"Schema Registry URL" serialized:"schema_registry_url"`
+	Resources                  []string `human:"Resources" serialized:"resources"`
+	NetworkDnsDomain           string   `human:"Network DNS Domain" serialized:"network_dns_domain"`
+	NetworkZones               string   `human:"Network Zones" serialized:"network_zones"`
+	NetworkZonalSubdomains     []string `human:"Network Zonal Subdomains" serialized:"network_zonal_subdomains"`
+	NetworkKind                string   `human:"Network Kind" serialized:"network_kind"`
+	NetworkPrivateLinkDataType string   `human:"Network Private Link Data Type" serialized:"network_private_link_data_type"`
+	NetworkPrivateLinkData     string   `human:"Network Private Link Data" serialized:"network_private_link_data"`
 }
 
 func (c *command) newRedeemCommand() *cobra.Command {
@@ -134,7 +86,7 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	tokenObj := &redeemToken{
+	out := &redeemOut{
 		Id:                   redeemResponse.GetId(),
 		ApiKey:               redeemResponse.GetApiKey(),
 		ApiSecret:            redeemResponse.GetSecret(),
@@ -147,14 +99,17 @@ func (c *command) redeemShare(cmd *cobra.Command, args []string) error {
 
 	// non private link cluster
 	if awsAccountId == "" && azureSubscriptionId == "" && gcpProjectId == "" {
-		return output.DescribeObject(cmd, tokenObj, redeemTokenFields, redeemTokenHumanLabelMap, redeemTokenStructuredLabelMap)
+		table := output.NewTable(cmd)
+		table.Add(out)
+		table.Filter([]string{"Id", "ApiKey", "ApiSecret", "KafkaBootstrapUrl", "SchemaRegistryApiKey", "SchemaRegistrySecret", "SchemaRegistryUrl", "Resources"})
+		return table.Print()
 	}
 
-	return c.handlePrivateLinkClusterRedeem(cmd, redeemResponse, tokenObj)
+	return c.handlePrivateLinkClusterRedeem(cmd, redeemResponse, out)
 }
 
-func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemResponse cdxv1.CdxV1RedeemTokenResponse, tokenObj *redeemToken) error {
-	consumerSharedResources, err := c.V2Client.ListConsumerSharedResources(redeemResponse.GetId())
+func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, resp cdxv1.CdxV1RedeemTokenResponse, out *redeemOut) error {
+	consumerSharedResources, err := c.V2Client.ListConsumerSharedResources(resp.GetId())
 	if err != nil {
 		return err
 	}
@@ -169,14 +124,14 @@ func (c *command) handlePrivateLinkClusterRedeem(cmd *cobra.Command, redeemRespo
 	}
 
 	networkDetails := getPrivateLinkNetworkDetails(network)
-	tokenObj.NetworkDnsDomain = network.GetDnsDomain()
-	tokenObj.NetworkZones = strings.Join(network.GetZones(), ",")
-	tokenObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
-	tokenObj.NetworkKind = networkDetails.networkKind
-	tokenObj.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
-	tokenObj.NetworkPrivateLinkData = networkDetails.privateLinkData
+	out.NetworkDnsDomain = network.GetDnsDomain()
+	out.NetworkZones = strings.Join(network.GetZones(), ",")
+	out.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
+	out.NetworkKind = networkDetails.networkKind
+	out.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
+	out.NetworkPrivateLinkData = networkDetails.privateLinkData
 
-	return output.DescribeObject(cmd, tokenObj, append(redeemTokenFields, redeemTokenPrivateLinkFields...),
-		combineMaps(redeemTokenHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
-		combineMaps(redeemTokenStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
 }

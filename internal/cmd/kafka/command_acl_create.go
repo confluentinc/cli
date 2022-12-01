@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
@@ -26,10 +25,10 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"READ\" and \"DESCRIBE\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+				Code: "confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic '*'",
+				Code: "confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --topic '*'",
 			},
 		),
 	}
@@ -93,21 +92,21 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 					break
 				}
 				// i > 0: unlikely
-				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if err != nil {
 				if i > 0 {
 					// unlikely
-					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				}
 				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
 				if i > 0 {
-					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], os.Stdout, resourceIdMap)
+					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
 				}
 				return errors.NewErrorWithSuggestions(
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
@@ -116,7 +115,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		}
 
 		if kafkaRestExists {
-			return pacl.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
+			return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
 		}
 	}
 
@@ -126,9 +125,9 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.Client.Kafka.CreateACLs(context.Background(), cluster, bindings); err != nil {
+	if err := c.PrivateClient.Kafka.CreateACLs(context.Background(), cluster, bindings); err != nil {
 		return err
 	}
 
-	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, os.Stdout, resourceIdMap)
+	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
 }

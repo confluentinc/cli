@@ -4,7 +4,7 @@
 | Description | description     |
 | Ingress     | 500 B/s         |
 | Egress      | 100 B/s         |
-| Cluster     | lkc-1234        |
 | Principals  | sa-1234,sa-5678 |
+| Cluster     | lkc-1234        |
 | Environment | a-595           |
 +-------------+-----------------+

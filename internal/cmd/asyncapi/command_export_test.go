@@ -125,22 +125,27 @@ func newCmd() (*command, error) {
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
 	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(c.Command)
-	err := c.Command.Flags().Set("api-key", "ASYNCAPIKEY")
+	c.Command.Flags().String("schema-registry-api-key", "ASYNCAPIKEY", "API Key for schema registry")
+	c.Command.Flags().String("schema-registry-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
+	err := c.Command.Flags().Set("schema-registry-api-key", "ASYNCAPIKEY")
 	if err != nil {
 		return nil, err
 	}
-	err = c.Command.Flags().Set("api-secret", "ASYNCAPISECRET")
+	err = c.Command.Flags().Set("schema-registry-api-secret", "ASYNCAPISECRET")
 	if err != nil {
 		return nil, err
 	}
 	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
 	c.State = cfg.Context().State
-	c.Config = dynamicconfig.New(cfg, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
-	c.Client = &ccloud.Client{
+	c.PrivateClient = &ccloud.Client{
+		APIKey: &ccsdkmock.APIKey{
+			GetFunc: func(context.Context, *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+				return &schedv1.ApiKey{Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"}, nil
+			},
+		},
 		Account: &ccsdkmock.Account{
 			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
 				return nil, nil
@@ -239,7 +244,7 @@ func newCmd() (*command, error) {
 func TestGetTopicDescription(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	err = details.getTopicDescription()
@@ -250,14 +255,15 @@ func TestGetTopicDescription(t *testing.T) {
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	err = c.getClusterDetails(details)
+	flags := &flags{kafkaApiKey: ""}
+	err = c.getClusterDetails(details, flags)
 	require.NoError(t, err)
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
 	utils.Println(c.Command, "")
 	require.Error(t, err)
@@ -266,7 +272,7 @@ func TestGetSchemaRegistry(t *testing.T) {
 func TestGetSchemaDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
@@ -278,12 +284,12 @@ func TestGetSchemaDetails(t *testing.T) {
 func TestGetChannelDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
 }
@@ -291,7 +297,7 @@ func TestGetChannelDetails(t *testing.T) {
 func TestGetBindings(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+	topics, _ := c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
 	_, err = c.getBindings(details.cluster, topics[0])
 	require.NoError(t, err)
 }

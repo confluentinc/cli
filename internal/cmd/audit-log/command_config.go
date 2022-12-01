@@ -25,6 +25,7 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.AddCommand(c.newDescribeCommand())
 	c.AddCommand(c.newEditCommand())
+	c.AddCommand(c.newMigrateCommand())
 	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command

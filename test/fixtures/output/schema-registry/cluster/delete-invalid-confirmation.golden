@@ -1,1 +1,1 @@
-Are you sure you want to permanently delete the Schema Registry cluster for environment "env-srUpdate", along with all of its data? (y/n): Error: failed to read your deletion confirmation
+Are you sure you want to delete Schema Registry cluster "lsrc-1234" for environment "env-srUpdate"? (y/n): Error: failed to read input

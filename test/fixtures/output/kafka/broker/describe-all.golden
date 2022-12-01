@@ -1,4 +1,4 @@
-        Name       |   Value    | Is Default | Is Read Only | Is Sensitive  
--------------------+------------+------------+--------------+---------------
-  compression.type | gzip       | true       | true         | true          
-  sasl_mechanism   | SASL/PLAIN | false      | false        | false         
+        Name       |   Value    | Default | Read Only | Sensitive  
+-------------------+------------+---------+-----------+------------
+  compression.type | gzip       | true    | true      | true       
+  sasl_mechanism   | SASL/PLAIN | false   | false     | false      
