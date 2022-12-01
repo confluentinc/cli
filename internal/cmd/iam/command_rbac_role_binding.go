@@ -147,7 +147,16 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	if !isCloud {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
-		scopeV2, err = c.parseAndValidateScopeV2(cmd)
+		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+			scopeV2, err = c.parseAndValidateScopeV2(cmd, resource)
+
+			// KsqlCluster resource gets added to the scope instead of resource
+			if strings.HasPrefix(resource, "KsqlCluster:") {
+				resource = ""
+			}
+		} else {
+			scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
+		}
 	}
 	if err != nil {
 		return nil, err
@@ -295,7 +304,7 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
-func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
+func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resource string) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
 
 	if cmd.Flags().Changed("current-env") {
@@ -343,6 +352,15 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 			return nil, err
 		}
 		scopeV2.Clusters.KsqlCluster = ksqlCluster
+	}
+
+	if strings.HasPrefix(resource, "KsqlCluster") {
+		ksqlCluster := strings.SplitN(resource, ":", 2)
+		if len(ksqlCluster) != 2 {
+			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+		}
+
+		scopeV2.Clusters.KsqlCluster = ksqlCluster[1]
 	}
 
 	if cmd.Flags().Changed("role") {
