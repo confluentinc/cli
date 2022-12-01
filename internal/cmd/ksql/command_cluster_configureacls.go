@@ -45,7 +45,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.PrivateClient.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return err
 	}
@@ -92,11 +92,11 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	return c.Client.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
+	return c.PrivateClient.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *schedv1.KSQLCluster) (string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}

@@ -84,7 +84,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		cfg.Image = image
 	}
 
-	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
+	cluster, err := c.PrivateClient.KSQL.Create(context.Background(), cfg)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	for cluster.Endpoint == "" && count < 3 {
 		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
-		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+		cluster, err = c.PrivateClient.KSQL.Describe(context.Background(), req)
 		if err != nil {
 			return err
 		}

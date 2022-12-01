@@ -113,7 +113,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
+	clouds, err := c.PrivateClient.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, prompt form.P
 func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
 	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
-	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
+	externalID, err := c.PrivateClient.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
 	if err != nil {
 		return err
 	}

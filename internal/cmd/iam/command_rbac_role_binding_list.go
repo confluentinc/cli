@@ -194,7 +194,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					clusterType = "ksqlDB"
 					clusterName := roleBindingScope.Clusters.KsqlCluster
 					req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-					clusterList, err := c.Client.KSQL.List(context.Background(), req)
+					clusterList, err := c.PrivateClient.KSQL.List(context.Background(), req)
 					if err != nil {
 						return err
 					}

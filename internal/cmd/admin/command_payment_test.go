@@ -142,8 +142,8 @@ func getCommand() *command {
 					},
 				},
 			},
-			CLICommand: &pcmd.CLICommand{Command: mockAdminCommand()},
-			Client:     mockClient(),
+			CLICommand:    &pcmd.CLICommand{Command: mockAdminCommand()},
+			PrivateClient: mockClient(),
 		},
 		isTest: true,
 	}
@@ -152,7 +152,7 @@ func getCommand() *command {
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
 	cfg := v1.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg), true)
+	return New(climock.NewPreRunnerMock(client, nil, nil, nil, nil, cfg), true)
 }
 
 func mockClient() (client *ccloud.Client) {

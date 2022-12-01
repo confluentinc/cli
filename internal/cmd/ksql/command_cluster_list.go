@@ -34,7 +34,7 @@ func (c *ksqlCommand) newListCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-	clusters, err := c.Client.KSQL.List(context.Background(), req)
+	clusters, err := c.PrivateClient.KSQL.List(context.Background(), req)
 	if err != nil {
 		return err
 	}
