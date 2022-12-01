@@ -1,4 +1,4 @@
-Source: confluent
+Source: confluent-cli
 Section: misc
 Priority: optional
 Maintainer: Confluent Packaging <packages@confluent.io>
@@ -6,7 +6,9 @@ Build-Depends: debhelper (>= 9), make
 Standards-Version: 3.9.3
 Homepage: https://docs.confluent.io/confluent-cli/current/overview.html
 
-Package: confluent
+Package: confluent-cli
 Architecture: any
+Replaces: confluent-cli
+Breaks: confluent-cli
 Depends: ${misc:Depends}
 Description: CLI for Confluent Cloud and Confluent Platform
