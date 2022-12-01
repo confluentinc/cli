@@ -48,4 +48,8 @@ const (
 	RetentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
 		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
 		" router configuration, but different retention times. The maximum specified retention time will be used."
+
+	// ksql cluster create
+	SchemaRegistryRoleBindingRequiredForKsqlWarning = "IMPORTANT: Confirm that the users or service accounts that will interact " +
+		"with this cluster have the required privileges to access Schema Registry."
 )

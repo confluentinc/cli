@@ -296,7 +296,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCmd() *cobra.Command {
-	client := &ccloud.Client{
+	privateClient := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
 		Kafka:          suite.kafkaMock,
@@ -332,11 +332,11 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		Out: os.Stdout,
 	}
 	prerunner := &climock.Commander{
-		FlagResolver: resolverMock,
-		Client:       client,
-		V2Client:     v2Client,
-		MDSClient:    nil,
-		Config:       suite.conf,
+		FlagResolver:  resolverMock,
+		PrivateClient: privateClient,
+		V2Client:      v2Client,
+		MDSClient:     nil,
+		Config:        suite.conf,
 	}
 	return New(prerunner, suite.keystore, resolverMock)
 }
@@ -373,7 +373,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", apiKeyVal})
+	cmd.SetArgs([]string{"delete", apiKeyVal, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

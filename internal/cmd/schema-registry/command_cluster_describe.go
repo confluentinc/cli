@@ -19,7 +19,7 @@ import (
 
 type clusterOut struct {
 	Name                  string `human:"Name" serialized:"name"`
-	ClusterId             string `human:"Cluster ID" serialized:"cluster_id"`
+	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
 	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
 	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
 	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`

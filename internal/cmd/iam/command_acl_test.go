@@ -193,7 +193,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New(suite.conf, mock2.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
+	return New(suite.conf, mock2.NewPreRunnerMock(nil, nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -229,13 +229,26 @@ func (suite *ACLTestSuite) TestMdsCreateACL() {
 func (suite *ACLTestSuite) TestMdsDeleteACL() {
 	expect := make(chan interface{})
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "delete", "--kafka-cluster", "testcluster", "--host", "*"},
+		args := append([]string{"acl", "delete", "--kafka-cluster", "testcluster", "--host", "*", "--force"},
 			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsACLEntries {
 			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
+				expect <- convertToACLFilterRequest(
+					&mds.CreateAclRequest{
+						Scope: mds.KafkaScope{
+							Clusters: mds.KafkaScopeClusters{
+								KafkaCluster: "testcluster",
+							},
+						},
+						AclBinding: mds.AclBinding{
+							Pattern: mdsResourcePattern.pattern,
+							Entry:   mdsAclEntry.entry,
+						},
+					},
+				)
 				expect <- convertToACLFilterRequest(
 					&mds.CreateAclRequest{
 						Scope: mds.KafkaScope{

@@ -99,11 +99,10 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg        = "Your token has expired. You are now logged out."
-	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
-	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\nNOT for production usage. https://docs.confluent.io/current/cli/index.html\n\n"
-	AutoLoginMsg           = "Successful auto log in with non-interactive credentials.\n"
+	TokenExpiredMsg      = "Your token has expired. You are now logged out."
+	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
+	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
+	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
@@ -135,10 +134,14 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg         = "Created %s \"%s\".\n"
-	DeletedResourceMsg         = "Deleted %s \"%s\".\n"
-	RequestedDeleteResourceMsg = "Requested to delete %s \"%s\".\n"
-	UpdatedResourceMsg         = "Updated %s \"%s\".\n"
+	CreatedResourceMsg            = "Created %s \"%s\".\n"
+	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
+	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
+	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
+	DeleteACLConfirmMsg           = "Are you sure you want to delete the ACL corresponding to these parameters?"
+	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
+	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
+	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 

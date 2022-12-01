@@ -3,12 +3,11 @@ package auditlog
 import (
 	"context"
 
-	"github.com/spf13/cobra"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/spf13/cobra"
 )
 
 type describeCmd struct {
@@ -45,7 +44,7 @@ func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
 
 	auditLog := c.Context.GetOrganization().GetAuditLog()
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}

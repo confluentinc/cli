@@ -24,7 +24,7 @@ import (
 type topicConfigurationOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
-	ReadOnly string `human:"Read-Only" serialized:"read_only"`
+	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
@@ -81,9 +81,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
-		_, hasNumPartitionsChanged := configMap["num.partitions"]
+		_, hasNumPartitionsChanged := configMap[numPartitionsKey]
 		if hasNumPartitionsChanged {
-			delete(configMap, "num.partitions")
+			delete(configMap, numPartitionsKey)
 		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
@@ -131,10 +131,10 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 					return err
 				}
 
-				readOnlyConfigs.Add("num.partitions")
-				configsValues["num.partitions"] = strconv.Itoa(numPartitions)
+				readOnlyConfigs.Add(numPartitionsKey)
+				configsValues[numPartitionsKey] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
-				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
+				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
 
@@ -148,7 +148,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				list.Add(&topicConfigurationOut{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
-					ReadOnly: strconv.FormatBool(readOnlyConfigs[config.Name]),
+					ReadOnly: readOnlyConfigs[config.Name],
 				})
 			}
 			return list.Print()
@@ -168,7 +168,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		},
 		Validate: dryRun,
 	}
-	if err := c.Client.Kafka.UpdateTopic(context.Background(), cluster, topic); err != nil {
+	if err := c.PrivateClient.Kafka.UpdateTopic(context.Background(), cluster, topic); err != nil {
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}
 

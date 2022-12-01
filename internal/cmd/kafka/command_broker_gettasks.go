@@ -16,14 +16,14 @@ import (
 )
 
 type brokerTaskData struct {
-	ClusterId         string                     `human:"Cluster ID" serialized:"cluster_id"`
+	ClusterId         string                     `human:"Cluster" serialized:"cluster_id"`
 	BrokerId          int32                      `human:"Broker ID" serialized:"broker_id"`
 	TaskType          kafkarestv3.BrokerTaskType `human:"Task Type" serialized:"task_type"`
 	TaskStatus        string                     `human:"Task Status" serialized:"task_status"`
 	CreatedAt         time.Time                  `human:"Created At" serialized:"created_at"`
 	UpdatedAt         time.Time                  `human:"Updated At" serialized:"updated_at"`
 	ShutdownScheduled bool                       `human:"Shutdown Scheduled,omitempty" serialized:"shutdown_scheduled,omitempty"`
-	SubTaskStatuses   string                     `human:"Subtask Statuses" serialized:"sub_task_statuses"`
+	SubtaskStatuses   string                     `human:"Subtask Statuses" serialized:"subtask_statuses"`
 	ErrorCode         int32                      `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
 	ErrorMessage      string                     `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
@@ -108,7 +108,7 @@ func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
 		TaskStatus:      entry.TaskStatus,
 		CreatedAt:       entry.CreatedAt,
 		UpdatedAt:       entry.UpdatedAt,
-		SubTaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
+		SubtaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
 	}
 	if entry.ShutdownScheduled != nil {
 		s.ShutdownScheduled = *entry.ShutdownScheduled

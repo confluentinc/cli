@@ -74,29 +74,24 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 			}
 
 			// Kafka REST is available and there was no error. Fetch partition and config information.
-			configs := make(map[string]string)
-
-			for _, config := range configsResp.Data {
-				configs[config.Name] = config.GetValue()
-			}
 			numPartitions, err := c.getNumPartitions(topicName)
 			if err != nil {
 				return err
 			}
-			configs[partitionCount] = strconv.Itoa(numPartitions)
-
-			if output.GetFormat(cmd).IsSerialized() {
-				return output.SerializedOutput(cmd, configs)
-			}
 
 			list := output.NewList(cmd)
-			for name, value := range configs {
-				list.Add(&configOut{
-					Name:  name,
-					Value: value,
+			for _, config := range configsResp.Data {
+				list.Add(&topicConfigurationOut{
+					Name:     config.GetName(),
+					Value:    config.GetValue(),
+					ReadOnly: config.GetIsReadOnly(),
 				})
 			}
-			list.Filter([]string{"Name", "Value"})
+			list.Add(&topicConfigurationOut{
+				Name:     numPartitionsKey,
+				Value:    strconv.Itoa(numPartitions),
+				ReadOnly: false,
+			})
 			return list.Print()
 		}
 	}
@@ -108,7 +103,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 
 	topic := &schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicName}}
-	resp, err := c.Client.Kafka.DescribeTopic(context.Background(), cluster, topic)
+	resp, err := c.PrivateClient.Kafka.DescribeTopic(context.Background(), cluster, topic)
 	if err != nil {
 		return err
 	}
@@ -118,7 +113,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		for _, entry := range resp.Config {
 			out[entry.Name] = entry.Value
 		}
-		out[partitionCount] = strconv.Itoa(len(resp.Partitions))
+		out[numPartitionsKey] = strconv.Itoa(len(resp.Partitions))
 		return output.SerializedOutput(cmd, out)
 	}
 
@@ -130,7 +125,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		})
 	}
 	list.Add(&configOut{
-		Name:  partitionCount,
+		Name:  numPartitionsKey,
 		Value: strconv.Itoa(len(resp.Partitions)),
 	})
 	list.Filter([]string{"Name", "Value"})

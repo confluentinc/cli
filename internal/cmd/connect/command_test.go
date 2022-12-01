@@ -12,13 +12,12 @@ import (
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -152,7 +151,7 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 		LifecycleV1Api:  suite.lifecycleMock,
 		PluginsV1Api:    suite.pluginMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock},
+	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock}, nil,
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(suite.conf, prerunner)
 }
@@ -179,7 +178,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"cluster", "delete", connectorID})
+	cmd.SetArgs([]string{"cluster", "delete", connectorID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

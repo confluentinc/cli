@@ -6,8 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,7 +34,15 @@ var (
 		"ClusterLinkingWrite":   "Cluster linking write",
 	}
 
-	formatClusterType = map[string]string{
+	formatClusterTypeSerialized = map[string]string{
+		"basic":       "basic",
+		"custom":      "custom-legacy",
+		"dedicated":   "dedicated",
+		"standard":    "basic-legacy",
+		"standard_v2": "standard",
+	}
+
+	formatClusterTypeHuman = map[string]string{
 		"basic":       "Basic",
 		"custom":      "Legacy - Custom",
 		"dedicated":   "Dedicated",
@@ -57,18 +64,26 @@ var (
 )
 
 var (
-	metrics        = mapToSlice(formatMetric)
-	clusterTypes   = mapToSlice(formatClusterType)
-	availabilities = mapToSlice(formatAvailability)
-	networkTypes   = mapToSlice(formatNetworkType)
+	metrics        = getKeys(formatMetric)
+	clusterTypes   = getValues(formatClusterTypeSerialized)
+	availabilities = getKeys(formatAvailability)
+	networkTypes   = getKeys(formatNetworkType)
 )
 
-type out struct {
-	Metric       string `human:"Metric" serialized:"metric"`
-	ClusterType  string `human:"Cluster Type" serialized:"cluster_type"`
-	Availability string `human:"Availability" serialized:"availability"`
-	NetworkType  string `human:"Network Type" serialized:"network_type"`
-	Price        string `human:"Price" serialized:"price"`
+type humanOut struct {
+	Metric       string `human:"Metric"`
+	ClusterType  string `human:"Cluster Type"`
+	Availability string `human:"Availability"`
+	NetworkType  string `human:"Network Type"`
+	Price        string `human:"Price"`
+}
+
+type serializedOut struct {
+	Metric       string  `serialized:"metric"`
+	ClusterType  string  `serialized:"cluster_type"`
+	Availability string  `serialized:"availability"`
+	NetworkType  string  `serialized:"network_type"`
+	Price        float64 `serialized:"price"`
 }
 
 type row struct {
@@ -126,7 +141,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {
@@ -177,8 +192,8 @@ func (c *command) list(filters []string, metric string, legacy bool) ([]row, err
 	return rows, nil
 }
 
-func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*billingv1.UnitPrices, error) {
-	filteredTable := make(map[string]*billingv1.UnitPrices)
+func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*ccloudv1.UnitPrices, error) {
+	filteredTable := make(map[string]*ccloudv1.UnitPrices)
 
 	for service, val := range table {
 		if metric != "" && service != metric {
@@ -186,11 +201,11 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 		}
 
 		for key, price := range val.Prices {
-			args := strings.Split(key, ":")
+			fields := strings.Split(key, ":")
 
 			shouldContinue := false
 			for i, val := range filters {
-				if val != "" && args[i] != val {
+				if val != "" && fields[i] != val {
 					shouldContinue = true
 				}
 			}
@@ -199,7 +214,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, args[3]) && !legacy {
+			if utils.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
@@ -208,7 +223,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			if _, ok := filteredTable[service]; !ok {
-				filteredTable[service] = &billingv1.UnitPrices{
+				filteredTable[service] = &ccloudv1.UnitPrices{
 					Prices: make(map[string]float64),
 					Unit:   val.Unit,
 				}
@@ -221,10 +236,19 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 	return filteredTable, nil
 }
 
-func mapToSlice(m map[string]string) []string {
+func getKeys(m map[string]string) []string {
 	var slice []string
 	for key := range m {
 		slice = append(slice, key)
+	}
+	sort.Strings(slice)
+	return slice
+}
+
+func getValues(m map[string]string) []string {
+	var slice []string
+	for _, value := range m {
+		slice = append(slice, value)
 	}
 	sort.Strings(slice)
 	return slice
@@ -234,20 +258,20 @@ func printTable(cmd *cobra.Command, rows []row) error {
 	list := output.NewList(cmd)
 	for _, row := range rows {
 		if output.GetFormat(cmd) == output.Human {
-			list.Add(&out{
+			list.Add(&humanOut{
 				Metric:       formatMetric[row.metric],
-				ClusterType:  formatClusterType[row.clusterType],
+				ClusterType:  formatClusterTypeHuman[row.clusterType],
 				Availability: formatAvailability[row.availability],
 				NetworkType:  formatNetworkType[row.networkType],
 				Price:        formatPrice(row.price, row.unit),
 			})
 		} else {
-			list.Add(&out{
+			list.Add(&serializedOut{
 				Metric:       row.metric,
-				ClusterType:  row.clusterType,
+				ClusterType:  formatClusterTypeSerialized[row.clusterType],
 				Availability: row.availability,
 				NetworkType:  row.networkType,
-				Price:        fmt.Sprint(row.price),
+				Price:        row.price,
 			})
 		}
 	}

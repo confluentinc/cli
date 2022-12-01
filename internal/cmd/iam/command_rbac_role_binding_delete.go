@@ -10,7 +10,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 )
+
+const rbacPromptMsg = "Are you sure you want to delete this role binding?"
 
 func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -31,6 +34,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 
 	cmd.Flags().String("role", "", "Role name of the existing role binding.")
 	cmd.Flags().String("principal", "", "Qualified principal name associated with the role binding.")
+	pcmd.AddForceFlag(cmd)
 	addClusterFlags(cmd, c.cfg.IsCloudLogin(), c.CLICommand)
 	cmd.Flags().String("resource", "", "Qualified resource name for the role binding.")
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
@@ -57,15 +61,15 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
-			httpResp, err = c.ccloudDelete(options)
+			httpResp, err = c.ccloudDelete(cmd, options)
 		} else {
-			err = c.ccloudDeleteV2(deleteRoleBinding)
+			err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
 		}
 		if err != nil {
 			return err
 		}
 	} else {
-		httpResp, err = c.confluentDelete(options)
+		httpResp, err = c.confluentDelete(cmd, options)
 		if err != nil {
 			return err
 		}
@@ -82,23 +86,37 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 }
 
-func (c *roleBindingCommand) ccloudDeleteV2(deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
-	resp, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName(), deleteRoleBinding.GetCrnPattern())
+func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
+	roleBindings, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetCrnPattern(), deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName())
 	if err != nil {
 		return err
 	}
-	roleBindingList := resp.Data
 
-	for _, rolebinding := range roleBindingList {
-		if rolebinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			_, err = c.V2Client.DeleteIamRoleBinding(rolebinding.GetId())
-			return err
+	var roleBindingToDelete *mdsv2.IamV2RoleBinding
+	for _, roleBinding := range roleBindings {
+		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
+			roleBindingToDelete = &roleBinding
+			break
 		}
 	}
-	return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
+
+	if roleBindingToDelete == nil {
+		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
+	}
+
+	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+		return err
+	}
+
+	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
+	return err
 }
 
-func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Response, error) {
+func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
+	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+		return nil, err
+	}
+
 	if options.resource != "" {
 		return c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),
@@ -114,7 +132,11 @@ func (c *roleBindingCommand) ccloudDelete(options *roleBindingOptions) (*http.Re
 	}
 }
 
-func (c *roleBindingCommand) confluentDelete(options *roleBindingOptions) (*http.Response, error) {
+func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
+	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
+		return nil, err
+	}
+
 	if options.resource != "" {
 		return c.MDSClient.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
 			c.createContext(),

@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluentinc.semaphoreci.com/badges/cli/branches/master.svg?style=shields&key=f6c470c4-296b-4d7f-b550-0a169f85f767)](https://confluentinc.semaphoreci.com/projects/cli)
+[![Build Status](https://confluentinc.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=f6c470c4-296b-4d7f-b550-0a169f85f767)](https://confluentinc.semaphoreci.com/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 

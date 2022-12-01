@@ -11,7 +11,7 @@ import (
 
 type quotaValue struct {
 	QuotaCode    string `human:"Quota Code" serialized:"quota_code"`
-	DisplayName  string `human:"Display Name" serialized:"display_name"`
+	DisplayName  string `human:"Name" serialized:"name"`
 	Scope        string `human:"Scope" serialized:"scope"`
 	AppliedLimit int32  `human:"Applied Limit" serialized:"applied_limit"`
 	// The usage field is actually an integer, but this field is not a required one.

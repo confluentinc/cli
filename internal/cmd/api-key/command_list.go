@@ -52,7 +52,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client, c.V2Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.PrivateClient, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -114,16 +114,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			continue
 		}
 
-		// Add '*' only in the case where we are printing out tables
-		outputKey := apiKey.GetId()
-		if output.GetFormat(cmd) == output.Human {
-			if clusterId != "" && apiKey.GetId() == currentKey {
-				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
-			} else {
-				outputKey = fmt.Sprintf("  %s", apiKey.GetId())
-			}
-		}
-
 		ownerId := apiKey.Spec.Owner.GetId()
 		email := c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 
@@ -138,13 +128,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// needs to be added here to determine the resource type.
 		for _, res := range resources {
 			list.Add(&out{
-				Key:             outputKey,
-				Description:     apiKey.Spec.GetDescription(),
-				OwnerResourceId: ownerId,
-				OwnerEmail:      email,
-				ResourceType:    resourceKindToType[res.GetKind()],
-				ResourceId:      getApiKeyResourceId(res.GetId()),
-				Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
+				Key:          apiKey.GetId(),
+				Description:  apiKey.Spec.GetDescription(),
+				OwnerId:      ownerId,
+				OwnerEmail:   email,
+				ResourceType: resourceKindToType[res.GetKind()],
+				ResourceId:   getApiKeyResourceId(res.GetId()),
+				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}

@@ -1,16 +1,12 @@
 - principal: User:u-11aaa
+  name: ""
   email: u-11aaa@confluent.io
-  service_name: ""
-  pool_name: ""
 - principal: User:u-22bbb
+  name: ""
   email: u-22bbb@confluent.io
-  service_name: ""
-  pool_name: ""
 - principal: User:u-33ccc
+  name: ""
   email: u-33ccc@confluent.io
-  service_name: ""
-  pool_name: ""
 - principal: User:u-44ddd
+  name: ""
   email: mhe@confluent.io
-  service_name: ""
-  pool_name: ""

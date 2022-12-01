@@ -11,8 +11,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -27,8 +27,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -43,8 +43,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -59,8 +59,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -75,8 +75,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -91,8 +91,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -107,8 +107,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -123,8 +123,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   },
   {
@@ -139,8 +139,8 @@
     "is_caught_up": false,
     "log_start_offset": 0,
     "log_end_offset": 0,
-    "last_caught_up_time_ms": "0",
-    "last_fetch_time_ms": "0",
+    "last_caught_up_time_ms": 0,
+    "last_fetch_time_ms": 0,
     "link_name": ""
   }
 ]

@@ -29,7 +29,7 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	environment, err := c.Client.Account.Get(context.Background(), &orgv1.Account{Id: id})
+	environment, err := c.PrivateClient.Account.Get(context.Background(), &orgv1.Account{Id: id})
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
 	}
