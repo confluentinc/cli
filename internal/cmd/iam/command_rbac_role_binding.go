@@ -227,7 +227,7 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 		}
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
@@ -337,8 +337,8 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+	if cmd.Flags().Changed("ksql-cluster") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
 		if err != nil {
 			return nil, err
 		}

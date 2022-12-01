@@ -119,6 +119,7 @@ var flagRules = []linter.FlagRule{
 			"log-exclude-rows",
 			"if-not-exists",
 			"kafka-cluster-id",
+			"ksql-cluster",
 			"ksql-cluster-id",
 			"local-secrets-file",
 			"max-block-ms",
