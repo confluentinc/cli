@@ -10,6 +10,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -138,6 +139,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	privateClient := c.ccloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
+	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
@@ -158,28 +160,29 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
 		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
 	} else {
-		c.printRemainingFreeCredit(cmd, privateClient, currentOrg)
+		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, privateClient *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := privateClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
-	if err != nil {
-		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+	// the org is not on free trial or there is no promo code claims
+	if len(promoCodeClaims) == 0 {
+		log.CliLogger.Debugf("Skip printing remaining free credit")
 		return
 	}
 
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
-	for _, promoCode := range promoCodes {
-		remainingFreeCredit += promoCode.Balance
+	for _, promoCodeClaim := range promoCodeClaims {
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
