@@ -57,7 +57,7 @@ func (c *Client) CreateProviderInvite(environment, kafkaCluster, topic, email, s
 	deliveryMethod := "Email"
 
 	resources := []string{
-		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/kafka=%s/topic=%s", orgId, environment, kafkaCluster, topic),
+		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s", orgId, environment, srClusterId, kafkaCluster, topic),
 	}
 	for _, subject := range subjects {
 		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s", orgId, environment, srClusterId, subject))
