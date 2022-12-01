@@ -110,6 +110,7 @@ var flagRules = []linter.FlagRule{
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
+			"cloud-cluster-id",
 			"connect-cluster-id",
 			"destination-bootstrap-server",
 			"destination-api-key",
