@@ -147,16 +147,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	if !isCloud {
 		scope, err = c.parseAndValidateScope(cmd)
 	} else {
-		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			scopeV2, err = c.parseAndValidateScopeV2(cmd, resource)
-
-			// KsqlCluster resource gets added to the scope instead of resource
-			if strings.HasPrefix(resource, "KsqlCluster:") {
-				resource = ""
-			}
-		} else {
-			scopeV2, err = c.parseAndValidateScopeV2(cmd, "")
-		}
+		scopeV2, err = c.parseAndValidateScopeV2(cmd)
 	}
 	if err != nil {
 		return nil, err
@@ -236,7 +227,7 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 		}
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
@@ -304,14 +295,8 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 	return &mds.MdsScope{ClusterName: clusterName}, nil
 }
 
-func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resource string) (*mdsv2alpha1.Scope, error) {
+func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
-	parts := strings.SplitN(resource, ":", 2)
-	if len(parts) != 2 {
-		return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
-	}
-	resourceName := parts[0]
-	resourceValue := parts[1]
 
 	if cmd.Flags().Changed("current-env") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
@@ -352,16 +337,12 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resourc
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+	if cmd.Flags().Changed("ksql-cluster") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
 		if err != nil {
 			return nil, err
 		}
 		scopeV2.Clusters.KsqlCluster = ksqlCluster
-	}
-
-	if resourceName == "KsqlCluster" {
-		scopeV2.Clusters.KsqlCluster = resourceValue
 	}
 
 	if cmd.Flags().Changed("role") {

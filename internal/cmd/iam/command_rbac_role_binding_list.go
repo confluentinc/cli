@@ -91,7 +91,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding listings.")
 		}
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
@@ -306,11 +306,10 @@ func (c *roleBindingCommand) getServiceAccountIdToNameMap() (map[string]string, 
 func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, options *roleBindingOptions) error {
 	scopeV2 := &options.scopeV2
 	role := options.role
-	resource := options.resource
 
 	var principals []string
 	var err error
-	if resource != "" {
+	if cmd.Flags().Changed("resource") {
 		r, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
