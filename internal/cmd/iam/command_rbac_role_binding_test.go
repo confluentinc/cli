@@ -99,7 +99,7 @@ var v2RoleBindingMock = &mdsmock.RoleBindingsIamV2Api{
 					Id:         mdsv2.PtrString("9"),
 					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
 					RoleName:   mdsv2.PtrString("ResourceOwner"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/kafka=lkc-123"),
 				},
 			}}, nil, nil
 	},
