@@ -6,24 +6,22 @@ import (
 	"os"
 	"strings"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
+	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/countrycode"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type command struct {
@@ -178,13 +176,14 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
+		privateAuthorizedClient := c.clientFactory.PrivateJwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fEmailName.Responses["email"].(string),
 			AuthToken:        res.Token,
 			AuthRefreshToken: res.RefreshToken,
 		}
-		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
+		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateAuthorizedClient, client.BaseURL, credentials)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
@@ -197,44 +196,20 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	}
 }
 
-func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
-		return
-	}
-
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
 	if err != nil {
-		log.CliLogger.Warnf("Failed to print free trial announcement: %v", err)
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
-	}
-
-	url, _ := c.Flags().GetString("url")
-
-	var ldClient v1.LaunchDarklyClient
-	switch url {
-	case "https://devel.cpdev.cloud":
-		ldClient = v1.CcloudDevelLaunchDarklyClient
-	case "https://stag.cpdev.cloud":
-		ldClient = v1.CcloudStagLaunchDarklyClient
-	default:
-		ldClient = v1.CcloudProdLaunchDarklyClient
-	}
-
-	var freeTrialPromoCode string
-	if c.isTest {
-		freeTrialPromoCode = testserver.PromoTestCode
-	} else {
-		freeTrialPromoCode = featureflags.Manager.StringVariation("billing.service.signup_promo.promo_code", c.Config.Context(), ldClient, false, "")
 	}
 
 	// try to find free trial promo code
 	hasFreeTrialCode := false
 	freeTrialPromoCodeAmount := int64(0)
-	for _, promoCode := range promoCodes {
-		if promoCode.Code == freeTrialPromoCode {
+	for _, promoCodeClaim := range promoCodeClaims {
+		if promoCodeClaim.GetIsFreeTrialPromoCode() {
 			hasFreeTrialCode = true
-			freeTrialPromoCodeAmount = promoCode.Amount
+			freeTrialPromoCodeAmount = promoCodeClaim.GetAmount()
 			break
 		}
 	}

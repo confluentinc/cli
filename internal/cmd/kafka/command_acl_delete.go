@@ -117,7 +117,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
 		ctx := context.WithValue(context.Background(), kafka.Requester, "delete")
 
-		resp, err := c.Client.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
+		resp, err := c.PrivateClient.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
 		if err != nil {
 			return err
 		}
@@ -128,7 +128,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	if err := c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
+	if err := c.PrivateClient.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
 		return err
 	}
 

@@ -44,7 +44,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check KSQL exists
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.PrivateClient.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -61,7 +61,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := c.Client.KSQL.Delete(context.Background(), req); err != nil {
+	if err := c.PrivateClient.KSQL.Delete(context.Background(), req); err != nil {
 		return err
 	}
 

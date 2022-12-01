@@ -14,22 +14,9 @@ import (
 func (s *CLITestSuite) TestCloudSignup_FreeTrialAnnouncement() {
 	args := fmt.Sprintf("cloud-signup --url=%s -vvv", s.TestBackend.GetCloudUrl())
 
-	s.T().Run("signup only has free trial code", func(tt *testing.T) {
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "onlyFreeTrialCode")
-		defer unsetPaymentAndPromoEnvs()
-
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(
-			[]bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\ny\ny\ny\n"))},
-			[]bincover.PostCmdFunc{})
-
-		output := runCommand(tt, testBin, []string{}, args, 0, covCollectorOptions...)
-		require.Contains(tt, output, errors.CloudSignUpMsg)
-		require.Contains(tt, output, fmt.Sprintf(errors.FreeTrialSignUpMsg, 400.00))
-	})
-
 	s.T().Run("signup has multiple codes including free trial code", func(tt *testing.T) {
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "multiCodes")
-		defer unsetPaymentAndPromoEnvs()
+		os.Setenv("IS_ON_FREE_TRIAL", "true")
+		defer unsetFreeTrialEnv()
 
 		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(
 			[]bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("test-signup@confluent.io\nMiles\nTodzo\nUS\ny\nConfluent\nPa$$word12\ny\ny\ny\n"))},

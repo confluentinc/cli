@@ -97,6 +97,6 @@ func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, er
 		return []*schedv1.TopicDescription{}, err
 	}
 
-	resp, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
+	resp, err := c.PrivateClient.Kafka.ListTopics(context.Background(), cluster)
 	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
 }

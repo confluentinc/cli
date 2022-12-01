@@ -59,7 +59,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		user := &orgv1.User{ResourceId: invitation.User.GetId()}
 
 		var firstName, lastName string
-		if user, err = c.Client.User.Describe(context.Background(), user); err == nil {
+		if user, err = c.PrivateClient.User.Describe(context.Background(), user); err == nil {
 			firstName = user.FirstName
 			lastName = user.LastName
 		}
