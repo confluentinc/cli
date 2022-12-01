@@ -44,8 +44,7 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 	}
 
 	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
-
-	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+	if err := c.PrivateClient.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
 		return err
 	}
 

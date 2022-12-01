@@ -31,7 +31,7 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 	cloud, _ := cmd.Flags().GetString("cloud")
 
-	regions, err := kafka.ListRegions(c.Client, cloud)
+	regions, err := kafka.ListRegions(c.PrivateClient, cloud)
 	if err != nil {
 		return err
 	}

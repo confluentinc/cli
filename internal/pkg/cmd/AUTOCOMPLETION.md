@@ -17,7 +17,7 @@ pcmd.NewValidArgsFunction(func(cmd *cobra.Command, args []string) []string {
         return nil
     }
 
-    return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.Client)
+    return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.PrivateClient)
 })
 ```
 
@@ -30,6 +30,6 @@ pcmd.RegisterFlagCompletionFunc(cmd, "api-key", func(cmd *cobra.Command, args []
         return nil
     }
 
-    return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.Client)
+    return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.PrivateClient)
 })
 ```
