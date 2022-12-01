@@ -92,7 +92,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
 			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
+			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding listings.")
 		}
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
