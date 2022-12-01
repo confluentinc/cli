@@ -6,6 +6,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -42,7 +43,7 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 	cfg := v1.AuthenticatedCloudConfigMock()
 
 	if configured {
-		cfg.Context().State.Auth.Organization.AuditLog = &orgv1.AuditLog{
+		cfg.Context().State.Auth.Organization.AuditLog = &ccloudv1.AuditLog{
 			ClusterId:        "lkc-ab123",
 			AccountId:        "env-zy987",
 			ServiceAccountId: 12345,

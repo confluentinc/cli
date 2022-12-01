@@ -11,6 +11,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -454,7 +455,7 @@ func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName,
 	return true
 }
 
-func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) *orgv1.Account {
+func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *ccloudv1.Account {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
 			return env
