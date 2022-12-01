@@ -62,5 +62,7 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	return output.DescribeObject(cmd, convertLagToStruct(lagGetResp), lagFields, lagGetHumanRenames, lagGetStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(convertLagToStruct(lagGetResp))
+	return table.Print()
 }

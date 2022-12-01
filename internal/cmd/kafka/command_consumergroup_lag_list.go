@@ -34,26 +34,19 @@ func (c *lagCommand) newListCommand() *cobra.Command {
 }
 
 func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
 	if err != nil {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(lkc, consumerGroupId)
+	lagSummaryResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(lkc, args[0])
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, lagFields, lagListHumanLabels, lagListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, lagData := range lagSummaryResp.Data {
-		outputWriter.AddElement(convertLagToStruct(lagData))
+		list.Add(convertLagToStruct(lagData))
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

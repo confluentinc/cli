@@ -101,7 +101,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
@@ -154,11 +154,14 @@ func (suite *ExporterTestSuite) TestDescribeExporter() {
 	params := apiMock.GetExporterInfoCalls()[0]
 	req.Equal(params.Name, exporterName)
 
-	req.Equal("+--------------------------------+-------------+\n"+
-		"| Name                           | my_exporter |\n| Subjects                       | Subject     |\n"+
-		"| Subject Format                 | ${subject}  |\n| Context Type                   | AUTO        |\n"+
-		"| Context                        |             |\n| Remote Schema Registry Configs |             |\n"+
-		"+--------------------------------+-------------+\n", output.String())
+	req.Equal("+----------------+-------------+\n"+
+		"| Name           | my_exporter |\n"+
+		"| Subjects       | Subject     |\n"+
+		"| Subject Format | ${subject}  |\n"+
+		"| Context Type   | AUTO        |\n"+
+		"| Context        |             |\n"+
+		"| Config         |             |\n"+
+		"+----------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestStatusExporter() {
@@ -174,10 +177,13 @@ func (suite *ExporterTestSuite) TestStatusExporter() {
 	params := apiMock.GetExporterStatusCalls()[0]
 	req.Equal(params.Name, exporterName)
 
-	req.Equal("+--------------------+-------------+\n"+
-		"| Name               | my_exporter |\n| Exporter State     | PAUSED      |\n"+
-		"| Exporter Offset    |           0 |\n| Exporter Timestamp |           0 |\n"+
-		"| Error Trace        |             |\n+--------------------+-------------+\n", output.String())
+	req.Equal("+-------------+-------------+\n"+
+		"| Name        | my_exporter |\n"+
+		"| State       | PAUSED      |\n"+
+		"| Offset      |           0 |\n"+
+		"| Timestamp   |           0 |\n"+
+		"| Error Trace |             |\n"+
+		"+-------------+-------------+\n", output.String())
 }
 
 func (suite *ExporterTestSuite) TestUpdateExporter() {
@@ -262,7 +268,7 @@ func (suite *ExporterTestSuite) TestResetExporter() {
 
 func (suite *ExporterTestSuite) TestDeleteExporter() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"exporter", "delete", exporterName})
+	cmd.SetArgs([]string{"exporter", "delete", exporterName, "--force"})
 	output := new(bytes.Buffer)
 	cmd.SetOut(output)
 	err := cmd.Execute()
