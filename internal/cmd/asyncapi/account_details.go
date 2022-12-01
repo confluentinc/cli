@@ -65,12 +65,10 @@ func (d *accountDetails) getTags() error {
 	for _, schemaLevelTag := range schemaLevelTags {
 		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
-
 	return nil
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
 	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err

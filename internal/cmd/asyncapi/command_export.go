@@ -135,6 +135,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
+	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.Name)
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
 		log.CliLogger.Log("Protobuf is not supported.")
