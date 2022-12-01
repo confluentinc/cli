@@ -306,6 +306,12 @@ func (c *roleBindingCommand) parseAndValidateScope(cmd *cobra.Command) (*mds.Mds
 
 func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resource string) (*mdsv2alpha1.Scope, error) {
 	scopeV2 := &mdsv2alpha1.Scope{Path: []string{"organization=" + c.Context.GetOrganization().GetResourceId()}}
+	parts := strings.SplitN(resource, ":", 2)
+	if len(parts) != 2 {
+		return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
+	}
+	resourceName := parts[0]
+	resourceValue := parts[1]
 
 	if cmd.Flags().Changed("current-env") {
 		scopeV2.Path = append(scopeV2.Path, "environment="+c.EnvironmentId())
@@ -354,13 +360,8 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command, resourc
 		scopeV2.Clusters.KsqlCluster = ksqlCluster
 	}
 
-	if strings.HasPrefix(resource, "KsqlCluster") {
-		ksqlCluster := strings.SplitN(resource, ":", 2)
-		if len(ksqlCluster) != 2 {
-			return nil, errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
-		}
-
-		scopeV2.Clusters.KsqlCluster = ksqlCluster[1]
+	if resourceName == "KsqlCluster" {
+		scopeV2.Clusters.KsqlCluster = resourceValue
 	}
 
 	if cmd.Flags().Changed("role") {
