@@ -11,8 +11,6 @@ import (
 )
 
 type CCloudClientFactory interface {
-	PrivateAnonHTTPClientFactory(baseURL string) *ccloud.Client
-	PrivateJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client
 	AnonHTTPClientFactory(baseURL string) *ccloudv1.Client
 	JwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloudv1.Client
 }
@@ -25,14 +23,6 @@ func NewCCloudClientFactory(userAgent string) CCloudClientFactory {
 	return &CCloudClientFactoryImpl{
 		UserAgent: userAgent,
 	}
-}
-
-func (c *CCloudClientFactoryImpl) PrivateAnonHTTPClientFactory(baseURL string) *ccloud.Client {
-	return ccloud.NewClient(&ccloud.Params{BaseURL: baseURL, HttpClient: ccloud.BaseClient, Logger: log.CliLogger, UserAgent: c.UserAgent})
-}
-
-func (c *CCloudClientFactoryImpl) PrivateJwtHTTPClientFactory(ctx context.Context, jwt string, baseURL string) *ccloud.Client {
-	return ccloud.NewClientWithJWT(ctx, jwt, &ccloud.Params{BaseURL: baseURL, Logger: log.CliLogger, UserAgent: c.UserAgent})
 }
 
 func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloudv1.Client {

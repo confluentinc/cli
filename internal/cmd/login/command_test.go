@@ -21,12 +21,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 
@@ -60,21 +56,21 @@ var (
 		Username: envUser,
 		Password: envPassword,
 	}
-	mockAuth = &sdkMock.Auth{
-		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-			return &flowv1.GetMeReply{
-				User: &orgv1.User{
+	mockAuth = &ccloudv1Mock.Auth{
+		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
 					Id:        23,
 					Email:     "",
 					FirstName: "",
 				},
-				Organization: &orgv1.Organization{ResourceId: org1Id},
-				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
-	mockUser                    = &sdkMock.User{}
-	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	mockLoginRealm              = &ccloudv1Mock.LoginRealm{}
+	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -111,7 +107,7 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloud.Client) {
+		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 		},
 	}
 	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
@@ -155,24 +151,24 @@ var (
 
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
-	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
-			return &flowv1.AuthenticateReply{Token: testToken1}, nil
+	auth := &ccloudv1Mock.Auth{
+		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-			return &flowv1.GetMeReply{
-				User: &orgv1.User{
+		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
 					Id:        23,
 					Email:     envUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: org1Id},
-				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
-	user := &sdkMock.User{}
-	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+	loginRealm := &ccloudv1Mock.LoginRealm{}
+	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
@@ -193,9 +189,9 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloud.Client) {},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, cfg := newLoginCmd(auth, loginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -206,25 +202,25 @@ func TestCredentialsOverride(t *testing.T) {
 	req.Equal(pauth.GenerateContextName(envUser, ccloudURL, ""), ctx.Name)
 
 	req.Equal(testToken1, ctx.GetAuthToken())
-	req.Equal(&orgv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.GetUser())
+	req.Equal(&ccloudv1.User{Id: 23, Email: envUser, FirstName: "Cody"}, ctx.GetUser())
 }
 
 func TestOrgIdOverride(t *testing.T) {
 	req := require.New(t)
-	auth := &sdkMock.Auth{
-		UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
-			return &flowv1.GetMeReply{
-				User: &orgv1.User{
+	auth := &ccloudv1Mock.Auth{
+		UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
 					Id:        23,
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: org2Id},
-				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &ccloudv1.Organization{ResourceId: org2Id},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
-	user := &sdkMock.User{}
+	loginRealm := &ccloudv1Mock.LoginRealm{}
 	type test struct {
 		setEnv     bool
 		setDefault bool
@@ -252,7 +248,7 @@ func TestOrgIdOverride(t *testing.T) {
 				}
 			},
 		}
-		loginCmd, cfg := newLoginCmd(auth, user, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, loginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
 		output, err := pcmd.ExecuteCommand(loginCmd)
 		req.NoError(err)
@@ -263,7 +259,7 @@ func TestOrgIdOverride(t *testing.T) {
 		req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
 
 		req.Equal(testToken2, ctx.GetAuthToken())
-		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
+		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		verifyLoggedInState(t, cfg, true, org2Id)
 	}
 }
@@ -271,27 +267,27 @@ func TestOrgIdOverride(t *testing.T) {
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 	org2 := false
-	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
-			return &flowv1.AuthenticateReply{Token: testToken1}, nil
+	auth := &ccloudv1Mock.Auth{
+		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
+		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
 			org := org1Id
 			if org2 {
 				org = org2Id
 			}
-			return &flowv1.GetMeReply{
-				User: &orgv1.User{
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
 					Id:        23,
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: org},
-				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &ccloudv1.Organization{ResourceId: org},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
-	user := &sdkMock.User{}
+	loginRealm := &ccloudv1Mock.LoginRealm{}
 
 	suite := []struct {
 		isCloud bool
@@ -328,7 +324,7 @@ func TestLoginSuccess(t *testing.T) {
 			org2 = s.orgId == org2Id
 			s.args = append(s.args, "--organization-id="+s.orgId)
 		}
-		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, loginRealm, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -401,7 +397,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			loginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -438,7 +434,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				SetCloudClientFunc: func(_ *ccloud.Client) {},
+				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 			}
 			if tt.setNetrcUser {
 				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -465,7 +461,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			}
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
 			var loginArgs []string
 			if !tt.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
@@ -499,7 +495,7 @@ func TestPromptLoginFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
@@ -531,10 +527,10 @@ func TestPromptLoginFlag(t *testing.T) {
 						return wrongCreds, nil
 					}
 				},
-				SetCloudClientFunc: func(arg0 *ccloud.Client) {
+				SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 				},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUser, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !tt.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
@@ -553,7 +549,7 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
@@ -571,15 +567,15 @@ func TestLoginFail(t *testing.T) {
 		},
 		GetCloudCredentialsFromPromptFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
-				return nil, &ccloud.InvalidLoginError{}
+				return nil, &ccloudv1.InvalidLoginError{}
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloud.Client) {},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUser, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
-	req.Equal(new(ccloud.InvalidLoginError), err)
+	req.Equal(new(ccloudv1.InvalidLoginError), err)
 }
 
 func Test_SelfSignedCerts(t *testing.T) {
@@ -749,23 +745,23 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
-	auth := &sdkMock.Auth{
-		LoginFunc: func(_ context.Context, _ *flowv1.AuthenticateRequest) (*flowv1.AuthenticateReply, error) {
-			return &flowv1.AuthenticateReply{Token: testToken1}, nil
+	auth := &ccloudv1Mock.Auth{
+		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-			return &flowv1.GetMeReply{
-				User: &orgv1.User{
+		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.GetMeReply{
+				User: &ccloudv1.User{
 					Id:        23,
 					Email:     promptUser,
 					FirstName: "Cody",
 				},
-				Organization: &orgv1.Organization{ResourceId: org1Id},
-				Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+				Organization: &ccloudv1.Organization{ResourceId: org1Id},
+				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
 		},
 	}
-	user := &sdkMock.User{}
+	loginRealm := &ccloudv1Mock.LoginRealm{}
 
 	suite := []struct {
 		isCloud bool
@@ -798,7 +794,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, user, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, loginRealm, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -899,7 +895,7 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
+func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
@@ -918,16 +914,9 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		}
 	}
 	ccloudClientFactory := &cliMock.CCloudClientFactory{
-		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloud.Client{Params: &ccloud.Params{HttpClient: new(http.Client)}, Auth: auth, User: user}
-		},
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}}
-		},
-		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-			return &ccloud.Client{Auth: auth, User: user}
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, LoginRealm: loginRealm}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
@@ -935,7 +924,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil
 				},
-			}}
+			}, Auth: auth, LoginRealm: loginRealm}
 		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
@@ -943,7 +932,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.PrivateAnonHTTPClientFactory(ccloudURL), ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
@@ -974,7 +963,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
-		req.Equal(&orgv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
+		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		req.Equal(orgResourceId, ctx.GetOrganization().GetResourceId())
 		req.Equal(orgResourceId, ctx.Config.GetLastUsedOrgId())
 	} else {

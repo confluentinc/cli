@@ -6,9 +6,6 @@ import (
 	"os"
 	"strings"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -55,17 +52,17 @@ func (c *command) cloudSignupRunE(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client := ccloud.NewClient(&ccloud.Params{
+	client := ccloudv1.NewClient(&ccloudv1.Params{
 		BaseURL:    url,
 		UserAgent:  c.userAgent,
-		HttpClient: ccloud.BaseClient,
+		HttpClient: ccloudv1.BaseClient,
 		Logger:     log.CliLogger,
 	})
 
 	return c.signup(cmd, form.NewPrompt(os.Stdin), client)
 }
 
-func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.Client) error {
+func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloudv1.Client) error {
 	utils.Println(cmd, "Sign up for Confluent Cloud. Use Ctrl-C to quit at any time.")
 	fNameCompanyEmail := form.New(
 		form.Field{ID: "name", Prompt: "Full name"},
@@ -113,16 +110,16 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		return err
 	}
 
-	req := &orgv1.SignupRequest{
-		Organization: &orgv1.Organization{
+	req := &ccloudv1.SignupRequest{
+		Organization: &ccloudv1.Organization{
 			Name: fNameCompanyEmail.Responses["company"].(string),
-			Plan: &orgv1.Plan{AcceptTos: &types.BoolValue{Value: fPasswordTosPrivacy.Responses["tos"].(bool)}},
+			Plan: &ccloudv1.Plan{AcceptTos: &types.BoolValue{Value: fPasswordTosPrivacy.Responses["tos"].(bool)}},
 		},
-		User: &orgv1.User{
+		User: &ccloudv1.User{
 			Email:     fNameCompanyEmail.Responses["email"].(string),
 			FirstName: fNameCompanyEmail.Responses["name"].(string),
 		},
-		Credentials: &orgv1.Credentials{
+		Credentials: &ccloudv1.Credentials{
 			Password: fPasswordTosPrivacy.Responses["password"].(string),
 		},
 		CountryCode: countryCode,
@@ -136,7 +133,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		return err
 
 	}
-	org := signupReply.Organization
+	org := signupReply.GetOrganization()
 
 	utils.Printf(cmd, "A verification email has been sent to %s.\n", fNameCompanyEmail.Responses["email"].(string))
 	v := form.New(form.Field{ID: "verified", Prompt: `Type "y" once verified, or type "n" to resend.`, IsYesOrNo: true})
@@ -147,7 +144,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 		}
 
 		if !v.Responses["verified"].(bool) {
-			if err := client.Signup.SendVerificationEmail(context.Background(), &orgv1.User{Email: fNameCompanyEmail.Responses["email"].(string)}); err != nil {
+			if err := client.Signup.SendVerificationEmail(context.Background(), &ccloudv1.User{Email: fNameCompanyEmail.Responses["email"].(string)}); err != nil {
 				return err
 			}
 
@@ -155,7 +152,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 			continue
 		}
 
-		req := &flowv1.AuthenticateRequest{
+		req := &ccloudv1.AuthenticateRequest{
 			Email:         fNameCompanyEmail.Responses["email"].(string),
 			Password:      fPasswordTosPrivacy.Responses["password"].(string),
 			OrgResourceId: org.ResourceId,
@@ -172,14 +169,13 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Print(cmd, errors.CloudSignUpMsg)
 
-		privateAuthorizedClient := c.clientFactory.PrivateJwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), res.Token, client.BaseURL)
 		credentials := &pauth.Credentials{
 			Username:         fNameCompanyEmail.Responses["email"].(string),
-			AuthToken:        res.Token,
-			AuthRefreshToken: res.RefreshToken,
+			AuthToken:        res.GetToken(),
+			AuthRefreshToken: res.GetRefreshToken(),
 		}
-		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateAuthorizedClient, client.BaseURL, credentials)
+		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
@@ -192,7 +188,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 	}
 }
 
-func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+func (c *command) printFreeTrialAnnouncement(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
 	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
