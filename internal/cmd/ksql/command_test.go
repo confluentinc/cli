@@ -25,7 +25,6 @@ import (
 
 const (
 	ksqlClusterID         = "lksqlc-12345"
-	outputTopicPrefix     = "pksqlc-abcde"
 	serviceAcctID         = int32(123)
 	serviceAcctResourceID = "sa-12345"
 )
