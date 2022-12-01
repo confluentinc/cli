@@ -34,7 +34,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
 			examples.Example{
-				Text: `Grant the role "KsqlAdmin" to the principal "User:u-123456", in the environment "env-12345" and cloud cluster "lkc-123456" for the ksqlDb cluster named "my-ksql-cluster":`,
+				Text: `Grant the role "KsqlAdmin" to the principal "User:u-123456", in the environment "env-12345" and cloud cluster "lkc-123456" for the ksqlDB cluster named "my-ksql-cluster":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role KsqlAdmin --resource KsqlCluster:my-ksql-cluster --environment env-12345 --cloud-cluster-id lkc-123456",
 			},
 		)
