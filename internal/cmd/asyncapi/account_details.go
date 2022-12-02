@@ -7,9 +7,10 @@ import (
 	"strconv"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
-	spec "github.com/swaggest/go-asyncapi/spec-2.4.0"
+	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -17,7 +18,7 @@ import (
 )
 
 type channelDetails struct {
-	currentTopic            *schedv1.TopicDescription
+	currentTopic            kafkarestv3.TopicData
 	currentTopicDescription string
 	currentSubject          string
 	contentType             string
@@ -32,7 +33,7 @@ type channelDetails struct {
 
 type accountDetails struct {
 	cluster        *schedv1.KafkaCluster
-	topics         []*schedv1.TopicDescription
+	topics         []kafkarestv3.TopicData
 	clusterCreds   *v1.APIKeyPair
 	consumer       *ckgo.Consumer
 	broker         string
@@ -48,7 +49,7 @@ const UserAgent = "User-Agent"
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	d.channelDetails.topicLevelTags = nil
-	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
+	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -95,7 +96,7 @@ func (d *accountDetails) getSchemaDetails() error {
 }
 
 func (d *accountDetails) getTopicDescription() error {
-	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
+	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.GetTopicName(), nil)
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -123,7 +124,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	}
 	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.Name))
+	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.GetTopicName()))
 	// Example
 	if d.channelDetails.example != nil {
 		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})

@@ -8,6 +8,11 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 )
 
+const (
+	BadRequestErrorCode              = 40002
+	UnknownTopicOrPartitionErrorCode = 40403
+)
+
 type KafkaRestClient struct {
 	*kafkarestv3.APIClient
 	AuthToken string
