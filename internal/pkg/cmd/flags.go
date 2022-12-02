@@ -6,6 +6,7 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -232,12 +233,12 @@ func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 		}
 
 		cloud, _ := cmd.Flags().GetString("cloud")
-		return autocompleteRegions(command.PrivateClient, cloud)
+		return autocompleteRegions(command.Client, cloud)
 	})
 }
 
-func autocompleteRegions(privateClient *ccloud.Client, cloud string) []string {
-	regions, err := kafka.ListRegions(privateClient, cloud)
+func autocompleteRegions(client *ccloudv1.Client, cloud string) []string {
+	regions, err := kafka.ListRegions(client, cloud)
 	if err != nil {
 		return nil
 	}
