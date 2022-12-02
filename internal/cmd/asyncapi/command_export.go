@@ -101,6 +101,8 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
+				// Reset channel details
+				accountDetails.channelDetails = channelDetails{}
 				accountDetails.channelDetails.currentTopic = topic
 				accountDetails.channelDetails.currentSubject = subject
 				err := c.getChannelDetails(accountDetails, flags)
