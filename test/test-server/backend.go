@@ -20,7 +20,6 @@ var (
 type TestBackend struct {
 	cloud          *httptest.Server
 	v2Api          *httptest.Server
-	kafkaApi       *httptest.Server
 	kafkaRestProxy *httptest.Server
 	mds            *httptest.Server
 	sr             *httptest.Server
@@ -36,12 +35,10 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	backend := &TestBackend{
 		cloud:          newTestCloudServer(cloudRouter, TestCloudURL.Host),
 		v2Api:          newTestCloudServer(v2Router, TestV2CloudURL.Host),
-		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
 		kafkaRestProxy: newTestCloudServer(kafkaRouter.KafkaRP, TestKafkaRestProxyUrl.Host),
 		mds:            httptest.NewServer(mdsRouter),
 		sr:             httptest.NewServer(srRouter),
 	}
-	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
 	return backend
@@ -79,9 +76,6 @@ func (b *TestBackend) Close() {
 	if b.v2Api != nil {
 		b.v2Api.Close()
 	}
-	if b.kafkaApi != nil {
-		b.kafkaApi.Close()
-	}
 	if b.kafkaRestProxy != nil {
 		b.kafkaRestProxy.Close()
 	}
@@ -95,10 +89,6 @@ func (b *TestBackend) Close() {
 
 func (b *TestBackend) GetCloudUrl() string {
 	return b.cloud.URL
-}
-
-func (b *TestBackend) GetKafkaApiUrl() string {
-	return b.kafkaApi.URL
 }
 
 func (b *TestBackend) GetKafkaRestUrl() string {

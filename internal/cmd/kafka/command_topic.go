@@ -1,27 +1,18 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
-)
-
-const (
-	badRequestErrorCode              = 40002
-	unknownTopicOrPartitionErrorCode = 40403
 )
 
 const numPartitionsKey = "num.partitions"
@@ -96,10 +87,10 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 	suggestions := make([]string, len(topics))
 	for i, topic := range topics {
 		var description string
-		if topic.Internal {
+		if topic.GetIsInternal() {
 			description = "Internal"
 		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", topic.Name, description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", topic.GetTopicName(), description)
 	}
 	return suggestions
 }
@@ -132,47 +123,25 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 }
 
 func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return 0, err
-		}
-
-		partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but there was an error
-			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-			if parseErr == nil {
-				if restErr.Code == unknownTopicOrPartitionErrorCode {
-					return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-				}
-			}
-			return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusOK {
-				return 0, errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-
-			return len(partitionsResp.Data), nil
-		}
-	}
-
-	// Fallback to Kafka API
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return 0, err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: topicName}
-	resp, err := c.PrivateClient.Kafka.DescribeTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return 0, err
 	}
 
-	return len(resp.Partitions), nil
+	partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
+	if err != nil {
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+			return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+		}
+		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	return len(partitionsResp.Data), nil
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {

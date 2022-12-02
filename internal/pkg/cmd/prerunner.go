@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -525,10 +526,6 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", "", nil
-	}
-
 	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err

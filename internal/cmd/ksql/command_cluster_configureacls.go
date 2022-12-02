@@ -3,7 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -67,37 +66,32 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Setup ACLs
-	aclsDryRun, err := cmd.Flags().GetBool("dry-run")
+	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
 	}
 
 	bindings := buildACLBindings(serviceAccountId, &cluster, args[1:])
-	if aclsDryRun {
+	if dryRun {
 		return acl.PrintACLs(cmd, bindings)
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
-
-		httpResp, err := kafkaREST.CloudClient.BatchCreateKafkaAcls(kafkaClusterConfig.ID, getCreateAclRequestDataList(bindings))
-		if err != nil && httpResp != nil {
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusNoContent {
-				msg := fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode)
-				return errors.NewErrorWithSuggestions(msg, errors.InternalServerErrorSuggestions)
-			}
-			return nil
-		}
+	kafkaREST, err := c.GetKafkaREST()
+	if err != nil {
+		return err
 	}
 
-	return c.PrivateClient.Kafka.CreateACLs(context.Background(), kafkaCluster, bindings)
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+
+	httpResp, err := kafkaREST.CloudClient.BatchCreateKafkaAcls(kafkaClusterConfig.ID, getCreateAclRequestDataList(bindings))
+	if err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	return acl.PrintACLs(cmd, bindings)
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
