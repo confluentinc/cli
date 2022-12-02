@@ -14,14 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
-func copyMap(inputMap map[string]string) map[string]string {
-	newMap := make(map[string]string)
-	for key, val := range inputMap {
-		newMap[key] = val
-	}
-	return newMap
-}
-
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
 	topicConfigs := make([]cckafkarestv3.ConfigData, len(topicConfigsMap))
 	i := 0
