@@ -334,11 +334,11 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 // Handler for: "api/env_metadata"
 func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*schedv1.CloudMetadata{
+		clouds := []*ccloudv1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "asia-southeast1",
 						Name:          "asia-southeast1 (Singapore)",
@@ -354,7 +354,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "aws",
 				Name: "Amazon Web Services",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "ap-northeast-1",
 						Name:          "ap-northeast-1 (Tokyo)",
@@ -370,7 +370,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "azure",
 				Name: "Azure",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "southeastasia",
 						Name:          "southeastasia (Singapore)",
@@ -379,7 +379,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 				},
 			},
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetEnvironmentMetadataReply{
+		reply, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetEnvironmentMetadataReply{
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
