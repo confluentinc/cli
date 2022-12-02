@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -57,7 +57,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
-				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
 			},
 		),
 	}
@@ -164,22 +164,23 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
-	if err != nil {
-		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+	// the org is not on free trial or there is no promo code claims
+	if len(promoCodeClaims) == 0 {
+		log.CliLogger.Debugf("Skip printing remaining free credit")
 		return
 	}
 
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
-	for _, promoCode := range promoCodes {
-		remainingFreeCredit += promoCode.Balance
+	for _, promoCodeClaim := range promoCodeClaims {
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
@@ -354,7 +355,7 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 			return nil
 		}
 
-		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
+		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
 
@@ -366,46 +367,31 @@ func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range ccloudv2.Hostnames {
-			if strings.Contains(url, hostname) {
-				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
-					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
-				} else {
-					break
-				}
+		if strings.Contains(url, ccloudv2.Hostnames[0]) {
+			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), ccloudv2.Hostnames[0]) {
+				return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
 			}
 		}
 	}
-	protocolRgx, _ := regexp.Compile(`(\w+)://`)
-	portRgx, _ := regexp.Compile(`:(\d+\/?)`)
-
-	protocolMatch := protocolRgx.MatchString(url)
-	portMatch := portRgx.MatchString(url)
 
 	var msg []string
-	if !protocolMatch {
-		if isCCloud {
-			url = "https://" + url
-			msg = append(msg, "https protocol")
-		} else {
-			url = "http://" + url
-			msg = append(msg, "http protocol")
-		}
+	if !regexp.MustCompile(`(\w+)://`).MatchString(url) {
+		url = "https://" + url
+		msg = append(msg, "https protocol")
 	}
-	if !portMatch && !isCCloud {
+	if !isCCloud && !regexp.MustCompile(`:(\d+\/?)`).MatchString(url) {
 		url = url + ":8090"
 		msg = append(msg, "default MDS port 8090")
 	}
 
-	var pattern string
+	var pattern *regexp.Regexp
 	if isCCloud {
-		pattern = `^\w+://[^/ ]+`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+`)
 	} else {
-		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
 	}
-	matched, _ := regexp.MatchString(pattern, url)
-	if !matched {
-		return url, "", errors.New(errors.InvalidLoginURLErrorMsg)
+	if !pattern.MatchString(url) {
+		return "", "", errors.New(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil

@@ -27,7 +27,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume items from the "my_topic" topic and press "Ctrl+C" to exit.`,
+				Text: `Consume items from the "my_topic" topic and press "Ctrl-C" to exit.`,
 				Code: "confluent kafka topic consume -b my_topic",
 			},
 		),
@@ -50,10 +50,10 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
-	cmd.Flags().String("context-name", "", "The Schema Registry context under which to lookup schema ID.")
-	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to lookup schema ID.")
+	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	cmd.Flags().String("api-key", "", "API key.")
 	cmd.Flags().String("api-secret", "", "API key secret.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -155,11 +155,11 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-		srAPIKey, err := cmd.Flags().GetString("sr-api-key")
+		srAPIKey, err := cmd.Flags().GetString("schema-registry-api-key")
 		if err != nil {
 			return err
 		}
-		srAPISecret, err := cmd.Flags().GetString("sr-api-secret")
+		srAPISecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 		if err != nil {
 			return err
 		}
@@ -183,7 +183,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}()
 
 	subject := topicNameStrategy(topic)
-	contextName, err := cmd.Flags().GetString("context-name")
+	contextName, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return err
 	}
