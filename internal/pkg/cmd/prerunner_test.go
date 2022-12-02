@@ -115,7 +115,7 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	featureflags.Init(nil, true)
+	featureflags.Init(nil, true, false)
 
 	tests := map[string]log.Level{
 		"":      log.ERROR,
