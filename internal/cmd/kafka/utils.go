@@ -79,7 +79,7 @@ func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkare
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -99,7 +99,7 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 }
 
 func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.KafkaREST, string, error) {
-	kafkaREST, err := c.AuthenticatedCLICommand.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, "", err
 	}
@@ -107,7 +107,7 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 		return nil, "", errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, "", err
 	}

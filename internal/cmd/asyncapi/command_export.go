@@ -9,6 +9,7 @@ import (
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
@@ -18,10 +19,12 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -38,9 +41,7 @@ type Configs struct {
 }
 
 type confluentBinding struct {
-	Partitions int     `json:"x-partitions"`
-	Replicas   int     `json:"x-replicas"`
-	Configs    Configs `json:"x-configs"`
+	Configs Configs `json:"x-configs"`
 }
 
 type bindings struct {
@@ -98,7 +99,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	messages := make(map[string]spec.Message)
 	for _, topic := range accountDetails.topics {
 		for _, subject := range accountDetails.subjects {
-			if subject != topic.Name+"-value" || strings.HasPrefix(topic.Name, "_") {
+			if subject != topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
 			} else {
@@ -109,7 +110,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
-				messages[msgName(topic.Name)] = spec.Message{
+				messages[msgName(topic.GetTopicName())] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
 				reflector, err = addChannel(reflector, accountDetails.channelDetails)
@@ -135,7 +136,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.Name)
+	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
 		log.CliLogger.Log("Protobuf is not supported.")
@@ -150,7 +151,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.Name, details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
@@ -263,28 +264,35 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *schedv1.TopicDescription) (*bindings, error) {
-	topic := schedv1.Topic{Spec: &schedv1.TopicSpecification{Name: topicDescription.Name}}
-	configs, err := c.PrivateClient.Kafka.ListTopicConfig(context.Background(), cluster, &topic)
+func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get topic configs: %v", err)
+		return nil, err
+	}
+	configs, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
+	if err != nil {
+		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+		if parseErr == nil {
+			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+				return nil, fmt.Errorf(errors.UnknownTopicErrorMsg, topicDescription.GetTopicName())
+			}
+		}
+		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 	var cleanupPolicy string
 	deleteRetentionMsValue := -1
-	for _, config := range configs.Entries {
+	for _, config := range configs.Data {
 		if config.Name == "cleanup.policy" {
-			cleanupPolicy = config.Value
+			cleanupPolicy = config.GetValue()
 		}
 		if config.Name == "delete.retention.ms" {
-			deleteRetentionMsValue, err = strconv.Atoi(config.Value)
+			deleteRetentionMsValue, err = strconv.Atoi(config.GetValue())
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 	var channelBindings interface{} = confluentBinding{
-		Partitions: len(topicDescription.GetPartitions()),
-		Replicas:   len(topicDescription.GetPartitions()[0].Replicas),
 		Configs: Configs{
 			CleanupPolicy:                  cleanupPolicy,
 			DeleteRetentionMs:              deleteRetentionMsValue,
@@ -343,12 +351,19 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return errors.NewErrorWithSuggestions("API key not set for the Kafka cluster",
 			"Set an API key pair for the Kafka cluster using `confluent api-key create --resource <cluster-id>` and then use it with `--kafka-api-key`.")
 	}
-	topics, err := c.PrivateClient.Kafka.ListTopics(context.Background(), cluster)
+
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
-		return fmt.Errorf("failed to get topics: %v", err)
+		return err
 	}
+
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	if err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
 	details.cluster = cluster
-	details.topics = topics
+	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	return nil
 }
@@ -477,13 +492,13 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 
 func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.Reflector, error) {
 	channel := asyncapi.ChannelInfo{
-		Name: details.currentTopic.Name,
+		Name: details.currentTopic.GetTopicName(),
 		BaseChannelItem: &spec.ChannelItem{
 			Description:   details.currentTopicDescription,
 			MapOfAnything: details.mapOfMessageCompat,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(details.currentTopic.Name) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.Name)}},
+				ID:       strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
+				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}},
 				Bindings: &details.bindings.operationBinding,
 				Tags:     details.topicLevelTags,
 			},
