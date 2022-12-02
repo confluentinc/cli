@@ -2,18 +2,17 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
-
-	"fmt"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
