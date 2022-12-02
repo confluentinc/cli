@@ -2,12 +2,14 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -18,11 +20,17 @@ import (
 )
 
 var (
-	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
-	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility",
-		"ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
-	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility",
-		"Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
+	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "FreeSchemasLimit", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
+	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "FreeSchemasLimit": "Free Schemas Limit",
+		"Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
+	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "FreeSchemasLimit": "free_schemas_limit",
+		"Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
+)
+
+const (
+	defaultSchemaLimitAdvanced            = 20000
+	streamGovernancePriceTableProductName = "stream-governance"
+	schemaRegistryPriceTableName          = "SchemaRegistry"
 )
 
 type describeDisplay struct {
@@ -31,6 +39,7 @@ type describeDisplay struct {
 	URL                   string
 	Used                  string
 	Available             string
+	FreeSchemasLimit      string
 	Compatibility         string
 	Mode                  string
 	ServiceProvider       string
@@ -110,17 +119,30 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		return unmarshalErr
 	}
 
+	freeSchemasLimit := int(cluster.MaxSchemas)
+	if cluster.Package == essentialsPackageInternal {
+		org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
+		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
+
+		if err == nil {
+			priceKey := getStreamGovernanceMaxLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
+			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
+		}
+	} else {
+		freeSchemasLimit = defaultSchemaLimitAdvanced
+	}
+
 	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || metricsResponse == nil {
 		log.CliLogger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 0 {
 		numSchemas = "0"
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas))
+		availableSchemas = strconv.Itoa(freeSchemasLimit)
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 1 {
 		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
+		availableSchemas = strconv.Itoa(int(math.Max(float64(freeSchemasLimit-numSchemasInt), 0)))
 	} else {
 		log.CliLogger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""
@@ -136,6 +158,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		Package:               getPackageDisplayName(cluster.Package),
 		Used:                  numSchemas,
 		Available:             availableSchemas,
+		FreeSchemasLimit:      strconv.Itoa(freeSchemasLimit),
 		Compatibility:         compatibility,
 		Mode:                  mode,
 	}
@@ -158,4 +181,8 @@ func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
 	req := metricsv2.NewQueryRequest(aggregations, "ALL", []string{"PT1M/now-2m|m"})
 	req.SetFilter(filter)
 	return *req
+}
+
+func getStreamGovernanceMaxLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
+	return fmt.Sprintf("%s:%s:%s:1:max", serviceProvider, serviceProviderRegion, sgPackage)
 }
