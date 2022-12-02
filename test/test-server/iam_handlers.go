@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -117,10 +118,13 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
+		w.Header().Set("Content-Type", "application/json")
 		switch userId {
 		case "u-1":
-			w.Header().Set("Content-Type", "application/json")
 			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+		case "u-11aaa":
+			err := json.NewEncoder(w).Encode(buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa"))
 			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
@@ -372,6 +376,34 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 			}
 			err = json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for "iam/v2/invitations"
+func handleIamInvitations(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{
+				buildIamInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
+				buildIamInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
+			}}
+			err := json.NewEncoder(w).Encode(invitationList)
+			require.NoError(t, err)
+		case http.MethodPost:
+			req := new(iamv2.IamV2Invitation)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+			if strings.Contains(req.GetEmail(), "user@exists.com") {
+				err = writeUserConflictError(w)
+				require.NoError(t, err)
+			} else {
+				invitation := buildIamInvitation("1", "miles@confluent.io", "user1", "SENT")
+				err = json.NewEncoder(w).Encode(invitation)
+				require.NoError(t, err)
+			}
 		}
 	}
 }

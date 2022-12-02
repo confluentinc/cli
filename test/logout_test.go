@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -15,7 +14,7 @@ import (
 )
 
 var (
-	removedFromNetrcOutput = "Removed credentials for user \"good@user.com\" from netrc file \"/tmp/netrc_test\""
+	removedFromNetrcOutput = `Removed credentials for user "good@user.com" from netrc file "netrc_test"`
 	loggedOutOutput        = fmt.Sprintf(errors.LoggedOutMsg)
 )
 
@@ -71,9 +70,9 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
-		originalNetrc, err := ioutil.ReadFile(tt.input)
+		originalNetrc, err := os.ReadFile(tt.input)
 		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
 		s.NoError(err)
 
 		// run login to provide context, then logout command and check output
@@ -90,9 +89,9 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		s.Contains(output, removedFromNetrcOutput)
 
 		// check netrc file matches wanted file
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(tt.wantFile)
+		wantBytes, err := os.ReadFile(tt.wantFile)
 		s.NoError(err)
 		s.Equal(utils.NormalizeNewLines(string(wantBytes)), utils.NormalizeNewLines(string(got)))
 	}
@@ -138,10 +137,10 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
-		originalNetrc, err := ioutil.ReadFile(tt.input)
+		originalNetrc, err := os.ReadFile(tt.input)
 		s.NoError(err)
 		original := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(original), 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, []byte(original), 0600)
 		s.NoError(err)
 
 		// run login to provide context, then logout command and check output
@@ -150,9 +149,9 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 		s.Contains(output, loggedOutOutput)
 
 		// check netrc file matches wanted file
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(tt.wantFile)
+		wantBytes, err := os.ReadFile(tt.wantFile)
 		s.NoError(err)
 		wantString := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))

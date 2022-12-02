@@ -2,7 +2,6 @@ package kafka
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -42,9 +41,9 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	quotas, resp, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
+	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 
 	w, err := output.NewListOutputWriter(cmd, quotaListFields, quotaHumanFields, quotaStructuredFields)
@@ -68,11 +67,11 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 	return w.Out()
 }
 
-func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principal string) []v1.KafkaQuotasV1ClientQuota {
+func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principalId string) []v1.KafkaQuotasV1ClientQuota {
 	var filteredQuotas []v1.KafkaQuotasV1ClientQuota
 	for _, quota := range quotas {
-		for _, p := range *quota.Principals {
-			if p.Id == principal {
+		for _, principal := range *quota.Spec.Principals {
+			if principal.Id == principalId {
 				filteredQuotas = append(filteredQuotas, quota)
 				// principals can only belong to one quota so break after finding it
 				return filteredQuotas

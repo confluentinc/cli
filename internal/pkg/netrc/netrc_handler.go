@@ -3,7 +3,6 @@ package netrc
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"runtime"
@@ -15,8 +14,7 @@ import (
 )
 
 const (
-	// For integration test
-	NetrcIntegrationTestFile = "/tmp/netrc_test"
+	NetrcIntegrationTestFile = "netrc_test"
 
 	netrcCredentialsPrefix       = "confluent-cli"
 	netrcCredentialStringFormat  = netrcCredentialsPrefix + ":%s:%s"
@@ -90,7 +88,7 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, u
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
-	if err := ioutil.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
+	if err := os.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
 	}
 
@@ -160,7 +158,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		return err
 	}
 	filemode := info.Mode()
-	err = ioutil.WriteFile(filename, buf, filemode)
+	err = os.WriteFile(filename, buf, filemode)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}

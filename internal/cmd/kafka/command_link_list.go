@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -24,13 +25,17 @@ type link struct {
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
+	var linkError string
+	if data.GetLinkError() != "NO_ERROR" {
+		linkError = data.GetLinkError()
+	}
 	return &link{
 		LinkName:             data.LinkName,
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
 		LinkState:            data.GetLinkState(),
-		LinkError:            data.GetLinkError(),
+		LinkError:            linkError,
 		LinkErrorMessage:     data.GetLinkErrorMessage(),
 	}
 }
@@ -74,7 +79,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 
 	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(clusterId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	listFields := getListFields(includeTopics)

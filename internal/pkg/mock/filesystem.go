@@ -37,10 +37,10 @@ type FileSystem struct {
 	RemoveAllFunc func(path string) error
 
 	lockReadDir sync.Mutex
-	ReadDirFunc func(dirname string) ([]os.FileInfo, error)
+	ReadDirFunc func(dirname string) ([]os.DirEntry, error)
 
-	lockTempDir sync.Mutex
-	TempDirFunc func(dir, prefix string) (string, error)
+	lockMkdirTemp sync.Mutex
+	MkdirTempFunc func(dir, prefix string) (string, error)
 
 	lockCopy sync.Mutex
 	CopyFunc func(dst io.Writer, src io.Reader) (int64, error)
@@ -85,7 +85,7 @@ type FileSystem struct {
 		ReadDir []struct {
 			Dirname string
 		}
-		TempDir []struct {
+		MkdirTemp []struct {
 			Dir    string
 			Prefix string
 		}
@@ -385,7 +385,7 @@ func (m *FileSystem) RemoveAllCalls() []struct {
 }
 
 // ReadDir mocks base method by wrapping the associated func.
-func (m *FileSystem) ReadDir(dirname string) ([]os.FileInfo, error) {
+func (m *FileSystem) ReadDir(dirname string) ([]os.DirEntry, error) {
 	m.lockReadDir.Lock()
 	defer m.lockReadDir.Unlock()
 
@@ -422,13 +422,13 @@ func (m *FileSystem) ReadDirCalls() []struct {
 	return m.calls.ReadDir
 }
 
-// TempDir mocks base method by wrapping the associated func.
-func (m *FileSystem) TempDir(dir, prefix string) (string, error) {
-	m.lockTempDir.Lock()
-	defer m.lockTempDir.Unlock()
+// MkdirTemp mocks base method by wrapping the associated func.
+func (m *FileSystem) MkdirTemp(dir, prefix string) (string, error) {
+	m.lockMkdirTemp.Lock()
+	defer m.lockMkdirTemp.Unlock()
 
-	if m.TempDirFunc == nil {
-		panic("mocker: FileSystem.TempDirFunc is nil but FileSystem.TempDir was called.")
+	if m.MkdirTempFunc == nil {
+		panic("mocker: FileSystem.MkdirTempFunc is nil but FileSystem.MkdirTemp was called.")
 	}
 
 	call := struct {
@@ -439,28 +439,28 @@ func (m *FileSystem) TempDir(dir, prefix string) (string, error) {
 		Prefix: prefix,
 	}
 
-	m.calls.TempDir = append(m.calls.TempDir, call)
+	m.calls.MkdirTemp = append(m.calls.MkdirTemp, call)
 
-	return m.TempDirFunc(dir, prefix)
+	return m.MkdirTempFunc(dir, prefix)
 }
 
-// TempDirCalled returns true if TempDir was called at least once.
-func (m *FileSystem) TempDirCalled() bool {
-	m.lockTempDir.Lock()
-	defer m.lockTempDir.Unlock()
+// MkdirTempCalled returns true if MkdirTemp was called at least once.
+func (m *FileSystem) MkdirTempCalled() bool {
+	m.lockMkdirTemp.Lock()
+	defer m.lockMkdirTemp.Unlock()
 
-	return len(m.calls.TempDir) > 0
+	return len(m.calls.MkdirTemp) > 0
 }
 
-// TempDirCalls returns the calls made to TempDir.
-func (m *FileSystem) TempDirCalls() []struct {
+// MkdirTempCalls returns the calls made to MkdirTemp.
+func (m *FileSystem) MkdirTempCalls() []struct {
 	Dir    string
 	Prefix string
 } {
-	m.lockTempDir.Lock()
-	defer m.lockTempDir.Unlock()
+	m.lockMkdirTemp.Lock()
+	defer m.lockMkdirTemp.Unlock()
 
-	return m.calls.TempDir
+	return m.calls.MkdirTemp
 }
 
 // Copy mocks base method by wrapping the associated func.
@@ -685,9 +685,9 @@ func (m *FileSystem) Reset() {
 	m.lockReadDir.Lock()
 	m.calls.ReadDir = nil
 	m.lockReadDir.Unlock()
-	m.lockTempDir.Lock()
-	m.calls.TempDir = nil
-	m.lockTempDir.Unlock()
+	m.lockMkdirTemp.Lock()
+	m.calls.MkdirTemp = nil
+	m.lockMkdirTemp.Unlock()
 	m.lockCopy.Lock()
 	m.calls.Copy = nil
 	m.lockCopy.Unlock()

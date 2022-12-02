@@ -35,7 +35,6 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// login command
-	NoEnvironmentFoundErrorMsg                       = "no environment found for authenticated user"
 	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions      = "Log in to Confluent Cloud with `confluent login`."
 	SSOCredentialsDoNotMatchLoginCredentialsErrorMsg = "expected SSO credentials for %s but got credentials for %s"
@@ -49,6 +48,7 @@ const (
 	AccessClusterRegistrySuggestions = EnsureCPSixPlusSuggestions
 	MustSpecifyOneClusterIDErrorMsg  = "must specify at least one cluster ID"
 	ProtocolNotSupportedErrorMsg     = "protocol %s is currently not supported"
+	UnknownClusterErrorMsg           = `unknown cluster "%s"`
 
 	// connect and connector-catalog commands
 	UnknownConnectorIdErrorMsg         = `unknown connector ID "%s"`
@@ -156,8 +156,9 @@ const (
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	UnknownTopicErrorMsg      = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	UnknownTopicErrorMsg              = `unknown topic "%s"`
+	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
@@ -402,7 +403,7 @@ const (
 	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
-	NoKafkaSelectedSuggestions    = "You must pass `--cluster` or `--resource` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
+	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
@@ -419,6 +420,7 @@ const (
 	KafkaRestCertErrorSuggestions     = `To specify a CA certificate, please use the "ca-cert-path" flag or set "CONFLUENT_PLATFORM_CA_CERT_PATH".`
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
+	KafkaRestProvisioningErrorMsg     = `Kafka REST unavailable: Kafka cluster "%s" is still provisioning`
 	NoClustersFoundErrorMsg           = "no clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration."
 	NeedClientCertAndKeyPathsErrorMsg = `must set "client-cert-path" and "client-key-path" flags together`
@@ -445,9 +447,11 @@ const (
 	ExpiredTokenErrorMsg    = "expired token"
 	ExpiredTokenSuggestions = "Your session has timed out, you need to log in again.\n" +
 		AvoidTimeoutSuggestions
-	InvalidEmailErrorMsg             = `user "%s" not found`
-	InvalidLoginURLErrorMsg          = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
-	InvalidLoginErrorMsg             = "incorrect email or password"
+	InvalidEmailErrorMsg         = `user "%s" not found`
+	InvalidLoginURLErrorMsg      = "invalid URL value, see structure: http(s)://<domain/hostname/ip>:<port>/"
+	InvalidLoginErrorMsg         = "incorrect email, password, or organization ID"
+	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
+		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
 	NoAPIKeySelectedErrorMsg         = `no API key selected for resource "%s"`
 	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
@@ -455,6 +459,7 @@ const (
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
+	FailedToReadOptOutConfirmationErrorMsg   = "failed to read your opt out confirmation"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"testing"
@@ -119,7 +118,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
-			reqBody, _ := ioutil.ReadAll(r.Body)
+			reqBody, _ := io.ReadAll(r.Body)
 			var requestData cpkafkarestv3.CreateTopicRequestData
 			err := json.Unmarshal(reqBody, &requestData)
 			require.NoError(t, err)
@@ -128,12 +127,6 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc
 				return
 			} else if requestData.TopicName == "topic-exceed-limit" {
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Adding the requested number of partitions will exceed 9000 total partitions."))
-				return
-			} else if requestData.PartitionsCount < -1 || requestData.PartitionsCount == 0 { // check partition
-				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Number of partitions must be larger than 0."))
-				return
-			} else if requestData.ReplicationFactor < -1 || requestData.ReplicationFactor == 0 { // check replication factor
-				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Replication factor must be larger than 0."))
 				return
 			} else if requestData.ReplicationFactor > 3 {
 				require.NoError(t, writeErrorResponse(w, http.StatusBadRequest, 40002, "Replication factor: 4 larger than available brokers: 3."))
@@ -408,7 +401,7 @@ func (r KafkaRestProxyRouter) HandleKafkaRPConfigsAlter(t *testing.T) http.Handl
 		case http.MethodPost:
 			if topicName == "topic-exist" || topicName == "topic-exist-rest" {
 				// Parse Alter Args
-				requestBody, err := ioutil.ReadAll(r.Body)
+				requestBody, err := io.ReadAll(r.Body)
 				require.NoError(t, err)
 				var requestData cpkafkarestv3.AlterConfigBatchRequestData
 				err = json.Unmarshal(requestBody, &requestData)
@@ -473,37 +466,40 @@ func (r KafkaRestProxyRouter) HandleKafkaRPLinks(t *testing.T) http.HandlerFunc 
 			w.Header().Set("Content-Type", "application/json")
 			topics := make([]string, 2)
 			topics = append(topics, "link-1-topic-1", "link-1-topic-2")
-			cluster1 := "cluster-1"
-			cluster2 := "cluster-2"
-			linkStateAvailable := "AVAILABLE"
-			linkStateUnavailable := "UNAVAILABLE"
-			linkAuthErr := "AUTHENTICATION_ERROR"
-			linkAuthErrMsg := "Please check your API key and secret."
+			cluster1 := cckafkarestv3.PtrString("cluster-1")
+			cluster2 := cckafkarestv3.PtrString("cluster-2")
+			linkStateAvailable := cckafkarestv3.PtrString("AVAILABLE")
+			linkStateUnavailable := cckafkarestv3.PtrString("UNAVAILABLE")
+			linkAuthErr := cckafkarestv3.PtrString("AUTHENTICATION_ERROR")
+			noErrorErr := cckafkarestv3.PtrString("NO_ERROR")
+			linkAuthErrMsg := cckafkarestv3.PtrString("Please check your API key and secret.")
 			err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseDataList{Data: []cckafkarestv3.ListLinksResponseData{
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-1",
 					LinkId:               "LINKID1",
 					TopicsNames:          &topics,
+					LinkError:            noErrorErr,
 				},
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-2",
 					LinkId:               "LINKID2",
 					TopicsNames:          &topics,
-					LinkState:            &linkStateAvailable,
+					LinkState:            linkStateAvailable,
+					LinkError:            noErrorErr,
 				},
 				{
-					SourceClusterId:      *cckafkarestv3.NewNullableString(&cluster1),
-					DestinationClusterId: *cckafkarestv3.NewNullableString(&cluster2),
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-3",
 					LinkId:               "LINKID3",
 					TopicsNames:          &topics,
-					LinkState:            &linkStateUnavailable,
-					LinkError:            &linkAuthErr,
-					LinkErrorMessage:     *cckafkarestv3.NewNullableString(&linkAuthErrMsg),
+					LinkState:            linkStateUnavailable,
+					LinkError:            linkAuthErr,
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(linkAuthErrMsg),
 				},
 			}})
 			require.NoError(t, err)

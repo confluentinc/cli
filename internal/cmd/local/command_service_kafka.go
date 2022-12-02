@@ -2,7 +2,6 @@ package local
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"sort"
@@ -19,7 +18,7 @@ var (
 	defaultBool        bool
 	defaultInt         int
 	defaultString      string
-	defaultStringArray []string
+	defaultStringSlice []string
 
 	commonFlagUsage = map[string]string{
 		"cloud":        "Consume from Confluent Cloud.",
@@ -59,7 +58,7 @@ var (
 		"max-messages":          defaultInt,
 		"offset":                defaultString,
 		"partition":             defaultInt,
-		"property":              defaultStringArray,
+		"property":              defaultStringSlice,
 		"skip-message-on-error": defaultBool,
 		"timeout-ms":            defaultInt,
 		"value-deserializer":    defaultString,
@@ -98,7 +97,7 @@ var (
 		"metadata-expiry-ms":         defaultInt,
 		"producer-property":          defaultString,
 		"producer.config":            defaultString,
-		"property":                   defaultStringArray,
+		"property":                   defaultStringSlice,
 		"request-required-acks":      defaultString,
 		"request-timeout-ms":         defaultInt,
 		"retry-backoff-ms":           defaultInt,
@@ -196,7 +195,7 @@ func (c *Command) initFlags(mode string) {
 		case string:
 			c.Flags().String(flag, val, usage[flag])
 		case []string:
-			c.Flags().StringArray(flag, val, usage[flag])
+			c.Flags().StringSlice(flag, val, usage[flag])
 		}
 	}
 }
@@ -242,7 +241,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 			return err
 		}
 
-		data, err := ioutil.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(cloudConfigFile)
 		if err != nil {
 			return err
 		}

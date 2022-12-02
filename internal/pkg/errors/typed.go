@@ -95,7 +95,9 @@ type UnconfiguredAPISecretError struct {
 }
 
 func (e *UnconfiguredAPISecretError) Error() string {
-	return e.APIKey
+	errorMsg := fmt.Sprintf(NoAPISecretStoredErrorMsg, e.APIKey, e.ClusterID)
+	suggestionsMsg := fmt.Sprintf(NoAPISecretStoredSuggestions, e.APIKey, e.ClusterID)
+	return NewErrorWithSuggestions(errorMsg, suggestionsMsg).Error()
 }
 
 func (e *UnconfiguredAPISecretError) UserFacingError() error {

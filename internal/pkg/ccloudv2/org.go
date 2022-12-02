@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
@@ -47,9 +48,9 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListEnvironments(pageToken)
+		page, httpResp, err := c.executeListEnvironments(pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

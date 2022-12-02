@@ -3,7 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -75,7 +75,7 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	schema, err := ioutil.ReadFile(schemaPath)
+	schema, err := os.ReadFile(schemaPath)
 	if err != nil {
 		return err
 	}

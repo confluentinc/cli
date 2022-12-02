@@ -82,7 +82,8 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	} else {
 		cluster, err = c.Context.GetKafkaClusterForCommand()
 		if err != nil {
-			return err
+			// Replace the error msg since it suggests flags which are unavailable with this command
+			return errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
 		}
 	}
 

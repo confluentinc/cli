@@ -28,11 +28,13 @@ func newSchemaCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.
 		c.AddCommand(c.newCreateCommand())
 		c.AddCommand(c.newDeleteCommand())
 		c.AddCommand(c.newDescribeCommand())
+		c.AddCommand(c.newListCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.AddCommand(c.newCreateCommandOnPrem())
 		c.AddCommand(c.newDeleteCommandOnPrem())
 		c.AddCommand(c.newDescribeCommandOnPrem())
+		c.AddCommand(c.newListCommandOnPrem())
 	}
 	return c.Command
 }

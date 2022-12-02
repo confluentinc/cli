@@ -25,12 +25,18 @@ import (
 const quotaExceededRegex = ".* is currently limited to .*"
 
 type errorResponseBody struct {
-	Error   []errorDetail `json:"errors"`
+	Errors  []errorDetail `json:"errors"`
+	Error   errorBody     `json:"error"`
 	Message string        `json:"message"`
 }
 
 type errorDetail struct {
-	Detail string `json:"detail"`
+	Detail     string `json:"detail"`
+	Resolution string `json:"resolution"`
+}
+
+type errorBody struct {
+	Message string `json:"message"`
 }
 
 func catchTypedErrors(err error) error {
@@ -106,7 +112,7 @@ func catchCoreV1Errors(err error) error {
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, AvoidTimeoutSuggestions)
+		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
 	case *ccloud.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
 	case *ccloud.ExpiredTokenError:
@@ -153,16 +159,28 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	body, _ := io.ReadAll(r.Body)
 	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
-	if len(resBody.Error) > 0 {
-		detail := resBody.Error[0].Detail
+	if len(resBody.Errors) > 0 {
+		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
 			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
 		} else if detail != "" {
-			return Wrap(err, strings.TrimSuffix(detail, "\n"))
+			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
+				err = NewErrorWithSuggestions(err.Error(), resolution)
+			}
+			return err
 		}
 	}
+
 	if resBody.Message != "" {
 		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
+	}
+
+	if resBody.Error.Message != "" {
+		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
+			return c == rune('.') || c == rune('\n')
+		})
+		return Wrap(err, errorMessage)
 	}
 
 	return err

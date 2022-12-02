@@ -8,11 +8,12 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "promote <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link my-link",
+		Use:   "promote <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
 		Short: "Promote mirror topics.",
 		RunE:  c.promote,
 		Args:  cobra.MinimumNArgs(1),
@@ -67,7 +68,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)

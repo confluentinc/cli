@@ -37,10 +37,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	pluginMap, err := plugin.SearchPath(c.cfg)
-	if err != nil {
-		return err
-	}
+	pluginMap := plugin.SearchPath(c.cfg)
 	output, err := cmd.Flags().GetString("output")
 	if err != nil {
 		return err

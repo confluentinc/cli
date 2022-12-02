@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
@@ -28,9 +29,10 @@ func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccoun
 	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccountExecute(req)
 }
 
-func (c *Client) DeleteIamServiceAccount(id string) (*http.Response, error) {
+func (c *Client) DeleteIamServiceAccount(id string) error {
 	req := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(c.iamApiContext(), id)
-	return c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
+	httpResp, err := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
@@ -49,9 +51,9 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 	done := false
 	pageToken := ""
 	for !done {
-		page, _, err := c.executeListServiceAccounts(pageToken)
+		page, httpResp, err := c.executeListServiceAccounts(pageToken)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 
@@ -73,14 +75,22 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 
 // iam user api calls
 
-func (c *Client) DeleteIamUser(id string) (*http.Response, error) {
+func (c *Client) DeleteIamUser(id string) error {
 	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
-	return c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+	httpResp, err := c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, *http.Response, error) {
+func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, error) {
 	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
-	return c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetIamUser(id string) (iamv2.IamV2User, error) {
+	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
@@ -109,6 +119,54 @@ func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.
 		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+}
+
+// iam user invitation api calls
+
+func (c *Client) CreateIamInvitation(invitation iamv2.IamV2Invitation) (iamv2.IamV2Invitation, error) {
+	req := c.IamClient.InvitationsIamV2Api.CreateIamV2Invitation(c.iamApiContext()).IamV2Invitation(invitation)
+	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.CreateIamV2InvitationExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeleteIamInvitation(id string) error {
+	req := c.IamClient.InvitationsIamV2Api.DeleteIamV2Invitation(c.iamApiContext(), id)
+	httpResp, err := c.IamClient.InvitationsIamV2Api.DeleteIamV2InvitationExecute(req)
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) GetIamInvitation(id string) (iamv2.IamV2Invitation, error) {
+	req := c.IamClient.InvitationsIamV2Api.GetIamV2Invitation(c.iamApiContext(), id)
+	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.GetIamV2InvitationExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListIamInvitations() ([]iamv2.IamV2Invitation, error) {
+	var list []iamv2.IamV2Invitation
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, _, err := c.executeListInvitations(pageToken)
+		if err != nil {
+			return nil, err
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2InvitationList, *http.Response, error) {
+	req := c.IamClient.InvitationsIamV2Api.ListIamV2Invitations(c.iamApiContext()).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.IamClient.InvitationsIamV2Api.ListIamV2InvitationsExecute(req)
 }
 
 func extractIamNextPageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {

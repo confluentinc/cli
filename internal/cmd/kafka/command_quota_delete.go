@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/resource"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -22,9 +23,9 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	resp, err := c.V2Client.DeleteKafkaQuota(args[0])
+	err := c.V2Client.DeleteKafkaQuota(args[0])
 	if err != nil {
-		return errors.CatchCCloudV2Error(err, resp)
+		return err
 	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClientQuota, args[0])
 	return nil

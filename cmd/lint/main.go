@@ -96,6 +96,7 @@ var flagRules = []linter.FlagRule{
 			"message-send-max-retries",
 			"request-required-acks",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"source-bootstrap-server",
 		),
@@ -105,6 +106,7 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"aws-account-id",
 			"azure-subscription-id",
+			"gcp-project-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
@@ -129,6 +131,7 @@ var flagRules = []linter.FlagRule{
 			"request-timeout-ms",
 			"retry-backoff-ms",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"socket-buffer-size",
 			"source-api-key",
@@ -146,6 +149,8 @@ var properNouns = []string{
 	"ACL",
 	"API",
 	"Apache",
+	"Async",
+	"AsyncAPI",
 	"CLI",
 	"Confluent Cloud",
 	"Confluent Platform",
@@ -178,6 +183,7 @@ var properNouns = []string{
 	"Rust",
 	"Scala",
 	"Spring Boot",
+	"Stream Designer",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -190,6 +196,7 @@ var vocabWords = []string{
 	"api",
 	"apikey",
 	"apisecret",
+	"asyncapi",
 	"auth",
 	"avro",
 	"aws",
@@ -219,6 +226,7 @@ var vocabWords = []string{
 	"jwks",
 	"kafka",
 	"ksql",
+	"ksqldb",
 	"lifecycle",
 	"lkc",
 	"lz4",
@@ -234,7 +242,9 @@ var vocabWords = []string{
 	"readwrite",
 	"recv",
 	"sasl",
+	"schemas",
 	"signup",
+	"sql",
 	"sr",
 	"ssl",
 	"sso",
@@ -305,7 +315,7 @@ func main() {
 	for _, cfg := range configs {
 		cfg.IsTest = true
 		cfg.Version = new(pversion.Version)
-	
+
 		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)

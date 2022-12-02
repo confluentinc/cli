@@ -74,7 +74,47 @@ func TestPrintIndexPage(t *testing.T) {
 		"      ",
 	}
 
-	require.Equal(t, expected, printIndexPage(tabs))
+	require.Equal(t, expected, printIndexPage(tabs, false))
+}
+
+func TestPrintRootIndexPage(t *testing.T) {
+	cmd := &cobra.Command{Use: "command"}
+
+	a1 := &cobra.Command{Use: "a"}
+	a2 := &cobra.Command{Use: "a"}
+
+	cmd.AddCommand(a1)
+	cmd.AddCommand(a2)
+
+	a1.AddCommand(&cobra.Command{Use: "b1", Run: doNothingFunc})
+	a2.AddCommand(&cobra.Command{Use: "b2", Run: doNothingFunc})
+
+	tabs := []Tab{
+		{Name: "Tab 1", Command: a1},
+		{Name: "Tab 2", Command: a2},
+	}
+
+	expected := []string{
+		".. _command_a:",
+		"",
+		"command a",
+		"=========",
+		"",
+		".. raw:: html",
+		"",
+		`   <script type="text/javascript">`,
+		"      window.location = 'overview.html';",
+		"   </script>",
+		"",
+		".. toctree::",
+		"   :hidden:",
+		"",
+		"   command_a_b1",
+		"   command_a_b2",
+		"",
+	}
+
+	require.Equal(t, expected, printRootIndexPage(tabs))
 }
 
 func TestFlatten(t *testing.T) {
@@ -94,7 +134,7 @@ func TestPrintHeader(t *testing.T) {
 		"",
 	}
 
-	require.Equal(t, expected, printHeader(cmd))
+	require.Equal(t, expected, printHeader(cmd, false))
 }
 
 func TestPrintTitle_Root(t *testing.T) {
@@ -124,6 +164,19 @@ func TestPrintTitle_NonRoot(t *testing.T) {
 	require.Equal(t, expected, printTitle(b, "-"))
 }
 
+func TestPrintInlineScript(t *testing.T) {
+	expected := []string{
+		".. raw:: html",
+		"",
+		`   <script type="text/javascript">`,
+		"      window.location = 'overview.html';",
+		"   </script>",
+		"",
+	}
+
+	require.Equal(t, expected, printInlineScript())
+}
+
 func TestPrintTableOfContents(t *testing.T) {
 	a1 := &cobra.Command{Use: "a"}
 	a2 := &cobra.Command{Use: "a"}
@@ -141,8 +194,10 @@ func TestPrintTableOfContents(t *testing.T) {
 
 	expected := []string{
 		".. toctree::",
+		"   :maxdepth: 1",
 		"   :hidden:",
 		"",
+		"   Overview <overview>",
 		"   a_b1",
 		"   a_b2",
 		"",
@@ -213,7 +268,12 @@ func TestPrintSphinxRef(t *testing.T) {
 
 func TestPrintRef_Root(t *testing.T) {
 	cmd := &cobra.Command{Use: "command"}
-	require.Equal(t, "command-ref", printRef(cmd))
+	require.Equal(t, "command-ref", printRef(cmd, false))
+}
+
+func TestPrintRef_Overview(t *testing.T) {
+	cmd := &cobra.Command{Use: "command"}
+	require.Equal(t, "command-ref-index", printRef(cmd, true))
 }
 
 func TestPrintRef(t *testing.T) {
@@ -222,7 +282,7 @@ func TestPrintRef(t *testing.T) {
 
 	a.AddCommand(b)
 
-	require.Equal(t, "a_b", printRef(b))
+	require.Equal(t, "a_b", printRef(b, false))
 }
 
 func TestDedent(t *testing.T) {

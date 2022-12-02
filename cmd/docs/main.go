@@ -2,6 +2,8 @@ package main
 
 import (
 	"os"
+	"path/filepath"
+	"regexp"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
@@ -48,7 +50,36 @@ func main() {
 		panic(err)
 	}
 
+	removeUnreleasedDocs()
+
 	if err := os.Setenv("HOME", currentHOME); err != nil {
 		panic(err)
 	}
+}
+
+// removeUnreleasedDocs hides documentation for unreleased features
+func removeUnreleasedDocs() {
+	if err := removeLineFromFile(`\s{3}stream-share/index\n`, filepath.Join("docs", "index.rst")); err != nil {
+		panic(err)
+	}
+
+	if err := removeLineFromFile("\\s{7}:ref:`confluent_stream-share`\\s+.+\\s+\n", filepath.Join("docs", "overview.rst")); err != nil {
+		panic(err)
+	}
+
+	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
+		panic(err)
+	}
+}
+
+func removeLineFromFile(line, file string) error {
+	out, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+
+	re := regexp.MustCompile(line)
+	out = re.ReplaceAll(out, []byte(""))
+
+	return os.WriteFile(file, out, 0644)
 }

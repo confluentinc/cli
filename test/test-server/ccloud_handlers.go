@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -491,6 +490,24 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			Storage:           123,
 			Endpoint:          "SASL_SSL://ksql-endpoint",
 		}
+		ksqlCluster3 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-v80wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1111aaa",
+			OutputTopicPrefix: "pksqlc-2222aaa",
+			Name:              "ksql-cluster-name-2222bbb",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
+		ksqlCluster4 := &schedv1.KSQLCluster{
+			Id:                "lksqlc-a90wnz",
+			AccountId:         "25",
+			KafkaClusterId:    "lkc-1234abc",
+			OutputTopicPrefix: "pksqlc-1234a",
+			Name:              "ksqlDB_cluster_name",
+			Storage:           123,
+			Endpoint:          "SASL_SSL://ksql-endpoint",
+		}
 		ksqlClusterForDetailedProcessingLogFalse := &schedv1.KSQLCluster{
 			Id:                    "lksqlc-woooo",
 			AccountId:             "25",
@@ -519,7 +536,7 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
 			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
-				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2},
+				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2, ksqlCluster3, ksqlCluster4},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
@@ -684,7 +701,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/organizations/{id}/invites"
 func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := ioutil.ReadAll(r.Body)
+		body, _ := io.ReadAll(r.Body)
 		bs := string(body)
 		var res flowv1.SendInviteReply
 		switch {
@@ -720,7 +737,7 @@ func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		} else if r.Method == http.MethodPost {
-			body, _ := ioutil.ReadAll(r.Body)
+			body, _ := io.ReadAll(r.Body)
 			bs := string(body)
 			var res flowv1.CreateInvitationReply
 			if strings.Contains(bs, "user@exists.com") {

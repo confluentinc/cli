@@ -37,6 +37,7 @@ func TestGetServerUrl(t *testing.T) {
 		"https://confluent.cloud":                  "https://api.confluent.cloud",
 		"https://devel.cpdev.cloud":                "https://api.devel.cpdev.cloud",
 		"https://stag.cpdev.cloud":                 "https://api.stag.cpdev.cloud",
+		"https://stag.cpdev.cloud/":                "https://api.stag.cpdev.cloud",
 		"https://healthy-fox.gcp.priv.cpdev.cloud": "https://healthy-fox.gcp.priv.cpdev.cloud/api",
 	}
 

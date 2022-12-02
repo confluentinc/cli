@@ -2,7 +2,6 @@ package test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -21,7 +20,7 @@ import (
 
 var (
 	urlPlaceHolder          = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "netrc_test")
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
@@ -105,7 +104,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.AvoidTimeoutSuggestions))
+		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.InvalidLoginErrorSuggestions))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
@@ -215,9 +214,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc")
 	for _, tt := range tests {
 		// store existing credentials in netrc to check that they are not corrupted
-		originalNetrc, err := ioutil.ReadFile(netrcInput)
+		originalNetrc, err := os.ReadFile(netrcInput)
 		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -239,11 +238,11 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
+		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
@@ -282,10 +281,10 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 
 	for _, tt := range tests {
 		// store existing credential + the user credential to be updated
-		originalNetrc, err := ioutil.ReadFile(tt.input)
+		originalNetrc, err := os.ReadFile(tt.input)
 		s.NoError(err)
 		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
+		err = os.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
 		s.NoError(err)
 
 		// run the login command with --save flag and check output
@@ -305,11 +304,11 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(netrc.NetrcIntegrationTestFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
+		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
 		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))

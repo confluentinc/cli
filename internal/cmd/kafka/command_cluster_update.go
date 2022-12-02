@@ -87,12 +87,16 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, httpResp, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
+	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(errors.CatchCCloudV2Error(err, httpResp), "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
+		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
-	return c.outputKafkaClusterDescription(cmd, &updatedCluster)
+	ctx := c.AuthenticatedCLICommand.Context.Config.Context()
+	c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
+
+	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
 func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
