@@ -5,7 +5,6 @@ import (
 	"context"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -134,8 +133,8 @@ func getCommand() *command {
 				Context: &v1.Context{
 					State: &v1.ContextState{
 						Auth: &v1.AuthConfig{
-							User:         &orgv1.User{},
-							Organization: &orgv1.Organization{Id: int32(0)},
+							User:         &ccloudv1.User{},
+							Organization: &ccloudv1.Organization{Id: int32(0)},
 						},
 					},
 				},
