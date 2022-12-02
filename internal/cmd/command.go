@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
@@ -207,9 +207,9 @@ func catchErrors(cmd *cobra.Command) {
 	}
 }
 
-func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloudv1.Client {
 	if cfg.IsCloudLogin() {
-		return ccloudClientFactory.PrivateAnonHTTPClientFactory(pauth.CCloudURL)
+		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
 }
