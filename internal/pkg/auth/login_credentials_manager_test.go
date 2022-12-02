@@ -10,9 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/mock"
@@ -111,7 +110,7 @@ type LoginCredentialsManagerTestSuite struct {
 	suite.Suite
 	require *require.Assertions
 
-	ccloudClient *ccloud.Client
+	ccloudClient *ccloudv1.Client
 	netrcHandler netrc.NetrcHandler
 	prompt       *mock.Prompt
 
@@ -119,17 +118,17 @@ type LoginCredentialsManagerTestSuite struct {
 }
 
 func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
-	params := &ccloud.Params{
+	params := &ccloudv1.Params{
 		BaseURL: "https://devel.cpdev.cloud",
 	}
-	suite.ccloudClient = &ccloud.Client{
+	suite.ccloudClient = &ccloudv1.Client{
 		Params: params,
-		User: &sdkMock.User{
-			LoginRealmFunc: func(ctx context.Context, req *flowv1.GetLoginRealmRequest) (*flowv1.GetLoginRealmReply, error) {
+		LoginRealm: &ccloudv1mock.LoginRealm{
+			LoginRealmFunc: func(ctx context.Context, req *ccloudv1.GetLoginRealmRequest) (*ccloudv1.GetLoginRealmReply, error) {
 				if req.Email == "test+sso@confluent.io" {
-					return &flowv1.GetLoginRealmReply{IsSso: true, Realm: "ccloud-local"}, nil
+					return &ccloudv1.GetLoginRealmReply{IsSso: true, Realm: "ccloud-local"}, nil
 				}
-				return &flowv1.GetLoginRealmReply{IsSso: false, Realm: "ccloud-local"}, nil
+				return &ccloudv1.GetLoginRealmReply{IsSso: false, Realm: "ccloud-local"}, nil
 			},
 		},
 	}
