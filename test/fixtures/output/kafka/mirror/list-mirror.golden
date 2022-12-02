@@ -1,4 +1,4 @@
-  Link Name | Mirror Topic Name | Num Partition | Max Per Partition Mirror Lag | Source Topic Name | Mirror Status | Status Time Ms  
-------------+-------------------+---------------+------------------------------+-------------------+---------------+-----------------
-  link-1    | dest-topic-1      |             3 |                       571428 | src-topic-1       | active        |      111111111  
-  link-2    | dest-topic-2      |             2 |                            0 | src-topic-2       | stopped       |      222222222  
+  Link Name | Mirror Topic Name | Source Topic Name | Mirror Status | Status Time (ms) | Num Partition | Max Per Partition Mirror Lag  
+------------+-------------------+-------------------+---------------+------------------+---------------+-------------------------------
+  link-1    | dest-topic-1      | src-topic-1       | active        |        111111111 |             3 |                       571428  
+  link-2    | dest-topic-2      | src-topic-2       | stopped       |        222222222 |             2 |                            0  

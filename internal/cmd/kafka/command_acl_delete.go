@@ -11,10 +11,13 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -25,6 +28,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclConfigFlags())
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -66,6 +70,25 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		aclCount := 0
+		for _, acl := range acls {
+			aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
+			if err != nil && httpResp != nil {
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			} else if len(aclDataList.Data) == 0 {
+				return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
+			}
+			aclCount += len(aclDataList.Data)
+		}
+
+		promptMsg := errors.DeleteACLConfirmMsg
+		if aclCount > 1 {
+			promptMsg = errors.DeleteACLsConfirmMsg
+		}
+		if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+			return err
+		}
+
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
