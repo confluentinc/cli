@@ -147,9 +147,6 @@ func (c *Config) Load() error {
 		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
 	}
 	err = json.Unmarshal(input, c)
-	if err != nil {
-		return errors.NewCorruptedConfigError(err.Error(), "", c.Filename)
-	}
 	if c.Ver.Compare(ver) < 0 {
 		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, ver)
 	} else if c.Ver.Compare(ver) > 0 {
