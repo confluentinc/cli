@@ -125,7 +125,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
 
 		if err == nil {
-			priceKey := getStreamGovernanceMaxLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
+			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -142,6 +142,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 1 {
 		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
+		// Available number of schemas should not be negative
 		availableSchemas = strconv.Itoa(int(math.Max(float64(freeSchemasLimit-numSchemasInt), 0)))
 	} else {
 		log.CliLogger.Warn("Unexpected results from Metrics API")
@@ -183,6 +184,6 @@ func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
 	return *req
 }
 
-func getStreamGovernanceMaxLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
+func getMaxSchemaLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
 	return fmt.Sprintf("%s:%s:%s:1:max", serviceProvider, serviceProviderRegion, sgPackage)
 }
