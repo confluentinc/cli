@@ -23,7 +23,7 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (c *cobra.Command, out
 	root.SetOut(buf)
 	root.SetArgs(args)
 
-	featureflags.Init(nil, true)
+	featureflags.Init(nil, true, false)
 
 	c, err = root.ExecuteC()
 
