@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -187,14 +186,6 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			}
 		}
 	}
-}
-
-func buildPrivateCcloudMockClient() *ccloud.Client {
-	client := pmock.NewPrivateClientMock()
-	client.Account = &mock.Account{ListFunc: func(ctx context.Context, account *orgv1.Account) ([]*orgv1.Account, error) {
-		return []*orgv1.Account{{Id: apiEnvironment}}, nil
-	}}
-	return client
 }
 
 func buildCcloudMockClient() *ccloudv1.Client {
