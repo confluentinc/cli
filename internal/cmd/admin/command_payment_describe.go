@@ -21,7 +21,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
+	card, err := c.PrivateClient.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
