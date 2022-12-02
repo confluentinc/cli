@@ -59,7 +59,7 @@ type launchDarklyManager struct {
 	version                  *version.Version
 }
 
-func Init(version *version.Version, isTest, isDisabled bool) {
+func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
@@ -90,7 +90,7 @@ func Init(version *version.Version, isTest, isDisabled bool) {
 		ccloudClient:             ccloudClientProvider,
 		version:                  version,
 		timeoutSuggestionPrinted: false,
-		disable:                  disableFeatureFlags,
+		isDisabled:               isDisabledConfig,
 	}
 }
 
@@ -131,7 +131,7 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.Dyna
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{} {
-	if ld.disable {
+	if ld.isDisabled {
 		return defaultVal
 	}
 
