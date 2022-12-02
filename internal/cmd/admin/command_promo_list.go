@@ -6,9 +6,10 @@ import (
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 type humanOut struct {

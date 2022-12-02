@@ -13,6 +13,7 @@ import (
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
@@ -20,6 +21,7 @@ func NewPrivateClientMock() *ccloud.Client {
 	return &ccloud.Client{
 		Auth:           &mock.Auth{},
 		Account:        &mock.Account{},
+		Billing:        &mock.Billing{},
 		Kafka:          &mock.Kafka{},
 		SchemaRegistry: &mock.SchemaRegistry{},
 		Connect:        &mock.Connect{},
