@@ -75,6 +75,11 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
+
+	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
+	exampleSRPriceTable = "SchemaRegistry"
+	exampleSRPriceUnit  = "Schema-Hour"
+	exampleSchemaLimit  = 1000
 )
 
 // Fill API keyStore with default data
@@ -254,10 +259,15 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 		}
 
+		srPrices := map[string]float64{
+			exampleSRPriceKey: exampleSchemaLimit,
+		}
+
 		res := &billingv1.GetPriceTableReply{
 			PriceTable: &billingv1.PriceTable{
 				PriceTable: map[string]*billingv1.UnitPrices{
-					exampleMetric: {Unit: exampleUnit, Prices: prices},
+					exampleMetric:       {Unit: exampleUnit, Prices: prices},
+					exampleSRPriceTable: {Unit: exampleSRPriceUnit, Prices: srPrices},
 				},
 			},
 		}
