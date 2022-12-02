@@ -73,16 +73,17 @@ var (
 type Config struct {
 	*config.BaseConfig
 
-	DisableUpdateCheck bool                     `json:"disable_update_check"`
-	DisableUpdates     bool                     `json:"disable_updates"`
-	DisablePlugins     bool                     `json:"disable_plugins"`
-	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                   `json:"current_context"`
-	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+	DisableUpdateCheck  bool                     `json:"disable_update_check"`
+	DisableUpdates      bool                     `json:"disable_updates"`
+	DisablePlugins      bool                     `json:"disable_plugins"`
+	DisableFeatureFlags bool                     `json:"disable_feature_flags"`
+	NoBrowser           bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms           map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials         map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts            map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates       map[string]*ContextState `json:"context_states,omitempty"`
+	CurrentContext      string                   `json:"current_context"`
+	AnonymousId         string                   `json:"anonymous_id,omitempty"`
 
 	// The following configurations are not persisted between runs
 

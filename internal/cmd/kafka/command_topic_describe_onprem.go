@@ -35,7 +35,12 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe the "my_topic" topic at specified cluster (providing Kafka REST Proxy endpoint).`,
+				Text: `Describe the "my_topic" topic for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic describe my_topic --url http://localhost:8090/kafka",
+			},
+
+			examples.Example{
+				Text: `Describe the "my_topic" topic for the specified cluster (providing Kafka REST Proxy endpoint).`,
 				Code: "confluent kafka topic describe my_topic --url http://localhost:8082",
 			},
 		),

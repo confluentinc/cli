@@ -95,6 +95,7 @@ func (d *accountDetails) getSchemaDetails() error {
 }
 
 func (d *accountDetails) getTopicDescription() error {
+	d.channelDetails.currentTopicDescription = ""
 	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
 	if err != nil {
 		return catchOpenAPIError(err)

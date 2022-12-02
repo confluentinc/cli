@@ -1,11 +1,11 @@
 package dynamicconfig
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
