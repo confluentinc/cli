@@ -1,54 +1,79 @@
 package connect
 
 import (
-	"context"
+	"fmt"
 
-	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 const clusterType = "connect-cluster"
 
 type clusterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
 }
 
-func newClusterCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Short:       "Manage Connect clusters.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &clusterCommand{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
-		prerunner:                     prerunner,
-	}
+	c := new(clusterCommand)
 
-	c.AddCommand(c.newListCommand())
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AddCommand(c.newCreateCommand())
+		c.AddCommand(c.newDeleteCommand())
+		c.AddCommand(c.newDescribeCommand())
+		c.AddCommand(c.newListCommand())
+		c.AddCommand(c.newPauseCommand())
+		c.AddCommand(c.newResumeCommand())
+		c.AddCommand(c.newUpdateCommand())
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AddCommand(c.newListCommandOnPrem())
+	}
 
 	return c.Command
 }
 
-func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
-	opts := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(clusterType)}
-
-	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
-	if err != nil {
-		return print.HandleClusterError(err, response)
+func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
 	}
 
-	return print.PrintCluster(clusterInfos, format)
+	return c.autocompleteConnectors()
+}
+
+func (c *clusterCommand) autocompleteConnectors() []string {
+	connectors, err := c.fetchConnectors()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(connectors))
+	i := 0
+	for _, connector := range connectors {
+		suggestions[i] = fmt.Sprintf("%s\t%s", connector.Id.GetId(), connector.Info.GetName())
+		i++
+	}
+	return suggestions
+}
+
+func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 }

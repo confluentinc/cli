@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -32,6 +33,8 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
+
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -52,6 +55,16 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
+		err = c.checkTopicExists(kafkaREST, kafkaClusterConfig.ID, topicName)
+		if err != nil {
+			return err
+		}
+
+		promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
+		if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
+			return err
+		}
+
 		httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
@@ -83,11 +96,28 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	topic := &schedv1.TopicSpecification{Name: topicName}
-	err = c.Client.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
+	err = c.PrivateClient.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
 	if err != nil {
 		err = errors.CatchClusterNotReadyError(err, cluster.Id)
 		return err
 	}
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
+	return nil
+}
+
+func (c *authenticatedTopicCommand) checkTopicExists(kafkaREST *pcmd.KafkaREST, lkc, name string) error {
+	// Get topic config
+	_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
+	if err != nil && httpResp != nil {
+		// Kafka REST is available, but there was an error
+		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+		if parseErr == nil {
+			if restErr.Code == unknownTopicOrPartitionErrorCode {
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
+			}
+		}
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
 	return nil
 }

@@ -51,16 +51,15 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// *pipeline.state will be deactivating
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		Id:          pipeline.GetId(),
+		Name:        pipeline.Spec.GetDisplayName(),
+		Description: pipeline.Spec.GetDescription(),
+		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+		State:       pipeline.Status.GetState(),
+		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
+		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
+	})
+	return table.Print()
 }

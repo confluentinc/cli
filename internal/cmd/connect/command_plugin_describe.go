@@ -49,12 +49,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputFormat == output.Human.String() {
+	if output.GetFormat(cmd) == output.Human {
 		utils.Println(cmd, "The following are required configs:")
 		utils.Println(cmd, "connector.class : "+args[0])
 		for _, c := range *reply.Configs {
@@ -70,5 +65,5 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
 		}
 	}
-	return output.StructuredOutput(outputFormat, &config)
+	return output.SerializedOutput(cmd, &config)
 }
