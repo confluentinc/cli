@@ -28,7 +28,7 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regions, err := kafka.ListRegions(c.PrivateClient, cloud)
+	regions, err := kafka.ListRegions(c.Client, cloud)
 	if err != nil {
 		return err
 	}

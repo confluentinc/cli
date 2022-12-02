@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
@@ -75,16 +73,16 @@ type LoginCredentialsManager interface {
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
 	// Needed SSO login for non-prod accounts
-	SetCloudClient(client *ccloud.Client)
+	SetCloudClient(client *ccloudv1.Client)
 }
 
 type LoginCredentialsManagerImpl struct {
 	netrcHandler netrc.NetrcHandler
 	prompt       form.Prompt
-	client       *ccloud.Client
+	client       *ccloudv1.Client
 }
 
-func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, client *ccloud.Client) LoginCredentialsManager {
+func NewLoginCredentialsManager(netrcHandler netrc.NetrcHandler, prompt form.Prompt, client *ccloudv1.Client) LoginCredentialsManager {
 	return &LoginCredentialsManagerImpl{
 		netrcHandler: netrcHandler,
 		prompt:       prompt,
@@ -173,7 +171,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
@@ -258,12 +256,12 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
 	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
 	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
-	req := &flowv1.GetLoginRealmRequest{
+	req := &ccloudv1.GetLoginRealmRequest{
 		Email:         email,
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgId,
 	}
-	res, err := h.client.User.LoginRealm(context.Background(), req)
+	res, err := h.client.LoginRealm.LoginRealm(context.Background(), req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()
@@ -317,6 +315,6 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloud.Client) {
+func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
 }
