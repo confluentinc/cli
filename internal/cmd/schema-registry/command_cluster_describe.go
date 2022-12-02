@@ -14,6 +14,7 @@ import (
 
 	"fmt"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -142,7 +143,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 1 {
 		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
-		availableSchemas = strconv.Itoa(freeSchemasLimit - numSchemasInt)
+		availableSchemas = strconv.Itoa(int(math.Max(float64(freeSchemasLimit-numSchemasInt), 0)))
 	} else {
 		log.CliLogger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""
