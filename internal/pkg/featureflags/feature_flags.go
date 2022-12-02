@@ -59,7 +59,7 @@ type launchDarklyManager struct {
 	version                  *version.Version
 }
 
-func Init(version *version.Version, isTest, disableFeatureFlags bool) {
+func Init(version *version.Version, isTest, isDisabled bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
