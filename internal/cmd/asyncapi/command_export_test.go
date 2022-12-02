@@ -217,6 +217,19 @@ func newCmd() (*command, error) {
 							},
 						},
 					},
+					{
+						Name: "topic2",
+						Config: []*schedv1.TopicConfigEntry{
+							{
+								Name:  "cleanup.policy",
+								Value: "delete",
+							},
+							{
+								Name:  "delete.retention.ms",
+								Value: "86400000",
+							},
+						},
+					},
 				}, nil
 			},
 			ListTopicConfigFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, topic *schedv1.Topic) (*schedv1.TopicConfig, error) {
@@ -292,8 +305,10 @@ func TestGetBindings(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
 	topics, _ := c.Client.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
-	_, err = c.getBindings(details.cluster, topics[0])
-	require.NoError(t, err)
+	for _, topic := range topics {
+		_, err = c.getBindings(details.cluster, topic)
+		require.NoError(t, err)
+	}
 }
 
 func TestGetTags(t *testing.T) {

@@ -283,9 +283,17 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 			}
 		}
 	}
+	partitions := 0
+	replicas := 0
+	if topicDescription.GetPartitions() != nil {
+		partitions = len(topicDescription.GetPartitions())
+	}
+	if partitions > 0 {
+		replicas = len(topicDescription.GetPartitions()[0].Replicas)
+	}
 	var channelBindings interface{} = confluentBinding{
-		Partitions: len(topicDescription.GetPartitions()),
-		Replicas:   len(topicDescription.GetPartitions()[0].Replicas),
+		Partitions: partitions,
+		Replicas:   replicas,
 		Configs: Configs{
 			CleanupPolicy:                  cleanupPolicy,
 			DeleteRetentionMs:              deleteRetentionMsValue,
@@ -313,7 +321,7 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription *s
 		messageBinding:   messageBindings,
 		operationBinding: operationBindings,
 	}
-	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
+	if deleteRetentionMsValue != -1 && cleanupPolicy != "" && partitions > 0 && replicas > 0 {
 		bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
 	}
 	return bindings, nil
