@@ -345,24 +345,6 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 	return false, err
 }
 
-/*
-Error: 1 error occurred:
-  - error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
-
-Error: 1 error occurred:
-  - error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
-*/
-func CatchClusterNotReadyError(err error, clusterId string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
-		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
-	}
-	return err
-}
-
 func CatchSchemaNotFoundError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
