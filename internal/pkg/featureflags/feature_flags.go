@@ -54,7 +54,7 @@ type featureFlagManager interface {
 type launchDarklyManager struct {
 	cliClient                *sling.Sling
 	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
-	disable                  bool
+	isDisabled               bool
 	timeoutSuggestionPrinted bool
 	version                  *version.Version
 }
