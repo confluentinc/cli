@@ -1,15 +1,15 @@
 Name: confluent-cli
 Version: %{__version}
 Release: %{__release}%{?dist}
-
 Summary: CLI for Confluent Cloud and Confluent Platform
 Group: Applications/Internet
 License: Confluent License Agreement
 Source0: confluent-cli-%{version}.tar.gz
 URL: http://confluent.io
-BuildRoot: %{_tmppath}/%{name}-%{version}-root
 Vendor: Confluent, Inc.
 Packager: Confluent Packaging <packages@confluent.io>
+
+BuildRoot: %{_tmppath}/%{name}-%{version}-root
 
 %description
 The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
