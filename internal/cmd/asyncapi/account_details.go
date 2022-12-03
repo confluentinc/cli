@@ -47,6 +47,7 @@ const UserAgent = "User-Agent"
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
+	d.channelDetails.topicLevelTags = nil
 	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name)
 	if err != nil {
 		return catchOpenAPIError(err)
@@ -56,6 +57,7 @@ func (d *accountDetails) getTags() error {
 	}
 
 	// Get schema level tags
+	d.channelDetails.schemaLevelTags = nil
 	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return catchOpenAPIError(err)
@@ -63,12 +65,10 @@ func (d *accountDetails) getTags() error {
 	for _, schemaLevelTag := range schemaLevelTags {
 		d.channelDetails.schemaLevelTags = append(d.channelDetails.schemaLevelTags, spec.Tag{Name: schemaLevelTag.TypeName})
 	}
-
 	return nil
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	log.CliLogger.Debugf("Adding operation: %s", d.channelDetails.currentTopic.Name)
 	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
@@ -95,6 +95,7 @@ func (d *accountDetails) getSchemaDetails() error {
 }
 
 func (d *accountDetails) getTopicDescription() error {
+	d.channelDetails.currentTopicDescription = ""
 	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.Name, nil)
 	if err != nil {
 		return catchOpenAPIError(err)

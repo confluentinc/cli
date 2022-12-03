@@ -8,9 +8,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/spf13/cobra"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -137,11 +139,12 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
+	privateClient := c.ccloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateClient, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -164,22 +167,23 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.cfg.IsTest) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
-	if err != nil {
-		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+	// the org is not on free trial or there is no promo code claims
+	if len(promoCodeClaims) == 0 {
+		log.CliLogger.Debugf("Skip printing remaining free credit")
 		return
 	}
 
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
-	for _, promoCode := range promoCodes {
-		remainingFreeCredit += promoCode.Balance
+	for _, promoCodeClaim := range promoCodeClaims {
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
@@ -191,8 +195,8 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 // Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
-	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	c.loginCredentialsManager.SetCloudClient(client)
+	privateClient := c.ccloudClientFactory.PrivateAnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(privateClient)
 
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {

@@ -36,7 +36,7 @@ func (c *ksqlCommand) newDescribeCommand(resource string) *cobra.Command {
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
 	req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: args[0]}
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.PrivateClient.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
