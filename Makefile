@@ -207,7 +207,13 @@ test: test-prep unit-test int-test
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 
-install: apply-patches
+PACKAGE_TITLE=cli
+
+PREFIX=/usr
+BINPATH=$(PREFIX)/bin
+DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
+
+install:
 	rm -rf $(DESTDIR)$(PREFIX)
 	mkdir -p $(DESTDIR)$(PREFIX)
 
