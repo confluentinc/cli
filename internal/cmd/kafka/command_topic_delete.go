@@ -1,15 +1,12 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -45,79 +42,41 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		err = c.checkTopicExists(kafkaREST, kafkaClusterConfig.ID, topicName)
-		if err != nil {
-			return err
-		}
-
-		promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
-		if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
-			return err
-		}
-
-		httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but an error occurred
-			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-			if parseErr == nil {
-				if restErr.Code == unknownTopicOrPartitionErrorCode {
-					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-				}
-			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusNoContent {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Topic successfully deleted
-			utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
-			return nil
-		}
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return err
 	}
 
-	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.TopicSpecification{Name: topicName}
-	err = c.PrivateClient.Kafka.DeleteTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: false})
-	if err != nil {
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
+	// Check if topic exists
+	if _, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName); err != nil {
 		return err
 	}
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
-	return nil
-}
 
-func (c *authenticatedTopicCommand) checkTopicExists(kafkaREST *pcmd.KafkaREST, lkc, name string) error {
-	// Get topic config
-	_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
-	if err != nil && httpResp != nil {
-		// Kafka REST is available, but there was an error
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
+		return err
+	}
+
+	httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
+	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {
-			if restErr.Code == unknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
+			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 			}
 		}
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }
