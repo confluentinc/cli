@@ -710,11 +710,11 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cobraCmd := &cobra.Command{Use: "test"}
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
 	cobraCmd.Flags().Bool("unsafe-trace", false, "")
-	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
+	c := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
-		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
 		require.NoError(t, err)
-		kafkaREST, err := cmd.GetKafkaREST()
+		kafkaREST, err := c.GetKafkaREST()
 		require.NoError(t, err)
 		auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
@@ -722,7 +722,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	})
 	r.Config.Context().State.AuthToken = ""
 	buf := new(bytes.Buffer)
-	cmd.SetOut(buf)
+	c.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
 		mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
@@ -747,9 +747,9 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 			},
 		}
 		r.LoginCredentialsManager = mockLoginCredentialsManager
-		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
 		require.NoError(t, err)
-		kafkaREST, err := cmd.GetKafkaREST()
+		kafkaREST, err := c.GetKafkaREST()
 		require.Error(t, err)
 		require.Nil(t, kafkaREST)
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)

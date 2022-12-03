@@ -525,10 +525,6 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", "", nil
-	}
-
 	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
