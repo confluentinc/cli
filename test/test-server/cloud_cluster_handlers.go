@@ -57,7 +57,7 @@ func (c *CloudRouter) HandleCluster(t *testing.T) http.HandlerFunc {
 		case "lkc-describe":
 			c.HandleKafkaClusterDescribe(t)(w, r)
 		case "lkc-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api":
-			c.HandleKafkaApiOrRestClusters(t)(w, r)
+			c.HandleKafkaRestClusters(t)(w, r)
 		case "lkc-update-dedicated-expand":
 			c.HandleKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
@@ -86,13 +86,12 @@ func (c *CloudRouter) HandleKafkaClusterDescribe(t *testing.T) http.HandlerFunc 
 	}
 }
 
-func (c *CloudRouter) HandleKafkaApiOrRestClusters(t *testing.T) http.HandlerFunc {
+func (c *CloudRouter) HandleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		clusterId := vars["id"]
 		id := r.URL.Query().Get("id")
 		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.ApiEndpoint = c.kafkaApiUrl
 		if !strings.Contains(clusterId, "kafka-api") {
 			cluster.RestEndpoint = c.kafkaRPUrl
 		}
@@ -116,11 +115,9 @@ func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http
 		}
 		// this is in the body of delete requests
 		require.NotEmpty(t, r.URL.Query().Get("account_id"))
-		// Now return the KafkaCluster with updated ApiEndpoint
-		cluster := getBaseDescribeCluster(id, "kafka-cluster")
-		cluster.ApiEndpoint = c.kafkaApiUrl
+		// Now return the KafkaCluster
 		b, err := utilv1.MarshalJSONToBytes(&schedv1.GetKafkaClusterReply{
-			Cluster: cluster,
+			Cluster: getBaseDescribeCluster(id, "kafka-cluster"),
 		})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
