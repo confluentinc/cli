@@ -144,39 +144,35 @@ func newCmd() (*command, error) {
 	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
-	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
-		return &pcmd.KafkaREST{
-			CloudClient: &ccloudv2.KafkaRestClient{
-				APIClient: &kafkarestv3.APIClient{
-					ConfigsV3Api: &kafkarestv3mock.ConfigsV3Api{
-						ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
-							return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
-						},
-						ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
-							configs := []kafkarestv3.TopicConfigData{
-								{
-									Name:  "cleanup.policy",
-									Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("delete")),
-								},
-								{
-									Name:  "delete.retention.ms",
-									Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("86400000")),
-								},
-							}
-							return kafkarestv3.TopicConfigDataList{Data: configs}, nil, nil
-						},
-					},
-					TopicV3Api: &kafkarestv3mock.TopicV3Api{
-						ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
-							return kafkarestv3.ApiListKafkaTopicsRequest{}
-						},
-						ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
-							return kafkarestv3.TopicDataList{Data: []kafkarestv3.TopicData{{TopicName: "topic1"}}}, nil, nil
-						},
-					},
+	apiClient := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
+	apiClient.ConfigsV3Api = &kafkarestv3mock.ConfigsV3Api{
+		ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
+			return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
+		},
+		ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+			configs := []kafkarestv3.TopicConfigData{
+				{
+					Name:  "cleanup.policy",
+					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("delete")),
 				},
-			},
-		}, nil
+				{
+					Name:  "delete.retention.ms",
+					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("86400000")),
+				},
+			}
+			return kafkarestv3.TopicConfigDataList{Data: configs}, nil, nil
+		},
+	}
+	apiClient.TopicV3Api = &kafkarestv3mock.TopicV3Api{
+		ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
+			return kafkarestv3.ApiListKafkaTopicsRequest{}
+		},
+		ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
+			return kafkarestv3.TopicDataList{Data: []kafkarestv3.TopicData{{TopicName: "topic1"}}}, nil, nil
+		},
+	}
+	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
+		return &pcmd.KafkaREST{CloudClient: &ccloudv2.KafkaRestClient{APIClient: apiClient}}, nil
 	})
 	c.KafkaRESTProvider = &kafkaRestProvider
 	c.PrivateClient = &ccloud.Client{

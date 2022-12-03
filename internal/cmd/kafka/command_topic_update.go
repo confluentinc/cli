@@ -85,7 +85,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	data := toAlterConfigBatchRequestData(configMap)
 	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
-
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {
