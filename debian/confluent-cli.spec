@@ -36,8 +36,6 @@ The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform d
 [ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
 %{__mkdir_p} %{buildroot}
 %{__cp} -R * %{buildroot}
-# The spec file gets included, get rid of it
-%{__rm} %{buildroot}/confluent-cli.spec
 
 %files
 %defattr(-,root,root)
