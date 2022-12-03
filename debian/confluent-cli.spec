@@ -32,10 +32,8 @@ The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform d
 %build
 
 %install
-# Clean out any previous builds not on slash
-[ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
-%{__mkdir_p} %{buildroot}
-%{__cp} -R * %{buildroot}
+rm -rf %{buildroot}
+DESTDIR=%{buildroot} make install
 
 %files
 %defattr(-,root,root)
@@ -45,8 +43,7 @@ The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform d
 /usr/share/doc/cli/
 
 %clean
-#used to cleanup things outside the build area and possibly inside.
-[ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
+rm -rf %{buildroot}
 
 %changelog
 * Fri Jul 24 2020 Confluent Packaging <packages@confluent.io>
