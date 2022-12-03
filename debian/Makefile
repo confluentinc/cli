@@ -52,7 +52,7 @@ install: apply-patches
 	mkdir -p $(DESTDIR)$(DOCPATH)
 	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 
-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(VERSION)/confluent_$(VERSION)_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/2.34.0/confluent_2.34.0_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
