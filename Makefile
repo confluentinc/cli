@@ -206,3 +206,17 @@ test: test-prep unit-test int-test
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+BINPATH=$(DESTDIR)/usr/bin
+DOCPATH=$(DESTDIR)/usr/share/doc/cli
+
+install:
+	rm -rf $(DESTDIR)/usr
+
+	mkdir -p $(BINPATH)
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_linux_amd64 -o $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
+
+	mkdir -p $(DOCPATH)
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	echo $(CLEAN_VERSION) > $(DOCPATH)/version.txt
