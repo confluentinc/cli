@@ -1,7 +1,8 @@
-Summary: CLI for Confluent Cloud and Confluent Platform
 Name: confluent-cli
-Version: ##RPMVERSION##
-Release: ##RPMRELEASE##
+Version: %{__version}
+Release: %{__release}%{?dist}
+
+Summary: CLI for Confluent Cloud and Confluent Platform
 Group: Applications/Internet
 License: Confluent License Agreement
 Source0: confluent-cli-%{version}.tar.gz
