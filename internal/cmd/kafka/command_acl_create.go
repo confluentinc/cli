@@ -1,17 +1,11 @@
 package kafka
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -71,62 +65,28 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings = append(bindings, acl.ACLBinding)
 	}
 
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaRestExists := true
-		for i, binding := range bindings {
-			data := pacl.GetCreateAclRequestData(binding)
-			httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data)
-			if err != nil && httpResp == nil {
-				if i == 0 {
-					// assume Kafka REST is not available, fallback to KafkaAPI
-					kafkaRestExists = false
-					break
-				}
-				// i > 0: unlikely
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return err
+	}
+
+	kafkaREST, err := c.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+
+	for i, binding := range bindings {
+		data := pacl.GetCreateAclRequestData(binding)
+		if httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
+			if i > 0 {
 				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
-
-			if err != nil {
-				if i > 0 {
-					// unlikely
-					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
-				}
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-			}
-
-			if httpResp != nil && httpResp.StatusCode != http.StatusCreated {
-				if i > 0 {
-					_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
-				}
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
-
-		if kafkaRestExists {
-			return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
-		}
-	}
-
-	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if err != nil {
-		return err
-	}
-
-	if err := c.PrivateClient.Kafka.CreateACLs(context.Background(), cluster, bindings); err != nil {
-		return err
 	}
 
 	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
