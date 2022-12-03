@@ -1,5 +1,5 @@
---- cli/Makefile	2022-11-16 08:33:45.000000000 -0800
-+++ debian/Makefile	2022-11-29 15:03:22.000000000 -0800
+--- cli/Makefile	2022-11-30 14:27:47.000000000 -0800
++++ debian/Makefile	2022-12-02 19:24:54.000000000 -0800
 @@ -1,208 +1,146 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -248,7 +248,7 @@
 +	mkdir -p $(DESTDIR)$(DOCPATH)
 +	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 +
-+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_darwin_amd64 -o $(DESTDIR)$(BINPATH)/confluent
++	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/2.34.0/confluent_2.34.0_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
