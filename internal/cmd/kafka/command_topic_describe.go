@@ -1,16 +1,12 @@
 package kafka
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -54,16 +50,9 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	// Get topic config
-	configsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
+	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 	if err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil {
-			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-			}
-		}
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	numPartitions, err := c.getNumPartitions(topicName)

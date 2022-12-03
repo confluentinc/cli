@@ -19,7 +19,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -269,15 +268,9 @@ func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription ka
 	if err != nil {
 		return nil, err
 	}
-	configs, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
 	if err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil {
-			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return nil, fmt.Errorf(errors.UnknownTopicErrorMsg, topicDescription.GetTopicName())
-			}
-		}
-		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return nil, err
 	}
 	var cleanupPolicy string
 	deleteRetentionMsValue := -1

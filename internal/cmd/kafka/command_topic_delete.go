@@ -56,7 +56,8 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.checkTopicExists(kafkaREST, kafkaClusterConfig.ID, topicName); err != nil {
+	// Check if topic exists
+	if _, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName); err != nil {
 		return err
 	}
 
@@ -77,22 +78,5 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
-	return nil
-}
-
-func (c *authenticatedTopicCommand) checkTopicExists(kafkaREST *pcmd.KafkaREST, lkc, name string) error {
-	// Get topic config
-	_, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(lkc, name)
-	if err != nil && httpResp != nil {
-		// Kafka REST is available, but there was an error
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil {
-			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, name)
-			}
-		}
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-	}
-
 	return nil
 }
