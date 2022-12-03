@@ -207,22 +207,16 @@ test: test-prep unit-test int-test
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 
-PACKAGE_TITLE=cli
-
-PREFIX=/usr
-BINPATH=$(PREFIX)/bin
-DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
+BINPATH=$(DESTDIR)/usr/bin
+DOCPATH=$(DESTDIR)/usr/share/doc/cli
 
 install:
-	rm -rf $(DESTDIR)$(PREFIX)
-	mkdir -p $(DESTDIR)$(PREFIX)
+	rm -rf $(DESTDIR)/usr
 
-	mkdir -p $(DESTDIR)$(BINPATH)
-	mkdir -p $(DESTDIR)$(DOCPATH)
-	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+	mkdir -p $(BINPATH)
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_linux_amd64 -o $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
 
-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/2.34.0/confluent_2.34.0_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-
-	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	mkdir -p $(DOCPATH)
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	echo $(CLEAN_VERSION) > $(DOCPATH)/version.txt

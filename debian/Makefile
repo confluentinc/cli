@@ -52,7 +52,7 @@ install: apply-patches
 	mkdir -p $(DESTDIR)$(DOCPATH)
 	mkdir -p $(DESTDIR)$(SYSCONFDIR)
 
-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/2.34.0/confluent_2.34.0_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
@@ -95,52 +95,3 @@ ifneq ($(PACKAGE_TYPE),deb)
 	git reset --hard HEAD
 	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 endif
-
-RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
-
-# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
-# the version since RPM versions don't support non-numeric
-# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
-# Version=0.8.2 Release=0.X.beta
-# where X is the RPM release # of 0.8.2-beta (the prefix 0. forces this to be
-# considered earlier than any 0.8.2 final releases since those will start with
-# Version=0.8.2 Release=1)
-RPM_RELEASE_POSTFIX=$(subst -,,$(subst $(RPM_VERSION),,$(VERSION)))
-ifneq ($(RPM_RELEASE_POSTFIX),)
-	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
-	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
-else
-	RPM_RELEASE_ID=$(REVISION)
-endif
-
-rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-	echo "Building the RPM"
-	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
-	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-	echo
-	echo "================================================="
-	echo "The RPMs have been created and can be found here:"
-	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-	echo "================================================="
-
-# Unfortunately, because of version naming issues and the way rpmbuild expects
-# the paths in the tar file to be named, we need to rearchive the package. So
-# instead of depending on archive, this target just uses the unarchived,
-# installed version to generate a new archive. Note that we always regenerate
-# the symlink because the RPM_VERSION doesn't include all the version info -- it
-# can leave of things like -beta, -rc1, etc.
-RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
-	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
-	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-
-rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
-
-RPM_BUILDING/%:
-	mkdir -p $@
-
-RELEASE_%:
-	echo 0 > $@

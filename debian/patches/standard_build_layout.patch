@@ -1,6 +1,6 @@
---- cli/Makefile	2022-12-02 21:50:09.000000000 -0800
-+++ debian/Makefile	2022-12-02 19:24:54.000000000 -0800
-@@ -1,219 +1,50 @@
+--- cli/Makefile	2022-12-02 22:32:14.000000000 -0800
++++ debian/Makefile	2022-12-02 22:32:14.000000000 -0800
+@@ -1,222 +1,97 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -20,7 +20,8 @@
 -else # build for Darwin
 -	make cli-builder
 -endif
--
++SHELL=/bin/bash
+ 
 -.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
 -cross-build:
 -ifeq ($(GOARCH),arm64)
@@ -37,8 +38,10 @@
 -    else # build for Darwin/amd64
 -		CGO_ENABLED=1 make cli-builder
 -    endif
--endif
--
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
+ endif
+ 
 -.PHONY: cli-builder
 -cli-builder:
 -	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
@@ -61,16 +64,18 @@
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+SHELL=/bin/bash
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
  
 -.PHONY: clean
 -clean:
 -	@for dir in bin dist docs legal release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
-+endif
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
  
 -.PHONY: generate
 -generate:
@@ -103,7 +108,8 @@
 -  # ...and turn them into do-nothing targets
 -  $(eval $(RUN_ARGS):;@:)
 -endif
--
++APPLY_PATCHES?=yes
+ 
 -.PHONY: run
 -run:
 -	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
@@ -187,28 +193,23 @@
 -test-prep:
 -ifdef CI
 -	@echo "mode: atomic" > coverage.txt
--endif
--
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
+ endif
+ 
 -.PHONY: unit-test
 -unit-test:
 -ifdef CI
 -	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
 -	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
--else
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
 -	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
-+
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
-+APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
  
 -.PHONY: int-test
@@ -216,48 +217,57 @@
 -ifdef CI
 -	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
+-else
 -	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
- 
--.PHONY: test
--test: test-prep unit-test int-test
 +all: install
- 
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++
 +archive: install
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).tar.gz && cd $(DESTDIR) && tar -czf $(CURDIR)/$(PACKAGE_NAME).tar.gz $(PREFIX)
 +	rm -f $(CURDIR)/$(PACKAGE_NAME).zip && cd $(DESTDIR) && zip -r $(CURDIR)/$(PACKAGE_NAME).zip $(PREFIX)
- 
--PACKAGE_TITLE=cli
++
 +apply-patches: $(wildcard debian/patches/*)
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-+endif
+ endif
  
--PREFIX=/usr
- BINPATH=$(PREFIX)/bin
+-.PHONY: test
+-test: test-prep unit-test int-test
++BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
- DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
- 
--install:
++DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
++
 +# Install a single binary, specified with $CLI_VERSION, $OS and $ARCH
 +install: apply-patches
- 	rm -rf $(DESTDIR)$(PREFIX)
- 	mkdir -p $(DESTDIR)$(PREFIX)
++	rm -rf $(DESTDIR)$(PREFIX)
++	mkdir -p $(DESTDIR)$(PREFIX)
++
++	mkdir -p $(DESTDIR)$(BINPATH)
++	mkdir -p $(DESTDIR)$(DOCPATH)
++	mkdir -p $(DESTDIR)$(SYSCONFDIR)
++
++	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
++	chmod 755 $(DESTDIR)$(BINPATH)/confluent
  
-@@ -226,3 +57,90 @@
- 
- 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
- 	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+-
+-BINPATH=$(DESTDIR)/usr/bin
+-DOCPATH=$(DESTDIR)/usr/share/doc/cli
+-
+-install:
+-	rm -rf $(DESTDIR)/usr
+-
+-	mkdir -p $(BINPATH)
+-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_linux_amd64 -o $(BINPATH)/confluent
+-	chmod 755 $(BINPATH)/confluent
+-
+-	mkdir -p $(DOCPATH)
+-	cp LICENSE $(DOCPATH)/COPYRIGHT
+-	echo $(CLEAN_VERSION) > $(DOCPATH)/version.txt
++	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
++	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
 +
 +# Install all OS/arch combinations and bundle with packaging/confluent.sh for OS/arch-agnostic TAR/ZIP archives
 +install-all: apply-patches
@@ -296,52 +306,3 @@
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
 +endif
-+
-+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
-+
-+# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
-+# the version since RPM versions don't support non-numeric
-+# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
-+# Version=0.8.2 Release=0.X.beta
-+# where X is the RPM release # of 0.8.2-beta (the prefix 0. forces this to be
-+# considered earlier than any 0.8.2 final releases since those will start with
-+# Version=0.8.2 Release=1)
-+RPM_RELEASE_POSTFIX=$(subst -,,$(subst $(RPM_VERSION),,$(VERSION)))
-+ifneq ($(RPM_RELEASE_POSTFIX),)
-+	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
-+	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
-+else
-+	RPM_RELEASE_ID=$(REVISION)
-+endif
-+
-+rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
-+	echo "Building the RPM"
-+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
-+	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
-+	echo
-+	echo "================================================="
-+	echo "The RPMs have been created and can be found here:"
-+	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
-+	echo "================================================="
-+
-+# Unfortunately, because of version naming issues and the way rpmbuild expects
-+# the paths in the tar file to be named, we need to rearchive the package. So
-+# instead of depending on archive, this target just uses the unarchived,
-+# installed version to generate a new archive. Note that we always regenerate
-+# the symlink because the RPM_VERSION doesn't include all the version info -- it
-+# can leave of things like -beta, -rc1, etc.
-+RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz: rpm-build-area install debian/$(FULL_PACKAGE_TITLE).spec.in RELEASE_$(RPM_VERSION)$(RPM_RELEASE_POSTFIX_UNDERSCORE)
-+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	mkdir $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	cp -R $(DESTDIR)/* $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
-+	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+
-+rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
-+
-+RPM_BUILDING/%:
-+	mkdir -p $@
-+
-+RELEASE_%:
-+	echo 0 > $@
