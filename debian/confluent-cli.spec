@@ -1,7 +1,8 @@
-Summary: Command Line Interface for managing Confluent Platform
 Name: confluent-cli
-Version: ##RPMVERSION##
-Release: ##RPMRELEASE##
+Version: %{__version}
+Release: %{__release}%{?dist}
+
+Summary: CLI for Confluent Cloud and Confluent Platform
 Group: Applications/Internet
 License: Confluent License Agreement
 Source0: confluent-cli-%{version}.tar.gz
@@ -11,7 +12,7 @@ Vendor: Confluent, Inc.
 Packager: Confluent Packaging <packages@confluent.io>
 
 %description
-You can use the Confluent command line interface (CLI) to manage Confluent Platform, including RBAC, secrets, and the ability to deploy a single-node Confluent Platform instance.
+The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
 %define __jar_repack %{nil}
 %define _binaries_in_noarch_packages_terminate_build 0
@@ -35,8 +36,6 @@ You can use the Confluent command line interface (CLI) to manage Confluent Platf
 [ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
 %{__mkdir_p} %{buildroot}
 %{__cp} -R * %{buildroot}
-# The spec file gets included, get rid of it
-%{__rm} %{buildroot}/confluent-cli.spec
 
 %files
 %defattr(-,root,root)
