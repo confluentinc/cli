@@ -21,10 +21,8 @@ endif
 
 ifeq ($(PACKAGE_TYPE),archive)
 PREFIX=$(PACKAGE_NAME)
-SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
 else
 PREFIX=/usr
-SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 endif
 
 all: install
@@ -39,39 +37,32 @@ ifeq ($(APPLY_PATCHES),yes)
 	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
 endif
 
-BINPATH=$(PREFIX)/bin
-LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
-DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
+BINPATH=$(DESTDIR)$(PREFIX)/bin
+LIBPATH=$(DESTDIR)/libexec/$(PACKAGE_TITLE)
+DOCPATH=$(DESTDIR)$(PREFIX)/share/doc/cli
 
-# Install a single binary, specified with $CLI_VERSION, $OS and $ARCH
+# Install a single binary, specified with $CLI_VERSION
 install: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
-	mkdir -p $(DESTDIR)$(PREFIX)
 
-	mkdir -p $(DESTDIR)$(BINPATH)
-	mkdir -p $(DESTDIR)$(DOCPATH)
-	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+	mkdir -p $(BINPATH)
+	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(VERSION)/confluent_$(VERSION)_linux_amd64 -o $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
 
-	curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_linux_amd64 -o $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-
-	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	mkdir -p $(DOCPATH)
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	echo $(VERSION) > $(DOCPATH)/version.txt
 
 # Install all OS/arch combinations and bundle with packaging/confluent.sh for OS/arch-agnostic TAR/ZIP archives
 install-all: apply-patches
 	rm -rf $(DESTDIR)$(PREFIX)
-	mkdir -p $(DESTDIR)$(PREFIX)
 
-	mkdir -p $(DESTDIR)$(BINPATH)
-	mkdir -p $(DESTDIR)$(LIBPATH)
-	mkdir -p $(DESTDIR)$(DOCPATH)
-	mkdir -p $(DESTDIR)$(SYSCONFDIR)
+	mkdir -p $(BINPATH)
+	cp packaging/confluent.sh $(BINPATH)/confluent
+	chmod 755 $(BINPATH)/confluent
 
-	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-	chmod 755 $(DESTDIR)$(BINPATH)/confluent
-
-	cd $(DESTDIR)$(LIBPATH) ; \
+	mkdir -p $(LIBPATH)
+	cd $(LIBPATH) ; \
 	for dir in darwin_amd64 darwin_arm64 linux_amd64 linux_arm64 windows_amd64; do \
 		mkdir -p $${dir} ; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
@@ -80,10 +71,11 @@ install-all: apply-patches
 		chmod 755 $${filepath} ; \
 	done
 
-	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
-	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
+	mkdir -p $(DOCPATH)
+	cp LICENSE $(DOCPATH)/COPYRIGHT
+	echo $(CLI_VERSION) > $(DOCPATH)/version.txt
 
-	chown -R root:root $(DESTDIR)$(PREFIX)
+	chown -R root:root $(PREFIX)
 
 clean:
 	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
