@@ -38,7 +38,6 @@ DESTDIR=%{buildroot} make install
 %files
 %defattr(-,root,root)
 /usr/bin/*
-/usr/libexec/cli/
 %doc
 /usr/share/doc/cli/
 
