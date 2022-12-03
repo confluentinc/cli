@@ -234,6 +234,24 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 				w.Header().Set("Content-Type", "application/json")
 				_, err = io.WriteString(w, string(reply))
 				require.NoError(t, err)
+			} else if topicName == "topic1" {
+				topicConfigList := cckafkarestv3.TopicConfigDataList{
+					Data: []cckafkarestv3.TopicConfigData{
+						{
+							Name:  "cleanup.policy",
+							Value: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("delete")),
+						},
+						{
+							Name:  "delete.retention.ms",
+							Value: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("86400000")),
+						},
+					},
+				}
+				reply, err := json.Marshal(topicConfigList)
+				require.NoError(t, err)
+				w.Header().Set("Content-Type", "application/json")
+				_, err = io.WriteString(w, string(reply))
+				require.NoError(t, err)
 			} else { // if topic not exist
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
