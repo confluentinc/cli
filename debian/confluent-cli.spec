@@ -14,17 +14,6 @@ Packager: Confluent Packaging <packages@confluent.io>
 %description
 The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
-%define __jar_repack %{nil}
-%define _binaries_in_noarch_packages_terminate_build 0
-
-%pre
-
-%post
-
-%preun
-
-%postun
-
 %prep
 
 %setup
@@ -38,8 +27,7 @@ DESTDIR=%{buildroot} make install
 %files
 %defattr(-,root,root)
 /usr/bin/*
-%doc
-/usr/share/doc/cli/
+%doc /usr/share/doc/cli/
 
 %clean
 rm -rf %{buildroot}
