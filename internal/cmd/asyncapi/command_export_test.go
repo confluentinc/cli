@@ -9,6 +9,7 @@ import (
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
@@ -87,7 +88,7 @@ func newCmd() (*command, error) {
 				State: &v1.ContextState{
 					Auth: &v1.AuthConfig{
 						Organization: testserver.RegularOrg,
-						Account:      &orgv1.Account{Id: "env-asyncapi", Name: "asyncapi"},
+						Account:      &ccloudv1.Account{Id: "env-asyncapi", Name: "asyncapi"},
 					},
 					AuthToken: "env-asyncapi",
 				},
@@ -125,13 +126,13 @@ func newCmd() (*command, error) {
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
 	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(c.Command)
-	err := c.Command.Flags().Set("api-key", "ASYNCAPIKEY")
+	c.Command.Flags().String("schema-registry-api-key", "ASYNCAPIKEY", "API Key for schema registry")
+	c.Command.Flags().String("schema-registry-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
+	err := c.Command.Flags().Set("schema-registry-api-key", "ASYNCAPIKEY")
 	if err != nil {
 		return nil, err
 	}
-	err = c.Command.Flags().Set("api-secret", "ASYNCAPISECRET")
+	err = c.Command.Flags().Set("schema-registry-api-secret", "ASYNCAPISECRET")
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +142,11 @@ func newCmd() (*command, error) {
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
 	c.PrivateClient = &ccloud.Client{
+		APIKey: &ccsdkmock.APIKey{
+			GetFunc: func(context.Context, *schedv1.ApiKey) (*schedv1.ApiKey, error) {
+				return &schedv1.ApiKey{Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"}, nil
+			},
+		},
 		Account: &ccsdkmock.Account{
 			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
 				return nil, nil
@@ -250,14 +256,15 @@ func TestGetTopicDescription(t *testing.T) {
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	err = c.getClusterDetails(details)
+	flags := &flags{kafkaApiKey: ""}
+	err = c.getClusterDetails(details, flags)
 	require.NoError(t, err)
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
 	utils.Println(c.Command, "")
 	require.Error(t, err)
@@ -283,7 +290,7 @@ func TestGetChannelDetails(t *testing.T) {
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
 }

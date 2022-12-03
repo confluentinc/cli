@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/cobra"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -38,7 +36,7 @@ func NewDynamicContext(context *v1.Context, privateClient *ccloud.Client, client
 }
 
 // Parse "--environment" and "--cluster" flag values into config struct
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloud.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
@@ -78,8 +76,8 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 
 // getAllEnvironments retrives all environments listed by ccloud v1 client.
 // It also includes the audit-log environment when that's enabled
-func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Account, error) {
-	environments, err := client.Account.List(context.Background(), &orgv1.Account{})
+func (d *DynamicContext) getAllEnvironments(client *ccloudv1.Client) ([]*ccloudv1.Account, error) {
+	environments, err := client.Account.List(context.Background(), &ccloudv1.Account{})
 	if err != nil {
 		return environments, err
 	}
@@ -88,11 +86,11 @@ func (d *DynamicContext) getAllEnvironments(client *ccloud.Client) ([]*orgv1.Acc
 		return environments, nil
 	}
 	auditLogAccountId := d.State.Auth.Organization.GetAuditLog().GetAccountId()
-	auditLogEnvironment, err := client.Account.Get(context.Background(), &orgv1.Account{Id: auditLogAccountId})
+	auditLogEnvironment, err := client.Account.Get(context.Background(), &ccloudv1.Account{Id: auditLogAccountId})
 	return append(environments, auditLogEnvironment), err
 }
 
-func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*orgv1.Account) bool {
+func (d *DynamicContext) verifyEnvironmentId(envId string, environments []*ccloudv1.Account) bool {
 	for _, env := range environments {
 		if env.Id == envId {
 			d.Config.SetOverwrittenAccount(d.GetEnvironment())
@@ -278,6 +276,9 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 }
 
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
+	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
+		return "", "", nil
+	}
 	key, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return "", "", err

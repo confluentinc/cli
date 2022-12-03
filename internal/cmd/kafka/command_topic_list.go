@@ -16,6 +16,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type topicOut struct {
+	Name string `human:"Name" serialized:"name"`
+}
+
 func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -63,32 +67,27 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
+
 			// Kafka REST is available and there was no error
-			outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
-			if err != nil {
-				return err
+			list := output.NewList(cmd)
+			for _, topic := range topicGetResp.Data {
+				list.Add(&topicOut{Name: topic.GetTopicName()})
 			}
-			for _, topicData := range topicGetResp.Data {
-				outputWriter.AddElement(&topicData)
-			}
-			return outputWriter.Out()
+			return list.Print()
 		}
 	}
 
 	// Kafka REST is not available, fall back to KafkaAPI
+	topics, err := c.getTopics()
+	if err != nil {
+		return err
+	}
 
-	resp, err := c.getTopics()
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, topic := range topics {
+		list.Add(&topicOut{Name: topic.GetName()})
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
-	if err != nil {
-		return err
-	}
-	for _, topic := range resp {
-		outputWriter.AddElement(topic)
-	}
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {

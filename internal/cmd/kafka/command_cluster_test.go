@@ -9,6 +9,8 @@ import (
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
@@ -80,7 +82,7 @@ type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
 	kafkaMock       *ccsdkmock.Kafka
-	envMetadataMock *ccsdkmock.EnvironmentMetadata
+	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
 	usageLimits     *ccsdkmock.UsageLimits
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
@@ -115,18 +117,18 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			return nil, nil
 		},
 	}
-	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
-		GetFunc: func(arg0 context.Context) (metadata []*schedv1.CloudMetadata, e error) {
-			cloudMeta := &schedv1.CloudMetadata{
+	suite.envMetadataMock = &ccloudv1mock.EnvironmentMetadata{
+		GetFunc: func(arg0 context.Context) (metadata []*ccloudv1.CloudMetadata, e error) {
+			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            regionId,
 						IsSchedulable: true,
 					},
 				},
 			}
-			return []*schedv1.CloudMetadata{
+			return []*ccloudv1.CloudMetadata{
 				cloudMeta,
 			}, nil
 		},
@@ -186,17 +188,19 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
-	client := &ccloud.Client{
-		Kafka:               suite.kafkaMock,
+	privateClient := &ccloud.Client{
+		Kafka:       suite.kafkaMock,
+		UsageLimits: suite.usageLimits,
+	}
+	client := &ccloudv1.Client{
 		EnvironmentMetadata: suite.envMetadataMock,
-		UsageLimits:         suite.usageLimits,
 	}
 	v2Client := &ccloudv2.Client{
 		AuthToken:     "auth-token",
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(privateClient, client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -254,7 +258,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId})
+	cmd.SetArgs([]string{"delete", clusterId, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
