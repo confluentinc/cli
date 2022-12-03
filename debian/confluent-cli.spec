@@ -14,6 +14,8 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 %description
 The Confluent CLI helps you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
+%global debug_package %{nil}
+
 %prep
 
 %setup
