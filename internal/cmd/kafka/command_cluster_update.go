@@ -191,7 +191,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(ctx context.Context, cku in
 }
 
 func (c *clusterCommand) getUsageLimit(ctx context.Context, cku uint32) (int32, int32, error) {
-	usageReply, err := c.Client.UsageLimits.GetUsageLimits(ctx)
+	usageReply, err := c.PrivateClient.UsageLimits.GetUsageLimits(ctx)
 	if err != nil || usageReply.UsageLimits == nil || len(usageReply.UsageLimits.GetCkuLimits()) == 0 || usageReply.UsageLimits.GetCkuLimits()[cku] == nil {
 		return 0, 0, errors.Wrap(err, "Could not retrieve partition count usage limits. Please try again or contact support.")
 	}

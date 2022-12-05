@@ -39,6 +39,7 @@ const (
 	accessTokens        = "/api/access_tokens"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
+	freeTrialInfo       = "/api/growth/v1/free-trial-info"
 )
 
 type CloudRouter struct {
@@ -83,6 +84,7 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addUsageLimitRoutes(t)
 	c.addJwtTokenRoutes(t)
 	c.addServiceAccountRoutes(t)
+	c.addGrowthRoutes(t)
 }
 
 func (c CloudRouter) addV2AlphaRoutes(t *testing.T) {
@@ -153,4 +155,8 @@ func (c *CloudRouter) addJwtTokenRoutes(t *testing.T) {
 func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
 	c.HandleFunc(serviceAccounts, c.HandleServiceAccounts(t))
 	c.HandleFunc(serviceAccount, c.HandleServiceAccount(t))
+}
+
+func (c *CloudRouter) addGrowthRoutes(t *testing.T) {
+	c.HandleFunc(freeTrialInfo, c.HandleFreeTrialInfo(t))
 }

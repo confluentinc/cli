@@ -284,26 +284,13 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			var res *billingv1.GetPromoCodeClaimsReply
-
 			var tenDollars int64 = 10 * 10000
 
 			// The time is set to noon so that all time zones display the same local time
 			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
 			expiration := &types.Timestamp{Seconds: date.Unix()}
 
-			freeTrialCode := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 PromoTestCode,
-						Amount:               400 * 10000,
-						Balance:              0,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			regularCodes := &billingv1.GetPromoCodeClaimsReply{
+			res := &billingv1.GetPromoCodeClaimsReply{
 				Claims: []*billingv1.PromoCodeClaim{
 					{
 						Code:                 "PROMOCODE1",
@@ -318,19 +305,6 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 						CreditExpirationDate: expiration,
 					},
 				},
-			}
-
-			hasPromoCodeClaims := os.Getenv("HAS_PROMO_CODE_CLAIMS")
-			switch hasPromoCodeClaims {
-			case "false":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-			case "onlyFreeTrialCode":
-				res = freeTrialCode
-			case "multiCodes":
-				res = &billingv1.GetPromoCodeClaimsReply{}
-				res.Claims = append(freeTrialCode.Claims, regularCodes.Claims...)
-			default:
-				res = regularCodes
 			}
 
 			listReply, err := utilv1.MarshalJSONToBytes(res)

@@ -41,7 +41,7 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, user := range users {
-		userProfile, err := c.Client.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
+		userProfile, err := c.PrivateClient.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
 		if err != nil {
 			return err
 		}
