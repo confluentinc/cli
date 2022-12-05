@@ -8,10 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	sdkMock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
@@ -50,7 +48,7 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -96,11 +94,11 @@ func getPreRunBase() *pcmd.PreRun {
 			Out:    os.Stdout,
 		},
 		CCloudClientFactory: &cliMock.CCloudClientFactory{
-			PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-				return &ccloud.Client{}
+			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+				return &ccloudv1.Client{}
 			},
-			PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-				return &ccloud.Client{}
+			AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+				return &ccloudv1.Client{}
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
@@ -243,7 +241,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -377,23 +375,23 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r := getPreRunBase()
 			r.Config = cfg
 			r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-				PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-					return &ccloud.Client{Auth: &sdkMock.Auth{
-						UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
-							return &flowv1.GetMeReply{
-								User: &orgv1.User{
+				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+					return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+							return &ccloudv1.GetMeReply{
+								User: &ccloudv1.User{
 									Id:        23,
 									Email:     "",
 									FirstName: "",
 								},
-								Organization: &orgv1.Organization{ResourceId: "o-123"},
-								Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
+								Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
 						},
 					}}
 				},
-				PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-					return &ccloud.Client{}
+				AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+					return &ccloudv1.Client{}
 				},
 			}
 			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
@@ -409,7 +407,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var ccloudNetrcCalled bool
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
-			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+			r.LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
@@ -486,23 +484,23 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	r := getPreRunBase()
 	r.CCloudClientFactory = &cliMock.CCloudClientFactory{
-		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
-			return &ccloud.Client{Auth: &sdkMock.Auth{
-				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
-					return &flowv1.GetMeReply{
-						User: &orgv1.User{
+		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+					return &ccloudv1.GetMeReply{
+						User: &ccloudv1.User{
 							Id:        23,
 							Email:     "",
 							FirstName: "",
 						},
-						Organization: &orgv1.Organization{ResourceId: "o-123"},
-						Accounts:     []*orgv1.Account{{Id: "a-595", Name: "Default"}},
+						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
+						Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 					}, nil
 				},
 			}}
 		},
-		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
-			return &ccloud.Client{}
+		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
+			return &ccloudv1.Client{}
 		},
 	}
 	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
@@ -511,7 +509,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 			return validAuthToken, "", nil
 		},
 	}
-	r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	r.LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCredentialsFromNetrcFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcFunc,
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -567,7 +565,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 
 			var envVarCalled bool
 			var netrcCalled bool
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						envVarCalled = true
@@ -712,11 +710,11 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cobraCmd := &cobra.Command{Use: "test"}
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
 	cobraCmd.Flags().Bool("unsafe-trace", false, "")
-	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
+	c := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
-		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
 		require.NoError(t, err)
-		kafkaREST, err := cmd.GetKafkaREST()
+		kafkaREST, err := c.GetKafkaREST()
 		require.NoError(t, err)
 		auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
@@ -724,9 +722,9 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	})
 	r.Config.Context().State.AuthToken = ""
 	buf := new(bytes.Buffer)
-	cmd.SetOut(buf)
+	c.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
-		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+		mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
@@ -749,9 +747,9 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 			},
 		}
 		r.LoginCredentialsManager = mockLoginCredentialsManager
-		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
+		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
 		require.NoError(t, err)
-		kafkaREST, err := cmd.GetKafkaREST()
+		kafkaREST, err := c.GetKafkaREST()
 		require.Error(t, err)
 		require.Nil(t, kafkaREST)
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)

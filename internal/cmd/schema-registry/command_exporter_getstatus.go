@@ -11,11 +11,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeStatusLabels            = []string{"Name", "State", "Offset", "Timestamp", "Trace"}
-	describeStatusHumanRenames      = map[string]string{"State": "Exporter State", "Offset": "Exporter Offset", "Timestamp": "Exporter Timestamp", "Trace": "Error Trace"}
-	describeStatusStructuredRenames = map[string]string{"Name": "name", "State": "state", "Offset": "offset", "Timestamp": "timestamp", "Trace": "trace"}
-)
+type getStatusOut struct {
+	Name       string `human:"Name" serialized:"name"`
+	State      string `human:"State" serialized:"state"`
+	Offset     string `human:"Offset" serialized:"offset"`
+	Timestamp  string `human:"Timestamp" serialized:"timestamp"`
+	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
+}
 
 func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -49,12 +51,13 @@ func getExporterStatus(cmd *cobra.Command, name string, srClient *srsdk.APIClien
 		return err
 	}
 
-	data := &exporterStatusDisplay{
-		Name:      status.Name,
-		State:     status.State,
-		Offset:    strconv.FormatInt(status.Offset, 10),
-		Timestamp: strconv.FormatInt(status.Ts, 10),
-		Trace:     status.Trace,
-	}
-	return output.DescribeObject(cmd, data, describeStatusLabels, describeStatusHumanRenames, describeStatusStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(&getStatusOut{
+		Name:       status.Name,
+		State:      status.State,
+		Offset:     strconv.FormatInt(status.Offset, 10),
+		Timestamp:  strconv.FormatInt(status.Ts, 10),
+		ErrorTrace: status.Trace,
+	})
+	return table.Print()
 }
