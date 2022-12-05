@@ -8,6 +8,8 @@ import (
 	shell "github.com/brianstrauch/cobra-shell"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/asyncapi"
@@ -47,7 +49,6 @@ import (
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-	"github.com/spf13/cobra"
 )
 
 func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
@@ -74,7 +75,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest)
+	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)

@@ -348,7 +348,6 @@ func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
 		ServiceProvider: "aws",
 		Region:          "us-west-2",
 		Endpoint:        "SASL_SSL://kafka-endpoint",
-		ApiEndpoint:     "http://kafka-api-url",
 		RestEndpoint:    "http://kafka-rest-url",
 	}
 }

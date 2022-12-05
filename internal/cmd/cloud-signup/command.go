@@ -7,6 +7,10 @@ import (
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	"github.com/confluentinc/countrycode"
+	"github.com/gogo/protobuf/types"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -14,9 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/countrycode"
-	"github.com/gogo/protobuf/types"
-	"github.com/spf13/cobra"
 )
 
 type command struct {

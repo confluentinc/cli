@@ -52,12 +52,14 @@ type featureFlagManager interface {
 }
 
 type launchDarklyManager struct {
-	cliClient    *sling.Sling
-	ccloudClient func(v1.LaunchDarklyClient) *sling.Sling
-	version      *version.Version
+	cliClient                *sling.Sling
+	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
+	isDisabled               bool
+	timeoutSuggestionPrinted bool
+	version                  *version.Version
 }
 
-func Init(version *version.Version, isTest bool) {
+func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
@@ -84,9 +86,11 @@ func Init(version *version.Version, isTest bool) {
 	}
 
 	Manager = &launchDarklyManager{
-		cliClient:    sling.New().Base(cliBasePath),
-		ccloudClient: ccloudClientProvider,
-		version:      version,
+		cliClient:                sling.New().Base(cliBasePath),
+		ccloudClient:             ccloudClientProvider,
+		version:                  version,
+		timeoutSuggestionPrinted: false,
+		isDisabled:               isDisabledConfig,
 	}
 }
 
@@ -127,6 +131,10 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.Dyna
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{} {
+	if ld.isDisabled {
+		return defaultVal
+	}
+
 	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
@@ -172,6 +180,12 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
+		if !ld.timeoutSuggestionPrinted {
+			timeoutSuggestions := errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`)
+			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n" + timeoutSuggestions + "\n")
+			ld.timeoutSuggestionPrinted = true
+		}
+
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
 	}
 	return flagVals, nil
