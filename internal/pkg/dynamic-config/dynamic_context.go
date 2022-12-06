@@ -130,7 +130,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Don't attempt to fetch cluster details if the client isn't initialized/authenticated yet
-	if d.PrivateClient == nil || d.V2Client == nil {
+	if d.V2Client == nil {
 		return nil, nil
 	}
 
