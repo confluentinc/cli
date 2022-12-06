@@ -71,10 +71,10 @@ generate:
 
 .PHONY: deps
 deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
-	go install github.com/google/go-licenses@v1.4.0 && \
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
-	go install gotest.tools/gotestsum@v1.8.2
+	go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+	go install -v github.com/google/go-licenses@v1.4.0 && \
+	go install -v github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install -v gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
 jenkins-deps:
