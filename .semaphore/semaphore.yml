@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-2
+    type: s1-prod-ubuntu20-04-amd64-1
 
 auto_cancel:
   running:
@@ -108,7 +108,6 @@ blocks:
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-            - Write-Output $(go env)
             
             # Set up Git
             - checkout
