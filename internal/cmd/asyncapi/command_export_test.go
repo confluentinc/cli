@@ -32,11 +32,10 @@ const BackwardCompatibilityLevel = "BACKWARD"
 
 var details = &accountDetails{
 	cluster: &schedv1.KafkaCluster{
-		Id:          "lkc-asyncapi",
-		Name:        "AsyncAPI Cluster",
-		Endpoint:    "http://kafka-endpoint",
-		ApiEndpoint: "http://kafka-endpoint",
-		AccountId:   "env-asyncapi",
+		Id:        "lkc-asyncapi",
+		Name:      "AsyncAPI Cluster",
+		Endpoint:  "http://kafka-endpoint",
+		AccountId: "env-asyncapi",
 	},
 	srClient: &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
@@ -110,7 +109,6 @@ func newCmd() (*command, error) {
 							ID:           "lkc-asyncapi",
 							Name:         "AsyncAPI Cluster",
 							Bootstrap:    "kafka-endpoint",
-							APIEndpoint:  "kafka-endpoint",
 							RestEndpoint: "kafka-endpoint",
 							APIKeys: map[string]*v1.APIKeyPair{
 								"AsyncAPI": {Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"},

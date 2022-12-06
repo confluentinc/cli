@@ -780,10 +780,9 @@ func TestLoginWithExistingContext(t *testing.T) {
 
 	activeApiKey := "bo"
 	kafkaCluster := &v1.KafkaClusterConfig{
-		ID:          "lkc-0000",
-		Name:        "bob",
-		Bootstrap:   "http://bobby",
-		APIEndpoint: "http://bobbyboi",
+		ID:        "lkc-0000",
+		Name:      "bob",
+		Bootstrap: "http://bobby",
 		APIKeys: map[string]*v1.APIKeyPair{
 			activeApiKey: {
 				Key:    activeApiKey,
