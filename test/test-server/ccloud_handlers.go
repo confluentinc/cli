@@ -74,6 +74,11 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
+
+	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
+	exampleSRPriceTable = "SchemaRegistry"
+	exampleSRPriceUnit  = "Schema-Hour"
+	exampleSchemaLimit  = 1000
 )
 
 // Fill API keyStore with default data

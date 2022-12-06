@@ -3,7 +3,8 @@
 | Cluster                 | lsrc-1234               |
 | Endpoint URL            | SASL_SSL://sr-endpoint  |
 | Used Schemas            |                       0 |
-| Available Schemas       |                       0 |
+| Available Schemas       |                    1000 |
+| Free Schemas Limit      |                    1000 |
 | Global Compatibility    | <Requires API Key>      |
 | Mode                    | <Requires API Key>      |
 | Service Provider        | aws                     |
