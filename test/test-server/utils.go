@@ -6,20 +6,24 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 var (
-	serviceAccountInvalidErrMsg = `{"errors":[{"detail":"service account is not valid"}]}`
-	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
+	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
 	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
+	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
 )
@@ -313,6 +317,12 @@ func writeResourceNotFoundError(w http.ResponseWriter) error {
 	return err
 }
 
+func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
+	w.WriteHeader(http.StatusBadRequest)
+	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
+	return err
+}
+
 func writeUserConflictError(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
@@ -338,7 +348,6 @@ func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
 		ServiceProvider: "aws",
 		Region:          "us-west-2",
 		Endpoint:        "SASL_SSL://kafka-endpoint",
-		ApiEndpoint:     "http://kafka-api-url",
 		RestEndpoint:    "http://kafka-rest-url",
 	}
 }
@@ -423,7 +432,29 @@ func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
 	}
 }
 
-func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) *orgv1.Account {
+func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
+	return mdsv2.IamV2RoleBinding{
+		Id:         mdsv2.PtrString("0"),
+		Principal:  mdsv2.PtrString("User:" + user),
+		RoleName:   mdsv2.PtrString(roleName),
+		CrnPattern: mdsv2.PtrString(crn),
+	}
+}
+
+func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName, crnPattern string) bool {
+	if !strings.Contains(*rolebinding.CrnPattern, strings.TrimSuffix(crnPattern, "/*")) {
+		return false
+	}
+	if principal != "" && principal != *rolebinding.Principal {
+		return false
+	}
+	if roleName != "" && roleName != *rolebinding.RoleName {
+		return false
+	}
+	return true
+}
+
+func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *ccloudv1.Account {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
 			return env

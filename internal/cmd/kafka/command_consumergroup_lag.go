@@ -7,6 +7,19 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+type lagDataStruct struct {
+	ClusterId       string `human:"Cluster" serialized:"cluster"`
+	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group"`
+	Lag             int64  `human:"Lag" serialized:"lag"`
+	LogEndOffset    int64  `human:"Log End Offset" serialized:"log_end_offset"`
+	CurrentOffset   int64  `human:"Current Offset" serialized:"current_offset"`
+	ConsumerId      string `human:"Consumer" serialized:"consumer"`
+	InstanceId      string `human:"Instance" serialized:"instance"`
+	ClientId        string `human:"Client" serialized:"client"`
+	TopicName       string `human:"Topic" serialized:"topic"`
+	PartitionId     int32  `human:"Partition" serialized:"partition"`
+}
+
 type lagCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
@@ -27,18 +40,18 @@ func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func convertLagToStruct(lagData kafkarestv3.ConsumerLagData) *lagDataStruct {
+func convertLagToStruct(data kafkarestv3.ConsumerLagData) *lagDataStruct {
 	return &lagDataStruct{
-		ClusterId:       lagData.ClusterId,
-		ConsumerGroupId: lagData.ConsumerGroupId,
-		Lag:             lagData.Lag,
-		LogEndOffset:    lagData.LogEndOffset,
-		CurrentOffset:   lagData.CurrentOffset,
-		ConsumerId:      lagData.ConsumerId,
-		InstanceId:      lagData.GetInstanceId(),
-		ClientId:        lagData.ClientId,
-		TopicName:       lagData.TopicName,
-		PartitionId:     lagData.PartitionId,
+		ClusterId:       data.GetClusterId(),
+		ConsumerGroupId: data.GetConsumerGroupId(),
+		Lag:             data.GetLag(),
+		LogEndOffset:    data.GetLogEndOffset(),
+		CurrentOffset:   data.GetCurrentOffset(),
+		ConsumerId:      data.GetConsumerId(),
+		InstanceId:      data.GetInstanceId(),
+		ClientId:        data.GetClientId(),
+		TopicName:       data.GetTopicName(),
+		PartitionId:     data.GetPartitionId(),
 	}
 }
 

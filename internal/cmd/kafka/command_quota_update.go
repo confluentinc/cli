@@ -58,6 +58,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
 		Id: &quotaId,
 		Spec: &kafkaquotas.KafkaQuotasV1ClientQuotaSpecUpdate{
@@ -71,9 +72,11 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	printQuota := quotaToPrintable(updatedQuota, format)
-	return output.DescribeObject(cmd, printQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(updatedQuota, format))
+	return table.Print()
 }
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.GlobalObjectReference) (*[]kafkaquotas.GlobalObjectReference, error) {
