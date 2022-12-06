@@ -82,7 +82,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
-            - make deps
+            - make semaphore-deps
             - ulimit -n 2048
             - make test
       epilogue:
@@ -118,12 +118,9 @@ blocks:
 
             # Try to restore cached dependencies
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
-            - dir C:\Users\semaphore\go\pkg\mod\
 
             # Run tests
-            - go install -v github.com/goreleaser/goreleaser@v1.11.2
-            - go install -v gotest.tools/gotestsum@v1.8.2
-            - dir C:\Users\semaphore\go\pkg\mod\
+            - make semaphore-deps
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
           

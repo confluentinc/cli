@@ -1,4 +1,4 @@
---- cli/Makefile	2022-12-05 16:19:43.000000000 -0800
+--- cli/Makefile	2022-12-05 16:24:45.000000000 -0800
 +++ debian/Makefile	2022-12-05 08:48:53.000000000 -0800
 @@ -1,208 +1,130 @@
 -SHELL           := /bin/bash
@@ -82,20 +82,20 @@
 +
 +APPLY_PATCHES?=yes
  
--.PHONY: generate
--generate:
--	@go generate ./...
--
 -.PHONY: deps
 -deps:
--	go install -v github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
--	go install -v github.com/google/go-licenses@v1.4.0 && \
--	go install -v github.com/goreleaser/goreleaser@v1.11.2 && \
--	go install -v gotest.tools/gotestsum@v1.8.2
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+-	go install github.com/google/go-licenses@v1.4.0 && \
+-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+-	go install gotest.tools/gotestsum@v1.8.2
 -
 -.PHONY: jenkins-deps
 -jenkins-deps:
 -	go install github.com/goreleaser/goreleaser@v1.11.2
+-
+-semaphore-deps:
+-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+-	go install gotest.tools/gotestsum@v1.8.2
 -
 -show-args:
 -	@echo "VERSION: $(VERSION)"
