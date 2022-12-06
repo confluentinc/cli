@@ -105,10 +105,10 @@ blocks:
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
             - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
-            
+
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-            
+
             # Set up Git
             - checkout
             - $Env:GOPRIVATE = "github.com/confluentinc"
@@ -122,7 +122,7 @@ blocks:
             - make semaphore-deps
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
-          
+
             # Cache Go dependencies
             - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
       epilogue:
