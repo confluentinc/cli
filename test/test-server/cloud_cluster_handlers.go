@@ -1,6 +1,7 @@
 package testserver
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -55,19 +56,22 @@ func (c *CloudRouter) HandleCluster(t *testing.T) http.HandlerFunc {
 		clusterId := vars["id"]
 		switch clusterId {
 		case "lkc-describe":
+			fmt.Println("i got called 59")
 			c.HandleKafkaClusterDescribe(t)(w, r)
 		case "lkc-topics", "lkc-create-topic", "lkc-describe-topic", "lkc-delete-topic", "lkc-acls", "lkc-create-topic-kafka-api", "lkc-describe-topic-kafka-api", "lkc-delete-topic-kafka-api":
+			fmt.Println("i got called 62")
 			c.HandleKafkaRestClusters(t)(w, r)
 		case "lkc-update-dedicated-expand":
+			fmt.Println("i got called 65")
 			c.HandleKafkaDedicatedClusterExpansion(t)(w, r)
 		case "lkc-update-dedicated-shrink":
+			fmt.Println("i got called 68")
 			c.HandleKafkaDedicatedClusterShrink(t)(w, r)
-		case "lkc-unknown":
-			err := writeV1ResourceNotFoundError(w)
-			require.NoError(t, err)
 		case "lkc-update", "lkc-def963":
+			fmt.Println("i got called 75")
 			c.HandleClusterDefaultApiEndpoint(t)(w, r)
 		default:
+			fmt.Println("i got called 78")
 			c.HandleKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
 	}
@@ -126,6 +130,7 @@ func (c *CloudRouter) HandleKafkaClusterGetListDeleteDescribe(t *testing.T) http
 }
 
 func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) http.HandlerFunc {
+	fmt.Println("im called... HandleClusterDefaultApiEndpoint")
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -149,6 +154,7 @@ func (c *CloudRouter) HandleClusterDefaultApiEndpoint(t *testing.T) http.Handler
 
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated-expand"
 func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
+	fmt.Println("im called...  HandleKafkaDedicatedClusterExpansion")
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == http.MethodGet {
@@ -203,6 +209,7 @@ func (c *CloudRouter) HandleKafkaDedicatedClusterExpansion(t *testing.T) http.Ha
 
 // Handler for GET/PUT "api/clusters/lkc-update-dedicated-shrink"
 func (c *CloudRouter) HandleKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
+	fmt.Println("im called shrink...")
 	return func(w http.ResponseWriter, r *http.Request) {
 		var out []byte
 		if r.Method == http.MethodGet {
