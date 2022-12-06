@@ -122,7 +122,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	freeSchemasLimit := int(cluster.MaxSchemas)
 	if cluster.Package == essentialsPackageInternal {
 		org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
-		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
+		prices, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
 
 		if err == nil {
 			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
