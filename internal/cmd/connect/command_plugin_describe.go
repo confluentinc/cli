@@ -63,7 +63,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 				if c.Definition.GetDocumentation() != "" {
 					doc = c.Definition.GetDocumentation()
 				}
-				utils.Println(cmd, c.Value.GetName()+" : "+doc)
+				utils.Printf(cmd, "%s: %s\n", c.Value.GetName(), doc)
 			}
 		}
 		return nil
