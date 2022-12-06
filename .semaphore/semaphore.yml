@@ -108,7 +108,7 @@ blocks:
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-            - Write-Output $(go env GOPATH)
+            - Write-Output $(go env)
             
             # Set up Git
             - checkout
