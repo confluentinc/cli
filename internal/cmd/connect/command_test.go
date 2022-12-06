@@ -33,8 +33,12 @@ var (
 		Type:  "sink",
 	}
 
+	fieldName = "name"
+	fieldDoc  = "Connector Name"
+
 	pluginDescribe = connectv1.InlineResponse2003Configs{
-		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
+		Value:      &connectv1.InlineResponse2003Value{Name: &fieldName, Errors: &[]string{`"name" is required`}},
+		Definition: &connectv1.InlineResponse2003Definition{Documentation: &fieldDoc},
 	}
 
 	connector = connectv1.ConnectV1Connector{
