@@ -61,7 +61,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -95,16 +95,16 @@ func getPreRunBase() *pcmd.PreRun {
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
 		},
-		CCloudClientFactory: &cliMock.MockCCloudClientFactory{
-			JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+		CCloudClientFactory: &cliMock.CCloudClientFactory{
+			PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 				return &ccloud.Client{}
 			},
-			AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+			PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 				return &ccloud.Client{}
 			},
 		},
 		MDSClientManager: &cliMock.MockMDSClientManager{
-			GetMDSClientFunc: func(url, caCertPath string) (client *mds.APIClient, e error) {
+			GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 				return &mds.APIClient{}, nil
 			},
 		},
@@ -115,7 +115,7 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	featureflags.Init(nil, true)
+	featureflags.Init(nil, true, false)
 
 	tests := map[string]log.Level{
 		"":      log.ERROR,
@@ -130,6 +130,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().CountP("verbose", "v", "Increase verbosity")
+		cmd.Flags().Bool("unsafe-trace", false, "")
 		c := pcmd.NewAnonymousCLICommand(cmd, r)
 
 		_, err := pcmd.ExecuteCommand(c.Command, "help", flags)
@@ -143,6 +144,10 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	calledAnonymous := false
 
 	r := getPreRunBase()
+
+	// HACK: Checking for updates is intentionally skipped when testing
+	r.Config.IsTest = false
+
 	r.UpdateClient = &mock.Client{
 		CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
 			calledAnonymous = true
@@ -152,6 +157,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	args := strings.Split("help", " ")
 	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
@@ -174,6 +180,7 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	}
 	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err := pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
@@ -237,12 +244,12 @@ func Test_UpdateToken(t *testing.T) {
 			cfg.Context().State.AuthToken = tt.authToken
 
 			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
-				GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
@@ -258,6 +265,7 @@ func Test_UpdateToken(t *testing.T) {
 			}
 			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
@@ -368,8 +376,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			r := getPreRunBase()
 			r.Config = cfg
-			r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
-				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+			r.CCloudClientFactory = &cliMock.CCloudClientFactory{
+				PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 					return &ccloud.Client{Auth: &sdkMock.Auth{
 						UserFunc: func(_ context.Context) (*flowv1.GetMeReply, error) {
 							return &flowv1.GetMeReply{
@@ -384,7 +392,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						},
 					}}
 				},
-				AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+				PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 					return &ccloud.Client{}
 				},
 			}
@@ -408,7 +416,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return tt.envVarReturn.creds, tt.envVarReturn.err
 					}
 				},
-				GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
@@ -443,6 +451,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
 			}
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
@@ -476,8 +485,8 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 		Password: "password",
 	}
 	r := getPreRunBase()
-	r.CCloudClientFactory = &cliMock.MockCCloudClientFactory{
-		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
+	r.CCloudClientFactory = &cliMock.CCloudClientFactory{
+		PrivateJwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloud.Client {
 			return &ccloud.Client{Auth: &sdkMock.Auth{
 				UserFunc: func(ctx context.Context) (*flowv1.GetMeReply, error) {
 					return &flowv1.GetMeReply{
@@ -492,7 +501,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				},
 			}}
 		},
-		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
+		PrivateAnonHTTPClientFactoryFunc: func(baseURL string) *ccloud.Client {
 			return &ccloud.Client{}
 		},
 	}
@@ -526,6 +535,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
+	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err = pcmd.ExecuteCommand(rootCmd.Command)
 	require.NoError(t, err)
@@ -564,7 +574,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcFunc: func(_ *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						netrcCalled = true
 						return nil, nil
@@ -587,6 +597,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			}
 
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
@@ -652,7 +663,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		{
 			name:           "api key passed via flag without stored secret",
 			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedMsg, "miles", v1.MockKafkaClusterId()),
+			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, "miles", v1.MockKafkaClusterId()),
 			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v1.MockKafkaClusterId()),
 			config:         usernameClusterWithoutSecret,
 		},
@@ -674,6 +685,7 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			}
 			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
+			root.Flags().Bool("unsafe-trace", false, "")
 			root.Flags().String("api-key", "", "Kafka cluster API key.")
 			root.Flags().String("api-secret", "", "API key secret.")
 			root.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -699,13 +711,14 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	r.Config = cfg
 	cobraCmd := &cobra.Command{Use: "test"}
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
+	cobraCmd.Flags().Bool("unsafe-trace", false, "")
 	cmd := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
 	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
-		kafkaRest, err := cmd.GetKafkaREST()
+		kafkaREST, err := cmd.GetKafkaREST()
 		require.NoError(t, err)
-		auth, ok := kafkaRest.Context.Value(krsdk.ContextAccessToken).(string)
+		auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
 		require.True(t, ok)
 		require.Equal(t, validAuthToken, auth)
 	})
@@ -729,7 +742,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 					return nil, nil
 				}
 			},
-			GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}
@@ -738,9 +751,9 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 		r.LoginCredentialsManager = mockLoginCredentialsManager
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
-		kafkaRest, err := cmd.GetKafkaREST()
+		kafkaREST, err := cmd.GetKafkaREST()
 		require.Error(t, err)
-		require.Nil(t, kafkaRest)
+		require.Nil(t, kafkaREST)
 		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
 	})
 }

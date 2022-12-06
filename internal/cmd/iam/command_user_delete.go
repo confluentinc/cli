@@ -25,9 +25,9 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
-	httpResp, err := c.V2Client.DeleteIamUser(resourceId)
+	err := c.V2Client.DeleteIamUser(resourceId)
 	if err != nil {
-		return errors.Errorf(`failed to delete user "%s": %v`, resourceId, errors.CatchV2ErrorDetailWithResponse(err, httpResp))
+		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err)
 	}
 
 	utils.Printf(cmd, errors.DeletedResourceMsg, resource.User, resourceId)

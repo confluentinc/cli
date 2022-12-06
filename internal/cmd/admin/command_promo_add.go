@@ -19,9 +19,9 @@ func (c *command) newAddCommand() *cobra.Command {
 }
 
 func (c *command) add(cmd *cobra.Command, args []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
+	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	if _, err := c.Client.Billing.ClaimPromoCode(context.Background(), org, args[0]); err != nil {
+	if _, err := c.PrivateClient.Billing.ClaimPromoCode(context.Background(), org, args[0]); err != nil {
 		return err
 	}
 

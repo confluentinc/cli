@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	createFields           = []string{"Name", "Id"}
-	createHumanLabels      = map[string]string{"Name": "Environment Name", "Id": "ID"}
-	createStructuredLabels = map[string]string{"Name": "name", "Id": "id"}
+	fields            = []string{"Id", "Name"}
+	humanRenames      = map[string]string{"Id": "ID"}
+	structuredRenames = map[string]string{"Id": "id", "Name": "name"}
 )
 
 func (c *command) newCreateCommand() *cobra.Command {
@@ -32,13 +32,13 @@ func (c *command) newCreateCommand() *cobra.Command {
 func (c *command) create(cmd *cobra.Command, args []string) error {
 	account := &orgv1.Account{
 		Name:           args[0],
-		OrganizationId: c.State.Auth.Account.OrganizationId,
+		OrganizationId: c.Context.GetOrganization().GetId(),
 	}
 
-	environment, err := c.Client.Account.Create(context.Background(), account)
+	environment, err := c.PrivateClient.Account.Create(context.Background(), account)
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, environment, createFields, createHumanLabels, createStructuredLabels)
+	return output.DescribeObject(cmd, environment, fields, humanRenames, structuredRenames)
 }

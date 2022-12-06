@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -25,13 +24,16 @@ The server runs in a goroutine / in the background.
 */
 type authServer struct {
 	server *http.Server
-	wg     *sync.WaitGroup
+	wait   chan bool
 	bgErr  error
 	State  *authState
 }
 
 func newServer(state *authState) *authServer {
-	return &authServer{State: state}
+	return &authServer{
+		wait:  make(chan bool),
+		State: state,
+	}
 }
 
 // Start begins the server including attempting to bind the desired TCP port
@@ -51,10 +53,8 @@ func (s *authServer) startServer() error {
 		return err
 	}
 
-	s.wg = &sync.WaitGroup{}
 	s.server = &http.Server{Handler: mux}
 
-	s.wg.Add(1)
 	go func() {
 		serverErr := s.server.Serve(lis)
 		// Serve returns ErrServerClosed when the server is gracefully, intentionally closed:
@@ -75,9 +75,9 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 		time.Sleep(timeout)
 		s.bgErr = errors.NewErrorWithSuggestions(errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 		s.server.Close()
-		s.wg.Done()
+		s.wait <- true
 	}()
-	s.wg.Wait()
+	<-s.wait
 
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
@@ -105,5 +105,5 @@ func (s *authServer) callbackHandler(w http.ResponseWriter, r *http.Request) {
 		s.bgErr = errors.New(errors.LoginFailedQueryStringErrorMsg)
 	}
 
-	s.wg.Done()
+	s.wait <- true
 }

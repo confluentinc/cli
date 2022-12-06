@@ -3,32 +3,64 @@ package dynamicconfig
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func (d *DynamicContext) FetchCluster(clusterId string) (*schedv1.KafkaCluster, error) {
+func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
 	environmentId, err := d.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
 	}
 
-	cluster := &schedv1.KafkaCluster{
-		AccountId: environmentId,
-		Id:        clusterId,
+	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	if err != nil {
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
-	cluster, err = d.Client.Kafka.Describe(context.Background(), cluster)
-	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
+	apiEndpoint, err := getKafkaApiEndpoint(d.PrivateClient, clusterId, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	config := &v1.KafkaClusterConfig{
+		ID:           *cluster.Id,
+		Name:         *cluster.Spec.DisplayName,
+		Bootstrap:    strings.TrimPrefix(*cluster.Spec.KafkaBootstrapEndpoint, "SASL_SSL://"),
+		APIEndpoint:  apiEndpoint,
+		RestEndpoint: *cluster.Spec.HttpEndpoint,
+		APIKeys:      make(map[string]*v1.APIKeyPair),
+		LastUpdate:   time.Now(),
+	}
+
+	return config, nil
+}
+
+func getKafkaApiEndpoint(privateClient *ccloud.Client, clusterId, environmentId string) (string, error) {
+	cluster := &schedv1.KafkaCluster{
+		Id:        clusterId,
+		AccountId: environmentId,
+	}
+
+	cluster, err := privateClient.Kafka.Describe(context.Background(), cluster)
+	if err != nil {
+		return "", err
+	}
+
+	return cluster.ApiEndpoint, nil
 }
 
 func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
 	// check if this is API key exists server-side
 	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
 	if err != nil {
-		return errors.CatchV2ErrorDetailWithResponse(err, httpResp)
+		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 	// check if the key is for the right cluster
 	ok := key.Spec.Resource.Id == clusterID
@@ -38,12 +70,12 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 		suggestionsMsg := fmt.Sprintf(errors.InvalidAPIKeySuggestions, clusterID, clusterID, clusterID, clusterID)
 		return errors.NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 	}
-	// this means the requested api-key exists, but we just don't have the secret saved locally
+	// the requested api-key exists, but the secret is not saved locally
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
 func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+	existingClusters, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -57,7 +89,7 @@ func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context,
 }
 
 func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+	existingCluster, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

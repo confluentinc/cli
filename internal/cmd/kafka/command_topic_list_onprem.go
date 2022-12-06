@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -16,8 +17,14 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
+				// on-prem examples are ccloud examples + "of a specified cluster (providing embedded Kafka REST Proxy endpoint)."
+				Text: `List all topics for a specified cluster (providing Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic list --url http://localhost:8090/kafka",
+			},
+
+			examples.Example{
 				// on-prem examples are ccloud examples + "of a specified cluster (providing Kafka REST Proxy endpoint)."
-				Text: "List all topics of a specified cluster (providing Kafka REST Proxy endpoint).",
+				Text: "List all topics for a specified cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka topic list --url http://localhost:8082",
 			},
 		),
@@ -40,7 +47,7 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 	// Get Topics
 	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 	topicDatas := topicGetResp.Data
 

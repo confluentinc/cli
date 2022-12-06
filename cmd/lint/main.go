@@ -12,7 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 var commandRules = []linter.CommandRule{
@@ -23,15 +23,17 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommandContains("local services"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("ksql app")),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
 	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
+		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
-		linter.ExcludeCommandContains("kafka client-config create")),
+		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -84,6 +86,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
+			"azure-subscription-id",
 			"destination-bootstrap-server",
 			"destination-cluster-id",
 			"destination-api-key",
@@ -93,6 +96,7 @@ var flagRules = []linter.FlagRule{
 			"message-send-max-retries",
 			"request-required-acks",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"source-bootstrap-server",
 		),
@@ -100,6 +104,9 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(
 		linter.RequireFlagDelimiter('-', 1),
 		linter.ExcludeFlag(
+			"aws-account-id",
+			"azure-subscription-id",
+			"gcp-project-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
@@ -124,6 +131,7 @@ var flagRules = []linter.FlagRule{
 			"request-timeout-ms",
 			"retry-backoff-ms",
 			"schema-registry-cluster-id",
+			"schema-registry-subjects",
 			"skip-message-on-error",
 			"socket-buffer-size",
 			"source-api-key",
@@ -141,6 +149,8 @@ var properNouns = []string{
 	"ACL",
 	"API",
 	"Apache",
+	"Async",
+	"AsyncAPI",
 	"CLI",
 	"Confluent Cloud",
 	"Confluent Platform",
@@ -167,11 +177,13 @@ var properNouns = []string{
 	"Kotlin",
 	"Ktor",
 	"Node.js",
+	"PATH",
 	"Python",
 	"Ruby",
 	"Rust",
 	"Scala",
 	"Spring Boot",
+	"Stream Designer",
 }
 
 // vocabWords are words that don't appear in the US dictionary, but are Confluent-related words.
@@ -184,6 +196,7 @@ var vocabWords = []string{
 	"api",
 	"apikey",
 	"apisecret",
+	"asyncapi",
 	"auth",
 	"avro",
 	"aws",
@@ -210,8 +223,10 @@ var vocabWords = []string{
 	"iam",
 	"json",
 	"jsonschema",
+	"jwks",
 	"kafka",
 	"ksql",
+	"ksqldb",
 	"lifecycle",
 	"lkc",
 	"lz4",
@@ -227,7 +242,9 @@ var vocabWords = []string{
 	"readwrite",
 	"recv",
 	"sasl",
+	"schemas",
 	"signup",
+	"sql",
 	"sr",
 	"ssl",
 	"sso",
@@ -238,6 +255,7 @@ var vocabWords = []string{
 	"txt",
 	"unregister",
 	"url",
+	"uri",
 	"us",
 	"v2",
 	"vpc",
@@ -295,7 +313,10 @@ func main() {
 
 	code := 0
 	for _, cfg := range configs {
-		cmd := pcmd.NewConfluentCommand(cfg, new(version.Version), true)
+		cfg.IsTest = true
+		cfg.Version = new(pversion.Version)
+
+		cmd := pcmd.NewConfluentCommand(cfg)
 		if err := l.Lint(cmd); err != nil {
 			fmt.Printf(`For context "%s", %v`, cfg.CurrentContext, err)
 			code = 1

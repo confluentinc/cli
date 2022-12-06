@@ -1,0 +1,116 @@
+package ksql
+
+import (
+	"context"
+	"fmt"
+	"os"
+
+	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/gogo/protobuf/types"
+	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+func (c *ksqlCommand) newCreateCommand(resource string) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create <name>",
+		Short: fmt.Sprintf("Create a ksqlDB %s.", resource),
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.create,
+	}
+
+	cmd.Flags().String("api-key", "", `Kafka API key for the ksqlDB cluster to use (use "confluent api-key create --resource lkc-123456" to create one if none exist).`)
+	cmd.Flags().String("api-secret", "", "Secret for the Kafka API key.")
+	cmd.Flags().String("image", "", "Image to run (internal).")
+	cmd.Flags().Int32("csu", 4, "Number of CSUs to use in the cluster.")
+	cmd.Flags().Bool("log-exclude-rows", false, "Exclude row data in the processing log.")
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("api-key")
+	_ = cmd.MarkFlagRequired("api-secret")
+	_ = cmd.Flags().MarkHidden("image")
+
+	return cmd
+}
+
+func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	csus, err := cmd.Flags().GetInt32("csu")
+	if err != nil {
+		return err
+	}
+
+	cfg := &schedv1.KSQLClusterConfig{
+		AccountId:      c.EnvironmentId(),
+		Name:           args[0],
+		TotalNumCsu:    uint32(csus),
+		KafkaClusterId: kafkaCluster.ID,
+	}
+
+	logExcludeRows, err := cmd.Flags().GetBool("log-exclude-rows")
+	if err != nil {
+		return err
+	}
+
+	cfg.DetailedProcessingLog = &types.BoolValue{Value: !logExcludeRows}
+
+	kafkaApiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return err
+	}
+
+	kafkaApiKeySecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return err
+	}
+
+	cfg.KafkaApiKey = &schedv1.ApiKey{
+		Key:    kafkaApiKey,
+		Secret: kafkaApiKeySecret,
+	}
+
+	image, err := cmd.Flags().GetString("image")
+	if err == nil && len(image) > 0 {
+		cfg.Image = image
+	}
+
+	cluster, err := c.PrivateClient.KSQL.Create(context.Background(), cfg)
+	if err != nil {
+		return err
+	}
+
+	// use count to prevent the command from hanging too long waiting for the endpoint value
+	count := 0
+	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
+	for cluster.Endpoint == "" && count < 3 {
+		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
+		cluster, err = c.PrivateClient.KSQL.Describe(context.Background(), req)
+		if err != nil {
+			return err
+		}
+		count++
+	}
+
+	if cluster.Endpoint == "" {
+		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+	}
+
+	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+		srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
+		if srCluster != nil {
+			utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		}
+	}
+
+	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)
+}

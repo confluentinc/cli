@@ -64,7 +64,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient)
 	if err != nil {
 		return err
 	}
@@ -157,7 +157,7 @@ func (c *command) createV1(ownerResourceId, clusterId, resourceType, description
 		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
 	}
 
-	schedv1ApiKey, err := c.Client.APIKey.Create(context.Background(), key)
+	schedv1ApiKey, err := c.PrivateClient.APIKey.Create(context.Background(), key)
 	if err != nil {
 		return nil, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
 	}
@@ -196,8 +196,8 @@ func (c *command) getCurrentUserId() (string, error) {
 		return "", err
 	}
 	for _, user := range users {
-		if user.Id == c.State.Auth.User.Id {
-			return user.ResourceId, nil
+		if user.GetId() == c.Context.GetUser().GetId() {
+			return user.GetResourceId(), nil
 		}
 	}
 	return "", fmt.Errorf("unable to find authenticated user")
@@ -209,15 +209,18 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 	if err == nil {
 		return nil
 	}
+
+	auditLog := c.Context.GetOrganization().GetAuditLog()
+
 	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
-	if isInvalid && clusterId == c.State.Auth.Organization.AuditLog.ClusterId {
-		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), c.State.Auth.Organization.AuditLog.ServiceAccountId)
+	if isInvalid && clusterId == auditLog.GetClusterId() {
+		auditLogServiceAccount, err2 := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err2 != nil {
 			return err
 		}
 
-		if serviceAccountId != auditLogServiceAccount.ResourceId {
-			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.ResourceId)
+		if serviceAccountId != auditLogServiceAccount.GetResourceId() {
+			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
 		}
 	}
 
@@ -225,5 +228,5 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		return err
 	}
 
-	return errors.CatchV2ErrorDetailWithResponse(err, r)
+	return errors.CatchCCloudV2Error(err, r)
 }

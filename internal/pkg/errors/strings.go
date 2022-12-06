@@ -49,18 +49,21 @@ const (
 
 	// kafka topic commands
 	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumer         = "Stopping Consumer."
+	StoppingConsumerMsg      = "Stopping Consumer."
 	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
 
 	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only support with kafka rest proxy."
+	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka acl commands
 	DeletedACLsMsg      = "Deleted ACLs.\n"
 	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
 	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
+
+	// kafka REST proxy
+	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
@@ -102,9 +105,8 @@ const (
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."
 	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
-		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
-	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
+	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\nNOT for production usage. https://docs.confluent.io/current/cli/index.html\n\n"
+	AutoLoginMsg           = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
@@ -136,9 +138,15 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg = "Created %s \"%s\".\n"
-	DeletedResourceMsg = "Deleted %s \"%s\".\n"
-	UpdatedResourceMsg = "Updated %s \"%s\".\n"
+	CreatedResourceMsg         = "Created %s \"%s\".\n"
+	DeletedResourceMsg         = "Deleted %s \"%s\".\n"
+	RequestedDeleteResourceMsg = "Requested to delete %s \"%s\".\n"
+	UpdatedResourceMsg         = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
+
+	// Stream Sharing commands
+	ResendInviteMsg = "Sent invitation for \"%s\".\n"
+	OptInMsg        = "Successfully opted in to Stream Sharing.\n"
+	OptOutMsg       = "Successfully opted out of Stream Sharing.\n"
 )

@@ -1,130 +1,5 @@
 package testserver
 
-var v2RbacRoles = map[string]string{
-	"CCloudRoleBindingAdmin": `{
-			"name": "CCloudRoleBindingAdmin",
-			"policy": {
-				"bindingScope": "root",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType":"SecurityMetadata","operations":["Describe","Alter"]},
-				{"resourceType":"Organization","operations":["AlterAccess","DescribeAccess"]}]}}`,
-	"CloudClusterAdmin": `{
-			"name": "CloudClusterAdmin",
-			"policies": [
-			{
-				"bindingScope": "cluster",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType": "Topic","operations": ["All"]},
-				{"resourceType": "KsqlCluster","operations": ["All"]},
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "Connector","operations": ["All"]},
-				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "ClusterMetric","operations": ["All"]},
-				{"resourceType": "Cluster","operations": ["All"]},
-				{"resourceType": "ClusterApiKey","operations": ["All"]},
-				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]}]
-			},
-			{
-				"bindingScope": "organization",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType": "SupportPlan","operations": ["Describe"]},
-				{"resourceType": "User","operations": ["Describe","Invite"]},
-				{"resourceType": "ServiceAccount","operations": ["Describe"]}]
-			}]}`,
-	"EnvironmentAdmin": `{
-			"name": "EnvironmentAdmin",
-			"policies": [
-			{
-				"bindingScope": "ENVIRONMENT",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]},
-				{"resourceType": "ClusterApiKey","operations": ["All"]},
-				{"resourceType": "Connector","operations": ["All"]},
-				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "KsqlCluster","operations": ["All"]},
-				{"resourceType": "Environment","operations": ["Alter","Delete","AlterAccess","CreateKafkaCluster","DescribeAccess"]},
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "NetworkConfig","operations": ["All"]},
-				{"resourceType": "ClusterMetric","operations": ["All"]},
-				{"resourceType": "Cluster","operations": ["All"]},
-				{"resourceType": "SchemaRegistry","operations": ["All"]},
-				{"resourceType": "NetworkRegion","operations": ["All"]},
-				{"resourceType": "Deployment","operations": ["All"]},
-				{"resourceType": "Topic","operations": ["All"]}
-				]
-			},
-			{
-				"bindingScope": "organization",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType": "User","operations": ["Describe","Invite"]},
-				{"resourceType": "ServiceAccount","operations": ["Describe"]},
-				{"resourceType": "SupportPlan","operations": ["Describe"]}
-				]
-			}]}`,
-	"OrganizationAdmin": `{
-			"name": "OrganizationAdmin",
-			"policy": {
-				"bindingScope": "organization",
-				"bindWithResource": false,
-				"allowedOperations": [
-				{"resourceType": "Topic","operations": ["All"]},
-				{"resourceType": "NetworkConfig","operations": ["All"]},
-				{"resourceType": "SecurityMetadata","operations": ["Describe", "Alter"]},
-				{"resourceType": "Billing","operations": ["All"]},
-				{"resourceType": "ClusterApiKey","operations": ["All"]},
-				{"resourceType": "Deployment","operations": ["All"]},
-				{"resourceType": "SchemaRegistry","operations": ["All"]},
-				{"resourceType": "KsqlCluster","operations": ["All"]},
-				{"resourceType": "CloudApiKey","operations": ["All"]},
-				{"resourceType": "NetworkAccess","operations": ["All"]},
-				{"resourceType": "SecuritySSO","operations": ["All"]},
-				{"resourceType": "SupportPlan","operations": ["All"]},
-				{"resourceType": "Connector","operations": ["All"]},
-				{"resourceType": "ClusterMetric","operations": ["All"]},
-				{"resourceType": "ServiceAccount","operations": ["All"]},
-				{"resourceType": "Subject","operations": ["All"]},
-				{"resourceType": "Cluster","operations": ["All"]},
-				{"resourceType": "Environment","operations": ["All"]},
-				{"resourceType": "NetworkRegion","operations": ["All"]},
-				{"resourceType": "Organization","operations": ["Alter","CreateEnvironment","AlterAccess","DescribeAccess"]},
-				{"resourceType": "User","operations": ["All"]}
-				]
-			}
-		}`,
-	"ResourceOwner": `{
-			"name": "ResourceOwner",
-			"policies": [
-			{
-			  "bindingScope": "cloud-cluster",
-			  "bindWithResource": false,
-			  "allowedOperations": [
-				{
-				  "resourceType": "CloudCluster",
-				  "operations": [ "Describe" ]
-				}
-			  ]
-        },
-        {
-			  "bindingScope": "cluster",
-			  "bindWithResource": true,
-			  "allowedOperations": [
-				{
-				  "resourceType": "Topic",
-				  "operations": ["Create", "Delete", "Read", "Write", "Describe", "DescribeConfigs", "Alter", "AlterConfigs", "DescribeAccess", "AlterAccess"]
-				},
-				{
-				  "resourceType": "Group",
-				  "operations": ["Read", "Describe", "Delete", "DescribeAccess", "AlterAccess"]
-				}
-			  ]
-        }]}`,
-}
-
 var v2RoutesAndReplies = map[string]string{
 	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/CloudClusterAdmin":      `[]`,
 	"/api/metadata/security/v2alpha1/principals/User:u-11aaa/roles/ResourceOwner/bindings": `[]`,
@@ -267,14 +142,33 @@ var v2RoutesAndReplies = map[string]string{
 						"cloud-cluster=lkc-1111aaa"
 					],
 					"clusters": {
-						"ksql-cluster": "lksqlc-2222bbb"
+						"ksql-cluster": "ksql-cluster-name-2222bbb"
 					}
 				},
 				"rolebindings": {
 					"User:u-66fff": {
 						"ResourceOwner": [
-							{ "resourceType": "Cluster", "name": "lksqlc-2222bbb", "patternType": "LITERAL" }
+							{ "resourceType": "Cluster", "name": "ksql-cluster-name-2222bbb", "patternType": "LITERAL" }
 						]
+					}
+				}
+		  	}
+		]`,
+	"/api/metadata/security/v2alpha1/lookup/rolebindings/principal/User:u-66ffa": `[
+		  	{
+				"scope": {
+				  	"path": [
+						"organization=2345",
+						"environment=b-595",
+						"cloud-cluster=lkc-1234abc"
+					],
+					"clusters": {
+						"ksql-cluster": "ksqlDB_cluster_name"
+					}
+				},
+				"rolebindings": {
+					"User:u-66ffa": {
+						"KsqlAdmin": []
 					}
 				}
 		  	}

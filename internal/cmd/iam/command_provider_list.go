@@ -38,11 +38,13 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 	for _, op := range identityProviders {
 		element := &identityProvider{
-			Id:          *op.Id,
-			Name:        *op.DisplayName,
-			Description: *op.Description,
-			IssuerUri:   *op.Issuer,
-			JwksUri:     *op.JwksUri,
+			Id:        *op.Id,
+			Name:      *op.DisplayName,
+			IssuerUri: *op.Issuer,
+			JwksUri:   *op.JwksUri,
+		}
+		if op.Description != nil {
+			element.Description = *op.Description
 		}
 		outputWriter.AddElement(element)
 	}

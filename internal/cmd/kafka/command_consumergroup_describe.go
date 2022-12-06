@@ -3,13 +3,14 @@ package kafka
 import (
 	"strings"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/go-printer/tables"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -53,14 +54,14 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.GetKafkaConsumerGroup(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdResp, httpResp, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	groupCmdConsumersResp, httpResp, err := kafkaREST.Client.ConsumerGroupV3Api.ListKafkaConsumers(kafkaREST.Context, lkc, consumerGroupId)
+	groupCmdConsumersResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumers(lkc, consumerGroupId)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	outputOption, err := cmd.Flags().GetString(output.FlagName)
@@ -90,17 +91,12 @@ func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersR
 
 	// Populate consumers list
 	for i, consumerResp := range groupCmdConsumersResp.Data {
-		instanceId := ""
-		if consumerResp.InstanceId != nil {
-			instanceId = *consumerResp.InstanceId
-		}
-		consumerData := consumerData{
+		groupData.Consumers[i] = consumerData{
 			ConsumerGroupId: groupCmdResp.ConsumerGroupId,
 			ConsumerId:      consumerResp.ConsumerId,
-			InstanceId:      instanceId,
+			InstanceId:      consumerResp.GetInstanceId(),
 			ClientId:        consumerResp.ClientId,
 		}
-		groupData.Consumers[i] = consumerData
 	}
 
 	return groupData

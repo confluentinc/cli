@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -20,7 +20,7 @@ type LaunchDarklyTestSuite struct {
 }
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
-	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 
 	type kv struct {
 		key string
@@ -40,9 +40,9 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	defer server.Close()
 	ld := launchDarklyManager{
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
-		version:   version.NewVersion("v1.2", "", "", ""),
+		version:   version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)
@@ -90,7 +90,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
-	ld := launchDarklyManager{version: version.NewVersion("v1.2", "", "", "")}
+	ld := launchDarklyManager{version: version.NewVersion("v1.2", "", "")}
 
 	user := ld.contextToLDUser(suite.ctx)
 	resourceId, _ := user.GetCustom("user.resource_id")

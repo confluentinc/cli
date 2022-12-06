@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -55,13 +56,16 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil {
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
 
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
 		kafkaRestExists := true
 		matchingBindingCount := 0
 		for i, filter := range filters {
@@ -74,7 +78,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 				}
 				// i > 0: unlikely
 				printAclsDeleted(cmd, matchingBindingCount)
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if err != nil {
@@ -82,7 +86,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 					// unlikely
 					printAclsDeleted(cmd, matchingBindingCount)
 				}
-				return kafkaRestError(kafkaREST.CloudClient.GetKafkaRestUrl(), err, httpResp)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			}
 
 			if httpResp.StatusCode == http.StatusOK {
@@ -90,7 +94,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 			} else {
 				printAclsDeleted(cmd, matchingBindingCount)
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 		}
@@ -113,7 +117,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
 		ctx := context.WithValue(context.Background(), kafka.Requester, "delete")
 
-		resp, err := c.Client.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
+		resp, err := c.PrivateClient.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
 		if err != nil {
 			return err
 		}
@@ -124,7 +128,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	if err := c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
+	if err := c.PrivateClient.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
 		return err
 	}
 

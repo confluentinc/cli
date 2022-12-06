@@ -5,6 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
@@ -24,6 +26,12 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 	cmd.AddCommand(newRegionCommand(prerunner))
 	cmd.AddCommand(newReplicaCommand(prerunner))
 	cmd.AddCommand(newTopicCommand(cfg, prerunner, clientID))
+
+	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(newQuotaCommand(cfg, prerunner))
+	}
 
 	return cmd
 }

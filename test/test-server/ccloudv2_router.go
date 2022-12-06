@@ -8,8 +8,17 @@ import (
 )
 
 var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
-	"/cmk/v2/clusters":      handleCmkClusters,
-	"/cmk/v2/clusters/{id}": handleCmkCluster,
+	"/cdx/v1/consumer-shared-resources":              handleConsumerSharedResources,
+	"/cdx/v1/consumer-shared-resources/{id}:network": handlePrivateLinkNetworkConfig,
+	"/cdx/v1/consumer-shares":                        handleStreamSharingConsumerShares,
+	"/cdx/v1/consumer-shares/{id}":                   handleStreamSharingConsumerShare,
+	"/cdx/v1/opt-in":                                 handleOptInOptOut,
+	"/cdx/v1/provider-shares":                        handleStreamSharingProviderShares,
+	"/cdx/v1/provider-shares/{id}":                   handleStreamSharingProviderShare,
+	"/cdx/v1/provider-shares/{id}:resend":            handleStreamSharingResendInvite,
+	"/cdx/v1/shared-tokens:redeem":                   handleStreamSharingRedeemToken,
+	"/cmk/v2/clusters":                               handleCmkClusters,
+	"/cmk/v2/clusters/{id}":                          handleCmkCluster,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins":                          handlePlugins,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate": handlePluginValidate,
 	"/connect/v1/environments/{env}/clusters/{clusters}/connectors":                                 handleConnectors,
@@ -23,30 +32,26 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/identity-providers/{id}":                              handleIamIdentityProvider,
 	"/iam/v2/identity-providers/{provider_id}/identity-pools":      handleIamIdentityPools,
 	"/iam/v2/identity-providers/{provider_id}/identity-pools/{id}": handleIamIdentityPool,
+	"/iam/v2/invitations":                                          handleIamInvitations,
 	"/iam/v2/service-accounts":                                     handleIamServiceAccounts,
 	"/iam/v2/service-accounts/{id}":                                handleIamServiceAccount,
 	"/iam/v2/users":                                                handleIamUsers,
 	"/iam/v2/users/{id}":                                           handleIamUser,
-	"/kafka/v3/clusters/{cluster}/acls":                            handleKafkaRestAcls,
+	"/kafka-quotas/v1/client-quotas/{id}":                          handleKafkaClientQuota,
+	"/kafka-quotas/v1/client-quotas":                               handleKafkaClientQuotas,
 	"/org/v2/environments":                                         handleOrgEnvironments,
 	"/org/v2/environments/{id}":                                    handleOrgEnvironment,
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
+	"/sd/v1/pipelines/{id}":                                        handlePipeline,
+	"/sd/v1/pipelines":                                             handlePipelines,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
 }
 
-type V2Router struct {
-	*mux.Router
-}
-
-func NewV2Router(t *testing.T) *V2Router {
-	router := &V2Router{Router: mux.NewRouter()}
-	router.buildV2Handler(t)
-	return router
-}
-
-func (c *V2Router) buildV2Handler(t *testing.T) {
+func NewV2Router(t *testing.T) *mux.Router {
+	router := mux.NewRouter()
 	for route, handler := range ccloudv2Handlers {
-		c.HandleFunc(route, handler(t))
+		router.HandleFunc(route, handler(t))
 	}
+	return router
 }

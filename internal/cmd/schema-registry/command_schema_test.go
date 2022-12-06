@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -49,7 +48,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 		},
 	}
 	ctx := suite.conf.Context()
-	srCluster := ctx.SchemaRegistryClusters[ctx.State.Auth.Account.Id]
+	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &schedv1.KafkaCluster{
@@ -90,7 +89,7 @@ func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
+	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
 }
 
@@ -105,7 +104,7 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 	cmd.Flags().String(output.FlagName, "human", `Specify the output format as "human", "json", or "yaml".`)
 	req := require.New(suite.T())
 	storePath := suite.T().TempDir()
-	file, err := ioutil.TempFile(storePath, "schema-file")
+	file, err := os.CreateTemp(storePath, "schema-file")
 	req.Nil(err)
 	err = file.Close()
 	req.Nil(err)

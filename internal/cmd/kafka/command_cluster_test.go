@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
@@ -24,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -55,7 +54,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Id: cmkv2.PtrString("lkc-xyz"),
 	Status: &cmkv2.CmkV2ClusterStatus{
 		Cku:   cmkv2.PtrInt32(1),
-		Phase: "PROVISIONING",
+		Phase: ccloudv2.StatusProvisioning,
 	},
 }
 
@@ -197,7 +196,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -217,7 +216,7 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
 	err := cmd.Execute()
-	req.Contains(err.Error(), "Cluster resize error: failed to read your confirmation")
+	req.Contains(err.Error(), "cluster resize error: failed to read your confirmation")
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }
@@ -247,7 +246,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = dynamicconfig.New(cfg, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

@@ -8,9 +8,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/spf13/cobra"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -18,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -32,16 +35,33 @@ type command struct {
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
-	isTest                   bool
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager, authTokenHandler pauth.AuthTokenHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
 		Long: fmt.Sprintf("Confluent Cloud:\n\nLog in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.\n\nEmail and password login can be accomplished non-interactively using the `%s` and `%s` environment variables.\n\nEmail and password can also be stored locally for non-interactive re-authentication with the `--save` flag.\n\nSSO login can be accomplished headlessly using the `--no-browser` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.\n\nLog in to a specific Confluent Cloud organization using the `--organization-id` flag, or by setting the environment variable `%s`.\n\n", pauth.ConfluentCloudEmail, pauth.ConfluentCloudPassword, pauth.ConfluentCloudOrganizationId) +
 			fmt.Sprintf("Confluent Platform:\n\nLog in to Confluent Platform with your username and password, the `--url` flag to identify the location of your Metadata Service (MDS), and the `--ca-cert-path` flag to identify your self-signed certificate chain.\n\nLogin can be accomplished non-interactively using the `%s`, `%s`, `%s`, and `%s` environment variables.\n\nIn a non-interactive login, `%s` replaces the `--url` flag, and `%s` replaces the `--ca-cert-path` flag.\n\nEven with the environment variables set, you can force an interactive login using the `--prompt` flag.", pauth.ConfluentPlatformUsername, pauth.ConfluentPlatformPassword, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath, pauth.ConfluentPlatformMDSURL, pauth.ConfluentPlatformCACertPath),
 		Args: cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "Log in to Confluent Cloud.",
+				Code: "confluent login",
+			},
+			examples.Example{
+				Text: "Log in to a specific organization in Confluent Cloud.",
+				Code: "confluent login --organization-id 00000000-0000-0000-0000-000000000000",
+			},
+			examples.Example{
+				Text: "Log in to Confluent Platform with a MDS URL.",
+				Code: "confluent login --url http://localhost:8090",
+			},
+			examples.Example{
+				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
+				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+			},
+		),
 	}
 
 	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
@@ -60,7 +80,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: loginOrganizationManager,
 		authTokenHandler:         authTokenHandler,
-		isTest:                   isTest,
 	}
 	cmd.RunE = c.login
 
@@ -73,7 +92,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	isCCloud := ccloudv2.IsCCloudURL(url, c.isTest)
+	isCCloud := ccloudv2.IsCCloudURL(url, c.cfg.IsTest)
 
 	url, warningMsg, err := validateURL(url, isCCloud)
 	if err != nil {
@@ -120,17 +139,20 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
+	privateClient := c.ccloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateClient, url, credentials)
 	if err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	if currentEnv != nil {
+		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	}
 
 	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.
 	// otherwise, print remaining free credit upon each login.
@@ -145,22 +167,23 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	return c.saveLoginToNetrc(cmd, true, credentials)
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Client, currentOrg *orgv1.Organization) {
-	if !utils.IsOrgOnFreeTrial(currentOrg, c.isTest) {
+func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
 	}
 
-	org := &orgv1.Organization{Id: currentOrg.Id}
-	promoCodes, err := client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
-	if err != nil {
-		log.CliLogger.Warnf("Failed to print remaining free credit: %v", err)
+	// the org is not on free trial or there is no promo code claims
+	if len(promoCodeClaims) == 0 {
+		log.CliLogger.Debugf("Skip printing remaining free credit")
 		return
 	}
 
 	// aggregate remaining free credit
 	remainingFreeCredit := int64(0)
-	for _, promoCode := range promoCodes {
-		remainingFreeCredit += promoCode.Balance
+	for _, promoCodeClaim := range promoCodeClaims {
+		remainingFreeCredit += promoCodeClaim.GetBalance()
 	}
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
@@ -172,8 +195,8 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloud.Cl
 // Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
-	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
-	c.loginCredentialsManager.SetCloudClient(client)
+	privateClient := c.ccloudClientFactory.PrivateAnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(privateClient)
 
 	promptOnly, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
@@ -187,10 +210,15 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		IsCloud: true,
 		URL:     url,
 	}
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
+	}
+
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
@@ -230,7 +258,12 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		}
 	}
 
-	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath)
+	unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	client, err := c.mdsClientManager.GetMDSClient(url, caCertPath, unsafeTrace)
 	if err != nil {
 		return err
 	}
@@ -273,13 +306,17 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	}
 
 	netrcFilterParams := netrc.NetrcMachineParams{
-		IsCloud: false,
-		URL:     url,
+		IgnoreCert: true,
+		URL:        url,
+	}
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
 }
@@ -372,7 +409,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	}
 	matched, _ := regexp.MatchString(pattern, url)
 	if !matched {
-		return url, "", errors.New(errors.InvalidLoginURLMsg)
+		return url, "", errors.New(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil

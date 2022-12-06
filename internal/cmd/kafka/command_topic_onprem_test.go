@@ -35,6 +35,8 @@ const (
 	ExpectedListTopicsJsonOutput = "[\n  {\n    \"name\": \"topic-1\"\n  },\n  {\n    \"name\": \"topic-2\"\n  },\n  {\n    \"name\": \"topic-3\"\n  }\n]\n"
 )
 
+var conf *v1.Config
+
 type KafkaTopicOnPremTestSuite struct {
 	suite.Suite
 	testClient *kafkarestv3.APIClient
@@ -237,7 +239,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
+	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, &provider, conf)
 	return newTopicCommand(conf, testPrerunner, "")
 }
 

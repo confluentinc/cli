@@ -1,13 +1,13 @@
 package kafka
 
 import (
-	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -96,27 +96,22 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	configs := toCreateTopicConfigs(configMap)
 	createMirrorTopicRequestData := kafkarestv3.CreateMirrorTopicRequestData{
 		SourceTopicName:   sourceTopicName,
-		ReplicationFactor: replicationFactor,
-		Configs:           toCreateTopicConfigs(configMap),
+		ReplicationFactor: &replicationFactor,
+		Configs:           &configs,
 	}
 	// Only set the mirror topic if it differs from the source topic. This is for backwards compatibility: old versions
 	// of ce-kafka-rest don't know about MirrorTopicName.
 	if sourceTopicName != mirrorTopicName {
-		createMirrorTopicRequestData.MirrorTopicName = mirrorTopicName
+		createMirrorTopicRequestData.MirrorTopicName = &mirrorTopicName
 	}
 
-	createMirrorOpt := &kafkarestv3.CreateKafkaMirrorTopicOpts{
-		CreateMirrorTopicRequestData: optional.NewInterface(
-			createMirrorTopicRequestData,
-		),
+	if httpResp, err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(lkc, linkName, createMirrorTopicRequestData); err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	if httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.CreateKafkaMirrorTopic(kafkaREST.Context, lkc, linkName, createMirrorOpt); err != nil {
-		return handleOpenApiError(httpResp, err, kafkaREST.Client)
-	}
-
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.MirrorTopic, sourceTopicName)
+	utils.Printf(cmd, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

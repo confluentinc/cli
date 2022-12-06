@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -22,7 +21,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	serdes "github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -72,7 +71,7 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
 		if retrieveErr != nil {
@@ -249,7 +248,7 @@ func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *Gr
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumer)
+			utils.ErrPrintln(cmd, errors.StoppingConsumerMsg)
 			consumer.Close()
 			run = false
 		default:
@@ -295,7 +294,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err != nil {
 			return "", nil, err
 		}
-		err = ioutil.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		err = os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
 			return "", nil, err
 		}
@@ -304,13 +303,13 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err != nil {
 			return "", nil, err
 		}
-		err = ioutil.WriteFile(tempRefStorePath, refBytes, 0644)
+		err = os.WriteFile(tempRefStorePath, refBytes, 0644)
 		if err != nil {
 			return "", nil, err
 		}
 		references = schemaString.References
 	} else {
-		refBlob, err := ioutil.ReadFile(tempRefStorePath)
+		refBlob, err := os.ReadFile(tempRefStorePath)
 		if err != nil {
 			return "", nil, err
 		}

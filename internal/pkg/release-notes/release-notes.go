@@ -3,6 +3,7 @@ package releasenotes
 import (
 	"io"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -63,8 +64,8 @@ func buildAndWriteReleaseNotes(version string, content *ReleaseNotesContent, doc
 	return writeFile(updatedDocsFilePath, updatedDocsPage)
 }
 
-func buildDocsPage(docsFilePath string, docsHeader string, latestReleaseNotes string) (string, error) {
-	docsUpdateHandler := NewDocsUpdateHandler(docsHeader, docsFilePath+"/"+docsPageFileName)
+func buildDocsPage(docsFilePath, docsHeader, latestReleaseNotes string) (string, error) {
+	docsUpdateHandler := NewDocsUpdateHandler(docsHeader, filepath.Join(docsFilePath, docsPageFileName))
 	updatedDocsPage, err := docsUpdateHandler.getUpdatedDocsPage(latestReleaseNotes)
 	if err != nil {
 		return "", err

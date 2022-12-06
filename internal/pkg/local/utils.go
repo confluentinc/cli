@@ -46,7 +46,7 @@ func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]str
 		case string:
 			val, err = flags.GetString(key)
 		case []string:
-			val, err = flags.GetStringArray(key)
+			val, err = flags.GetStringSlice(key)
 		}
 		if err != nil {
 			return []string{}, err

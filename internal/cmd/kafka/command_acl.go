@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -139,12 +140,12 @@ func parsePrincipal(principal string) (string, error) {
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
+	adminUsers, err := c.PrivateClient.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -159,12 +160,12 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 }
 
 func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
+	adminUsers, err := c.PrivateClient.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -176,4 +177,15 @@ func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
 		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil
+}
+
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	if err != nil {
+		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+	}
+	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
+		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
 }

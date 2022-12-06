@@ -9,13 +9,14 @@ Available Commands:
   describe    Describe a connector.
   event       Manage Connect log events configuration.
   list        List connectors.
-  pause       Pause a connector.
+  pause       Pause connectors.
   plugin      Show plugins and their configurations.
-  resume      Resume a connector.
+  resume      Resume connectors.
   update      Update a connector configuration.
 
 Global Flags:
   -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "confluent connect [command] --help" for more information about a command.

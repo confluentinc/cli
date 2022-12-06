@@ -7,16 +7,16 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/antihax/optional"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/set"
@@ -45,7 +45,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
-				Code: `confluent kafka topic update my_topic --config="retention.ms=259200000"`,
+				Code: `confluent kafka topic update my_topic --config "retention.ms=259200000"`,
 			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
@@ -78,8 +78,16 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaREST, _ := c.GetKafkaREST()
-	if kafkaREST != nil && !dryRun {
+	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	if err != nil {
+		return err
+	}
+
+	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
 		// num.partitions is read only but requires special handling
 		_, hasNumPartitionsChanged := configMap["num.partitions"]
 		if hasNumPartitionsChanged {
@@ -87,41 +95,33 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		}
 		kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
-		kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-		if err != nil {
-			return err
-		}
-		lkc := kafkaClusterConfig.ID
-
-		httpResp, err := kafkaREST.Client.ConfigsV3Api.UpdateKafkaTopicConfigBatch(kafkaREST.Context, lkc, topicName,
-			&kafkarestv3.UpdateKafkaTopicConfigBatchOpts{
-				AlterConfigBatchRequestData: optional.NewInterface(kafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}),
-			})
+		data := toAlterConfigBatchRequestData(configMap)
+		httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
 
 		if err != nil && httpResp != nil {
 			// Kafka REST is available, but an error occurred
-			restErr, parseErr := parseOpenAPIError(err)
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil {
-				if restErr.Code == KafkaRestUnknownTopicOrPartitionErrorCode {
+				if restErr.Code == unknownTopicOrPartitionErrorCode {
 					return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 				}
 			}
-			return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 
 		if err == nil && httpResp != nil {
 			if httpResp.StatusCode != http.StatusNoContent {
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusMsg, httpResp.Request.URL, httpResp.StatusCode),
+					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
 					errors.InternalServerErrorSuggestions)
 			}
 
 			// Kafka REST is available and there was no error
-			configsResp, httpResp, err := kafkaREST.Client.ConfigsV3Api.ListKafkaTopicConfigs(kafkaREST.Context, lkc, topicName)
+			configsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 			if err != nil {
-				return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 			} else if configsResp.Data == nil {
-				return errors.NewErrorWithSuggestions(errors.EmptyResponseMsg, errors.InternalServerErrorSuggestions)
+				return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 			}
 			readOnlyConfigs := set.New()
 			configsValues := make(map[string]string)
@@ -129,7 +129,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				if conf.IsReadOnly {
 					readOnlyConfigs.Add(conf.Name)
 				}
-				configsValues[conf.Name] = *conf.Value
+				configsValues[conf.Name] = conf.GetValue()
 			}
 
 			// Output writing preparation
@@ -147,10 +147,10 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 				configsValues["num.partitions"] = strconv.Itoa(numPartitions)
 				// Add num.partitions back into kafkaRestConfig for sorting & output
 				partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: "num.partitions"}
-				kafkaRestConfigs = append(kafkaRestConfigs, partitionsKafkaRestConfig)
+				kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 			}
-			sort.Slice(kafkaRestConfigs, func(i, j int) bool {
-				return kafkaRestConfigs[i].Name < kafkaRestConfigs[j].Name
+			sort.Slice(kafkaRestConfigs.Data, func(i, j int) bool {
+				return kafkaRestConfigs.Data[i].Name < kafkaRestConfigs.Data[j].Name
 			})
 
 			// Write current state of relevant config settings
@@ -161,7 +161,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			if format == output.Human.String() {
 				utils.ErrPrintf(cmd, errors.UpdateTopicConfigRestMsg, topicName)
 			}
-			for _, config := range kafkaRestConfigs {
+			for _, config := range kafkaRestConfigs.Data {
 				row := &updateRow{
 					Name:     config.Name,
 					Value:    configsValues[config.Name],
@@ -181,7 +181,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.TopicSpecification{Name: args[0], Configs: copyMap(configMap)}
 
-	err = c.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
+	err = c.PrivateClient.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
 	if err != nil {
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}

@@ -55,21 +55,21 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
-	if auditLog := v1.GetAuditLog(c.State); auditLog == nil {
+	if v1.GetAuditLog(c.Context.Context) == nil {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
-	auditLog := c.State.Auth.Organization.AuditLog
+	auditLog := c.Context.GetOrganization().GetAuditLog()
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.ServiceAccountId)
+	serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
 
 	return output.DescribeObject(cmd, &auditLogStruct{
-		ClusterId:        auditLog.ClusterId,
-		EnvironmentId:    auditLog.AccountId,
-		ServiceAccountId: serviceAccount.ResourceId,
-		TopicName:        auditLog.TopicName,
+		ClusterId:        auditLog.GetClusterId(),
+		EnvironmentId:    auditLog.GetAccountId(),
+		ServiceAccountId: serviceAccount.GetResourceId(),
+		TopicName:        auditLog.GetTopicName(),
 	}, listFields, humanLabelMap, structuredLabelMap)
 }

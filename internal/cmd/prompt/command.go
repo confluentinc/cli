@@ -48,11 +48,10 @@ func New(cfg *v1.Config) *cobra.Command {
 				if ctx == nil {
 					return none
 				}
-				state := ctx.State
-				if state.Auth == nil || state.Auth.Account == nil || state.Auth.Account.Id == "" {
-					return none
+				if id := ctx.GetEnvironment().GetId(); id != "" {
+					return id
 				}
-				return state.Auth.Account.Id
+				return none
 			},
 		},
 		{
@@ -63,12 +62,10 @@ func New(cfg *v1.Config) *cobra.Command {
 				if ctx == nil {
 					return none
 				}
-				state := ctx.State
-				if state.Auth == nil || state.Auth.Account == nil || state.Auth.Account.Name == "" {
-					return none
-				} else {
-					return state.Auth.Account.Name
+				if name := ctx.GetEnvironment().GetName(); name != "" {
+					return name
 				}
+				return none
 			},
 		},
 		{
@@ -110,11 +107,10 @@ func New(cfg *v1.Config) *cobra.Command {
 				if ctx == nil {
 					return none
 				}
-				state := ctx.State
-				if state.Auth == nil || state.Auth.User == nil || state.Auth.User.Email == "" {
-					return none
+				if email := ctx.GetUser().GetEmail(); email != "" {
+					return email
 				}
-				return state.Auth.User.Email
+				return none
 			},
 		},
 	})

@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"testing"
@@ -198,7 +197,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
-	return New(cliMock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
+	return New(cliMock.NewPreRunnerMock(nil, nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {
@@ -317,7 +316,7 @@ func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
 	if err != nil {
 		return nil, err
 	}
-	file, err := ioutil.TempFile(os.TempDir(), "test")
+	file, err := os.CreateTemp(os.TempDir(), "test")
 	if err != nil {
 		return file, err
 	}

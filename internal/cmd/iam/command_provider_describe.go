@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,17 +36,19 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
-	identityProviderProfile, httpResp, err := c.V2Client.GetIdentityProvider(args[0])
+	identityProviderProfile, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		return errors.CatchV2ErrorMessageWithResponse(err, httpResp)
+		return err
 	}
 
 	describeIdentityProvider := &identityProvider{
-		Id:          *identityProviderProfile.Id,
-		Name:        *identityProviderProfile.DisplayName,
-		Description: *identityProviderProfile.Description,
-		IssuerUri:   *identityProviderProfile.Issuer,
-		JwksUri:     *identityProviderProfile.JwksUri,
+		Id:        *identityProviderProfile.Id,
+		Name:      *identityProviderProfile.DisplayName,
+		IssuerUri: *identityProviderProfile.Issuer,
+		JwksUri:   *identityProviderProfile.JwksUri,
+	}
+	if identityProviderProfile.Description != nil {
+		describeIdentityProvider.Description = *identityProviderProfile.Description
 	}
 
 	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)

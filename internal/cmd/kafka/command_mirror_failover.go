@@ -8,11 +8,12 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> <destination-topic-2> ... <destination-topic-N> --link my-link",
+		Use:   "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
 		Short: "Failover mirror topics.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.failover,
@@ -67,7 +68,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)
 	if err != nil {
-		return kafkaRestError(kafkaREST.Client.GetConfig().BasePath, err, httpResp)
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return printAlterMirrorResult(cmd, results)

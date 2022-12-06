@@ -52,15 +52,17 @@ type featureFlagManager interface {
 }
 
 type launchDarklyManager struct {
-	cliClient    *sling.Sling
-	ccloudClient func(v1.LaunchDarklyClient) *sling.Sling
-	version      *version.Version
+	cliClient                *sling.Sling
+	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
+	isDisabled               bool
+	timeoutSuggestionPrinted bool
+	version                  *version.Version
 }
 
-func Init(version *version.Version, isTest bool) {
+func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
-		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.Path, "1234")
+		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
 	}
@@ -84,9 +86,11 @@ func Init(version *version.Version, isTest bool) {
 	}
 
 	Manager = &launchDarklyManager{
-		cliClient:    sling.New().Base(cliBasePath),
-		ccloudClient: ccloudClientProvider,
-		version:      version,
+		cliClient:                sling.New().Base(cliBasePath),
+		ccloudClient:             ccloudClientProvider,
+		version:                  version,
+		timeoutSuggestionPrinted: false,
+		isDisabled:               isDisabledConfig,
 	}
 }
 
@@ -127,6 +131,10 @@ func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.Dyna
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal interface{}) interface{} {
+	if ld.isDisabled {
+		return defaultVal
+	}
+
 	user := ld.contextToLDUser(ctx)
 	// Check if cached flags are available
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
@@ -172,6 +180,12 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
+		if !ld.timeoutSuggestionPrinted {
+			timeoutSuggestions := errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`)
+			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n" + timeoutSuggestions + "\n")
+			ld.timeoutSuggestionPrinted = true
+		}
+
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
 	}
 	return flagVals, nil
@@ -230,26 +244,21 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		userBuilder.Key(key).Anonymous(true)
 		return userBuilder.Build()
 	}
-	user := ctx.GetUser()
 	// Basic user info
-	if user != nil && user.ResourceId != "" {
-		userResourceId := ctx.State.Auth.User.ResourceId
-		userBuilder = lduser.NewUserBuilder(userResourceId)
-		setCustomAttribute(custom, "user.resource_id", ldvalue.String(userResourceId))
+	if id := ctx.GetUser().GetResourceId(); id != "" {
+		userBuilder = lduser.NewUserBuilder(id)
+		setCustomAttribute(custom, "user.resource_id", ldvalue.String(id))
 	} else {
 		key := uuid.New().String()
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
-
-	organization := ctx.GetOrganization()
 	// org info
-	if organization != nil && organization.ResourceId != "" {
-		setCustomAttribute(custom, "org.resource_id", ldvalue.String(organization.ResourceId))
+	if id := ctx.GetOrganization().GetResourceId(); id != "" {
+		setCustomAttribute(custom, "org.resource_id", ldvalue.String(id))
 	}
-	environment := ctx.GetEnvironment()
 	// environment (account) info
-	if environment != nil && environment.Id != "" {
-		setCustomAttribute(custom, "environment.id", ldvalue.String(environment.Id))
+	if id := ctx.GetEnvironment().GetId(); id != "" {
+		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
 	}
 	// cluster info
 	cluster, _ := ctx.GetKafkaClusterForCommand()

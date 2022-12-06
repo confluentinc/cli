@@ -3,7 +3,7 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -156,7 +156,7 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 			return nil, err
 		}
 	default:
-		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestion)
+		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestions)
 	}
 	return configMap, nil
 }
@@ -319,7 +319,7 @@ func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string,
 			return err
 		}
 		defer configFile.Close()
-		configBytes, err := ioutil.ReadAll(configFile)
+		configBytes, err := io.ReadAll(configFile)
 		if err != nil {
 			return err
 		}

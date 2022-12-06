@@ -70,7 +70,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient)
 	if err == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
@@ -82,7 +82,8 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	} else {
 		cluster, err = c.Context.GetKafkaClusterForCommand()
 		if err != nil {
-			return err
+			// Replace the error msg since it suggests flags which are unavailable with this command
+			return errors.NewErrorWithSuggestions(errors.NoKafkaSelectedErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
 		}
 	}
 

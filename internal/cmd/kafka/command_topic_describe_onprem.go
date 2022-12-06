@@ -9,6 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -21,7 +22,12 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 		Short: "Describe a Kafka topic.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe the "my_topic" topic at specified cluster (providing Kafka REST Proxy endpoint).`,
+				Text: `Describe the "my_topic" topic for the specified cluster (providing embedded Kafka REST Proxy endpoint).`,
+				Code: "confluent kafka topic describe my_topic --url http://localhost:8090/kafka",
+			},
+
+			examples.Example{
+				Text: `Describe the "my_topic" topic for the specified cluster (providing Kafka REST Proxy endpoint).`,
 				Code: "confluent kafka topic describe my_topic --url http://localhost:8082",
 			},
 		),
@@ -54,7 +60,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	topicData := &TopicData{}
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	} else if partitionsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
@@ -71,7 +77,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 		// For each partition, get replicas
 		replicasResp, resp, err := restClient.ReplicaApi.ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasGet(restContext, clusterId, topicName, partitionId)
 		if err != nil {
-			return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
@@ -95,7 +101,7 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	// Get configs
 	configsResp, resp, err := restClient.ConfigsV3Api.ListKafkaTopicConfigs(restContext, clusterId, topicName)
 	if err != nil {
-		return kafkaRestError(restClient.GetConfig().BasePath, err, resp)
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	} else if configsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}

@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -17,9 +16,9 @@ import (
 )
 
 func GetCAClient(caCertPath string) (*http.Client, error) {
-	caCert, err := ioutil.ReadFile(caCertPath)
+	caCert, err := os.ReadFile(caCertPath)
 	if err != nil {
-		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestion)
+		return nil, errors.NewErrorWithSuggestions(errors.CaCertNotSpecifiedErrorMsg, errors.SRCaCertSuggestions)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
@@ -99,7 +98,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 			caCertPool = x509.NewCertPool()
 		}
 		// read custom certs
-		caCerts, err := ioutil.ReadAll(caCertReader)
+		caCerts, err := io.ReadAll(caCertReader)
 		if err != nil {
 			return nil, errors.Wrap(err, errors.ReadCertErrorMsg)
 		}

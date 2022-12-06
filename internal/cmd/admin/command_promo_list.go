@@ -45,9 +45,9 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.State.Auth.Account.OrganizationId}
+	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	codes, err := c.PrivateClient.Billing.GetClaimedPromoCodes(context.Background(), org, true)
 	if err != nil {
 		return err
 	}

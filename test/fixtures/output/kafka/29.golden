@@ -7,7 +7,8 @@ ingress: 100
 name: lkc-update-name
 provider: aws
 region: us-west-2
-rest_endpoint: http://kafka-rest-url
+rest_endpoint: http://127.0.0.1:1025
 status: UP
 storage: 5 TB
+topic_count: 2
 type: BASIC

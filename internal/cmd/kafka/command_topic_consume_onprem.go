@@ -92,7 +92,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	consumer, err := newOnPremConsumer(cmd, c.clientID, configFile, config)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerMsg, err).Error(), errors.OnPremConfigGuideSuggestion)
+		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
@@ -103,7 +103,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 
 	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
 	if err != nil {
-		return fmt.Errorf(errors.FailedToCreateAdminClientMsg, err)
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
 	}
 	defer adminClient.Close()
 
@@ -144,7 +144,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
 		if c.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestion)
+			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 		if err != nil {
