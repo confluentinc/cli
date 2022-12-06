@@ -324,9 +324,6 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
-	if cluster.Endpoint == "" {
-		cluster.Endpoint = cluster.ApiEndpoint
-	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
