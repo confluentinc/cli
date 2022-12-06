@@ -16,6 +16,10 @@ Grant the role "MetricsViewer" to service account "sa-123456":
 
   $ confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer
 
+Grant the role "KsqlAdmin" to the principal "User:u-123456", in the environment "env-12345" and cloud cluster "lkc-123456" for the KSQL cluster named "myKsqlCluster":
+
+  $ confluent iam rbac role-binding create --principal User:u-123456 --role KsqlAdmin --environment env-12345 --cloud-cluster lkc-123456 --ksql-cluster myKsqlCluster
+
 Flags:
       --role string                      REQUIRED: Role name of the new role binding.
       --principal string                 REQUIRED: Qualified principal name for the role binding.
