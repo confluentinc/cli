@@ -3,7 +3,7 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-2
+    type: s1-prod-ubuntu20-04-amd64-1
 
 auto_cancel:
   running:
@@ -82,7 +82,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
-            - make deps
+            - make semaphore-deps
             - ulimit -n 2048
             - make test
       epilogue:
@@ -119,7 +119,7 @@ blocks:
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
 
             # Run tests
-            - make deps
+            - make semaphore-deps
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
           
