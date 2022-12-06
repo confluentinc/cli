@@ -17,7 +17,6 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster create --help", fixture: "ksql/cluster/create-help.golden"},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", wantErrCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345 --credential-identity sa-credential-identity", fixture: "ksql/cluster/create-result.golden"},
-		{args: "ksql cluster create test_ksql --cluster lkc-12345 --credential-identity sa-credential-identity", env: []string{"XX_DATAPLANE_3_ENABLE=1"}, fixture: "ksql/cluster/create-result-rbac-stage3.golden"},
 		{args: "ksql cluster create test_ksql_json --cluster lkc-12345 --credential-identity sa-credential-identity -o json", fixture: "ksql/cluster/create-result-json.golden"},
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-12345 --credential-identity sa-credential-identity -o yaml", fixture: "ksql/cluster/create-result-yaml.golden"},
 		{args: "ksql cluster create test_ksql --cluster lkc-processLogFalse --credential-identity sa-credential-identity --log-exclude-rows", fixture: "ksql/cluster/create-result-log-exclude-rows.golden"},
