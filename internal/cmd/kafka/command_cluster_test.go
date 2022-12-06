@@ -221,27 +221,6 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }
 
-func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
-	req := require.New(suite.T())
-	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
-		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
-			return cmkv2.ApiGetCmkV2ClusterRequest{}
-		},
-		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-			return cmkExpandCluster, nil, nil
-		},
-	}
-	// Set variable for Metrics API mock
-	shouldError = true
-	shouldPrompt = false
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
-	err := cmd.Execute()
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
-	req.Contains(err.Error(), "cluster shrink validation error")
-}
-
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	cmd.SetArgs([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
