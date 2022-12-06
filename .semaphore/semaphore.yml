@@ -82,7 +82,7 @@ blocks:
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
-            - make deps
+            - make semaphore-deps
             - ulimit -n 2048
             - make test
       epilogue:
@@ -108,6 +108,7 @@ blocks:
             
             # Set up Go
             # TODO: https://confluentinc.atlassian.net/browse/DP-9532
+            - Write-Output $(go env)
             
             # Set up Git
             - checkout
@@ -119,7 +120,7 @@ blocks:
             - cache restore windows-$($(Get-FileHash go.sum).Hash)
 
             # Run tests
-            - make deps
+            - make semaphore-deps
             - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
             - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
           
