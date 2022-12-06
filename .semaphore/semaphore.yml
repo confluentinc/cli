@@ -121,7 +121,6 @@ blocks:
             - dir C:\Users\semaphore\go\pkg\mod\
 
             # Run tests
-            - make deps
             - go install -v github.com/goreleaser/goreleaser@v1.11.2
             - go install -v gotest.tools/gotestsum@v1.8.2
             - dir C:\Users\semaphore\go\pkg\mod\
