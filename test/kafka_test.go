@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/bincover"
 )
 
-func (s *CLITestSuite) TestKafka() {
+func (s *CLITestSuite) TestKafka123() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
