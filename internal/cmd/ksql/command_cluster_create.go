@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -83,11 +82,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
-		if srCluster != nil {
-			utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
-		}
+	srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
+	if srCluster != nil {
+		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	table := output.NewTable(cmd)
