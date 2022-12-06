@@ -59,7 +59,13 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		utils.Println(cmd, "connector.class : "+args[0])
 		for _, c := range *reply.Configs {
 			if len(c.Value.GetErrors()) > 0 {
-				utils.Println(cmd, c.Value.GetName()+" : ["+c.Value.GetErrors()[0]+"]")
+				var doc string
+				if *(c.GetDefinition().Documentation) != "" {
+					doc = *(c.GetDefinition().Documentation)
+				} else {
+					doc = *(c.GetDefinition().DisplayName)
+				}
+				utils.Println(cmd, c.Value.GetName()+" : "+doc)
 			}
 		}
 		return nil
