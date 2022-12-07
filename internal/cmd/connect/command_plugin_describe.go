@@ -2,6 +2,7 @@ package connect
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -9,8 +10,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
+)
+
+var (
+	pluginConfigFields          = []string{"Config", "Documentation", "Required"}
+	pluginConfigHumanFields     = []string{"Config", "Documentation", "Required"}
+	pluginConfigStructureLabels = []string{"config", "documentation", "required"}
 )
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
@@ -49,26 +55,29 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	outputWriter, err := output.NewListOutputWriter(cmd, pluginConfigFields, pluginConfigHumanFields, pluginConfigStructureLabels)
 	if err != nil {
 		return err
 	}
 
-	if outputFormat == output.Human.String() {
-		utils.Println(cmd, "The following are required configs:")
-		utils.Println(cmd, "connector.class : "+args[0])
-		for _, c := range *reply.Configs {
-			if len(c.Value.GetErrors()) > 0 {
-				utils.Println(cmd, c.Value.GetName()+" : ["+c.Value.GetErrors()[0]+"]")
-			}
+	configs := reply.GetConfigs()
+	// move the required configs to top
+	sort.Slice(configs, func(i, j int) bool {
+		return configs[i].Definition.GetRequired() && !configs[j].Definition.GetRequired()
+	})
+
+	for _, c := range configs {
+		doc := c.Definition.GetDisplayName()
+		if c.Definition.GetDocumentation() != "" {
+			doc = c.Definition.GetDocumentation()
 		}
-		return nil
+		pluginConfigDisplayElement := &pluginConfigDisplay{
+			Config:        c.Value.GetName(),
+			Documentation: doc,
+			Required:      c.Definition.GetRequired(),
+		}
+		outputWriter.AddElement(pluginConfigDisplayElement)
 	}
 
-	for _, c := range *reply.Configs {
-		if len(c.Value.GetErrors()) > 0 {
-			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
-		}
-	}
-	return output.StructuredOutput(outputFormat, &config)
+	return outputWriter.Out()
 }
