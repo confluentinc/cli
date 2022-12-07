@@ -42,7 +42,6 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ConsumerShare, shareId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
-		utils.Println(cmd, "Operation terminated.")
 		return err
 	}
 
