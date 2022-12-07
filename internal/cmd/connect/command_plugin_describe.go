@@ -56,10 +56,14 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	if outputFormat == output.Human.String() {
 		utils.Println(cmd, "The following are required configs:")
-		utils.Println(cmd, "connector.class : "+args[0])
-		for _, c := range *reply.Configs {
+		utils.Printf(cmd, "connector.class: %s\n", args[0])
+		for _, config := range reply.GetConfigs() {
 			if len(c.Value.GetErrors()) > 0 {
-				utils.Println(cmd, c.Value.GetName()+" : ["+c.Value.GetErrors()[0]+"]")
+				doc := c.Definition.GetDisplayName()
+				if c.Definition.GetDocumentation() != "" {
+					doc = c.Definition.GetDocumentation()
+				}
+				utils.Printf(cmd, "%s: %s\n", c.Value.GetName(), doc)
 			}
 		}
 		return nil
@@ -67,7 +71,11 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for _, c := range *reply.Configs {
 		if len(c.Value.GetErrors()) > 0 {
-			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
+			doc := c.Definition.GetDisplayName()
+			if c.Definition.GetDocumentation() != "" {
+				doc = c.Definition.GetDocumentation()
+			}
+			config[c.Value.GetName()] = doc
 		}
 	}
 	return output.StructuredOutput(outputFormat, &config)
