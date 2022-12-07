@@ -46,7 +46,7 @@ func (s *CLITestSuite) TestIAMRBACRoleCloud() {
 		{args: "iam rbac role list -o json", fixture: "iam/rbac/role/list-json-cloud.golden"},
 		{args: "iam rbac role list -o yaml", fixture: "iam/rbac/role/list-yaml-cloud.golden"},
 		{args: "iam rbac role list", fixture: "iam/rbac/role/list-cloud.golden"},
-		{args: "iam rbac role list", env: []string{"XX_DATAPLANE_3_ENABLE=1"}, fixture: "iam/rbac/role/list-dataplane-stage3-cloud.golden"},
+		{args: "iam rbac role list", env: []string{"XX_SR_RBAC_ENABLE=1", "XX_KSQL_RBAC_ENABLE=1"}, fixture: "iam/rbac/role/list-dataplane-stage3-cloud.golden"},
 	}
 
 	for _, tt := range tests {

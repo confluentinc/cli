@@ -49,15 +49,22 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	}
 	roles = append(roles, publicAndDataplaneRoles...)
 
-	// add ksql and datagovernance roles
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		ksqlAndDataGovernanceNamespace := []string{ksqlNamespace.Value(), dataGovernanceNamespace.Value()}
-		ksqlAndDataGovernanceNamespaceOpt := optional.NewString(strings.Join(ksqlAndDataGovernanceNamespace, ","))
-		ksqlAndDataGovernanceRoles, err := c.namespaceRoles(ksqlAndDataGovernanceNamespaceOpt)
+	// add ksql roles
+	if os.Getenv("XX_KSQL_RBAC_ENABLE") != "" {
+		ksqlRoles, err := c.namespaceRoles(ksqlNamespace)
 		if err != nil {
 			return err
 		}
-		roles = append(roles, ksqlAndDataGovernanceRoles...)
+		roles = append(roles, ksqlRoles...)
+	}
+
+	// add datagovernance roles
+	if os.Getenv("XX_SR_RBAC_ENABLE") != "" {
+		dataGovernanceRoles, err := c.namespaceRoles(dataGovernanceNamespace)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, dataGovernanceRoles...)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
