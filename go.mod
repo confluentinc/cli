@@ -60,7 +60,7 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.13
-	github.com/jhump/protoreflect v1.12.0
+	github.com/jhump/protoreflect v1.14.0
 	github.com/jonboulle/clockwork v0.2.2
 	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mattn/go-isatty v0.0.16
