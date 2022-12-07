@@ -83,7 +83,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
+	if os.Getenv("XX_SR_RBAC_ENABLE") != "" {
 		srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
 		if srCluster != nil {
 			utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
