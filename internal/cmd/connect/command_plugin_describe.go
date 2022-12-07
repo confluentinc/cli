@@ -71,7 +71,11 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	for _, c := range *reply.Configs {
 		if len(c.Value.GetErrors()) > 0 {
-			config[c.Value.GetName()] = fmt.Sprintf("%s ", c.Value.GetErrors()[0])
+			doc := c.Definition.GetDisplayName()
+			if c.Definition.GetDocumentation() != "" {
+				doc = c.Definition.GetDocumentation()
+			}
+			config[c.Value.GetName()] = doc
 		}
 	}
 	return output.StructuredOutput(outputFormat, &config)
