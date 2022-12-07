@@ -20,10 +20,13 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 		}
 
+		srPrices := map[string]float64{exampleSRPriceKey: exampleSchemaLimit}
+
 		res := &ccloudv1.GetPriceTableReply{
 			PriceTable: &ccloudv1.PriceTable{
 				PriceTable: map[string]*ccloudv1.UnitPrices{
-					exampleMetric: {Unit: exampleUnit, Prices: prices},
+					exampleMetric:       {Unit: exampleUnit, Prices: prices},
+					exampleSRPriceTable: {Unit: exampleSRPriceUnit, Prices: srPrices},
 				},
 			},
 		}
