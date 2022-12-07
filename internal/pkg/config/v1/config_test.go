@@ -120,10 +120,9 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.kafkaClusters = map[string]*KafkaClusterConfig{
 		kafkaClusterID: {
-			ID:          kafkaClusterID,
-			Name:        "anonymous-cluster",
-			Bootstrap:   "http://test",
-			APIEndpoint: "",
+			ID:        kafkaClusterID,
+			Name:      "anonymous-cluster",
+			Bootstrap: "http://test",
 			APIKeys: map[string]*APIKeyPair{
 				apiKeyString: {
 					Key:    apiKeyString,
@@ -833,10 +832,9 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	}
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
-		ID:          otherKafkaClusterId,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        otherKafkaClusterId,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -883,10 +881,9 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
-		ID:          otherKafkaClusterId,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        otherKafkaClusterId,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -918,10 +915,9 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -942,10 +938,9 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
@@ -974,10 +969,9 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
