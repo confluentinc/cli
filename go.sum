@@ -702,8 +702,8 @@ github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuR
 github.com/confluentinc/k8saas/grpc-api/api v0.726.0/go.mod h1:6eQbw72Dz8dmfaWzTnIVuCAJBDwqYsdJXw2yX9LT1zI=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14 h1:/ifiYRgvbtzTrMxsntzAc2NFXsZxfCpjHZG03X9BDxw=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
-github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40 h1:sitY5c+efIA1sQspTrlWM0YSEMDIibQJVZHnoXJjsCo=
-github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40/go.mod h1:8uhp3pNJttGbFtDGWlSBgf57OxGOPh8BvVOonoGhV1o=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48 h1:3M4UYpTDex+MxI689sy2kdI7SbfnBW/GAPxEcfvCghg=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48/go.mod h1:8uhp3pNJttGbFtDGWlSBgf57OxGOPh8BvVOonoGhV1o=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.4/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.22/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37/go.mod h1:Gpylo9DhWPClL/rpmoRPjNHxOsdrf1qL8QNRAbJO5Z0=
