@@ -57,7 +57,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 	if outputFormat == output.Human.String() {
 		utils.Println(cmd, "The following are required configs:")
 		utils.Printf(cmd, "connector.class: %s\n", args[0])
-		for _, c := range *reply.Configs {
+		for _, config := range reply.GetConfigs() {
 			if len(c.Value.GetErrors()) > 0 {
 				doc := c.Definition.GetDisplayName()
 				if c.Definition.GetDocumentation() != "" {
