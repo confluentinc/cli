@@ -3,12 +3,15 @@ package streamshare
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/spf13/cobra"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/crn"
 )
 
 type privateLinkNetworkDetails struct {
@@ -58,4 +61,38 @@ func confirmOptOut(cmd *cobra.Command) (bool, error) {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
+}
+
+func getSubjectsCRNFromSharedResources(sharedResources []cdxv1.CdxV1ProviderSharedResource) ([]string, error) {
+	var crns []string
+	for _, s := range sharedResources {
+		for _, r := range s.GetResources() {
+			crnObj, err := crn.NewFromString(r)
+			if err != nil {
+				return nil, err
+			}
+			for _, e := range crnObj.Elements {
+				if e.ResourceType == resource.Subject {
+					crns = append(crns, r)
+				}
+			}
+		}
+	}
+	return crns, nil
+}
+
+func areSubjectsModified(newSubjectsCRN []string, existingSubjectsCRN []string) error {
+	if len(newSubjectsCRN) != len(existingSubjectsCRN) {
+		return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
+	}
+
+	sort.Strings(newSubjectsCRN)
+	sort.Strings(existingSubjectsCRN)
+
+	for i, s := range existingSubjectsCRN {
+		if s != newSubjectsCRN[i] {
+			return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
+		}
+	}
+	return nil
 }
