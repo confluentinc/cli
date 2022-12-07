@@ -1,9 +1,6 @@
 package kafka
 
 import (
-	"context"
-	"fmt"
-	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -68,8 +64,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	ctx := c.AuthenticatedCLICommand.Context.Config.Context()
-	c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	ctx := c.Context.Config.Context()
+	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
@@ -169,30 +165,15 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		return 0, nil
 	}
 
-	lkc := *cluster.Id
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(lkc)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but an error occurred
-			return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusOK {
-				return 0, errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST is available and there was no error
-			return len(topicGetResp.Data), nil
-		}
-	}
-
-	// Kafka REST is not available, fall back to KafkaAPI, to be deprecated
-	req, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return 0, err
 	}
-	resp, err := c.PrivateClient.Kafka.ListTopics(context.Background(), req)
-	return len(resp), err
+
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	if err != nil {
+		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	return len(topics.Data), nil
 }

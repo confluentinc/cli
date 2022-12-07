@@ -633,8 +633,8 @@ github.com/confluentinc/cc-utils v0.240.0/go.mod h1:l5vuobVLiwFY9S+M7aLwHzFBc354
 github.com/confluentinc/cc-utils/idgen v0.203.0/go.mod h1:vKsrR9u7tqRE/9MP1sQn0bqNrDQSVbNe0qbqSU/xWYc=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108 h1:XVbx4yuLLM2jPjepdvmOY1X1y8ti7GcTBUZmuXGHjHs=
 github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108/go.mod h1:AAVdbxtQfR0gJkrADk+cyA3u8fTxsofg6l73n901nWo=
-github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221201012806-05d56fd583cf h1:5XlMvgPj5se/Ots105D7SizLxOkzH4QLvhJPDRuqvc4=
-github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221201012806-05d56fd583cf/go.mod h1:KtqKCUuccBTr/ziC5wJRLL2wIFLNURZLgQzT1ibWpEU=
+github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221202021212-436f6cd2b475 h1:edzbZlqiRXOPyDcvZbBRogXnCoT3YyTV2oVee7ATanU=
+github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221202021212-436f6cd2b475/go.mod h1:kyF4ef3dRDOG6N+8ncTiYHmWe2KZ/aOlCyQRScq28Qo=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.5/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/networking v0.0.7/go.mod h1:b0fKj4FlWseVcd8CsjXUdvvDtAGHu8nDUJjPykqWInQ=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -685,7 +685,6 @@ github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0 h1:alq2+x
 github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/crn v0.1.1-0.20210416032625-44ccb46a7687/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
-github.com/confluentinc/crn v0.2.0 h1:ReoF7FS2gZPEV5lHtbDZOnBWg0P78XnOkHdUgUL3yrY=
 github.com/confluentinc/crn v0.2.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=
 github.com/confluentinc/events v1.0.0/go.mod h1:m3JwuKmu1jh4JFlpPD+CuB7Hdncfa+MSvcuKoaVxOdU=

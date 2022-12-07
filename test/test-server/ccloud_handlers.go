@@ -23,7 +23,6 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -75,6 +74,11 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
+
+	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
+	exampleSRPriceTable = "SchemaRegistry"
+	exampleSRPriceUnit  = "Schema-Hour"
+	exampleSchemaLimit  = 1000
 )
 
 // Fill API keyStore with default data
@@ -334,11 +338,11 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 // Handler for: "api/env_metadata"
 func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*schedv1.CloudMetadata{
+		clouds := []*ccloudv1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "asia-southeast1",
 						Name:          "asia-southeast1 (Singapore)",
@@ -354,7 +358,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "aws",
 				Name: "Amazon Web Services",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "ap-northeast-1",
 						Name:          "ap-northeast-1 (Tokyo)",
@@ -370,7 +374,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "azure",
 				Name: "Azure",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "southeastasia",
 						Name:          "southeastasia (Singapore)",
@@ -379,7 +383,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 				},
 			},
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetEnvironmentMetadataReply{
+		reply, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetEnvironmentMetadataReply{
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
@@ -754,7 +758,7 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/external_identities"
 func handleExternalIdentities(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := &bucketv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
+		res := &ccloudv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}

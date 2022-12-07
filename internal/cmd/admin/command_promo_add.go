@@ -4,8 +4,9 @@ import (
 	"context"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newAddCommand() *cobra.Command {

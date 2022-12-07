@@ -23,6 +23,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+	defer os.Remove("asyncapi-spec.yaml")
 	s.FileExistsf("./asyncapi-spec.yaml", "Spec file not generated.")
 	file, err := os.ReadFile("asyncapi-spec.yaml")
 	if err != nil {
