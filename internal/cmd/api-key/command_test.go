@@ -159,7 +159,6 @@ func (suite *APITestSuite) SetupTest() {
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 		AccountId:  environment,
 	}
