@@ -54,7 +54,6 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
 	suite.srCluster = &schedv1.SchemaRegistryCluster{
