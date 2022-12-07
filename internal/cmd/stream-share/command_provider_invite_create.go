@@ -111,6 +111,15 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) validateSubjects(newSubjectsCRN []string, topicCRN string) error {
+	providerShares, err := c.V2Client.ListProviderShares("", topicCRN)
+	if err != nil {
+		return err
+	}
+
+	if len(providerShares) == 0 {
+		return nil
+	}
+
 	sharedResources, err := c.V2Client.ListProviderSharedResources(topicCRN)
 	if err != nil {
 		return err
