@@ -7,13 +7,13 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0
+	github.com/confluentinc/cc-structs/kafka/core v0.1390.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
-	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.1390.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0
+	github.com/confluentinc/cc-structs/kafka/util v0.1390.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221201012806-05d56fd583cf
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -171,14 +171,15 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.1-0.20220615005615-2e17a8a06096 // indirect
 	github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/common v0.1390.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
-	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/operator v0.1390.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
