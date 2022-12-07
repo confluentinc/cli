@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
@@ -335,21 +334,6 @@ func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, v1ResourceNotFoundErrMsg)
 	return err
-}
-
-func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
-	return &schedv1.KafkaCluster{
-		Id:              id,
-		Name:            name,
-		Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-		NetworkIngress:  100,
-		NetworkEgress:   100,
-		Storage:         500,
-		ServiceProvider: "aws",
-		Region:          "us-west-2",
-		Endpoint:        "SASL_SSL://kafka-endpoint",
-		RestEndpoint:    "http://kafka-rest-url",
-	}
 }
 
 func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {

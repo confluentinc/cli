@@ -230,7 +230,6 @@ func handleCmkKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update"
 func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// var out []byte
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			cluster := getCmkBasicDescribeCluster("lkc-update", "lkc-update")

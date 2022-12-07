@@ -27,7 +27,6 @@ var (
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
 	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
-	kafkaApiEndpoint   = "https://pkac-abc123:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 
@@ -216,13 +215,12 @@ func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
 
 func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
 	return &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        clusterName,
-		Bootstrap:   bootstrapServer,
-		APIEndpoint: kafkaApiEndpoint,
-		APIKeys:     map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
-		APIKey:      apiKeyPair.Key,
-		LastUpdate:  time.Now(),
+		ID:         clusterID,
+		Name:       clusterName,
+		Bootstrap:  bootstrapServer,
+		APIKeys:    map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
+		APIKey:     apiKeyPair.Key,
+		LastUpdate: time.Now(),
 	}
 }
 
