@@ -116,55 +116,80 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		apiKeyDoc := "Kafka API Key"
 		apiSecretDoc := "Kafka API Secret"
-		bucketNameDoc := "Google Cloud Storage bucket name."
+		bucketNameDoc := "GCS bucket name."
 		credentialsDoc := "GCP service account JSON file."
-		dataFormatDoc := "Sets the input Kafka record value format."
+		dataFormatDoc := "Sets the input value format."
 		tasksDoc := "Tasks"
 		timeIntervalDoc := "Partitioning interval of data."
 		topicsDoc := "Identifies the topic name."
+		flushSizeDoc := "Commit file size."
+		requiredTrue := true
+		requiredFalse := false
 		configs := &[]connectv1.InlineResponse2003Configs{
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.key"),
 					Errors: &[]string{"\"kafka.api.key\" is required"},
 				},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &apiKeyDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &apiKeyDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.secret"),
 					Errors: &[]string{"\"kafka.api.secret\" is required"},
 				},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &apiSecretDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &apiSecretDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("topics"),
 					Errors: &[]string{"\"topics\" is required"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &topicsDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &topicsDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("data.format"),
 					Errors: &[]string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"data.format\" enum"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &dataFormatDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &dataFormatDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.credentials.config"),
 					Errors: &[]string{"\"gcs.credentials.config\" is required"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &credentialsDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &credentialsDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.bucket.name"),
 					Errors: &[]string{"\"gcs.bucket.name\" is required"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &bucketNameDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &bucketNameDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("time.interval"),
 					Errors: &[]string{"\"data.format\" is required", "Value \"null\" doesn't belong to the property's \"time.interval\" enum"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &timeIntervalDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &timeIntervalDoc,
+					Required:      &requiredTrue}},
 			connectv1.InlineResponse2003Configs{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("tasks.max"),
 					Errors: &[]string{"\"tasks.max\" is required"}},
-				Definition: &connectv1.InlineResponse2003Definition{Documentation: &tasksDoc}},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &tasksDoc,
+					Required:      &requiredTrue}},
+			connectv1.InlineResponse2003Configs{
+				Value: &connectv1.InlineResponse2003Value{
+					Name: connectv1.PtrString("flush.size")},
+				Definition: &connectv1.InlineResponse2003Definition{
+					Documentation: &flushSizeDoc,
+					Required:      &requiredFalse}},
 		}
 
 		err := json.NewEncoder(w).Encode(connectv1.InlineResponse2003{Configs: configs})
