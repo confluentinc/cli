@@ -1,11 +1,47 @@
-{
-  "connector.class": "GcsSink",
-  "data.format": "Sets the input Kafka record value format.",
-  "gcs.bucket.name": "Google Cloud Storage bucket name.",
-  "gcs.credentials.config": "GCP service account JSON file.",
-  "kafka.api.key": "Kafka API Key",
-  "kafka.api.secret": "Kafka API Secret",
-  "tasks.max": "Tasks",
-  "time.interval": "Partitioning interval of data.",
-  "topics": "Identifies the topic name."
-}
+[
+  {
+    "config": "kafka.api.key",
+    "documentation": "Kafka API Key",
+    "required": "true"
+  },
+  {
+    "config": "kafka.api.secret",
+    "documentation": "Kafka API Secret",
+    "required": "true"
+  },
+  {
+    "config": "topics",
+    "documentation": "Identifies the topic name.",
+    "required": "true"
+  },
+  {
+    "config": "data.format",
+    "documentation": "Sets the input value format.",
+    "required": "true"
+  },
+  {
+    "config": "gcs.credentials.config",
+    "documentation": "GCP service account JSON file.",
+    "required": "true"
+  },
+  {
+    "config": "gcs.bucket.name",
+    "documentation": "GCS bucket name.",
+    "required": "true"
+  },
+  {
+    "config": "time.interval",
+    "documentation": "Partitioning interval of data.",
+    "required": "true"
+  },
+  {
+    "config": "tasks.max",
+    "documentation": "Tasks",
+    "required": "true"
+  },
+  {
+    "config": "flush.size",
+    "documentation": "Commit file size.",
+    "required": "false"
+  }
+]

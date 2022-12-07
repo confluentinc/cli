@@ -18,6 +18,12 @@ type pluginListDisplay struct {
 	Type  string `json:"type"`
 }
 
+type pluginConfigDisplay struct {
+	Config        string `json:"config"`
+	Documentation string `json:"documentation"`
+	Required      bool   `json:"required"`
+}
+
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "plugin",
