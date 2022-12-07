@@ -163,7 +163,8 @@ type RoleBindingTestSuite struct {
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
-	os.Setenv("XX_DATAPLANE_3_ENABLE", "1")
+	os.Setenv("XX_SR_RBAC_ENABLE", "1")
+	os.Setenv("XX_KSQL_RBAC_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
