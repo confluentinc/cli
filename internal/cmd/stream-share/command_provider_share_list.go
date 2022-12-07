@@ -35,7 +35,7 @@ func (c *command) listProviderShare(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	providerShares, err := c.V2Client.ListProviderShares(sharedResource)
+	providerShares, err := c.V2Client.ListProviderShares(sharedResource, "")
 	if err != nil {
 		return err
 	}

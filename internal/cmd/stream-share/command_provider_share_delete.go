@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -43,6 +43,7 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ProviderShare, shareId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+		utils.Println(cmd, "Operation terminated.")
 		return err
 	}
 
