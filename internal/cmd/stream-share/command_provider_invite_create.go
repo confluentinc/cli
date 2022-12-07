@@ -75,7 +75,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	topicCRN := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
 		c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
 
-	var subjectsCRN []string
+	subjectsCrn := make([]string, len(schemaRegistrySubjects))
 	for _, subject := range schemaRegistrySubjects {
 		subjectsCRN = append(subjectsCRN, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
 			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject))
