@@ -45,7 +45,7 @@ require (
 	github.com/dghubble/sling v1.4.0
 	github.com/fatih/color v1.13.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/gobuffalo/flect v0.2.4
+	github.com/gobuffalo/flect v0.3.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.49.0
