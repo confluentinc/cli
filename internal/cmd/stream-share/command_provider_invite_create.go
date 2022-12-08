@@ -1,8 +1,6 @@
 package streamshare
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
@@ -72,14 +70,27 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	}
 
 	deliveryMethod := "Email"
-	resources := []string{
-		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
-			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic),
+	topicCRN, err := getTopicCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
+	if err != nil {
+		return err
 	}
+
+	subjectsCrn := make([]string, 0, len(schemaRegistrySubjects))
 	for _, subject := range schemaRegistrySubjects {
-		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
-			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject))
+		crn, err := getSubjectCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject)
+		if err != nil {
+			return err
+		}
+		subjectsCrn = append(subjectsCrn, crn)
 	}
+
+	err = c.validateSubjects(subjectsCrn, topicCRN)
+	if err != nil {
+		return err
+	}
+
+	resources := []string{topicCRN}
+	resources = append(resources, subjectsCrn...)
 
 	shareReq := cdxv1.CdxV1CreateProviderShareRequest{
 		ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
@@ -100,4 +111,27 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	table := output.NewTable(cmd)
 	table.Add(c.buildProviderShare(invite))
 	return table.Print()
+}
+
+func (c *command) validateSubjects(newSubjectsCRN []string, topicCRN string) error {
+	providerShares, err := c.V2Client.ListProviderShares("", topicCRN)
+	if err != nil {
+		return err
+	}
+
+	if len(providerShares) == 0 {
+		return nil
+	}
+
+	sharedResources, err := c.V2Client.ListProviderSharedResources(topicCRN)
+	if err != nil {
+		return err
+	}
+
+	existingSubjectsCRN, err := getSubjectsCRNFromSharedResources(sharedResources)
+	if err != nil {
+		return err
+	}
+
+	return areSubjectsModified(newSubjectsCRN, existingSubjectsCRN)
 }

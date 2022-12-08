@@ -485,4 +485,7 @@ const (
 	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
 	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
 	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
+
+	// Stream Share errors
+	SubjectsListUnmodifiableErrorMsg = "list of shared subjects cannot be modified"
 )

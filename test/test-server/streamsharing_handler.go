@@ -23,6 +23,17 @@ func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 	}
 }
 
+func getTestProviderSharedResource() cdxv1.CdxV1ProviderSharedResource {
+	return cdxv1.CdxV1ProviderSharedResource{
+		Resources: &[]string{
+			"crn://confluent.cloud/organization=abc-123/environment=env-12345/schema-registry=lsrc-1234/kafka=lkc-12345/topic=topic-12345",
+			"crn://confluent.cloud/organization=abc-123/environment=env-12345/schema-registry=lsrc-1234/subject=sub1",
+			"crn://confluent.cloud/organization=abc-123/environment=env-12345/schema-registry=lsrc-1234/subject=sub2",
+			"crn://confluent.cloud/organization=abc-123/environment=env-12345/schema-registry=lsrc-1234/subject=sub3",
+		},
+	}
+}
+
 func getTestConsumerSharedResource() cdxv1.CdxV1ConsumerSharedResource {
 	return cdxv1.CdxV1ConsumerSharedResource{
 		Id: stringToPtr("sr-12345"),
@@ -104,6 +115,20 @@ func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		list := cdxv1.CdxV1ConsumerShareList{
 			Data: []cdxv1.CdxV1ConsumerShare{getTestConsumerShare()},
+		}
+		b, err := json.Marshal(&list)
+		require.NoError(t, err)
+		_, err = io.WriteString(w, string(b))
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: ""/cdx/v1/provider-shared-resources""
+func handleStreamSharingProviderSharedResources(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		list := cdxv1.CdxV1ProviderSharedResourceList{
+			Data: []cdxv1.CdxV1ProviderSharedResource{getTestProviderSharedResource()},
 		}
 		b, err := json.Marshal(&list)
 		require.NoError(t, err)
