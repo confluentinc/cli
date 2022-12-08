@@ -24,7 +24,7 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig,
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
-	apiEndpoint, err := getKafkaApiEndpoint(d.Client, clusterId, environmentId)
+	apiEndpoint, err := getKafkaApiEndpoint(d.PrivateClient, clusterId, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -42,13 +42,13 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig,
 	return config, nil
 }
 
-func getKafkaApiEndpoint(client *ccloud.Client, clusterId, environmentId string) (string, error) {
+func getKafkaApiEndpoint(privateClient *ccloud.Client, clusterId, environmentId string) (string, error) {
 	cluster := &schedv1.KafkaCluster{
 		Id:        clusterId,
 		AccountId: environmentId,
 	}
 
-	cluster, err := client.Kafka.Describe(context.Background(), cluster)
+	cluster, err := privateClient.Kafka.Describe(context.Background(), cluster)
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +75,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 }
 
 func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+	existingClusters, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -89,7 +89,7 @@ func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context,
 }
 
 func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+	existingCluster, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})

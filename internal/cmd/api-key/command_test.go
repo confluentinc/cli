@@ -290,7 +290,7 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCmd() *cobra.Command {
-	client := &ccloud.Client{
+	privateClient := &ccloud.Client{
 		Auth:           &ccsdkmock.Auth{},
 		Account:        &ccsdkmock.Account{},
 		Kafka:          suite.kafkaMock,
@@ -326,11 +326,11 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		Out: os.Stdout,
 	}
 	prerunner := &cliMock.Commander{
-		FlagResolver: resolverMock,
-		Client:       client,
-		V2Client:     v2Client,
-		MDSClient:    nil,
-		Config:       suite.conf,
+		FlagResolver:  resolverMock,
+		PrivateClient: privateClient,
+		V2Client:      v2Client,
+		MDSClient:     nil,
+		Config:        suite.conf,
 	}
 	return New(prerunner, suite.keystore, resolverMock)
 }

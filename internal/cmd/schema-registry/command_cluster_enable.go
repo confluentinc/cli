@@ -98,7 +98,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		Name: "account schema-registry",
 	}
 
-	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	newCluster, err := c.PrivateClient.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	var clusterOutput *v1.SchemaRegistryCluster
 	if err != nil {
 		// If it already exists, return the existing one

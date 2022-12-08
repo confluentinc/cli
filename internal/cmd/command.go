@@ -12,6 +12,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
+	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
@@ -74,7 +75,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest)
+	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
@@ -95,6 +96,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	cmd.AddCommand(admin.New(prerunner, cfg.IsTest))
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
+	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New(prerunner, cfg.Version.UserAgent, ccloudClientFactory, cfg.IsTest))
@@ -118,7 +120,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
@@ -210,13 +212,13 @@ func catchErrors(cmd *cobra.Command) {
 
 func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
 	if cfg.IsCloudLogin() {
-		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
+		return ccloudClientFactory.PrivateAnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil, nil)
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {

@@ -15,23 +15,52 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const tab = "   "
+
 // generateIndexPage creates a file called index.rst which contains the command description and links to subcommands.
 // If there are multiple versions of a single command, tabs are used within index.rst.
 func generateIndexPage(tabs []Tab, dir string) error {
-	rows := printIndexPage(tabs)
+	if cmd := tabs[0].Command; cmd == cmd.Root() {
+		rows := printIndexPage(tabs, true)
+		if err := writeFile(filepath.Join(dir, "overview.rst"), strings.Join(rows, "\n")); err != nil {
+			return err
+		}
+
+		rows = printRootIndexPage(tabs)
+		return writeFile(filepath.Join(dir, "index.rst"), strings.Join(rows, "\n"))
+	}
+
+	rows := printIndexPage(tabs, false)
 	return writeFile(filepath.Join(dir, "index.rst"), strings.Join(rows, "\n"))
 }
 
-func printIndexPage(tabs []Tab) []string {
+func printRootIndexPage(tabs []Tab) []string {
 	cmd := tabs[0].Command
 
 	return flatten([][]string{
-		printHeader(cmd),
+		printHeader(cmd, false),
+		printTitle(cmd, "="),
+		printInlineScript(),
+		printTableOfContents(tabs),
+	})
+}
+
+func printIndexPage(tabs []Tab, isOverview bool) []string {
+	cmd := tabs[0].Command
+
+	rows := [][]string{
+		printHeader(cmd, isOverview),
 		printTitle(cmd, "="),
 		printTabbedSection("Description", printDescription, tabs),
-		printTableOfContents(tabs),
-		printTabbedSection("Subcommands", printSubcommands, tabs),
-	})
+	}
+
+	if cmd := tabs[0].Command; cmd != cmd.Root() {
+		rows = append(rows, printTableOfContents(tabs))
+	}
+
+	rows = append(rows, printTabbedSection("Subcommands", printSubcommands, tabs))
+
+	return flatten(rows)
 }
 
 func flatten(arrs [][]string) []string {
@@ -42,9 +71,9 @@ func flatten(arrs [][]string) []string {
 	return flatArr
 }
 
-func printHeader(cmd *cobra.Command) []string {
+func printHeader(cmd *cobra.Command, isOverview bool) []string {
 	return []string{
-		fmt.Sprintf(".. _%s:", printRef(cmd)),
+		fmt.Sprintf(".. _%s:", printRef(cmd, isOverview)),
 		"",
 	}
 }
@@ -58,6 +87,17 @@ func printTitle(cmd *cobra.Command, underline string) []string {
 	return []string{
 		name,
 		strings.Repeat(underline, len(name)),
+		"",
+	}
+}
+
+func printInlineScript() []string {
+	return []string{
+		".. raw:: html",
+		"",
+		tab + `<script type="text/javascript">`,
+		tab + tab + "window.location = 'overview.html';",
+		tab + "</script>",
 		"",
 	}
 }
@@ -82,16 +122,20 @@ func printTableOfContents(tabs []Tab) []string {
 
 	rows := []string{
 		".. toctree::",
-		"   :hidden:",
-		"",
 	}
 
-	if tabs[0].Command.CommandPath() == "confluent" {
-		rows = append(rows, "   Overview <../command-reference-index>")
+	if cmd := tabs[0].Command; cmd == cmd.Root() {
+		rows = append(rows, tab+":maxdepth: 1")
+	}
+
+	rows = append(rows, tab+":hidden:", "")
+
+	if cmd := tabs[0].Command; cmd == cmd.Root() {
+		rows = append(rows, tab+"Overview <overview>")
 	}
 
 	for _, name := range names {
-		rows = append(rows, fmt.Sprintf("   %s", linksByName[name]))
+		rows = append(rows, tab+linksByName[name])
 	}
 
 	return append(rows, "")
@@ -102,7 +146,7 @@ func printLink(cmd *cobra.Command) string {
 		// Example: command/index
 		return path.Join(cmd.Name(), "index")
 	} else {
-		return printRef(cmd)
+		return printRef(cmd, false)
 	}
 }
 
@@ -175,17 +219,20 @@ func printSubcommands(cmd *cobra.Command) ([]string, bool) {
 }
 
 func printSphinxRef(cmd *cobra.Command) string {
-	ref := printRef(cmd)
+	ref := printRef(cmd, false)
 	return fmt.Sprintf(":ref:`%s`", ref)
 }
 
-func printRef(cmd *cobra.Command) string {
+func printRef(cmd *cobra.Command, isOverview bool) string {
 	// Example: command_subcommand
 	ref := strings.ReplaceAll(cmd.CommandPath(), " ", "_")
 
 	// The root ref is named "confluent-ref"
 	if cmd == cmd.Root() {
 		ref += "-ref"
+		if isOverview {
+			ref += "-index"
+		}
 	}
 
 	return ref

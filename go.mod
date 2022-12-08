@@ -7,14 +7,15 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/core v0.1101.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0
+	github.com/confluentinc/cc-structs/kafka/core v0.1505.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
-	github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0
-	github.com/confluentinc/cc-structs/kafka/util v0.1096.0
+	github.com/confluentinc/cc-structs/kafka/product/core v0.1390.0
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0
+	github.com/confluentinc/cc-structs/kafka/util v0.1422.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.108
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221201012806-05d56fd583cf
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.4
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -33,18 +34,18 @@ require (
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
-	github.com/confluentinc/go-printer v0.16.0
+	github.com/confluentinc/go-printer v0.17.0
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
-	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.40
+	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48
 	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
-	github.com/confluentinc/schema-registry-sdk-go v0.0.13
+	github.com/confluentinc/schema-registry-sdk-go v0.0.18
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.0
 	github.com/fatih/color v1.13.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/gobuffalo/flect v0.2.4
+	github.com/gobuffalo/flect v0.3.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.49.0
@@ -59,8 +60,8 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.13
-	github.com/jhump/protoreflect v1.12.0
-	github.com/jonboulle/clockwork v0.2.2
+	github.com/jhump/protoreflect v1.14.0
+	github.com/jonboulle/clockwork v0.3.0
 	github.com/linkedin/goavro/v2 v2.11.1
 	github.com/mattn/go-isatty v0.0.16
 	github.com/mitchellh/go-homedir v1.1.0
@@ -71,14 +72,15 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
-	github.com/tidwall/gjson v1.14.0
+	github.com/swaggest/go-asyncapi v0.8.0
+	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.2.4
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
-	golang.org/x/oauth2 v0.0.0-20220722155238-128564f6959c
-	golang.org/x/text v0.4.0
+	golang.org/x/crypto v0.1.0
+	golang.org/x/oauth2 v0.3.0
+	golang.org/x/text v0.5.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gotest.tools/gotestsum v1.8.2
@@ -169,16 +171,17 @@ require (
 	github.com/charmbracelet/lipgloss v0.5.1-0.20220615005615-2e17a8a06096 // indirect
 	github.com/chavacava/garif v0.0.0-20220630083739-93517212f375 // indirect
 	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/cc-structs/common v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/common v0.1390.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/auth v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/authz v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.753.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1096.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.753.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.719.0 // indirect
-	github.com/confluentinc/cc-structs/operator v0.1096.0 // indirect
+	github.com/confluentinc/cc-structs/operator v0.1390.0 // indirect
 	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
-	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
+	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/curioswitch/go-reassign v0.1.2 // indirect
@@ -193,7 +196,7 @@ require (
 	github.com/dnephin/pflag v1.0.7 // indirect
 	github.com/emicklei/go-restful v2.16.0+incompatible // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
-	github.com/envoyproxy/protoc-gen-validate v0.6.7 // indirect
+	github.com/envoyproxy/protoc-gen-validate v0.9.0 // indirect
 	github.com/esimonov/ifshort v1.0.4 // indirect
 	github.com/ettle/strcase v0.1.1 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible // indirect
@@ -355,7 +358,7 @@ require (
 	github.com/slack-go/slack v0.11.2 // indirect
 	github.com/sonatard/noctx v0.0.1 // indirect
 	github.com/sourcegraph/go-diff v0.6.1 // indirect
-	github.com/spf13/afero v1.8.2 // indirect
+	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.12.0 // indirect
@@ -364,6 +367,8 @@ require (
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.4.0 // indirect
 	github.com/subosito/gotenv v1.4.0 // indirect
+	github.com/swaggest/jsonschema-go v0.3.39 // indirect
+	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/sylvia7788/contextcheck v1.0.6 // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
 	github.com/technoweenie/multipartstreamer v1.0.1 // indirect
@@ -374,7 +379,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.6.2 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.0 // indirect
 	github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 // indirect
-	github.com/ugorji/go/codec v1.2.5 // indirect
+	github.com/ugorji/go/codec v1.2.7 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
 	github.com/ultraware/funlen v0.0.3 // indirect
 	github.com/ultraware/whitespace v0.0.5 // indirect
@@ -395,14 +400,14 @@ require (
 	gocloud.dev v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220613132600-b0d781184e0d // indirect
-	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
-	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
+	golang.org/x/mod v0.6.0 // indirect
+	golang.org/x/net v0.3.0 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
-	golang.org/x/term v0.0.0-20220526004731-065cf7ba2467 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
-	golang.org/x/tools v0.1.12 // indirect
-	golang.org/x/xerrors v0.0.0-20220609144429-65e65417b02f // indirect
+	golang.org/x/tools v0.2.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.93.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220815135757-37a418bb8959 // indirect

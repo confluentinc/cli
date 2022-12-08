@@ -1,5 +1,7 @@
 #!/bin/bash
 
+aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
+
 go mod vendor
 
 # Build linux/amd64

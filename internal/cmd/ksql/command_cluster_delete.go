@@ -44,7 +44,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check KSQL exists
-	cluster, err := c.Client.KSQL.Describe(context.Background(), req)
+	cluster, err := c.PrivateClient.KSQL.Describe(context.Background(), req)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -54,14 +54,14 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	// the topics.
 	if cluster.Status == schedv1.ClusterStatus_UP {
 		provisioningFailed, err := c.checkProvisioningFailed(cluster)
-		if !provisioningFailed && err != nil {
-			if err := c.deleteTopics(req); err != nil {
+		if !provisioningFailed && err == nil {
+			if err := c.deleteTopics(cluster.GetId(), cluster.GetEndpoint()); err != nil {
 				return err
 			}
 		}
 	}
 
-	if err := c.Client.KSQL.Delete(context.Background(), req); err != nil {
+	if err := c.PrivateClient.KSQL.Delete(context.Background(), req); err != nil {
 		return err
 	}
 
@@ -69,21 +69,21 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *ksqlCommand) deleteTopics(cluster *schedv1.KSQLCluster) error {
+func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return err
 	}
 
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, cluster.Id)
+	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
 	if err != nil {
 		return err
 	}
 
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
-	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(cluster.Endpoint)
-	request := map[string][]string{"deleteTopicList": []string{".*"}}
+	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
+	request := map[string][]string{"deleteTopicList": {".*"}}
 	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
 	//this returns a 503
 	if err != nil {
@@ -95,7 +95,7 @@ func (c *ksqlCommand) deleteTopics(cluster *schedv1.KSQLCluster) error {
 		if err != nil {
 			return err
 		}
-		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, cluster.Id, string(body))
+		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
 	}
 	return nil
 }

@@ -60,7 +60,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return nil
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
+	err = c.PrivateClient.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
 	if err != nil {
 		return err
 	}
