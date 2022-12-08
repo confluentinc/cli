@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -101,6 +102,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			}
 		}
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	if dryRun {
+		utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Topic, topicName)
+		return nil
 	}
 
 	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
