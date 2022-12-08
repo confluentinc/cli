@@ -708,8 +708,8 @@ github.com/confluentinc/go-editor v0.9.0 h1:wiOoxW4+7LHgBPXQJvFuQ3aMZRWD0NUxipP2
 github.com/confluentinc/go-editor v0.9.0/go.mod h1:AcC+FSlssLJntnZaBra+OlvH++e/fY3OrRk02PlZ028=
 github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18 h1:5EBie/kVOqHGDA2PJbG26xmQQDL3yRIQIZQGIkubf+U=
 github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18/go.mod h1:GGVB1yDj9YYQTxoo5vTRGWuQKccGN00bvyit4O5jznI=
-github.com/confluentinc/go-printer v0.16.0 h1:V6QyEiN39zzcHY7zzMP5ClJYxBLbZshP1Ay7XRJTUds=
-github.com/confluentinc/go-printer v0.16.0/go.mod h1:o2sfQSpLyisht0oQqXN6WT/MgmLqUbtH+hOHBwaXe/c=
+github.com/confluentinc/go-printer v0.17.0 h1:zAzRqLCIlr9XoogqOuspr/vcUpKbm8mH+XT1zh4FyWU=
+github.com/confluentinc/go-printer v0.17.0/go.mod h1:YdTHzcS1ci5B9Wv6rstCSZUpwW1mC0SYNJbucr3DNog=
 github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2ic4o=
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
 github.com/confluentinc/k8saas/grpc-api/api v0.726.0/go.mod h1:6eQbw72Dz8dmfaWzTnIVuCAJBDwqYsdJXw2yX9LT1zI=
