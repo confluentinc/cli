@@ -2,46 +2,46 @@
   {
     "config": "kafka.api.key",
     "documentation": "Kafka API Key",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "kafka.api.secret",
     "documentation": "Kafka API Secret",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "topics",
     "documentation": "Identifies the topic name.",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "data.format",
     "documentation": "Sets the input value format.",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "gcs.credentials.config",
     "documentation": "GCP service account JSON file.",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "gcs.bucket.name",
     "documentation": "GCS bucket name.",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "time.interval",
     "documentation": "Partitioning interval of data.",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "tasks.max",
     "documentation": "Tasks",
-    "required": "true"
+    "is_required": "true"
   },
   {
     "config": "flush.size",
     "documentation": "Commit file size.",
-    "required": "false"
+    "is_required": "false"
   }
 ]

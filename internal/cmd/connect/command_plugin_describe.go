@@ -14,9 +14,9 @@ import (
 )
 
 var (
-	pluginConfigFields          = []string{"Config", "Documentation", "Required"}
+	pluginConfigFields          = []string{"Config", "Documentation", "IsRequired"}
 	pluginConfigHumanFields     = []string{"Config", "Documentation", "Required"}
-	pluginConfigStructureLabels = []string{"config", "documentation", "required"}
+	pluginConfigStructureLabels = []string{"config", "documentation", "is_required"}
 )
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
@@ -66,15 +66,15 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		return configs[i].Definition.GetRequired() && !configs[j].Definition.GetRequired()
 	})
 
-	for _, c := range configs {
-		doc := c.Definition.GetDisplayName()
-		if c.Definition.GetDocumentation() != "" {
-			doc = c.Definition.GetDocumentation()
+	for _, config := range configs {
+		doc := config.Definition.GetDisplayName()
+		if config.Definition.GetDocumentation() != "" {
+			doc = config.Definition.GetDocumentation()
 		}
 		pluginConfigDisplayElement := &pluginConfigDisplay{
-			Config:        c.Value.GetName(),
+			Config:        config.Value.GetName(),
 			Documentation: doc,
-			Required:      c.Definition.GetRequired(),
+			IsRequired:    config.Definition.GetRequired(),
 		}
 		outputWriter.AddElement(pluginConfigDisplayElement)
 	}

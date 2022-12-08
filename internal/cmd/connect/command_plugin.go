@@ -19,9 +19,9 @@ type pluginListDisplay struct {
 }
 
 type pluginConfigDisplay struct {
-	Config        string `json:"config"`
-	Documentation string `json:"documentation"`
-	Required      bool   `json:"required"`
+	Config        string
+	Documentation string
+	IsRequired    bool
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
