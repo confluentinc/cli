@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -90,9 +91,45 @@ func areSubjectsModified(newSubjectsCRN []string, existingSubjectsCRN []string) 
 	sort.Strings(existingSubjectsCRN)
 
 	for i, s := range existingSubjectsCRN {
-		if s != newSubjectsCRN[i] {
+		if s != strings.TrimSpace(newSubjectsCRN[i]) {
 			return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
 		}
 	}
 	return nil
+}
+
+func getTopicCRN(orgId, environment, srCluster, kafkaCluster, topic string) (string, error) {
+	elements, err := crn.NewElements(
+		crn.CcloudResourceType_ORGANIZATION, orgId,
+		crn.CcloudResourceType_ENVIRONMENT, environment,
+		crn.CcloudResourceType_SCHEMA_REGISTRY, srCluster,
+		crn.CcloudResourceType_KAFKA, kafkaCluster,
+		resource.Topic, topic,
+	)
+	if err != nil {
+		return "", err
+	}
+	return getCRNFromElements(elements), nil
+}
+
+func getSubjectCRN(orgId, environment, srCluster, subject string) (string, error) {
+	elements, err := crn.NewElements(
+		crn.CcloudResourceType_ORGANIZATION, orgId,
+		crn.CcloudResourceType_ENVIRONMENT, environment,
+		crn.CcloudResourceType_SCHEMA_REGISTRY, srCluster,
+		resource.Subject, subject,
+	)
+	if err != nil {
+		return "", err
+	}
+	return getCRNFromElements(elements), nil
+}
+
+func getCRNFromElements(elements []*crn.Element) string {
+	c := "crn://confluent.cloud"
+
+	for _, e := range elements {
+		c += fmt.Sprintf("/%s=%s", e.ResourceType, e.ResourceName)
+	}
+	return c
 }

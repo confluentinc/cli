@@ -1,8 +1,6 @@
 package streamshare
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
@@ -72,22 +70,27 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	}
 
 	deliveryMethod := "Email"
-	topicCRN := fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
-		c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
-
-	subjectsCrn := make([]string, len(schemaRegistrySubjects))
-	for _, subject := range schemaRegistrySubjects {
-		subjectsCRN = append(subjectsCRN, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
-			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject))
+	topicCRN, err := getTopicCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
+	if err != nil {
+		return err
 	}
 
-	err = c.validateSubjects(subjectsCRN, topicCRN)
+	subjectsCrn := make([]string, 0, len(schemaRegistrySubjects))
+	for _, subject := range schemaRegistrySubjects {
+		crn, err := getSubjectCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject)
+		if err != nil {
+			return err
+		}
+		subjectsCrn = append(subjectsCrn, crn)
+	}
+
+	err = c.validateSubjects(subjectsCrn, topicCRN)
 	if err != nil {
 		return err
 	}
 
 	resources := []string{topicCRN}
-	resources = append(resources, subjectsCRN...)
+	resources = append(resources, subjectsCrn...)
 
 	shareReq := cdxv1.CdxV1CreateProviderShareRequest{
 		ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
