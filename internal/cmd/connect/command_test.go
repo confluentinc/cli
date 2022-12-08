@@ -33,13 +33,13 @@ var (
 		Type:  "sink",
 	}
 
-	fieldName     = "name"
-	fieldDoc      = "Connector Name"
-	fieldRequired = true
-
 	pluginDescribe = connectv1.InlineResponse2003Configs{
-		Value:      &connectv1.InlineResponse2003Value{Name: &fieldName, Errors: &[]string{`"name" is required`}},
-		Definition: &connectv1.InlineResponse2003Definition{Documentation: &fieldDoc, Required: &fieldRequired},
+		Value: &connectv1.InlineResponse2003Value{
+			Name:   connectv1.PtrString("name"),
+			Errors: &[]string{`"name" is required`}},
+		Definition: &connectv1.InlineResponse2003Definition{
+			Documentation: connectv1.PtrString("Connector Name"),
+			Required:      connectv1.PtrBool(true)},
 	}
 
 	connector = connectv1.ConnectV1Connector{
