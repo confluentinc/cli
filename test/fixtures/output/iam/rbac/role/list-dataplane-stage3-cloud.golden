@@ -366,25 +366,6 @@
                          |                                                                            
   ResourceOwner          | [                                                                          
                          |   {                                                                        
-                         |     "bindingScope": "ksql-cluster",                                        
-                         |     "bindWithResource": true,                                              
-                         |     "allowedOperations": [                                                 
-                         |       {                                                                    
-                         |         "resourceType": "KsqlCluster",                                     
-                         |         "operations": [                                                    
-                         |           "Describe",                                                      
-                         |           "AlterAccess",                                                   
-                         |           "Contribute",                                                    
-                         |           "DescribeAccess",                                                
-                         |           "Terminate"                                                      
-                         |         ]                                                                  
-                         |       }                                                                    
-                         |     ]                                                                      
-                         |   }                                                                        
-                         | ]                                                                          
-                         |                                                                            
-  ResourceOwner          | [                                                                          
-                         |   {                                                                        
                          |     "bindingScope": "schema-registry-cluster",                             
                          |     "bindWithResource": true,                                              
                          |     "allowedOperations": [                                                 
@@ -398,6 +379,25 @@
                          |           "AlterAccess",                                                   
                          |           "WriteCompatibility",                                            
                          |           "DescribeAccess"                                                 
+                         |         ]                                                                  
+                         |       }                                                                    
+                         |     ]                                                                      
+                         |   }                                                                        
+                         | ]                                                                          
+                         |                                                                            
+  ResourceOwner          | [                                                                          
+                         |   {                                                                        
+                         |     "bindingScope": "ksql-cluster",                                        
+                         |     "bindWithResource": true,                                              
+                         |     "allowedOperations": [                                                 
+                         |       {                                                                    
+                         |         "resourceType": "KsqlCluster",                                     
+                         |         "operations": [                                                    
+                         |           "Describe",                                                      
+                         |           "AlterAccess",                                                   
+                         |           "Contribute",                                                    
+                         |           "DescribeAccess",                                                
+                         |           "Terminate"                                                      
                          |         ]                                                                  
                          |       }                                                                    
                          |     ]                                                                      
