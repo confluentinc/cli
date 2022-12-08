@@ -19,7 +19,7 @@ var commandRules = []linter.CommandRule{
 	// Hard Requirements
 	linter.RequireLowerCase("Use"),
 	linter.RequireRealWords("Use", '-'),
-	linter.Filter(linter.RequireSingular("Use"),
+	linter.Filter(linter.RequireSingular("Name"),
 		linter.ExcludeCommandContains("local services"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
