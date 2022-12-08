@@ -32,6 +32,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0
+	github.com/confluentinc/crn v0.2.0
 	github.com/confluentinc/go-editor v0.9.0
 	github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18
 	github.com/confluentinc/go-ps1 v1.0.2

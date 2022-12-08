@@ -698,6 +698,7 @@ github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0 h1:alq2+x
 github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
 github.com/confluentinc/crn v0.1.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/crn v0.1.1-0.20210416032625-44ccb46a7687/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
+github.com/confluentinc/crn v0.2.0 h1:ReoF7FS2gZPEV5lHtbDZOnBWg0P78XnOkHdUgUL3yrY=
 github.com/confluentinc/crn v0.2.0/go.mod h1:HnSJnI4K2e5TSxkdIG7r0i3B8cwxLdTwczj1/EVX/Dw=
 github.com/confluentinc/events v0.0.0-20200410230739-3f254df71881/go.mod h1:80TdvWyMqf/wqxlNrQFY2y9o8yKQX/guxW1HB4mHz2A=
 github.com/confluentinc/events v1.0.0/go.mod h1:m3JwuKmu1jh4JFlpPD+CuB7Hdncfa+MSvcuKoaVxOdU=
