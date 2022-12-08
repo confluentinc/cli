@@ -58,6 +58,7 @@ type flags struct {
 	schemaRegistryApiKey    string
 	schemaRegistryApiSecret string
 	valueFormat             string
+	schemaContext           string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -77,6 +78,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	c.Flags().String("schema-context", "default", "Use a specific schema context.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -96,9 +98,14 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	reflector := addServer(accountDetails.broker, accountDetails.srCluster, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
+	var schemaContextPrefix string
+	if flags.schemaContext != "default" {
+		utils.Printf(cmd, "Using Schema Context %s\n", flags.schemaContext)
+		schemaContextPrefix = ":." + flags.schemaContext + ":"
+	}
 	for _, topic := range accountDetails.topics {
 		for _, subject := range accountDetails.subjects {
-			if subject != topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
+			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
 			} else {
@@ -394,6 +401,10 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	schemaContext, err := cmd.Flags().GetString("schema-context")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:                    file,
 		groupId:                 groupId,
@@ -403,6 +414,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		schemaRegistryApiKey:    schemaRegistryApiKey,
 		schemaRegistryApiSecret: schemaRegistryApiSecret,
 		valueFormat:             valueFormat,
+		schemaContext:           schemaContext,
 	}, nil
 }
 
