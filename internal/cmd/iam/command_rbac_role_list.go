@@ -38,7 +38,7 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	// add public dataplane and datagovernance roles
+	// add public, dataplane, and datagovernance roles
 	namespaces := []string{publicNamespace.Value(), dataplaneNamespace.Value(), dataGovernanceNamespace.Value()}
 	opt := optional.NewString(strings.Join(namespaces, ","))
 	roles, err := c.namespaceRoles(opt)
