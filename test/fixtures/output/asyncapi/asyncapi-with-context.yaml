@@ -4,7 +4,7 @@ title:APIDocumentforConfluentCluster
 version:1.0.0
 servers:
 confluentSchemaRegistry:[]
-channels:null
+channels:{}
 components:
 securitySchemes:
 confluentBroker:

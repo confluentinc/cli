@@ -100,9 +100,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
 	if flags.schemaContext != "default" {
-		utils.Printf(cmd, "Using Schema Context %s\n", flags.schemaContext)
+		utils.Printf(cmd, fmt.Sprintf("Using schema context %s\n", flags.schemaContext))
 		schemaContextPrefix = ":." + flags.schemaContext + ":"
 	}
+	channelCount := 0
 	for _, topic := range accountDetails.topics {
 		for _, subject := range accountDetails.subjects {
 			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
@@ -110,6 +111,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
+				channelCount += 1
 				// Reset channel details
 				accountDetails.channelDetails = channelDetails{
 					currentTopic:   topic,
@@ -128,6 +130,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				}
 			}
 		}
+	}
+	// if no channels, add an empty object
+	if channelCount == 0 {
+		reflector.Schema.Channels = map[string]spec.ChannelItem{}
 	}
 	// Components
 	reflector = addComponents(reflector, messages)
@@ -187,7 +193,6 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	if err != nil {
 		return nil, err
 	}
-	details.broker = details.cluster.GetEndpoint()
 	err = c.getSchemaRegistry(details, flags)
 	if err != nil {
 		return nil, err
@@ -356,7 +361,6 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
-
 	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
@@ -365,6 +369,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	details.cluster = cluster
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
+	details.broker = kafkaREST.CloudClient.GetUrl()
 	return nil
 }
 
