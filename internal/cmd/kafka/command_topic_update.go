@@ -41,6 +41,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
+	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -58,6 +59,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 
 	configMap, err := properties.ConfigFlagToMap(configs)
+	if err != nil {
+		return err
+	}
+
+	dryRun, err := cmd.Flags().GetBool("dry-run")
 	if err != nil {
 		return err
 	}
@@ -84,6 +90,8 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
 	data := toAlterConfigBatchRequestData(configMap)
+	data.ValidateOnly = &dryRun
+
 	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
