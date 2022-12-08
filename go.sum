@@ -523,6 +523,7 @@ github.com/confluentinc/cc-structs/common v0.996.0/go.mod h1:dwjCbTZqvQBxrSwGZn4
 github.com/confluentinc/cc-structs/common v0.1022.0/go.mod h1:dwjCbTZqvQBxrSwGZn4rkO3Uqx8Z2LXdLsExJqiD6gU=
 github.com/confluentinc/cc-structs/common v0.1096.0/go.mod h1:dwjCbTZqvQBxrSwGZn4rkO3Uqx8Z2LXdLsExJqiD6gU=
 github.com/confluentinc/cc-structs/common v0.1305.0/go.mod h1:dwjCbTZqvQBxrSwGZn4rkO3Uqx8Z2LXdLsExJqiD6gU=
+github.com/confluentinc/cc-structs/common v0.1349.0/go.mod h1:dwjCbTZqvQBxrSwGZn4rkO3Uqx8Z2LXdLsExJqiD6gU=
 github.com/confluentinc/cc-structs/common v0.1390.0 h1:VLREC3MSwmmCI9pncB+3JkQxwe390/CTKo4bCZ2xkuc=
 github.com/confluentinc/cc-structs/common v0.1390.0/go.mod h1:aii296rf0oUsiyZK5Jd3Ib7zyGTdONdsBaz9UiH6mAs=
 github.com/confluentinc/cc-structs/kafka/auth v0.191.0/go.mod h1:Tw/lN119KTAnoM9WZ5re1OpzZ8VioDHa94G6RmEpoSo=
@@ -562,8 +563,9 @@ github.com/confluentinc/cc-structs/kafka/core v0.968.0/go.mod h1:dxshfymLj+GtjZQ
 github.com/confluentinc/cc-structs/kafka/core v0.1006.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/core v0.1101.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/core v0.1349.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
-github.com/confluentinc/cc-structs/kafka/core v0.1390.0 h1:7RzST6Y/m2ghBLGHnAkBwD/4TZZy4bLBzoxxbN2u7p0=
 github.com/confluentinc/cc-structs/kafka/core v0.1390.0/go.mod h1:witVFvTv90nKuc08Rwac0jviWkHF8s8SiWb+0Of00jM=
+github.com/confluentinc/cc-structs/kafka/core v0.1505.0 h1:3VhKNDg9Wax4j7T4WBRxb7qtYhW5xqZsu93IJL8ZAZc=
+github.com/confluentinc/cc-structs/kafka/core v0.1505.0/go.mod h1:KrVBsXNjuCulHirqA3jFIgDDKdr+6q9ju14qoP+EbqM=
 github.com/confluentinc/cc-structs/kafka/flow v0.399.0/go.mod h1:C30tHJRwqMQBJdnc6brEu+jEm0Wl8Rey8QsYpIXZ+ew=
 github.com/confluentinc/cc-structs/kafka/flow v0.1161.0 h1:gpWwyf1L2h+inJ45lbEsa29cU7PGZq6JuEaCH3PAV+k=
 github.com/confluentinc/cc-structs/kafka/flow v0.1161.0/go.mod h1:qTqdFPxPPfMNm2KsvGyfOtDFAmlgNe0gwH0sOinIJTA=
@@ -595,6 +597,7 @@ github.com/confluentinc/cc-structs/kafka/product/core v0.680.0/go.mod h1:L+FK/Wy
 github.com/confluentinc/cc-structs/kafka/product/core v0.719.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
 github.com/confluentinc/cc-structs/kafka/product/core v0.779.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
 github.com/confluentinc/cc-structs/kafka/product/core v0.1096.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
+github.com/confluentinc/cc-structs/kafka/product/core v0.1349.0/go.mod h1:L+FK/Wy0RdVAh/MjBT5PfYxkmar+Tz2lgnR2e1HagXM=
 github.com/confluentinc/cc-structs/kafka/product/core v0.1390.0 h1:oD0g1iPExu0GPKz0vt3baGYPXH5FXvtMH1u3xsWIDg4=
 github.com/confluentinc/cc-structs/kafka/product/core v0.1390.0/go.mod h1:2ezSHIqHgB2urLQm6KQOSlptamQiovfFMn0SqMpDGDY=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.29.0/go.mod h1:b4bIVt0Eb3Up1QNlkbmt03q2Qs6jDeHeT4h1dlKZ/Ik=
@@ -608,8 +611,10 @@ github.com/confluentinc/cc-structs/kafka/scheduler v0.719.0/go.mod h1:SirG6NGkX0
 github.com/confluentinc/cc-structs/kafka/scheduler v0.779.0/go.mod h1:Lt+d2h0PFcA3bkt3r3rueS4T3xU+y6UJVt3Hw+0UOE4=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.1267.0/go.mod h1:em+YHOm3cVUTR2ba/aH1ixKGmfhAiyoigetNk5N1YFg=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.1349.0/go.mod h1:E048Pt9qudP78u3en8cOl1X6FKaWu5z9k2oHBZ57ynM=
+github.com/confluentinc/cc-structs/kafka/scheduler v0.1390.0/go.mod h1:N2Xhi+nIK0cOI+GSHLrgf/T+Prkpz9RRqAhA54wAolo=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0 h1:xqQzcRAT1bzC/dum6cttFQ1Iqb6wVpYubOPvyy9ehGU=
 github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0/go.mod h1:9gX+HmVgLohpfOjGBZDGs8smOzVB0PHI18PXSSm5JWg=
+github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1370.0/go.mod h1:CnK8dvHnw9wIwRpMzggDKdX2uF5wtlWLkEOJQR3xd1M=
 github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 h1:cpu9CFiIbJaXPsWuxPzLIERYIl5flDexwAO3GMnKMug=
 github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0/go.mod h1:OKC5RNOs0rxg9iFG+X7/u4sui7vBju08GfjzOwO5peM=
 github.com/confluentinc/cc-structs/kafka/support v0.719.0 h1:Slbt8/4WHLX9wuslvRjXqBxtCRs5tAvXWWA4T9/m7Gc=
@@ -623,8 +628,9 @@ github.com/confluentinc/cc-structs/kafka/util v0.735.0/go.mod h1:vKI+bAgLC0H1hhm
 github.com/confluentinc/cc-structs/kafka/util v0.779.0/go.mod h1:zK+BAdNsqeeEbGWXM2lBlKoBK31BdeyNyPiu8TgwZ28=
 github.com/confluentinc/cc-structs/kafka/util v0.1096.0/go.mod h1:is2ljNOcVuS7WovEMwHVfvEwdzFeYMh4a74luFd/ips=
 github.com/confluentinc/cc-structs/kafka/util v0.1349.0/go.mod h1:z/KgpzO4WJ9sjxLvhT1q0mWW4FAkub960TFR0l5a67E=
-github.com/confluentinc/cc-structs/kafka/util v0.1390.0 h1:rRCJIGUfBDyW/GWiafI1zowlOcODZDM8V81WdEuDLX0=
 github.com/confluentinc/cc-structs/kafka/util v0.1390.0/go.mod h1:PhptuYaeJ9aQWM+noMaqrak9+hSpARPqOoO85T/wZmo=
+github.com/confluentinc/cc-structs/kafka/util v0.1422.0 h1:8UMX0p34WCo73PcPizhf4/266j7fIQabi8vuQPnGpMA=
+github.com/confluentinc/cc-structs/kafka/util v0.1422.0/go.mod h1:yf+ukLwEjc5nLCthWQAl/gfGLlAA/uVq2CKQEP2Ea2o=
 github.com/confluentinc/cc-structs/operator v0.239.0/go.mod h1:B7rCZH5/rjkTdx80Io6h4H+gRZtDa5ciJZwmbGJ5lsM=
 github.com/confluentinc/cc-structs/operator v0.405.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
 github.com/confluentinc/cc-structs/operator v0.407.0/go.mod h1:h80UL1NR+Q9Ey/umropf7dg7/RvW2zqXhRvqvAJVgv4=
@@ -633,6 +639,7 @@ github.com/confluentinc/cc-structs/operator v0.640.0/go.mod h1:HuCEW8KtDHzJOUpik
 github.com/confluentinc/cc-structs/operator v0.779.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.911.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.1096.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
+github.com/confluentinc/cc-structs/operator v0.1349.0/go.mod h1:HuCEW8KtDHzJOUpikNgspO9orr70yiD0RZnzBxNLV/E=
 github.com/confluentinc/cc-structs/operator v0.1390.0 h1:3uACX/GquL1ujnCmXRvNnoW6lRX9v1AxaRhbgupiUVk=
 github.com/confluentinc/cc-structs/operator v0.1390.0/go.mod h1:USurmD3oQsUFhxiITJDTgKTNPI9xS6Nm6ZY++yDYdjw=
 github.com/confluentinc/cc-structs/public_apis/iam v0.437.0/go.mod h1:l0eswgWHRrg7NAkBM98xbc0EDetnTa6aqnt5qZzyPRc=
