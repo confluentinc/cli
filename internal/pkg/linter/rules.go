@@ -124,6 +124,8 @@ func RequireSingular(field string) CommandRule {
 			return nil
 		}
 		if flect.Singularize(fieldValue) != fieldValue {
+			fmt.Println(fieldValue)
+			fmt.Println(flect.Singularize(fieldValue))
 			return fmt.Errorf("%s should be singular for `%s`", normalizeDesc(field), FullCommand(cmd))
 		}
 		return nil
