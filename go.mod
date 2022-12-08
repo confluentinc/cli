@@ -73,7 +73,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
-	github.com/tidwall/gjson v1.14.0
+	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/pretty v1.2.0
 	github.com/tidwall/sjson v1.2.4
 	github.com/travisjeffery/mocker v1.1.1
