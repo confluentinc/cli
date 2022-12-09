@@ -32,31 +32,30 @@ def job = {
                     ["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
                     ["aws/prod_cli_team", "access_key", "AWS_SECRET_ACCESS_KEY"]]){
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                            sh '''#!/usr/bin/env bash
-                                export HASH=$(git rev-parse --short=7 HEAD)
-                                wget "https://golang.org/dl/go1.19.linux-amd64.tar.gz" --quiet --output-document go1.19.tar.gz
-                                tar -C $(pwd) -xzf go1.19.tar.gz
-                                export GOROOT=$(pwd)/go
-                                export GOPATH=$(pwd)/go/path
-                                export GOBIN=$(pwd)/go/bin
-                                export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
-                                mkdir -p $GOPATH/bin
-                                mkdir -p $GOROOT/bin
-                                export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-                                echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                make jenkins-deps
-                                make build || exit 1
-                                cd dist
-                                dir=confluent_SNAPSHOT-${HASH}_linux_amd64
-                                mv confluent_linux_amd64_v1 $dir
-                                tarball=$dir.tar.gz
-                                tar -czf $tarball $dir
-                                aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
-                                aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
-                            '''
-                        }
+                        sh '''#!/usr/bin/env bash
+                            export HASH=$(git rev-parse --short=7 HEAD)
+                            wget "https://golang.org/dl/go1.19.linux-amd64.tar.gz" --quiet --output-document go1.19.tar.gz
+                            tar -C $(pwd) -xzf go1.19.tar.gz
+                            export GOROOT=$(pwd)/go
+                            export GOPATH=$(pwd)/go/path
+                            export GOBIN=$(pwd)/go/bin
+                            export modulePath=$(pwd)/go/src/github.com/confluentinc/cli
+                            mkdir -p $GOPATH/bin
+                            mkdir -p $GOROOT/bin
+                            export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
+                            echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
+                            make jenkins-deps
+                            make build || exit 1
+                            cd dist
+                            dir=confluent_SNAPSHOT-${HASH}_linux_amd64
+                            mv confluent_linux_amd64_v1 $dir
+                            tarball=$dir.tar.gz
+                            tar -czf $tarball $dir
+                            sudo apt-get install -y dnsutils
+                            dig +short myip.opendns.com @resolver1.opendns.com
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
+                        '''
                     }
                 }
             }
@@ -71,22 +70,19 @@ def job = {
                     ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                            sh '''#!/usr/bin/env bash
-                                export HASH=$(git rev-parse --short=7 HEAD)
-                                export confluent_s3="https://s3-us-west-2.amazonaws.com"
-                                git clone git@github.com:confluentinc/muckrake.git
-                                cd muckrake
-                                git checkout 7.3.x
-                                sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
-                                sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
-                                sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
-                                git checkout -b cli_system_test_$HASH
-                                git commit -am "System test configuration for CLI build ${HASH}"
-                                git push -u origin cli_system_test_$HASH
-                            '''
-                        }
+                        sh '''#!/usr/bin/env bash
+                            export HASH=$(git rev-parse --short=7 HEAD)
+                            export confluent_s3="https://s3-us-west-2.amazonaws.com"
+                            git clone git@github.com:confluentinc/muckrake.git
+                            cd muckrake
+                            git checkout 7.3.x
+                            sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
+                            sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
+                            sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
+                            git checkout -b cli_system_test_$HASH
+                            git commit -am "System test configuration for CLI build ${HASH}"
+                            git push -u origin cli_system_test_$HASH
+                        '''
                     }
                 }
             }
@@ -103,21 +99,18 @@ def job = {
                     ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                            sh '''#!/usr/bin/env bash
-                                export HASH=$(git rev-parse --short=7 HEAD)
-                                . extract-iam-credential.sh
-                                if [ -z "${TEST_PATH}" ]; then
-                                    export TEST_PATH="muckrake/tests/everything_runs_test.py"
-                                fi
-                                muckrake/ducker/resources/setup-gradle-properties.sh
-                                muckrake/ducker/resources/setup-git-credential-store
-                                export CHANGE_BRANCH=cli_system_test_$HASH
-                                cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
-                            '''
-                        }
+                            "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
+                        sh '''#!/usr/bin/env bash
+                            export HASH=$(git rev-parse --short=7 HEAD)
+                            . extract-iam-credential.sh
+                            if [ -z "${TEST_PATH}" ]; then
+                                export TEST_PATH="muckrake/tests/everything_runs_test.py"
+                            fi
+                            muckrake/ducker/resources/setup-gradle-properties.sh
+                            muckrake/ducker/resources/setup-git-credential-store
+                            export CHANGE_BRANCH=cli_system_test_$HASH
+                            cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
+                        '''
                     }
                 }
             }
