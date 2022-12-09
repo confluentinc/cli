@@ -1,11 +1,11 @@
           Config         |         Documentation          | Required  
 -------------------------+--------------------------------+-----------
+  data.format            | Sets the input value format.   | true      
+  gcs.bucket.name        | GCS bucket name.               | true      
+  gcs.credentials.config | GCP service account JSON file. | true      
   kafka.api.key          | Kafka API Key                  | true      
   kafka.api.secret       | Kafka API Secret               | true      
-  topics                 | Identifies the topic name.     | true      
-  data.format            | Sets the input value format.   | true      
-  gcs.credentials.config | GCP service account JSON file. | true      
-  gcs.bucket.name        | GCS bucket name.               | true      
-  time.interval          | Partitioning interval of data. | true      
   tasks.max              | Tasks                          | true      
+  time.interval          | Partitioning interval of data. | true      
+  topics                 | Identifies the topic name.     | true      
   flush.size             | Commit file size.              | false     

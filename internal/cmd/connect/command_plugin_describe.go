@@ -61,9 +61,14 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	configs := reply.GetConfigs()
-	// move the required configs to top
 	sort.Slice(configs, func(i, j int) bool {
-		return configs[i].Definition.GetRequired() && !configs[j].Definition.GetRequired()
+		requiredI := configs[i].Definition.GetRequired()
+		requiredJ := configs[j].Definition.GetRequired()
+		if requiredI == requiredJ {
+			return configs[i].Value.GetName() < configs[j].Value.GetName()
+		}
+
+		return requiredI
 	})
 
 	for _, config := range configs {
