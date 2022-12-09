@@ -1,4 +1,4 @@
-package environment
+package organization
 
 import (
 	"github.com/spf13/cobra"
@@ -18,7 +18,7 @@ type out struct {
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe a Confluent Cloud environment.",
+		Short:             "Describe a Confluent Cloud organization.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
@@ -30,16 +30,16 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0])
+	organization, httpResp, err := c.V2Client.GetOrgOrganization(args[0])
 	if err != nil {
-		return errors.CatchV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.CatchV2ResourceNotFoundError(err, resource.Organization, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: *environment.Id == c.EnvironmentId(),
-		Id:        *environment.Id,
-		Name:      *environment.DisplayName,
+		IsCurrent: *organization.Id == c.EnvironmentId(),
+		Id:        *organization.Id,
+		Name:      *organization.DisplayName,
 	})
 	return table.Print()
 }
