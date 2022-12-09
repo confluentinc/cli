@@ -1,6 +1,18 @@
 package test
 
+import (
+	"fmt"
+	"path/filepath"
+	"runtime"
+)
+
 func (s *CLITestSuite) TestSDPipeline() {
+	_, callerFileName, _, ok := runtime.Caller(0)
+	if !ok {
+		s.T().Fatalf("problems recovering caller information")
+	}
+	testPipelineSourceCode := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "pipeline", "test-pipeline.sql")
+
 	tests := []CLITest{
 		{args: "pipeline list --help", fixture: "pipeline/list-help.golden"},
 		{args: "pipeline list", fixture: "pipeline/list.golden"},
@@ -9,6 +21,8 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline create --help", fixture: "pipeline/create-help.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},
+		{args: fmt.Sprintf("pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/create.golden"},
+		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value1 --secret name2=value2", fixture: "pipeline/create.golden"},
 		{args: "pipeline delete --help", fixture: "pipeline/delete-help.golden"},
 		{args: "pipeline delete pipe-12345", fixture: "pipeline/delete.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
