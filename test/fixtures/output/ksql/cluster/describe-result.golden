@@ -1,5 +1,5 @@
 +-------------------------+--------------------------+
-| Id                      | lksqlc-12345             |
+| ID                      | lksqlc-12345             |
 | Name                    | account ksql             |
 | Topic Prefix            | pksqlc-zxcvb             |
 | Kafka                   | lkc-abcde                |

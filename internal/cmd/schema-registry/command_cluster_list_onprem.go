@@ -9,7 +9,6 @@ import (
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const clusterType = "schema-registry-cluster"
@@ -39,10 +38,5 @@ func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return print.PrintCluster(clusterInfos, format)
+	return print.PrintClusters(cmd, clusterInfos)
 }

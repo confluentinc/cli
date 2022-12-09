@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"fmt"
+
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
 
@@ -8,8 +10,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
-
-var listFields = []string{"Id", "Email", "FirstName", "LastName", "Status", "AuthenticationMethod"}
 
 var statusMap = map[flowv1.UserStatus]string{
 	flowv1.UserStatus_USER_STATUS_UNKNOWN:     "Unknown",
@@ -28,13 +28,12 @@ type userCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type userStruct struct {
-	Id                   string
-	Email                string
-	FirstName            string
-	LastName             string
-	Status               string
-	AuthenticationMethod string
+type userOut struct {
+	Id                   string `human:"ID" serialized:"id"`
+	Name                 string `human:"Name" serialized:"name"`
+	Email                string `human:"Email" serialized:"email"`
+	Status               string `human:"Status" serialized:"status"`
+	AuthenticationMethod string `human:"Authentication Method" serialized:"authentication_method"`
 }
 
 func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -53,4 +52,12 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
+}
+
+func getName(user *flowv1.UserProfile) string {
+	name := user.GetFirstName()
+	if last := user.GetLastName(); last != "" {
+		name += fmt.Sprintf(" %s", last)
+	}
+	return name
 }
