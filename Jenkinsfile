@@ -34,6 +34,7 @@ def job = {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                         sh '''#!/usr/bin/env bash
                             ip addr
+                            curl ifconfig.co/
                         '''
                     }
                 }
