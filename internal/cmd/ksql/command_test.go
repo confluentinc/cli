@@ -8,7 +8,6 @@ import (
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
@@ -31,15 +30,15 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
-	ksqlCluster  *ksqlv2.KsqldbcmV2Cluster
-	serviceAcct  *orgv1.User
-	ksqlc        *ksqlmock.ClustersKsqldbcmV2Api
-	kafkac       *mock.Kafka
-	userc        *mock.User
-	client       *ccloud.Client
-	v2Client     *ccloudv2.Client
+	conf            *v1.Config
+	kafkaCluster    *schedv1.KafkaCluster
+	ksqlCluster     *ksqlv2.KsqldbcmV2Cluster
+	serviceAcct     *orgv1.User
+	ksqlc           *ksqlmock.ClustersKsqldbcmV2Api
+	kafkac          *mock.Kafka
+	userc           *mock.User
+	schemaregistryc *mock.SchemaRegistry
+	v2Client        *ccloudv2.Client
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
@@ -127,10 +126,6 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
-	suite.client = &ccloud.Client{
-		Kafka: suite.kafkac,
-		User:  suite.userc,
-	}
 	suite.v2Client = &ccloudv2.Client{
 		KsqlClient: &ksqlv2.APIClient{
 			ClustersKsqldbcmV2Api: suite.ksqlc,
@@ -142,7 +137,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return nil, nil
 	})
-	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(suite.client, nil, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
+	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(nil, nil, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }
