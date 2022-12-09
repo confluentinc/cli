@@ -128,7 +128,7 @@ func getCRNFromElements(elements []*crn.Element) string {
 	c := "crn://confluent.cloud"
 
 	for _, e := range elements {
-		c += fmt.Sprintf("/%s=%s", e.ResourceType, e.ResourceName)
+		c += fmt.Sprintf("/%s", e.String())
 	}
 	return c
 }
