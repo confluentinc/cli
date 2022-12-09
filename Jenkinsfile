@@ -51,6 +51,8 @@ def job = {
                             mv confluent_linux_amd64_v1 $dir
                             tarball=$dir.tar.gz
                             tar -czf $tarball $dir
+                            sudo apt-get install -y dnsutils
+                            dig +short myip.opendns.com @resolver1.opendns.com
                             aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
                             aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
                         '''
