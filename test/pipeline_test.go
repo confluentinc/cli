@@ -34,6 +34,8 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline update pipeline-12345 --name testPipeline", fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --description newDescription", fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --name testPipeline --description newDescription", fixture: "pipeline/update.golden"},
+		{args: fmt.Sprintf("pipeline update pipeline-12345 --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
+		{args: "pipeline update pipeline-12345 --secret name3=value3", fixture: "pipeline/update.golden"},
 	}
 
 	for _, tt := range tests {
