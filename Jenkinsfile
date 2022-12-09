@@ -32,12 +32,9 @@ def job = {
                     ["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
                     ["aws/prod_cli_team", "access_key", "AWS_SECRET_ACCESS_KEY"]]){
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
-                            sh '''#!/usr/bin/env bash
-                                ip addr
-                            '''
-                        }
+                        sh '''#!/usr/bin/env bash
+                            ip addr
+                        '''
                     }
                 }
             }
