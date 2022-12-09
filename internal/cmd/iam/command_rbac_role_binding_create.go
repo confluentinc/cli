@@ -38,7 +38,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster-id lsrc-123456 --resource Subject:*",
 			},
 			examples.Example{
-				Text: `Grant the role "ResourceOwner" to principal "User:u-123456" to specific subject "test" for the |sr| “lsrc-123456” in the environment “env-12345”:`,
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster-id lsrc-123456 --resource Subject:test",
 			},
 			examples.Example{
