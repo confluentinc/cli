@@ -70,26 +70,25 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	}
 
 	deliveryMethod := "Email"
-	topicCRN, err := getTopicCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
+	topicCrn, err := getTopicCrn(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic)
 	if err != nil {
 		return err
 	}
 
-	subjectsCrn := make([]string, 0, len(schemaRegistrySubjects))
-	for _, subject := range schemaRegistrySubjects {
-		crn, err := getSubjectCRN(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject)
+	subjectsCrn := make([]string, len(schemaRegistrySubjects))
+	for i, subject := range schemaRegistrySubjects {
+		subjectsCrn[i], err = getSubjectCrn(c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject)
 		if err != nil {
 			return err
 		}
-		subjectsCrn = append(subjectsCrn, crn)
 	}
 
-	err = c.validateSubjects(subjectsCrn, topicCRN)
+	err = c.validateSubjects(subjectsCrn, topicCrn)
 	if err != nil {
 		return err
 	}
 
-	resources := []string{topicCRN}
+	resources := []string{topicCrn}
 	resources = append(resources, subjectsCrn...)
 
 	shareReq := cdxv1.CdxV1CreateProviderShareRequest{

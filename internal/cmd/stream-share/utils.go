@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -91,14 +90,14 @@ func areSubjectsModified(newSubjectsCRN []string, existingSubjectsCRN []string) 
 	sort.Strings(existingSubjectsCRN)
 
 	for i, s := range existingSubjectsCRN {
-		if s != strings.TrimSpace(newSubjectsCRN[i]) {
+		if s != newSubjectsCRN[i] {
 			return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
 		}
 	}
 	return nil
 }
 
-func getTopicCRN(orgId, environment, srCluster, kafkaCluster, topic string) (string, error) {
+func getTopicCrn(orgId, environment, srCluster, kafkaCluster, topic string) (string, error) {
 	elements, err := crn.NewElements(
 		crn.CcloudResourceType_ORGANIZATION, orgId,
 		crn.CcloudResourceType_ENVIRONMENT, environment,
@@ -112,7 +111,7 @@ func getTopicCRN(orgId, environment, srCluster, kafkaCluster, topic string) (str
 	return getCRNFromElements(elements), nil
 }
 
-func getSubjectCRN(orgId, environment, srCluster, subject string) (string, error) {
+func getSubjectCrn(orgId, environment, srCluster, subject string) (string, error) {
 	elements, err := crn.NewElements(
 		crn.CcloudResourceType_ORGANIZATION, orgId,
 		crn.CcloudResourceType_ENVIRONMENT, environment,
