@@ -57,6 +57,7 @@ def job = {
                             aws s3api ls
                             aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
                             aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
+                            aws --version
                         '''
                     }
                 }
