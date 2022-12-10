@@ -2,6 +2,8 @@ package pipeline
 
 import (
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"strings"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -22,6 +24,9 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
+	cmd.Flags().Bool("save-source-code", false, "Save the pipeline source code in a local file with name as pipeline_id.sql.")
+	cmd.Flags().String("output-directory", "", "Path to save pipeline source code. (default \"./\")")
+
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -30,6 +35,9 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
+	saveSource, _ := cmd.Flags().GetBool("save-source-code")
+	outputDir, _ := cmd.Flags().GetString("output-directory")
+
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -39,6 +47,23 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
+	}
+
+	if saveSource {
+		file := args[0] + ".sql"
+
+		if outputDir != "" {
+			if strings.HasSuffix(outputDir, "/") {
+				file = outputDir + file
+			} else {
+				file = outputDir + "/" + file
+			}
+		}
+
+		err = ioutil.WriteFile(file, []byte(pipeline.Spec.GetSourceCode()), 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	element := &Pipeline{
