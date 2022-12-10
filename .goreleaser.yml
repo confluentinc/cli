@@ -74,6 +74,7 @@ builds:
       - amd64
     hooks:
       pre:
+        - cmd: az login
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
         - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
