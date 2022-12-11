@@ -52,6 +52,9 @@ def job = {
                             tarball=$dir.tar.gz
                             tar -czf $tarball $dir
                             sudo apt-get install -y dnsutils
+                            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+                            unzip awscliv2.zip
+                            export PATH=$(pwd)/aws/dist/:$PATH
                             dig +short myip.opendns.com @resolver1.opendns.com
                             aws s3api list-buckets --debug
                             aws s3api ls
