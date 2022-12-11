@@ -56,11 +56,11 @@ def job = {
                             unzip awscliv2.zip
                             export PATH=$(pwd)/aws/dist/:$PATH
                             dig +short myip.opendns.com @resolver1.opendns.com
-                            aws s3api list-buckets --debug
-                            aws s3api ls
-                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball
-                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
                             aws --version
+                            aws s3api list-buckets --debug
+                            echo "BEGIN PUT OBJECT REQUEST"
+                            aws s3api put-object --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --body $tarball --debug
+                            aws s3api put-object-acl --bucket confluent.cloud --key confluent-cli-system-test-builds/$tarball --acl public-read
                         '''
                     }
                 }
