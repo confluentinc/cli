@@ -1,7 +1,6 @@
 package test
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -33,14 +32,12 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 			s.Errorf(err, "Cannot read file %s", fileName)
 		}
 		testfile, _ := os.ReadFile("test/fixtures/output/asyncapi/" + fileName)
-		testfile1 := strings.ReplaceAll(string(testfile), "\r", "")
 		index1 := strings.Index(string(file), "cluster:")
 		index2 := strings.Index(string(file), "confluentSchemaRegistry")
 		file1 := string(file[:index1]) + string(file[index2:])
 		file1 = strings.ReplaceAll(file1, "\r", "")
 		file1 = strings.ReplaceAll(file1, " ", "")
-		if strings.Compare(file1, testfile1) != 0 {
-			fmt.Println(file1)
+		if strings.Compare(file1, string(testfile)) != 0 {
 			s.Error(nil, "spec generated does not match the template output file")
 		}
 	}

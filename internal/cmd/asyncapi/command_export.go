@@ -100,7 +100,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
 	if flags.schemaContext != "default" {
-		utils.Printf(cmd, fmt.Sprintf("Using schema context %s\n", flags.schemaContext))
+		log.CliLogger.Debug(fmt.Sprintf("Using schema context %s\n", flags.schemaContext))
 		schemaContextPrefix = ":." + flags.schemaContext + ":"
 	}
 	channelCount := 0
