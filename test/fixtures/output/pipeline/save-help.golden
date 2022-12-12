@@ -1,0 +1,20 @@
+Save a Stream Designer pipeline's source code to a local file.
+
+Usage:
+  confluent pipeline save <pipeline-id> [flags]
+
+Examples:
+Save Stream Designer pipeline's source code for "pipe-12345".
+
+  $ confluent pipeline save pipe-12345
+
+Flags:
+      --source-code-file string   Path to save the pipeline's source code at. (default "./<pipeline-id>.sql")
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string            Kafka cluster ID.
+      --environment string        Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
