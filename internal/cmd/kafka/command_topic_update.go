@@ -83,7 +83,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// num.partitions is read only but requires special handling
+	// num.partitions is read-only but requires special handling
 	_, hasNumPartitionsChanged := configMap[numPartitionsKey]
 	if hasNumPartitionsChanged {
 		delete(configMap, numPartitionsKey)
