@@ -23,7 +23,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.9.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.11.0
+	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.12.0
 	github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
@@ -443,7 +443,6 @@ replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
-	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest => ../ccloud-sdk-go-v2-internal/kafkarest
 )
 
 go 1.19
