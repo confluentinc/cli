@@ -32,8 +32,8 @@ def job = {
                     ["aws/prod_cli_team", "key_id", "AWS_ACCESS_KEY_ID"],
                     ["aws/prod_cli_team", "access_key", "AWS_SECRET_ACCESS_KEY"]]){
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
+                        withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
+                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 wget "https://golang.org/dl/go1.19.linux-amd64.tar.gz" --quiet --output-document go1.19.tar.gz
@@ -71,8 +71,8 @@ def job = {
                     ["sonatype/confluent", "user", "SONATYPE_OSSRH_USER"],
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
+                        withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
+                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
@@ -104,8 +104,8 @@ def job = {
                     ["sonatype/confluent", "password", "SONATYPE_OSSRH_PASSWORD"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
                         "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
-                        withVaultFile([["gradle/gradle_properties_maven", "gradle_properties_file",
-                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]]) {
+                        withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
+                            "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 . extract-iam-credential.sh
