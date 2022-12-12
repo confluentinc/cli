@@ -9,11 +9,13 @@ Request to update Stream Designer pipeline "pipe-12345", with new name and new d
   $ confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"
 
 Flags:
-      --name string          Name of the pipeline.
-      --description string   Description of the pipeline.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
-      --cluster string       Kafka cluster ID.
-      --environment string   Environment ID.
+      --name string               Name of the pipeline.
+      --description string        Description of the pipeline.
+      --source-code-file string   Path to an ksql file containing the pipeline's source code.
+      --secrets strings           A comma-separated list of secret key-value pairs.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string            Kafka cluster ID.
+      --environment string        Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.

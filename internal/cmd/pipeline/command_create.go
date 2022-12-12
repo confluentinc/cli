@@ -2,8 +2,10 @@ package pipeline
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/spf13/cobra"
+	"io/ioutil"
+	"regexp"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,6 +30,8 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
+	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
+	cmd.Flags().StringSlice("secrets", nil, "A comma-separated list of secret key-value pairs.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -42,6 +46,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
+	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
+	secrets, _ := cmd.Flags().GetStringSlice("secrets")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -65,7 +71,23 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, ksqlCluster, srCluster.Id)
+	// read pipeline source code file if provided
+	sourceCode := ""
+	if sourceCodeFile != "" {
+		fileContent, err := ioutil.ReadFile(sourceCodeFile)
+		if err != nil {
+			return err
+		}
+		sourceCode = string(fileContent)
+	}
+
+	// parse and construct secret mappings
+	secretMappings, err := createSecretMappings(secrets)
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
 	if err != nil {
 		return err
 	}
@@ -81,4 +103,27 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+}
+
+func createSecretMappings(secrets []string) (map[string]string, error) {
+	secretMappings := make(map[string]string)
+
+	// The name of a secret may consist of 1-64 lowercase letters, uppercase letters, digits,
+	// and the '_' (underscore) and may not begin with a digit.
+	pattern := regexp.MustCompile(`^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`)
+
+	for _, secret := range secrets {
+		if pattern.MatchString(secret) {
+			matches := pattern.FindStringSubmatch(secret)
+			name, value := matches[1], matches[2]
+			if len(name) > 64 {
+				return nil, fmt.Errorf("secret name cannot exceed 64 characters")
+			}
+			secretMappings[name] = value
+		} else {
+			return nil, fmt.Errorf("each secret must be of the format \"<name>=<value>\", with the name " +
+				"consisting of 1-64 lowercase, uppercase, digits and '_' characters but may not begin with digits.")
+		}
+	}
+	return secretMappings, nil
 }
