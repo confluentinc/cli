@@ -9,11 +9,9 @@ Describe Stream Designer pipeline "pipe-12345".
   $ confluent pipeline describe pipe-12345
 
 Flags:
-      --save-source-code          Save the pipeline source code in a local file with name as pipeline_id.sql.
-      --output-directory string   Path to save pipeline source code. (default "./")
-  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
-      --cluster string            Kafka cluster ID.
-      --environment string        Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.
