@@ -81,7 +81,6 @@ var cmkExpandCluster = cmkv2.CmkV2Cluster{
 type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
-	kafkaMock       *ccsdkmock.Kafka
 	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
 	usageLimits     *ccsdkmock.UsageLimits
@@ -90,13 +89,6 @@ type KafkaClusterTestSuite struct {
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return &schedv1.KafkaCluster{
-				ApiEndpoint: "api-endpoint",
-			}, nil
-		},
-	}
 	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
 		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
 			return cmkv2.ApiCreateCmkV2ClusterRequest{}
@@ -189,7 +181,6 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	privateClient := &ccloud.Client{
-		Kafka:       suite.kafkaMock,
 		UsageLimits: suite.usageLimits,
 	}
 	client := &ccloudv1.Client{
