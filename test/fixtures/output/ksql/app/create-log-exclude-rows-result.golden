@@ -1,6 +1,7 @@
+`confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
 IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 +-------------------------+--------------------------+
-| ID                      | lksqlc-woooo             |
+| Id                      | lksqlc-woooo             |
 | Name                    | kay cee queue elle       |
 | Topic Prefix            | pksqlc-ghjkl             |
 | Kafka                   | lkc-zxcvb                |

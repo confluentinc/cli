@@ -364,3 +364,24 @@
                          |   }                                                                        
                          | ]                                                                          
                          |                                                                            
+  ResourceOwner          | [                                                                          
+                         |   {                                                                        
+                         |     "bindingScope": "schema-registry-cluster",                             
+                         |     "bindWithResource": true,                                              
+                         |     "allowedOperations": [                                                 
+                         |       {                                                                    
+                         |         "resourceType": "Subject",                                         
+                         |         "operations": [                                                    
+                         |           "Delete",                                                        
+                         |           "Read",                                                          
+                         |           "Write",                                                         
+                         |           "ReadCompatibility",                                             
+                         |           "AlterAccess",                                                   
+                         |           "WriteCompatibility",                                            
+                         |           "DescribeAccess"                                                 
+                         |         ]                                                                  
+                         |       }                                                                    
+                         |     ]                                                                      
+                         |   }                                                                        
+                         | ]                                                                          
+                         |                                                                            
