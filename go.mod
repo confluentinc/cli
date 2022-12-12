@@ -7,7 +7,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
-	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1505.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
