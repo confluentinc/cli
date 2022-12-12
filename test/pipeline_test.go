@@ -22,7 +22,8 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},
 		{args: fmt.Sprintf("pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/create.golden"},
-		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value1 --secret name2=value2", fixture: "pipeline/create.golden"},
+		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secrets name1=value1 --secrets name2=value2", fixture: "pipeline/create.golden"},
+		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secrets a_really_really_really_long_secret_name_but_not_exceeding_64_yet=value1 --secrets name2=value2", fixture: "pipeline/create.golden"},
 		{args: "pipeline delete --help", fixture: "pipeline/delete-help.golden"},
 		{args: "pipeline delete pipe-12345", fixture: "pipeline/delete.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
@@ -35,7 +36,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline update pipeline-12345 --description newDescription", fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --name testPipeline --description newDescription", fixture: "pipeline/update.golden"},
 		{args: fmt.Sprintf("pipeline update pipeline-12345 --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
-		{args: "pipeline update pipeline-12345 --secret name3=value3", fixture: "pipeline/update.golden"},
+		{args: "pipeline update pipeline-12345 --secrets name3=value3", fixture: "pipeline/update.golden"},
 	}
 
 	for _, tt := range tests {

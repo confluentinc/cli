@@ -27,8 +27,8 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
-	cmd.Flags().String("source-code-file", "", "Path to a sql file containing pipeline source code.")
-	cmd.Flags().StringSlice("secret", nil, "A secret name value mapping.")
+	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
+	cmd.Flags().StringSlice("secrets", nil, "A comma-separated list of secret key-value pairs.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -41,7 +41,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
-	secrets, _ := cmd.Flags().GetStringSlice("secret")
+	secrets, _ := cmd.Flags().GetStringSlice("secrets")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {

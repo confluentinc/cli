@@ -149,7 +149,7 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
 					DisplayName: body.Spec.DisplayName,
 					Description: streamdesignerv1.PtrString("description"),
-					SourceCode:  body.Spec.SourceCode,
+					SourceCode:  streamdesignerv1.PtrString(body.Spec.GetSourceCode()),
 					Secrets:     body.Spec.Secrets,
 					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
 				},

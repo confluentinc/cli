@@ -30,8 +30,8 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
-	cmd.Flags().String("source-code-file", "", "Path to a sql file containing pipeline source code.")
-	cmd.Flags().StringSlice("secret", nil, "A secret name value mapping.")
+	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
+	cmd.Flags().StringSlice("secrets", nil, "A comma-separated list of secret key-value pairs.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -47,7 +47,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
 	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
-	secrets, _ := cmd.Flags().GetStringSlice("secret")
+	secrets, _ := cmd.Flags().GetStringSlice("secrets")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -115,13 +115,14 @@ func createSecretMappings(secrets []string) (map[string]string, error) {
 	for _, secret := range secrets {
 		if pattern.MatchString(secret) {
 			matches := pattern.FindStringSubmatch(secret)
-			if len(matches[1]) > 6 {
-				return nil, fmt.Errorf("secret name cannot exceeds 64 characters")
+			name, value := matches[1], matches[2]
+			if len(name) > 64 {
+				return nil, fmt.Errorf("secret name cannot exceed 64 characters")
 			}
-
-			secretMappings[matches[1]] = matches[2]
+			secretMappings[name] = value
 		} else {
-			return nil, fmt.Errorf("each secret must conform to the pattern of <name>=<value>")
+			return nil, fmt.Errorf("each secret must be of the format \"<name>=<value>\", with the name " +
+				"consisting of 1-64 lowercase, uppercase, digits and '_' characters but may not begin with digits.")
 		}
 	}
 	return secretMappings, nil

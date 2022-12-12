@@ -11,8 +11,8 @@ Request to update Stream Designer pipeline "pipe-12345", with new name and new d
 Flags:
       --name string               Name of the pipeline.
       --description string        Description of the pipeline.
-      --source-code-file string   Path to a sql file containing pipeline source code.
-      --secret strings            A secret name value mapping.
+      --source-code-file string   Path to an ksql file containing the pipeline's source code.
+      --secrets strings           A comma-separated list of secret key-value pairs.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string            Kafka cluster ID.
       --environment string        Environment ID.

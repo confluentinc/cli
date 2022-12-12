@@ -3,7 +3,7 @@ package pipeline
 import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
-	"strings"
+	"path/filepath"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -25,7 +25,7 @@ func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.Flags().Bool("save-source-code", false, "Save the pipeline source code in a local file with name as pipeline_id.sql.")
-	cmd.Flags().String("output-directory", "", "Path to save pipeline source code. (default \"./\")")
+	cmd.Flags().String("output-directory", "./", "Path to save pipeline source code.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -53,11 +53,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		file := args[0] + ".sql"
 
 		if outputDir != "" {
-			if strings.HasSuffix(outputDir, "/") {
-				file = outputDir + file
-			} else {
-				file = outputDir + "/" + file
-			}
+			file = filepath.Join(outputDir, file)
 		}
 
 		err = ioutil.WriteFile(file, []byte(pipeline.Spec.GetSourceCode()), 0644)
