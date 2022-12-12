@@ -28,6 +28,7 @@ var (
 		"KafkaNetworkWrite":     "Kafka write",
 		"KafkaNumCKUs":          "CKU price",
 		"KafkaPartition":        "Kafka partition",
+		"KafkaRestProduce":      "Kafka Rest Produce",
 		"KafkaStorage":          "Kafka storage",
 		"ClusterLinkingBase":    "Cluster linking base",
 		"ClusterLinkingPerLink": "Cluster linking per-link",
