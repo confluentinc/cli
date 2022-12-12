@@ -21,7 +21,7 @@ def job = {
 
             stage('Setup Go and Build CLI') {
                 writeFile file:'extract-iam-credential.sh', text:libraryResource('scripts/extract-iam-credential.sh')
-                withVaultFile([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
+                withVaultEnv([["docker_hub/jenkins", "user", "DOCKER_USERNAME"],
                     ["docker_hub/jenkins", "password", "DOCKER_PASSWORD"],
                     ["github/confluent_jenkins", "user", "GIT_USER"],
                     ["github/confluent_jenkins", "access_token", "GIT_TOKEN"],
