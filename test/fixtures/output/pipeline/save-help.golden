@@ -4,15 +4,15 @@ Usage:
   confluent pipeline save <pipeline-id> [flags]
 
 Examples:
-Save Stream Designer pipeline's source code for "pipe-12345".
+Save the source code for Stream Designer pipeline "pipe-12345" to "/tmp/pipeline-source-code.sql".
 
-  $ confluent pipeline save pipe-12345
+  $ confluent pipeline save pipe-12345 --source-code-file /tmp/pipeline-source-code.sql
 
 Flags:
       --source-code-file string   Path to save the pipeline's source code at. (default "./<pipeline-id>.sql")
-  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string            Kafka cluster ID.
       --environment string        Environment ID.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
