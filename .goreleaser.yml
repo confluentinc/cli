@@ -128,7 +128,7 @@ archives:
       linux: alpine
     format: binary
   - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     replacements: 
       linux: alpine
     format: tar.gz
