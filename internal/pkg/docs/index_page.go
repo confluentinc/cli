@@ -38,6 +38,7 @@ func printRootIndexPage(tabs []Tab) []string {
 	cmd := tabs[0].Command
 
 	return flatten([][]string{
+		printComments(),
 		printHeader(cmd, false),
 		printTitle(cmd, "="),
 		printInlineScript(),
@@ -49,6 +50,7 @@ func printIndexPage(tabs []Tab, isOverview bool) []string {
 	cmd := tabs[0].Command
 
 	rows := [][]string{
+		printComments(),
 		printHeader(cmd, isOverview),
 		printTitle(cmd, "="),
 		printTabbedSection("Description", printDescription, tabs),
@@ -69,6 +71,14 @@ func flatten(arrs [][]string) []string {
 		flatArr = append(flatArr, arr...)
 	}
 	return flatArr
+}
+
+func printComments() []string {
+	return []string{
+		"..",
+		tab + "WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
+	}
 }
 
 func printHeader(cmd *cobra.Command, isOverview bool) []string {
