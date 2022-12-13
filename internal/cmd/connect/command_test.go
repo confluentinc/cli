@@ -34,7 +34,12 @@ var (
 	}
 
 	pluginDescribe = connectv1.InlineResponse2003Configs{
-		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
+		Value: &connectv1.InlineResponse2003Value{
+			Name:   connectv1.PtrString("name"),
+			Errors: &[]string{`"name" is required`}},
+		Definition: &connectv1.InlineResponse2003Definition{
+			Documentation: connectv1.PtrString("Connector Name"),
+			Required:      connectv1.PtrBool(true)},
 	}
 
 	connector = connectv1.ConnectV1Connector{
@@ -290,7 +295,6 @@ func (suite *ConnectTestSuite) TestPluginDescribeConnector() {
 	req.NoError(err)
 	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginCalled())
 	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginExecuteCalled())
-	req.Contains(buf.String(), pluginType)
 }
 
 func TestConnectTestSuite(t *testing.T) {
