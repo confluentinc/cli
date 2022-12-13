@@ -31,7 +31,10 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
-	cmd.Flags().StringSlice("secrets", nil, "A comma-separated list of secret key-value pairs.")
+	cmd.Flags().StringArray("secret", nil, "A named secret that's to be referenced in pipeline source code. "+
+		"The secret mapping must follow the pattern of <secret-name>=<secret-value>, with <secret-name> consisting of 1-64 lowercase, "+
+		"uppercase, digits and '_' characters but may not begin with digits. If <secret-value> is empty, the named secret will be "+
+		"removed from Stream Designer.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -47,7 +50,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
 	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
-	secrets, _ := cmd.Flags().GetStringSlice("secrets")
+	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -117,12 +120,11 @@ func createSecretMappings(secrets []string) (map[string]string, error) {
 			matches := pattern.FindStringSubmatch(secret)
 			name, value := matches[1], matches[2]
 			if len(name) > 64 {
-				return nil, fmt.Errorf("secret name cannot exceed 64 characters")
+				return nil, fmt.Errorf("secret name '%s' cannot exceed 64 characters", name)
 			}
 			secretMappings[name] = value
 		} else {
-			return nil, fmt.Errorf("each secret must be of the format \"<name>=<value>\", with the name " +
-				"consisting of 1-64 lowercase, uppercase, digits and '_' characters but may not begin with digits.")
+			return nil, fmt.Errorf("invalid secret pattern '%s'", secret)
 		}
 	}
 	return secretMappings, nil

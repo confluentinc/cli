@@ -13,7 +13,7 @@ Flags:
       --name string               REQUIRED: Name of the pipeline.
       --description string        Description of the pipeline.
       --source-code-file string   Path to an ksql file containing the pipeline's source code.
-      --secrets strings           A comma-separated list of secret key-value pairs.
+      --secret stringArray        A named secret that's to be referenced in pipeline source code. The secret mapping must follow the pattern of <secret-name>=<secret-value>, with <secret-name> consisting of 1-64 lowercase, uppercase, digits and '_' characters but may not begin with digits. If <secret-value> is empty, the named secret will be removed from Stream Designer.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string            Kafka cluster ID.
       --environment string        Environment ID.
