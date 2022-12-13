@@ -30,15 +30,14 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
-	kafkaCluster    *schedv1.KafkaCluster
-	ksqlCluster     *ksqlv2.KsqldbcmV2Cluster
-	serviceAcct     *orgv1.User
-	ksqlc           *ksqlmock.ClustersKsqldbcmV2Api
-	kafkac          *mock.Kafka
-	userc           *mock.User
-	schemaregistryc *mock.SchemaRegistry
-	v2Client        *ccloudv2.Client
+	conf         *v1.Config
+	kafkaCluster *schedv1.KafkaCluster
+	ksqlCluster  *ksqlv2.KsqldbcmV2Cluster
+	serviceAcct  *orgv1.User
+	ksqlc        *ksqlmock.ClustersKsqldbcmV2Api
+	kafkac       *mock.Kafka
+	userc        *mock.User
+	v2Client     *ccloudv2.Client
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {

@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -41,6 +42,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
+	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -62,6 +64,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -76,7 +83,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// num.partitions is read only but requires special handling
+	// num.partitions is read-only but requires special handling
 	_, hasNumPartitionsChanged := configMap[numPartitionsKey]
 	if hasNumPartitionsChanged {
 		delete(configMap, numPartitionsKey)
@@ -84,6 +91,8 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	kafkaRestConfigs := toAlterConfigBatchRequestData(configMap)
 
 	data := toAlterConfigBatchRequestData(configMap)
+	data.ValidateOnly = &dryRun
+
 	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
@@ -93,6 +102,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			}
 		}
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	if dryRun {
+		utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Topic, topicName)
+		return nil
 	}
 
 	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
