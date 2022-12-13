@@ -31,10 +31,10 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
-	cmd.Flags().StringArray("secret", nil, "A named secret that's to be referenced in pipeline source code. "+
-		"The secret mapping must follow the pattern of <secret-name>=<secret-value>, with <secret-name> consisting of 1-64 lowercase, "+
-		"uppercase, digits and '_' characters but may not begin with digits. If <secret-value> is empty, the named secret will be "+
-		"removed from Stream Designer.")
+	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
+		"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
+		"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+		"The <secret-value> can be of any format but may not be empty.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -85,7 +85,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// parse and construct secret mappings
-	secretMappings, err := createSecretMappings(secrets)
+	secretMappings, err := createSecretMappings(secrets, secretMappingWithoutEmptyValue)
 	if err != nil {
 		return err
 	}
@@ -108,23 +108,23 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
 }
 
-func createSecretMappings(secrets []string) (map[string]string, error) {
+func createSecretMappings(secrets []string, regex string) (map[string]string, error) {
 	secretMappings := make(map[string]string)
 
 	// The name of a secret may consist of 1-64 lowercase letters, uppercase letters, digits,
 	// and the '_' (underscore) and may not begin with a digit.
-	pattern := regexp.MustCompile(`^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`)
+	pattern := regexp.MustCompile(regex)
 
 	for _, secret := range secrets {
 		if pattern.MatchString(secret) {
 			matches := pattern.FindStringSubmatch(secret)
 			name, value := matches[1], matches[2]
 			if len(name) > 64 {
-				return nil, fmt.Errorf("secret name '%s' cannot exceed 64 characters", name)
+				return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
 			}
 			secretMappings[name] = value
 		} else {
-			return nil, fmt.Errorf("invalid secret pattern '%s'", secret)
+			return nil, fmt.Errorf(`invalid secret pattern "%s"`, secret)
 		}
 	}
 	return secretMappings, nil

@@ -41,6 +41,8 @@ var (
 		"CreatedAt":   "created_at",
 		"UpdatedAt":   "updated_at",
 	}
+	secretMappingWithoutEmptyValue = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$`
+	secretMappingWithEmptyValue    = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`
 )
 
 type command struct {
