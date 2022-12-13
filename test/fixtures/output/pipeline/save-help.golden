@@ -4,6 +4,10 @@ Usage:
   confluent pipeline save <pipeline-id> [flags]
 
 Examples:
+Save the source code for Stream Designer pipeline "pipe-12345" to the default file at "./pipe-12345.sql".
+
+  $ confluent pipeline save pipe-12345
+
 Save the source code for Stream Designer pipeline "pipe-12345" to "/tmp/pipeline-source-code.sql".
 
   $ confluent pipeline save pipe-12345 --source-code-file /tmp/pipeline-source-code.sql

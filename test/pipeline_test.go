@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 )
@@ -12,6 +13,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		s.T().Fatalf("problems recovering caller information")
 	}
 	testPipelineSourceCode := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "pipeline", "test-pipeline.sql")
+	testOutputFile, _ := os.CreateTemp("", "test-save.sql")
 
 	tests := []CLITest{
 		{args: "pipeline list --help", fixture: "pipeline/list-help.golden"},
@@ -19,7 +21,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline describe --help", fixture: "pipeline/describe-help.golden"},
 		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
 		{args: "pipeline save --help", fixture: "pipeline/save-help.golden"},
-		{args: "pipeline save pipe-12345 --source-code-file /tmp/test-save.sql", fixture: "pipeline/save.golden"},
+		{args: fmt.Sprintf("pipeline save pipe-12345 --source-code-file %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
 		{args: "pipeline create --help", fixture: "pipeline/create-help.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},

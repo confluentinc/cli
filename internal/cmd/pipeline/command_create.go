@@ -30,22 +30,19 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
-	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
-	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
-		"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-		"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
-		"The <secret-value> can be of any format but may not be empty.")
+	if enableSourceCode {
+		cmd.Flags().String("source-code-file", "", "Path to a KSQL file containing the pipeline's source code.")
+		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
+			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
+			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"The <secret-value> can be of any format but may not be empty.")
+	}
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	_ = cmd.MarkFlagRequired("ksql-cluster")
 	_ = cmd.MarkFlagRequired("name")
-
-	if !enableSourceCode {
-		_ = cmd.Flags().MarkHidden("source-code-file")
-		_ = cmd.Flags().MarkHidden("secret")
-	}
 
 	return cmd
 }
@@ -121,16 +118,16 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 	pattern := regexp.MustCompile(regex)
 
 	for _, secret := range secrets {
-		if pattern.MatchString(secret) {
-			matches := pattern.FindStringSubmatch(secret)
-			name, value := matches[1], matches[2]
-			if len(name) > 64 {
-				return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
-			}
-			secretMappings[name] = value
-		} else {
+		if !pattern.MatchString(secret) {
 			return nil, fmt.Errorf(`invalid secret pattern "%s"`, secret)
 		}
+
+		matches := pattern.FindStringSubmatch(secret)
+		name, value := matches[1], matches[2]
+		if len(name) > 64 {
+			return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
+		}
+		secretMappings[name] = value
 	}
 	return secretMappings, nil
 }
