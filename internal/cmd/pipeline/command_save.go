@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 )
 
-func (c *command) newSaveCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "save <pipeline-id>",
 		Short: "Save a Stream Designer pipeline's source code to a local file.",
@@ -28,6 +28,7 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.Hidden = !enableSourceCode
 	return cmd
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new pipeline.",
@@ -41,6 +41,11 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	_ = cmd.MarkFlagRequired("ksql-cluster")
 	_ = cmd.MarkFlagRequired("name")
+
+	if !enableSourceCode {
+		_ = cmd.Flags().MarkHidden("source-code-file")
+		_ = cmd.Flags().MarkHidden("secret")
+	}
 
 	return cmd
 }

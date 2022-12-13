@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <pipeline-id>",
 		Short: "Update an existing pipeline.",
@@ -36,6 +36,11 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	if !enableSourceCode {
+		_ = cmd.Flags().MarkHidden("source-code-file")
+		_ = cmd.Flags().MarkHidden("secret")
+	}
 
 	return cmd
 }
