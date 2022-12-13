@@ -71,14 +71,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		sourceCode := string(fileContent)
 		updatePipeline.Spec.SetSourceCode(sourceCode)
 	}
-	if len(secrets) != 0 {
-		// parse and construct secret mappings
-		secretMappings, err := createSecretMappings(secrets)
-		if err != nil {
-			return err
-		}
-		updatePipeline.Spec.SetSecrets(secretMappings)
+	// parse and construct secret mappings
+	secretMappings, err := createSecretMappings(secrets)
+	if err != nil {
+		return err
 	}
+	updatePipeline.Spec.SetSecrets(secretMappings)
 
 	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
