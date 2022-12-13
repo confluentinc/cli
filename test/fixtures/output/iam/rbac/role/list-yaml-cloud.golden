@@ -285,3 +285,15 @@
       - AlterAccess
       - WriteCompatibility
       - DescribeAccess
+- name: ResourceOwner
+  policies:
+  - bindingscope: ksql-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: KsqlCluster
+      operations:
+      - Describe
+      - AlterAccess
+      - Contribute
+      - DescribeAccess
+      - Terminate
