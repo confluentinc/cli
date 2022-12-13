@@ -65,10 +65,6 @@ clean:
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
 
-.PHONY: generate
-generate:
-	@go generate ./...
-
 .PHONY: deps
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
@@ -79,6 +75,10 @@ deps:
 .PHONY: jenkins-deps
 jenkins-deps:
 	go install github.com/goreleaser/goreleaser@v1.11.2
+
+semaphore-deps:
+	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install gotest.tools/gotestsum@v1.8.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
