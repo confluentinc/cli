@@ -1,6 +1,6 @@
 IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 +-------------------------+--------------------------+
-| Id                      | lksqlc-woooo             |
+| ID                      | lksqlc-woooo             |
 | Name                    | kay cee queue elle       |
 | Topic Prefix            | pksqlc-ghjkl             |
 | Kafka                   | lkc-zxcvb                |

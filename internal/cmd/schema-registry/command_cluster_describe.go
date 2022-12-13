@@ -19,33 +19,25 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "FreeSchemasLimit", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
-	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "FreeSchemasLimit": "Free Schemas Limit",
-		"Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
-	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "FreeSchemasLimit": "free_schemas_limit",
-		"Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
-)
+type clusterOut struct {
+	Name                  string `human:"Name" serialized:"name"`
+	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
+	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit      int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                  string `human:"Mode" serialized:"mode"`
+	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
+	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
+	Package               string `human:"Package" serialized:"package"`
+}
 
 const (
 	defaultSchemaLimitAdvanced            = 20000
 	streamGovernancePriceTableProductName = "stream-governance"
 	schemaRegistryPriceTableName          = "SchemaRegistry"
 )
-
-type describeDisplay struct {
-	Name                  string
-	ID                    string
-	URL                   string
-	Used                  string
-	Available             string
-	FreeSchemasLimit      string
-	Compatibility         string
-	Mode                  string
-	ServiceProvider       string
-	ServiceProviderRegion string
-	Package               string
-}
 
 func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -150,20 +142,21 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		availableSchemas = ""
 	}
 
-	data := &describeDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&clusterOut{
 		Name:                  cluster.Name,
-		ID:                    cluster.Id,
-		URL:                   cluster.Endpoint,
+		ClusterId:             cluster.Id,
+		EndpointUrl:           cluster.Endpoint,
 		ServiceProvider:       cluster.ServiceProvider,
 		ServiceProviderRegion: cluster.ServiceProviderRegion,
 		Package:               getPackageDisplayName(cluster.Package),
-		Used:                  numSchemas,
-		Available:             availableSchemas,
-		FreeSchemasLimit:      strconv.Itoa(freeSchemasLimit),
-		Compatibility:         compatibility,
+		UsedSchemas:           numSchemas,
+		AvailableSchemas:      availableSchemas,
+		FreeSchemasLimit:      freeSchemasLimit,
+		GlobalCompatibility:   compatibility,
 		Mode:                  mode,
-	}
-	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
+	})
+	return table.Print()
 }
 
 func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {

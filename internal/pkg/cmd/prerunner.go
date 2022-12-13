@@ -349,7 +349,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.PrivateClient)
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
 }
 
@@ -387,8 +387,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return nil
 	}
 
-	privateClient := r.CCloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, privateClient, pauth.CCloudURL, credentials)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
 	if err != nil {
 		return err
 	}
@@ -525,10 +525,6 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", "", nil
-	}
-
 	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
@@ -800,7 +796,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
-	noAuth, _ := cmd.Flags().GetBool("no-auth")
+	noAuth, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
@@ -886,7 +882,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.PrivateClient); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err
 			}
 
@@ -1042,8 +1038,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		//nolint
-		utils.ErrPrint(cmd, errors.LocalCommandDevOnlyMsg)
+		utils.ErrPrintln(cmd, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		utils.ErrPrintln(cmd, "As of Confluent Platform 8.0, Java 8 is no longer supported.")
+		utils.ErrPrintln(cmd)
 	}
 }
 
