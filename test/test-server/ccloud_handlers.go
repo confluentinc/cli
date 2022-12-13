@@ -17,13 +17,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
-	bucketv1 "github.com/confluentinc/cire-bucket-service/protos/bucket/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -31,23 +30,23 @@ import (
 )
 
 var (
-	environments       = []*orgv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	environments       = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
 	keyStore           = map[int32]*schedv1.ApiKey{}
 	keyIndex           = int32(1)
 	keyTimestamp, _    = types.TimestampProto(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 	resourceTypeToKind = map[string]string{resource.KafkaCluster: "Cluster", resource.KsqlCluster: "ksqlDB", resource.SchemaRegistryCluster: "SchemaRegistry", resource.Cloud: "Cloud"}
 
-	RegularOrg = &orgv1.Organization{
+	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
 		Name: "test-org",
 	}
-	SuspendedOrg = func(eventType orgv1.SuspensionEventType) *orgv1.Organization {
-		return &orgv1.Organization{
+	SuspendedOrg = func(eventType ccloudv1.SuspensionEventType) *ccloudv1.Organization {
+		return &ccloudv1.Organization{
 			Id:   321,
 			Name: "test-org",
-			SuspensionStatus: &orgv1.SuspensionStatus{
-				Status:    orgv1.SuspensionStatusType_SUSPENSION_COMPLETED,
+			SuspensionStatus: &ccloudv1.SuspensionStatus{
+				Status:    ccloudv1.SuspensionStatusType_SUSPENSION_COMPLETED,
 				EventType: eventType,
 			},
 		}
@@ -95,9 +94,9 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			orgResourceId = "abc-123"
 		}
 
-		org := &orgv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
 		if !isAuditLogEnabled {
-			org.AuditLog = &orgv1.AuditLog{
+			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",
 				ServiceAccountId: auditLogServiceAccountID,
@@ -105,8 +104,8 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			}
 		}
 
-		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
-			User: &orgv1.User{
+		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
+			User: &ccloudv1.User{
 				Id:         23,
 				Email:      "cody@confluent.io",
 				FirstName:  "Cody",
@@ -124,21 +123,21 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 // Handler for: "/api/sessions"
 func handleLogin(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := new(flowv1.AuthenticateRequest)
+		req := new(ccloudv1.AuthenticateRequest)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
 
-		res := new(flowv1.AuthenticateReply)
+		res := new(ccloudv1.AuthenticateReply)
 
 		switch req.Email {
 		case "incorrect@user.com":
 			w.WriteHeader(http.StatusForbidden)
 		case "suspended@user.com":
 			w.WriteHeader(http.StatusForbidden)
-			res.Error = &corev1.Error{Message: errors.SuspendedOrganizationSuggestions}
+			res.Error = &ccloudv1.Error{Message: errors.SuspendedOrganizationSuggestions}
 		case "end-of-free-trial-suspended@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
-			res.Organization = SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
+			res.Organization = SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
@@ -160,7 +159,7 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		email := r.URL.Query().Get("email")
 
-		res := &flowv1.GetLoginRealmReply{
+		res := &ccloudv1.GetLoginRealmReply{
 			IsSso: strings.Contains(email, "sso"),
 			Realm: "realm",
 		}
@@ -177,16 +176,16 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
 			case http.MethodGet: // called by `environment use`
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.GetAccountReply{Account: env})
+				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 			case http.MethodPut: // called by `environment create`
-				req := &orgv1.UpdateAccountRequest{}
+				req := &ccloudv1.CreateAccountRequest{}
 				err := utilv1.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
 				env.Name = req.Account.Name
-				b, err := utilv1.MarshalJSONToBytes(&orgv1.UpdateAccountReply{Account: env})
+				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
@@ -202,15 +201,15 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
-			req := &orgv1.CreateAccountRequest{}
+			req := &ccloudv1.CreateAccountRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
-			account := &orgv1.Account{
+			account := &ccloudv1.Account{
 				Id:             "a-5555",
 				Name:           req.Account.Name,
 				OrganizationId: 0,
 			}
-			b, err := utilv1.MarshalJSONToBytes(&orgv1.CreateAccountReply{
+			b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{
 				Account: account,
 			})
 			require.NoError(t, err)
@@ -225,96 +224,28 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost: //admin payment update
-			req := &orgv1.UpdatePaymentInfoRequest{}
+			req := &ccloudv1.UpdatePaymentInfoRequest{}
 			err := utilv1.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
 
-			res := &orgv1.UpdatePaymentInfoReply{}
+			res := &ccloudv1.UpdatePaymentInfoReply{}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodGet: // admin payment describe
-			res := orgv1.GetPaymentInfoReply{
-				Card: &orgv1.Card{
+			res := ccloudv1.GetPaymentInfoReply{
+				Card: &ccloudv1.Card{
 					Cardholder: "Miles Todzo",
 					Brand:      "Visa",
 					Last4:      "4242",
 					ExpMonth:   "01",
 					ExpYear:    "99",
 				},
-				Organization: &orgv1.Organization{Id: 0},
+				Organization: &ccloudv1.Organization{Id: 0},
 			}
 			data, err := json.Marshal(res)
 			require.NoError(t, err)
 			_, err = w.Write(data)
-			require.NoError(t, err)
-		}
-	}
-}
-
-// Handler for "/api/organizations/"
-func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		prices := map[string]float64{
-			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
-		}
-
-		srPrices := map[string]float64{
-			exampleSRPriceKey: exampleSchemaLimit,
-		}
-
-		res := &billingv1.GetPriceTableReply{
-			PriceTable: &billingv1.PriceTable{
-				PriceTable: map[string]*billingv1.UnitPrices{
-					exampleMetric:       {Unit: exampleUnit, Prices: prices},
-					exampleSRPriceTable: {Unit: exampleSRPriceUnit, Prices: srPrices},
-				},
-			},
-		}
-
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			var tenDollars int64 = 10 * 10000
-
-			// The time is set to noon so that all time zones display the same local time
-			date := time.Date(2021, time.June, 16, 12, 0, 0, 0, time.UTC)
-			expiration := &types.Timestamp{Seconds: date.Unix()}
-
-			res := &billingv1.GetPromoCodeClaimsReply{
-				Claims: []*billingv1.PromoCodeClaim{
-					{
-						Code:                 "PROMOCODE1",
-						Amount:               tenDollars,
-						Balance:              tenDollars,
-						CreditExpirationDate: expiration,
-					},
-					{
-						Code:                 "PROMOCODE2",
-						Balance:              tenDollars,
-						Amount:               tenDollars,
-						CreditExpirationDate: expiration,
-					},
-				},
-			}
-
-			listReply, err := utilv1.MarshalJSONToBytes(res)
-			require.NoError(t, err)
-			_, err = w.Write(listReply)
-			require.NoError(t, err)
-		case http.MethodPost:
-			res := &billingv1.ClaimPromoCodeReply{}
-
-			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
 	}
@@ -325,15 +256,23 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := &orgv1.User{
-				Id:                 serviceAccountID,
-				ResourceId:         serviceAccountResourceID,
-				ServiceName:        "service_account",
-				ServiceDescription: "at your service.",
+			res := &orgv1.GetServiceAccountsReply{
+				Users: []*orgv1.User{
+					{
+						Id:                 serviceAccountID,
+						ResourceId:         serviceAccountResourceID,
+						ServiceName:        "service_account",
+						ServiceDescription: "at your service.",
+					},
+					{
+						Id:                 1,
+						ResourceId:         "sa-00001",
+						ServiceName:        "KSQL.lksqlc-12345",
+						ServiceDescription: "ksqlDB service account",
+					},
+				},
 			}
-			listReply, err := utilv1.MarshalJSONToBytes(&orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{serviceAccount},
-			})
+			listReply, err := utilv1.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
@@ -399,11 +338,11 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 // Handler for: "api/env_metadata"
 func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		clouds := []*schedv1.CloudMetadata{
+		clouds := []*ccloudv1.CloudMetadata{
 			{
 				Id:   "gcp",
 				Name: "Google Cloud Platform",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "asia-southeast1",
 						Name:          "asia-southeast1 (Singapore)",
@@ -419,7 +358,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "aws",
 				Name: "Amazon Web Services",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "ap-northeast-1",
 						Name:          "ap-northeast-1 (Tokyo)",
@@ -435,7 +374,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 			{
 				Id:   "azure",
 				Name: "Azure",
-				Regions: []*schedv1.Region{
+				Regions: []*ccloudv1.Region{
 					{
 						Id:            "southeastasia",
 						Name:          "southeastasia (Singapore)",
@@ -444,7 +383,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 				},
 			},
 		}
-		reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetEnvironmentMetadataReply{
+		reply, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetEnvironmentMetadataReply{
 			Clouds: clouds,
 		})
 		require.NoError(t, err)
@@ -454,6 +393,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/ksqls"
+// We only implement create here, as the v2 api takes over the other endpoints
 func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ksqlCluster1 := &schedv1.KSQLCluster{
@@ -761,13 +701,13 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/signup"
 func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		req := &orgv1.SignupRequest{}
+		req := &ccloudv1.SignupRequest{}
 		err := utilv1.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
 		require.NotEmpty(t, req.Organization.Name)
 		require.NotEmpty(t, req.User)
 		require.NotEmpty(t, req.Credentials)
-		signupReply := &orgv1.SignupReply{Organization: &orgv1.Organization{}}
+		signupReply := &ccloudv1.SignupReply{Organization: &ccloudv1.Organization{}}
 		reply, err := utilv1.MarshalJSONToBytes(signupReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
@@ -797,13 +737,11 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":   true,
-			"testString": "string",
-			"testInt":    1,
-			"testJson":   map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices": []map[string]interface{}{
-				{"pattern": "ksql app", "message": "Use the equivalent `confluent ksql cluster` commands instead."},
-			},
+			"testBool":                 true,
+			"testString":               "string",
+			"testInt":                  1,
+			"testJson":                 map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":  []map[string]interface{}{},
 			"cli.client_quotas.enable": true,
 		}
 
@@ -820,7 +758,7 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 // Handler for: "/api/external_identities"
 func handleExternalIdentities(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		res := &bucketv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
+		res := &ccloudv1.CreateExternalIdentityResponse{IdentityName: "id-xyz"}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
 	}

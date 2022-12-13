@@ -2,30 +2,17 @@ package kafka
 
 import (
 	_nethttp "net/http"
-	"regexp"
-	"strings"
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
-
-var matchFirstCap = regexp.MustCompile("(.)([A-Z][a-z]+)")
-var matchAllCap = regexp.MustCompile("([a-z0-9])([A-Z])")
-
-func copyMap(inputMap map[string]string) map[string]string {
-	newMap := make(map[string]string)
-	for key, val := range inputMap {
-		newMap[key] = val
-	}
-	return newMap
-}
 
 func toCreateTopicConfigs(topicConfigsMap map[string]string) []cckafkarestv3.ConfigData {
 	topicConfigs := make([]cckafkarestv3.ConfigData, len(topicConfigsMap))
@@ -84,7 +71,7 @@ func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkare
 }
 
 func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
 	}
@@ -104,7 +91,7 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 }
 
 func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.KafkaREST, string, error) {
-	kafkaREST, err := c.AuthenticatedCLICommand.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, "", err
 	}
@@ -112,7 +99,7 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 		return nil, "", errors.New(errors.RestProxyNotAvailable)
 	}
 	// Kafka REST is available
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, "", err
 	}
@@ -201,26 +188,6 @@ func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
 		return "UP"
 	}
 	return cluster.Status.Phase
-}
-
-func camelToSnake(camels []string) []string {
-	var ret []string
-	for _, camel := range camels {
-		snake := matchFirstCap.ReplaceAllString(camel, "${1}_${2}")
-		snake = matchAllCap.ReplaceAllString(snake, "${1}_${2}")
-		ret = append(ret, strings.ToLower(snake))
-	}
-	return ret
-}
-
-func camelToSpaced(camels []string) []string {
-	var ret []string
-	for _, camel := range camels {
-		snake := matchFirstCap.ReplaceAllString(camel, "${1} ${2}")
-		snake = matchAllCap.ReplaceAllString(snake, "${1} ${2}")
-		ret = append(ret, snake)
-	}
-	return ret
 }
 
 func topicNameStrategy(topic string) string {

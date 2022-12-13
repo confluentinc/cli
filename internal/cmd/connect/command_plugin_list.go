@@ -8,11 +8,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	pluginFields          = []string{"Class", "Type"}
-	pluginHumanFields     = []string{"Plugin Name", "Type"}
-	pluginStructureLabels = []string{"plugin_name", "type"}
-)
+type pluginListOut struct {
+	Class string `human:"Plugin Name" serialized:"plugin_name"`
+	Type  string `human:"Type" serialized:"type"`
+}
 
 func (c *pluginCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -45,19 +44,12 @@ func (c *pluginCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pluginFields, pluginHumanFields, pluginStructureLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, plugin := range plugins {
-		pluginListDisplay := &pluginListDisplay{
+		list.Add(&pluginListOut{
 			Class: plugin.Class,
 			Type:  plugin.Type,
-		}
-		outputWriter.AddElement(pluginListDisplay)
+		})
 	}
-	outputWriter.StableSort()
-
-	return outputWriter.Out()
+	return list.Print()
 }
