@@ -543,8 +543,8 @@ github.com/confluentinc/cc-structs/kafka/billing v0.1054.0/go.mod h1:2/VGjzgqLEs
 github.com/confluentinc/cc-structs/kafka/billing v0.1071.0 h1:r6ekwn5ARFKDdA5HJx84rRKTclVTQB2Z+h2Rl7XBvWA=
 github.com/confluentinc/cc-structs/kafka/billing v0.1071.0/go.mod h1:2/VGjzgqLEsIl/OgZf/kBegYywME5vtyImrLBit2llI=
 github.com/confluentinc/cc-structs/kafka/clusterlink v0.753.0/go.mod h1:+36Nssf5C3b5WrWPiUpwqXZsrR5YS4RPwj1EJUoRUtc=
-github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0 h1:TNgDxnnHODNAv0m90GRqbVKPaDameKixpRmZAHe1SUw=
-github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0/go.mod h1:giep0xhxyVdyqOHXow2HcHrIs8iR0bsZ2/blmHobs+A=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0 h1:3o8phrmghIVmalYA2r3OF9mz93gxGGDHUzWAc2X8MJk=
+github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0/go.mod h1:giep0xhxyVdyqOHXow2HcHrIs8iR0bsZ2/blmHobs+A=
 github.com/confluentinc/cc-structs/kafka/connect v0.753.0 h1:TsRKFKXj//rzxrjFStsvaFU+n7oAfgawyvtsXahsZ7A=
 github.com/confluentinc/cc-structs/kafka/connect v0.753.0/go.mod h1:kja6AZU7QAFDKRiVpXdGTfCrjQ/MojCndlrJJHxKxMg=
 github.com/confluentinc/cc-structs/kafka/core v0.29.0/go.mod h1:ljLpd3SiTuRk9hMK/itE+6T3DnTAuWKnuuSaADUdTag=
