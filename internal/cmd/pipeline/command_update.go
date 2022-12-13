@@ -3,6 +3,7 @@ package pipeline
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -26,6 +27,11 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
+	cmd.Flags().String("source-code-file", "", "Path to an ksql file containing the pipeline's source code.")
+	cmd.Flags().StringArray("secret", nil, "A named secret that's to be referenced in pipeline source code. "+
+		"The secret mapping must follow the pattern of <secret-name>=<secret-value>, with <secret-name> consisting of 1-64 lowercase, "+
+		"uppercase, digits and '_' characters but may not begin with digits. If <secret-value> is empty, the named secret will be "+
+		"removed from Stream Designer.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -37,14 +43,16 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner) *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
+	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
+	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if name == "" && description == "" {
-		return fmt.Errorf("one of `--name` or `--description` must be provided")
+	if name == "" && description == "" && sourceCodeFile == "" && len(secrets) == 0 {
+		return fmt.Errorf("one of the update options must be provided: --name, --description, --source-code-file, --secret")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{}}
@@ -53,6 +61,23 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	if description != "" {
 		updatePipeline.Spec.SetDescription(description)
+	}
+	if sourceCodeFile != "" {
+		// read pipeline source code file if provided
+		fileContent, err := ioutil.ReadFile(sourceCodeFile)
+		if err != nil {
+			return err
+		}
+		sourceCode := string(fileContent)
+		updatePipeline.Spec.SetSourceCode(sourceCode)
+	}
+	if len(secrets) != 0 {
+		// parse and construct secret mappings
+		secretMappings, err := createSecretMappings(secrets)
+		if err != nil {
+			return err
+		}
+		updatePipeline.Spec.SetSecrets(secretMappings)
 	}
 
 	// call api
