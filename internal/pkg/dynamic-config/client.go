@@ -7,7 +7,6 @@ import (
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -24,36 +23,16 @@ func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig,
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
-	apiEndpoint, err := getKafkaApiEndpoint(d.PrivateClient, clusterId, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
 	config := &v1.KafkaClusterConfig{
 		ID:           *cluster.Id,
 		Name:         *cluster.Spec.DisplayName,
 		Bootstrap:    strings.TrimPrefix(*cluster.Spec.KafkaBootstrapEndpoint, "SASL_SSL://"),
-		APIEndpoint:  apiEndpoint,
 		RestEndpoint: *cluster.Spec.HttpEndpoint,
 		APIKeys:      make(map[string]*v1.APIKeyPair),
 		LastUpdate:   time.Now(),
 	}
 
 	return config, nil
-}
-
-func getKafkaApiEndpoint(privateClient *ccloud.Client, clusterId, environmentId string) (string, error) {
-	cluster := &schedv1.KafkaCluster{
-		Id:        clusterId,
-		AccountId: environmentId,
-	}
-
-	cluster, err := privateClient.Kafka.Describe(context.Background(), cluster)
-	if err != nil {
-		return "", err
-	}
-
-	return cluster.ApiEndpoint, nil
 }
 
 func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {

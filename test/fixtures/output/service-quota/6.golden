@@ -1,20 +1,20 @@
-- applied_limit: "15"
-  display_name: Quota A
+- quota_code: quota_a
+  name: Quota A
+  scope: kafka_cluster
+  applied_limit: 15
+  usage: "10"
+  organization: org-123
   environment: env-1
   kafka_cluster: lkc-1
   network: ""
-  organization: org-123
-  quota_code: quota_a
-  scope: kafka_cluster
-  usage: "10"
   user: ""
-- applied_limit: "16"
-  display_name: Qutoa A
+- quota_code: quota_a
+  name: Qutoa A
+  scope: kafka_cluster
+  applied_limit: 16
+  usage: "11"
+  organization: org-123
   environment: env-2
   kafka_cluster: lkc-2
   network: ""
-  organization: org-123
-  quota_code: quota_a
-  scope: kafka_cluster
-  usage: "11"
   user: ""

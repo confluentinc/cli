@@ -1,11 +1,11 @@
 [
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "first-key",
     "key": "MYKEY1",
+    "description": "first-key",
+    "owner_id": "u11",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "u11",
+    "resource_type": "kafka",
     "resource_id": "lkc-bob",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   }
 ]

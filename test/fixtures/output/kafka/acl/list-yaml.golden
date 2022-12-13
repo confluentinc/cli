@@ -1,7 +1,7 @@
-- host: '*'
-  operation: READ
-  pattern_type: LITERAL
+- principal: User:12345
   permission: ALLOW
-  principal: User:12345
-  resource_name: test-topic
+  operation: READ
+  host: '*'
   resource_type: TOPIC
+  resource_name: test-topic
+  pattern_type: LITERAL
