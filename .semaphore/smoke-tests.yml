@@ -1,0 +1,38 @@
+version: v1.0
+name: Smoke Tests
+
+agent:
+  machine:
+    type: s1-prod-ubuntu20-04-amd64-1
+
+blocks:
+  - name: Smoke Tests
+    task:
+      jobs:
+        - name: Smoke Tests
+          commands:
+            # Get GitHub SSH key from Vault
+            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+
+            # Set up Go
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
+            
+            # Try to restore cached dependencies
+            - cache restore linux-$(checksum go.sum)
+
+            # Set up Git
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            
+            # Run tests
+            - make semaphore-deps
+            - make build
+            - email="cli-team+system-tests@confluent.io"
+            - password=$(vault kv get -field password "v1/devel/kv/cli/system-tests/test-user-password")
+            - echo -e "${email}\n${password}\n" | HOME=$(mktemp -d) $(find dist/ -name confluent) login
+            - go install github.com/confluentinc/confluent-login-headless_sso
+            - HOME=$(mktemp -d) $(find dist/ -name confluent) login headless-sso --provider okta --email ${email} --password ${password}
