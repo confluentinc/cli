@@ -71,7 +71,7 @@ generate:
 
 .PHONY: deps
 deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
 	go install github.com/google/go-licenses@v1.4.0 && \
 	go install github.com/goreleaser/goreleaser@v1.11.2 && \
 	go install gotest.tools/gotestsum@v1.8.2
