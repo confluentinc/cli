@@ -25,6 +25,8 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
 					DisplayName: streamdesignerv1.PtrString("testPipeline"),
 					Description: streamdesignerv1.PtrString("description"),
+					SourceCode:  streamdesignerv1.PtrString("CREATE STREAM `upstream` (id integer, name string) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"),
+					Secrets:     &map[string]string{"name": "secret"},
 					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
 				},
 
@@ -147,6 +149,8 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
 					DisplayName: body.Spec.DisplayName,
 					Description: streamdesignerv1.PtrString("description"),
+					SourceCode:  streamdesignerv1.PtrString(body.Spec.GetSourceCode()),
+					Secrets:     body.Spec.Secrets,
 					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
 				},
 
