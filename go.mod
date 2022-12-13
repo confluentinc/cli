@@ -7,6 +7,8 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1502.0
+	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
+	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1505.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1161.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1096.0
@@ -37,7 +39,7 @@ require (
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48
-	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.40
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.48
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.18
 	github.com/davecgh/go-spew v1.1.1
@@ -74,7 +76,7 @@ require (
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.14.4
-	github.com/tidwall/pretty v1.2.0
+	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.4
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
