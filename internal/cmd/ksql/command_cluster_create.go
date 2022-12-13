@@ -3,8 +3,6 @@ package ksql
 import (
 	"context"
 	"fmt"
-	"os"
-
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
@@ -84,7 +82,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		cfg.Image = image
 	}
 
-	cluster, err := c.Client.KSQL.Create(context.Background(), cfg)
+	cluster, err := c.PrivateClient.KSQL.Create(context.Background(), cfg)
 	if err != nil {
 		return err
 	}
@@ -94,7 +92,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	// endpoint value filled later, loop until endpoint information is not null (usually just one describe call is enough)
 	for cluster.Endpoint == "" && count < 3 {
 		req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId(), Id: cluster.Id}
-		cluster, err = c.Client.KSQL.Describe(context.Background(), req)
+		cluster, err = c.PrivateClient.KSQL.Describe(context.Background(), req)
 		if err != nil {
 			return err
 		}
@@ -105,11 +103,9 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
-		if srCluster != nil {
-			utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
-		}
+	srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
+	if srCluster != nil {
+		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	return output.DescribeObject(cmd, c.updateKsqlClusterForDescribeAndList(cluster), describeFields, describeHumanRenames, describeStructuredRenames)

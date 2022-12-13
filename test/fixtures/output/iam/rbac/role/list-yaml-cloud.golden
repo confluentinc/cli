@@ -271,3 +271,17 @@
       operations:
       - Describe
       - Delete
+- name: ResourceOwner
+  policies:
+  - bindingscope: schema-registry-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Subject
+      operations:
+      - Delete
+      - Read
+      - Write
+      - ReadCompatibility
+      - AlterAccess
+      - WriteCompatibility
+      - DescribeAccess

@@ -181,7 +181,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	topic := &schedv1.TopicSpecification{Name: args[0], Configs: copyMap(configMap)}
 
-	err = c.Client.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
+	err = c.PrivateClient.Kafka.UpdateTopic(context.Background(), cluster, &schedv1.Topic{Spec: topic, Validate: dryRun})
 	if err != nil {
 		return errors.CatchClusterNotReadyError(err, cluster.Id)
 	}

@@ -90,8 +90,8 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().Bool("current-env", false, "Use current environment ID for scope.")
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for scope of role binding listings.")
+		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
 		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding listings.")
 			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding listings.")
 		}
 	} else {
@@ -194,7 +194,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, options *rol
 					clusterType = "ksqlDB"
 					clusterName := roleBindingScope.Clusters.KsqlCluster
 					req := &schedv1.KSQLCluster{AccountId: c.EnvironmentId()}
-					clusterList, err := c.Client.KSQL.List(context.Background(), req)
+					clusterList, err := c.PrivateClient.KSQL.List(context.Background(), req)
 					if err != nil {
 						return err
 					}

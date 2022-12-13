@@ -2,6 +2,7 @@ package pipeline
 
 import (
 	"context"
+
 	"github.com/spf13/cobra"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -53,7 +54,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Id:        ksqlCluster,
 	}
 
-	_, err = c.Client.KSQL.Describe(context.Background(), ksqlReq)
+	_, err = c.PrivateClient.KSQL.Describe(context.Background(), ksqlReq)
 	if err != nil {
 		return err
 	}

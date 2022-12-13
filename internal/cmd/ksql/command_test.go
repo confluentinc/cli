@@ -68,13 +68,14 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
-	ksqlCluster  *schedv1.KSQLCluster
-	serviceAcct  *orgv1.User
-	ksqlc        *mock.KSQL
-	kafkac       *mock.Kafka
-	userc        *mock.User
+	conf            *v1.Config
+	kafkaCluster    *schedv1.KafkaCluster
+	ksqlCluster     *schedv1.KSQLCluster
+	serviceAcct     *orgv1.User
+	ksqlc           *mock.KSQL
+	kafkac          *mock.Kafka
+	userc           *mock.User
+	schemaregistryc *mock.SchemaRegistry
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
@@ -129,18 +130,24 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return []*orgv1.User{suite.serviceAcct}, nil
 		},
 	}
+	suite.schemaregistryc = &mock.SchemaRegistry{
+		GetSchemaRegistryClustersFunc: func(_ context.Context, _ *schedv1.SchemaRegistryCluster) ([]*schedv1.SchemaRegistryCluster, error) {
+			return nil, nil
+		},
+	}
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	client := &ccloud.Client{
-		Kafka: suite.kafkac,
-		User:  suite.userc,
-		KSQL:  suite.ksqlc,
+		Kafka:          suite.kafkac,
+		User:           suite.userc,
+		KSQL:           suite.ksqlc,
+		SchemaRegistry: suite.schemaregistryc,
 	}
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return nil, nil
 	})
-	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, &kafkaRestProvider, suite.conf))
+	cmd := New(v1.AuthenticatedCloudConfigMock(), cliMock.NewPreRunnerMock(client, nil, nil, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

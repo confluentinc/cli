@@ -28,6 +28,7 @@ var (
 		"KafkaNetworkWrite":     "Kafka write",
 		"KafkaNumCKUs":          "CKU price",
 		"KafkaPartition":        "Kafka partition",
+		"KafkaRestProduce":      "Kafka REST produce",
 		"KafkaStorage":          "Kafka storage",
 		"ClusterLinkingBase":    "Cluster linking base",
 		"ClusterLinkingPerLink": "Cluster linking per-link",
@@ -142,12 +143,12 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
 	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
-	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
+	kafkaPricesReply, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {
 		return nil, err
 	}
 
-	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "cluster-link")
+	clusterLinkPricesReply, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, "cluster-link")
 	if err != nil {
 		return nil, err
 	}
