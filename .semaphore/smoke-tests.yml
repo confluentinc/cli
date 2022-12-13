@@ -30,8 +30,8 @@ blocks:
             
             # Run tests
             - make build
-            - email="cli-team+system-tests@confluent.io"
-            - password=$(vault kv get "v1/devel/kv/data/cli/system-tests/test-user-password")
-            - echo -e "${email}\n${password}\n" | HOME=$(mktemp -d) $(find dist/ -name confluent) login
-            - go install github.com/confluentinc/confluent-login-headless_sso
-            - HOME=$(mktemp -d) $(find dist/ -name confluent) login headless-sso --provider okta --email ${email} --password ${password}
+#            - email="cli-team+system-tests@confluent.io"
+#            - password=$(vault kv get "v1/devel/kv/data/cli/system-tests/test-user-password")
+#            - echo -e "${email}\n${password}\n" | HOME=$(mktemp -d) $(find dist/ -name confluent) login
+#            - go install github.com/confluentinc/confluent-login-headless_sso
+#            - HOME=$(mktemp -d) $(find dist/ -name confluent) login headless-sso --provider okta --email ${email} --password ${password}
