@@ -326,8 +326,8 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		}
 
 		if command.Context.GetEnvironment() == nil {
-			noEnvSuggestions := "This issue may occur if this user has no role bindings. Contact an Organization Admin to create a role binding for this user."
-			return errors.NewErrorWithSuggestions("this command requires an environment: no environments found", noEnvSuggestions)
+			noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no role bindings. Contact an Organization Admin to create a role binding for this user.")
+			_, _ = fmt.Fprint(os.Stderr, "WARNING: This command requires an environment; no environments found.\n" + noEnvSuggestions + "\n")
 		}
 
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
