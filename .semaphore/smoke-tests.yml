@@ -31,7 +31,7 @@ blocks:
             # Run tests
             - make semaphore-deps
             - make build
-            - go install github.com/confluentinc/confluent-login-headless_sso
+            - go install cmd/plugins/confluent-login-headless_sso
             # Basic login
             - email="cli-team+system-tests@confluent.io"
             - password=$(vault kv get -field password "v1/devel/kv/cli/system-tests/test-user-password")
