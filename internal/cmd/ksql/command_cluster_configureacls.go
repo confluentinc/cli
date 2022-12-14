@@ -95,7 +95,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}
