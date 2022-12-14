@@ -51,7 +51,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
-	sourceCodeSql, _ := cmd.Flags().GetString("sql-file")
+	sqlFile, _ := cmd.Flags().GetString("sql-file")
 	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
@@ -78,8 +78,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	// read pipeline source code file if provided
 	sourceCode := ""
-	if sourceCodeSql != "" {
-		fileContent, err := ioutil.ReadFile(sourceCodeSql)
+	if sqlFile != "" {
+		fileContent, err := ioutil.ReadFile(sqlFile)
 		if err != nil {
 			return err
 		}

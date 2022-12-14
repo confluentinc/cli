@@ -39,7 +39,7 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	sourceCodeSql, _ := cmd.Flags().GetString("sql-file")
+	sqlFile, _ := cmd.Flags().GetString("sql-file")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -52,9 +52,9 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[0] + ".sql"
-	if sourceCodeSql != "" {
-		if path, err = homedir.Expand(sourceCodeSql); err != nil {
-			path = sourceCodeSql
+	if sqlFile != "" {
+		if path, err = homedir.Expand(sqlFile); err != nil {
+			path = sqlFile
 		}
 	}
 

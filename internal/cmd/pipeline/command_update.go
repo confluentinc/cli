@@ -45,7 +45,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	sourceCodeSql, _ := cmd.Flags().GetString("sql-file")
+	sqlFile, _ := cmd.Flags().GetString("sql-file")
 	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
@@ -53,7 +53,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && description == "" && sourceCodeSql == "" && len(secrets) == 0 {
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 {
 		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret")
 	}
 
@@ -64,9 +64,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if description != "" {
 		updatePipeline.Spec.SetDescription(description)
 	}
-	if sourceCodeSql != "" {
+	if sqlFile != "" {
 		// read pipeline source code file if provided
-		fileContent, err := ioutil.ReadFile(sourceCodeSql)
+		fileContent, err := ioutil.ReadFile(sqlFile)
 		if err != nil {
 			return err
 		}
