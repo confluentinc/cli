@@ -102,7 +102,6 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 
 			plugin := NewPasswordProtectionPlugin()
 
-			plugin.SetCipherMode(MetadataEncAlgorithm)
 			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 			if !tt.wantErr {
@@ -382,7 +381,6 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 
 			plugin := NewPasswordProtectionPlugin()
 			plugin.Clock = clockwork.NewFakeClock()
-			plugin.SetCipherMode(MetadataEncAlgorithm)
 			if tt.args.setMEK {
 				err := createMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath, plugin)
 				defer os.Unsetenv(ConfluentKeyEnvVar)
@@ -575,34 +573,6 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:lNy9wP3Weq03Yrye8aPi
 			wantErrMsg: fmt.Sprintf(errors.DecryptConfigErrorMsg, "testPassword"),
 		},
 		{
-			name: "ValidTestCase: Decrypt Config File (AES CBC)",
-			args: &args{
-				masterKeyPassphrase: "123",
-				configFileContent: `testPassword = ${securepass:/tmp/securePass987/secureConfig.properties:config.properties/testPassword}
-config.providers = securepass
-config.providers.securepass.class = io.confluent.kafka.security.config.provider.SecurePassConfigProvider
-`,
-				secretFileContent: `_metadata.master_key.0.salt = de0YQknpvBlnXk0fdmIT2nG2Qnj+0srV8YokdhkgXjA=
-_metadata.symmetric_key.0.created_at = 2019-05-30 19:34:58.190796 -0700 PDT m=+13.357260342
-_metadata.symmetric_key.0.envvar = CONFLUENT_SECURITY_MASTER_KEY
-_metadata.symmetric_key.0.length = 32
-_metadata.symmetric_key.0.iterations = 10000
-_metadata.symmetric_key.0.salt = 2BEkhLYyr0iZ2wI5xxsbTJHKWul75JcuQu3BnIO4Eyw=
-_metadata.symmetric_key.0.enc = ENC[AES/CBC/PKCS5Padding,data:svYxySZYkI8oDkF36ZYRze3q1CiqJQLwp+9jrfb0w1znLXOKgDlw/PKQMtvrCkCd,iv:qDtNy+skN3DKhtHE/XD6yQ==,type:str]
-config.properties/testPassword = ENC[AES/CBC/PKCS5Padding,data:zzjj9G+MeJ6XgsoIUFOVog==,iv:3IhIyRrhQpYzp4vhVdcqqw==,type:str]
-`,
-				configFilePath:         "/tmp/securePass987/decrypt/config.properties",
-				outputConfigPath:       "/tmp/securePass987/decrypt/output.properties",
-				localSecureConfigPath:  "/tmp/securePass987/decrypt/secureConfig.properties",
-				secureDir:              "/tmp/securePass987/decrypt",
-				remoteSecureConfigPath: "/tmp/securePass987/decrypt/secureConfig.properties",
-				setNewMEK:              true,
-				newMasterKey:           "YC7IvcB0J60YBytDhGLP+GlAQ2j7igE0kXIZ+VphUKA=",
-			},
-			wantErr:        false,
-			wantOutputFile: "testPassword = password\n",
-		},
-		{
 			name: "ValidTestCase: Decrypt Config File (AES GCM)",
 			args: &args{
 				masterKeyPassphrase: "123",
@@ -639,8 +609,6 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yry
 			defer os.RemoveAll(tt.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
-
-			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			// Create config file
 			err = os.WriteFile(tt.args.configFilePath, []byte(tt.args.configFileContent), 0644)
@@ -770,8 +738,6 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			plugin.SetCipherMode(MetadataEncAlgorithm)
-
 			err = plugin.AddEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.newConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
 
@@ -867,8 +833,6 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			defer os.RemoveAll(tt.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
-
-			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			err = plugin.UpdateEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.updateConfigs)
 			checkError(err, tt.wantErr, tt.wantErrMsg, req)
@@ -1039,8 +1003,6 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			plugin.SetCipherMode(MetadataEncAlgorithm)
-
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
 			req.NoError(err)
 
@@ -1166,8 +1128,6 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			defer os.RemoveAll(tt.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
-
-			plugin.SetCipherMode(MetadataEncAlgorithm)
 
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 
@@ -1328,8 +1288,6 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			plugin.SetCipherMode(MetadataEncAlgorithm)
-
 			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
 			req.NoError(err)
 
@@ -1345,107 +1303,6 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
 				req.NoError(err)
 			}
-		})
-	}
-}
-
-func TestPasswordProtectionSuite_CipherModeTransition(t *testing.T) {
-	type args struct {
-		contents               string
-		masterKeyPassphrase    string
-		newMasterKeyPassphrase string
-		cipherMode             string
-		newCipherMode          string
-		configFilePath         string
-		localSecureConfigPath  string
-		remoteSecureConfigPath string
-		outputConfigPath       string
-		secureDir              string
-		invalidMEK             bool
-	}
-	tests := []struct {
-		name       string
-		args       *args
-		wantErr    bool
-		wantErrMsg string
-	}{
-		{
-			name: "Ciper Mode Transition : AES_CBC mode to AES_GCM mode",
-			args: &args{
-				masterKeyPassphrase:    "abc123",
-				newMasterKeyPassphrase: "xyz987",
-				cipherMode:             AES_CBC,
-				newCipherMode:          AES_GCM,
-				contents:               "testPassword = password\n",
-				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
-				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
-				secureDir:              "/tmp/securePass987/rotateMek",
-				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
-				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
-				invalidMEK:             false,
-			},
-			wantErr: false,
-		},
-		{
-			name: "Ciper Mode Transition : AES_GCM mode to AES_CBC mode",
-			args: &args{
-				masterKeyPassphrase:    "abc123",
-				newMasterKeyPassphrase: "xyz987",
-				cipherMode:             AES_GCM,
-				newCipherMode:          AES_CBC,
-				contents:               "testPassword = password\n",
-				configFilePath:         "/tmp/securePass987/rotateMek/config.properties",
-				localSecureConfigPath:  "/tmp/securePass987/rotateMek/secureConfig.properties",
-				secureDir:              "/tmp/securePass987/rotateMek",
-				remoteSecureConfigPath: "/tmp/securePass987/rotateMek/secureConfig.properties",
-				outputConfigPath:       "/tmp/securePass987/rotateMek/output.properties",
-				invalidMEK:             false,
-			},
-			wantErr: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := require.New(t)
-
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
-			defer os.Unsetenv(ConfluentKeyEnvVar)
-			req.NoError(err)
-
-			plugin.SetCipherMode(tt.args.cipherMode)
-
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
-			req.NoError(err)
-
-			// Verify can decrypt with existing cipher
-			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
-			req.NoError(err)
-
-			// Update cipher mode
-			plugin.SetCipherMode(tt.args.newCipherMode)
-
-			// Verify can decrypt with existing cipher
-			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
-			req.NoError(err)
-
-			// Rotate Data Key
-			err = plugin.RotateDataKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
-
-			// Verify can decrypt with new cipher
-			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
-			req.NoError(err)
-
-			// Verify can decrypt with new cipher after Rotate Data Key
-			newKey, err := plugin.RotateMasterKey(tt.args.masterKeyPassphrase, tt.args.newMasterKeyPassphrase, tt.args.localSecureConfigPath)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
-
-			// Verify can decrypt with new cipher after Master Key rotation
-			os.Setenv(ConfluentKeyEnvVar, newKey)
-			err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
-			req.NoError(err)
 		})
 	}
 }
