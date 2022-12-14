@@ -102,6 +102,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		{args: "kafka topic create", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create.golden", wantErrCode: 1},
 		{args: "kafka topic create topic1", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka topic create topic1 --dry-run", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-success.golden"},
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", wantErrCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", wantErrCode: 1},
 
@@ -116,6 +117,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic2 --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", wantErrCode: 1},
 
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
+		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip --dry-run", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-dry-run.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
 

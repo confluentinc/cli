@@ -34,9 +34,6 @@ archives:
   - id: archive
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
-    format_overrides:
-      - goos: windows
-        format: zip
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE

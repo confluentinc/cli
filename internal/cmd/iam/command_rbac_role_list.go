@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,26 +37,21 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	var roles []mdsv2alpha1.Role
-
-	// add public and dataplane roles
-	publicAndDataplaneNamespace := []string{publicNamespace.Value(), dataplaneNamespace.Value()}
-	publicAndDataplaneNamespaceOpt := optional.NewString(strings.Join(publicAndDataplaneNamespace, ","))
-	publicAndDataplaneRoles, err := c.namespaceRoles(publicAndDataplaneNamespaceOpt)
+	// add public, dataplane, and datagovernance roles
+	namespaces := []string{publicNamespace.Value(), dataplaneNamespace.Value(), dataGovernanceNamespace.Value()}
+	opt := optional.NewString(strings.Join(namespaces, ","))
+	roles, err := c.namespaceRoles(opt)
 	if err != nil {
 		return err
 	}
-	roles = append(roles, publicAndDataplaneRoles...)
 
-	// add ksql and datagovernance roles
+	// add ksql roles
 	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		ksqlAndDataGovernanceNamespace := []string{ksqlNamespace.Value(), dataGovernanceNamespace.Value()}
-		ksqlAndDataGovernanceNamespaceOpt := optional.NewString(strings.Join(ksqlAndDataGovernanceNamespace, ","))
-		ksqlAndDataGovernanceRoles, err := c.namespaceRoles(ksqlAndDataGovernanceNamespaceOpt)
+		ksqlRoles, err := c.namespaceRoles(ksqlNamespace)
 		if err != nil {
 			return err
 		}
-		roles = append(roles, ksqlAndDataGovernanceRoles...)
+		roles = append(roles, ksqlRoles...)
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
