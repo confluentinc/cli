@@ -45,7 +45,7 @@ func (c *command) validProviderShareArgs(cmd *cobra.Command, args []string) []st
 }
 
 func (c *command) autocompleteProviderShares() []string {
-	providerShares, err := c.V2Client.ListProviderShares("")
+	providerShares, err := c.V2Client.ListProviderShares("", "")
 	if err != nil {
 		return nil
 	}
