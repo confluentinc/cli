@@ -111,7 +111,7 @@ func getTopicCrn(orgId, environment, srCluster, kafkaCluster, topic string) (str
 		return "", err
 	}
 	name := crn.ConfluentResourceName{
-		Authority: CRNCCloudAuthority,
+		Authority: CrnCcloudAuthority,
 		Elements:  elements,
 	}
 	return name.String(), nil
@@ -128,7 +128,7 @@ func getSubjectCrn(orgId, environment, srCluster, subject string) (string, error
 		return "", err
 	}
 	name := crn.ConfluentResourceName{
-		Authority: CRNCCloudAuthority,
+		Authority: CrnCcloudAuthority,
 		Elements:  elements,
 	}
 	return name.String(), nil
