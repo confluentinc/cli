@@ -22,7 +22,6 @@ func (c *command) optOut(cmd *cobra.Command, _ []string) error {
 	}
 
 	if !isDeleteConfirmed {
-		utils.Println(cmd, "Operation terminated.")
 		return nil
 	}
 
