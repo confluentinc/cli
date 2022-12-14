@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/crn"
 )
 
-const CRNCCloudAuthority = "confluent.cloud"
+const CrnCcloudAuthority = "confluent.cloud"
 
 type privateLinkNetworkDetails struct {
 	networkKind         string
