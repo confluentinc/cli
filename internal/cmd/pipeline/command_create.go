@@ -31,7 +31,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	if enableSourceCode {
-		cmd.Flags().String("source-code-file", "", "Path to a KSQL file containing the pipeline's source code.")
+		cmd.Flags().String("source-code-sql", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
 			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
@@ -51,7 +51,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
-	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
+	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql")
 	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
@@ -78,8 +78,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	// read pipeline source code file if provided
 	sourceCode := ""
-	if sourceCodeFile != "" {
-		fileContent, err := ioutil.ReadFile(sourceCodeFile)
+	if sourceCodeSql != "" {
+		fileContent, err := ioutil.ReadFile(sourceCodeSql)
 		if err != nil {
 			return err
 		}

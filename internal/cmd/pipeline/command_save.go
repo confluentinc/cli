@@ -24,13 +24,13 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool
 			},
 			examples.Example{
 				Text: `Save the source code for Stream Designer pipeline "pipe-12345" to "/tmp/pipeline-source-code.sql".`,
-				Code: "confluent pipeline save pipe-12345 --source-code-file /tmp/pipeline-source-code.sql",
+				Code: "confluent pipeline save pipe-12345 --source-code-sql /tmp/pipeline-source-code.sql",
 			},
 		),
 		Hidden: !enableSourceCode,
 	}
 
-	cmd.Flags().String("source-code-file", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
+	cmd.Flags().String("source-code-sql", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -39,7 +39,7 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	sourceCodeFile, _ := cmd.Flags().GetString("source-code-file")
+	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -52,13 +52,13 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[0] + ".sql"
-	if sourceCodeFile != "" {
-		if path, err = homedir.Expand(sourceCodeFile); err != nil {
-			path = sourceCodeFile
+	if sourceCodeSql != "" {
+		if path, err = homedir.Expand(sourceCodeSql); err != nil {
+			path = sourceCodeSql
 		}
 	}
 
-	if err := ioutil.WriteFile(path, []byte(pipeline.Spec.GetSourceCode()), 0644); err != nil {
+	if err := ioutil.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
 		return err
 	}
 

@@ -55,7 +55,7 @@ func (c *Client) CreatePipeline(envId, clusterId, name, description, sourceCode 
 		Spec: &streamdesignerv1.SdV1PipelineSpec{
 			DisplayName:             streamdesignerv1.PtrString(name),
 			Description:             streamdesignerv1.PtrString(description),
-			SourceCode:              streamdesignerv1.PtrString(sourceCode),
+			SourceCode:              &streamdesignerv1.SdV1SourceCodeObject{Sql: sourceCode},
 			Secrets:                 secretMappings,
 			Environment:             &streamdesignerv1.ObjectReference{Id: envId},
 			KafkaCluster:            &streamdesignerv1.ObjectReference{Id: clusterId},

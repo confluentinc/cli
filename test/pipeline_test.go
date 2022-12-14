@@ -21,11 +21,11 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline describe --help", fixture: "pipeline/describe-help.golden"},
 		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
 		{args: "pipeline save --help", fixture: "pipeline/save-help.golden"},
-		{args: fmt.Sprintf("pipeline save pipe-12345 --source-code-file %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
+		{args: fmt.Sprintf("pipeline save pipe-12345 --source-code-sql %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
 		{args: "pipeline create --help", fixture: "pipeline/create-help.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription", fixture: "pipeline/create.golden"},
-		{args: fmt.Sprintf("pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/create.golden"},
+		{args: fmt.Sprintf("pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --source-code-sql %s", testPipelineSourceCode), fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value1 --secret name2=value2", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret a_really_really_really_long_secret_name_but_not_exceeding_64_yet=value1 --secret name2=value2", fixture: "pipeline/create.golden"},
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value-with,and= --secret name2=value-with\"and'", fixture: "pipeline/create.golden"},
@@ -41,7 +41,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline update pipeline-12345 --name testPipeline", fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --description newDescription", fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --name testPipeline --description newDescription", fixture: "pipeline/update.golden"},
-		{args: fmt.Sprintf("pipeline update pipeline-12345 --source-code-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
+		{args: fmt.Sprintf("pipeline update pipeline-12345 --source-code-sql %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --secret name1=value-with,and= --secret name2=value-with\"and' --secret name3=", fixture: "pipeline/update.golden"},
 	}
 
