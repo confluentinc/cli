@@ -1,11 +1,47 @@
-{
-  "connector.class": "GcsSink",
-  "data.format": "\"data.format\" is required ",
-  "gcs.bucket.name": "\"gcs.bucket.name\" is required ",
-  "gcs.credentials.config": "\"gcs.credentials.config\" is required ",
-  "kafka.api.key": "\"kafka.api.key\" is required ",
-  "kafka.api.secret": "\"kafka.api.secret\" is required ",
-  "tasks.max": "\"tasks.max\" is required ",
-  "time.interval": "\"data.format\" is required ",
-  "topics": "\"topics\" is required "
-}
+[
+  {
+    "config": "data.format",
+    "documentation": "Sets the input value format.",
+    "is_required": true
+  },
+  {
+    "config": "gcs.bucket.name",
+    "documentation": "GCS bucket name.",
+    "is_required": true
+  },
+  {
+    "config": "gcs.credentials.config",
+    "documentation": "GCP service account JSON file.",
+    "is_required": true
+  },
+  {
+    "config": "kafka.api.key",
+    "documentation": "Kafka API Key",
+    "is_required": true
+  },
+  {
+    "config": "kafka.api.secret",
+    "documentation": "Kafka API Secret",
+    "is_required": true
+  },
+  {
+    "config": "tasks.max",
+    "documentation": "Tasks",
+    "is_required": true
+  },
+  {
+    "config": "time.interval",
+    "documentation": "Partitioning interval of data.",
+    "is_required": true
+  },
+  {
+    "config": "topics",
+    "documentation": "Identifies the topic name.",
+    "is_required": true
+  },
+  {
+    "config": "flush.size",
+    "documentation": "Commit file size.",
+    "is_required": false
+  }
+]
