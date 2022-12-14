@@ -405,7 +405,6 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 		config["zookeeper.connect"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
 	case "ksql-server":
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
-		config["ksql.schema.registry.url"] = fmt.Sprintf("http://localhost:%d", services["schema-registry"].port)
 		config["state.dir"] = data
 	case "schema-registry":
 		config["kafkastore.connection.url"] = fmt.Sprintf("localhost:%d", services["zookeeper"].port)
