@@ -28,7 +28,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	if enableSourceCode {
-		cmd.Flags().String("source-code-sql", "", "Path to a KSQL file containing the pipeline's source code.")
+		cmd.Flags().String("source-code-sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
 			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
@@ -45,7 +45,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
-	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql")
+	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql-file")
 	secrets, _ := cmd.Flags().GetStringArray("secret")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
@@ -54,7 +54,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if name == "" && description == "" && sourceCodeSql == "" && len(secrets) == 0 {
-		return fmt.Errorf("one of the update options must be provided: --name, --description, --source-code-sql, --secret")
+		return fmt.Errorf("one of the update options must be provided: --name, --description, --source-code-sql-file, --secret")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{}}

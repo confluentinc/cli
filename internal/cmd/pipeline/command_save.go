@@ -24,13 +24,13 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool
 			},
 			examples.Example{
 				Text: `Save the source code for Stream Designer pipeline "pipe-12345" to "/tmp/pipeline-source-code.sql".`,
-				Code: "confluent pipeline save pipe-12345 --source-code-sql /tmp/pipeline-source-code.sql",
+				Code: "confluent pipeline save pipe-12345 --source-code-sql-file /tmp/pipeline-source-code.sql",
 			},
 		),
 		Hidden: !enableSourceCode,
 	}
 
-	cmd.Flags().String("source-code-sql", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
+	cmd.Flags().String("source-code-sql-file", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -39,7 +39,7 @@ func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql")
+	sourceCodeSql, _ := cmd.Flags().GetString("source-code-sql-file")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
