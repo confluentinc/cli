@@ -14,6 +14,8 @@ import (
 	"github.com/confluentinc/crn"
 )
 
+const CRNCCloudAuthority = "confluent.cloud"
+
 type privateLinkNetworkDetails struct {
 	networkKind         string
 	privateLinkDataType string
@@ -108,7 +110,11 @@ func getTopicCrn(orgId, environment, srCluster, kafkaCluster, topic string) (str
 	if err != nil {
 		return "", err
 	}
-	return getCRNFromElements(elements), nil
+	name := crn.ConfluentResourceName{
+		Authority: CRNCCloudAuthority,
+		Elements:  elements,
+	}
+	return name.String(), nil
 }
 
 func getSubjectCrn(orgId, environment, srCluster, subject string) (string, error) {
@@ -121,14 +127,9 @@ func getSubjectCrn(orgId, environment, srCluster, subject string) (string, error
 	if err != nil {
 		return "", err
 	}
-	return getCRNFromElements(elements), nil
-}
-
-func getCRNFromElements(elements []*crn.Element) string {
-	c := "crn://confluent.cloud"
-
-	for _, e := range elements {
-		c += fmt.Sprintf("/%s", e.String())
+	name := crn.ConfluentResourceName{
+		Authority: CRNCCloudAuthority,
+		Elements:  elements,
 	}
-	return c
+	return name.String(), nil
 }
