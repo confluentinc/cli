@@ -58,7 +58,6 @@ func TestGetKafkaRestConfig(t *testing.T) {
 func TestGetKsqlServerConfig(t *testing.T) {
 	want := map[string]string{
 		"kafkastore.connection.url":    "localhost:2181",
-		"ksql.schema.registry.url":     "http://localhost:8081",
 		"state.dir":                    exampleDir,
 		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
 		"producer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor",
