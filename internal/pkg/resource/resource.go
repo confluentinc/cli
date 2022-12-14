@@ -26,6 +26,7 @@ const (
 	ServiceAccount        = "service account"
 	Topic                 = "topic"
 	User                  = "user"
+	Subject               = "subject"
 )
 
 const (

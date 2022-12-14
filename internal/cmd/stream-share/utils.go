@@ -3,13 +3,18 @@ package streamshare
 import (
 	"fmt"
 	"os"
+	"sort"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/spf13/cobra"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/crn"
 )
+
+const CrnCcloudAuthority = "confluent.cloud"
 
 type privateLinkNetworkDetails struct {
 	networkKind         string
@@ -58,4 +63,73 @@ func confirmOptOut(cmd *cobra.Command) (bool, error) {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
+}
+
+func getSubjectsCRNFromSharedResources(sharedResources []cdxv1.CdxV1ProviderSharedResource) ([]string, error) {
+	var crns []string
+	for _, s := range sharedResources {
+		for _, r := range s.GetResources() {
+			crnObj, err := crn.NewFromString(r)
+			if err != nil {
+				return nil, err
+			}
+			for _, e := range crnObj.Elements {
+				if e.ResourceType == resource.Subject {
+					crns = append(crns, r)
+				}
+			}
+		}
+	}
+	return crns, nil
+}
+
+func areSubjectsModified(newSubjectsCRN []string, existingSubjectsCRN []string) error {
+	if len(newSubjectsCRN) != len(existingSubjectsCRN) {
+		return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
+	}
+
+	sort.Strings(newSubjectsCRN)
+	sort.Strings(existingSubjectsCRN)
+
+	for i, s := range existingSubjectsCRN {
+		if s != newSubjectsCRN[i] {
+			return errors.New(errors.SubjectsListUnmodifiableErrorMsg)
+		}
+	}
+	return nil
+}
+
+func getTopicCrn(orgId, environment, srCluster, kafkaCluster, topic string) (string, error) {
+	elements, err := crn.NewElements(
+		crn.CcloudResourceType_ORGANIZATION, orgId,
+		crn.CcloudResourceType_ENVIRONMENT, environment,
+		crn.CcloudResourceType_SCHEMA_REGISTRY, srCluster,
+		crn.CcloudResourceType_KAFKA, kafkaCluster,
+		resource.Topic, topic,
+	)
+	if err != nil {
+		return "", err
+	}
+	name := crn.ConfluentResourceName{
+		Authority: CrnCcloudAuthority,
+		Elements:  elements,
+	}
+	return name.String(), nil
+}
+
+func getSubjectCrn(orgId, environment, srCluster, subject string) (string, error) {
+	elements, err := crn.NewElements(
+		crn.CcloudResourceType_ORGANIZATION, orgId,
+		crn.CcloudResourceType_ENVIRONMENT, environment,
+		crn.CcloudResourceType_SCHEMA_REGISTRY, srCluster,
+		resource.Subject, subject,
+	)
+	if err != nil {
+		return "", err
+	}
+	name := crn.ConfluentResourceName{
+		Authority: CrnCcloudAuthority,
+		Elements:  elements,
+	}
+	return name.String(), nil
 }
