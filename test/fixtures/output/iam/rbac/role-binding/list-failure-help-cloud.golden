@@ -28,6 +28,7 @@ Flags:
       --cloud-cluster string                Cloud cluster ID for scope of role binding listings.
       --kafka-cluster-id string             Kafka cluster ID for scope of role binding listings.
       --schema-registry-cluster-id string   Schema Registry cluster ID for the role binding listings.
+      --ksql-cluster string                 ksqlDB cluster name for the role binding listings.
       --resource string                     If specified with a role and no principals, list principals with role bindings to the role for this qualified resource.
   -o, --output string                       Specify the output format as "human", "json", or "yaml". (default "human")
 
