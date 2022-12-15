@@ -1,7 +1,6 @@
 package secret
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
@@ -221,11 +220,4 @@ func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
 		return nil, errors.New(errors.DataCorruptedErrorMsg)
 	}
 	return encrypt[:len(encrypt)-int(padding)], nil
-}
-
-func (c *EncryptEngineImpl) pkcs5Padding(ciphertext []byte, blockSize int) []byte {
-	length := len(ciphertext) % blockSize
-	padding := blockSize - length
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
 }
