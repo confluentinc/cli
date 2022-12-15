@@ -203,8 +203,8 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 			pathKey := GenerateConfigKey(configFilePath, key)
 			cipher := secureConfigProps.GetString(pathKey, "")
 			if cipher != "" {
-				data, iv, _ := ParseCipherValue(cipher)
-				plainSecret, err := engine.Decrypt(data, iv, dataKey)
+				data, iv, algo := ParseCipherValue(cipher)
+				plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 				if err != nil {
 					log.CliLogger.Debug(err)
 					return errors.Errorf(errors.DecryptConfigErrorMsg, key)
@@ -281,8 +281,8 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 			return err
 		}
 		if encrypted && !strings.HasPrefix(key, MetadataPrefix) {
-			data, iv, _ := ParseCipherValue(value)
-			plainSecret, err := engine.Decrypt(data, iv, dataKey)
+			data, iv, algo := ParseCipherValue(value)
+			plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 			if err != nil {
 				return err
 			}
@@ -587,8 +587,8 @@ func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEng
 	if err != nil {
 		return []byte{}, err
 	}
-	data, iv, _ := ParseCipherValue(key)
-	return engine.UnwrapDataKey(data, iv, masterKey)
+	data, iv, algo := ParseCipherValue(key)
+	return engine.UnwrapDataKey(data, iv, algo, masterKey)
 }
 
 func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath string, masterKey string) (*properties.Properties, *Cipher, error) {
