@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"testing"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -60,7 +59,6 @@ type RoleBindingTestSuite struct {
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
-	os.Setenv("XX_DATAPLANE_3_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
@@ -218,7 +216,7 @@ var roleBindingListTests = []roleBindingTest{
 		},
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
 		principal: "User:" + v1.MockUserResourceId,
 		scope: mdsv2alpha1.Scope{
 			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
@@ -564,7 +562,7 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		},
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster-id", "ksql-9999"},
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
 		principal: "User:" + v1.MockUserResourceId,
 		roleName:  "ResourceOwner",
 		scope: mdsv2alpha1.Scope{
