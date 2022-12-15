@@ -14,9 +14,9 @@ Once the command starts running, no interaction is necessary.
 $ go install github.com/confluentinc/cli-plugins/cmd/confluent-login-headless_sso
 
 $ confluent plugin list
-         Plugin Name          |               File Path                
-------------------------------+---------------------------------------
- confluent login headless-sso | ~/go/bin/confluent-login-headless_sso  
+          Plugin Name          |               File Path                
+-------------------------------+----------------------------------------
+  confluent login headless-sso | ~/go/bin/confluent-login-headless_sso  
 
 $ confluent login headless-sso --provider okta --email example@confluent.io --password $(cat password.txt)
 Enter your Confluent Cloud credentials:
