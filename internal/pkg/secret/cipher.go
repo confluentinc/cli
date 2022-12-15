@@ -14,6 +14,6 @@ func NewCipher() *Cipher {
 	return &Cipher{
 		Iterations:     MetadataKeyDefaultIterations,
 		KeyLength:      MetadataKeyDefaultLengthBytes,
-		EncryptionAlgo: AES_GCM,
+		EncryptionAlgo: AesGcm,
 	}
 }

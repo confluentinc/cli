@@ -193,12 +193,12 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 
 	var decrypted []byte
 
-	if algo == AES_CBC { // Backwards compatability
+	if algo == AesCbc { // Backwards compatability
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
 		return c.pkcs5Trimming(decrypted)
-	} else if algo == AES_GCM {
+	} else if algo == AesGcm {
 		aesGcm, err := cipher.NewGCM(block)
 		if err != nil {
 			return []byte{}, err
