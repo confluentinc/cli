@@ -1,3 +1,4 @@
-         Name        |     Type      |  Kafka ID  | Component ID |                 Hosts                  |    Protocol     
----------------------+---------------+------------+--------------+----------------------------------------+-----------------
-  theMdsKafkaCluster | kafka-cluster | kafka-GUID |              | 10.10.10.10:8090, mds.example.com:8090 | SASL_PLAINTEXT  
+         Name        |     Type      | Kafka Cluster | Component ID |             Hosts              |    Protocol     
+---------------------+---------------+---------------+--------------+--------------------------------+-----------------
+  theMdsKafkaCluster | kafka-cluster | kafka-GUID    |              | 10.10.10.10:8090,              | SASL_PLAINTEXT  
+                     |               |               |              | mds.example.com:8090           |                 

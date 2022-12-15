@@ -92,8 +92,8 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
-	ctx := c.AuthenticatedCLICommand.Context.Config.Context()
-	c.AuthenticatedCLICommand.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	ctx := c.Context.Config.Context()
+	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)

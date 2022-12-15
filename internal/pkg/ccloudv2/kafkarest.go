@@ -2,10 +2,19 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+)
+
+const (
+	BadRequestErrorCode              = 40002
+	UnknownTopicOrPartitionErrorCode = 40403
 )
 
 type KafkaRestClient struct {
@@ -118,9 +127,17 @@ func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string,
 	return c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatchExecute(req)
 }
 
-func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, error) {
 	req := c.ConfigsV3Api.ListKafkaTopicConfigs(c.context(), clusterId, topicName)
-	return c.ConfigsV3Api.ListKafkaTopicConfigsExecute(req)
+	res, httpResp, err := c.ConfigsV3Api.ListKafkaTopicConfigsExecute(req)
+	if err != nil {
+		if restErr, err := kafkarest.ParseOpenAPIErrorCloud(err); err == nil {
+			if restErr.Code == UnknownTopicOrPartitionErrorCode {
+				return kafkarestv3.TopicConfigDataList{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+			}
+		}
+	}
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(clusterId, topicName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {
