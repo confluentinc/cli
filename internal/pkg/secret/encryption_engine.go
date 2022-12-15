@@ -17,11 +17,11 @@ import (
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte) (string, string, error)
-	Decrypt(cipher string, iv string, key []byte) (string, error)
+	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
 	GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
-	UnwrapDataKey(dataKey string, iv string, masterKey string) ([]byte, error)
+	UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
 }
 
 // EncryptEngineImpl is the EncryptionEngine implementation
@@ -92,13 +92,13 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	dataKeyEnc, err := c.Decrypt(dataKey, iv, masterKeyByte)
+	dataKeyEnc, err := c.Decrypt(dataKey, iv, algo, masterKeyByte)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -123,7 +123,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, 
 	return c.encrypt(plainText, key)
 }
 
-func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
@@ -132,7 +132,7 @@ func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, key []byte) (strin
 	if err != nil {
 		return "", err
 	}
-	plainText, err := c.decrypt(cipherBytes, key, ivBytes)
+	plainText, err := c.decrypt(cipherBytes, key, ivBytes, algo)
 	if err != nil {
 		return "", err
 	}
@@ -173,7 +173,7 @@ func (c *EncryptEngineImpl) encrypt(plainText string, key []byte) (string, strin
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain []byte, err error) {
+func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) (plain []byte, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
@@ -194,16 +194,24 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte) (plain 
 
 	var decrypted []byte
 
-	aesGcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return []byte{}, err
+	if algo == AES_CBC { // Backwards compatability
+		ecb := cipher.NewCBCDecrypter(block, iv)
+		decrypted = make([]byte, len(crypt))
+		ecb.CryptBlocks(decrypted, crypt)
+		return c.pkcs5Trimming(decrypted)
+	} else if algo == AES_GCM {
+		aesGcm, err := cipher.NewGCM(block)
+		if err != nil {
+			return []byte{}, err
+		}
+		decrypted, err = aesGcm.Open(nil, iv, crypt, nil)
+		if err != nil {
+			return []byte{}, err
+		}
+		return decrypted, nil
+	} else {
+		return []byte{}, errors.Errorf(errors.InvalidAlgorithmErrorMsg, algo)
 	}
-
-	decrypted, err = aesGcm.Open(nil, iv, crypt, nil)
-	if err != nil {
-		return []byte{}, err
-	}
-	return decrypted, nil
 }
 
 func (c *EncryptEngineImpl) pkcs5Trimming(encrypt []byte) ([]byte, error) {
