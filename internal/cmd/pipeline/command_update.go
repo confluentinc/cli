@@ -3,7 +3,7 @@ package pipeline
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"io/ioutil"
+	"os"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -66,7 +66,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	if sqlFile != "" {
 		// read pipeline source code file if provided
-		fileContent, err := ioutil.ReadFile(sqlFile)
+		fileContent, err := os.ReadFile(sqlFile)
 		if err != nil {
 			return err
 		}

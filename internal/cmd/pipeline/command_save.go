@@ -1,7 +1,7 @@
 package pipeline
 
 import (
-	"io/ioutil"
+	"os"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -58,7 +58,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := ioutil.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
 		return err
 	}
 

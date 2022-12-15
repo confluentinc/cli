@@ -3,7 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"regexp"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
@@ -79,7 +79,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	// read pipeline source code file if provided
 	sourceCode := ""
 	if sqlFile != "" {
-		fileContent, err := ioutil.ReadFile(sqlFile)
+		fileContent, err := os.ReadFile(sqlFile)
 		if err != nil {
 			return err
 		}
