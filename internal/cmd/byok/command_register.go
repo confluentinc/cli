@@ -22,7 +22,7 @@ var (
 func (c *command) newRegisterCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register <key>",
-		Short: "Register a customer managed key in Confluent Cloud.",
+		Short: "Register a self-managed key in Confluent Cloud.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.register,
 	}

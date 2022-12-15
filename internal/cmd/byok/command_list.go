@@ -18,7 +18,7 @@ var (
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List registered customer managed keys.",
+		Short: "List registered self-managed keys.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

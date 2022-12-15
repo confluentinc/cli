@@ -12,7 +12,7 @@ import (
 func (c *command) newUnregisterCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:               "unregister <id>",
-		Short:             "unregister a customer managed key.",
+		Short:             "unregister a self-managed key.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.unregister,
