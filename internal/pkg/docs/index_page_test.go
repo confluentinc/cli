@@ -27,6 +27,9 @@ func TestPrintIndexPage(t *testing.T) {
 	}
 
 	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
 		".. _command_a:",
 		"",
 		"command a",
@@ -95,6 +98,9 @@ func TestPrintRootIndexPage(t *testing.T) {
 	}
 
 	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
 		".. _command_a:",
 		"",
 		"command a",
@@ -124,6 +130,16 @@ func TestFlatten(t *testing.T) {
 	}
 
 	require.Equal(t, []string{"a", "b", "c", "d"}, flatten(arrs))
+}
+
+func TestPrintComments(t *testing.T) {
+	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
+	}
+
+	require.Equal(t, expected, printComments())
 }
 
 func TestPrintHeader(t *testing.T) {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"sort"
 	"strings"
 
@@ -93,9 +92,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for scope of role binding listings.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for scope of role binding listings.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding listings.")
-		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding listings.")
-		}
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding listings.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for scope of role binding listings.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for scope of role binding listings.")

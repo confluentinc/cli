@@ -3,7 +3,6 @@ package iam
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -217,9 +216,7 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")
-		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID for the role binding.")
-		}
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 	} else {
 		cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID for the role binding.")

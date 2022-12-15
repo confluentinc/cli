@@ -56,6 +56,9 @@ func TestPrintDocPage(t *testing.T) {
 	}
 
 	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
 		".. _a_b:",
 		"",
 		"a b",

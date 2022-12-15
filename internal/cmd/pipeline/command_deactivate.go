@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDeactivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deactivate <pipeline-id>",
 		Short: "Request to deactivate a pipeline.",
