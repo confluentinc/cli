@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/byok/v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
@@ -25,6 +26,7 @@ type Client struct {
 	JwtToken  string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	ByokClient             *byokv1.APIClient
 	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
@@ -50,6 +52,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		ByokClient:             newByokv1Client(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
