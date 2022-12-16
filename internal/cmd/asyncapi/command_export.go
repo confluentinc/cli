@@ -101,7 +101,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	var schemaContextPrefix string
 	if flags.schemaContext != "default" {
 		log.CliLogger.Debugf("Using schema context \"%s\"\n", flags.schemaContext)
-		schemaContextPrefix = ":." + flags.schemaContext + ":"
+		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
 	for _, topic := range accountDetails.topics {
