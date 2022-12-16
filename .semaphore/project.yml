@@ -7,6 +7,10 @@ spec:
   visibility: private
   repository:
     url: git@github.com:confluentinc/cli.git
+    run_on:
+    - branches
+    - tags
+    - pull_requests
     pipeline_file: .semaphore/semaphore.yml
     integration_type: github_app
     status:
