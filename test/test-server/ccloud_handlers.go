@@ -737,12 +737,13 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]interface{}{
-			"testBool":                 true,
-			"testString":               "string",
-			"testInt":                  1,
-			"testJson":                 map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices":  []map[string]interface{}{},
-			"cli.client_quotas.enable": true,
+			"testBool":                               true,
+			"testString":                             "string",
+			"testInt":                                1,
+			"testJson":                               map[string]interface{}{"key": "val"},
+			"cli.deprecation_notices":                []map[string]interface{}{},
+			"cli.client_quotas.enable":               true,
+			"cli.stream_designer.source_code.enable": true,
 		}
 
 		val, ok := ldUser.GetCustom("org.resource_id")

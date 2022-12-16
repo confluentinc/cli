@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <pipeline-id>",
 		Short: "Describe a Stream Designer pipeline.",

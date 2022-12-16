@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newActivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newActivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "activate <pipeline-id>",
 		Short: "Request to activate a pipeline.",

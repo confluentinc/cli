@@ -50,11 +50,13 @@ func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (strea
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreatePipeline(envId, clusterId, name, description, ksqlId, srClusterId string) (streamdesignerv1.SdV1Pipeline, error) {
+func (c *Client) CreatePipeline(envId, clusterId, name, description, sourceCode string, secretMappings *map[string]string, ksqlId, srClusterId string) (streamdesignerv1.SdV1Pipeline, error) {
 	createPipeline := streamdesignerv1.SdV1Pipeline{
 		Spec: &streamdesignerv1.SdV1PipelineSpec{
 			DisplayName:             streamdesignerv1.PtrString(name),
 			Description:             streamdesignerv1.PtrString(description),
+			SourceCode:              &streamdesignerv1.SdV1SourceCodeObject{Sql: sourceCode},
+			Secrets:                 secretMappings,
 			Environment:             &streamdesignerv1.ObjectReference{Id: envId},
 			KafkaCluster:            &streamdesignerv1.ObjectReference{Id: clusterId},
 			KsqlCluster:             &streamdesignerv1.ObjectReference{Id: ksqlId},
