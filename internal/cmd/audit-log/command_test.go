@@ -10,14 +10,13 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	cliMock "github.com/confluentinc/cli/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (

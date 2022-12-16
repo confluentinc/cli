@@ -1,13 +1,18 @@
 package environment
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+type out struct {
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Id        string `human:"ID" serialized:"id"`
+	Name      string `human:"Name" serialized:"name"`
+}
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -29,10 +34,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
-	account := &orgv1.Account{
-		Id:   *environment.Id,
-		Name: *environment.DisplayName,
-	}
-
-	return output.DescribeObject(cmd, account, fields, humanRenames, structuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		IsCurrent: *environment.Id == c.EnvironmentId(),
+		Id:        *environment.Id,
+		Name:      *environment.DisplayName,
+	})
+	return table.Print()
 }
