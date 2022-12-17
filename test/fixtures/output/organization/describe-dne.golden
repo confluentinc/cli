@@ -1,0 +1,4 @@
+Error: organization not found or access forbidden: 403 Forbidden
+
+Suggestions:
+    List available organizations with `confluent organization list`.
