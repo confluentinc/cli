@@ -27,6 +27,7 @@ func printDocPage(tabs []Tab, depth int) []string {
 	cmd := tabs[0].Command
 
 	return flatten([][]string{
+		printComments(),
 		printHeader(cmd, false),
 		printTitle(cmd, "-"),
 		printWarnings(cmd, depth),

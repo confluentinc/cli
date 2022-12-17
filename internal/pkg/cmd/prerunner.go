@@ -325,6 +325,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return setContextErr
 		}
 
+		if command.Context.GetEnvironment() == nil {
+			noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+			utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n" + noEnvSuggestions + "\n")
+		}
+
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
@@ -395,7 +400,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
 
 	return nil
 }

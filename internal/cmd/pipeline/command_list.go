@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Display pipelines in the current environment and cluster.",
