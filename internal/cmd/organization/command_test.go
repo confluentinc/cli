@@ -102,6 +102,16 @@ func (suite *OrganizationTestSuite) newCmd() *cobra.Command {
 	return New(prerunner)
 }
 
+func (suite *OrganizationTestSuite) TestDescribeOrganizations() {
+	cmd := suite.newCmd()
+	cmd.SetArgs([]string{"describe", firstOrganizationID})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.True(suite.V2ClientMock.orgClientMock.GetOrgV2OrganizationCalled())
+	req.True(suite.V2ClientMock.orgClientMock.GetOrgV2OrganizationExecuteCalled())
+}
+
 func (suite *OrganizationTestSuite) TestListOrganizations() {
 	cmd := suite.newCmd()
 	var buf bytes.Buffer
@@ -116,4 +126,5 @@ func (suite *OrganizationTestSuite) TestListOrganizations() {
 	req.Contains(got, secondOrganizationID)
 	req.Contains(got, secondOrganizationName)
 	req.True(suite.V2ClientMock.orgClientMock.ListOrgV2OrganizationsCalled())
+	req.True(suite.V2ClientMock.orgClientMock.ListOrgV2OrganizationsExecuteCalled())
 }
