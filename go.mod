@@ -139,5 +139,5 @@ replace (
 	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
 	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
 	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
-	github.com/confluentinc/ccloud-sdk-go-v2/org => ../ccloud-sdk-go-v2-internal/org
+	github.com/confluentinc/ccloud-sdk-go-v2/org => ../ccloud-sdk-go-v2/org
 )
