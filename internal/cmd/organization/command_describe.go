@@ -32,12 +32,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	organization, httpResp, err := c.V2Client.GetOrgOrganization(args[0])
 	if err != nil {
-		return errors.CatchV2ResourceNotFoundError(err, resource.Organization, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Organization, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: *organization.Id == c.EnvironmentId(),
+		IsCurrent: *organization.Id == c.Context.GetOrganization().GetResourceId(),
 		Id:        *organization.Id,
 		Name:      *organization.DisplayName,
 	})

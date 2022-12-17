@@ -58,10 +58,10 @@ const (
 	InvalidCloudSuggestions            = "To list available connector plugin types, use `confluent connect plugin list`."
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
-	// environment command
-	EnvNotFoundErrorMsg    = `environment "%s" not found`
-	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
-	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
+	// environment & organization command
+	EnvNotFoundErrorMsg            = `environment "%s" not found`
+	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
+	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"

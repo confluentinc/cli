@@ -36,7 +36,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	_, httpResp, err := c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
 	if err != nil {
-		return errors.CatchV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
 	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, name)

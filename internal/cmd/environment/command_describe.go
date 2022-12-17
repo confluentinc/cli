@@ -32,7 +32,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0])
 	if err != nil {
-		return errors.CatchV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
 	table := output.NewTable(cmd)
