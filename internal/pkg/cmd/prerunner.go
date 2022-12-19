@@ -875,6 +875,11 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
+			client, err := r.createCCloudClient(ctx, command.Version)
+			if err != nil {
+				return err
+			}
+
 			privateClient, err := r.createPrivateCCloudClient(ctx, command.Version)
 			if err != nil {
 				return err
@@ -882,6 +887,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
+			ctx.Client = client
+			command.Config.Client = client
 			ctx.PrivateClient = privateClient
 			command.Config.PrivateClient = privateClient
 			ctx.V2Client = v2Client

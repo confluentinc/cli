@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/stretchr/testify/require"
 )
@@ -43,12 +42,12 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			createReply := &ccloudv1.CreateSchemaRegistryClusterReply{Cluster: srCluster}
-			b, err := utilv1.MarshalJSONToBytes(createReply)
+			b, err := ccloudv1.MarshalJSONToBytes(createReply)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
 		case http.MethodGet:
-			b, err := utilv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClustersReply{Clusters: []*ccloudv1.SchemaRegistryCluster{srCluster}})
+			b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClustersReply{Clusters: []*ccloudv1.SchemaRegistryCluster{srCluster}})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -68,7 +67,7 @@ func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) http.HandlerFunc {
 			Name:      "account schema-registry",
 			Endpoint:  "SASL_SSL://sr-endpoint",
 		}
-		b, err := utilv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClusterReply{Cluster: srCluster})
+		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClusterReply{Cluster: srCluster})
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
