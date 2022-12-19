@@ -299,14 +299,13 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		Account: &ccsdkmock.Account{},
 		Kafka:   suite.kafkaMock,
 		Connect: &ccsdkmock.Connect{},
-		User:    suite.userMock,
 		APIKey:  suite.apiMock,
 		Metrics: &ccsdkmock.Metrics{},
 	}
 	client := &ccloudv1.Client{
+		User:           suite.userMock,
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	client := &ccloudv1.Client{User: suite.userMock}
 	v2Client := &ccloudv2.Client{
 		ApiKeysClient: &apikeysv2.APIClient{
 			APIKeysIamV2Api: suite.apiKeysMock,
