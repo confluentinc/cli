@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/spf13/cobra"
 
@@ -105,7 +104,7 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v2Client *ccloudv2.Client) (string, string, string, error) {
+func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
 	resourceId, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return "", "", "", err

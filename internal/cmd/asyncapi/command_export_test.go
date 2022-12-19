@@ -10,6 +10,7 @@ import (
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
@@ -190,8 +191,10 @@ func newCmd() (*command, error) {
 				return nil, nil
 			},
 		},
-		SchemaRegistry: &ccsdkmock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+	}
+	c.Client = &ccloudv1.Client{
+		SchemaRegistry: &ccloudv1mock.SchemaRegistry{
+			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 				return nil, nil
 			},
 		},
