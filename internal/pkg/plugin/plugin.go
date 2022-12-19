@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -38,6 +39,12 @@ func SearchPath(cfg *v1.Config) map[string][]string {
 		if err != nil {
 			log.CliLogger.Warnf("unable to read directory from $PATH: %s", dir)
 			continue
+		}
+
+		if home, err := homedir.Dir(); err == nil {
+			if strings.HasPrefix(dir, home) {
+				dir = filepath.Join("~", strings.TrimPrefix(dir, home))
+			}
 		}
 
 		for _, entry := range entries {
