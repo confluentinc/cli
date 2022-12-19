@@ -685,8 +685,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
-github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0 h1:yJpe4scsmbxoZ5qcd7Jjh/su8R8p+YruWCHnhXx1IGI=
-github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0 h1:PPX84ol90CmVws/g77n/GwpEP+77wNO+UuRs7nDhYG4=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
@@ -3296,8 +3294,8 @@ gopkg.in/jcmturner/rpc.v1 v1.1.0/go.mod h1:YIdkC4XfD6GXbzje11McwsDuOlZQSb9W4vfLv
 gopkg.in/launchdarkly/go-jsonstream.v1 v1.0.1 h1:aZHvMDAS+M6/0sRMkDBQ8MyLGsTQrNgN5evu5e8UYpQ=
 gopkg.in/launchdarkly/go-jsonstream.v1 v1.0.1/go.mod h1:YefdBjfITIP8D9BJLVbssFctHkJnQXhv+TiRdTV0Jr4=
 gopkg.in/launchdarkly/go-sdk-common.v1 v1.0.0-20200401173443-991b2f427a01/go.mod h1:2kE5FCTDQ53bqRSOfJpE5fdiAQYiN9LESONDNyEBFjI=
-gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0 h1:1LnhgO4O7tUkwtoKni0cm9dPrI1fUIgCJuPluJ05fr8=
-gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0/go.mod h1:P2+C6CHteys+lEDd6298QszCsMhjdYrfzBd6dg//CHA=
+gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1 h1:RqucG3hCU/GAupuEyVXXPf0Hz3F4InyhiFR2sfUbgBs=
+gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1/go.mod h1:P2+C6CHteys+lEDd6298QszCsMhjdYrfzBd6dg//CHA=
 gopkg.in/launchdarkly/go-server-sdk.v4 v4.0.0-20200514001346-5d022ad40612/go.mod h1:5PjGYhLa/sjT7W4x56rD0ZyqhmMQPP9b4Y57WzFAqT4=
 gopkg.in/mail.v2 v2.3.1 h1:WYFn/oANrAGP2C0dcV6/pbkPzv8yGzqTjPmTeO7qoXk=
 gopkg.in/mail.v2 v2.3.1/go.mod h1:htwXN1Qh09vZJ1NVKxQqHPBaCBbzKhp5GzuJEA4VJWw=
