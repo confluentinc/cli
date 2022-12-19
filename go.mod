@@ -81,7 +81,7 @@ require (
 	golang.org/x/crypto v0.1.0
 	golang.org/x/oauth2 v0.3.0
 	golang.org/x/text v0.5.0
-	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.0
+	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	gotest.tools/gotestsum v1.8.2
 )
