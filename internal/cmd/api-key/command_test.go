@@ -7,7 +7,6 @@ import (
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -119,10 +118,8 @@ var (
 			},
 			Secret: apikeysv2.PtrString(myApiKeySecretVal),
 		},
-		Id: apikeysv2.PtrString(myApiKeyVal),
-		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{},
-		},
+		Id:       apikeysv2.PtrString(myApiKeyVal),
+		Metadata: &apikeysv2.ObjectMeta{CreatedAt: &time.Time{}},
 	}
 )
 
@@ -139,7 +136,7 @@ type APITestSuite struct {
 	kafkaMock             *ccsdkmock.Kafka
 	ksqlmock              *ksqlmock.ClustersKsqldbcmV2Api
 	isPromptPipe          bool
-	userMock              *ccsdkmock.User
+	userMock              *ccloudv1mock.UserInterface
 }
 
 // Require
@@ -257,9 +254,9 @@ func (suite *APITestSuite) SetupTest() {
 			return list, nil, nil
 		},
 	}
-	suite.userMock = &ccsdkmock.User{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
-			return []*orgv1.User{
+	suite.userMock = &ccloudv1mock.UserInterface{
+		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
+			return []*ccloudv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -267,15 +264,15 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
-		GetServiceAccountFunc: func(_ context.Context, _ int32) (*orgv1.User, error) {
-			return &orgv1.User{
+		GetServiceAccountFunc: func(_ context.Context, _ int32) (*ccloudv1.User, error) {
+			return &ccloudv1.User{
 				Id:          serviceAccountId,
 				ResourceId:  userResourceId,
 				ServiceName: serviceAccountName,
 			}, nil
 		},
-		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{
+		ListFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+			return []*ccloudv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -309,6 +306,7 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
+	client := &ccloudv1.Client{User: suite.userMock}
 	v2Client := &ccloudv2.Client{
 		ApiKeysClient: &apikeysv2.APIClient{
 			APIKeysIamV2Api: suite.apiKeysMock,
