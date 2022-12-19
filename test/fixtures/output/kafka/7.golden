@@ -1,20 +1,22 @@
 [
   {
-    "availability": "single-zone",
+    "is_current": false,
     "id": "lkc-123",
     "name": "abc",
+    "type": "BASIC",
     "provider": "gcp",
     "region": "us-central1",
-    "status": "PROVISIONING",
-    "type": "BASIC"
+    "availability": "single-zone",
+    "status": "PROVISIONING"
   },
   {
-    "availability": "multi-zone",
+    "is_current": false,
     "id": "lkc-456",
     "name": "def",
+    "type": "BASIC",
     "provider": "gcp",
     "region": "us-central1",
-    "status": "PROVISIONING",
-    "type": "BASIC"
+    "availability": "multi-zone",
+    "status": "PROVISIONING"
   }
 ]

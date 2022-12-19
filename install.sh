@@ -416,6 +416,11 @@ main() {
 
   log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
+  # If < v3, archive version is prefixed with "v"
+  VERSION=${VERSION#v}
+  VERSION=$([ "${VERSION#3.}" = "${VERSION}" ] && echo "v${VERSION}" || echo "${VERSION}")
+  VERSION=$([ "${VERSION}" = "vlatest" ] && echo "latest" || echo "${VERSION}")
+  
   S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
   NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
   TARBALL=${NAME}.${FORMAT}
