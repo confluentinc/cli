@@ -685,8 +685,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0 h1:mr24i/kfi5kGyEx00Z3UjZC/6
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.5.0/go.mod h1:zREJ+OOZz0rEXCaPx0JbCVj2EfNnYs/c6qhPDfhldI0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
-github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0 h1:yJpe4scsmbxoZ5qcd7Jjh/su8R8p+YruWCHnhXx1IGI=
-github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.1.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0 h1:PPX84ol90CmVws/g77n/GwpEP+77wNO+UuRs7nDhYG4=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/cire-bucket-service/protos/bucket v0.50.0 h1:MKQiWsLL0A6Ml0qRoSda5UFn1E3lMpqzjME06dCOlQI=
@@ -727,8 +725,8 @@ github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuR
 github.com/confluentinc/k8saas/grpc-api/api v0.726.0/go.mod h1:6eQbw72Dz8dmfaWzTnIVuCAJBDwqYsdJXw2yX9LT1zI=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14 h1:/ifiYRgvbtzTrMxsntzAc2NFXsZxfCpjHZG03X9BDxw=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14/go.mod h1:qJAUraWU9BERQWyalrPsxt+ECELWPV+qsyOaP00VidY=
-github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48 h1:3M4UYpTDex+MxI689sy2kdI7SbfnBW/GAPxEcfvCghg=
-github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.48/go.mod h1:8uhp3pNJttGbFtDGWlSBgf57OxGOPh8BvVOonoGhV1o=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.53 h1:nCYhz//UI5t17JjLSDuLaRtIltm17dmWxSVhe/h1XUI=
+github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.53/go.mod h1:8uhp3pNJttGbFtDGWlSBgf57OxGOPh8BvVOonoGhV1o=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.4/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.22/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37/go.mod h1:Gpylo9DhWPClL/rpmoRPjNHxOsdrf1qL8QNRAbJO5Z0=
