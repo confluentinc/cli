@@ -35,8 +35,8 @@ blocks:
             # Basic login
             - email="cli-team+system-tests@confluent.io"
             - password=$(vault kv get -field password "v1/devel/kv/cli/system-tests/test-user-password")
-            - echo -e "${email}\n${password}\n" | HOME=$(mktemp -d) $(find dist/ -name confluent) login
+            - echo -e "${email}\n${password}\n" | HOME=$(mktemp -d) $(find dist/ -name confluent) login || exit 1
             # SSO login
             - email="cli-system-tests@confluent.io"
             - password=$(vault kv get -field password "v1/devel/kv/cli/system-tests/sso-password")
-            - HOME=$(mktemp -d) $(find dist/ -name confluent) login headless-sso --provider okta --email ${email} --password ${password}
+            - HOME=$(mktemp -d) $(find dist/ -name confluent) login headless-sso --provider okta --email ${email} --password ${password} || exit 1
