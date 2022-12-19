@@ -6,8 +6,7 @@ import (
 	"strings"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -53,8 +52,8 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingClusters, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryClusters(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
+	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &ccloudv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -67,8 +66,8 @@ func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context,
 	return nil, errors.NewSRNotEnabledError()
 }
 
-func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*schedv1.SchemaRegistryCluster, error) {
-	existingCluster, err := d.PrivateClient.SchemaRegistry.GetSchemaRegistryCluster(context, &schedv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
+	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &ccloudv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})
