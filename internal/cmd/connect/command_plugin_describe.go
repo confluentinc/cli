@@ -13,11 +13,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var (
-	pluginConfigFields          = []string{"Config", "Documentation", "IsRequired"}
-	pluginConfigHumanFields     = []string{"Config", "Documentation", "Required"}
-	pluginConfigStructureLabels = []string{"config", "documentation", "is_required"}
-)
+type pluginDescribeOut struct {
+	Config        string `human:"Config" serialized:"config"`
+	Documentation string `human:"Documentation" serialized:"documentation"`
+	IsRequired    bool   `human:"Required" serialized:"is_required"`
+}
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -55,10 +55,8 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.NewWrapErrorWithSuggestions(err, errors.InvalidCloudErrorMsg, errors.InvalidCloudSuggestions)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pluginConfigFields, pluginConfigHumanFields, pluginConfigStructureLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
+	list.Sort(false)
 
 	configs := reply.GetConfigs()
 	sort.Slice(configs, func(i, j int) bool {
@@ -76,13 +74,12 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 		if config.Definition.GetDocumentation() != "" {
 			doc = config.Definition.GetDocumentation()
 		}
-		pluginConfigDisplayElement := &pluginConfigDisplay{
+		list.Add(&pluginDescribeOut{
 			Config:        config.Value.GetName(),
 			Documentation: doc,
 			IsRequired:    config.Definition.GetRequired(),
-		}
-		outputWriter.AddElement(pluginConfigDisplayElement)
+		})
 	}
 
-	return outputWriter.Out()
+	return list.Print()
 }

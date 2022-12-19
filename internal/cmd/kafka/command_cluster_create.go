@@ -9,7 +9,7 @@ import (
 	"text/template"
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/spf13/cobra"
@@ -59,7 +59,7 @@ Identity:
 
 type validateEncryptionKeyInput struct {
 	Cloud          string
-	MetadataClouds []*schedv1.CloudMetadata
+	MetadataClouds []*ccloudv1.CloudMetadata
 	AccountID      string
 }
 
@@ -113,7 +113,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	clouds, err := c.PrivateClient.EnvironmentMetadata.Get(context.Background())
+	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {
 		return err
 	}
@@ -202,12 +202,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.CloudMetadata) error {
 	for _, cloud := range clouds {
-		if cloudId == cloud.Id {
-			for _, region := range cloud.Regions {
-				if regionId == region.Id {
-					if region.IsSchedulable {
+		if cloudId == cloud.GetId() {
+			for _, region := range cloud.GetRegions() {
+				if regionId == region.GetId() {
+					if region.GetIsSchedulable() {
 						return nil
 					} else {
 						break
@@ -236,7 +236,7 @@ func (c *clusterCommand) validateEncryptionKey(cmd *cobra.Command, prompt form.P
 func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, prompt form.Prompt, input validateEncryptionKeyInput) error {
 	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
-	externalID, err := c.PrivateClient.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
+	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, input.Cloud, input.AccountID)
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,7 @@ func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt for
 	}
 }
 
-func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
+func getEnvironmentsForCloud(cloudId string, clouds []*ccloudv1.CloudMetadata) []string {
 	var environments []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {

@@ -54,7 +54,6 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	suite.kafkaCluster = &schedv1.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
 	suite.srCluster = &schedv1.SchemaRegistryCluster{
@@ -148,7 +147,7 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 
 func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -160,7 +159,7 @@ func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 
 func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -173,7 +172,7 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
