@@ -118,10 +118,8 @@ var (
 			},
 			Secret: apikeysv2.PtrString(myApiKeySecretVal),
 		},
-		Id: apikeysv2.PtrString(myApiKeyVal),
-		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{},
-		},
+		Id:       apikeysv2.PtrString(myApiKeyVal),
+		Metadata: &apikeysv2.ObjectMeta{CreatedAt: &time.Time{}},
 	}
 )
 
@@ -305,9 +303,7 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		APIKey:         suite.apiMock,
 		Metrics:        &ccsdkmock.Metrics{},
 	}
-	client := &ccloudv1.Client{
-		User: suite.userMock,
-	}
+	client := &ccloudv1.Client{User: suite.userMock}
 	v2Client := &ccloudv2.Client{
 		ApiKeysClient: &apikeysv2.APIClient{
 			APIKeysIamV2Api: suite.apiKeysMock,
