@@ -70,7 +70,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.14.4
@@ -368,7 +368,7 @@ require (
 	github.com/src-d/gcfg v1.4.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
-	github.com/stretchr/objx v0.4.0 // indirect
+	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/swaggest/jsonschema-go v0.3.39 // indirect
 	github.com/swaggest/refl v1.1.0 // indirect
