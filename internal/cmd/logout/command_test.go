@@ -143,8 +143,8 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 			}, nil
 		},
 	}
-	loginRealm := &ccloudv1Mock.LoginRealm{}
-	loginCmd, _ := newLoginCmd(auth, loginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	userInterface := &ccloudv1Mock.UserInterface{}
+	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
 
@@ -155,7 +155,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req.Equal(exist, false)
 }
 
-func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
+func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
@@ -176,7 +176,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 	ccloudClientFactory := &cliMock.CCloudClientFactory{
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, LoginRealm: loginRealm}
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
@@ -184,7 +184,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil
 				},
-			}, Auth: auth, LoginRealm: loginRealm}
+			}, Auth: auth, User: userInterface}
 		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{
