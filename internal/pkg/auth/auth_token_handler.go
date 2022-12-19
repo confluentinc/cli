@@ -116,7 +116,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloudv1.Client, email, 
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgResourceId,
 	}
-	loginRealmReply, err := client.LoginRealm.LoginRealm(context.Background(), req)
+	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
 	if err != nil {
 		return "", err
 	}
