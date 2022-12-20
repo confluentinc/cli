@@ -1,6 +1,6 @@
   Current |      ID      |      Name       
 ----------+--------------+-----------------
-  false   | a-595        | default         
-  false   | env-123      | env123          
-  false   | env-srUpdate | srUpdate        
-  true    | not-595      | new-other-name  
+          | a-595        | default         
+          | env-123      | env123          
+          | env-srUpdate | srUpdate        
+  *       | not-595      | new-other-name  

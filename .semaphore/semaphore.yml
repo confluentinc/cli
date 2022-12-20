@@ -46,6 +46,32 @@ blocks:
             - make deps
             - make lint
             - ulimit -n 2048
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestAdmin"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestApiKey"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestAsyncapi"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestAuditLog"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestCloudSignup"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestCluster"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestCompletion"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestConnect"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestContext"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestEnvironment"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestHelp"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestIam"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestKafka"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestKsql"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestLocal"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestLogin"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestLogout"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestPipeline"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestPlugin"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestPrice"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestQuotas"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestSchemaRegistry"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestStreamShare"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestUpdate"
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestVersion"
+            - make int-test
             - make test
             - make test-installer
 
