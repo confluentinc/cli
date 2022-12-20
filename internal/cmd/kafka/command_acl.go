@@ -140,12 +140,12 @@ func parsePrincipal(principal string) (string, error) {
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -160,12 +160,12 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 }
 
 func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}

@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -33,10 +33,9 @@ type KSQLTestSuite struct {
 	conf         *v1.Config
 	kafkaCluster *schedv1.KafkaCluster
 	ksqlCluster  *ksqlv2.KsqldbcmV2Cluster
-	serviceAcct  *orgv1.User
+	serviceAcct  *ccloudv1.User
 	ksqlc        *ksqlmock.ClustersKsqldbcmV2Api
-	kafkac       *mock.Kafka
-	userc        *mock.User
+	userc        *ccloudv1mock.UserInterface
 	v2Client     *ccloudv2.Client
 }
 
@@ -46,7 +45,7 @@ func (suite *KSQLTestSuite) SetupSuite() {
 		Id:   "lkc-123",
 		Name: "kafka",
 	}
-	suite.serviceAcct = &orgv1.User{
+	suite.serviceAcct = &ccloudv1.User{
 		ServiceAccount: true,
 		ServiceName:    "KSQL." + ksqlClusterID,
 		Id:             serviceAcctID,
@@ -71,17 +70,6 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 		Status: &ksqlv2.KsqldbcmV2ClusterStatus{
 			TopicPrefix: &outputTopicPrefix,
-		},
-	}
-	suite.kafkac = &mock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return suite.kafkaCluster, nil
-		},
-		CreateACLsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, binding []*schedv1.ACLBinding) error {
-			return nil
-		},
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
-			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
 		},
 	}
 
@@ -120,9 +108,9 @@ func (suite *KSQLTestSuite) SetupTest() {
 			return nil, nil
 		},
 	}
-	suite.userc = &mock.User{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
-			return []*orgv1.User{suite.serviceAcct}, nil
+	suite.userc = &ccloudv1mock.UserInterface{
+		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
+			return []*ccloudv1.User{suite.serviceAcct}, nil
 		},
 	}
 	suite.v2Client = &ccloudv2.Client{
@@ -150,7 +138,6 @@ func (suite *KSQLTestSuite) TestShouldNotConfigureAclsWhenUser() {
 
 	req := require.New(suite.T())
 	req.EqualError(err, fmt.Sprintf(errors.KsqlDBNoServiceAccountErrorMsg, ksqlClusterID))
-	req.Equal(0, len(suite.kafkac.CreateACLsCalls()))
 }
 
 func (suite *KSQLTestSuite) TestDescribeKSQL() {
