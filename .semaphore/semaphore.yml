@@ -46,6 +46,8 @@ blocks:
             - make deps
             - make lint
             - ulimit -n 2048
+            - make int-test INT_TEST_ARGS="-run TestCLI/TestPrice"
+            - make int-test
             - make test
             - make test-installer
 
