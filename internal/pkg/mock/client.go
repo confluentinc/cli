@@ -19,22 +19,21 @@ import (
 
 func NewPrivateClientMock() *ccloud.Client {
 	return &ccloud.Client{
-		Auth:           &mock.Auth{},
-		Account:        &mock.Account{},
-		Billing:        &mock.Billing{},
-		Kafka:          &mock.Kafka{},
-		SchemaRegistry: &mock.SchemaRegistry{},
-		Connect:        &mock.Connect{},
-		User:           &mock.User{},
-		APIKey:         &mock.APIKey{},
-		KSQL:           &mock.KSQL{},
-		UsageLimits:    &mock.UsageLimits{},
+		Auth:        &mock.Auth{},
+		Account:     &mock.Account{},
+		Kafka:       &mock.Kafka{},
+		Connect:     &mock.Connect{},
+		APIKey:      &mock.APIKey{},
+		KSQL:        &mock.KSQL{},
+		UsageLimits: &mock.UsageLimits{},
 	}
 }
 
 func NewClientMock() *ccloudv1.Client {
 	return &ccloudv1.Client{
-		Billing: &ccloudv1mock.Billing{},
+		Billing:        &ccloudv1mock.Billing{},
+		SchemaRegistry: &ccloudv1mock.SchemaRegistry{},
+		User:           &ccloudv1mock.UserInterface{},
 	}
 }
 

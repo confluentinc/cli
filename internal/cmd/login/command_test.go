@@ -69,7 +69,7 @@ var (
 			}, nil
 		},
 	}
-	mockLoginRealm              = &ccloudv1Mock.LoginRealm{}
+	mockUserInterface           = &ccloudv1Mock.UserInterface{}
 	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -167,7 +167,7 @@ func TestCredentialsOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	loginRealm := &ccloudv1Mock.LoginRealm{}
+	userInterface := &ccloudv1Mock.UserInterface{}
 	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
@@ -191,7 +191,7 @@ func TestCredentialsOverride(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, cfg := newLoginCmd(auth, loginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -220,7 +220,7 @@ func TestOrgIdOverride(t *testing.T) {
 			}, nil
 		},
 	}
-	loginRealm := &ccloudv1Mock.LoginRealm{}
+	userInterface := &ccloudv1Mock.UserInterface{}
 	type test struct {
 		setEnv     bool
 		setDefault bool
@@ -248,7 +248,7 @@ func TestOrgIdOverride(t *testing.T) {
 				}
 			},
 		}
-		loginCmd, cfg := newLoginCmd(auth, loginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
 		output, err := pcmd.ExecuteCommand(loginCmd)
 		req.NoError(err)
@@ -287,7 +287,7 @@ func TestLoginSuccess(t *testing.T) {
 			}, nil
 		},
 	}
-	loginRealm := &ccloudv1Mock.LoginRealm{}
+	userInterface := &ccloudv1Mock.UserInterface{}
 
 	suite := []struct {
 		isCloud bool
@@ -324,7 +324,7 @@ func TestLoginSuccess(t *testing.T) {
 			org2 = s.orgId == org2Id
 			s.args = append(s.args, "--organization-id="+s.orgId)
 		}
-		loginCmd, cfg := newLoginCmd(auth, loginRealm, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -461,7 +461,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			}
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
 			var loginArgs []string
 			if !tt.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
@@ -530,7 +530,7 @@ func TestPromptLoginFlag(t *testing.T) {
 				SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 				},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !tt.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
@@ -572,7 +572,7 @@ func TestLoginFail(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockLoginRealm, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
 	req.Equal(new(ccloudv1.InvalidLoginError), err)
@@ -761,7 +761,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			}, nil
 		},
 	}
-	loginRealm := &ccloudv1Mock.LoginRealm{}
+	userInterface := &ccloudv1Mock.UserInterface{}
 
 	suite := []struct {
 		isCloud bool
@@ -793,7 +793,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, loginRealm, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
@@ -894,7 +894,7 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
+func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
@@ -915,7 +915,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 	ccloudClientFactory := &cliMock.CCloudClientFactory{
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
-			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, LoginRealm: loginRealm}
+			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
@@ -923,7 +923,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, loginRealm *ccloudv1Mock.LoginRealm, i
 					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil
 				},
-			}, Auth: auth, LoginRealm: loginRealm}
+			}, Auth: auth, User: userInterface}
 		},
 	}
 	mdsClientManager := &cliMock.MockMDSClientManager{

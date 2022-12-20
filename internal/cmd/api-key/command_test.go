@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
@@ -118,10 +118,8 @@ var (
 			},
 			Secret: apikeysv2.PtrString(myApiKeySecretVal),
 		},
-		Id: apikeysv2.PtrString(myApiKeyVal),
-		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{},
-		},
+		Id:       apikeysv2.PtrString(myApiKeyVal),
+		Metadata: &apikeysv2.ObjectMeta{CreatedAt: &time.Time{}},
 	}
 )
 
@@ -133,12 +131,12 @@ type APITestSuite struct {
 	iamServiceAccountMock *iammock.ServiceAccountsIamV2Api
 	keystore              *mock.KeyStore
 	kafkaCluster          *schedv1.KafkaCluster
-	srCluster             *schedv1.SchemaRegistryCluster
-	srMothershipMock      *ccsdkmock.SchemaRegistry
+	srCluster             *ccloudv1.SchemaRegistryCluster
+	srMothershipMock      *ccloudv1mock.SchemaRegistry
 	kafkaMock             *ccsdkmock.Kafka
 	ksqlmock              *ksqlmock.ClustersKsqldbcmV2Api
 	isPromptPipe          bool
-	userMock              *ccsdkmock.User
+	userMock              *ccloudv1mock.UserInterface
 }
 
 // Require
@@ -162,7 +160,7 @@ func (suite *APITestSuite) SetupTest() {
 		Enterprise: true,
 		AccountId:  environment,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.kafkaMock = &ccsdkmock.Kafka{
@@ -187,15 +185,15 @@ func (suite *APITestSuite) SetupTest() {
 			return cluster, nil, nil
 		},
 	}
-	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (clusters []*schedv1.SchemaRegistryCluster, e error) {
-			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
+		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *ccloudv1.SchemaRegistryCluster) (clusters []*ccloudv1.SchemaRegistryCluster, e error) {
+			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
 	suite.apiMock = &ccsdkmock.APIKey{
@@ -256,9 +254,9 @@ func (suite *APITestSuite) SetupTest() {
 			return list, nil, nil
 		},
 	}
-	suite.userMock = &ccsdkmock.User{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
-			return []*orgv1.User{
+	suite.userMock = &ccloudv1mock.UserInterface{
+		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
+			return []*ccloudv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -266,15 +264,15 @@ func (suite *APITestSuite) SetupTest() {
 				},
 			}, nil
 		},
-		GetServiceAccountFunc: func(_ context.Context, _ int32) (*orgv1.User, error) {
-			return &orgv1.User{
+		GetServiceAccountFunc: func(_ context.Context, _ int32) (*ccloudv1.User, error) {
+			return &ccloudv1.User{
 				Id:          serviceAccountId,
 				ResourceId:  userResourceId,
 				ServiceName: serviceAccountName,
 			}, nil
 		},
-		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{
+		ListFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+			return []*ccloudv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -297,14 +295,16 @@ func (suite *APITestSuite) SetupTest() {
 
 func (suite *APITestSuite) newCmd() *cobra.Command {
 	privateClient := &ccloud.Client{
-		Auth:           &ccsdkmock.Auth{},
-		Account:        &ccsdkmock.Account{},
-		Kafka:          suite.kafkaMock,
-		SchemaRegistry: suite.srMothershipMock,
-		Connect:        &ccsdkmock.Connect{},
+		Auth:    &ccsdkmock.Auth{},
+		Account: &ccsdkmock.Account{},
+		Kafka:   suite.kafkaMock,
+		Connect: &ccsdkmock.Connect{},
+		APIKey:  suite.apiMock,
+		Metrics: &ccsdkmock.Metrics{},
+	}
+	client := &ccloudv1.Client{
 		User:           suite.userMock,
-		APIKey:         suite.apiMock,
-		Metrics:        &ccsdkmock.Metrics{},
+		SchemaRegistry: suite.srMothershipMock,
 	}
 	v2Client := &ccloudv2.Client{
 		ApiKeysClient: &apikeysv2.APIClient{
@@ -334,8 +334,8 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 	prerunner := &climock.Commander{
 		FlagResolver:  resolverMock,
 		PrivateClient: privateClient,
+		Client:        client,
 		V2Client:      v2Client,
-		MDSClient:     nil,
 		Config:        suite.conf,
 	}
 	return New(prerunner, suite.keystore, resolverMock)

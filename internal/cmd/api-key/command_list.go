@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
@@ -52,7 +52,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.PrivateClient, c.V2Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -150,15 +150,15 @@ func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[stri
 	return saMap
 }
 
-func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
-	userMap := make(map[int32]*orgv1.User)
+func getUsersMap(users []*ccloudv1.User) map[int32]*ccloudv1.User {
+	userMap := make(map[int32]*ccloudv1.User)
 	for _, user := range users {
 		userMap[user.Id] = user
 	}
 	return userMap
 }
 
-func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
+func mapResourceIdToUserId(users []*ccloudv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
@@ -166,7 +166,7 @@ func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	return idMap
 }
 
-func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*orgv1.User, serviceAccountsMap map[string]bool) string {
+func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*ccloudv1.User, serviceAccountsMap map[string]bool) string {
 	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
 	}
