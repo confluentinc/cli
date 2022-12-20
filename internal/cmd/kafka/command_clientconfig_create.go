@@ -40,7 +40,7 @@ const (
 
 	contextExampleFmt = "confluent kafka client-config create %s"
 	flagExampleFmt    = "confluent kafka client-config create %s --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret"
-	srFlagExample     = " --sr-apikey my-sr-key --sr-apisecret my-sr-secret"
+	srFlagExample     = " --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret"
 
 	javaConfig         = "java"
 	javaSRConfig       = "java-sr"
@@ -151,8 +151,8 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 
 	// add sr flags
 	if clientConfig.isSrApiAvailable {
-		cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-		cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	}
 
 	c.AddCommand(cmd)
@@ -290,11 +290,11 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 	}
 
 	// get SR key pair from flag
-	apiKey, err := cmd.Flags().GetString("sr-apikey")
+	apiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
-	apiSecret, err := cmd.Flags().GetString("sr-apisecret")
+	apiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}

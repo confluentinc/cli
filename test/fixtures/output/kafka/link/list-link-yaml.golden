@@ -1,18 +1,18 @@
-- destination_cluster_id: cluster-2
-  link_error: ""
-  link_error_message: ""
-  link_name: link-1
-  link_state: ""
+- link_name: link-1
   source_cluster_id: cluster-1
-- destination_cluster_id: cluster-2
-  link_error: ""
-  link_error_message: ""
-  link_name: link-2
-  link_state: AVAILABLE
+  destination_cluster_id: cluster-2
+  state: ""
+  error: ""
+  error_message: ""
+- link_name: link-2
   source_cluster_id: cluster-1
-- destination_cluster_id: cluster-2
-  link_error: AUTHENTICATION_ERROR
-  link_error_message: Please check your API key and secret.
-  link_name: link-3
-  link_state: UNAVAILABLE
+  destination_cluster_id: cluster-2
+  state: AVAILABLE
+  error: ""
+  error_message: ""
+- link_name: link-3
   source_cluster_id: cluster-1
+  destination_cluster_id: cluster-2
+  state: UNAVAILABLE
+  error: AUTHENTICATION_ERROR
+  error_message: Please check your API key and secret.
