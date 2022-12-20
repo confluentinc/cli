@@ -7,8 +7,8 @@ import (
 	"time"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -32,8 +32,8 @@ type ClusterTestSuite struct {
 	suite.Suite
 	conf         *v1.Config
 	kafkaCluster *schedv1.KafkaCluster
-	srCluster    *schedv1.SchemaRegistryCluster
-	srMock       *ccsdkmock.SchemaRegistry
+	srCluster    *ccloudv1.SchemaRegistryCluster
+	srMock       *ccloudv1mock.SchemaRegistry
 	srClientMock *srsdk.APIClient
 	metricsApi   *metricsmock.Version2Api
 }
@@ -47,7 +47,7 @@ func (suite *ClusterTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.srClientMock = &srsdk.APIClient{
@@ -69,12 +69,12 @@ func (suite *ClusterTestSuite) SetupSuite() {
 }
 
 func (suite *ClusterTestSuite) SetupTest() {
-	suite.srMock = &ccsdkmock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) ([]*schedv1.SchemaRegistryCluster, error) {
-			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
+		GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
+			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
 	suite.metricsApi = &metricsmock.Version2Api{
@@ -95,14 +95,14 @@ func (suite *ClusterTestSuite) SetupTest() {
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMock,
 	}
 	v2Client := &ccloudv2.Client{
 		AuthToken:     "auth-token",
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(nil, client, v2Client, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {

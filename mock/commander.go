@@ -85,6 +85,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
+		command.Context.Client = c.Client
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
