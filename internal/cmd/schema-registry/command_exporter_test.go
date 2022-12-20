@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
@@ -30,18 +30,18 @@ type ExporterTestSuite struct {
 	suite.Suite
 	conf             *v1.Config
 	kafkaCluster     *schedv1.KafkaCluster
-	srCluster        *schedv1.SchemaRegistryCluster
+	srCluster        *ccloudv1.SchemaRegistryCluster
 	srClientMock     *srsdk.APIClient
-	srMothershipMock *mock.SchemaRegistry
+	srMothershipMock *ccloudv1mock.SchemaRegistry
 }
 
 func (suite *ExporterTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
@@ -54,7 +54,7 @@ func (suite *ExporterTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 }
@@ -97,10 +97,10 @@ func (suite *ExporterTestSuite) SetupTest() {
 }
 
 func (suite *ExporterTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(nil, client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
