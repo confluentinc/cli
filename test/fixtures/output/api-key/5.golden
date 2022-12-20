@@ -1,6 +1,6 @@
   Current |        Key         | Description |  Owner   |      Owner Email      | Resource Type | Resource |       Created         
 ----------+--------------------+-------------+----------+-----------------------+---------------+----------+-----------------------
-  false   | DEACTIVATEDUSERKEY |             | sa-6666  | <deactivated user>    | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
-  false   | MYKEY1             | first-key   | u11      | bstrauch@confluent.io | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
-  false   | MYKEY3             |             | u-44ddd  | mhe@confluent.io      | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
-  false   | SERVICEACCOUNTKEY1 |             | sa-12345 | <service account>     | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
+          | DEACTIVATEDUSERKEY |             | sa-6666  | <deactivated user>    | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
+          | MYKEY1             | first-key   | u11      | bstrauch@confluent.io | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
+          | MYKEY3             |             | u-44ddd  | mhe@confluent.io      | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
+          | SERVICEACCOUNTKEY1 |             | sa-12345 | <service account>     | kafka         | lkc-bob  | 1999-02-24T00:00:00Z  
