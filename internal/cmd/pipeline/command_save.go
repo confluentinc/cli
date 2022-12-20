@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newSaveCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
+func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "save <pipeline-id>",
 		Short: "Save a Stream Designer pipeline's source code to a local file.",
