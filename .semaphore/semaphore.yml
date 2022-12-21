@@ -150,6 +150,8 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
             - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/testbreak-reporting" > script.sh
+            - source script.sh
             - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
