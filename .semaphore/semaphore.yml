@@ -130,6 +130,51 @@ blocks:
           commands:
             - test-results publish . -N "windows/amd64"
 
+  - name: System Tests
+    dependencies: []
+    task:
+      jobs:
+        - name: Cloud (Development)
+          commands:
+            # Get GitHub SSH key from Vault
+            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+
+            # Set up Go
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
+
+            # Try to restore cached dependencies
+            - cache restore linux-$(checksum go.sum)
+
+            # Set up Git
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+            # Build CLI
+            - make semaphore-deps
+            - make build
+
+            # Set up environment
+            - kubectl-ccloud-config get all
+            - export KUBECONFIG=$HOME/.kube/ccloud-config/kubeconfig
+            - kubectl config use-context k8saas-eks-mothership-devel
+
+            - eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::037803949979:role/administrator")
+            - export KUBECONFIG=$HOME/.kube/ccloud-config/devel/kubeconfig
+            - export CCLOUD_ENV=devel
+            - export MOTHERSHIP_K8S=$(kubectl config current-context)
+            - export CCLOUD_URL=https://$CCLOUD_ENV.cpdev.cloud
+
+            # Test
+            - cd ..
+            - git clone git@github.com:confluentinc/cc-system-tests.git 
+            - cd cc-system-tests/test/cli
+            - go test -run TestCLITestSuite/TestLogin
+
+
 after_pipeline:
   task:
     jobs:
