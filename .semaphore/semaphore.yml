@@ -136,10 +136,17 @@ blocks:
       jobs:
         - name: Cloud (Development)
           commands:
-            # Get GitHub SSH key from Vault
+            # Get secrets from Vault
             - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
             - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
             - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
+            - source script.sh
+            - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
             - checkout
@@ -158,14 +165,6 @@ blocks:
             - make build
 
             # Set up environment
-            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
-            - source script.sh
-            - chmod 400 ~/.config/gcloud/cloud-private-dev.json
-
             - export CCLOUD_ENV=devel
             - git clone git@github.com:confluentinc/cc-dotfiles.git
             - source cc-dotfiles/caas.sh
