@@ -360,6 +360,9 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, rolebinding *mdsv2.IamV2RoleBinding) error {
 	userResourceId := strings.TrimLeft(rolebinding.GetPrincipal(), "User:")
 	user, err := c.V2Client.GetIamUserById(userResourceId)
+	if err != nil {
+		return err
+	}
 	out := &roleBindingOut{
 		Principal: rolebinding.GetPrincipal(),
 		Role:      rolebinding.GetRoleName(),

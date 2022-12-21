@@ -53,12 +53,13 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	var deleteRoleBinding *v2.IamV2RoleBinding
 	var options *roleBindingOptions
 	var httpResp *http.Response
+	var err error
 	if isCloud {
-		deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
+		deleteRoleBinding, err = c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		fmt.Println(deleteRoleBinding.GetCrnPattern())
+
 		err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
 		if err != nil {
 			return err
