@@ -149,9 +149,9 @@ blocks:
             - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
-            # - checkout
-            # - goenv install --skip-existing
-            # - export "PATH=$(go env GOPATH)/bin:$PATH"
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
             # - cache restore linux-$(checksum go.sum)
