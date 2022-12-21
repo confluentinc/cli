@@ -149,23 +149,23 @@ blocks:
             - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
-            - checkout
-            - goenv install --skip-existing
-            - export "PATH=$(go env GOPATH)/bin:$PATH"
+            # - checkout
+            # - goenv install --skip-existing
+            # - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
-            - cache restore linux-$(checksum go.sum)
+            # - cache restore linux-$(checksum go.sum)
 
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Build CLI
-            - make semaphore-deps
-            - make build
+            # - make semaphore-deps
+            # - make build
 
             # Set up environment
-            - export CCLOUD_ENV=devel
+            # - export CCLOUD_ENV=devel
             # - git clone git@github.com:confluentinc/cc-dotfiles.git
             # - source cc-dotfiles/caas.sh
             # - kubectl-ccloud-config get $CCLOUD_ENV aws
@@ -177,7 +177,7 @@ blocks:
             # Test
             - cd ..
             - git clone git@github.com:confluentinc/cc-system-tests.git 
-            - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
+            # - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
             - cd cc-system-tests
             - make init-ci
             - make ci-runner
