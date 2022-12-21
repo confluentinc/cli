@@ -160,15 +160,15 @@ blocks:
             - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
-            # - cache restore linux-$(checksum go.sum)
+            - cache restore linux-$(checksum go.sum)
 
             # Set up Git
             - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Build CLI
-            # - make semaphore-deps
-            # - make build
+            - make semaphore-deps
+            - make build
 
             # Set up environment
             # - export CCLOUD_ENV=devel
@@ -190,7 +190,8 @@ blocks:
 
             - cd ..
             - git clone git@github.com:confluentinc/cc-system-tests.git 
-            # - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
+            - mkdir -p cc-system-tests/test/cli/cli_bin/linux_amd64
+            - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
             - cd cc-system-tests
             - goenv install --skip-existing
             - make show-args
@@ -198,6 +199,7 @@ blocks:
 
             # Test
             - make ci-runner
+            - cd test/cli
             - go test -run TestCLITestSuite/TestLogin
         - name: Cloud (Staging)
           commands:
