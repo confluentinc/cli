@@ -160,13 +160,13 @@ blocks:
             # Set up environment
             - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
             - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/cc-system-tests" > script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
             - source script.sh
 
             - export CCLOUD_ENV=devel
             - git clone git@github.com:confluentinc/cc-dotfiles.git
             - source cc-dotfiles/caas.sh
-            - kubectl-ccloud-config get $CCLOUD_ENV
+            - kubectl-ccloud-config get $CCLOUD_ENV aws
             - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/kubeconfig
             - kubectl config use-context k8saas-eks-mothership-$CCLOUD_ENV
 
@@ -179,6 +179,9 @@ blocks:
             - git clone git@github.com:confluentinc/cc-system-tests.git 
             - cd cc-system-tests/test/cli
             - go test -run TestCLITestSuite/TestLogin
+        - name: Cloud (Staging)
+          commands:
+            echo "Testing the staging environment..."
 
 
 after_pipeline:
