@@ -146,7 +146,9 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
             - source script.sh
+
             - chmod 400 .config/gcloud/cloud-private-dev.json
+            - gcloud login
 
             # Set up Go
             - checkout
