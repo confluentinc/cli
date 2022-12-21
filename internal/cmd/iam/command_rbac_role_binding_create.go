@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	v2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -72,28 +73,25 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
+	var createRoleBinding *v2.IamV2RoleBinding
+	var options *roleBindingOptions
 	var httpResp *http.Response
 	if isCloud {
 		createRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
-			httpResp, err = c.ccloudCreate(options)
-		} else {
-			_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
-		}
+		_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		if err != nil {
 			return err
 		}
 	} else {
+		options, err := c.parseCommon(cmd)
+		if err != nil {
+			return err
+		}
 		httpResp, err = c.confluentCreate(options)
 		if err != nil {
 			return err
@@ -105,25 +103,9 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
+		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
-	}
-}
-
-func (c *roleBindingCommand) ccloudCreate(options *roleBindingOptions) (*http.Response, error) {
-	if options.resource != "" {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.resourcesRequestV2)
-	} else {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.scopeV2)
 	}
 }
 
