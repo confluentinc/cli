@@ -158,9 +158,10 @@ blocks:
             - make build
 
             # Set up environment
-            - kubectl-ccloud-config get all
-            - export KUBECONFIG=$HOME/.kube/ccloud-config/kubeconfig
-            - kubectl config use-context k8saas-eks-mothership-devel
+            - git clone git@github.com:confluentinc/cc-dotfiles.git
+            - source cc-dotfiles/caas.sh
+            - kubectl-ccloud-config get devel
+            - KUBECONFIG=$HOME/.kube/ccloud-config/kubeconfig kubectl config use-context k8saas-eks-mothership-devel
 
             - eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::037803949979:role/administrator")
             - export KUBECONFIG=$HOME/.kube/ccloud-config/devel/kubeconfig
