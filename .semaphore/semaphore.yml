@@ -177,11 +177,12 @@ blocks:
             # Test
             - cd ..
             - git clone git@github.com:confluentinc/cc-system-tests.git 
+            - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
             - cd cc-system-tests/test/cli
             - go test -run TestCLITestSuite/TestLogin
         - name: Cloud (Staging)
           commands:
-            echo "Testing the staging environment..."
+            - echo "Testing the staging environment..."
 
 
 after_pipeline:
