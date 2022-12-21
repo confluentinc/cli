@@ -158,14 +158,17 @@ blocks:
             - make build
 
             # Set up environment
+            - export CCLOUD_ENV=devel
+            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
+            - source script.sh
+
             - git clone git@github.com:confluentinc/cc-dotfiles.git
             - source cc-dotfiles/caas.sh
-            - kubectl-ccloud-config get devel
-            - KUBECONFIG=$HOME/.kube/ccloud-config/devel/kubeconfig kubectl config use-context k8saas-eks-mothership-devel
+            - kubectl-ccloud-config get $CCLOUD_ENV
+            - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/kubeconfig
+            - kubectl config use-context k8saas-eks-mothership-$CCLOUD_ENV
 
-            - eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::037803949979:role/administrator")
-            - export KUBECONFIG=$HOME/.kube/ccloud-config/devel/kubeconfig
-            - export CCLOUD_ENV=devel
+            - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/kubeconfig
             - export MOTHERSHIP_K8S=$(kubectl config current-context)
             - export CCLOUD_URL=https://$CCLOUD_ENV.cpdev.cloud
 
