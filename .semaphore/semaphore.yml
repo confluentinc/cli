@@ -164,6 +164,7 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
             - source script.sh
+            - gcloud auth login
 
             - export CCLOUD_ENV=devel
             - git clone git@github.com:confluentinc/cc-dotfiles.git
