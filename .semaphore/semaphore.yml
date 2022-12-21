@@ -146,6 +146,10 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
             - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
+            - source script.sh
             - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
@@ -174,7 +178,14 @@ blocks:
             # - export MOTHERSHIP_K8S=$(kubectl config current-context)
             # - export CCLOUD_URL=https://$CCLOUD_ENV.cpdev.cloud
 
-            # Test
+            - git clone git@github.com:confluentinc/cc-mk-include.git mk-include
+            - echo "include ./mk-include/cc-begin.mk" >> Makefile
+            - echo "include ./mk-include/cc-cpd.mk" >> Makefile
+            - echo "include ./mk-include/cc-docker.mk" >> Makefile
+            - echo "include ./mk-include/cc-helm.mk" >> Makefile
+            - echo "include ./mk-include/cc-vault.mk" >> Makefile
+            - echo "include ./mk-files/cli-cpd.mk" >> Makefile
+
             - cd ..
             - git clone git@github.com:confluentinc/cc-system-tests.git 
             # - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
@@ -182,6 +193,8 @@ blocks:
             - goenv install --skip-existing
             - make show-args
             - make init-ci
+
+            # Test
             - make ci-runner
             - go test -run TestCLITestSuite/TestLogin
         - name: Cloud (Staging)
