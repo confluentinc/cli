@@ -64,9 +64,8 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topic)
-	if err != nil {
-		return err
+	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
+		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
 
 	schemaPath, err := cmd.Flags().GetString("schema")
@@ -78,22 +77,68 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
+
 	defer func() {
 		_ = os.RemoveAll(dir)
 	}()
 
-	schemaCfg := &sr.RegisterSchemaConfigs{
-		SchemaDir:   dir,
-		SchemaPath:  &schemaPath,
-		Subject:     subject,
-		ValueFormat: valueFormat,
-		SchemaType:  serializationProvider.GetSchemaName(),
-	}
-
-	metaInfo, referencePathMap, err := c.prepareSchemaFileAndRefs(cmd, schemaCfg)
+	subject := topicNameStrategy(topic)
+	schemaId, err := cmd.Flags().GetInt32("schema-id")
 	if err != nil {
 		return err
 	}
+
+	var valueFormat string
+	referencePathMap := map[string]string{}
+	metaInfo := []byte{}
+
+	if schemaId != 0 { // request schema information from schemaID
+		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		if err != nil {
+			return err
+		}
+
+		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, srClient, ctx)
+		if err != nil {
+			return err
+		}
+		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, schemaPath, subject, schemaId, srClient, ctx)
+		if err != nil {
+			return err
+		}
+
+		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
+		valueFormat = schemaString.SchemaType
+
+	} else {
+		valueFormat, err = cmd.Flags().GetString("value-format")
+		if err != nil {
+			return err
+		}
+	}
+
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return err
+	}
+
+	if schemaPath != "" && schemaId == 0 { // read schema info from local file and register schema
+		schemaCfg := &sr.RegisterSchemaConfigs{
+			SchemaDir:   dir,
+			SchemaPath:  &schemaPath,
+			Subject:     subject,
+			ValueFormat: valueFormat,
+			SchemaType:  serializationProvider.GetSchemaName(),
+		}
+		refs, err := sr.ReadSchemaRefs(cmd)
+		if err != nil {
+			return err
+		}
+		schemaCfg.Refs = refs
+		// Meta info contains a magic byte and schema ID (4 bytes).
+		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
+	}
+
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
@@ -198,19 +243,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	return scanErr
 }
 
-func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
-	valueFormat, err := cmd.Flags().GetString("value-format")
-	if err != nil {
-		return "", "", nil, err
-	}
-	subject := topicNameStrategy(topicName)
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
-	if err != nil {
-		return "", "", nil, err
-	}
-	return valueFormat, subject, serializationProvider, nil
-}
-
 func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
 	srAPIKey, err := cmd.Flags().GetString("sr-api-key")
 	if err != nil {
@@ -247,47 +279,6 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr
 		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
-		}
-	}
-	return metaInfo, referencePathMap, nil
-}
-
-func (c *hasAPIKeyTopicCommand) prepareSchemaFileAndRefs(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
-	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
-		return nil, nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
-	}
-
-	referencePathMap := map[string]string{}
-	metaInfo := []byte{}
-
-	if *schemaCfg.SchemaPath != "" { // read schema from local file
-		refs, err := sr.ReadSchemaRefs(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
-		schemaCfg.Refs = refs
-		// Meta info contains a magic byte and schema ID (4 bytes).
-		return c.registerSchema(cmd, schemaCfg)
-	}
-
-	schemaId, err := cmd.Flags().GetInt32("schema-id")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if schemaId != 0 { // request schema from schema registry
-		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
-
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
-
-		if schemaCfg.ValueFormat != "string" {
-			*schemaCfg.SchemaPath, referencePathMap, err = sr.RequestSchemaWithId(schemaId, schemaCfg.SchemaDir, schemaCfg.Subject, srClient, ctx)
-			if err != nil {
-				return nil, nil, err
-			}
 		}
 	}
 	return metaInfo, referencePathMap, nil
