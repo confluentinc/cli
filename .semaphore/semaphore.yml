@@ -162,15 +162,14 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
             - source script.sh
+            - gcloud auth login
 
             - export CCLOUD_ENV=devel
             - git clone git@github.com:confluentinc/cc-dotfiles.git
             - source cc-dotfiles/caas.sh
             - kubectl-ccloud-config get $CCLOUD_ENV aws
-            - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/kubeconfig
+            - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/aws/kubeconfig
             - kubectl config use-context k8saas-eks-mothership-$CCLOUD_ENV
-
-            - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/kubeconfig
             - export MOTHERSHIP_K8S=$(kubectl config current-context)
             - export CCLOUD_URL=https://$CCLOUD_ENV.cpdev.cloud
 
