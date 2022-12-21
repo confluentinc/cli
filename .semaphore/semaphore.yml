@@ -181,7 +181,6 @@ blocks:
             - cd cc-system-tests
             - make init-ci
             - make ci-runner
-            - test/cli
             - go test -run TestCLITestSuite/TestLogin
         - name: Cloud (Staging)
           commands:
