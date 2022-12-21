@@ -148,7 +148,7 @@ blocks:
             - source script.sh
 
             - chmod 400 .config/gcloud/cloud-private-dev.json
-            - gcloud login
+            - gcloud auth login
 
             # Set up Go
             - checkout
