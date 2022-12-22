@@ -92,7 +92,8 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
-	if schemaId != 0 { // request schema information from schemaID
+	if cmd.Flags().Changed("schema-id") {
+		// request schema information from schemaID
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return err
