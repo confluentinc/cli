@@ -154,6 +154,8 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/connect_aws_credentials" > script.sh
             - source script.sh
+            
+            - export AWS_AUTH_METHOD=aws-creds
             - chmod 400 .config/gcloud/cloud-private-dev.json
 
             # Set up Go
