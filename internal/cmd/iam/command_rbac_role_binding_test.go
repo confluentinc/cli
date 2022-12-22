@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
@@ -267,6 +268,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.crnPattern,
 				}
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}()
 			err := cmd.Execute()
@@ -351,7 +353,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.crnPattern,
 				}
-				fmt.Println("")
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}(tc)
 			err := cmd.Execute()
@@ -376,7 +378,7 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 				copy := expectedListCmdArgs{
 					tc.principal, tc.roleName, tc.crnPattern,
 				}
-				fmt.Println("")
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}(tc)
 			err := cmd.Execute()
