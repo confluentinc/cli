@@ -137,6 +137,9 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		schemaCfg.Refs = refs
 		// Meta info contains a magic byte and schema ID (4 bytes).
 		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
