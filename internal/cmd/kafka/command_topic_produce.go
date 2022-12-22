@@ -110,7 +110,6 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
 		valueFormat = schemaString.SchemaType
-
 	} else {
 		valueFormat, err = cmd.Flags().GetString("value-format")
 		if err != nil {
