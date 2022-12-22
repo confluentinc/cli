@@ -138,21 +138,50 @@ blocks:
           commands:
             # Get secrets from Vault
             - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
+
+            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
-            - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/testbreak-reporting" > script.sh
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/connect_aws_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/kinesis_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/lambda_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_aws_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/netrc" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_config" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/gitconfig" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/data-dog-creds" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/GCP_CONNECT_CREDENTIALS_DEVEL" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/azure_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/azure_client_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/azure-traffic-pl-vm-credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_jdbc_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/CONNECT_MONGODB_ATLAS_PASSWORD" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/CONNECT_SNOWFLAKE_PRIVATE_KEY" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_redshift_credentials " > script.sh
             - source script.sh
             
             - export AWS_AUTH_METHOD=aws-creds
