@@ -8,11 +8,12 @@ import (
 
 	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 )
 
 // Handler for POST "/cmk/v2/clusters"
@@ -67,7 +68,7 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(int(r.GetError().Code))
 		}
 
-		b, err := utilv1.MarshalJSONToBytes(resp)
+		b, err := ccstructs.MarshalJSONToBytes(resp)
 		require.NoError(t, err)
 
 		_, err = io.WriteString(w, string(b))
