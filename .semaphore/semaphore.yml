@@ -199,7 +199,7 @@ blocks:
             - make init-ci
 
             # Test
-            - GO_TEST_PACKAGE_ARGS="./test/cli/..." make ci-runner
+            - SEMAPHORE_TRIGGER_SOURCE=scheduler GO_TEST_PACKAGE_ARGS="./test/cli/..." make ci-runner
         - name: Cloud (Staging)
           commands:
             - echo "Testing the staging environment..."
