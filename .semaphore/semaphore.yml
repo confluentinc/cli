@@ -193,7 +193,6 @@ blocks:
             - mkdir -p cc-system-tests/test/cli/cli_bin/linux_amd64
             - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
             - cd cc-system-tests
-            - git checkout devel
             - goenv install --skip-existing
             - make show-args
             - make init-ci
