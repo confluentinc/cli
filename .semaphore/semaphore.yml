@@ -130,6 +130,80 @@ blocks:
           commands:
             - test-results publish . -N "windows/amd64"
 
+  - name: System Tests
+    dependencies: []
+    task:
+      jobs:
+        - name: Cloud (Development)
+          commands:
+            # Get secrets from Vault
+            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
+            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/aws_credentials" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/cpd_gcloud" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/eng_aws" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/artifactory-docker-helm" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/semaphore-secrets-global" > script.sh
+            - source script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/testbreak-reporting" > script.sh
+            - source script.sh
+            - chmod 400 .config/gcloud/cloud-private-dev.json
+
+            # Set up Go
+            - checkout
+            - goenv install --skip-existing
+            - export "PATH=$(go env GOPATH)/bin:$PATH"
+
+            # Try to restore cached dependencies
+            - cache restore linux-$(checksum go.sum)
+
+            # Set up Git
+            - export "GOPRIVATE=github.com/confluentinc"
+            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+
+            # Build CLI
+            - make semaphore-deps
+            - make build
+
+            # Set up environment
+            # - export CCLOUD_ENV=devel
+            # - git clone git@github.com:confluentinc/cc-dotfiles.git
+            # - source cc-dotfiles/caas.sh
+            # - kubectl-ccloud-config get $CCLOUD_ENV aws
+            # - export KUBECONFIG=$HOME/.kube/ccloud-config/$CCLOUD_ENV/aws/kubeconfig
+            # - kubectl config use-context k8saas-eks-mothership-$CCLOUD_ENV
+            # - export MOTHERSHIP_K8S=$(kubectl config current-context)
+            # - export CCLOUD_URL=https://$CCLOUD_ENV.cpdev.cloud
+
+            - git clone git@github.com:confluentinc/cc-mk-include.git mk-include
+            - echo "include ./mk-include/cc-begin.mk" >> Makefile
+            - echo "include ./mk-include/cc-cpd.mk" >> Makefile
+            - echo "include ./mk-include/cc-docker.mk" >> Makefile
+            - echo "include ./mk-include/cc-helm.mk" >> Makefile
+            - echo "include ./mk-include/cc-vault.mk" >> Makefile
+            - echo "include ./mk-files/cli-cpd.mk" >> Makefile
+
+            - cd ..
+            - git clone git@github.com:confluentinc/cc-system-tests.git 
+            - mkdir -p cc-system-tests/test/cli/cli_bin/linux_amd64
+            - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
+            - cd cc-system-tests
+            - goenv install --skip-existing
+            - make show-args
+            - make init-ci
+
+            # Test
+            - GO_TEST_PACKAGE_ARGS="./test/cli/..." make ci-runner
+        - name: Cloud (Staging)
+          commands:
+            - echo "Testing the staging environment..."
+
+
 after_pipeline:
   task:
     jobs:
