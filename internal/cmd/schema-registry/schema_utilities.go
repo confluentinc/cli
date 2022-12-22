@@ -102,54 +102,6 @@ func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srCli
 	return referencePathMap, nil
 }
 
-// func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
-// 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-// 	tempStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.txt", subject, schemaId))
-// 	tempRefStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.ref", subject, schemaId))
-// 	var references []srsdk.SchemaReference
-// 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
-// 		// TODO: add handler for writing schema failure
-// 		getSchemaOpts := srsdk.GetSchemaOpts{
-// 			Subject: optional.NewString(subject),
-// 		}
-// 		schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, &getSchemaOpts)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-// 		err = os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-
-// 		refBytes, err := json.Marshal(schemaString.References)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-// 		err = os.WriteFile(tempRefStorePath, refBytes, 0644)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-// 		references = schemaString.References
-// 	} else {
-// 		refBlob, err := os.ReadFile(tempRefStorePath)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-// 		err = json.Unmarshal(refBlob, &references)
-// 		if err != nil {
-// 			return "", nil, err
-// 		}
-// 	}
-
-// 	// Store the references in temporary files
-// 	referencePathMap, err := StoreSchemaReferences(schemaPath, references, srClient, ctx)
-// 	if err != nil {
-// 		return "", nil, err
-// 	}
-
-// 	return tempStorePath, referencePathMap, nil
-// }
-
 func GetMetaInfoFromSchemaId(id int32) []byte {
 	metaInfo := []byte{0x0}
 	schemaIdBuffer := make([]byte, 4)
@@ -174,10 +126,10 @@ func RequestSchemaWithId(schemaId int32, subject string, srClient *srsdk.APIClie
 	return schemaString, nil
 }
 
-func SetSchemaPathRef(schemaString srsdk.SchemaString, schemaPath string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
+func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.txt", subject, schemaId))
-	tempRefStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.ref", subject, schemaId))
+	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
+	tempRefStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.ref", subject, schemaId))
 	var references []srsdk.SchemaReference
 
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
@@ -206,7 +158,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, schemaPath string, subjec
 			return "", nil, err
 		}
 	}
-	referencePathMap, err := StoreSchemaReferences(schemaPath, references, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(dir, references, srClient, ctx)
 	if err != nil {
 		return "", nil, err
 	}

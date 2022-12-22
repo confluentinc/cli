@@ -102,7 +102,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
-		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, schemaPath, subject, schemaId, srClient, ctx)
+		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, srClient, ctx)
 		if err != nil {
 			return err
 		}
