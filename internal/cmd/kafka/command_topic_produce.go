@@ -122,7 +122,8 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if schemaPath != "" && schemaId == 0 { // read schema info from local file and register schema
+	if schemaPath != "" && !cmd.Flags().Changed("schema-id") {
+		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
 			SchemaDir:   dir,
 			SchemaPath:  &schemaPath,
