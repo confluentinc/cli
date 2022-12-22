@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
@@ -12,8 +13,6 @@ import (
 	ccv2sdkmock "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2/mock"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mdsmock "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2/mock"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
-	mds2mock "github.com/confluentinc/mds-sdk-go/mdsv2alpha1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -50,13 +49,13 @@ var v2RoleBindingMock = &mdsmock.RoleBindingsIamV2Api{
 					Id:         mdsv2.PtrString("1"),
 					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
 					RoleName:   mdsv2.PtrString("ResourceOwner"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/ksql=ksql-9999"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/ksql=ksql-9999"),
 				},
 				mdsv2.IamV2RoleBinding{
 					Id:         mdsv2.PtrString("2"),
 					Principal:  mdsv2.PtrString("User:" + v1.MockUserResourceId),
 					RoleName:   mdsv2.PtrString("ResourceOwner"),
-					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/schema-registry=sr-777"),
+					CrnPattern: mdsv2.PtrString("crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/schema-registry=sr-777"),
 				},
 				mdsv2.IamV2RoleBinding{
 					Id:         mdsv2.PtrString("3"),
@@ -143,17 +142,17 @@ var v2ServiceAccountMock = &iammock.ServiceAccountsIamV2Api{
 }
 
 type roleBindingTest struct {
-	args      []string
-	principal string
-	roleName  string
-	scope     mdsv2alpha1.Scope
-	err       error
+	args       []string
+	principal  string
+	roleName   string
+	crnPattern string
+	err        error
 }
 
 type expectedListCmdArgs struct {
-	principal string
-	roleName  string
-	scope     mdsv2alpha1.Scope
+	principal  string
+	roleName   string
+	crnPattern string
 }
 
 type RoleBindingTestSuite struct {
@@ -167,27 +166,6 @@ func (suite *RoleBindingTestSuite) SetupSuite() {
 }
 
 func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expectedListCmdArgs, message string) *cobra.Command {
-	mdsClient := mdsv2alpha1.NewAPIClient(mdsv2alpha1.NewConfiguration())
-	mdsClient.RBACRoleBindingSummariesApi = &mds2mock.RBACRoleBindingSummariesApi{
-		MyRoleBindingsFunc: func(ctx context.Context, principal string, scope mdsv2alpha1.Scope) ([]mdsv2alpha1.ScopeRoleBindingMapping, *http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgs{principal, "", scope}, <-expect, message)
-			return nil, nil, nil
-		},
-		LookupPrincipalsWithRoleFunc: func(ctx context.Context, roleName string, scope mdsv2alpha1.Scope) ([]string, *http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgs{"", roleName, scope}, <-expect, message)
-			return nil, nil, nil
-		},
-	}
-	mdsClient.RBACRoleBindingCRUDApi = &mds2mock.RBACRoleBindingCRUDApi{
-		AddRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
-			return &http.Response{StatusCode: http.StatusOK}, nil
-		},
-		DeleteRoleForPrincipalFunc: func(ctx context.Context, principal, roleName string, scope mdsv2alpha1.Scope) (*http.Response, error) {
-			assert.Equal(suite.T(), expectedListCmdArgs{principal, roleName, scope}, <-expect, message)
-			return &http.Response{StatusCode: http.StatusOK}, nil
-		},
-	}
 	providerMock := &ccv2sdkmock.IdentityProvidersIamV2Api{
 		ListIamV2IdentityProvidersFunc: func(_ context.Context) identityproviderv2.ApiListIamV2IdentityProvidersRequest {
 			return identityproviderv2.ApiListIamV2IdentityProvidersRequest{}
@@ -219,72 +197,63 @@ func (suite *RoleBindingTestSuite) newMockIamRoleBindingCmd(expect chan expected
 		AuthToken: "auth-token",
 	}
 
-	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, mdsClient, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMdsV2Mock(nil, v2Client, nil, suite.conf))
 }
 
 var roleBindingListTests = []roleBindingTest{
 	{
-		args:      []string{"--current-user"},
-		principal: "User:" + v1.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--current-user"},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId},
-		principal: "User:" + v1.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:      []string{"--principal", "User:u-xyz"},
-		principal: "User:u-xyz",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:u-xyz"},
+		principal:  "User:u-xyz",
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:      []string{"--principal", "User:test@email.com"},
-		principal: "User:" + v1.MockUserResourceId,
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:test@email.com"},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com"},
 		err:  errUserNotFound,
 	},
 	{
-		args:     []string{"--role", "OrganizationAdmin"},
-		roleName: "OrganizationAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--role", "OrganizationAdmin"},
+		roleName:   "OrganizationAdmin",
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:     []string{"--role", "EnvironmentAdmin", "--current-environment"},
-		roleName: "EnvironmentAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+		args:       []string{"--role", "EnvironmentAdmin", "--current-environment"},
+		roleName:   "EnvironmentAdmin",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId,
 	},
 	{
-		args:     []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
-		roleName: "EnvironmentAdmin",
-		scope:    mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=env-123"}},
+		args:       []string{"--role", "EnvironmentAdmin", "--environment", "env-123"},
+		roleName:   "EnvironmentAdmin",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId,
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--kafka-cluster", "lkc-123"},
-		principal: "User:" + v1.MockUserResourceId,
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
-		},
+		args:       []string{"--current-user", "--environment", "env-123", "--kafka-cluster", "lkc-123"},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/kafka=lkc-123",
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
-		principal: "User:" + v1.MockUserResourceId,
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
-		},
+		args:       []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/ksql=ksql-9999",
 	},
 	{
-		args:      []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster", "sr-777"},
-		principal: "User:" + v1.MockUserResourceId,
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
-		},
+		args:       []string{"--current-user", "--environment", "env-123", "--cloud-cluster", "lkc-123", "--schema-registry-cluster", "sr-777"},
+		principal:  "User:" + v1.MockUserResourceId,
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/schema-registry=sr-777",
 	},
 }
 
@@ -297,8 +266,9 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 		if tc.err == nil {
 			go func() {
 				copy := expectedListCmdArgs{
-					tc.principal, tc.roleName, tc.scope,
+					tc.principal, tc.roleName, tc.crnPattern,
 				}
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}()
 			err := cmd.Execute()
@@ -313,71 +283,62 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsList() {
 
 var roleBindingCreateDeleteTests = []roleBindingTest{
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "ResourceOwner",
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{KsqlCluster: "ksql-9999"},
-		},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--ksql-cluster", "ksql-9999"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "ResourceOwner",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/ksql=ksql-9999",
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster", "sr-777"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "ResourceOwner",
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{SchemaRegistryCluster: "sr-777"},
-		},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--schema-registry-cluster", "sr-777"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "ResourceOwner",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/cloud-cluster=lkc-123/schema-registry=sr-777",
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "OrganizationAdmin"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "OrganizationAdmin"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "OrganizationAdmin",
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:      []string{"--principal", "User:u-xyz", "--role", "OrganizationAdmin"},
-		principal: "User:u-xyz",
-		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:u-xyz", "--role", "OrganizationAdmin"},
+		principal:  "User:u-xyz",
+		roleName:   "OrganizationAdmin",
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
-		args:      []string{"--principal", "User:test@email.com", "--role", "OrganizationAdmin"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "OrganizationAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId}},
+		args:       []string{"--principal", "User:test@email.com", "--role", "OrganizationAdmin"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "OrganizationAdmin",
+		crnPattern: "crn://confluent.cloud/organization=" + v1.MockOrgResourceId,
 	},
 	{
 		args: []string{"--principal", "User:notfound@email.com", "--role", "OrganizationAdmin"},
 		err:  errUserNotFound,
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-environment"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--current-environment"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "EnvironmentAdmin",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId,
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + env123}},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "EnvironmentAdmin", "--environment", env123},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "EnvironmentAdmin",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=" + "env123",
 	},
 	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--kafka-cluster", "lkc-123"},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "ResourceOwner",
-		scope: mdsv2alpha1.Scope{
-			Path:     []string{"organization=" + v1.MockOrgResourceId, "environment=env-123", "cloud-cluster=lkc-123"},
-			Clusters: mdsv2alpha1.ScopeClusters{KafkaCluster: "lkc-123"},
-		},
+		args:       []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "ResourceOwner", "--environment", env123, "--cloud-cluster", "lkc-123", "--kafka-cluster", "lkc-123"},
+		principal:  "User:" + v1.MockUserResourceId,
+		roleName:   "ResourceOwner",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=env-123/cloud-cluster=lkc-123/kafka=lkc-123",
 	},
 	{
-		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
-		principal: "User:u-noemail",
-		roleName:  "EnvironmentAdmin",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+		args:       []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
+		principal:  "User:u-noemail",
+		roleName:   "EnvironmentAdmin",
+		crnPattern: "crn://confluent.cloud/organization=org-resource-id/environment=" + v1.MockEnvironmentId,
 	},
 }
 
@@ -390,9 +351,9 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
 		if tc.err == nil {
 			go func(tc roleBindingTest) {
 				copy := expectedListCmdArgs{
-					tc.principal, tc.roleName, tc.scope,
+					tc.principal, tc.roleName, tc.crnPattern,
 				}
-				fmt.Println("")
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}(tc)
 			err := cmd.Execute()
@@ -415,9 +376,9 @@ func (suite *RoleBindingTestSuite) TestRoleBindingsDelete() {
 		if tc.err == nil {
 			go func(tc roleBindingTest) {
 				copy := expectedListCmdArgs{
-					tc.principal, tc.roleName, tc.scope,
+					tc.principal, tc.roleName, tc.crnPattern,
 				}
-				fmt.Println("")
+				time.Sleep(1 * time.Millisecond)
 				expect <- copy
 			}(tc)
 			err := cmd.Execute()
