@@ -190,10 +190,10 @@ blocks:
 
             - cd ..
             - git clone git@github.com:confluentinc/cc-system-tests.git 
-            - git checkout devel
             - mkdir -p cc-system-tests/test/cli/cli_bin/linux_amd64
             - cp $(find cli/dist -name confluent) cc-system-tests/test/cli/cli_bin/linux_amd64/confluent
             - cd cc-system-tests
+            - git checkout devel
             - goenv install --skip-existing
             - make show-args
             - make init-ci
