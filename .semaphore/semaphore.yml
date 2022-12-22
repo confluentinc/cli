@@ -181,7 +181,7 @@ blocks:
             - source script.sh
             - vault kv get -field=script "v1/ci/kv/semaphore2/CONNECT_SNOWFLAKE_PRIVATE_KEY" > script.sh
             - source script.sh
-            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_redshift_credentials " > script.sh
+            - vault kv get -field=script "v1/ci/kv/semaphore2/connect_redshift_credentials" > script.sh
             - source script.sh
             
             - export AWS_AUTH_METHOD=aws-creds
