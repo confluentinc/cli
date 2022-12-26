@@ -867,8 +867,9 @@ github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb/go.mod h1:qhZB
 github.com/dghubble/oauth1 v0.7.1 h1:JjbOVSVVkms9A4h/sTQy5Jb2nFuAAVb2qVYgenJPyrE=
 github.com/dghubble/oauth1 v0.7.1/go.mod h1:0eEzON0UY/OLACQrmnjgJjmvCGXzjBCsZqL1kWDXtF0=
 github.com/dghubble/sling v1.2.1-0.20181125223409-7458fd7fa70b/go.mod h1:ZcPRuLm0qrcULW2gOrjXrAWgf76sahqSyxXyVOvkunE=
-github.com/dghubble/sling v1.4.0 h1:/n8MRosVTthvMbwlNZgLx579OGVjUOy3GNEv5BIqAWY=
 github.com/dghubble/sling v1.4.0/go.mod h1:0r40aNsU9EdDUVBNhfCstAtFgutjgJGYbO1oNzkMoM8=
+github.com/dghubble/sling v1.4.1 h1:AxjTubpVyozMvbBCtXcsWEyGGgUZutC5YGrfxPNVOcQ=
+github.com/dghubble/sling v1.4.1/go.mod h1:QoMB1KL3GAo+7HsD8Itd6S+6tW91who8BGZzuLvpOyc=
 github.com/dgrijalva/jwt-go v0.0.0-20170104182250-a601269ab70c/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
