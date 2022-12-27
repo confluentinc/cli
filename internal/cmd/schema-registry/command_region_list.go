@@ -82,6 +82,10 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
+	return printRegionList(cmd, regionList)
+}
+
+func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
 	listOutputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
 	if err != nil {
 		return err
