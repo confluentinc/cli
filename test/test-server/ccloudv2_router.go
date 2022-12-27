@@ -45,6 +45,8 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
 	"/sd/v1/pipelines/{id}":                                        handlePipeline,
 	"/sd/v1/pipelines":                                             handlePipelines,
+	"/srcm/v2/regions":                                             handleSchemaRegistryRegions,
+	"/srcm/v2/regions/{id}":                                        handleSchemaRegistryRegion,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
 }
 
