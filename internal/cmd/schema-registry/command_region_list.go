@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+
 	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"github.com/spf13/cobra"
 
@@ -23,7 +24,7 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 		Short:       "List Schema Registry cloud regions.",
 		Args:        cobra.NoArgs,
 		RunE:        c.list,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List the schema registry cloud regions in "aws" for "advanced" package`,

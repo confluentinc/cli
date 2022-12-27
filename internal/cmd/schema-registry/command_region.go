@@ -23,7 +23,7 @@ func newRegionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "region",
 		Short:       "Manage Schema Registry cloud regions.",
 		Long:        "Use this command to manage Schema Registry cloud regions.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &regionCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
