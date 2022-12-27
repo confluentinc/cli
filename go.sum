@@ -714,8 +714,8 @@ github.com/confluentinc/events-schema v0.37.0/go.mod h1:asG+YTunBQzPjkO9FMz8pU1W
 github.com/confluentinc/events-schema v0.50.0/go.mod h1:asG+YTunBQzPjkO9FMz8pU1Wo9XzIysMYWAY6sG85tI=
 github.com/confluentinc/events/v2 v2.31.0/go.mod h1:TfbWw1+QNV1sYkYWf/tAvfFk9yFVeNxM5TR7Xmtgvug=
 github.com/confluentinc/go-editor v0.4.0/go.mod h1:sW1NzJdowffHQzy4iSbfY/ykRFMDE69I8EaT33Ebh7Y=
-github.com/confluentinc/go-editor v0.9.0 h1:wiOoxW4+7LHgBPXQJvFuQ3aMZRWD0NUxipP2WWN0M5U=
-github.com/confluentinc/go-editor v0.9.0/go.mod h1:AcC+FSlssLJntnZaBra+OlvH++e/fY3OrRk02PlZ028=
+github.com/confluentinc/go-editor v0.10.0 h1:b8wxzw/578LN2rzDR6wg6dwIsS6CcvTkcPWN036hBFg=
+github.com/confluentinc/go-editor v0.10.0/go.mod h1:bn0eyXtw4IuiQhc7uGqGdlfr6ywNSbXjkNhOR4M3rnc=
 github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18 h1:5EBie/kVOqHGDA2PJbG26xmQQDL3yRIQIZQGIkubf+U=
 github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18/go.mod h1:GGVB1yDj9YYQTxoo5vTRGWuQKccGN00bvyit4O5jznI=
 github.com/confluentinc/go-printer v0.17.0 h1:zAzRqLCIlr9XoogqOuspr/vcUpKbm8mH+XT1zh4FyWU=
