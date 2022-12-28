@@ -38,5 +38,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteEnvironments(c.PrivateClient, c.V2Client, c.Context)
+	return pcmd.AutocompleteEnvironments(c.Client, c.V2Client, c.Context)
 }

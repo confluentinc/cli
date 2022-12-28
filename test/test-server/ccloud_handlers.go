@@ -21,10 +21,10 @@ import (
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -176,16 +176,16 @@ func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
 		if env := isValidEnvironmentId(environments, envId); env != nil {
 			switch r.Method {
 			case http.MethodGet: // called by `environment use`
-				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
+				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
 			case http.MethodPut: // called by `environment create`
 				req := &ccloudv1.CreateAccountRequest{}
-				err := utilv1.UnmarshalJSON(r.Body, req)
+				err := ccstructs.UnmarshalJSON(r.Body, req)
 				require.NoError(t, err)
 				env.Name = req.Account.Name
-				b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
+				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
 				require.NoError(t, err)
 				_, err = io.WriteString(w, string(b))
 				require.NoError(t, err)
@@ -202,14 +202,14 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			req := &ccloudv1.CreateAccountRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
+			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			account := &ccloudv1.Account{
 				Id:             "a-5555",
 				Name:           req.Account.Name,
 				OrganizationId: 0,
 			}
-			b, err := utilv1.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{
+			b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{
 				Account: account,
 			})
 			require.NoError(t, err)
@@ -225,7 +225,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost: //admin payment update
 			req := &ccloudv1.UpdatePaymentInfoRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
+			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.StripeToken)
 
@@ -272,7 +272,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 					},
 				},
 			}
-			listReply, err := utilv1.MarshalJSONToBytes(res)
+			listReply, err := ccstructs.MarshalJSONToBytes(res)
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(listReply))
 			require.NoError(t, err)
@@ -309,7 +309,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			req := &schedv1.CreateApiKeyRequest{}
-			err := utilv1.UnmarshalJSON(r.Body, req)
+			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			require.NotEmpty(t, req.ApiKey.AccountId)
 			apiKey := req.ApiKey
@@ -327,7 +327,7 @@ func (c *CloudRouter) HandleApiKeys(t *testing.T) http.HandlerFunc {
 			keyStore[apiKey.Id] = apiKey
 			v2ApiKey := getV2ApiKey(apiKey)
 			keyStoreV2[*v2ApiKey.Id] = v2ApiKey
-			b, err := utilv1.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
+			b, err := ccstructs.MarshalJSONToBytes(&schedv1.CreateApiKeyReply{ApiKey: apiKey})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
@@ -443,15 +443,15 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			DetailedProcessingLog: &types.BoolValue{Value: false},
 		}
 		if r.Method == http.MethodPost {
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+			reply, err := ccstructs.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 				Cluster: ksqlCluster1,
 			})
 			require.NoError(t, err)
 			req := &schedv1.CreateKSQLClusterRequest{}
-			err = utilv1.UnmarshalJSON(r.Body, req)
+			err = ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
 			if !req.Config.DetailedProcessingLog.Value {
-				reply, err = utilv1.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
+				reply, err = ccstructs.MarshalJSONToBytes(&schedv1.CreateKSQLClusterReply{
 					Cluster: ksqlClusterForDetailedProcessingLogFalse,
 				})
 			}
@@ -459,7 +459,7 @@ func (c *CloudRouter) HandleKsqls(t *testing.T) http.HandlerFunc {
 			_, err = io.WriteString(w, string(reply))
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
-			listReply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
+			listReply, err := ccstructs.MarshalJSONToBytes(&schedv1.GetKSQLClustersReply{
 				Clusters: []*schedv1.KSQLCluster{ksqlCluster1, ksqlCluster2, ksqlCluster3, ksqlCluster4},
 			})
 			require.NoError(t, err)
@@ -485,7 +485,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 				Storage:           101,
 				Endpoint:          "SASL_SSL://ksql-endpoint",
 			}
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := ccstructs.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster,
 			})
 			require.NoError(t, err)
@@ -501,7 +501,7 @@ func (c *CloudRouter) HandleKsql(t *testing.T) http.HandlerFunc {
 				Storage:           130,
 				Endpoint:          "SASL_SSL://ksql-endpoint",
 			}
-			reply, err := utilv1.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
+			reply, err := ccstructs.MarshalJSONToBytes(&schedv1.GetKSQLClusterReply{
 				Cluster: ksqlCluster,
 			})
 			require.NoError(t, err)
@@ -615,7 +615,7 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 				},
 			}
 		}
-		b, err := utilv1.MarshalJSONToBytes(&res)
+		b, err := ccstructs.MarshalJSONToBytes(&res)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
@@ -651,7 +651,7 @@ func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			b, err := utilv1.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
+			b, err := ccstructs.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
 				Invitations: []*orgv1.Invitation{
 					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
 					buildInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
@@ -702,13 +702,13 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &ccloudv1.SignupRequest{}
-		err := utilv1.UnmarshalJSON(r.Body, req)
+		err := ccstructs.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
 		require.NotEmpty(t, req.Organization.Name)
 		require.NotEmpty(t, req.User)
 		require.NotEmpty(t, req.Credentials)
 		signupReply := &ccloudv1.SignupReply{Organization: &ccloudv1.Organization{}}
-		reply, err := utilv1.MarshalJSONToBytes(signupReply)
+		reply, err := ccstructs.MarshalJSONToBytes(signupReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
@@ -719,7 +719,7 @@ func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *
 func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		req := &flowv1.CreateEmailVerificationRequest{}
-		err := utilv1.UnmarshalJSON(r.Body, req)
+		err := ccstructs.UnmarshalJSON(r.Body, req)
 		require.NoError(t, err)
 		w.WriteHeader(http.StatusOK)
 	}
