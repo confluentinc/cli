@@ -33,9 +33,9 @@ func (m *ACLBinding) GetPattern() *ResourcePatternConfig {
 // Apache Kafka reference:
 // https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePattern.java
 type ResourcePatternConfig struct {
-	ResourceType         ResourceTypes_ResourceType `protobuf:"varint,1,opt,name=resource_type,json=resourceType,proto3,enum=kafka.scheduler.v1.ResourceTypes_ResourceType" json:"resourceType" db:"resource_type,omitempty" url:"resource_type,omitempty"`
+	ResourceType         ResourceTypes_ResourceType `protobuf:"varint,1,opt,name=resource_type,json=resourceType,proto3,enum=ResourceTypes_ResourceType" json:"resourceType" db:"resource_type,omitempty" url:"resource_type,omitempty"`
 	Name                 string                     `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" db:"name,omitempty" url:"name,omitempty"`
-	PatternType          PatternTypes_PatternType   `protobuf:"varint,3,opt,name=pattern_type,json=patternType,proto3,enum=kafka.scheduler.v1.PatternTypes_PatternType" json:"patternType" db:"pattern_type,omitempty" url:"pattern_type,omitempty"`
+	PatternType          PatternTypes_PatternType   `protobuf:"varint,3,opt,name=pattern_type,json=patternType,proto3,enum=PatternTypes_PatternType" json:"patternType" db:"pattern_type,omitempty" url:"pattern_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
 	XXX_unrecognized     []byte                     `json:"-"`
 	XXX_sizecache        int32                      `json:"-"`
@@ -120,9 +120,9 @@ var PatternTypes_PatternType_name = map[int32]string{
 // https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntry.java
 type AccessControlEntryConfig struct {
 	Principal            string                               `protobuf:"bytes,1,opt,name=principal,proto3" json:"principal,omitempty" db:"principal,omitempty" url:"principal,omitempty"`
-	Operation            ACLOperations_ACLOperation           `protobuf:"varint,2,opt,name=operation,proto3,enum=kafka.scheduler.v1.ACLOperations_ACLOperation" json:"operation,omitempty" db:"operation,omitempty" url:"operation,omitempty"`
+	Operation            ACLOperations_ACLOperation           `protobuf:"varint,2,opt,name=operation,proto3,enum=ACLOperations_ACLOperation" json:"operation,omitempty" db:"operation,omitempty" url:"operation,omitempty"`
 	Host                 string                               `protobuf:"bytes,3,opt,name=host,proto3" json:"host,omitempty" db:"host,omitempty" url:"host,omitempty"`
-	PermissionType       ACLPermissionTypes_ACLPermissionType `protobuf:"varint,4,opt,name=permission_type,json=permissionType,proto3,enum=kafka.scheduler.v1.ACLPermissionTypes_ACLPermissionType" json:"permissionType" db:"permission_type,omitempty" url:"permission_type,omitempty"`
+	PermissionType       ACLPermissionTypes_ACLPermissionType `protobuf:"varint,4,opt,name=permission_type,json=permissionType,proto3,enum=ACLPermissionTypes_ACLPermissionType" json:"permissionType" db:"permission_type,omitempty" url:"permission_type,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                             `json:"-"`
 	XXX_unrecognized     []byte                               `json:"-"`
 	XXX_sizecache        int32                                `json:"-"`
