@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -277,29 +275,15 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCmd() *cobra.Command {
-	privateClient := &ccloud.Client{
-		Auth:    &ccsdkmock.Auth{},
-		Account: &ccsdkmock.Account{},
-		Connect: &ccsdkmock.Connect{},
-		Metrics: &ccsdkmock.Metrics{},
-	}
 	client := &ccloudv1.Client{
 		User:           suite.userMock,
 		SchemaRegistry: suite.srMothershipMock,
 	}
 	v2Client := &ccloudv2.Client{
-		ApiKeysClient: &apikeysv2.APIClient{
-			APIKeysIamV2Api: suite.apiKeysMock,
-		},
-		CmkClient: &cmkv2.APIClient{
-			ClustersCmkV2Api: suite.kafkaMock,
-		},
-		IamClient: &iamv2.APIClient{
-			ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
-		},
-		KsqlClient: &ksqlv2.APIClient{
-			ClustersKsqldbcmV2Api: suite.ksqlmock,
-		},
+		ApiKeysClient: &apikeysv2.APIClient{APIKeysIamV2Api: suite.apiKeysMock},
+		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.kafkaMock},
+		IamClient:     &iamv2.APIClient{ServiceAccountsIamV2Api: suite.iamServiceAccountMock},
+		KsqlClient:    &ksqlv2.APIClient{ClustersKsqldbcmV2Api: suite.ksqlmock},
 	}
 	resolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &mock.Prompt{
@@ -316,11 +300,10 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		Out: os.Stdout,
 	}
 	prerunner := &climock.Commander{
-		FlagResolver:  resolverMock,
-		PrivateClient: privateClient,
-		Client:        client,
-		V2Client:      v2Client,
-		Config:        suite.conf,
+		FlagResolver: resolverMock,
+		Client:       client,
+		V2Client:     v2Client,
+		Config:       suite.conf,
 	}
 	return New(prerunner, suite.keystore, resolverMock)
 }

@@ -30,16 +30,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
 
-	_, httpResp, err := c.V2Client.GetApiKey(apiKey)
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
-	}
-
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, apiKey)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
-	httpResp, err = c.V2Client.DeleteApiKey(apiKey)
+	httpResp, err := c.V2Client.DeleteApiKey(apiKey)
 
 	if err != nil {
 		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)

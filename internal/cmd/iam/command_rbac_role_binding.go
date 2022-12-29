@@ -132,7 +132,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 		return nil, err
 	}
 
-	resourcesRequest := mds.ResourcesRequest{}
+	var resourcesRequest mds.ResourcesRequest
 	if resource != "" {
 		parsedResourcePattern, err := parseAndValidateResourcePattern(resource, prefix)
 		if err != nil {
@@ -156,7 +156,6 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 			Scope:            *scope,
 			ResourcePatterns: []mds.ResourcePattern{parsedResourcePattern},
 		}
-
 	}
 	return &roleBindingOptions{
 			role,
@@ -357,15 +356,15 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 	return nil
 }
 
-func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, rolebinding *mdsv2.IamV2RoleBinding) error {
-	userResourceId := strings.TrimLeft(rolebinding.GetPrincipal(), "User:")
+func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
+	userResourceId := strings.TrimLeft(roleBinding.GetPrincipal(), "User:")
 	user, err := c.V2Client.GetIamUserById(userResourceId)
 	if err != nil {
 		return err
 	}
 	out := &roleBindingOut{
-		Principal: rolebinding.GetPrincipal(),
-		Role:      rolebinding.GetRoleName(),
+		Principal: roleBinding.GetPrincipal(),
+		Role:      roleBinding.GetRoleName(),
 	}
 
 	prefix, _ := cmd.Flags().GetBool("prefix")

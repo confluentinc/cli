@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	v2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -50,7 +49,7 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	isCloud := c.cfg.IsCloudLogin()
 
-	var deleteRoleBinding *v2.IamV2RoleBinding
+	var deleteRoleBinding *mdsv2.IamV2RoleBinding
 	var options *roleBindingOptions
 	var httpResp *http.Response
 	var err error

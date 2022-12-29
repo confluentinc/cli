@@ -26,10 +26,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	_, httpResp, err := c.V2Client.GetApiKey(apiKey)
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
-	}
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
@@ -40,7 +36,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		apiKeyUpdate := apikeysv2.IamV2ApiKeyUpdate{
 			Spec: &apikeysv2.IamV2ApiKeySpecUpdate{Description: apikeysv2.PtrString(description)},
 		}
-		_, httpResp, err = c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
+		_, httpResp, err := c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
 
 		if err != nil {
 			return errors.CatchApiKeyForbiddenAccessError(err, updateOperation, httpResp)
