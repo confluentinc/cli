@@ -47,28 +47,27 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
+	var deleteRoleBinding *mdsv2.IamV2RoleBinding
+	var options *roleBindingOptions
 	var httpResp *http.Response
+	var err error
 	if isCloud {
-		deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
+		deleteRoleBinding, err = c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
-			httpResp, err = c.ccloudDelete(cmd, options)
-		} else {
-			err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
-		}
+
+		err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
 		if err != nil {
 			return err
 		}
 	} else {
+		options, err := c.parseCommon(cmd)
+		if err != nil {
+			return err
+		}
 		httpResp, err = c.confluentDelete(cmd, options)
 		if err != nil {
 			return err
@@ -80,7 +79,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
+		return c.displayCCloudCreateAndDeleteOutput(cmd, deleteRoleBinding)
 	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
@@ -110,26 +109,6 @@ func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBindin
 
 	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
 	return err
-}
-
-func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
-		return nil, err
-	}
-
-	if options.resource != "" {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.resourcesRequestV2)
-	} else {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.scopeV2)
-	}
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
