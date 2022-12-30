@@ -47,46 +47,39 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
-	var httpResp *http.Response
 	if isCloud {
 		deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		if isSchemaRegistryOrKsqlRoleBinding(deleteRoleBinding) {
-			httpResp, err = c.ccloudDelete(cmd, options)
-		} else {
-			err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
-		}
+
+		err = c.ccloudDelete(cmd, deleteRoleBinding)
 		if err != nil {
 			return err
 		}
+
+		return c.displayCCloudCreateAndDeleteOutput(cmd, deleteRoleBinding)
 	} else {
-		httpResp, err = c.confluentDelete(cmd, options)
+		options, err := c.parseCommon(cmd)
 		if err != nil {
 			return err
 		}
-	}
+		httpResp, err := c.confluentDelete(cmd, options)
+		if err != nil {
+			return err
+		}
 
-	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
+		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 
-	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
-	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
 }
 
-func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
 	roleBindings, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetCrnPattern(), deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName())
 	if err != nil {
 		return err
@@ -110,26 +103,6 @@ func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBindin
 
 	_, err = c.V2Client.DeleteIamRoleBinding(roleBindingToDelete.GetId())
 	return err
-}
-
-func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
-	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {
-		return nil, err
-	}
-
-	if options.resource != "" {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.RemoveRoleResourcesForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.resourcesRequestV2)
-	} else {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.DeleteRoleForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.scopeV2)
-	}
 }
 
 func (c *roleBindingCommand) confluentDelete(cmd *cobra.Command, options *roleBindingOptions) (*http.Response, error) {
