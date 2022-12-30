@@ -49,43 +49,37 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 	isCloud := c.cfg.IsCloudLogin()
 
-	var deleteRoleBinding *mdsv2.IamV2RoleBinding
-	var options *roleBindingOptions
-	var httpResp *http.Response
-	var err error
 	if isCloud {
-		deleteRoleBinding, err = c.parseV2RoleBinding(cmd)
+		deleteRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
 
-		err = c.ccloudDeleteV2(cmd, deleteRoleBinding)
+		err = c.ccloudDelete(cmd, deleteRoleBinding)
 		if err != nil {
 			return err
 		}
+
+		return c.displayCCloudCreateAndDeleteOutput(cmd, deleteRoleBinding)
 	} else {
 		options, err := c.parseCommon(cmd)
 		if err != nil {
 			return err
 		}
-		httpResp, err = c.confluentDelete(cmd, options)
+		httpResp, err := c.confluentDelete(cmd, options)
 		if err != nil {
 			return err
 		}
-	}
 
-	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
+		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 
-	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, deleteRoleBinding)
-	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
 }
 
-func (c *roleBindingCommand) ccloudDeleteV2(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding *mdsv2.IamV2RoleBinding) error {
 	roleBindings, err := c.V2Client.ListIamRoleBindings(deleteRoleBinding.GetCrnPattern(), deleteRoleBinding.GetPrincipal(), deleteRoleBinding.GetRoleName())
 	if err != nil {
 		return err

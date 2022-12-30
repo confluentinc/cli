@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	v2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -75,12 +74,8 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 	isCloud := c.cfg.IsCloudLogin()
 
-	var createRoleBinding *v2.IamV2RoleBinding
-	var options *roleBindingOptions
-	var httpResp *http.Response
-	var err error
 	if isCloud {
-		createRoleBinding, err = c.parseV2RoleBinding(cmd)
+		createRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
@@ -89,24 +84,22 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
+
+		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {
 		options, err := c.parseCommon(cmd)
 		if err != nil {
 			return err
 		}
-		httpResp, err = c.confluentCreate(options)
+		httpResp, err := c.confluentCreate(options)
 		if err != nil {
 			return err
 		}
-	}
 
-	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
+		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 
-	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
-	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
 	}
 }

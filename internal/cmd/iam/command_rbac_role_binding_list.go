@@ -111,7 +111,7 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		err = c.ccloudListV2(cmd, listRoleBinding)
+		err = c.ccloudList(cmd, listRoleBinding)
 		return err
 	} else {
 		options, err := c.parseCommon(cmd)
@@ -308,16 +308,16 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 	return list.Print()
 }
 
-func (c *roleBindingCommand) ccloudListV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) ccloudList(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
 	if cmd.Flags().Changed("principal") || cmd.Flags().Changed("current-user") {
-		return c.listMyRoleBindingsV2(cmd, listRoleBinding)
+		return c.listMyRoleBindings(cmd, listRoleBinding)
 	} else if cmd.Flags().Changed("role") {
-		return c.ccloudListRolePrincipalsV2(cmd, listRoleBinding)
+		return c.ccloudListRolePrincipals(cmd, listRoleBinding)
 	}
 	return errors.New(errors.PrincipalOrRoleRequiredErrorMsg)
 }
 
-func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
 	list := output.NewList(cmd)
 
 	currentUser, err := cmd.Flags().GetBool("current-user")
@@ -423,7 +423,7 @@ func (c *roleBindingCommand) listMyRoleBindingsV2(cmd *cobra.Command, listRoleBi
 	return list.Print()
 }
 
-func (c *roleBindingCommand) ccloudListRolePrincipalsV2(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
+func (c *roleBindingCommand) ccloudListRolePrincipals(cmd *cobra.Command, listRoleBinding *mdsv2.IamV2RoleBinding) error {
 	list := output.NewList(cmd)
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")
