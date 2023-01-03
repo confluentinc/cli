@@ -1,5 +1,5 @@
---- cli/Makefile	2022-12-12 19:02:52.000000000 -0800
-+++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
+--- cli/Makefile	2023-01-03 12:03:46.000000000 -0600
++++ debian/Makefile	2022-12-12 19:29:13.000000000 -0600
 @@ -1,208 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -233,7 +233,7 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
--	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml --timeout 10m -- -v $$(go list ./... | grep test)
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
