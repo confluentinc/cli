@@ -69,15 +69,16 @@ clean:
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
 	go install github.com/google/go-licenses@v1.4.0 && \
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
 jenkins-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2
+	go install github.com/goreleaser/goreleaser@v1.14.1
 
+.PHONY: semaphore-deps
 semaphore-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 show-args:
