@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -180,21 +179,21 @@ func newCmd() (*command, error) {
 				return &schedv1.ApiKey{Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"}, nil
 			},
 		},
-		Account: &ccsdkmock.Account{
-			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
-				return nil, nil
-			},
-			GetFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
-				return nil, nil
-			},
-			ListFunc: func(context.Context, *orgv1.Account) ([]*orgv1.Account, error) {
-				return nil, nil
-			},
-		},
 	}
 	c.Client = &ccloudv1.Client{
 		SchemaRegistry: &ccloudv1mock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+			GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+				return nil, nil
+			},
+		},
+		Account: &ccloudv1mock.AccountInterface{
+			CreateFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
+				return nil, nil
+			},
+			GetFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
+				return nil, nil
+			},
+			ListFunc: func(context.Context, *ccloudv1.Account) ([]*ccloudv1.Account, error) {
 				return nil, nil
 			},
 		},

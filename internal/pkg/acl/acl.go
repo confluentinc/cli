@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -60,7 +60,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.Acl
 	return list.Print()
 }
 
-func PrintACLs(cmd *cobra.Command, acls []*schedv1.ACLBinding) error {
+func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
 		list.Add(&out{
@@ -315,7 +315,7 @@ func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []
 	return list.Print()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*schedv1.ACLBinding, idMap map[int32]string) error {
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding, idMap map[int32]string) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
 		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, idMap)
@@ -368,26 +368,26 @@ func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId
 	return prefix, resourceId, nil
 }
 
-func GetCreateAclRequestData(binding *schedv1.ACLBinding) cckafkarestv3.CreateAclRequestData {
+func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {
 	data := cckafkarestv3.CreateAclRequestData{
 		Host:         binding.GetEntry().GetHost(),
 		Principal:    binding.GetEntry().GetPrincipal(),
 		ResourceName: binding.GetPattern().GetName(),
 	}
 
-	if binding.GetPattern().GetResourceType() != schedv1.ResourceTypes_UNKNOWN {
+	if binding.GetPattern().GetResourceType() != ccstructs.ResourceTypes_UNKNOWN {
 		data.ResourceType = cckafkarestv3.AclResourceType(binding.GetPattern().GetResourceType().String())
 	}
 
-	if binding.GetPattern().GetPatternType() != schedv1.PatternTypes_UNKNOWN {
+	if binding.GetPattern().GetPatternType() != ccstructs.PatternTypes_UNKNOWN {
 		data.PatternType = binding.GetPattern().GetPatternType().String()
 	}
 
-	if binding.GetEntry().GetOperation() != schedv1.ACLOperations_UNKNOWN {
+	if binding.GetEntry().GetOperation() != ccstructs.ACLOperations_UNKNOWN {
 		data.Operation = binding.GetEntry().GetOperation().String()
 	}
 
-	if binding.GetEntry().GetPermissionType() != schedv1.ACLPermissionTypes_UNKNOWN {
+	if binding.GetEntry().GetPermissionType() != ccstructs.ACLPermissionTypes_UNKNOWN {
 		data.Permission = binding.GetEntry().GetPermissionType().String()
 	}
 
