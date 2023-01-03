@@ -34,6 +34,7 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-12345":`,
+<<<<<<< HEAD
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource Subject:*",
 			},
 			examples.Example{
@@ -47,6 +48,21 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
 				Code: "confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource Subject::.schema_context:test",
+=======
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:*"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:test"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
+>>>>>>> main
 			},
 		)
 	} else {

@@ -53,6 +53,7 @@ func printIndexPage(tabs []Tab, isOverview bool) []string {
 		printComments(),
 		printHeader(cmd, isOverview),
 		printTitle(cmd, "="),
+		printSection("Aliases", printAliases(cmd)),
 		printTabbedSection("Description", printDescription, tabs),
 	}
 
@@ -157,6 +158,21 @@ func printLink(cmd *cobra.Command) string {
 		return path.Join(cmd.Name(), "index")
 	} else {
 		return printRef(cmd, false)
+	}
+}
+
+func printAliases(cmd *cobra.Command) []string {
+	if len(cmd.Aliases) == 0 {
+		return []string{}
+	}
+
+	aliases := append([]string{cmd.Name()}, cmd.Aliases...)
+
+	return []string{
+		"::",
+		"",
+		fmt.Sprintf("  %s", strings.Join(aliases, ", ")),
+		"",
 	}
 }
 
