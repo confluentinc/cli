@@ -80,6 +80,14 @@ func (r KafkaRestProxyRouter) HandleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/kafka/v3/clusters/{cluster}/acls:batch"
+func (r KafkaRestProxyRouter) HandleKafkaRPACLsBatch(_ *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics"
 func (r KafkaRestProxyRouter) HandleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -193,8 +201,9 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 							Value: stringPtr("delete"),
 						},
 						cpkafkarestv3.TopicConfigData{
-							Name:  "compression.type",
-							Value: stringPtr("producer"),
+							Name:       "compression.type",
+							Value:      stringPtr("producer"),
+							IsReadOnly: true,
 						},
 						cpkafkarestv3.TopicConfigData{
 							Name:  "retention.ms",
@@ -217,6 +226,24 @@ func (r KafkaRestProxyRouter) HandleKafkaRPTopicConfigs(t *testing.T) http.Handl
 						cpkafkarestv3.TopicConfigData{
 							Name:  "retention.ms",
 							Value: stringPtr("1"),
+						},
+					},
+				}
+				reply, err := json.Marshal(topicConfigList)
+				require.NoError(t, err)
+				w.Header().Set("Content-Type", "application/json")
+				_, err = io.WriteString(w, string(reply))
+				require.NoError(t, err)
+			} else if topicName == "topic1" {
+				topicConfigList := cckafkarestv3.TopicConfigDataList{
+					Data: []cckafkarestv3.TopicConfigData{
+						{
+							Name:  "cleanup.policy",
+							Value: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("delete")),
+						},
+						{
+							Name:  "delete.retention.ms",
+							Value: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("86400000")),
 						},
 					},
 				}
