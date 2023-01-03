@@ -182,7 +182,7 @@ func newCmd() (*command, error) {
 	}
 	c.Client = &ccloudv1.Client{
 		SchemaRegistry: &ccloudv1mock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+			GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 				return nil, nil
 			},
 		},
