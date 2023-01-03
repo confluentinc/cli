@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	poutput "github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -46,10 +47,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		utils.ErrPrintln(cmd, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 	var pluginList, overshadowedPlugins, nameConflictPlugins []row
-	for name, pathList := range pluginMap {
+	for name, paths := range pluginMap {
 		pluginInfo := row{
 			pluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
-			filePath:   pathList[0],
+			filePath:   paths[0],
 		}
 		args := strings.Split(pluginInfo.pluginName, " ")
 		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.pluginName {
@@ -57,8 +58,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		} else {
 			pluginList = append(pluginList, pluginInfo)
 		}
-		for i := 1; i < len(pathList); i++ {
-			overshadowedPlugins = append(overshadowedPlugins, row{pluginName: pluginInfo.pluginName, filePath: pathList[i]})
+
+		visitedPaths := set.New(paths[0])
+		for _, path := range paths[1:] {
+			if visitedPaths.Contains(path) {
+				continue
+			}
+			overshadowedPlugins = append(overshadowedPlugins, row{pluginName: pluginInfo.pluginName, filePath: path})
+			visitedPaths.Add(path)
 		}
 	}
 
