@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -148,12 +147,4 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 	}
 
 	return resourceType, clusterId, apiKey, nil
-}
-
-func isSchemaRegistryOrKsqlApiKey(key apikeysv2.IamV2ApiKey) bool {
-	var kind string
-	if key.Spec.HasResource() && key.Spec.Resource.HasKind() {
-		kind = key.Spec.Resource.GetKind()
-	}
-	return kind == "SchemaRegistry" || kind == "ksqlDB"
 }

@@ -88,58 +88,35 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
-	var httpResp *http.Response
 	if isCloud {
 		createRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
-			httpResp, err = c.ccloudCreate(options)
-		} else {
-			_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
-		}
+
+		_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		if err != nil {
 			return err
 		}
+
+		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {
-		httpResp, err = c.confluentCreate(options)
+		options, err := c.parseCommon(cmd)
 		if err != nil {
 			return err
 		}
-	}
+		httpResp, err := c.confluentCreate(options)
+		if err != nil {
+			return err
+		}
 
-	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
+		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 
-	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
-	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
-	}
-}
-
-func (c *roleBindingCommand) ccloudCreate(options *roleBindingOptions) (*http.Response, error) {
-	if options.resource != "" {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.resourcesRequestV2)
-	} else {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.scopeV2)
 	}
 }
 
