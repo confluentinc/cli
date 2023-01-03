@@ -44,12 +44,6 @@ var (
 	prefixedPatternType = "PREFIXED"
 )
 
-type ResourcesRequest struct {
-	ResourceName string
-	ResourceType string
-	PatternType  string
-}
-
 type roleBindingOptions struct {
 	role             string
 	resource         string
@@ -367,6 +361,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		Role:      roleBinding.GetRoleName(),
 	}
 
+	// The err is ignored here since the --prefix flag is not defined by the list subcommand
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	resource, err := cmd.Flags().GetString("resource")
@@ -482,6 +477,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		return nil, err
 	}
 
+	// The err is ignored here since the --prefix flag is not defined by the list subcommand
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
 	resource, err := cmd.Flags().GetString("resource")
