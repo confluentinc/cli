@@ -194,7 +194,8 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v -timeout 10m $$(go list ./... | grep test)
+	@INTEG_COVER=on gotestsum --jsonfile test2json.json --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+	@cat test2json.json
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
