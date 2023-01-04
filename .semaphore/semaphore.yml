@@ -54,6 +54,7 @@ blocks:
       epilogue:
         always:
           commands:
+            - cat test2json.json
             - test-results publish . -N "linux/amd64"
 
   - name: darwin/amd64
