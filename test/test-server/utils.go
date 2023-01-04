@@ -280,15 +280,6 @@ func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation 
 	}
 }
 
-func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
-	return &orgv1.Invitation{
-		Id:             id,
-		Email:          email,
-		UserResourceId: resourceId,
-		Status:         status,
-	}
-}
-
 func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
 	return mdsv2.IamV2RoleBinding{
 		Id:         mdsv2.PtrString("0"),

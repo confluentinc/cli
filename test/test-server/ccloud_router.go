@@ -25,7 +25,6 @@ const (
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	invites             = "/api/organizations/{id}/invites"
-	invitations         = "/api/invitations"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
@@ -113,7 +112,6 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
 	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
 	c.HandleFunc(invites, c.HandleInvite(t))
-	c.HandleFunc(invitations, c.HandleInvitations(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {

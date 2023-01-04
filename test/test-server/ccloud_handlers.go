@@ -481,41 +481,6 @@ func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/api/invitations"
-func (c *CloudRouter) HandleInvitations(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			b, err := ccstructs.MarshalJSONToBytes(&flowv1.ListInvitationsByOrgReply{
-				Invitations: []*orgv1.Invitation{
-					buildInvitation("1", "u-11aaa@confluent.io", "u-11aaa", "VERIFIED"),
-					buildInvitation("2", "u-22bbb@confluent.io", "u-22bbb", "SENT"),
-				},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		} else if r.Method == http.MethodPost {
-			body, _ := io.ReadAll(r.Body)
-			bs := string(body)
-			var res flowv1.CreateInvitationReply
-			if strings.Contains(bs, "user@exists.com") {
-				res = flowv1.CreateInvitationReply{
-					Error: &corev1.Error{Message: "User is already active"},
-				}
-			} else {
-				res = flowv1.CreateInvitationReply{
-					Error:      nil,
-					Invitation: buildInvitation("1", "miles@confluent.io", "user1", "SENT"),
-				}
-			}
-			data, err := json.Marshal(res)
-			require.NoError(t, err)
-			_, err = w.Write(data)
-			require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
 func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
