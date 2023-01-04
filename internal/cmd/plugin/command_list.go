@@ -39,7 +39,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	var overshadowedPlugins, nameConflictPlugins []row
+	var overshadowedPlugins, nameConflictPlugins []*out
 	for name, paths := range pluginMap {
 		pluginInfo := &out{
 			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
@@ -57,7 +57,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			if visitedPaths.Contains(path) {
 				continue
 			}
-			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.pluginName, FilePath: path})
+			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: path})
 			visitedPaths.Add(path)
 		}
 	}
