@@ -1,6 +1,6 @@
 +----------------+---------------------------------------------------+
 | ID             | op-55555                                          |
-| Display Name   | newer-name                                        |
+| Name           | newer-name                                        |
 | Description    | more-descriptive                                  |
 | Identity Claim | new-sub                                           |
 | Filter         | claims.iss="https://new-company.new-provider.com" |

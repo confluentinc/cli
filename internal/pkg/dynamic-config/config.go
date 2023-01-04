@@ -17,9 +17,8 @@ func KafkaCluster(ctx *DynamicContext) (*schedv1.KafkaCluster, error) {
 	}
 
 	cluster := &schedv1.KafkaCluster{
-		AccountId:   environmentId,
-		Id:          config.ID,
-		ApiEndpoint: config.APIEndpoint,
+		AccountId: environmentId,
+		Id:        config.ID,
 	}
 
 	return cluster, nil
