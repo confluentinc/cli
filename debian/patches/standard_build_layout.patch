@@ -1,4 +1,4 @@
---- cli/Makefile	2023-01-03 08:44:34.000000000 -0600
+--- cli/Makefile	2023-01-04 11:35:24.000000000 -0600
 +++ debian/Makefile	2022-12-12 19:29:13.000000000 -0600
 @@ -1,209 +1,130 @@
 -SHELL           := /bin/bash
@@ -234,7 +234,7 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
--	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v -timeout 10m $$(go list ./... | grep test)
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
