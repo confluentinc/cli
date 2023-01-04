@@ -451,6 +451,7 @@ replace (
 	k8s.io/api => k8s.io/api v0.0.0-20190126160459-e86510ea3fe7
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20171026124306-e509bb64fe11
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
+	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20211110012726-3cc51fd1e909
 )
 
 go 1.19
