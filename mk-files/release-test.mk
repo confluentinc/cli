@@ -49,10 +49,9 @@ smoke-tests:
 	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) bash install.sh && \
 	export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud && \
 	vault login -method=oidc -path=okta && \
-	email="cli-team+system-tests@confluent.io" && \
 	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
+	email="cli-team+system-tests@confluent.io" && \
 	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
 	go install ./cmd/plugins/confluent-login-headless_sso && \
+	email="cli-team+system-tests+sso@confluent.io" && \
 	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email $${email} --password $${password}
-
-
