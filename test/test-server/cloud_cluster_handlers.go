@@ -7,8 +7,9 @@ import (
 
 	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 )
 
 // Handler for: "/api/usage_limits"
@@ -40,7 +41,7 @@ func (c *CloudRouter) HandleUsageLimits(t *testing.T) http.HandlerFunc {
 				},
 			},
 		}}
-		b, err := utilv1.MarshalJSONToBytes(usageLimitsReply)
+		b, err := ccstructs.MarshalJSONToBytes(usageLimitsReply)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)

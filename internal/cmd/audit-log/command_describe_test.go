@@ -4,10 +4,8 @@ import (
 	"context"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -32,10 +30,10 @@ func TestAuditLogDescribeUnconfigured(t *testing.T) {
 }
 
 func mockAuditLogCommand(configured bool) *cobra.Command {
-	client := &ccloud.Client{
-		User: &ccloudmock.User{
-			GetServiceAccountFunc: func(_ context.Context, id int32) (*orgv1.User, error) {
-				return &orgv1.User{ResourceId: "sa-123456"}, nil
+	client := &ccloudv1.Client{
+		User: &ccloudv1mock.UserInterface{
+			GetServiceAccountFunc: func(_ context.Context, id int32) (*ccloudv1.User, error) {
+				return &ccloudv1.User{ResourceId: "sa-123456"}, nil
 			},
 		},
 	}
@@ -51,5 +49,5 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 		}
 	}
 
-	return New(climock.NewPreRunnerMock(client, nil, nil, nil, nil, cfg))
+	return New(climock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg))
 }
