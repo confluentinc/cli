@@ -1,5 +1,5 @@
---- cli/Makefile	2022-10-19 00:13:05.000000000 -0700
-+++ debian/Makefile	2022-07-12 14:17:45.000000000 -0700
+--- cli/Makefile	2023-01-03 12:15:48.000000000 -0600
++++ debian/Makefile	2022-12-12 19:29:13.000000000 -0600
 @@ -1,208 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -82,13 +82,9 @@
 +
 +APPLY_PATCHES?=yes
  
--.PHONY: generate
--generate:
--	@go generate ./...
--
 -.PHONY: deps
 -deps:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
 -	go install github.com/google/go-licenses@v1.4.0 && \
 -	go install github.com/goreleaser/goreleaser@v1.11.2 && \
 -	go install gotest.tools/gotestsum@v1.8.2
@@ -96,6 +92,10 @@
 -.PHONY: jenkins-deps
 -jenkins-deps:
 -	go install github.com/goreleaser/goreleaser@v1.11.2
+-
+-semaphore-deps:
+-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+-	go install gotest.tools/gotestsum@v1.8.2
 -
 -show-args:
 -	@echo "VERSION: $(VERSION)"
@@ -233,7 +233,7 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
--	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v -timeout 10m $$(go list ./... | grep test)
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)

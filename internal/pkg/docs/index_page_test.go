@@ -12,8 +12,8 @@ var doNothingFunc = func(_ *cobra.Command, _ []string) {}
 func TestPrintIndexPage(t *testing.T) {
 	cmd := &cobra.Command{Use: "command"}
 
-	a1 := &cobra.Command{Use: "a", Short: "Description 1."}
-	a2 := &cobra.Command{Use: "a", Short: "Description 2."}
+	a1 := &cobra.Command{Use: "a", Short: "Description 1.", Aliases: []string{"alias"}}
+	a2 := &cobra.Command{Use: "a", Short: "Description 2.", Aliases: []string{"alias"}}
 
 	cmd.AddCommand(a1)
 	cmd.AddCommand(a2)
@@ -27,10 +27,20 @@ func TestPrintIndexPage(t *testing.T) {
 	}
 
 	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
 		".. _command_a:",
 		"",
 		"command a",
 		"=========",
+		"",
+		"Aliases",
+		"~~~~~~~",
+		"",
+		"::",
+		"",
+		"  a, alias",
 		"",
 		"Description",
 		"~~~~~~~~~~~",
@@ -95,6 +105,9 @@ func TestPrintRootIndexPage(t *testing.T) {
 	}
 
 	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
 		".. _command_a:",
 		"",
 		"command a",
@@ -124,6 +137,16 @@ func TestFlatten(t *testing.T) {
 	}
 
 	require.Equal(t, []string{"a", "b", "c", "d"}, flatten(arrs))
+}
+
+func TestPrintComments(t *testing.T) {
+	expected := []string{
+		"..",
+		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
+	}
+
+	require.Equal(t, expected, printComments())
 }
 
 func TestPrintHeader(t *testing.T) {
@@ -214,6 +237,56 @@ func TestPrintLink(t *testing.T) {
 
 	require.Equal(t, "a/index", printLink(a))
 	require.Equal(t, "a_b", printLink(b))
+}
+
+func TestPrintAliases_Empty(t *testing.T) {
+	cmd := new(cobra.Command)
+	require.Empty(t, printAliases(cmd))
+}
+
+func TestPrintAliases(t *testing.T) {
+	cmd := &cobra.Command{
+		Use:     "long-command",
+		Aliases: []string{"lc"},
+	}
+
+	expected := []string{
+		"::",
+		"",
+		"  long-command, lc",
+		"",
+	}
+
+	require.Equal(t, expected, printAliases(cmd))
+}
+
+func TestPrintDescription_Root(t *testing.T) {
+	cmd := &cobra.Command{Use: "command"}
+
+	expected := []string{
+		"The available |confluent| CLI commands are documented here.",
+		"",
+	}
+
+	actual, ok := printDescription(cmd)
+	require.True(t, ok)
+	require.Equal(t, expected, actual)
+}
+
+func TestPrintDescription(t *testing.T) {
+	a := &cobra.Command{Use: "a"}
+	b := &cobra.Command{Use: "b", Short: "Description."}
+
+	a.AddCommand(b)
+
+	expected := []string{
+		"Description.",
+		"",
+	}
+
+	actual, ok := printDescription(b)
+	require.True(t, ok)
+	require.Equal(t, expected, actual)
 }
 
 func TestPrintLongestDescription_Short(t *testing.T) {

@@ -271,3 +271,29 @@
       operations:
       - Describe
       - Delete
+- name: ResourceOwner
+  policies:
+  - bindingscope: schema-registry-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Subject
+      operations:
+      - Delete
+      - Read
+      - Write
+      - ReadCompatibility
+      - AlterAccess
+      - WriteCompatibility
+      - DescribeAccess
+- name: ResourceOwner
+  policies:
+  - bindingscope: ksql-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: KsqlCluster
+      operations:
+      - Describe
+      - AlterAccess
+      - Contribute
+      - DescribeAccess
+      - Terminate

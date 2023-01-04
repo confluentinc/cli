@@ -1,8 +1,9 @@
-detailed_processing_log: true
-endpoint: SASL_SSL://ksql-endpoint
+IMPORTANT: Confirm that the users or service accounts that will interact with this cluster have the required privileges to access Schema Registry.
 id: lksqlc-ksql5
-kafka: lkc-qwert
 name: account ksql
-status: PROVISIONING
-storage: 101
 topic_prefix: pksqlc-abcde
+kafka: lkc-qwert
+storage: 101
+endpoint: SASL_SSL://ksql-endpoint
+status: PROVISIONING
+detailed_processing_log: true

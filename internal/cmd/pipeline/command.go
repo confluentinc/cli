@@ -3,44 +3,27 @@ package pipeline
 import (
 	"time"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/spf13/cobra"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
-type Pipeline struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	KsqlCluster string    `json:"ksql_cluster"`
-	State       string    `json:"state"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+type out struct {
+	Id          string    `human:"ID" serialized:"id"`
+	Name        string    `human:"Name" serialized:"name"`
+	Description string    `human:"Description" serialized:"description"`
+	KsqlCluster string    `human:"KSQL Cluster" serialized:"ksql_cluster"`
+	State       string    `human:"State" serialized:"state"`
+	CreatedAt   time.Time `human:"Created At" serialized:"created_at"`
+	UpdatedAt   time.Time `human:"Updated At" serialized:"updated_at"`
 }
 
 var (
-	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
-	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "KSQL Cluster", "State"}
-	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
-	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
-	pipelineDescribeHumanLabels  = map[string]string{
-		"Id":          "ID",
-		"Name":        "Name",
-		"Description": "Description",
-		"KsqlCluster": "KSQL Cluster",
-		"State":       "State",
-		"CreatedAt":   "Created At",
-		"UpdatedAt":   "Updated At",
-	}
-	pipelineDescribeStructuredLabels = map[string]string{
-		"Id":          "id",
-		"Name":        "name",
-		"Description": "description",
-		"KsqlCluster": "ksql_cluster",
-		"State":       "state",
-		"CreatedAt":   "created_at",
-		"UpdatedAt":   "updated_at",
-	}
+	secretMappingWithoutEmptyValue = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$`
+	secretMappingWithEmptyValue    = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`
 )
 
 type command struct {
@@ -60,13 +43,18 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:                     prerunner,
 	}
 
-	c.AddCommand(c.newActivateCommand(prerunner))
-	c.AddCommand(c.newCreateCommand(prerunner))
-	c.AddCommand(c.newDeactivateCommand(prerunner))
-	c.AddCommand(c.newDeleteCommand(prerunner))
-	c.AddCommand(c.newDescribeCommand(prerunner))
-	c.AddCommand(c.newListCommand(prerunner))
-	c.AddCommand(c.newUpdateCommand(prerunner))
+	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+
+	c.AddCommand(c.newActivateCommand())
+	c.AddCommand(c.newCreateCommand(enableSourceCode))
+	c.AddCommand(c.newDeactivateCommand())
+	c.AddCommand(c.newDeleteCommand())
+	c.AddCommand(c.newDescribeCommand())
+	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newSaveCommand(enableSourceCode))
+	c.AddCommand(c.newUpdateCommand(enableSourceCode))
 
 	return c.Command
 }
