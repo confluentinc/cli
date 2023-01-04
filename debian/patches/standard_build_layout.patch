@@ -1,6 +1,6 @@
---- cli/Makefile	2023-01-03 13:32:21.000000000 -0600
+--- cli/Makefile	2023-01-03 18:49:05.000000000 -0600
 +++ debian/Makefile	2022-12-12 19:29:13.000000000 -0600
-@@ -1,209 +1,130 @@
+@@ -1,210 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -233,6 +233,7 @@
 -.PHONY: int-test
 -int-test:
 -ifdef CI
+-	@go test -v $$(go list ./... | grep test)
 -	@INTEG_COVER=on gotestsum --jsonfile test2json.json --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
 -	@cat test2json.json
 -	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
