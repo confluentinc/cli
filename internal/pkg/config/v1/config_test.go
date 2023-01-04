@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
 	"github.com/mitchellh/go-homedir"
@@ -331,7 +330,7 @@ func TestConfig_Save(t *testing.T) {
 		wantErr          bool
 		kafkaOverwrite   string
 		contextOverwrite string
-		accountOverwrite *orgv1.Account
+		accountOverwrite *ccloudv1.Account
 	}{
 		{
 			name:     "save on-prem config with state to file",
