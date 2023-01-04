@@ -1,4 +1,6 @@
-   Principal   |        Email         | Service Name | Pool Name  
----------------+----------------------+--------------+------------
-  User:u-33ccc | u-33ccc@confluent.io |              |            
-  User:u-44ddd | mhe@confluent.io     |              |            
+   Principal   | Name |        Email          
+---------------+------+-----------------------
+  User:u-11aaa |      | u-11aaa@confluent.io  
+  User:u-22bbb |      | u-22bbb@confluent.io  
+  User:u-33ccc |      | u-33ccc@confluent.io  
+  User:u-44ddd |      | mhe@confluent.io      

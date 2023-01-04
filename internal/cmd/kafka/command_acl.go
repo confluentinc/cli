@@ -17,12 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var (
-	listFieldsOnPrem       = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	humanLabelsOnPrem      = []string{"Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabelsOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
-)
-
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
@@ -133,19 +127,25 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 
 func parsePrincipal(principal string) (string, error) {
 	if !strings.HasPrefix(principal, "User:") {
-		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
+		return "", fmt.Errorf(`principal must begin with "User:"`)
 	}
-	resourceId := strings.SplitN(principal, ":", 2)[1]
-	return resourceId, nil
+
+	id := strings.TrimPrefix(principal, "User:")
+
+	if _, err := strconv.Atoi(id); err == nil {
+		return "", fmt.Errorf("numeric IDs are not supported")
+	}
+
+	return id, nil
 }
 
 func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -160,12 +160,12 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 }
 
 func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}

@@ -6,28 +6,28 @@ Usage:
 Examples:
 Create a Java client configuration file.
 
-  $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret
+  $ confluent kafka client-config create java --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret
 
 Create a Java client configuration file with arguments passed via flags.
 
-  $ confluent kafka client-config create java --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret --sr-apikey my-sr-key --sr-apisecret my-sr-secret
+  $ confluent kafka client-config create java --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret
 
 Create a Java client configuration file, redirecting the configuration to a file and the warnings to a separate file.
 
-  $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret 1> my-client-config-file.config 2> my-warnings-file
+  $ confluent kafka client-config create java --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret 1> my-client-config-file.config 2> my-warnings-file
 
 Create a Java client configuration file, redirecting the configuration to a file and keeping the warnings in the console.
 
-  $ confluent kafka client-config create java --sr-apikey my-sr-key --sr-apisecret my-sr-secret 1> my-client-config-file.config 2>&1
+  $ confluent kafka client-config create java --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret 1> my-client-config-file.config 2>&1
 
 Flags:
-      --context string        CLI context name.
-      --environment string    Environment ID.
-      --cluster string        Kafka cluster ID.
-      --api-key string        API key.
-      --api-secret string     API key secret.
-      --sr-apikey string      Schema registry API key.
-      --sr-apisecret string   Schema registry API key secret.
+      --context string                      CLI context name.
+      --environment string                  Environment ID.
+      --cluster string                      Kafka cluster ID.
+      --api-key string                      API key.
+      --api-secret string                   API key secret.
+      --schema-registry-api-key string      Schema registry API key.
+      --schema-registry-api-secret string   Schema registry API key secret.
 
 Global Flags:
   -h, --help            Show help for this command.
