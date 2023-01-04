@@ -43,6 +43,7 @@ verify-binaries:
 	rm -rf $(TEMP_DIR)	
 	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
 
+# Test username/password login and SSO login in production
 .PHONY: smoke-tests
 smoke-tests:
 	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) bash install.sh && \
@@ -50,5 +51,8 @@ smoke-tests:
 	vault login -method=oidc -path=okta && \
 	email="cli-team+system-tests@confluent.io" && \
 	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
-	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login | grep 'Logged in as "cli-team+system-tests@confluent.io"'
+	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
+	go install ./cmd/plugins/confluent-login-headless_sso && \
+	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email $${email} --password $${password}
+
 
