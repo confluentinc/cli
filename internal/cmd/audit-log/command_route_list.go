@@ -19,7 +19,7 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().StringP("resource", "r", "", "The Confluent resource name (CRN) that is the subject of the query.")
+	cmd.Flags().String("resource", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	_ = cmd.MarkFlagRequired("resource")

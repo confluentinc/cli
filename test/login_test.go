@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/bincover"
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/stretchr/testify/require"
 
@@ -142,6 +143,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			wantErrCode: 1,
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
 		},
 		{
 			name:        "error if using unknown kafka",
