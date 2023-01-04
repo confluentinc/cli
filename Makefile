@@ -69,15 +69,16 @@ clean:
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
 	go install github.com/google/go-licenses@v1.4.0 && \
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 .PHONY: jenkins-deps
 jenkins-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2
+	go install github.com/goreleaser/goreleaser@v1.14.1
 
+.PHONY: semaphore-deps
 semaphore-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 show-args:
@@ -194,7 +195,7 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v -timeout 10m $$(go list ./... | grep test)
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m

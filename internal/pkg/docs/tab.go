@@ -58,6 +58,10 @@ func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]s
 }
 
 func printSection(title string, section []string) []string {
+	if len(section) == 0 {
+		return []string{}
+	}
+
 	head := []string{
 		title,
 		strings.Repeat("~", len(title)),

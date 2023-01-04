@@ -38,6 +38,7 @@ func printRootIndexPage(tabs []Tab) []string {
 	cmd := tabs[0].Command
 
 	return flatten([][]string{
+		printComments(),
 		printHeader(cmd, false),
 		printTitle(cmd, "="),
 		printInlineScript(),
@@ -49,8 +50,10 @@ func printIndexPage(tabs []Tab, isOverview bool) []string {
 	cmd := tabs[0].Command
 
 	rows := [][]string{
+		printComments(),
 		printHeader(cmd, isOverview),
 		printTitle(cmd, "="),
+		printSection("Aliases", printAliases(cmd)),
 		printTabbedSection("Description", printDescription, tabs),
 	}
 
@@ -69,6 +72,14 @@ func flatten(arrs [][]string) []string {
 		flatArr = append(flatArr, arr...)
 	}
 	return flatArr
+}
+
+func printComments() []string {
+	return []string{
+		"..",
+		tab + "WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
+		"",
+	}
 }
 
 func printHeader(cmd *cobra.Command, isOverview bool) []string {
@@ -147,6 +158,21 @@ func printLink(cmd *cobra.Command) string {
 		return path.Join(cmd.Name(), "index")
 	} else {
 		return printRef(cmd, false)
+	}
+}
+
+func printAliases(cmd *cobra.Command) []string {
+	if len(cmd.Aliases) == 0 {
+		return []string{}
+	}
+
+	aliases := append([]string{cmd.Name()}, cmd.Aliases...)
+
+	return []string{
+		"::",
+		"",
+		fmt.Sprintf("  %s", strings.Join(aliases, ", ")),
+		"",
 	}
 }
 

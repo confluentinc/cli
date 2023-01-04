@@ -3,10 +3,8 @@ package iam
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"
@@ -226,9 +224,7 @@ func addClusterFlags(cmd *cobra.Command, isCloudLogin bool, cliCommand *pcmd.CLI
 		cmd.Flags().String("cloud-cluster", "", "Cloud cluster ID for the role binding.")
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
-		if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-			cmd.Flags().String("ksql-cluster-id", "", "ksqlDB cluster ID for the role binding.")
-		}
+		cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster name for the role binding.")
 	} else {
 		cmd.Flags().String("kafka-cluster-id", "", "Kafka cluster ID for the role binding.")
 		cmd.Flags().String("schema-registry-cluster-id", "", "Schema Registry cluster ID for the role binding.")
@@ -337,8 +333,8 @@ func (c *roleBindingCommand) parseAndValidateScopeV2(cmd *cobra.Command) (*mdsv2
 		scopeV2.Clusters.SchemaRegistryCluster = srCluster
 	}
 
-	if cmd.Flags().Changed("ksql-cluster-id") {
-		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster-id")
+	if cmd.Flags().Changed("ksql-cluster") {
+		ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
 		if err != nil {
 			return nil, err
 		}
@@ -388,12 +384,7 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	ctx := c.createContext()
 	found := false
 
-	namespaces := []optional.String{publicNamespace, dataplaneNamespace, dataGovernanceNamespace}
-	if os.Getenv("XX_DATAPLANE_3_ENABLE") != "" {
-		namespaces = allNamespaces
-	}
-
-	for _, namespace := range namespaces {
+	for _, namespace := range allNamespaces {
 		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespace}
 		role, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 		if err != nil {
