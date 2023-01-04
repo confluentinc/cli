@@ -43,9 +43,9 @@ var (
 		buildRoleBinding("u-55eee", "ResourceOwner",
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=payroll"),
 		buildRoleBinding("u-66fff", "ResourceOwner",
-			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=lksqlc-2222bbb/cluster=lksqlc-2222bbb"),
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=ksql-cluster-name-2222bbb"),
 		buildRoleBinding("u-77ggg", "ResourceOwner",
-			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/schema-registry=lsrc-3333ccc/subject=clicks"),
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 )
 
@@ -97,6 +97,11 @@ func handleIamApiKeyGet(t *testing.T, keyStr string) http.HandlerFunc {
 
 func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if keyStr == "UNKNOWN" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		delete(keyStoreV2, keyStr)
 		w.WriteHeader(http.StatusNoContent)
 	}
