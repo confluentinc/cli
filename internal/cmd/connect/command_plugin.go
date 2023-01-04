@@ -6,22 +6,12 @@ import (
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type pluginListDisplay struct {
-	Class string `json:"class"`
-	Type  string `json:"type"`
-}
-
-type pluginConfigDisplay struct {
-	Config        string
-	Documentation string
-	IsRequired    bool
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {

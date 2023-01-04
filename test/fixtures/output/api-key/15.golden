@@ -1,4 +1,4 @@
-       Key      | Description | Owner Resource ID |     Owner Email      | Resource Type | Resource ID  |       Created         
-----------------+-------------+-------------------+----------------------+---------------+--------------+-----------------------
-    MYKEY6      | my-ksql-app | u-44ddd           | mhe@confluent.io     | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    UIAPIKEY102 |             | u-22bbb           | u-22bbb@confluent.io | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+  Current |     Key     | Description |  Owner  |     Owner Email      | Resource Type |   Resource   |       Created         
+----------+-------------+-------------+---------+----------------------+---------------+--------------+-----------------------
+          | MYKEY6      | my-ksql-app | u-44ddd | mhe@confluent.io     | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+          | UIAPIKEY102 |             | u-22bbb | u-22bbb@confluent.io | ksql          | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
