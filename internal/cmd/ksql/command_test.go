@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"testing"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	"github.com/spf13/cobra"
@@ -16,6 +15,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -31,7 +31,7 @@ const (
 type KSQLTestSuite struct {
 	suite.Suite
 	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
+	kafkaCluster *ccstructs.KafkaCluster
 	ksqlCluster  *ksqlv2.KsqldbcmV2Cluster
 	serviceAcct  *ccloudv1.User
 	ksqlc        *ksqlmock.ClustersKsqldbcmV2Api
@@ -41,7 +41,7 @@ type KSQLTestSuite struct {
 
 func (suite *KSQLTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:   "lkc-123",
 		Name: "kafka",
 	}

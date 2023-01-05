@@ -11,10 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -26,7 +26,7 @@ const (
 type SubjectTestSuite struct {
 	suite.Suite
 	conf             *v1.Config
-	kafkaCluster     *schedv1.KafkaCluster
+	kafkaCluster     *ccstructs.KafkaCluster
 	srCluster        *ccloudv1.SchemaRegistryCluster
 	srMothershipMock *ccloudv1mock.SchemaRegistry
 	srClientMock     *srsdk.APIClient
@@ -38,7 +38,7 @@ func (suite *SubjectTestSuite) SetupSuite() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
 		Enterprise: true,

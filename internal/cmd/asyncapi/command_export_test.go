@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -17,6 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -29,7 +29,7 @@ import (
 const BackwardCompatibilityLevel = "BACKWARD"
 
 var details = &accountDetails{
-	cluster: &schedv1.KafkaCluster{
+	cluster: &ccstructs.KafkaCluster{
 		Id:        "lkc-asyncapi",
 		Name:      "AsyncAPI Cluster",
 		Endpoint:  "http://kafka-endpoint",
