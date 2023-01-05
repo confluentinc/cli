@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"fmt"
 	nethttp "net/http"
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -1136,4 +1137,11 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func assertEqualValues(actual interface{}, expected interface{}) error {
+	if actual != expected {
+		return fmt.Errorf("actual: %+v\nexpected: %+v", actual, expected)
+	}
+	return nil
 }

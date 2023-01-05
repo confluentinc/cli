@@ -5,29 +5,28 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 
 	"github.com/hashicorp/go-multierror"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
 type ACLConfiguration struct {
-	*schedv1.ACLBinding
+	*ccstructs.ACLBinding
 	errors error
 }
 
 func NewACLConfig() *ACLConfiguration {
 	return &ACLConfiguration{
-		ACLBinding: &schedv1.ACLBinding{
-			Entry: &schedv1.AccessControlEntryConfig{
+		ACLBinding: &ccstructs.ACLBinding{
+			Entry: &ccstructs.AccessControlEntryConfig{
 				Host: "*",
 			},
-			Pattern: &schedv1.ResourcePatternConfig{},
+			Pattern: &ccstructs.ResourcePatternConfig{},
 		},
 	}
 }
@@ -42,7 +41,7 @@ func aclConfigFlags() *pflag.FlagSet {
 // aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
 func aclEntryFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	flgSet.StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(schedv1.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
+	flgSet.StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	flgSet.String("service-account", "", "The service account ID.")
 	flgSet.Bool("allow", false, "Access to the resource is allowed.")
@@ -113,11 +112,11 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 		case "transactional-id":
 			setResourcePattern(conf, n, v)
 		case "allow":
-			conf.Entry.PermissionType = schedv1.ACLPermissionTypes_ALLOW
+			conf.Entry.PermissionType = ccstructs.ACLPermissionTypes_ALLOW
 		case "deny":
-			conf.Entry.PermissionType = schedv1.ACLPermissionTypes_DENY
+			conf.Entry.PermissionType = ccstructs.ACLPermissionTypes_DENY
 		case "prefix":
-			conf.Pattern.PatternType = schedv1.PatternTypes_PREFIXED
+			conf.Pattern.PatternType = ccstructs.PatternTypes_PREFIXED
 		case "service-account":
 			setConfigPrincipal(conf, true, v)
 		case "principal":
@@ -143,19 +142,19 @@ func setConfigPrincipal(conf *ACLConfiguration, isServiceAccount bool, v string)
 
 func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	/* Normalize the resource pattern name */
-	if conf.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+	if conf.Pattern.ResourceType != ccstructs.ResourceTypes_UNKNOWN {
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg,
-			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
+			listEnum(ccstructs.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"})))
 		return
 	}
 
 	n = strings.ToUpper(n)
 	n = strings.ReplaceAll(n, "-", "_")
 
-	conf.Pattern.ResourceType = schedv1.ResourceTypes_ResourceType(schedv1.ResourceTypes_ResourceType_value[n])
+	conf.Pattern.ResourceType = ccstructs.ResourceTypes_ResourceType(ccstructs.ResourceTypes_ResourceType_value[n])
 
-	if conf.Pattern.ResourceType == schedv1.ResourceTypes_CLUSTER {
-		conf.Pattern.PatternType = schedv1.PatternTypes_LITERAL
+	if conf.Pattern.ResourceType == ccstructs.ResourceTypes_CLUSTER {
+		conf.Pattern.PatternType = ccstructs.PatternTypes_LITERAL
 	}
 	conf.Pattern.Name = v
 }
@@ -184,11 +183,11 @@ OUTER:
 	return strings.Join(ops, ", ")
 }
 
-func getACLOperation(operation string) (schedv1.ACLOperations_ACLOperation, error) {
+func getACLOperation(operation string) (ccstructs.ACLOperations_ACLOperation, error) {
 	op := strings.ToUpper(operation)
 	op = strings.ReplaceAll(op, "-", "_")
-	if operation, ok := schedv1.ACLOperations_ACLOperation_value[op]; ok {
-		return schedv1.ACLOperations_ACLOperation(operation), nil
+	if operation, ok := ccstructs.ACLOperations_ACLOperation_value[op]; ok {
+		return ccstructs.ACLOperations_ACLOperation(operation), nil
 	}
-	return schedv1.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
+	return ccstructs.ACLOperations_UNKNOWN, fmt.Errorf(errors.InvalidOperationValueErrorMsg, op)
 }
