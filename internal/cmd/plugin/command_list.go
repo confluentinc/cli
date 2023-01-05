@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -39,10 +40,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	var overshadowedPlugins, nameConflictPlugins []*out
-	for name, pathList := range pluginMap {
+	for name, paths := range pluginMap {
 		pluginInfo := &out{
 			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
-			FilePath:   pathList[0],
+			FilePath:   paths[0],
 		}
 		args := strings.Split(pluginInfo.PluginName, " ")
 		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.PluginName {
@@ -50,8 +51,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		} else {
 			list.Add(pluginInfo)
 		}
-		for i := 1; i < len(pathList); i++ {
-			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: pathList[i]})
+
+		visitedPaths := set.New(paths[0])
+		for _, path := range paths[1:] {
+			if visitedPaths.Contains(path) {
+				continue
+			}
+			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: path})
+			visitedPaths.Add(path)
 		}
 	}
 
