@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
@@ -19,6 +18,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -278,7 +278,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *schedv1.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
+func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err

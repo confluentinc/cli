@@ -7,11 +7,8 @@ import (
 	"testing"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	"github.com/hashicorp/go-version"
@@ -67,13 +64,6 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 				AuthToken: "token",
 			},
 			Config: &v1.Config{BaseConfig: &config.BaseConfig{Ver: config.Version{Version: &version.Version{}}}},
-		},
-		PrivateClient: &ccloud.Client{
-			Kafka: &mock.Kafka{
-				DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-					return &schedv1.KafkaCluster{}, nil
-				},
-			},
 		},
 		V2Client: &ccloudv2.Client{
 			CmkClient: &cmkv2.APIClient{

@@ -37,7 +37,7 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
 
-	serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
