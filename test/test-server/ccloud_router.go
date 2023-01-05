@@ -24,12 +24,10 @@ const (
 	priceTable          = "/api/organizations/{id}/price_table"
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
-	invites             = "/api/organizations/{id}/invites"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
-	verifyEmail         = "/api/email_verifications"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
 	freeTrialInfo       = "/api/growth/v1/free-trial-info"
@@ -61,7 +59,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
-	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
 	c.HandleFunc(launchDarklyProxy, c.HandleLaunchDarkly(t))
 	c.HandleFunc(externalIdentities, handleExternalIdentities(t))
@@ -109,7 +106,6 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(priceTable, c.HandlePriceTable(t))
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
 	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
-	c.HandleFunc(invites, c.HandleInvite(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {

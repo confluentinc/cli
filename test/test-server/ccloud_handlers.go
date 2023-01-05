@@ -456,31 +456,6 @@ func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/api/organizations/{id}/invites"
-func (c *CloudRouter) HandleInvite(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		body, _ := io.ReadAll(r.Body)
-		bs := string(body)
-		var res flowv1.SendInviteReply
-		switch {
-		case strings.Contains(bs, "user@exists.com"):
-			res = flowv1.SendInviteReply{
-				Error: &corev1.Error{Message: "User is already active"},
-				User:  nil,
-			}
-		default:
-			res = flowv1.SendInviteReply{
-				Error: nil,
-				User:  buildUser(1, "miles@confluent.io", "Miles", "Todzo", ""),
-			}
-		}
-		data, err := json.Marshal(res)
-		require.NoError(t, err)
-		_, err = w.Write(data)
-		require.NoError(t, err)
-	}
-}
-
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
 func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -511,16 +486,6 @@ func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(reply))
 		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/email_verifications"
-func (c *CloudRouter) HandleSendVerificationEmail(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := &flowv1.CreateEmailVerificationRequest{}
-		err := ccstructs.UnmarshalJSON(r.Body, req)
-		require.NoError(t, err)
-		w.WriteHeader(http.StatusOK)
 	}
 }
 
