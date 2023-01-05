@@ -30,7 +30,6 @@ const (
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	verifyEmail         = "/api/email_verifications"
-	usageLimits         = "/api/usage_limits"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
 	freeTrialInfo       = "/api/growth/v1/free-trial-info"
@@ -71,7 +70,6 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.addOrgRoutes(t)
 	c.addUserRoutes(t)
 	c.addV2AlphaRoutes(t)
-	c.addUsageLimitRoutes(t)
 	c.addServiceAccountRoutes(t)
 	c.addGrowthRoutes(t)
 }
@@ -117,10 +115,6 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
 	c.HandleFunc(accounts, c.HandleEnvironments(t))
 	c.HandleFunc(account, c.HandleEnvironment(t))
-}
-
-func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
-	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
 }
 
 func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {
