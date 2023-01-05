@@ -3,12 +3,12 @@ package kafka
 import (
 	_nethttp "net/http"
 
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
@@ -128,12 +128,12 @@ func getCmkClusterIngressAndEgress(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
 
 func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	if isBasic(cluster) {
-		return productv1.Sku_name[2]
+		return ccstructs.Sku_name[2]
 	}
 	if isStandard(cluster) {
-		return productv1.Sku_name[3]
+		return ccstructs.Sku_name[3]
 	}
-	return productv1.Sku_name[4]
+	return ccstructs.Sku_name[4]
 }
 
 func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
