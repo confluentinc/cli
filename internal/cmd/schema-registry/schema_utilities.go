@@ -116,14 +116,9 @@ func CreateTempDir() (string, error) {
 }
 
 func RequestSchemaWithId(schemaId int32, subject string, srClient *srsdk.APIClient, ctx context.Context) (srsdk.SchemaString, error) {
-	getSchemaOpts := srsdk.GetSchemaOpts{
-		Subject: optional.NewString(subject),
-	}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, &getSchemaOpts)
-	if err != nil {
-		return schemaString, err
-	}
-	return schemaString, nil
+	opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, opts)
+	return schemaString, err
 }
 
 func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {

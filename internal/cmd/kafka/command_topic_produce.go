@@ -68,83 +68,9 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(topic, cmd)
 	if err != nil {
 		return err
-	}
-
-	dir, err := sr.CreateTempDir()
-	if err != nil {
-		return err
-	}
-	defer func() {
-		_ = os.RemoveAll(dir)
-	}()
-
-	subject := topicNameStrategy(topic)
-	schemaId, err := cmd.Flags().GetInt32("schema-id")
-	if err != nil {
-		return err
-	}
-
-	var valueFormat string
-	referencePathMap := map[string]string{}
-	metaInfo := []byte{}
-
-	if cmd.Flags().Changed("schema-id") {
-		// request schema information from schemaID
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
-		if err != nil {
-			return err
-		}
-
-		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, srClient, ctx)
-		if err != nil {
-			return err
-		}
-		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, srClient, ctx)
-		if err != nil {
-			return err
-		}
-
-		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
-		valueFormat = schemaString.SchemaType
-	} else {
-		valueFormat, err = cmd.Flags().GetString("value-format")
-		if err != nil {
-			return err
-		}
-	}
-
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
-	if err != nil {
-		return err
-	}
-
-	if schemaPath != "" && !cmd.Flags().Changed("schema-id") {
-		// read schema info from local file and register schema
-		schemaCfg := &sr.RegisterSchemaConfigs{
-			SchemaDir:   dir,
-			SchemaPath:  &schemaPath,
-			Subject:     subject,
-			ValueFormat: valueFormat,
-			SchemaType:  serializationProvider.GetSchemaName(),
-		}
-		refs, err := sr.ReadSchemaRefs(cmd)
-		if err != nil {
-			return err
-		}
-		schemaCfg.Refs = refs
-		// Meta info contains a magic byte and schema ID (4 bytes).
-		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
-	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
 	}
 
 	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
@@ -264,11 +190,11 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 }
 
 func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
-	// For plain string encoding, meta info is empty.
-	// Registering schema when specified, and fill metaInfo array.
+	// Registering schema and fill metaInfo array.
 	var metaInfo []byte
 	referencePathMap := map[string]string{}
-	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
+
+	if len(*schemaCfg.SchemaPath) > 0 {
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
@@ -329,4 +255,94 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	encoded := append(metaInfo, encodedMessage...)
 	value := string(encoded)
 	return key, value, nil
+}
+
+func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(topic string, cmd *cobra.Command) (serdes.SerializationProvider, []byte, error) {
+	dir, err := sr.CreateTempDir()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer func() {
+		_ = os.RemoveAll(dir)
+	}()
+
+	subject := topicNameStrategy(topic)
+
+	schemaId, err := cmd.Flags().GetInt32("schema-id")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	schemaPath, err := cmd.Flags().GetString("schema")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var valueFormat string
+	referencePathMap := map[string]string{}
+	metaInfo := []byte{}
+
+	if cmd.Flags().Changed("schema-id") {
+		// request schema information from schemaID
+		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, srClient, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		valueFormat, err = serdes.FormatTranslation(schemaString.SchemaType)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, srClient, ctx)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
+
+	} else {
+		valueFormat, err = cmd.Flags().GetString("value-format")
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if schemaPath != "" && !cmd.Flags().Changed("schema-id") {
+		// read schema info from local file and register schema
+		schemaCfg := &sr.RegisterSchemaConfigs{
+			SchemaDir:   dir,
+			SchemaPath:  &schemaPath,
+			Subject:     subject,
+			ValueFormat: valueFormat,
+			SchemaType:  serializationProvider.GetSchemaName(),
+		}
+		refs, err := sr.ReadSchemaRefs(cmd)
+		if err != nil {
+			return nil, nil, err
+		}
+		schemaCfg.Refs = refs
+		// Meta info contains a magic byte and schema ID (4 bytes).
+		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	if err != nil {
+		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
+	}
+
+	return serializationProvider, metaInfo, nil
 }
