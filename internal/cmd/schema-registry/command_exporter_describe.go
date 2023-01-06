@@ -11,11 +11,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeInfoLabels            = []string{"Name", "Subjects", "SubjectFormat", "ContextType", "Context", "Config"}
-	describeInfoHumanRenames      = map[string]string{"SubjectFormat": "Subject Format", "ContextType": "Context Type", "Config": "Remote Schema Registry Configs"}
-	describeInfoStructuredRenames = map[string]string{"Name": "name", "Subjects": "subjects", "SubjectFormat": "subject_format", "ContextType": "context_type", "Context": "context", "Config": "config"}
-)
+type exporterOut struct {
+	Name          string `human:"Name" serialized:"name"`
+	Subjects      string `human:"Subjects" serialized:"subjects"`
+	SubjectFormat string `human:"Subject Format" serialized:"subject_format"`
+	ContextType   string `human:"Context Type" serialized:"context_type"`
+	Context       string `human:"Context" serialized:"context"`
+	Config        string `human:"Config" serialized:"config"`
+}
 
 func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -49,13 +52,14 @@ func describeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient
 		return err
 	}
 
-	data := &exporterInfoDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&exporterOut{
 		Name:          info.Name,
 		Subjects:      strings.Join(info.Subjects, ", "),
 		SubjectFormat: info.SubjectRenameFormat,
 		ContextType:   info.ContextType,
 		Context:       info.Context,
 		Config:        convertMapToString(info.Config),
-	}
-	return output.DescribeObject(cmd, data, describeInfoLabels, describeInfoHumanRenames, describeInfoStructuredRenames)
+	})
+	return table.Print()
 }

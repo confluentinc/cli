@@ -9,7 +9,6 @@ import (
 
 func TestGetAnnouncementsOrDeprecation(t *testing.T) {
 	ldResp := []map[string]interface{}{
-		{"message": "DEPRECATED", "pattern": "ksql app"},
 		{"message": "DEPRECATED", "pattern": "kafka cluster list --all --context"},
 	}
 	ld := make([]interface{}, len(ldResp))
@@ -18,7 +17,6 @@ func TestGetAnnouncementsOrDeprecation(t *testing.T) {
 	}
 	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(ld)
 	expected := map[string]*FlagsAndMsg{}
-	expected["ksql app"] = &FlagsAndMsg{CmdMessage: "DEPRECATED"}
 	expected["kafka cluster list"] = &FlagsAndMsg{
 		Flags:        []string{"all", "context"},
 		FlagMessages: []string{"DEPRECATED", "DEPRECATED"},

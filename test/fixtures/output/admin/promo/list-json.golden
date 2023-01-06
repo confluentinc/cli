@@ -1,12 +1,12 @@
 [
   {
-    "balance": "10",
     "code": "PROMOCODE1",
-    "expiration": "1623844800"
+    "balance": 10,
+    "expiration": 1623844800
   },
   {
-    "balance": "10",
     "code": "PROMOCODE2",
-    "expiration": "1623844800"
+    "balance": 10,
+    "expiration": 1623844800
   }
 ]

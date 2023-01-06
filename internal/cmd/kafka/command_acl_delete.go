@@ -1,20 +1,19 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -25,6 +24,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(aclConfigFlags())
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -47,7 +47,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var filters []*schedv1.ACLFilter
+	var filters []*ccstructs.ACLFilter
 	for _, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
@@ -56,83 +56,54 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaRestExists := true
-		matchingBindingCount := 0
-		for i, filter := range filters {
-			deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
-			if err != nil && httpResp == nil {
-				if i == 0 {
-					// Kafka REST is not available, fallback to KafkaAPI
-					kafkaRestExists = false
-					break
-				}
-				// i > 0: unlikely
-				printAclsDeleted(cmd, matchingBindingCount)
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-			}
-
-			if err != nil {
-				if i > 0 {
-					// unlikely
-					printAclsDeleted(cmd, matchingBindingCount)
-				}
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-			}
-
-			if httpResp.StatusCode == http.StatusOK {
-				matchingBindingCount += len(deleteResp.Data)
-			} else {
-				printAclsDeleted(cmd, matchingBindingCount)
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-		}
-
-		if kafkaRestExists {
-			// Kafka REST is available and at least one ACL was deleted
-			printAclsDeleted(cmd, matchingBindingCount)
-			return nil
-		}
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return err
 	}
 
-	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	matchingBindingCount := 0
+	count := 0
 	for _, acl := range acls {
-		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
-		ctx := context.WithValue(context.Background(), kafka.Requester, "delete")
-
-		resp, err := c.PrivateClient.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
+		aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
 		if err != nil {
-			return err
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
-		matchingBindingCount += len(resp)
-	}
-	if matchingBindingCount == 0 {
-		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
-		return nil
+		if len(aclDataList.Data) == 0 {
+			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
+		}
+		count += len(aclDataList.Data)
 	}
 
-	if err := c.PrivateClient.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
+	promptMsg := errors.DeleteACLConfirmMsg
+	if count > 1 {
+		promptMsg = errors.DeleteACLsConfirmMsg
+	}
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedACLsMsg)
+	count = 0
+	for i, filter := range filters {
+		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
+		if err != nil {
+			if i > 0 {
+				printAclsDeleted(cmd, count)
+			}
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+
+		count += len(deleteResp.Data)
+	}
+
+	printAclsDeleted(cmd, count)
 	return nil
 }
 
