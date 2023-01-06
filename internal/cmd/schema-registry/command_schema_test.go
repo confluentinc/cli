@@ -122,8 +122,10 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 
 func (suite *SchemaTestSuite) TestRequestSchemaById() {
 	tmpdir := suite.T().TempDir()
-	tempStorePath, _, err := RequestSchemaWithId(123, tmpdir, "subject", suite.srClientMock, suite.newCMD().Context())
 	req := require.New(suite.T())
+	schemaString, err := RequestSchemaWithId(123, "subject", suite.srClientMock, suite.newCMD().Context())
+	req.Nil(err)
+	tempStorePath, _, err := SetSchemaPathRef(schemaString, tmpdir, "subject", 123, suite.srClientMock, suite.newCMD().Context())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetSchemaCalled())

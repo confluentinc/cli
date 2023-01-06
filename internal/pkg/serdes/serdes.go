@@ -12,6 +12,23 @@ const (
 	RAWSCHEMANAME         string = "string"
 )
 
+func FormatTranslation(bankendValueFormat string) (string, error) {
+	var cliValueFormat string
+	switch bankendValueFormat {
+	case "":
+		cliValueFormat = AVROSCHEMANAME
+	case AVROSCHEMABACKEND:
+		cliValueFormat = AVROSCHEMANAME
+	case PROTOBUFSCHEMABACKEND:
+		cliValueFormat = PROTOBUFSCHEMANAME
+	case JSONSCHEMABACKEND:
+		cliValueFormat = JSONSCHEMANAME
+	default:
+		return "", errors.New(errors.UnknownValueFormatErrorMsg)
+	}
+	return cliValueFormat, nil
+}
+
 func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
 	var provider SerializationProvider
 	// Will add other providers in later commits.
