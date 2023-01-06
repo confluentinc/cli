@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
@@ -18,6 +17,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	cliMock "github.com/confluentinc/cli/mock"
 )
@@ -31,7 +31,7 @@ var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 type ClusterTestSuite struct {
 	suite.Suite
 	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
+	kafkaCluster *ccstructs.KafkaCluster
 	srCluster    *ccloudv1.SchemaRegistryCluster
 	srMock       *ccloudv1mock.SchemaRegistry
 	srClientMock *srsdk.APIClient
@@ -42,7 +42,7 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
 		Enterprise: true,

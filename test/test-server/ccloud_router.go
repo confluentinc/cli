@@ -16,25 +16,18 @@ const (
 	loginRealm          = "/api/login/realm"
 	account             = "/api/accounts/{id}"
 	accounts            = "/api/accounts"
-	apiKeys             = "/api/api_keys"
 	envMetadata         = "/api/env_metadata"
 	serviceAccounts     = "/api/service_accounts"
 	serviceAccount      = "/api/service_accounts/{id}"
 	schemaRegistries    = "/api/schema_registries"
 	schemaRegistry      = "/api/schema_registries/{id}"
-	ksqls               = "/api/ksqls"
 	priceTable          = "/api/organizations/{id}/price_table"
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
-	invites             = "/api/organizations/{id}/invites"
-	invitations         = "/api/invitations"
 	users               = "/api/users"
 	userProfile         = "/api/user_profiles/{id}"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
-	verifyEmail         = "/api/email_verifications"
-	usageLimits         = "/api/usage_limits"
-	accessTokens        = "/api/access_tokens"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
 	externalIdentities  = "/api/external_identities"
 	freeTrialInfo       = "/api/growth/v1/free-trial-info"
@@ -66,19 +59,14 @@ func (c *CloudRouter) buildCcloudRouter(t *testing.T, isAuditLogEnabled bool) {
 	c.HandleFunc(me, c.HandleMe(t, isAuditLogEnabled))
 	c.HandleFunc(loginRealm, handleLoginRealm(t))
 	c.HandleFunc(signup, c.HandleSignup(t))
-	c.HandleFunc(verifyEmail, c.HandleSendVerificationEmail(t))
 	c.HandleFunc(envMetadata, c.HandleEnvMetadata(t))
 	c.HandleFunc(launchDarklyProxy, c.HandleLaunchDarkly(t))
 	c.HandleFunc(externalIdentities, handleExternalIdentities(t))
 	c.addSchemaRegistryRoutes(t)
 	c.addEnvironmentRoutes(t)
 	c.addOrgRoutes(t)
-	c.addApiKeyRoutes(t)
-	c.addKsqlRoutes(t)
 	c.addUserRoutes(t)
 	c.addV2AlphaRoutes(t)
-	c.addUsageLimitRoutes(t)
-	c.addJwtTokenRoutes(t)
 	c.addServiceAccountRoutes(t)
 	c.addGrowthRoutes(t)
 }
@@ -118,29 +106,11 @@ func (c *CloudRouter) addOrgRoutes(t *testing.T) {
 	c.HandleFunc(priceTable, c.HandlePriceTable(t))
 	c.HandleFunc(paymentInfo, c.HandlePaymentInfo(t))
 	c.HandleFunc(promoCodeClaims, c.HandlePromoCodeClaims(t))
-	c.HandleFunc(invites, c.HandleInvite(t))
-	c.HandleFunc(invitations, c.HandleInvitations(t))
-}
-
-func (c *CloudRouter) addKsqlRoutes(t *testing.T) {
-	c.HandleFunc(ksqls, c.HandleKsqls(t))
-}
-
-func (c *CloudRouter) addApiKeyRoutes(t *testing.T) {
-	c.HandleFunc(apiKeys, c.HandleApiKeys(t))
 }
 
 func (c *CloudRouter) addEnvironmentRoutes(t *testing.T) {
 	c.HandleFunc(accounts, c.HandleEnvironments(t))
 	c.HandleFunc(account, c.HandleEnvironment(t))
-}
-
-func (c *CloudRouter) addUsageLimitRoutes(t *testing.T) {
-	c.HandleFunc(usageLimits, c.HandleUsageLimits(t))
-}
-
-func (c *CloudRouter) addJwtTokenRoutes(t *testing.T) {
-	c.HandleFunc(accessTokens, c.HandleJwtToken(t))
 }
 
 func (c *CloudRouter) addServiceAccountRoutes(t *testing.T) {

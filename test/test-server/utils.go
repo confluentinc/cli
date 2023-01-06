@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -21,28 +20,10 @@ import (
 var (
 	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
 	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
-	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
 )
-
-type ApiKeyList []*schedv1.ApiKey
-
-// Len is part of sort.Interface.
-func (d ApiKeyList) Len() int {
-	return len(d)
-}
-
-// Swap is part of sort.Interface.
-func (d ApiKeyList) Swap(i, j int) {
-	d[i], d[j] = d[j], d[i]
-}
-
-// Less is part of sort.Interface. We use Key as the value to sort by
-func (d ApiKeyList) Less(i, j int) bool {
-	return d[i].Key < d[j].Key
-}
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
@@ -59,94 +40,6 @@ func (d ApiKeyListV2) Swap(i, j int) {
 // Less is part of sort.Interface. We use Key as the value to sort by
 func (d ApiKeyListV2) Less(i, j int) bool {
 	return *d[i].Id < *d[j].Id
-}
-
-func fillKeyStore() {
-	keyStore[keyIndex] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "MYKEY1",
-		Secret: "MYSECRET1",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         1,
-		UserResourceId: "u11",
-	}
-	keyIndex += 1
-	keyStore[keyIndex] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "MYKEY2",
-		Secret: "MYSECRET2",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-abc", Type: "kafka"},
-		},
-		UserId:         2,
-		UserResourceId: "u-17",
-	}
-	keyIndex += 1
-	keyStore[100] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY100",
-		Secret: "UIAPISECRET100",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-cool1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[101] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY101",
-		Secret: "UIAPISECRET101",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-other1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[102] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY102",
-		Secret: "UIAPISECRET102",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1", Type: "ksql"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[103] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY103",
-		Secret: "UIAPISECRET103",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-cool1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[200] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "SERVICEACCOUNTKEY1",
-		Secret: "SERVICEACCOUNTSECRET1",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         serviceAccountID,
-		UserResourceId: serviceAccountResourceID,
-	}
-	keyStore[201] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "DEACTIVATEDUSERKEY",
-		Secret: "DEACTIVATEDUSERSECRET",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         deactivatedUserID,
-		UserResourceId: deactivatedResourceID,
-	}
-	for _, k := range keyStore {
-		k.Created = keyTimestamp
-	}
 }
 
 func fillKeyStoreV2() {
@@ -290,19 +183,6 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 	return false
 }
 
-func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
-	return &apikeysv2.IamV2ApiKey{
-		Id: apikeysv2.PtrString(apiKey.Key),
-		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Owner:       &apikeysv2.ObjectReference{Id: apiKey.UserResourceId},
-			Secret:      apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-			Resource:    &apikeysv2.ObjectReference{Id: apiKey.LogicalClusters[0].Id, Kind: apikeysv2.PtrString(resourceTypeToKind[apiKey.LogicalClusters[0].Type])},
-			Description: apikeysv2.PtrString(apiKey.Description),
-		},
-		Metadata: &apikeysv2.ObjectMeta{CreatedAt: keyTime},
-	}
-}
-
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, serviceAccountInvalidErrMsg)
@@ -326,13 +206,6 @@ func writeUserConflictError(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
 	_, err := io.WriteString(w, userConflictErrMsg)
-	return err
-}
-
-func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, v1ResourceNotFoundErrMsg)
 	return err
 }
 
@@ -404,15 +277,6 @@ func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation 
 		Email:  iamv2.PtrString(email),
 		User:   &iamv2.GlobalObjectReference{Id: userId},
 		Status: iamv2.PtrString(status),
-	}
-}
-
-func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
-	return &orgv1.Invitation{
-		Id:             id,
-		Email:          email,
-		UserResourceId: resourceId,
-		Status:         status,
 	}
 }
 

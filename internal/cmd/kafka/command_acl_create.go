@@ -1,11 +1,11 @@
 package kafka
 
 import (
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -56,7 +56,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var bindings []*schedv1.ACLBinding
+	var bindings []*ccstructs.ACLBinding
 	for _, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
