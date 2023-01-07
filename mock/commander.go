@@ -85,6 +85,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
+		command.Context.Client = c.Client
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
@@ -140,7 +141,7 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.PrivateClient)
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
 }
 

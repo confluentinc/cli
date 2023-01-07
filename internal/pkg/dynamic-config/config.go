@@ -1,11 +1,11 @@
 package dynamicconfig
 
 import (
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 )
 
 // KafkaCluster creates a schedv1 struct from the Kafka cluster of the current context.
-func KafkaCluster(ctx *DynamicContext) (*schedv1.KafkaCluster, error) {
+func KafkaCluster(ctx *DynamicContext) (*ccstructs.KafkaCluster, error) {
 	environmentId, err := ctx.AuthenticatedEnvId()
 	if err != nil {
 		return nil, err
@@ -16,10 +16,9 @@ func KafkaCluster(ctx *DynamicContext) (*schedv1.KafkaCluster, error) {
 		return nil, err
 	}
 
-	cluster := &schedv1.KafkaCluster{
-		AccountId:   environmentId,
-		Id:          config.ID,
-		ApiEndpoint: config.APIEndpoint,
+	cluster := &ccstructs.KafkaCluster{
+		AccountId: environmentId,
+		Id:        config.ID,
 	}
 
 	return cluster, nil

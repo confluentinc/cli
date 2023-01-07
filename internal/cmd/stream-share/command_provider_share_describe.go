@@ -36,5 +36,7 @@ func (c *command) describeProviderShare(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildProviderShare(provideShare), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(c.buildProviderShare(provideShare))
+	return table.Print()
 }

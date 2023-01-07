@@ -5,6 +5,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
+
+	"github.com/confluentinc/bincover"
 )
 
 func (s *CLITestSuite) TestSDPipeline() {
@@ -31,7 +34,8 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline create --name testPipeline --ksql-cluster lksqlc-12345 --description testDescription --secret name1=value-with,and= --secret name2=value-with\"and'", fixture: "pipeline/create.golden"},
 		// secret value with space (e.g. name="some value") also works but cannot be integration tested, due to cli_test.runCommand() is splitting these args by space character
 		{args: "pipeline delete --help", fixture: "pipeline/delete-help.golden"},
-		{args: "pipeline delete pipe-12345", fixture: "pipeline/delete.golden"},
+		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
+		{args: "pipeline delete pipe-12345", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("testPipeline\n"))}, fixture: "pipeline/delete-prompt.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
 		{args: "pipeline activate pipeline-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate --help", fixture: "pipeline/deactivate-help.golden"},
