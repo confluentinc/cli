@@ -42,7 +42,5 @@ func (c *command) add(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
 	return c.plugin.AddEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 }

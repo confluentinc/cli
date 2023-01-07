@@ -1,6 +1,6 @@
-        Name       |   Value    
--------------------+------------
-  cleanup.policy   | delete     
-  compression.type | producer   
-  num.partitions   |         3  
-  retention.ms     | 604800000  
+        Name       |   Value   | Read-Only  
+-------------------+-----------+------------
+  cleanup.policy   | delete    | false      
+  compression.type | producer  | true       
+  num.partitions   |         3 | true       
+  retention.ms     | 604800000 | false      

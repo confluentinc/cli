@@ -4,8 +4,6 @@ import (
 	"strings"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/go-printer/tables"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -13,13 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-)
-
-var (
-	groupDescribeFields              = []string{"ClusterId", "ConsumerGroupId", "Coordinator", "IsSimple", "PartitionAssignor", "State"}
-	groupDescribeHumanRenames        = map[string]string{"ClusterId": "Cluster", "ConsumerGroupId": "Consumer Group", "IsSimple": "Simple"}
-	groupDescribeConsumersFields     = []string{"ConsumerGroupId", "ConsumerId", "InstanceId", "ClientId"}
-	groupDescribeConsumerTableLabels = []string{"Consumer Group", "Consumer", "Instance", "Client"}
 )
 
 func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
@@ -64,18 +55,26 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
+	groupData := getGroupData(groupCmdResp, groupCmdConsumersResp)
+
+	table := output.NewTable(cmd)
+	table.Add(convertGroupToDescribeStruct(groupData))
+	if err := table.Print(); err != nil {
 		return err
 	}
 
-	groupData := getGroupData(groupCmdResp, groupCmdConsumersResp)
+	if output.GetFormat(cmd) == output.Human {
+		utils.Print(cmd, "\nConsumers\n\n")
 
-	if outputOption == output.Human.String() {
-		return printGroupHumanDescribe(cmd, groupData)
+		list := output.NewList(cmd)
+		for _, consumer := range groupData.Consumers {
+			list.Add(&consumer)
+		}
+
+		return list.Print()
 	}
 
-	return output.StructuredOutputForCommand(cmd, outputOption, groupData)
+	return nil
 }
 
 func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
@@ -113,26 +112,8 @@ func getStringBroker(relationship kafkarestv3.Relationship) string {
 	return splitString[1]
 }
 
-func printGroupHumanDescribe(cmd *cobra.Command, groupData *groupData) error {
-	// printing non-consumer information in table format first
-	if err := tables.RenderTableOut(convertGroupToDescribeStruct(groupData), groupDescribeFields, groupDescribeHumanRenames, cmd.OutOrStdout()); err != nil {
-		return err
-	}
-
-	utils.Print(cmd, "\nConsumers\n\n")
-
-	// printing consumer information in list table format
-	consumerTableEntries := make([][]string, len(groupData.Consumers))
-	for i, consumer := range groupData.Consumers {
-		consumerTableEntries[i] = printer.ToRow(&consumer, groupDescribeConsumersFields)
-	}
-
-	printer.RenderCollectionTable(consumerTableEntries, groupDescribeConsumerTableLabels)
-	return nil
-}
-
-func convertGroupToDescribeStruct(groupData *groupData) *groupDescribeStruct {
-	return &groupDescribeStruct{
+func convertGroupToDescribeStruct(groupData *groupData) *consumerGroupOut {
+	return &consumerGroupOut{
 		ClusterId:         groupData.ClusterId,
 		ConsumerGroupId:   groupData.ConsumerGroupId,
 		Coordinator:       groupData.Coordinator,
