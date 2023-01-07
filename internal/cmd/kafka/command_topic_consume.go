@@ -46,7 +46,6 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
-	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
@@ -82,11 +81,6 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
-	if err != nil {
-		return err
-	}
-
-	fullHeader, err := cmd.Flags().GetBool("full-header")
 	if err != nil {
 		return err
 	}
@@ -197,7 +191,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		Format:     valueFormat,
 		Out:        cmd.OutOrStdout(),
 		Subject:    subject,
-		Properties: ConsumerProperties{PrintKey: printKey, FullHeader: fullHeader, Delimiter: delimiter, SchemaPath: dir},
+		Properties: ConsumerProperties{PrintKey: printKey, Delimiter: delimiter, SchemaPath: dir},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
 }
