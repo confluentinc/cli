@@ -12,7 +12,7 @@ const (
 	RAWSCHEMANAME         string = "string"
 )
 
-func FormatTranslation(bankendValueFormat string) (string, error) {
+func FormatTranslation(backendValueFormat string) (string, error) {
 	var cliValueFormat string
 	switch bankendValueFormat {
 	case "":
