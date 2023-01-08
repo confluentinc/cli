@@ -14,7 +14,7 @@ const (
 
 func FormatTranslation(backendValueFormat string) (string, error) {
 	var cliValueFormat string
-	switch bankendValueFormat {
+	switch backendValueFormat {
 	case "":
 		cliValueFormat = AVROSCHEMANAME
 	case AVROSCHEMABACKEND:
