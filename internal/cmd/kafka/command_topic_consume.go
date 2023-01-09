@@ -208,7 +208,8 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			FullHeader: fullHeader,
 			Timestamp:  timestamp,
 			Delimiter:  delimiter,
-			SchemaPath: dir},
+			SchemaPath: dir
+		},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
 }
