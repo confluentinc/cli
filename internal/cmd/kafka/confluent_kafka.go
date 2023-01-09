@@ -46,6 +46,7 @@ type ConsumerProperties struct {
 	Delimiter  string
 	FullHeader bool
 	PrintKey   bool
+	Timestamp  bool
 	SchemaPath string
 }
 
@@ -223,6 +224,10 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
+	if h.Properties.Timestamp {
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t"+jsonMessage, e.Timestamp.UnixMilli())
+	}
+
 	_, err = fmt.Fprintln(h.Out, jsonMessage)
 	if err != nil {
 		return err
@@ -238,6 +243,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
