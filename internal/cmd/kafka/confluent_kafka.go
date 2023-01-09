@@ -224,6 +224,10 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
+	if h.Properties.Timestamp {
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t"+jsonMessage, e.Timestamp.UnixMilli())
+	}
+
 	_, err = fmt.Fprintln(h.Out, jsonMessage)
 	if err != nil {
 		return err
@@ -235,13 +239,6 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 			headers = getFullHeaders(e.Headers)
 		}
 		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
-		if err != nil {
-			return err
-		}
-	}
-
-	if h.Properties.Timestamp {
-		_, err = fmt.Fprintf(h.Out, "%% Timestamp: %d\n", e.Timestamp.UnixMilli())
 		if err != nil {
 			return err
 		}
