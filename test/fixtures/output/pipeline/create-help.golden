@@ -15,7 +15,7 @@ Flags:
       --sql-file string       Path to a KSQL file containing the pipeline's source code.
       --secret stringArray    A named secret that can be referenced in pipeline source code, e.g. "secret_name=secret_content".
                               This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
-                              where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
+                              where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
                               The <secret-value> can be of any format but may not be empty.
   -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string        Kafka cluster ID.
