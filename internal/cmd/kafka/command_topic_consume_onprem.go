@@ -176,7 +176,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			FullHeader: fullHeader,
 			Timestamp:  timestamp,
 			Delimiter:  delimiter,
-			SchemaPath: dir
+			SchemaPath: dir,
 		},
 	}
 	return runConsumer(cmd, consumer, groupHandler)
