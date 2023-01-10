@@ -48,6 +48,7 @@ blocks:
             - ulimit -n 2048
             - make test
             - make test-installer
+            - make sonar-scan
 
             # Cache Go dependencies
             - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
