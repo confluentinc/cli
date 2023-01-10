@@ -15,7 +15,7 @@ type Pipeline struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	KsqlCluster string    `json:"ksql_cluster"`
-	SecretNames []string  `json:"secret_names"`
+	SecretNames []string  `json:"secret_names,omitempty"`
 	State       string    `json:"state"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

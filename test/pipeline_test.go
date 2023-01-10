@@ -37,6 +37,7 @@ func (s *CLITestSuite) TestSDPipeline() {
 		{args: "pipeline deactivate pipeline-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline update --help", fixture: "pipeline/update-help.golden"},
 		{args: "pipeline update pipeline-12345 --name newName --description newDescription", fixture: "pipeline/update-with-new-name-and-desc.golden"},
+		{args: "pipeline update pipeline-12345 --name newName --description newDescription -o json", fixture: "pipeline/update-with-json-output.golden"},
 		{args: fmt.Sprintf("pipeline update pipeline-12345 --sql-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
 		{args: "pipeline update pipeline-12345 --secret name1=value-with,and= --secret name2=value-with\"and' --secret name3=", fixture: "pipeline/update-with-secret-names.golden"},
 	}
