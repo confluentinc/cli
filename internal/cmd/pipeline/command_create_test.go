@@ -32,7 +32,7 @@ func TestCreateSecretMappings(t *testing.T) {
 	require.Error(t, err)
 
 	// empty secret value is NOT allowed with this regex
-	secretMappings, err = createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
+	_, err = createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
 	require.Error(t, err)
 
 	// empty secret value is allowed with this regex
