@@ -48,6 +48,15 @@ blocks:
             - ulimit -n 2048
             - make test
             - make test-installer
+            - if [ -z "$SEMAPHORE_GIT_PR_NUMBER" ] then;
+              sonar-scanner -X \
+                -Dsonar.branch.name $SEMAPHORE_GIT_BRANCH \
+              else; \
+                sonar-scanner -X \
+                  -Dsonar.pullrequest.key $SEMAPHORE_GIT_PR_NUMBER \
+                  -Dsonar.pullrequest.branch $SEMAPHORE_GIT_PR_BRANCH \
+                  -Dsonar.pullrequest.base $SEMAPHORE_GIT_BRANCH \
+              fi
 
             # Cache Go dependencies
             - cache store linux-$(checksum go.sum) $(go env GOPATH)/pkg/mod
