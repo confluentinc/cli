@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -102,6 +103,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Name:        *pipeline.Spec.DisplayName,
 		Description: *pipeline.Spec.Description,
 		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
+		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
 		State:       *pipeline.Status.State,
 		CreatedAt:   *pipeline.Metadata.CreatedAt,
 		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
@@ -130,4 +132,18 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 		secretMappings[name] = value
 	}
 	return secretMappings, nil
+}
+
+func getOrderedSecretNames(secrets *map[string]string) []string {
+	if secrets == nil {
+		return []string{}
+	}
+
+	names := make([]string, 0, len(*secrets))
+	for n := range *secrets {
+		names = append(names, n)
+	}
+
+	sort.Strings(names)
+	return names
 }
