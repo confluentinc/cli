@@ -210,7 +210,7 @@ generate-packaging-patch:
 
 .PHONY: sonar-scan
 sonar-scan:
-ifeq ($SEMAPHORE_GIT_PR_NUMBER)
+ifeq ($SEMAPHORE_GIT_PR_NUMBER,)
 	sonar-scanner -X \
 	-Dsonar.branch.name $SEMAPHORE_GIT_BRANCH 
 else
