@@ -51,11 +51,11 @@ blocks:
             - if [ -z "$SEMAPHORE_GIT_PR_NUMBER" ] then;
               sonar-scanner -X \
                 -Dsonar.branch.name $SEMAPHORE_GIT_BRANCH \
-              else
+              else; \
                 sonar-scanner -X \
                   -Dsonar.pullrequest.key $SEMAPHORE_GIT_PR_NUMBER \
                   -Dsonar.pullrequest.branch $SEMAPHORE_GIT_PR_BRANCH \
-                  -Dsonar.pullrequest.base $SEMAPHORE_GIT_BRANCH
+                  -Dsonar.pullrequest.base $SEMAPHORE_GIT_BRANCH \
               fi
 
             # Cache Go dependencies
