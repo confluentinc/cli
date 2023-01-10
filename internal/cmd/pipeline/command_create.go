@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 
 	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,10 +33,10 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	if enableSourceCode {
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
-		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
+		cmd.Flags().StringArray("secret", []string{}, fmt.Sprintf("A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
-			"The <secret-value> can be of any format but may not be empty.")
+			"where <secret-name> consists of 1-%d lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"The <secret-value> can be of any format but may not be empty.", secretNameSizeLimit))
 	}
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -102,6 +103,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		Name:        *pipeline.Spec.DisplayName,
 		Description: *pipeline.Spec.Description,
 		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
+		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
 		State:       *pipeline.Status.State,
 		CreatedAt:   *pipeline.Metadata.CreatedAt,
 		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
@@ -113,7 +115,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {
 	secretMappings := make(map[string]string)
 
-	// The name of a secret may consist of 1-64 lowercase letters, uppercase letters, digits,
+	// The name of a secret may consist of 1-secretNameSizeLimit lowercase letters, uppercase letters, digits,
 	// and the '_' (underscore) and may not begin with a digit.
 	pattern := regexp.MustCompile(regex)
 
@@ -124,10 +126,24 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 
 		matches := pattern.FindStringSubmatch(secret)
 		name, value := matches[1], matches[2]
-		if len(name) > 64 {
-			return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
+		if len(name) > secretNameSizeLimit {
+			return nil, fmt.Errorf(`secret name "%s" cannot exceed %d characters`, name, secretNameSizeLimit)
 		}
 		secretMappings[name] = value
 	}
 	return secretMappings, nil
+}
+
+func getOrderedSecretNames(secrets *map[string]string) []string {
+	if secrets == nil || len(*secrets) == 0 {
+		return nil
+	}
+
+	names := make([]string, 0, len(*secrets))
+	for n := range *secrets {
+		names = append(names, n)
+	}
+
+	sort.Strings(names)
+	return names
 }
