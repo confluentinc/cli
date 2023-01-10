@@ -15,6 +15,7 @@ type Pipeline struct {
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
 	KsqlCluster string    `json:"ksql_cluster"`
+	SecretNames []string  `json:"secret_names,omitempty"`
 	State       string    `json:"state"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
@@ -24,12 +25,13 @@ var (
 	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
 	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "KSQL Cluster", "State"}
 	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
-	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "State", "CreatedAt", "UpdatedAt"}
+	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "SecretNames", "State", "CreatedAt", "UpdatedAt"}
 	pipelineDescribeHumanLabels  = map[string]string{
 		"Id":          "ID",
 		"Name":        "Name",
 		"Description": "Description",
 		"KsqlCluster": "KSQL Cluster",
+		"SecretNames": "Secret Names",
 		"State":       "State",
 		"CreatedAt":   "Created At",
 		"UpdatedAt":   "Updated At",
@@ -39,12 +41,14 @@ var (
 		"Name":        "name",
 		"Description": "description",
 		"KsqlCluster": "ksql_cluster",
+		"SecretNames": "secret_names",
 		"State":       "state",
 		"CreatedAt":   "created_at",
 		"UpdatedAt":   "updated_at",
 	}
 	secretMappingWithoutEmptyValue = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$`
 	secretMappingWithEmptyValue    = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`
+	secretNameSizeLimit            = 128
 )
 
 type command struct {
