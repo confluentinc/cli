@@ -50,6 +50,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		Name:        *pipeline.Spec.DisplayName,
 		Description: *pipeline.Spec.Description,
 		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
+		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
 		State:       *pipeline.Status.State,
 		CreatedAt:   *pipeline.Metadata.CreatedAt,
 		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
