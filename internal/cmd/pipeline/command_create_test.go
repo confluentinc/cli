@@ -10,10 +10,10 @@ func TestCreateSecretMappings(t *testing.T) {
 	require.Equal(t, "value1", secretMappings["name1"])
 	require.Equal(t, "value2", secretMappings["_name2"])
 
-	secretMappings, err := createSecretMappings([]string{"123invalidName=value"}, secretMappingWithoutEmptyValue)
+	_, err := createSecretMappings([]string{"123invalidName=value"}, secretMappingWithoutEmptyValue)
 	require.Error(t, err)
 
-	secretMappings, err = createSecretMappings([]string{"invalidName!@#$=value"}, secretMappingWithoutEmptyValue)
+	_, err = createSecretMappings([]string{"invalidName!@#$=value"}, secretMappingWithoutEmptyValue)
 	require.Error(t, err)
 
 	secretMappings, _ = createSecretMappings([]string{"name=value-with-,and="}, secretMappingWithoutEmptyValue)
@@ -28,7 +28,7 @@ func TestCreateSecretMappings(t *testing.T) {
 	secretMappings, _ = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value"}, secretMappingWithoutEmptyValue)
 	require.Equal(t, "value", secretMappings["a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet"])
 
-	secretMappings, err = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_exceeded_128_characters_limit=value"}, secretMappingWithoutEmptyValue)
+	_, err = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_exceeded_128_characters_limit=value"}, secretMappingWithoutEmptyValue)
 	require.Error(t, err)
 
 	// empty secret value is NOT allowed with this regex
