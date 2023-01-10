@@ -207,3 +207,15 @@ test: test-prep unit-test int-test
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
 	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
+
+.PHONY: sonar-scan
+sonar-scan:
+ifeq ($SEMAPHORE_GIT_PR_NUMBER,)
+	sonar-scanner -X \
+	-Dsonar.branch.name $SEMAPHORE_GIT_BRANCH 
+else
+	sonar-scanner -X \
+		-Dsonar.pullrequest.key $SEMAPHORE_GIT_PR_NUMBER \
+		-Dsonar.pullrequest.branch $SEMAPHORE_GIT_PR_BRANCH \
+		-Dsonar.pullrequest.base $SEMAPHORE_GIT_BRANCH
+endif
