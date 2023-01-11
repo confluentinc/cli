@@ -2,7 +2,6 @@ package pipeline
 
 import (
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -51,21 +50,21 @@ func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {
 }
 
 func TestSecretNamesListWithEmptyInput(t *testing.T) {
-	require.Equal(t, []string{}, getOrderedSecretNames(nil))
+	assert.Equal(t, []string{}, getOrderedSecretNames(nil))
 
 	secretMappings := make(map[string]string)
-	require.Equal(t, []string{}, getOrderedSecretNames(&secretMappings))
+	assert.Equal(t, []string{}, getOrderedSecretNames(&secretMappings))
 }
 
 func TestSecretNamesListOrder(t *testing.T) {
 	secretMappings := make(map[string]string)
 
 	secretMappings["name1"] = "value1"
-	require.Equal(t, []string{"name1"}, getOrderedSecretNames(&secretMappings))
+	assert.Equal(t, []string{"name1"}, getOrderedSecretNames(&secretMappings))
 
 	secretMappings["name3"] = "value3"
-	require.Equal(t, []string{"name1", "name3"}, getOrderedSecretNames(&secretMappings))
+	assert.Equal(t, []string{"name1", "name3"}, getOrderedSecretNames(&secretMappings))
 
 	secretMappings["name2"] = "value2"
-	require.Equal(t, []string{"name1", "name2", "name3"}, getOrderedSecretNames(&secretMappings))
+	assert.Equal(t, []string{"name1", "name2", "name3"}, getOrderedSecretNames(&secretMappings))
 }
