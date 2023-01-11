@@ -225,7 +225,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t"+jsonMessage, e.Timestamp.UnixMilli())
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
 	}
 
 	_, err = fmt.Fprintln(h.Out, jsonMessage)
