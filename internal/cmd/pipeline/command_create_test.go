@@ -43,11 +43,11 @@ func TestCreateSecretMappings(t *testing.T) {
 
 func TestSecretNamesList(t *testing.T) {
 	names := getOrderedSecretNames(nil)
-	require.Equal(t, []string(nil), names)
+	require.Equal(t, []string{}, names)
 
 	secretMappings := make(map[string]string)
 	names = getOrderedSecretNames(&secretMappings)
-	require.Equal(t, []string(nil), names)
+	require.Equal(t, []string{}, names)
 
 	secretMappings["name1"] = "value1"
 	names = getOrderedSecretNames(&secretMappings)
