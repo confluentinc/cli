@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -40,16 +39,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&out{
-		Id:          pipeline.GetId(),
-		Name:        pipeline.Spec.GetDisplayName(),
-		Description: pipeline.Spec.GetDescription(),
-		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
-		State:       pipeline.Status.GetState(),
-		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
-		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
-	})
-	return table.Print()
+	return print(cmd, pipeline)
 }
