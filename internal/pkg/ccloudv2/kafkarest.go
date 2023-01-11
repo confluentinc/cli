@@ -2,10 +2,19 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+)
+
+const (
+	BadRequestErrorCode              = 40002
+	UnknownTopicOrPartitionErrorCode = 40403
 )
 
 type KafkaRestClient struct {
@@ -44,44 +53,44 @@ func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.Cre
 	return c.ACLV3Api.CreateKafkaAclsExecute(req)
 }
 
-func (c *KafkaRestClient) GetKafkaAcls(clusterId string, acl *schedv1.ACLBinding) (kafkarestv3.AclDataList, *http.Response, error) {
+func (c *KafkaRestClient) GetKafkaAcls(clusterId string, acl *ccstructs.ACLBinding) (kafkarestv3.AclDataList, *http.Response, error) {
 	req := c.ACLV3Api.GetKafkaAcls(c.context(), clusterId).Host(acl.Entry.Host).Principal(acl.Entry.Principal).ResourceName(acl.Pattern.Name)
 
-	if acl.Entry.Operation != schedv1.ACLOperations_UNKNOWN {
+	if acl.Entry.Operation != ccstructs.ACLOperations_UNKNOWN {
 		req = req.Operation(acl.Entry.Operation.String())
 	}
 
-	if acl.Pattern.PatternType != schedv1.PatternTypes_UNKNOWN {
+	if acl.Pattern.PatternType != ccstructs.PatternTypes_UNKNOWN {
 		req = req.PatternType(acl.Pattern.PatternType.String())
 	}
 
-	if acl.Entry.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
+	if acl.Entry.PermissionType != ccstructs.ACLPermissionTypes_UNKNOWN {
 		req = req.Permission(acl.Entry.PermissionType.String())
 	}
 
-	if acl.Pattern.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+	if acl.Pattern.ResourceType != ccstructs.ResourceTypes_UNKNOWN {
 		req = req.ResourceType(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
 	}
 
 	return c.ACLV3Api.GetKafkaAclsExecute(req)
 }
 
-func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *schedv1.ACLFilter) (kafkarestv3.InlineResponse200, *http.Response, error) {
+func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *ccstructs.ACLFilter) (kafkarestv3.InlineResponse200, *http.Response, error) {
 	req := c.ACLV3Api.DeleteKafkaAcls(c.context(), clusterId).Host(acl.EntryFilter.Host).Principal(acl.EntryFilter.Principal).ResourceName(acl.PatternFilter.Name)
 
-	if acl.EntryFilter.Operation != schedv1.ACLOperations_UNKNOWN {
+	if acl.EntryFilter.Operation != ccstructs.ACLOperations_UNKNOWN {
 		req = req.Operation(acl.EntryFilter.Operation.String())
 	}
 
-	if acl.PatternFilter.PatternType != schedv1.PatternTypes_UNKNOWN {
+	if acl.PatternFilter.PatternType != ccstructs.PatternTypes_UNKNOWN {
 		req = req.PatternType(acl.PatternFilter.PatternType.String())
 	}
 
-	if acl.EntryFilter.PermissionType != schedv1.ACLPermissionTypes_UNKNOWN {
+	if acl.EntryFilter.PermissionType != ccstructs.ACLPermissionTypes_UNKNOWN {
 		req = req.Permission(acl.EntryFilter.PermissionType.String())
 	}
 
-	if acl.PatternFilter.ResourceType != schedv1.ResourceTypes_UNKNOWN {
+	if acl.PatternFilter.ResourceType != ccstructs.ResourceTypes_UNKNOWN {
 		req = req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
 	}
 
@@ -118,9 +127,17 @@ func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string,
 	return c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatchExecute(req)
 }
 
-func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, error) {
 	req := c.ConfigsV3Api.ListKafkaTopicConfigs(c.context(), clusterId, topicName)
-	return c.ConfigsV3Api.ListKafkaTopicConfigsExecute(req)
+	res, httpResp, err := c.ConfigsV3Api.ListKafkaTopicConfigsExecute(req)
+	if err != nil {
+		if restErr, err := kafkarest.ParseOpenAPIErrorCloud(err); err == nil {
+			if restErr.Code == UnknownTopicOrPartitionErrorCode {
+				return kafkarestv3.TopicConfigDataList{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+			}
+		}
+	}
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(clusterId, topicName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {

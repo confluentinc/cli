@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDeactivateCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDeactivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deactivate <pipeline-id>",
 		Short: "Request to deactivate a pipeline.",
@@ -51,17 +51,16 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// *pipeline.state will be deactivating
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		Id:          pipeline.GetId(),
+		Name:        pipeline.Spec.GetDisplayName(),
+		Description: pipeline.Spec.GetDescription(),
+		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
 		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+		State:       pipeline.Status.GetState(),
+		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
+		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
+	})
+	return table.Print()
 }
