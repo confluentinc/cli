@@ -33,9 +33,6 @@ func TestCreateSecretMappingsWithLongName(t *testing.T) {
 	secretMappings, err := createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value"}, secretMappingWithoutEmptyValue)
 	assert.NoError(t, err)
 	assert.Equal(t, "value", secretMappings["a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet"])
-
-	_, err = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_exceeded_128_characters_limit=value"}, secretMappingWithoutEmptyValue)
-	assert.Error(t, err)
 }
 
 func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {

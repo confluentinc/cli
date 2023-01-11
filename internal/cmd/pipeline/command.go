@@ -48,7 +48,6 @@ var (
 	}
 	secretMappingWithoutEmptyValue = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$`
 	secretMappingWithEmptyValue    = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`
-	secretNameSizeLimit            = 128
 )
 
 type command struct {
