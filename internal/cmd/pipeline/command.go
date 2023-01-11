@@ -16,6 +16,7 @@ type out struct {
 	Name        string    `human:"Name" serialized:"name"`
 	Description string    `human:"Description" serialized:"description"`
 	KsqlCluster string    `human:"KSQL Cluster" serialized:"ksql_cluster"`
+	SecretNames []string  `human:"Secret Names" serialized:"secret_names"`
 	State       string    `human:"State" serialized:"state"`
 	CreatedAt   time.Time `human:"Created At" serialized:"created_at"`
 	UpdatedAt   time.Time `human:"Updated At" serialized:"updated_at"`

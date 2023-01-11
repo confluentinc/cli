@@ -57,6 +57,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		Name:        pipeline.Spec.GetDisplayName(),
 		Description: pipeline.Spec.GetDescription(),
 		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
 		State:       pipeline.Status.GetState(),
 		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
 		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
