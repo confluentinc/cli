@@ -46,8 +46,5 @@ func (c *command) decrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
 	return c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
 }
