@@ -1,63 +1,71 @@
 package pipeline
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestCreateSecretMappings(t *testing.T) {
-	secretMappings, _ := createSecretMappings([]string{"name1=value1", "_name2=value2"}, secretMappingWithoutEmptyValue)
-	require.Equal(t, "value1", secretMappings["name1"])
-	require.Equal(t, "value2", secretMappings["_name2"])
-
-	_, err := createSecretMappings([]string{"123invalidName=value"}, secretMappingWithoutEmptyValue)
-	require.Error(t, err)
-
-	_, err = createSecretMappings([]string{"invalidName!@#$=value"}, secretMappingWithoutEmptyValue)
-	require.Error(t, err)
+func TestCreateValidSecretMappings(t *testing.T) {
+	secretMappings, err := createSecretMappings([]string{"name1=value1", "_name2=value2"}, secretMappingWithoutEmptyValue)
+	assert.NoError(t, err)
+	assert.Equal(t, "value1", secretMappings["name1"])
+	assert.Equal(t, "value2", secretMappings["_name2"])
 
 	secretMappings, _ = createSecretMappings([]string{"name=value-with-,and="}, secretMappingWithoutEmptyValue)
-	require.Equal(t, "value-with-,and=", secretMappings["name"])
+	assert.Equal(t, "value-with-,and=", secretMappings["name"])
 
 	secretMappings, _ = createSecretMappings([]string{"name=value-with-\"and'='"}, secretMappingWithoutEmptyValue)
-	require.Equal(t, "value-with-\"and'='", secretMappings["name"])
+	assert.Equal(t, "value-with-\"and'='", secretMappings["name"])
 
 	secretMappings, _ = createSecretMappings([]string{"name=value with space"}, secretMappingWithoutEmptyValue)
-	require.Equal(t, "value with space", secretMappings["name"])
+	assert.Equal(t, "value with space", secretMappings["name"])
+}
 
-	secretMappings, _ = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value"}, secretMappingWithoutEmptyValue)
-	require.Equal(t, "value", secretMappings["a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet"])
+func TestCreateSecretMappingsWithInvalidName(t *testing.T) {
+	_, err := createSecretMappings([]string{"123invalidName=value"}, secretMappingWithoutEmptyValue)
+	assert.Error(t, err)
+
+	_, err = createSecretMappings([]string{"invalidName!@#$=value"}, secretMappingWithoutEmptyValue)
+	assert.Error(t, err)
+}
+
+func TestCreateSecretMappingsWithLongName(t *testing.T) {
+	secretMappings, err := createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value"}, secretMappingWithoutEmptyValue)
+	assert.NoError(t, err)
+	assert.Equal(t, "value", secretMappings["a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet"])
 
 	_, err = createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_exceeded_128_characters_limit=value"}, secretMappingWithoutEmptyValue)
-	require.Error(t, err)
+	assert.Error(t, err)
+}
 
+func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {
 	// empty secret value is NOT allowed with this regex
-	_, err = createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
-	require.Error(t, err)
+	secretMappings, err := createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
+	assert.Error(t, err)
 
 	// empty secret value is allowed with this regex
 	secretMappings, _ = createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithEmptyValue)
-	require.Equal(t, "value1", secretMappings["name1"])
-	require.Equal(t, "", secretMappings["name2"])
+	assert.Equal(t, "value1", secretMappings["name1"])
+	assert.Equal(t, "", secretMappings["name2"])
 }
 
-func TestSecretNamesList(t *testing.T) {
-	names := getOrderedSecretNames(nil)
-	require.Equal(t, []string{}, names)
+func TestSecretNamesListWithEmptyInput(t *testing.T) {
+	require.Equal(t, []string{}, getOrderedSecretNames(nil))
 
 	secretMappings := make(map[string]string)
-	names = getOrderedSecretNames(&secretMappings)
-	require.Equal(t, []string{}, names)
+	require.Equal(t, []string{}, getOrderedSecretNames(&secretMappings))
+}
+
+func TestSecretNamesListOrder(t *testing.T) {
+	secretMappings := make(map[string]string)
 
 	secretMappings["name1"] = "value1"
-	names = getOrderedSecretNames(&secretMappings)
-	require.Equal(t, []string{"name1"}, names)
+	require.Equal(t, []string{"name1"}, getOrderedSecretNames(&secretMappings))
 
 	secretMappings["name3"] = "value3"
-	names = getOrderedSecretNames(&secretMappings)
-	require.Equal(t, []string{"name1", "name3"}, names)
+	require.Equal(t, []string{"name1", "name3"}, getOrderedSecretNames(&secretMappings))
 
 	secretMappings["name2"] = "value2"
-	names = getOrderedSecretNames(&secretMappings)
-	require.Equal(t, []string{"name1", "name2", "name3"}, names)
+	require.Equal(t, []string{"name1", "name2", "name3"}, getOrderedSecretNames(&secretMappings))
 }

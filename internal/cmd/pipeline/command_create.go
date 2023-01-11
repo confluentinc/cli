@@ -135,7 +135,7 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 }
 
 func getOrderedSecretNames(secrets *map[string]string) []string {
-	if secrets == nil || len(*secrets) == 0 {
+	if secrets == nil {
 		return []string{}
 	}
 
