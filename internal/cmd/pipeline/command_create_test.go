@@ -37,11 +37,11 @@ func TestCreateSecretMappingsWithLongName(t *testing.T) {
 
 func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {
 	// empty secret value is NOT allowed with this regex
-	secretMappings, err := createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
+	_, err := createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
 	assert.Error(t, err)
 
 	// empty secret value is allowed with this regex
-	secretMappings, _ = createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithEmptyValue)
+	secretMappings, _ := createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithEmptyValue)
 	assert.Equal(t, "value1", secretMappings["name1"])
 	assert.Equal(t, "", secretMappings["name2"])
 }
