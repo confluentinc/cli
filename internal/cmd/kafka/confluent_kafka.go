@@ -348,6 +348,6 @@ func getHeaderString(header ckafka.Header) string {
 	} else if len(header.Value) == 0 {
 		return fmt.Sprintf("%s=<empty>", header.Key)
 	} else {
-		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
+		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
 }
