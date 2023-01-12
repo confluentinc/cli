@@ -23,11 +23,12 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			pipeline := &streamdesignerv1.SdV1Pipeline{
 				Id: streamdesignerv1.PtrString("pipe-12345"),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: streamdesignerv1.PtrString("testPipeline"),
-					Description: streamdesignerv1.PtrString("description"),
-					SourceCode:  &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
-					Secrets:     &map[string]string{"name1": "secret1", "name2": "secret2"},
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
+					Secrets:             &map[string]string{"name1": "secret1", "name2": "secret2"},
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
@@ -53,11 +54,12 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			pipeline := &streamdesignerv1.SdV1Pipeline{
 				Id: streamdesignerv1.PtrString("pipe-12345"),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: streamdesignerv1.PtrString("testPipeline"),
-					Description: streamdesignerv1.PtrString("description"),
-					SourceCode:  &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
-					Secrets:     &map[string]string{"name1": "*****************", "name2": "*****************", "name3": "*****************"},
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
+					Secrets:             &map[string]string{"name1": "*****************", "name2": "*****************", "name3": "*****************"},
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
@@ -76,6 +78,10 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 
 			if body.Spec.Description != nil {
 				pipeline.Spec.Description = body.Spec.Description
+			}
+
+			if body.Spec.ActivationPrivilege != nil {
+				pipeline.Spec.ActivationPrivilege = body.Spec.ActivationPrivilege
 			}
 
 			state := "draft"
@@ -164,11 +170,12 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 			pipeline := &streamdesignerv1.SdV1Pipeline{
 				Id: streamdesignerv1.PtrString("pipe-12345"),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: body.Spec.DisplayName,
-					Description: streamdesignerv1.PtrString("description"),
-					SourceCode:  body.Spec.SourceCode,
-					Secrets:     body.Spec.Secrets,
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					DisplayName:         body.Spec.DisplayName,
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          body.Spec.SourceCode,
+					Secrets:             body.Spec.Secrets,
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
