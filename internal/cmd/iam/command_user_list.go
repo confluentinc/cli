@@ -1,10 +1,6 @@
 package iam
 
 import (
-	"context"
-	"strings"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,28 +28,11 @@ func (c userCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, user := range users {
-		userProfile, err := c.PrivateClient.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: *user.Id})
-		if err != nil {
-			return err
-		}
-
-		// Avoid panics if new types of statuses are added in the future
-		userStatus := "Unknown"
-		if val, ok := statusMap[userProfile.UserStatus]; ok {
-			userStatus = val
-		}
-
-		var authMethods []string
-		for _, method := range userProfile.GetAuthConfig().GetAllowedAuthMethods() {
-			authMethods = append(authMethods, authMethodFormats[method])
-		}
-
 		list.Add(&userOut{
-			Id:                   userProfile.ResourceId,
-			Name:                 getName(userProfile),
-			Email:                userProfile.Email,
-			Status:               userStatus,
-			AuthenticationMethod: strings.Join(authMethods, ", "),
+			Id:                   user.GetId(),
+			Name:                 user.GetFullName(),
+			Email:                user.GetEmail(),
+			AuthenticationMethod: authMethodFormats[user.GetAuthType()],
 		})
 	}
 	return list.Print()

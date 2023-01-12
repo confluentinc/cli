@@ -153,21 +153,21 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		userId := vars["id"]
 		w.Header().Set("Content-Type", "application/json")
+		var user iamv2.IamV2User
 		switch userId {
-		case "u-1":
+		case "u-0", "u-1":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
+			return
 		case "u-2":
-			user := buildIamUser("u-2@confluent.io", "Bono", "u-2")
-			err := json.NewEncoder(w).Encode(user)
-			require.NoError(t, err)
+			user = buildIamUser("u-2@confluent.io", "Bono", "u-2", "AUTH_TYPE_LOCAL")
 		case "u-11aaa":
-			user := buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa")
-			err := json.NewEncoder(w).Encode(user)
-			require.NoError(t, err)
+			user = buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL")
 		default:
-			w.WriteHeader(http.StatusNoContent)
+			user = buildIamUser("mhe@confluent.io", "Muwei He", userId, "AUTH_TYPE_LOCAL")
 		}
+		err := json.NewEncoder(w).Encode(user)
+		require.NoError(t, err)
 	}
 }
 
@@ -176,12 +176,12 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []iamv2.IamV2User{
-				buildIamUser("bstrauch@confluent.io", "Brian Strauch", "u11"),
-				buildIamUser("mtodzo@confluent.io", "Miles Todzo", "u-17"),
-				buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa"),
-				buildIamUser("u-22bbb@confluent.io", "22 Bbb", "u-22bbb"),
-				buildIamUser("u-33ccc@confluent.io", "33 Ccc", "u-33ccc"),
-				buildIamUser("mhe@confluent.io", "Muwei He", "u-44ddd"),
+				buildIamUser("bstrauch@confluent.io", "Brian Strauch", "u11", "AUTH_TYPE_LOCAL"),
+				buildIamUser("mtodzo@confluent.io", "Miles Todzo", "u-17", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-22bbb@confluent.io", "22 Bbb", "u-22bbb", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-33ccc@confluent.io", "33 Ccc", "u-33ccc", "AUTH_TYPE_SSO"),
+				buildIamUser("mhe@confluent.io", "Muwei He", "u-44ddd", "AUTH_TYPE_LOCAL"),
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
