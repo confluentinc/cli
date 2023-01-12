@@ -11,40 +11,43 @@ import (
 )
 
 type Pipeline struct {
-	Id          string    `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	KsqlCluster string    `json:"ksql_cluster"`
-	SecretNames []string  `json:"secret_names"`
-	State       string    `json:"state"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	Id                  string    `json:"id"`
+	Name                string    `json:"name"`
+	Description         string    `json:"description"`
+	KsqlCluster         string    `json:"ksql_cluster"`
+	SecretNames         []string  `json:"secret_names"`
+	ActivationPrivilege bool      `json:"activation_privilege"`
+	State               string    `json:"state"`
+	CreatedAt           time.Time `json:"created_at"`
+	UpdatedAt           time.Time `json:"updated_at"`
 }
 
 var (
 	pipelineListFields           = []string{"Id", "Name", "Description", "KsqlCluster", "State"}
 	pipelineListHumanLabels      = []string{"ID", "Name", "Description", "KSQL Cluster", "State"}
 	pipelineListStructuredLabels = []string{"id", "name", "description", "ksql_cluster", "state"}
-	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "SecretNames", "State", "CreatedAt", "UpdatedAt"}
+	pipelineDescribeFields       = []string{"Id", "Name", "Description", "KsqlCluster", "SecretNames", "ActivationPrivilege", "State", "CreatedAt", "UpdatedAt"}
 	pipelineDescribeHumanLabels  = map[string]string{
-		"Id":          "ID",
-		"Name":        "Name",
-		"Description": "Description",
-		"KsqlCluster": "KSQL Cluster",
-		"SecretNames": "Secret Names",
-		"State":       "State",
-		"CreatedAt":   "Created At",
-		"UpdatedAt":   "Updated At",
+		"Id":                  "ID",
+		"Name":                "Name",
+		"Description":         "Description",
+		"KsqlCluster":         "KSQL Cluster",
+		"SecretNames":         "Secret Names",
+		"ActivationPrivilege": "Activation Privilege",
+		"State":               "State",
+		"CreatedAt":           "Created At",
+		"UpdatedAt":           "Updated At",
 	}
 	pipelineDescribeStructuredLabels = map[string]string{
-		"Id":          "id",
-		"Name":        "name",
-		"Description": "description",
-		"KsqlCluster": "ksql_cluster",
-		"SecretNames": "secret_names",
-		"State":       "state",
-		"CreatedAt":   "created_at",
-		"UpdatedAt":   "updated_at",
+		"Id":                  "id",
+		"Name":                "name",
+		"Description":         "description",
+		"KsqlCluster":         "ksql_cluster",
+		"SecretNames":         "secret_names",
+		"ActivationPrivilege": "activation_privilege",
+		"State":               "state",
+		"CreatedAt":           "created_at",
+		"UpdatedAt":           "updated_at",
 	}
 	secretMappingWithoutEmptyValue = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.+)$`
 	secretMappingWithEmptyValue    = `^([a-zA-Z_][a-zA-Z0-9_]*)=(.*)$`
