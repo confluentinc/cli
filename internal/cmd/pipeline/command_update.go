@@ -22,6 +22,14 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
 				Code: `confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"`,
 			},
+			examples.Example{
+				Text: `Request to update Stream Designer pipeline "pipe-12345", to grant it the activation privilege.`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege`,
+			},
+			examples.Example{
+				Text: `Request to update Stream Designer pipeline "pipe-12345", to revoke the activation privilege.`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege=false`,
+			},
 		),
 	}
 
@@ -34,7 +42,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
-	cmd.Flags().Bool("activation-privilege", true, "Grant pipeline privileges to be activated.")
+	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to active this pipeline.")
 
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -48,14 +56,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	description, _ := cmd.Flags().GetString("description")
 	sqlFile, _ := cmd.Flags().GetString("sql-file")
 	secrets, _ := cmd.Flags().GetStringArray("secret")
-	activationPrivilegeChanged := cmd.Flags().Changed("activation-privilege")
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !activationPrivilegeChanged {
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") {
 		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret, --activation-privilege")
 	}
 
@@ -82,7 +89,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	updatePipeline.Spec.SetSecrets(secretMappings)
 
-	if activationPrivilegeChanged {
+	if cmd.Flags().Changed("activation-privilege") {
 		activationPrivilege, _ := cmd.Flags().GetBool("activation-privilege")
 		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
 	}
