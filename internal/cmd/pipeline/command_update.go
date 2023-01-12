@@ -24,7 +24,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 			},
 			examples.Example{
 				Text: `Request to update Stream Designer pipeline "pipe-12345", to grant it the activation privilege.`,
-				Code: `confluent pipeline update pipe-12345 --activation-privilege`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege=true`,
 			},
 			examples.Example{
 				Text: `Request to update Stream Designer pipeline "pipe-12345", to revoke the activation privilege.`,
