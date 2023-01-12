@@ -2,7 +2,7 @@ module github.com/confluentinc/cli
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.167
+	github.com/aws/aws-sdk-go v1.44.175
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.6
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -10,7 +10,6 @@ require (
 	github.com/confluentinc/cc-structs/kafka/core v0.1523.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1373.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1373.0
-	github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.123
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230104195027-bd50c3316065
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -18,7 +17,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.9.0
+	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.12.0
@@ -35,7 +34,7 @@ require (
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.53
-	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.48
+	github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.53
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.18
 	github.com/davecgh/go-spew v1.1.1
@@ -52,7 +51,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.2.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.1
+	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/hashicorp/go-version v1.6.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
@@ -184,6 +183,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1523.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/support v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/util v0.1422.0 // indirect

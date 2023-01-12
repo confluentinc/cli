@@ -10,7 +10,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
@@ -33,7 +32,7 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
 
@@ -87,15 +86,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&out{
-		Id:          pipeline.GetId(),
-		Name:        pipeline.Spec.GetDisplayName(),
-		Description: pipeline.Spec.GetDescription(),
-		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-		State:       pipeline.Status.GetState(),
-		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
-		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
-	})
-	return table.Print()
+	return print(cmd, pipeline)
 }
