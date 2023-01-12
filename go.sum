@@ -385,8 +385,8 @@ github.com/aws/aws-sdk-go v1.43.11/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4
 github.com/aws/aws-sdk-go v1.43.31/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.45/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
 github.com/aws/aws-sdk-go v1.44.68/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
-github.com/aws/aws-sdk-go v1.44.167 h1:kQmBhGdZkQLU7AiHShSkBJ15zr8agy0QeaxXduvyp2E=
-github.com/aws/aws-sdk-go v1.44.167/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.175 h1:c0NzHHnPXV5kJoTUFQxFN5cUPpX1SxO635XnwL5/oIY=
+github.com/aws/aws-sdk-go v1.44.175/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v0.18.0/go.mod h1:JWVYvqSMppoMJC0x5wdwiImzgXTI9FuZwxzkQq9wy+g=
 github.com/aws/aws-sdk-go-v2 v1.16.8 h1:gOe9UPR98XSf7oEJCcojYg+N2/jCRm4DdeIsP85pIyQ=
 github.com/aws/aws-sdk-go-v2 v1.16.8/go.mod h1:6CpKuLXg2w7If3ABZCl/qZ6rEgwtjZTn4eAf4RcEyuw=
@@ -725,8 +725,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0 h1:qOBunYd2bWo/IikZ60xMDcp/K
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0 h1:hnYc/T55dGEqhFBYJIGBfSCMhyhT78U31kqEj9vdS94=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0/go.mod h1:vzL/maQvg76G8BMXM9Mx0FNrXI1ctdBr46/EbZ0VJso=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.9.0 h1:qEW6xlE7brmLPx3sfdOBykHroCBcfLl5Zu7HkaH516M=
-github.com/confluentinc/ccloud-sdk-go-v2/iam v0.9.0/go.mod h1:uDSn9j+3ueF2BqvAuKWh2i98yy5px0sQwXEU9gCOKwc=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0 h1:AV0bGk01bGfKzNq5IVqRi2iEc6YTeBbl//IYvQ/j8ag=
+github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0/go.mod h1:JLmrXfnT2PzcuXHD8a6c2cW1c9LKK7aMsdZjjqxYPEk=
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0 h1:T9e7lNj/VjxE89+tcpX2RS2NE4rWNWbJjxcO2yehEqM=
@@ -783,8 +783,8 @@ github.com/confluentinc/mds-sdk-go/mdsv1 v0.0.53/go.mod h1:8uhp3pNJttGbFtDGWlSBg
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.4/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.22/go.mod h1:WimNyaI+msAxUXsM2oRMarBdkod/cnsQeWSbtXi0kGg=
 github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.37/go.mod h1:Gpylo9DhWPClL/rpmoRPjNHxOsdrf1qL8QNRAbJO5Z0=
-github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.48 h1:5yYKPa0+3QU/0+4c3NMfm/4IxYC0tm/oZuc+PyPynXA=
-github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.48/go.mod h1:Gpylo9DhWPClL/rpmoRPjNHxOsdrf1qL8QNRAbJO5Z0=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.53 h1:QX2x9q0kdnQqS/TAitS6qZP8S5ABkGuPjihwKqH2pFs=
+github.com/confluentinc/mds-sdk-go/mdsv2alpha1 v0.0.53/go.mod h1:Gpylo9DhWPClL/rpmoRPjNHxOsdrf1qL8QNRAbJO5Z0=
 github.com/confluentinc/pkg v0.0.0-20210720204051-8221d147350b/go.mod h1:UpWSjv7JqlkRSn2q/6vncFxCfzvuRL54UyaBeDbnoR4=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787 h1:hHiVn9sDY/pZCETOV3489odsMhj8NEyiamjwhBy6TLA=
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:e8oa6xV9gIddL04yTbRjly4s7U3Fn57PAOUMTUPibUA=
@@ -1597,8 +1597,9 @@ github.com/hashicorp/go-retryablehttp v0.5.4/go.mod h1:9B5zBasrRhHXnJnui7y6sL7es
 github.com/hashicorp/go-retryablehttp v0.6.2/go.mod h1:gEx6HMUGxYYhJScX7W1Il64m6cc2C1mDaW3NQ9sY1FY=
 github.com/hashicorp/go-retryablehttp v0.6.6/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
 github.com/hashicorp/go-retryablehttp v0.6.8/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
-github.com/hashicorp/go-retryablehttp v0.7.1 h1:sUiuQAnLlbvmExtFQs72iFW/HXeUn8Z1aJLQ4LJJbTQ=
 github.com/hashicorp/go-retryablehttp v0.7.1/go.mod h1:vAew36LZh98gCBJNLH42IQ1ER/9wtLZZ8meHqQvEYWY=
+github.com/hashicorp/go-retryablehttp v0.7.2 h1:AcYqCvkpalPnPF2pn0KamgwamS42TqUDDYFRKq/RAd0=
+github.com/hashicorp/go-retryablehttp v0.7.2/go.mod h1:Jy/gPYAdjqffZ/yFGCFV2doI5wjtH1ewM9u8iYVjtX8=
 github.com/hashicorp/go-rootcerts v1.0.0/go.mod h1:K6zTfqpRlCUIjkwsN4Z+hiSfzSTQa6eBIzfwKfwNnHU=
 github.com/hashicorp/go-rootcerts v1.0.1/go.mod h1:pqUvnprVnM5bf7AOirdbb01K4ccR319Vf4pU3K5EGc8=
 github.com/hashicorp/go-rootcerts v1.0.2/go.mod h1:pqUvnprVnM5bf7AOirdbb01K4ccR319Vf4pU3K5EGc8=

@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
@@ -33,7 +33,7 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"The <secret-value> can be of any format but may not be empty.")
 	}
 	pcmd.AddOutputFlag(cmd)
@@ -90,23 +90,13 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&out{
-		Id:          pipeline.GetId(),
-		Name:        pipeline.Spec.GetDisplayName(),
-		Description: pipeline.Spec.GetDescription(),
-		KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-		State:       pipeline.Status.GetState(),
-		CreatedAt:   pipeline.Metadata.GetCreatedAt(),
-		UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
-	})
-	return table.Print()
+	return print(cmd, pipeline)
 }
 
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {
 	secretMappings := make(map[string]string)
 
-	// The name of a secret may consist of 1-64 lowercase letters, uppercase letters, digits,
+	// The name of a secret may consist of lowercase letters, uppercase letters, digits,
 	// and the '_' (underscore) and may not begin with a digit.
 	pattern := regexp.MustCompile(regex)
 
@@ -117,10 +107,21 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 
 		matches := pattern.FindStringSubmatch(secret)
 		name, value := matches[1], matches[2]
-		if len(name) > 64 {
-			return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
-		}
 		secretMappings[name] = value
 	}
 	return secretMappings, nil
+}
+
+func getOrderedSecretNames(secrets *map[string]string) []string {
+	if secrets == nil {
+		return []string{}
+	}
+
+	names := make([]string, 0, len(*secrets))
+	for n := range *secrets {
+		names = append(names, n)
+	}
+
+	sort.Strings(names)
+	return names
 }
