@@ -46,14 +46,15 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 
 	// *pipeline.state will be activating
 	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
+		Id:                  *pipeline.Id,
+		Name:                *pipeline.Spec.DisplayName,
+		Description:         *pipeline.Spec.Description,
+		KsqlCluster:         pipeline.Spec.KsqlCluster.Id,
+		SecretNames:         getOrderedSecretNames(pipeline.Spec.Secrets),
+		ActivationPrivilege: *pipeline.Spec.ActivationPrivilege,
+		State:               *pipeline.Status.State,
+		CreatedAt:           *pipeline.Metadata.CreatedAt,
+		UpdatedAt:           *pipeline.Metadata.UpdatedAt,
 	}
 
 	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
