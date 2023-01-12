@@ -1,20 +1,18 @@
 package pipeline
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"regexp"
 	"sort"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
-func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
+func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new pipeline.",
@@ -48,7 +46,7 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 	return cmd
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, _ []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
@@ -61,13 +59,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	// validate ksql id
-	ksqlReq := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(),
-		Id:        ksqlCluster,
-	}
-
-	_, err = c.PrivateClient.KSQL.Describe(context.Background(), ksqlReq)
-	if err != nil {
+	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
 		return err
 	}
 
@@ -98,18 +90,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		SecretNames: getOrderedSecretNames(pipeline.Spec.Secrets),
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	return print(cmd, pipeline)
 }
 
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {
