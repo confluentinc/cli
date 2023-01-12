@@ -43,7 +43,6 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to active this pipeline.")
-
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
