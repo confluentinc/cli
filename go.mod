@@ -8,8 +8,6 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/core v0.1523.0
-	github.com/confluentinc/cc-structs/kafka/flow v0.1373.0
-	github.com/confluentinc/cc-structs/kafka/org v0.1373.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.123
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230104195027-bd50c3316065
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -180,8 +178,10 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.1373.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/flow v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.1373.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/org v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/product/core v0.1523.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/scheduler v0.1422.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 // indirect

@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
@@ -148,9 +147,6 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
-	privateClient := &ccloud.Client{
-		UsageLimits: suite.usageLimits,
-	}
 	client := &ccloudv1.Client{
 		EnvironmentMetadata: suite.envMetadataMock,
 	}
@@ -159,7 +155,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(privateClient, client, v2Client, nil, nil, conf)
+	prerunner := cliMock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
