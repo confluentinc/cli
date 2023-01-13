@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -224,7 +223,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			ctx := command.Config.Context()
 			err := r.ValidateToken(command.Config, unsafeTrace)
 			switch err.(type) {
-			case *ccloud.ExpiredTokenError:
+			case *ccloudv1.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
 					return err
 				}
@@ -902,10 +901,10 @@ func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace 
 		return nil
 	}
 	switch err.(type) {
-	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx, unsafeTrace)
-	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx, unsafeTrace)
+	case *ccloudv1.InvalidTokenError:
+		return r.updateToken(new(ccloudv1.InvalidTokenError), ctx, unsafeTrace)
+	case *ccloudv1.ExpiredTokenError:
+		return r.updateToken(new(ccloudv1.ExpiredTokenError), ctx, unsafeTrace)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
 		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx, unsafeTrace)

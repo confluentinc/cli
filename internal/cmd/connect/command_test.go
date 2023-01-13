@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
@@ -147,7 +146,7 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 		LifecycleV1Api:  suite.lifecycleMock,
 		PluginsV1Api:    suite.pluginMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock}, nil,
+	prerunner := cliMock.NewPreRunnerMock(nil,
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(suite.conf, prerunner)
 }
