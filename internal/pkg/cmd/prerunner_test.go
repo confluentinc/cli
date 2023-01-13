@@ -70,7 +70,7 @@ var (
 			}
 		},
 	}
-	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
+	AuthTokenHandler = &cliMock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
@@ -101,14 +101,14 @@ func getPreRunBase() *pcmd.PreRun {
 				return &ccloudv1.Client{}
 			},
 		},
-		MDSClientManager: &cliMock.MockMDSClientManager{
+		MDSClientManager: &cliMock.MDSClientManager{
 			GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 				return &mds.APIClient{}, nil
 			},
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
 		JWTValidator:            pcmd.NewJWTValidator(),
-		AuthTokenHandler:        mockAuthTokenHandler,
+		AuthTokenHandler:        AuthTokenHandler,
 	}
 }
 
@@ -394,7 +394,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 					return &ccloudv1.Client{}
 				},
 			}
-			r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
+			r.AuthTokenHandler = &cliMock.AuthTokenHandler{
 				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
@@ -503,7 +503,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 			return &ccloudv1.Client{}
 		},
 	}
-	r.AuthTokenHandler = &cliMock.MockAuthTokenHandler{
+	r.AuthTokenHandler = &cliMock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (s string, s2 string, e error) {
 			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
 			return validAuthToken, "", nil
