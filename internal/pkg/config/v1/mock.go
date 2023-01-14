@@ -45,6 +45,22 @@ func AuthenticatedCloudConfigMock() *Config {
 	return AuthenticatedToOrgCloudConfigMock(mockOrganizationId, MockOrgResourceId)
 }
 
+func AuthenticatedCloudMarketplaceOrgConfigMock(marketplace *ccloudv1.Marketplace) *Config {
+	params := mockConfigParams{
+		contextName:    mockContextName,
+		userId:         mockUserId,
+		userResourceId: MockUserResourceId,
+		username:       mockEmail,
+		url:            testserver.TestCloudURL.String(),
+		envId:          MockEnvironmentId,
+		orgId:          mockOrganizationId,
+		orgResourceId:  MockOrgResourceId,
+		marketplace:    marketplace,
+		credentialName: usernameCredentialName,
+	}
+	return AuthenticatedConfigMock(params)
+}
+
 func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Config {
 	params := mockConfigParams{
 		contextName:    mockContextName,
@@ -128,11 +144,12 @@ type mockConfigParams struct {
 	envId          string
 	orgId          int32
 	orgResourceId  string
+	marketplace    *ccloudv1.Marketplace
 	credentialName string
 }
 
 func AuthenticatedConfigMock(params mockConfigParams) *Config {
-	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.envId, params.orgId, params.orgResourceId)
+	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.envId, params.orgId, params.orgResourceId, params.marketplace)
 	credential := createUsernameCredential(params.credentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -183,7 +200,7 @@ func createPlatform(name, server string) *Platform {
 	}
 }
 
-func createAuthConfig(userId int32, email, userResourceId, envId string, organizationId int32, orgResourceId string) *AuthConfig {
+func createAuthConfig(userId int32, email, userResourceId, envId string, organizationId int32, orgResourceId string, marketplace *ccloudv1.Marketplace) *AuthConfig {
 	return &AuthConfig{
 		User: &ccloudv1.User{
 			Id:         userId,
@@ -192,8 +209,9 @@ func createAuthConfig(userId int32, email, userResourceId, envId string, organiz
 		},
 		Account: &ccloudv1.Account{Id: envId},
 		Organization: &ccloudv1.Organization{
-			Id:         organizationId,
-			ResourceId: orgResourceId,
+			Id:          organizationId,
+			ResourceId:  orgResourceId,
+			Marketplace: marketplace,
 		},
 		Accounts: []*ccloudv1.Account{{Id: envId}},
 	}
