@@ -158,7 +158,6 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloudv
 			Password:      fPasswordTosPrivacy.Responses["password"].(string),
 			OrgResourceId: org.ResourceId,
 		}
-
 		res, err := client.Auth.Login(context.Background(), req)
 		if err != nil {
 			if err.Error() == "username or password is invalid" {

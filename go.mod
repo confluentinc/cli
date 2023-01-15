@@ -7,9 +7,8 @@ require (
 	github.com/chromedp/chromedp v0.8.6
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/core v0.1523.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.123
-	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230104195027-bd50c3316065
+	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230115045244-520ba19b8994
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -178,6 +177,7 @@ require (
 	github.com/confluentinc/cc-structs/kafka/billing v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/clusterlink v0.1506.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/connect v0.1373.0 // indirect
+	github.com/confluentinc/cc-structs/kafka/core v0.1523.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/flow v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/marketplace v0.1373.0 // indirect
 	github.com/confluentinc/cc-structs/kafka/metrics v0.1373.0 // indirect
@@ -392,7 +392,7 @@ require (
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 // indirect
 	github.com/travisjeffery/proto-go-sql v0.0.0-20190911121832-39ff47280e87 // indirect
-	github.com/ugorji/go/codec v1.2.7 // indirect
+	github.com/ugorji/go/codec v1.2.8 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
 	github.com/ultraware/funlen v0.0.3 // indirect
 	github.com/ultraware/whitespace v0.0.5 // indirect

@@ -20,7 +20,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -128,7 +127,7 @@ var (
 			} else if orgResourceId == org2Id {
 				return testToken2, refreshToken, nil
 			} else {
-				return "", "", &corev1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
+				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
 		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
@@ -961,7 +960,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	req.Equal(ctx.Platform, cfg.Contexts[contextName].Platform)
 	req.Equal(ctx.Credential, cfg.Contexts[contextName].Credential)
 	if isCloud {
-		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an orgv1 (ccloud) User
+		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an ccloudv1 User
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
 		req.Equal(orgResourceId, ctx.GetOrganization().GetResourceId())
 		req.Equal(orgResourceId, ctx.Config.GetLastUsedOrgId())
