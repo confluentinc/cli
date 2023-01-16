@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"testing"
 
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -67,7 +66,6 @@ type ConnectTestSuite struct {
 	connectorsMock *connectmock.ConnectorsV1Api
 	lifecycleMock  *connectmock.LifecycleV1Api
 	pluginMock     *connectmock.PluginsV1Api
-	kafkaMock      *ccsdkmock.Kafka
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {

@@ -8,7 +8,6 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
@@ -80,7 +79,6 @@ type KafkaClusterTestSuite struct {
 	conf            *v1.Config
 	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
-	usageLimits     *ccsdkmock.UsageLimits
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
