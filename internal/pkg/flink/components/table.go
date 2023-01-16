@@ -247,8 +247,7 @@ const tableSelectCell = `[green]func[white] [yellow]main[white]() {
         [yellow]Run[white]()
 }`
 
-// Table demonstrates the Table.
-func RawTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.Table, *tview.TextView, func(), func()) {
+func CreateTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.Table, *tview.TextView, func(), func()) {
 	table := tview.NewTable().
 		SetFixed(1, 1)
 	for row, line := range strings.Split(tableData, "\n") {
@@ -367,7 +366,7 @@ func RawTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.Tab
 }
 
 func Table(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
-	list, table, code, _, _ := RawTable(nextSlide, app)
+	list, table, code, _, _ := CreateTable(nextSlide, app)
 
 	return "Table", ExtraSlideParams{table}, tview.NewFlex().
 		AddItem(tview.NewFlex().

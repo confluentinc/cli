@@ -38,7 +38,7 @@ func main() {
 
 	// The presentation slides.
 	slides := []Slide{
-		components.TableWithInput,
+		components.InteractiveOutput,
 		components.Cover,
 		components.InputField,
 		components.Table,
