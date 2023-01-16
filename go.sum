@@ -623,8 +623,8 @@ github.com/confluentinc/cc-structs/kafka/core v0.1305.0/go.mod h1:dxshfymLj+GtjZ
 github.com/confluentinc/cc-structs/kafka/core v0.1349.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/core v0.1373.0/go.mod h1:dxshfymLj+GtjZQ8RxSMEhK5PwxChHbmheCxwb/2M2A=
 github.com/confluentinc/cc-structs/kafka/core v0.1390.0/go.mod h1:witVFvTv90nKuc08Rwac0jviWkHF8s8SiWb+0Of00jM=
-github.com/confluentinc/cc-structs/kafka/core v0.1523.0 h1:vnLCroSpwgZImyauSuauYTDTE2YPwwqJQMzuEeh79TM=
-github.com/confluentinc/cc-structs/kafka/core v0.1523.0/go.mod h1:KrVBsXNjuCulHirqA3jFIgDDKdr+6q9ju14qoP+EbqM=
+github.com/confluentinc/cc-structs/kafka/core v0.1543.0 h1:xWsI4XwLvy+yC0PoSKorL66pWGQaaZ3+gtA3/24067A=
+github.com/confluentinc/cc-structs/kafka/core v0.1543.0/go.mod h1:KrVBsXNjuCulHirqA3jFIgDDKdr+6q9ju14qoP+EbqM=
 github.com/confluentinc/cc-structs/kafka/flow v0.399.0/go.mod h1:C30tHJRwqMQBJdnc6brEu+jEm0Wl8Rey8QsYpIXZ+ew=
 github.com/confluentinc/cc-structs/kafka/flow v0.1373.0 h1:9ZOiSsEHHega3LQaXNNMHhR++Ju9YOT+dUKmcg/t8qQ=
 github.com/confluentinc/cc-structs/kafka/flow v0.1373.0/go.mod h1:7KNo0Z0HevgqZIGsLQDClzwqCRUc6LY53T6gIc4zOTI=
