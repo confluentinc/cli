@@ -17,7 +17,7 @@ var appInputCapture = func(tableController TableController) func(event *tcell.Ev
 	}
 }
 
-func ApplicationControllerInit(tableController TableController) ApplicationController {
+func ApplicationControllerInit(tableController TableController, inputController InputController, shortcutsController ShortcutsController) ApplicationController {
 
 	// Set Input Capture for the whole application
 	app.SetInputCapture(appInputCapture(tableController))

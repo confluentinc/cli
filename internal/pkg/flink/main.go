@@ -10,24 +10,26 @@ import (
 var app = tview.NewApplication()
 
 func main() {
-	// Instantiate Controllers and Components
-	tableController := TableControllerInit(components.CreateTable())
-	ShortcutsControllerInit(components.Shortcuts(), tableController)
-	InputControllerInit(components.InputField())
-	ApplicationControllerInit(tableController)
+	// Create Components
+	table := components.CreateTable()
+	input := components.InputField()
+	shortcuts := components.Shortcuts()
 
-	// Instantiate Interactive Components
+	// Instantiate Component Controllers
+	tableController := TableControllerInit(table)
+	inputController := InputControllerInit(input)
+	shortcutsController := ShortcutsControllerInit(shortcuts, tableController)
+
+	// Instatiate Application Controller
+	ApplicationControllerInit(tableController, inputController, shortcutsController)
+
+	// Instantiate interactive components
 	components.InteractiveInput()
-	interactiveOutput := components.InteractiveOutput(input, table)
-
-	// Create the main layout.
-	layout := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(interactiveOutput, 0, 1, true).
-		AddItem(shortcuts, 1, 1, false)
+	interactiveOutput := components.InteractiveOutput(input, table, shortcuts)
+	rootLayout := components.RootLayout(interactiveOutput)
 
 	// Start the application.
-	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
+	if err := app.SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 
