@@ -18,7 +18,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.123
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20221201012806-05d56fd583cf
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
-	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.4
+	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
