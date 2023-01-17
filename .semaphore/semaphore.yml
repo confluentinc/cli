@@ -22,14 +22,13 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - goenv install --skip-existing
+            - sem-version go $(cat .go-version)
             - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
 
             # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
@@ -60,13 +59,12 @@ blocks:
           commands:
             # Set up Go
             - checkout
-            - goenv install --skip-existing
+            - sem-version go $(cat .go-version)
             - eval "$(goenv init -)"
             - export "PATH=$GOROOT/bin:$PATH"
             - export "PATH=$GOPATH/bin:$PATH"
 
             # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
             - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
