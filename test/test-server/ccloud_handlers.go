@@ -25,9 +25,9 @@ import (
 )
 
 var (
-	environments       = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
-	keyIndex           = int32(3)
-	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	environments  = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	keyIndex      = int32(3)
+	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 
 	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
@@ -89,6 +89,11 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 				ServiceAccountId: auditLogServiceAccountID,
 				TopicName:        "confluent-audit-log-events",
 			}
+		}
+
+		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
+		if isOrgOnMarketplace {
+			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
