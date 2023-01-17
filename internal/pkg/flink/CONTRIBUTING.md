@@ -1,3 +1,11 @@
+#### Code Architecture
+
+The following diagram represents approximately code structure.
+![image](https://user-images.githubusercontent.com/11739405/212975377-804fc1c3-4e93-45f6-86c0-6eb012312779.png)
+
+We have view-only dumb components and controllers to manage them. The controllers should ideally communicate through the ApplicationController to 
+maintain a unidirectional data flow and avoid creating circular dependencies: view -> x-controller -> aplicationController -> x-controller (if necessary). This diagram might be outdated by the time you see this, but this might help you have an idea of how the whole architecture. 
+
 #### Adding custom shortcuts to the client
 
 An important part of a good command line tool are shortcuts. To add custom shortcuts with go-prompt, you can take a look here at:
