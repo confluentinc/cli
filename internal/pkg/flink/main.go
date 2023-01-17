@@ -34,6 +34,7 @@ var app = tview.NewApplication()
 func main() {
 	tableController := TableControllerInit(components.CreateTable())
 	InputControllerInit(components.InputField())
+	ApplicationControllerInit(tableController)
 
 	// Shortcuts text view showed on the botton
 	shortcutsTV := tview.NewTextView().
@@ -42,20 +43,6 @@ func main() {
 		SetWrap(false)
 
 	// Functions used my the main component
-	input.SetDoneFunc(func(key tcell.Key) {
-		selectRow()
-		navigate()
-	})
-
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEscape {
-			app.SetFocus(input)
-			return nil
-		}
-
-		return event
-	})
-
 	shortcutHighlighted := func(added, removed, remaining []string) {
 		index, _ := strconv.Atoi(added[0])
 		switch shortcuts[index].Text {
@@ -64,15 +51,8 @@ func main() {
 		}
 	}
 
-	appInputCapture := func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyCtrlT {
-			tableController.borders()
-			return nil
-		}
-		return event
-	}
-
-	// Instantiate InteractiveOutput Component
+	// Instantiate components
+	components.InteractiveInput()
 	interactiveOutput := components.InteractiveOutput(input, table)
 
 	// Populate shortcuts from shortcuts array const
@@ -87,9 +67,6 @@ func main() {
 		SetDirection(tview.FlexRow).
 		AddItem(interactiveOutput, 0, 1, true).
 		AddItem(shortcutsTV, 1, 1, false)
-
-	// Shortcuts to navigate the slides.
-	app.SetInputCapture(appInputCapture)
 
 	// Start the application.
 	if err := app.SetRoot(layout, true).EnableMouse(true).Run(); err != nil {
