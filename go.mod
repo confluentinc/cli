@@ -7,7 +7,7 @@ require (
 	github.com/chromedp/chromedp v0.8.6
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
-	github.com/confluentinc/cc-structs/kafka/core v0.1523.0
+	github.com/confluentinc/cc-structs/kafka/core v0.1543.0
 	github.com/confluentinc/cc-structs/kafka/flow v0.1373.0
 	github.com/confluentinc/cc-structs/kafka/org v0.1373.0
 	github.com/confluentinc/ccloud-sdk-go-v1 v0.0.123
@@ -72,7 +72,7 @@ require (
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.14.4
 	github.com/tidwall/pretty v1.2.1
-	github.com/tidwall/sjson v1.2.4
+	github.com/tidwall/sjson v1.2.5
 	github.com/travisjeffery/mocker v1.1.1
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.4.0
