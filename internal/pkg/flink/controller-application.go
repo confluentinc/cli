@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -12,6 +14,14 @@ var appInputCapture = func(tableController TableController) func(event *tcell.Ev
 	return func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlT {
 			tableController.borders()
+			return nil
+		} else if event.Key() == tcell.KeyCtrlC {
+			if !table.HasFocus() {
+				app.Stop()
+				os.Exit(0)
+			} else {
+				tableController.onCtrlC()
+			}
 			return nil
 		}
 		return event

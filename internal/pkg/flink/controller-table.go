@@ -1,6 +1,9 @@
 package main
 
 import (
+	"strings"
+
+	clipboard "github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -15,6 +18,7 @@ type TableController struct {
 	selectColumn func()
 	selectCell   func()
 	focus        func()
+	onCtrlC      func()
 }
 
 type TableStyle struct {
@@ -68,6 +72,19 @@ func TableControllerInit(tableRef *tview.Table, appControler *ApplicationControl
 		app.SetFocus(table)
 	}
 
+	onCtrlC := func() {
+		rowIndex, _ := table.GetSelection()
+		columnCount := table.GetColumnCount()
+
+		var row []string
+		for i := 0; i < columnCount; i++ {
+			row = append(row, table.GetCell(rowIndex, i).Text)
+		}
+		clipboardValue := strings.Join(row, ", ")
+
+		clipboard.WriteAll(clipboardValue)
+	}
+
 	// Configure table
 	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyEscape {
@@ -86,5 +103,6 @@ func TableControllerInit(tableRef *tview.Table, appControler *ApplicationControl
 		selectColumn: selectColumn,
 		selectCell:   selectCell,
 		focus:        focus,
+		onCtrlC:      onCtrlC,
 	}
 }

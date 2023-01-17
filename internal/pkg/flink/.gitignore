@@ -226,3 +226,5 @@ flycheck_*.el
 
 !/.github/
 !/.github/**
+
+__debug_bin
