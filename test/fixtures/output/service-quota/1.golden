@@ -1,6 +1,6 @@
-  Quota Code | Display Name |     Scope     | Applied Limit | Usage | Organization | Environment | Network | Kafka Cluster | User  
--------------+--------------+---------------+---------------+-------+--------------+-------------+---------+---------------+-------
-  quota_a    | Quota A      | kafka_cluster |            15 |    10 | org-123      | env-1       |         | lkc-1         |       
-  quota_a    | Qutoa A      | kafka_cluster |            16 |    11 | org-123      | env-2       |         | lkc-2         |       
-  quota_b    | Quota B      | kafka_cluster |            17 |       | org-123      | env-1       |         | lkc-1         |       
-  quota_b    | Quota B      | kafka_cluster |            18 |       | org-123      | env-2       |         | lkc-2         |       
+  Quota Code |  Name   |     Scope     | Applied Limit | Usage | Organization | Environment | Kafka Cluster | Network | User  
+-------------+---------+---------------+---------------+-------+--------------+-------------+---------------+---------+-------
+  quota_a    | Quota A | kafka_cluster |            15 |    10 | org-123      | env-1       | lkc-1         |         |       
+  quota_a    | Qutoa A | kafka_cluster |            16 |    11 | org-123      | env-2       | lkc-2         |         |       
+  quota_b    | Quota B | kafka_cluster |            17 |       | org-123      | env-1       | lkc-1         |         |       
+  quota_b    | Quota B | kafka_cluster |            18 |       | org-123      | env-2       | lkc-2         |         |       
