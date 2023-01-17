@@ -23,13 +23,9 @@ blocks:
             # Set up Go
             - checkout
             - sem-version go $(cat .go-version)
-            - export "PATH=$(go env GOPATH)/bin:$PATH"
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
-
-            # Set up Git
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
 
             # Run tests
             - make generate-packaging-patch
@@ -60,11 +56,9 @@ blocks:
             # Set up Go
             - checkout
             - wget https://go.dev/dl/go$(cat .go-version).darwin-amd64.tar.gz
-            - tar -xvf go$(cat .go-version).darwin-amd64.tar.gz
-            - export PATH=$PATH:go/bin/
-
-            # Set up Git
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - sudo tar -xvf go$(cat .go-version).darwin-amd64.tar.gz -C /usr/local
+            - export PATH=$PATH:/usr/local/go/bin
+            - export PATH=$PATH:$(go env GOPATH)/bin
 
             # Run tests
             - make semaphore-deps
