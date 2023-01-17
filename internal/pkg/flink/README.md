@@ -19,3 +19,7 @@ Run prototype
 ```
 go run .
 ```
+
+#### Contributing
+
+Take a look at our [CONTRIBUTING.md](./CONTRIBUTING.md) for some notes about contributions.
