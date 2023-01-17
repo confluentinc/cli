@@ -32,12 +32,8 @@ var shortcuts = []Shortcut{
 var app = tview.NewApplication()
 
 func main() {
-
-	slidesParams := make(map[string]components.ExtraSlideParams)
-
-	tableStyle := TableStyle{
-		borders: false,
-	}
+	tableController := TableControllerInit(components.CreateTable())
+	InputControllerInit(components.InputField())
 
 	// Shortcuts text view showed on the botton
 	shortcutsTV := tview.NewTextView().
@@ -46,31 +42,38 @@ func main() {
 		SetWrap(false)
 
 	// Functions used my the main component
-	borders := func() {
-		table := slidesParams["Home"].Table
-		tableStyle.borders = !tableStyle.borders
-		table.SetBorders(tableStyle.borders)
-	}
+	input.SetDoneFunc(func(key tcell.Key) {
+		selectRow()
+		navigate()
+	})
+
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape {
+			app.SetFocus(input)
+			return nil
+		}
+
+		return event
+	})
 
 	shortcutHighlighted := func(added, removed, remaining []string) {
 		index, _ := strconv.Atoi(added[0])
 		switch shortcuts[index].Text {
 		case "Toggle Display Mode":
-			borders()
+			tableController.borders()
 		}
 	}
 
 	appInputCapture := func(event *tcell.EventKey) *tcell.EventKey {
 		if event.Key() == tcell.KeyCtrlT {
-			borders()
+			tableController.borders()
 			return nil
 		}
 		return event
 	}
 
 	// Instantiate InteractiveOutput Component
-	title, params, InteractiveOutput := components.InteractiveOutput(func() {}, app)
-	slidesParams[title] = params
+	interactiveOutput := components.InteractiveOutput(input, table)
 
 	// Populate shortcuts from shortcuts array const
 	for index, shortcut := range shortcuts {
@@ -82,7 +85,7 @@ func main() {
 	// Create the main layout.
 	layout := tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(InteractiveOutput, 0, 1, true).
+		AddItem(interactiveOutput, 0, 1, true).
 		AddItem(shortcutsTV, 1, 1, false)
 
 	// Shortcuts to navigate the slides.

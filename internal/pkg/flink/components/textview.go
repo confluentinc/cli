@@ -30,16 +30,14 @@ const textView1 = `[green]func[white] [yellow]main[white]() {
 }`
 
 // TextView1 demonstrates the basic text view.
-func TextView1(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func TextView1() tview.Primitive {
 	textView := tview.NewTextView().
 		SetTextColor(tcell.ColorYellow).
 		SetScrollable(false).
 		SetDoneFunc(func(key tcell.Key) {
-			nextSlide()
 		})
 	textView.SetChangedFunc(func() {
 		if textView.HasFocus() {
-			app.Draw()
 		}
 	})
 	go func() {
@@ -60,7 +58,7 @@ func TextView1(nextSlide func(), app *tview.Application) (title string, params E
 		}
 	}()
 	textView.SetBorder(true).SetTitle("TextView implements io.Writer")
-	return "Text 1", ExtraSlideParams{}, Code(textView, 36, 13, textView1)
+	return Code(textView, 36, 13, textView1)
 }
 
 const textView2 = `[green]package[white] main
@@ -111,7 +109,7 @@ const textView2 = `[green]package[white] main
 }`
 
 // TextView2 demonstrates the extended text view.
-func TextView2(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func TextView2() tview.Primitive {
 	codeView := tview.NewTextView().
 		SetWrap(false)
 	fmt.Fprint(codeView, textView2)
@@ -123,7 +121,6 @@ func TextView2(nextSlide func(), app *tview.Application) (title string, params E
 		SetRegions(true).
 		SetDoneFunc(func(key tcell.Key) {
 			if key == tcell.KeyEscape {
-				nextSlide()
 				return
 			}
 			highlights := textView.GetHighlights()
@@ -154,7 +151,7 @@ func TextView2(nextSlide func(), app *tview.Application) (title string, params E
 		})
 	fmt.Fprint(textView, textView2)
 	textView.SetBorder(true).SetTitle("TextView output")
-	return "Text 2", ExtraSlideParams{}, tview.NewFlex().
+	return tview.NewFlex().
 		AddItem(textView, 0, 1, true).
 		AddItem(codeView, 0, 1, false)
 }

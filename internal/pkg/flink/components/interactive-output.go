@@ -3,7 +3,6 @@ package components
 import (
 	prompt "github.com/c-bata/go-prompt"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -11,12 +10,6 @@ type ExtraSlideParams struct {
 	Table *tview.Table
 	Input *tview.InputField
 }
-
-var input = tview.NewInputField().
-	SetText("SELECT * FROM ORDERS;").
-	SetLabel("flinkSql[yellow]>>> ").
-	SetFieldBackgroundColor(tcell.ColorDefault).
-	SetLabelColor(tcell.ColorWhite)
 
 func completer(in prompt.Document) []prompt.Suggest {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
@@ -30,33 +23,16 @@ func completer(in prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
-func InteractiveOutput(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func InteractiveOutput(input *tview.InputField, table *tview.Table) tview.Primitive {
 
 	InteractiveInput()
 
-	list, table, _, selectRow, navigate := CreateTable(nextSlide, app)
-
-	input.SetDoneFunc(func(key tcell.Key) {
-		selectRow()
-		navigate()
-	})
-
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEscape {
-			app.SetFocus(input)
-			return nil
-		}
-
-		return event
-	})
-
-	return "Home", ExtraSlideParams{Table: table}, tview.NewFlex().
+	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(input, 1, 1, true).
 		AddItem(
 			(tview.NewFlex().
 				SetDirection(tview.FlexRow).
-				AddItem(table, 0, 1, true)).
-				AddItem(list, 10, 1, false),
+				AddItem(table, 0, 1, true)),
 			0, 1, false)
 }

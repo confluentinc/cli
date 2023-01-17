@@ -29,6 +29,9 @@ var navigate = func() {
 
 func TableControllerInit(tableRef *tview.Table) TableController {
 	table = tableRef
+	tableStyle := TableStyle{
+		borders: false,
+	}
 
 	// Actions
 	basic := func() {
@@ -44,8 +47,8 @@ func TableControllerInit(tableRef *tview.Table) TableController {
 	}
 
 	borders := func() {
-		table.SetBorders(true).
-			SetSelectable(false, false)
+		tableStyle.borders = !tableStyle.borders
+		table.SetBorders(tableStyle.borders)
 	}
 
 	selectRow2 := func() {

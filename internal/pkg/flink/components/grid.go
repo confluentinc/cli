@@ -6,7 +6,7 @@ import (
 )
 
 // Grid demonstrates the grid layout.
-func Grid(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func Grid() tview.Primitive {
 	modalShown := false
 	pages := tview.NewPages()
 
@@ -28,7 +28,6 @@ func Grid(nextSlide func(), app *tview.Application) (title string, params ExtraS
 		AddItem(newPrimitive("Footer"), 2, 0, 1, 3, 0, 0, false)
 	grid.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if modalShown {
-			nextSlide()
 			modalShown = false
 		} else {
 			pages.ShowPage("modal")
@@ -56,5 +55,5 @@ func Grid(nextSlide func(), app *tview.Application) (title string, params ExtraS
 	pages.AddPage("grid", grid, true, true).
 		AddPage("modal", modal, false, false)
 
-	return "Grid", ExtraSlideParams{}, pages
+	return pages
 }

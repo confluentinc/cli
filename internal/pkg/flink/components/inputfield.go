@@ -6,12 +6,10 @@ import (
 )
 
 // InputField demonstrates the InputField.
-func InputField(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
-	input := tview.NewInputField().
-		SetLabel("Enter a number: ").
-		SetAcceptanceFunc(tview.InputFieldInteger).SetDoneFunc(func(key tcell.Key) {
-		nextSlide()
-	})
-	return "Input", ExtraSlideParams{}, tview.NewFlex().
-		AddItem(input, 300, 1, true)
+func InputField() *tview.InputField {
+	return tview.NewInputField().
+		SetText("SELECT * FROM ORDERS;").
+		SetLabel("flinkSql[yellow]>>> ").
+		SetFieldBackgroundColor(tcell.ColorDefault).
+		SetLabelColor(tcell.ColorWhite)
 }

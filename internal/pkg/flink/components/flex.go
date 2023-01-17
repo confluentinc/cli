@@ -6,7 +6,7 @@ import (
 )
 
 // Flex demonstrates flexbox layout.
-func Flex(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func Flex() tview.Primitive {
 	modalShown := false
 	pages := tview.NewPages()
 	flex := tview.NewFlex().
@@ -19,7 +19,6 @@ func Flex(nextSlide func(), app *tview.Application) (title string, params ExtraS
 		AddItem(tview.NewBox().SetBorder(true).SetTitle("Fixed width"), 30, 1, false)
 	flex.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		if modalShown {
-			nextSlide()
 			modalShown = false
 		} else {
 			pages.ShowPage("modal")
@@ -34,5 +33,5 @@ func Flex(nextSlide func(), app *tview.Application) (title string, params ExtraS
 	})
 	pages.AddPage("flex", flex, true, true).
 		AddPage("modal", modal, false, false)
-	return "Flex", ExtraSlideParams{}, pages
+	return pages
 }

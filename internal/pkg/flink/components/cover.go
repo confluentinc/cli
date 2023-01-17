@@ -24,7 +24,7 @@ const (
 )
 
 // Cover returns the cover page.
-func Cover(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
+func Cover() tview.Primitive {
 	// What's the size of the logo?
 	lines := strings.Split(logo, "\n")
 	logoWidth := 0
@@ -37,7 +37,6 @@ func Cover(nextSlide func(), app *tview.Application) (title string, params Extra
 	logoBox := tview.NewTextView().
 		SetTextColor(tcell.ColorGreen).
 		SetDoneFunc(func(key tcell.Key) {
-			nextSlide()
 		})
 	fmt.Fprint(logoBox, logo)
 
@@ -59,5 +58,5 @@ func Cover(nextSlide func(), app *tview.Application) (title string, params Extra
 			AddItem(tview.NewBox(), 0, 1, false), logoHeight, 1, true).
 		AddItem(frame, 0, 10, false)
 
-	return "Start", ExtraSlideParams{}, flex
+	return flex
 }

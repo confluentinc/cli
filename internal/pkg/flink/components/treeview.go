@@ -56,9 +56,8 @@ type node struct {
 }
 
 var (
-	tree          = tview.NewTreeView()
-	treeNextSlide func()
-	treeCode      = tview.NewTextView().SetWrap(false).SetDynamicColors(true)
+	tree     = tview.NewTreeView()
+	treeCode = tview.NewTextView().SetWrap(false).SetDynamicColors(true)
 )
 
 var rootNode = &node{
@@ -102,12 +101,10 @@ var rootNode = &node{
 				treeCode.SetText(strings.Replace(treeAllCode, "$$$", treeBasicCode, -1))
 			}},
 		}},
-		{text: "Next slide", selected: func() { treeNextSlide() }},
 	}}
 
 // TreeView demonstrates the tree view.
-func TreeView(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
-	treeNextSlide = nextSlide
+func TreeView() tview.Primitive {
 	tree.SetBorder(true).
 		SetTitle("TreeView")
 
@@ -143,7 +140,7 @@ func TreeView(nextSlide func(), app *tview.Application) (title string, params Ex
 	treeCode.SetText(strings.Replace(treeAllCode, "$$$", treeBasicCode, -1)).
 		SetBorderPadding(1, 1, 2, 0)
 
-	return "Tree", ExtraSlideParams{}, tview.NewFlex().
+	return tview.NewFlex().
 		AddItem(tree, 0, 1, true).
 		AddItem(treeCode, codeWidth, 1, false)
 }

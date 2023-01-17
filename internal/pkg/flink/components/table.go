@@ -1,7 +1,6 @@
 package components
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
@@ -247,9 +246,10 @@ const tableSelectCell = `[green]func[white] [yellow]main[white]() {
         [yellow]Run[white]()
 }`
 
-func CreateTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.Table, *tview.TextView, func(), func()) {
+func CreateTable() *tview.Table {
 	table := tview.NewTable().
 		SetFixed(1, 1)
+
 	for row, line := range strings.Split(tableData, "\n") {
 		for column, cell := range strings.Split(line, "|") {
 			color := tcell.ColorWhite
@@ -276,92 +276,14 @@ func CreateTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.
 	}
 	table.SetBorder(true).SetTitle("Table")
 
-	code := tview.NewTextView().
-		SetWrap(false).
-		SetDynamicColors(true)
-	code.SetBorderPadding(1, 1, 2, 0)
-
-	list := tview.NewList()
-
-	basic := func() {
-		table.SetBorders(false).
-			SetSelectable(false, false).
-			SetSeparator(' ')
-		code.Clear()
-		fmt.Fprint(code, tableBasic)
-	}
-
-	separator := func() {
-		table.SetBorders(false).
-			SetSelectable(false, false).
-			SetSeparator(tview.Borders.Vertical)
-		code.Clear()
-		fmt.Fprint(code, tableSeparator)
-	}
-
-	borders := func() {
-		table.SetBorders(true).
-			SetSelectable(false, false)
-		code.Clear()
-		fmt.Fprint(code, tableBorders)
-	}
-
-	selectRow := func() {
-		table.SetBorders(false).
-			SetSelectable(true, false).
-			SetSeparator(' ')
-		code.Clear()
-		fmt.Fprint(code, tableSelectRow)
-	}
-
-	selectColumn := func() {
-		table.SetBorders(false).
-			SetSelectable(false, true).
-			SetSeparator(' ')
-		code.Clear()
-		fmt.Fprint(code, tableSelectColumn)
-	}
-
-	selectCell := func() {
-		table.SetBorders(false).
-			SetSelectable(true, true).
-			SetSeparator(' ')
-		code.Clear()
-		fmt.Fprint(code, tableSelectCell)
-	}
-
-	navigate := func() {
-		app.SetFocus(table)
-		table.SetDoneFunc(func(key tcell.Key) {
-			app.SetFocus(list)
-		}).SetSelectedFunc(func(row int, column int) {
-			app.SetFocus(list)
-		})
-	}
-
-	list.ShowSecondaryText(false).
-		AddItem("Basic table", "", 'b', basic).
-		AddItem("Table with separator", "", 's', separator).
-		AddItem("Table with borders", "", 'o', borders).
-		AddItem("Selectable rows", "", 'r', selectRow).
-		AddItem("Selectable columns", "", 'c', selectColumn).
-		AddItem("Selectable cells", "", 'l', selectCell).
-		AddItem("Navigate", "", 'n', navigate).
-		AddItem("Next slide", "", 'x', nextSlide)
-	list.SetBorderPadding(1, 1, 2, 2)
-
-	basic()
-
-	return list, table, code, selectRow, navigate
+	return table
 }
 
-func Table(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
-	list, table, code, _, _ := CreateTable(nextSlide, app)
+func Table() tview.Primitive {
+	table := CreateTable()
 
-	return "Table", ExtraSlideParams{Table: table}, tview.NewFlex().
+	return tview.NewFlex().
 		AddItem(tview.NewFlex().
 			SetDirection(tview.FlexRow).
-			AddItem(list, 10, 1, true).
-			AddItem(table, 0, 1, false), 0, 1, true).
-		AddItem(code, codeWidth, 1, false)
+			AddItem(table, 0, 1, false), 0, 1, true)
 }
