@@ -3,13 +3,12 @@ package feedback
 import (
 	"testing"
 
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/mock"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFeedback(t *testing.T) {
