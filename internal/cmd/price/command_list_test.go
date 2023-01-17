@@ -98,7 +98,7 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 
 	cfg := v1.AuthenticatedCloudConfigMock()
 
-	return New(mock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg))
+	return New(mock.NewPreRunnerMock(client, nil, nil, nil, cfg))
 }
 
 func TestFormatPrice(t *testing.T) {

@@ -251,14 +251,13 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 
 func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv1.User {
 	return &ccloudv1.User{
-		Id:             id,
-		Email:          email,
-		FirstName:      firstName,
-		LastName:       lastName,
-		OrganizationId: 0,
-		Deactivated:    false,
-		Verified:       nil,
-		ResourceId:     resourceId,
+		Id:          id,
+		Email:       email,
+		FirstName:   firstName,
+		LastName:    lastName,
+		Deactivated: false,
+		Verified:    nil,
+		ResourceId:  resourceId,
 	}
 }
 

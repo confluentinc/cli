@@ -109,7 +109,7 @@ var (
 		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 		},
 	}
-	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
+	mockLoginOrganizationManager = &cliMock.LoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
 			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromArgs(cmd)
 		},
@@ -120,7 +120,7 @@ var (
 			return pauth.NewLoginOrganizationManagerImpl().GetDefaultLoginOrganization()
 		},
 	}
-	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
+	mockAuthTokenHandler = &cliMock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 			if orgResourceId == "" || orgResourceId == org1Id {
 				return testToken1, refreshToken, nil
@@ -230,7 +230,7 @@ func TestOrgIdOverride(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		loginOrganizationManager := &cliMock.MockLoginOrganizationManager{
+		loginOrganizationManager := &cliMock.LoginOrganizationManager{
 			GetLoginOrganizationFromArgsFunc: mockLoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
 			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
 				if tt.setEnv {
@@ -687,7 +687,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -724,7 +724,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			}, nil, nil
 		},
 	}
-	mdsClientManager := &cliMock.MockMDSClientManager{
+	mdsClientManager := &cliMock.MDSClientManager{
 		GetMDSClientFunc: func(_, caCertPath string, _ bool) (*mds.APIClient, error) {
 			// ensure the right caCertPath is used
 			req.Contains(caCertPath, expectedCaCertPath)
@@ -925,19 +925,19 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterf
 			}, Auth: auth, User: userInterface}
 		},
 	}
-	mdsClientManager := &cliMock.MockMDSClientManager{
+	mdsClientManager := &cliMock.MDSClientManager{
 		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
-	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

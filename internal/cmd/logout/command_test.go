@@ -73,7 +73,7 @@ var (
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
 	orgManagerImpl               = pauth.NewLoginOrganizationManagerImpl()
-	mockLoginOrganizationManager = &cliMock.MockLoginOrganizationManager{
+	mockLoginOrganizationManager = &cliMock.LoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
 			return orgManagerImpl.GetLoginOrganizationFromArgs(cmd)
 		},
@@ -84,7 +84,7 @@ var (
 			return orgManagerImpl.GetDefaultLoginOrganization()
 		},
 	}
-	mockAuthTokenHandler = &cliMock.MockAuthTokenHandler{
+	mockAuthTokenHandler = &cliMock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
@@ -187,18 +187,18 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterf
 			}, Auth: auth, User: userInterface}
 		},
 	}
-	mdsClientManager := &cliMock.MockMDSClientManager{
+	mdsClientManager := &cliMock.MDSClientManager{
 		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
-	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

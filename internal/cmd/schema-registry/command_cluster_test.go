@@ -102,7 +102,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		AuthToken:     "auth-token",
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(nil, client, v2Client, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, cliMock.NewPreRunnerMock(client, v2Client, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {
