@@ -21,9 +21,7 @@ type Shortcut struct {
 var appShortcuts = []Shortcut{
 	{Key: tcell.KeyCtrlS, KeyText: "S", Text: "Smart Completion"},
 	{Key: tcell.KeyCtrlM, KeyText: "M", Text: "Multiline"},
-	{Key: tcell.KeyCtrlM, KeyText: "T", Text: "Toggle Display Mode"},
-	{Key: tcell.KeyCtrlN, KeyText: "N", Text: "Next slide"},
-	{Key: tcell.KeyCtrlP, KeyText: "P", Text: "Previous slide"}}
+	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"}}
 
 var shortcuts *tview.TextView
 

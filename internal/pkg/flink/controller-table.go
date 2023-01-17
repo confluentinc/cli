@@ -14,24 +14,14 @@ type TableController struct {
 	selectRow    func()
 	selectColumn func()
 	selectCell   func()
-	navigate     func()
+	focus        func()
 }
 
 type TableStyle struct {
 	borders bool
 }
 
-var selectRow = func() {
-	table.SetBorders(false).
-		SetSelectable(true, false).
-		SetSeparator(' ')
-}
-
-var navigate = func() {
-	app.SetFocus(table)
-}
-
-func TableControllerInit(tableRef *tview.Table) TableController {
+func TableControllerInit(tableRef *tview.Table, appControler *ApplicationController) TableController {
 	table = tableRef
 	tableStyle := TableStyle{
 		borders: false,
@@ -55,7 +45,7 @@ func TableControllerInit(tableRef *tview.Table) TableController {
 		table.SetBorders(tableStyle.borders)
 	}
 
-	selectRow2 := func() {
+	selectRow := func() {
 		table.SetBorders(false).
 			SetSelectable(true, false).
 			SetSeparator(' ')
@@ -73,7 +63,8 @@ func TableControllerInit(tableRef *tview.Table) TableController {
 			SetSeparator(' ')
 	}
 
-	navigate2 := func() {
+	focus := func() {
+		selectRow()
 		app.SetFocus(table)
 	}
 
@@ -91,9 +82,9 @@ func TableControllerInit(tableRef *tview.Table) TableController {
 		basic:        basic,
 		separator:    separator,
 		borders:      borders,
-		selectRow:    selectRow2,
+		selectRow:    selectRow,
 		selectColumn: selectColumn,
 		selectCell:   selectCell,
-		navigate:     navigate2,
+		focus:        focus,
 	}
 }

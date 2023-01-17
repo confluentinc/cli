@@ -16,12 +16,13 @@ func main() {
 	shortcuts := components.Shortcuts()
 
 	// Instantiate Component Controllers
-	tableController := TableControllerInit(table)
-	inputController := InputControllerInit(input)
+	var appController ApplicationController
+	tableController := TableControllerInit(table, &appController)
+	inputController := InputControllerInit(input, &appController)
 	shortcutsController := ShortcutsControllerInit(shortcuts, tableController)
 
 	// Instatiate Application Controller
-	ApplicationControllerInit(tableController, inputController, shortcutsController)
+	appController = ApplicationControllerInit(tableController, inputController, shortcutsController)
 
 	// Instantiate interactive components
 	components.InteractiveInput()

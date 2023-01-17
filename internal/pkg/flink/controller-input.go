@@ -11,7 +11,7 @@ type InputController struct {
 	basic func()
 }
 
-func InputControllerInit(inputRef *tview.InputField) InputController {
+func InputControllerInit(inputRef *tview.InputField, appController *ApplicationController) InputController {
 	input = inputRef
 
 	basic := func() {
@@ -21,8 +21,7 @@ func InputControllerInit(inputRef *tview.InputField) InputController {
 	}
 
 	input.SetDoneFunc(func(key tcell.Key) {
-		selectRow()
-		navigate()
+		appController.focus("table")
 	})
 
 	return InputController{
