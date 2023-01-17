@@ -137,7 +137,7 @@ func newCmd() (*command, error) {
 	}
 	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
 	c.State = cfg.Context().State
-	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
 	apiClient := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
