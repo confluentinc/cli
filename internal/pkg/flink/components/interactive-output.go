@@ -9,6 +9,7 @@ import (
 
 type ExtraSlideParams struct {
 	Table *tview.Table
+	Input *tview.InputField
 }
 
 var input = tview.NewInputField().
@@ -40,7 +41,16 @@ func InteractiveOutput(nextSlide func(), app *tview.Application) (title string, 
 		navigate()
 	})
 
-	return "Home", ExtraSlideParams{table}, tview.NewFlex().
+	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyEscape {
+			app.SetFocus(input)
+			return nil
+		}
+
+		return event
+	})
+
+	return "Home", ExtraSlideParams{Table: table}, tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(input, 1, 1, true).
 		AddItem(
@@ -49,8 +59,4 @@ func InteractiveOutput(nextSlide func(), app *tview.Application) (title string, 
 				AddItem(table, 0, 1, true)).
 				AddItem(list, 10, 1, false),
 			0, 1, false)
-}
-
-func getInput() *tview.InputField {
-	return input
 }

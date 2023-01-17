@@ -276,16 +276,6 @@ func CreateTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.
 	}
 	table.SetBorder(true).SetTitle("Table")
 
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEscape {
-			input := getInput()
-			app.SetFocus(input)
-			return nil
-		}
-
-		return event
-	})
-
 	code := tview.NewTextView().
 		SetWrap(false).
 		SetDynamicColors(true)
@@ -368,7 +358,7 @@ func CreateTable(nextSlide func(), app *tview.Application) (*tview.List, *tview.
 func Table(nextSlide func(), app *tview.Application) (title string, params ExtraSlideParams, content tview.Primitive) {
 	list, table, code, _, _ := CreateTable(nextSlide, app)
 
-	return "Table", ExtraSlideParams{table}, tview.NewFlex().
+	return "Table", ExtraSlideParams{Table: table}, tview.NewFlex().
 		AddItem(tview.NewFlex().
 			SetDirection(tview.FlexRow).
 			AddItem(list, 10, 1, true).
