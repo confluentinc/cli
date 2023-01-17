@@ -98,15 +98,15 @@ func catchMDSErrors(err error) error {
 	return err
 }
 
-// All errors from CCloud backend services will be of corev1.Error type
+// All errors from CCloud backend services will be of ccloudv1.Error type
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
-// func catchCoreV1Errors(err error) error {
-// 	if err, ok := err.(*corev1.Error); ok {
-// 		return Wrap(err, CCloudBackendErrorPrefix)
-// 	}
-// 	return err
-// }
+func catchCcloudV1Errors(err error) error {
+	if err, ok := err.(*ccloudv1.Error); ok {
+		return Wrap(err, CCloudBackendErrorPrefix)
+	}
+	return err
+}
 
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {

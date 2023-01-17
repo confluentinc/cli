@@ -7,8 +7,9 @@ import (
 )
 
 var authMethodFormats = map[string]string{
-	"AUTH_TYPE_LOCAL": "Username/Password",
-	"AUTH_TYPE_SSO":   "SSO",
+	"AUTH_TYPE_LOCAL":   "Username/Password",
+	"AUTH_TYPE_SSO":     "SSO",
+	"AUTH_TYPE_UNKNOWN": "Unknown",
 }
 
 type userCommand struct {
