@@ -2,10 +2,11 @@ package admin
 
 import (
 	"context"
+	"fmt"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -20,14 +21,19 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	marketplace := c.Context.GetOrganization().Marketplace
 
 	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
 
+	if marketplace != nil && marketplace.Partner != ccloudv1.MarketplacePartner_UNKNOWN {
+		utils.Println(cmd, fmt.Sprintf("Organization is currently linked to %s Marketplace account.", marketplace.Partner))
+	}
+
 	if card == nil {
-		utils.Println(cmd, "Payment method not found. Add one using `confluent admin payment update`.")
+		utils.Println(cmd, "No credit card found. Add one using `confluent admin payment update`.")
 		return nil
 	}
 
