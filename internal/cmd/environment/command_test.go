@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -102,7 +102,7 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 	resolverMock := &pcmd.FlagResolverImpl{
 		Out: os.Stdout,
 	}
-	prerunner := &cliMock.Commander{
+	prerunner := &climock.Commander{
 		FlagResolver: resolverMock,
 		Client:       client,
 		MDSClient:    nil,

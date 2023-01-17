@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -147,7 +147,7 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 		LifecycleV1Api:  suite.lifecycleMock,
 		PluginsV1Api:    suite.pluginMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock}, nil,
+	prerunner := climock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock}, nil,
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(suite.conf, prerunner)
 }
