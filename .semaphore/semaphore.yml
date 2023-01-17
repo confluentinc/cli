@@ -60,10 +60,16 @@ blocks:
             - export PATH=$PATH:/usr/local/go/bin
             - export PATH=$PATH:$(go env GOPATH)/bin
 
+            # Try to restore cached dependencies
+            - cache restore darwin-$(checksum go.sum)
+
             # Run tests
             - make semaphore-deps
             - ulimit -n 2048
             - make test
+
+            # Cache Go dependencies
+            - cache store darwin-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
