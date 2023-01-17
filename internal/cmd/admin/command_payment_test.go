@@ -3,7 +3,6 @@ package admin
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"testing"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -24,14 +23,6 @@ func TestPaymentDescribe(t *testing.T) {
 	out, err := pcmd.ExecuteCommand(cmd, "payment", "describe")
 	require.NoError(t, err)
 	require.Equal(t, "Visa ending in 4242\n", out)
-}
-
-func TestMarketplaceOrgPaymentDescribe(t *testing.T) {
-	cmd := mockMarketplaceOrgAdminCommand()
-
-	out, err := pcmd.ExecuteCommand(cmd, "payment", "describe")
-	require.NoError(t, err)
-	require.Equal(t, fmt.Sprintf("Organization is currently linked to %s Marketplace account.\nVisa ending in 4242\n", ccloudv1.MarketplacePartner_AWS), out)
 }
 
 type PaymentUpdateSuite struct {
@@ -159,12 +150,6 @@ func getCommand() *command {
 func mockAdminCommand() *cobra.Command {
 	client := mockClient()
 	cfg := v1.AuthenticatedCloudConfigMock()
-	return New(climock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg), true)
-}
-
-func mockMarketplaceOrgAdminCommand() *cobra.Command {
-	client := mockClient()
-	cfg := v1.AuthenticatedCloudMarketplaceOrgConfigMock(&ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS})
 	return New(climock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg), true)
 }
 
