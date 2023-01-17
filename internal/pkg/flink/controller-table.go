@@ -17,6 +17,10 @@ type TableController struct {
 	navigate     func()
 }
 
+type TableStyle struct {
+	borders bool
+}
+
 var selectRow = func() {
 	table.SetBorders(false).
 		SetSelectable(true, false).

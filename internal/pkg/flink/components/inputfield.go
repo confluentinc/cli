@@ -5,7 +5,6 @@ import (
 	"github.com/rivo/tview"
 )
 
-// InputField demonstrates the InputField.
 func InputField() *tview.InputField {
 	return tview.NewInputField().
 		SetText("SELECT * FROM ORDERS;").
