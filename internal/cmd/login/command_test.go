@@ -33,7 +33,7 @@ import (
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -69,7 +69,7 @@ var (
 		},
 	}
 	mockUserInterface           = &ccloudv1Mock.UserInterface{}
-	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
+	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -109,7 +109,7 @@ var (
 		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 		},
 	}
-	mockLoginOrganizationManager = &cliMock.LoginOrganizationManager{
+	mockLoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
 			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromArgs(cmd)
 		},
@@ -120,7 +120,7 @@ var (
 			return pauth.NewLoginOrganizationManagerImpl().GetDefaultLoginOrganization()
 		},
 	}
-	mockAuthTokenHandler = &cliMock.AuthTokenHandler{
+	mockAuthTokenHandler = &climock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 			if orgResourceId == "" || orgResourceId == org1Id {
 				return testToken1, refreshToken, nil
@@ -167,7 +167,7 @@ func TestCredentialsOverride(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1Mock.UserInterface{}
-	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
+	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
@@ -230,7 +230,7 @@ func TestOrgIdOverride(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		loginOrganizationManager := &cliMock.LoginOrganizationManager{
+		loginOrganizationManager := &climock.LoginOrganizationManager{
 			GetLoginOrganizationFromArgsFunc: mockLoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
 			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
 				if tt.setEnv {
@@ -396,7 +396,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loginCredentialsManager := &cliMock.LoginCredentialsManager{
+			loginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -494,7 +494,7 @@ func TestPromptLoginFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
+			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
@@ -548,7 +548,7 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
+	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
@@ -687,7 +687,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
+	prerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, cfg)
 
 	// Create a test certificate to be read in by the command
 	ca := &x509.Certificate{
@@ -724,7 +724,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			}, nil, nil
 		},
 	}
-	mdsClientManager := &cliMock.MDSClientManager{
+	mdsClientManager := &climock.MDSClientManager{
 		GetMDSClientFunc: func(_, caCertPath string, _ bool) (*mds.APIClient, error) {
 			// ensure the right caCertPath is used
 			req.Contains(caCertPath, expectedCaCertPath)
@@ -911,7 +911,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterf
 			},
 		}
 	}
-	ccloudClientFactory := &cliMock.CCloudClientFactory{
+	ccloudClientFactory := &climock.CCloudClientFactory{
 		AnonHTTPClientFactoryFunc: func(baseURL string) *ccloudv1.Client {
 			req.Equal("https://confluent.cloud", baseURL)
 			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
@@ -925,19 +925,19 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterf
 			}, Auth: auth, User: userInterface}
 		},
 	}
-	mdsClientManager := &cliMock.MDSClientManager{
+	mdsClientManager := &climock.MDSClientManager{
 		GetMDSClientFunc: func(_, _ string, _ bool) (*mds.APIClient, error) {
 			return mdsClient, nil
 		},
 	}
-	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
+	prerunner := climock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), nil, mdsClient, nil, cfg)
 	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	return loginCmd, cfg
 }
 
 func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
-	logoutCmd := logout.New(cfg, cliMock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
+	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 

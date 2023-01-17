@@ -22,7 +22,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -153,7 +153,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
+	prerunner := climock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
