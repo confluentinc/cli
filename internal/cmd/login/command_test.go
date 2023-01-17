@@ -109,7 +109,7 @@ var (
 		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 		},
 	}
-	mockLoginOrganizationManager = &climock.LoginOrganizationManager{
+	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
 			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromArgs(cmd)
 		},
@@ -120,7 +120,7 @@ var (
 			return pauth.NewLoginOrganizationManagerImpl().GetDefaultLoginOrganization()
 		},
 	}
-	mockAuthTokenHandler = &climock.AuthTokenHandler{
+	AuthTokenHandler = &climock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, credentials *pauth.Credentials, noBrowser bool, orgResourceId string) (string, string, error) {
 			if orgResourceId == "" || orgResourceId == org1Id {
 				return testToken1, refreshToken, nil
@@ -190,7 +190,7 @@ func TestCredentialsOverride(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 
 	output, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -231,23 +231,23 @@ func TestOrgIdOverride(t *testing.T) {
 
 	for _, tt := range tests {
 		loginOrganizationManager := &climock.LoginOrganizationManager{
-			GetLoginOrganizationFromArgsFunc: mockLoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
+			GetLoginOrganizationFromArgsFunc: LoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
 			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
 				if tt.setEnv {
 					return func() (string, error) { return org2Id, nil }
 				} else {
-					return mockLoginOrganizationManager.GetLoginOrganizationFromEnvVarFunc(cmd)
+					return LoginOrganizationManager.GetLoginOrganizationFromEnvVarFunc(cmd)
 				}
 			},
 			GetDefaultLoginOrganizationFunc: func() func() (string, error) {
 				if tt.setDefault {
 					return func() (string, error) { return org2Id, nil }
 				} else {
-					return mockLoginOrganizationManager.GetDefaultLoginOrganization()
+					return LoginOrganizationManager.GetDefaultLoginOrganization()
 				}
 			},
 		}
-		loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
 		output, err := pcmd.ExecuteCommand(loginCmd)
 		req.NoError(err)
@@ -323,7 +323,7 @@ func TestLoginSuccess(t *testing.T) {
 			org2 = s.orgId == org2Id
 			s.args = append(s.args, "--organization-id="+s.orgId)
 		}
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, promptUser))
@@ -460,7 +460,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			}
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, loginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
 			var loginArgs []string
 			if !tt.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
@@ -529,7 +529,7 @@ func TestPromptLoginFlag(t *testing.T) {
 				SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 				},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
 			if !tt.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
@@ -571,7 +571,7 @@ func TestLoginFail(t *testing.T) {
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.Error(err)
 	req.Equal(new(ccloudv1.InvalidLoginError), err)
@@ -735,7 +735,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockLoginOrganizationManager, mockAuthTokenHandler)
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, LoginOrganizationManager, AuthTokenHandler)
 	loginCmd.Flags().Bool("unsafe-trace", false, "")
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -792,7 +792,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	for _, s := range suite {
-		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+		loginCmd, cfg := newLoginCmd(auth, userInterface, s.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 
 		// Login to the CLI control plane
 		output, err := pcmd.ExecuteCommand(loginCmd, s.args...)

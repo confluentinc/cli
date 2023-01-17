@@ -72,8 +72,8 @@ var (
 		},
 		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
-	orgManagerImpl               = pauth.NewLoginOrganizationManagerImpl()
-	mockLoginOrganizationManager = &climock.LoginOrganizationManager{
+	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
+	LoginOrganizationManager = &climock.LoginOrganizationManager{
 		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
 			return orgManagerImpl.GetLoginOrganizationFromArgs(cmd)
 		},
@@ -84,7 +84,7 @@ var (
 			return orgManagerImpl.GetDefaultLoginOrganization()
 		},
 	}
-	mockAuthTokenHandler = &climock.AuthTokenHandler{
+	AuthTokenHandler = &climock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return testToken, "refreshToken", nil
 		},
@@ -144,7 +144,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1Mock.UserInterface{}
-	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, mockAuthTokenHandler, mockLoginCredentialsManager, mockLoginOrganizationManager)
+	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
 

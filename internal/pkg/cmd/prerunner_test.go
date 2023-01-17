@@ -70,7 +70,7 @@ var (
 			}
 		},
 	}
-	mockAuthTokenHandler = &climock.AuthTokenHandler{
+	AuthTokenHandler = &climock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 			return "", "", nil
 		},
@@ -108,7 +108,7 @@ func getPreRunBase() *pcmd.PreRun {
 		},
 		LoginCredentialsManager: mockLoginCredentialsManager,
 		JWTValidator:            pcmd.NewJWTValidator(),
-		AuthTokenHandler:        mockAuthTokenHandler,
+		AuthTokenHandler:        AuthTokenHandler,
 	}
 }
 

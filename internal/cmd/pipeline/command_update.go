@@ -23,6 +23,14 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
 				Code: `confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"`,
 			},
+			examples.Example{
+				Text: `Grant privilege to activate Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege true`,
+			},
+			examples.Example{
+				Text: `Revoke privilege to activate Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
+			},
 		),
 	}
 
@@ -35,7 +43,7 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
-
+	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to active this pipeline.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -54,8 +62,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 {
-		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret")
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") {
+		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret, --activation-privilege")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{}}
@@ -80,6 +88,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	updatePipeline.Spec.SetSecrets(secretMappings)
+
+	if cmd.Flags().Changed("activation-privilege") {
+		activationPrivilege, _ := cmd.Flags().GetBool("activation-privilege")
+		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
+	}
 
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {

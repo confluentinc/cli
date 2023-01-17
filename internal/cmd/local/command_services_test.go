@@ -143,7 +143,7 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
 	c := &Command{
-		ch: &mock.MockConfluentHome{
+		ch: &climock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return false, nil
 			},
