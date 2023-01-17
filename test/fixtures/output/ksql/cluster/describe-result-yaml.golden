@@ -1,8 +1,8 @@
-detailed_processing_log: true
-endpoint: SASL_SSL://ksql-endpoint
 id: lksqlc-12345
-kafka: lkc-abcde
 name: account ksql
-status: PROVISIONING
-storage: 130
 topic_prefix: pksqlc-zxcvb
+kafka: lkc-abcde
+storage: 130
+endpoint: SASL_SSL://ksql-endpoint
+status: PROVISIONING
+detailed_processing_log: true
