@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"os"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -43,6 +44,15 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	roles, err := c.namespaceRoles(opt)
 	if err != nil {
 		return err
+	}
+
+	// add streamcatalog roles
+	if os.Getenv("XX_STREAMCATALOG_ENABLE") != "" {
+		streamCatalogRoles, err := c.namespaceRoles(streamCatalogNamespace)
+		if err != nil {
+			return err
+		}
+		roles = append(roles, streamCatalogRoles...)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
