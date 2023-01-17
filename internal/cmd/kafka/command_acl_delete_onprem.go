@@ -18,7 +18,7 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete all READ access ACLs for the specified user (providing embedded Kafka REST Proxy endpoint).`,
-				Code: `confluent kafka acl delete --url http://localhost:8090/kafka --operation READ --allow --topic Test --principal User:Jane --host "*"`,
+				Code: "confluent kafka acl delete --url http://localhost:8090/kafka --operation READ --allow --topic Test --principal User:Jane --host '*'",
 			},
 			examples.Example{
 				Text: `Delete all READ access ACLs for the specified user (providing Kafka REST Proxy endpoint).`,
