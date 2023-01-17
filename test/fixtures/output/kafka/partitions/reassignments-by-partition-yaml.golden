@@ -1,5 +1,0 @@
-- adding_replicas: '[1 2 3]'
-  cluster_id: cluster-1
-  partition_id: "0"
-  removing_replicas: '[4]'
-  topic_name: topic1
