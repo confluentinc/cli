@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -59,6 +60,7 @@ type RoleBindingTestSuite struct {
 }
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
+	os.Setenv("XX_STREAMCATALOG_ENABLE", "1")
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
 }
@@ -583,6 +585,18 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		args:      []string{"--principal", "User:u-noemail", "--role", "EnvironmentAdmin", "--environment", v1.MockEnvironmentId},
 		principal: "User:u-noemail",
 		roleName:  "EnvironmentAdmin",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "DataDiscovery", "--environment", v1.MockEnvironmentId},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "DataDiscovery",
+		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
+	},
+	{
+		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "DataSteward", "--environment", v1.MockEnvironmentId},
+		principal: "User:" + v1.MockUserResourceId,
+		roleName:  "DataSteward",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
 }

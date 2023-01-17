@@ -3,6 +3,8 @@ package iam
 import (
 	"context"
 	"fmt"
+	"github.com/antihax/optional"
+	"os"
 	"strings"
 
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -384,7 +386,12 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV2(roleName string, reso
 	ctx := c.createContext()
 	found := false
 
-	for _, namespace := range allNamespaces {
+	namespaces := []optional.String{publicNamespace, dataplaneNamespace, dataGovernanceNamespace, ksqlNamespace}
+	if os.Getenv("XX_STREAMCATALOG_ENABLE") != "" {
+		namespaces = allNamespaces
+	}
+
+	for _, namespace := range namespaces {
 		opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespace}
 		role, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName, opts)
 		if err != nil {
