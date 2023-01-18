@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
@@ -19,9 +20,13 @@ type Shortcut struct {
 
 // Keyboard shortcuts shown at the bottom.
 var appShortcuts = []Shortcut{
+	{Key: tcell.KeyCtrlS, KeyText: "Q", Text: "Quit"},
 	{Key: tcell.KeyCtrlS, KeyText: "S", Text: "Smart Completion"},
 	{Key: tcell.KeyCtrlM, KeyText: "M", Text: "Multiline"},
-	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"}}
+	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"},
+	{Key: tcell.KeyCtrlT, KeyText: "N", Text: "Next Page"},
+	{Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
+}
 
 var shortcuts *tview.TextView
 
@@ -37,11 +42,15 @@ func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController Table
 		switch appShortcuts[index].Text {
 		case "Toggle Display Mode":
 			tableController.borders()
+		case "Quit":
+			// TODO import appController and intputController and call appController.stop
+			app.Stop()
+			os.Exit(0)
 		}
 	}
 
 	shortcuts.SetHighlightedFunc(shortcutHighlighted)
-	shortcuts.Highlight("0")
+	//shortcuts.Highlight("0")
 
 	return ShortcutsController{}
 }

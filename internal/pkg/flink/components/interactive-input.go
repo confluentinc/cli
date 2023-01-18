@@ -11,7 +11,6 @@ import (
 )
 
 func completer(in prompt.Document) []prompt.Suggest {
-	prompt.NewStdoutWriter().WriteRawStr("completer")
 
 	s := []prompt.Suggest{
 		{Text: "SELECT", Description: "Select data from a database"},
@@ -23,6 +22,8 @@ func completer(in prompt.Document) []prompt.Suggest {
 }
 
 func promptInput(value string) string {
+	prompt.NewStdoutWriter().WriteRawStr("completer")
+
 	return prompt.Input(">>> ", completer,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
@@ -39,7 +40,8 @@ func promptInput(value string) string {
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
-		prompt.OptionSuggestionBGColor(prompt.DarkGray))
+		prompt.OptionSuggestionBGColor(prompt.DarkGray),
+	)
 }
 
 func InteractiveInput(value string) string {

@@ -10,15 +10,23 @@ type ApplicationController struct {
 	focus func(component string)
 }
 
+var quit = func() {
+	app.Stop()
+	os.Exit(0)
+}
+
 var appInputCapture = func(tableController TableController) func(event *tcell.EventKey) *tcell.EventKey {
 	return func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyCtrlT {
+		if event.Key() == tcell.KeyCtrlQ {
+			quit()
+			return nil
+		} else if event.Key() == tcell.KeyCtrlT {
 			tableController.borders()
 			return nil
 		} else if event.Key() == tcell.KeyCtrlC {
 			if !table.HasFocus() {
-				app.Stop()
-				os.Exit(0)
+				// TODO move this to appController stop
+				quit()
 			} else {
 				tableController.onCtrlC()
 			}
