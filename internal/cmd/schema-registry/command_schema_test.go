@@ -18,7 +18,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -81,14 +81,14 @@ func (suite *SchemaTestSuite) SetupTest() {
 			},
 		},
 	}
-	suite.dynamicContext = cliMock.AuthenticatedDynamicConfigMock()
+	suite.dynamicContext = climock.AuthenticatedDynamicConfigMock()
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(nil, client, nil, nil, nil, suite.conf), suite.srClientMock)
+	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
 }
 

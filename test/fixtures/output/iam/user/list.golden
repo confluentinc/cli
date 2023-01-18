@@ -1,8 +1,8 @@
-    ID    |     Name      |         Email         |   Status   | Authentication Method   
-----------+---------------+-----------------------+------------+-------------------------
-  u-11aaa | 11 Aaa        | u-11aaa@confluent.io  | Unverified | Username/Password, SSO  
-  u-17    | Miles Todzo   | mtodzo@confluent.io   | Unverified | Username/Password, SSO  
-  u-22bbb | 22 Bbb        | u-22bbb@confluent.io  | Unverified | Username/Password, SSO  
-  u-33ccc | 33 Ccc        | u-33ccc@confluent.io  | Unverified | Username/Password, SSO  
-  u-44ddd | Muwei He      | mhe@confluent.io      | Unverified | Username/Password, SSO  
-  u11     | Brian Strauch | bstrauch@confluent.io | Unverified | Username/Password, SSO  
+    ID    |     Name      |         Email         | Authentication Method  
+----------+---------------+-----------------------+------------------------
+  u-11aaa | 11 Aaa        | u-11aaa@confluent.io  | Username/Password      
+  u-17    | Miles Todzo   | mtodzo@confluent.io   | Username/Password      
+  u-22bbb | 22 Bbb        | u-22bbb@confluent.io  | Username/Password      
+  u-33ccc | 33 Ccc        | u-33ccc@confluent.io  | SSO                    
+  u-44ddd | Muwei He      | mhe@confluent.io      | Username/Password      
+  u11     | Brian Strauch | bstrauch@confluent.io | Username/Password      

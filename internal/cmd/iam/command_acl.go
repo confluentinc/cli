@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"

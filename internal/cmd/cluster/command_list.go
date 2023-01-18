@@ -3,7 +3,7 @@ package cluster
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
