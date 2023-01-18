@@ -30,9 +30,9 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - make deps
+            - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
             - make lint
-            - ulimit -n 2048
+            - go install gotest.tools/gotestsum@v1.8.2
             - make test
             - make test-installer
 
@@ -60,21 +60,13 @@ blocks:
             - export PATH=$PATH:/usr/local/go/bin
             - export PATH=$PATH:$(go env GOPATH)/bin
 
-            # Try to restore cached dependencies
-            - cache restore darwin-$(checksum go.sum)
-
             # Run tests
-            - make semaphore-deps
-            - ulimit -n 2048
+            - go install gotest.tools/gotestsum@v1.8.2
             - make test
-
-            # Cache Go dependencies
-            - cache store darwin-$(checksum go.sum) $(go env GOPATH)/pkg/mod
       epilogue:
         always:
           commands:
             - test-results publish . -N "darwin/amd64"
-            - rm *.xml
 
 after_pipeline:
   task:
