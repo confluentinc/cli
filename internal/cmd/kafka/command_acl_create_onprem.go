@@ -39,9 +39,6 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 			examples.Example{
 				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --topic '*'",
 			},			
-
-		),
-	}
 		),
 	}
 
