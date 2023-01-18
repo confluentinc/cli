@@ -1,5 +1,7 @@
 module github.com/confluentinc/cli
 
+go 1.19
+
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.44.175
@@ -458,5 +460,3 @@ replace (
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20170925234155-019ae5ada31d
 	k8s.io/kube-openapi => k8s.io/kube-openapi v0.0.0-20211110012726-3cc51fd1e909
 )
-
-go 1.19
