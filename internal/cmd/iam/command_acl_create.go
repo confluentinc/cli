@@ -1,7 +1,7 @@
 package iam
 
 import (
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 

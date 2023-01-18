@@ -20,7 +20,7 @@ type LaunchDarklyTestSuite struct {
 }
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
-	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 
 	type kv struct {
 		key string
@@ -42,7 +42,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:   version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)

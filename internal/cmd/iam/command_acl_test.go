@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	mock2 "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 /*************** TEST command_acl ***************/
@@ -193,7 +193,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New(suite.conf, mock2.NewPreRunnerMock(nil, nil, nil, mdsClient, nil, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {

@@ -36,7 +36,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:               prerunner,
 	}
 
-	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		c.AddCommand(newPoolCommand(cfg, c.prerunner))

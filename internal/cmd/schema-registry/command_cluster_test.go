@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -102,7 +102,7 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		AuthToken:     "auth-token",
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(nil, client, v2Client, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, climock.NewPreRunnerMock(client, v2Client, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {

@@ -18,7 +18,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -100,7 +100,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(nil, client, nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {

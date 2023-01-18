@@ -6,10 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
@@ -24,7 +22,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -81,7 +79,6 @@ type KafkaClusterTestSuite struct {
 	conf            *v1.Config
 	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
-	usageLimits     *ccsdkmock.UsageLimits
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
@@ -148,9 +145,6 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
-	privateClient := &ccloud.Client{
-		UsageLimits: suite.usageLimits,
-	}
 	client := &ccloudv1.Client{
 		EnvironmentMetadata: suite.envMetadataMock,
 	}
@@ -159,7 +153,7 @@ func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(privateClient, client, v2Client, nil, nil, conf)
+	prerunner := climock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -209,7 +203,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

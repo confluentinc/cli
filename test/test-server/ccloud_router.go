@@ -25,7 +25,6 @@ const (
 	paymentInfo         = "/api/organizations/{id}/payment_info"
 	promoCodeClaims     = "/api/organizations/{id}/promo_code_claims"
 	users               = "/api/users"
-	userProfile         = "/api/user_profiles/{id}"
 	v2alphaAuthenticate = "/api/metadata/security/v2alpha1/authenticate"
 	signup              = "/api/signup"
 	launchDarklyProxy   = "/ldapi/sdk/eval/{env}/users/{user:[a-zA-Z0-9=\\-\\/]+}"
@@ -99,7 +98,6 @@ func (c *CloudRouter) addSchemaRegistryRoutes(t *testing.T) {
 
 func (c *CloudRouter) addUserRoutes(t *testing.T) {
 	c.HandleFunc(users, c.HandleUsers(t))
-	c.HandleFunc(userProfile, c.HandleUserProfiles(t))
 }
 
 func (c *CloudRouter) addOrgRoutes(t *testing.T) {

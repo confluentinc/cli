@@ -1,11 +1,8 @@
 package iam
 
 import (
-	"context"
 	"fmt"
-	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,29 +29,17 @@ func (c userCommand) describe(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
 	}
 
-	userProfile, err := c.PrivateClient.User.GetUserProfile(context.Background(), &orgv1.User{ResourceId: args[0]})
+	user, err := c.V2Client.GetIamUserById(args[0])
 	if err != nil {
 		return err
 	}
 
-	// Avoid panics if new types of statuses are added in the future
-	userStatus := "Unknown"
-	if val, ok := statusMap[userProfile.UserStatus]; ok {
-		userStatus = val
-	}
-
-	var authMethods []string
-	for _, method := range userProfile.GetAuthConfig().GetAllowedAuthMethods() {
-		authMethods = append(authMethods, authMethodFormats[method])
-	}
-
 	table := output.NewTable(cmd)
 	table.Add(&userOut{
-		Id:                   userProfile.ResourceId,
-		Name:                 getName(userProfile),
-		Email:                userProfile.Email,
-		Status:               userStatus,
-		AuthenticationMethod: strings.Join(authMethods, ", "),
+		Id:                   user.GetId(),
+		Name:                 user.GetFullName(),
+		Email:                user.GetEmail(),
+		AuthenticationMethod: authMethodFormats[user.GetAuthType()],
 	})
 	return table.Print()
 }

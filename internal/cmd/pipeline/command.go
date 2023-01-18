@@ -61,7 +61,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		prerunner:                     prerunner,
 	}
 
-	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 

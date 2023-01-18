@@ -14,20 +14,17 @@ import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 var (
-	environments       = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
-	keyIndex           = int32(3)
-	resourceIdMap      = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	environments  = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	keyIndex      = int32(3)
+	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 
 	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
@@ -243,8 +240,8 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			res := &orgv1.GetServiceAccountsReply{
-				Users: []*orgv1.User{
+			res := &ccloudv1.GetServiceAccountsReply{
+				Users: []*ccloudv1.User{
 					{
 						Id:                 serviceAccountID,
 						ResourceId:         serviceAccountResourceID,
@@ -276,8 +273,8 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 		userId := int32(id)
 		switch r.Method {
 		case http.MethodGet:
-			res := &orgv1.GetServiceAccountReply{
-				User: &orgv1.User{
+			res := &ccloudv1.GetServiceAccountReply{
+				User: &ccloudv1.User{
 					Id:         userId,
 					ResourceId: resourceIdMap[userId],
 				},
@@ -352,7 +349,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			users := []*orgv1.User{
+			users := []*ccloudv1.User{
 				buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),
 				buildUser(2, "mtodzo@confluent.io", "Miles", "Todzo", "u-17"),
 				buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
@@ -365,10 +362,10 @@ func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 				intId, err := strconv.Atoi(userId)
 				require.NoError(t, err)
 				if int32(intId) == deactivatedUserID {
-					users = []*orgv1.User{}
+					users = []*ccloudv1.User{}
 				}
 			}
-			res := orgv1.GetUsersReply{
+			res := ccloudv1.GetUsersReply{
 				Users: users,
 				Error: nil,
 			}
@@ -376,8 +373,8 @@ func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 			if email != "" {
 				for _, u := range users {
 					if u.Email == email {
-						res = orgv1.GetUsersReply{
-							Users: []*orgv1.User{u},
+						res = ccloudv1.GetUsersReply{
+							Users: []*ccloudv1.User{u},
 							Error: nil,
 						}
 						break
@@ -389,70 +386,6 @@ func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 			_, err = w.Write(data)
 			require.NoError(t, err)
 		}
-	}
-}
-
-// Handler for: "/api/user_profiles/{id}"
-func (c *CloudRouter) HandleUserProfiles(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		userId := vars["id"]
-		var res flowv1.GetUserProfileReply
-		users := []*orgv1.User{
-			buildUser(1, "bstrauch@confluent.io", "Brian", "Strauch", "u11"),
-			buildUser(2, "mtodzo@confluent.io", "Miles", "Todzo", "u-17"),
-			buildUser(3, "u-11aaa@confluent.io", "11", "Aaa", "u-11aaa"),
-			buildUser(4, "u-22bbb@confluent.io", "22", "Bbb", "u-22bbb"),
-			buildUser(5, "u-33ccc@confluent.io", "33", "Ccc", "u-33ccc"),
-			buildUser(23, "mhe@confluent.io", "Muwei", "He", "u-44ddd"),
-		}
-		var user *orgv1.User
-		switch userId {
-		case "u-0":
-			res = flowv1.GetUserProfileReply{
-				Error: &corev1.Error{Message: "user not found"},
-			}
-		case "u11":
-			user = users[0]
-		case "u-17":
-			user = users[1]
-		case "u-11aaa":
-			user = users[2]
-		case "u-22bbb":
-			user = users[3]
-		case "u-33ccc":
-			user = users[4]
-		case "u-44ddd":
-			user = users[5]
-		default:
-			res = flowv1.GetUserProfileReply{
-				User: &flowv1.UserProfile{
-					Email:      "cody@confluent.io",
-					FirstName:  "Cody",
-					ResourceId: "u-11aaa",
-					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
-				},
-			}
-		}
-		if userId != "u-0" {
-			authConfig := &orgv1.AuthConfig{
-				AllowedAuthMethods: []orgv1.AuthMethod{orgv1.AuthMethod_AUTH_METHOD_USERNAME_PWD, orgv1.AuthMethod_AUTH_METHOD_SSO},
-			}
-			res = flowv1.GetUserProfileReply{
-				User: &flowv1.UserProfile{
-					Email:      user.Email,
-					FirstName:  user.FirstName,
-					LastName:   user.LastName,
-					ResourceId: user.ResourceId,
-					UserStatus: flowv1.UserStatus_USER_STATUS_UNVERIFIED,
-					AuthConfig: authConfig,
-				},
-			}
-		}
-		b, err := ccstructs.MarshalJSONToBytes(&res)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
 	}
 }
 

@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -250,24 +249,22 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 	}
 }
 
-func buildUser(id int32, email, firstName, lastName, resourceId string) *orgv1.User {
-	return &orgv1.User{
-		Id:             id,
-		Email:          email,
-		FirstName:      firstName,
-		LastName:       lastName,
-		OrganizationId: 0,
-		Deactivated:    false,
-		Verified:       nil,
-		ResourceId:     resourceId,
+func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv1.User {
+	return &ccloudv1.User{
+		Id:         id,
+		Email:      email,
+		FirstName:  firstName,
+		LastName:   lastName,
+		ResourceId: resourceId,
 	}
 }
 
-func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
+func buildIamUser(email, name, resourceId, authType string) iamv2.IamV2User {
 	return iamv2.IamV2User{
 		Email:    iamv2.PtrString(email),
 		FullName: iamv2.PtrString(name),
 		Id:       iamv2.PtrString(resourceId),
+		AuthType: iamv2.PtrString(authType),
 	}
 }
 
