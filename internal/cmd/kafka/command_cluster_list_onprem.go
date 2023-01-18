@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
