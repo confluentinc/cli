@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -29,7 +30,7 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	if marketplace != nil && marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
-		utils.Println(cmd, fmt.Sprintf("Organization is currently linked to %s Marketplace account.", marketplace.Partner))
+		utils.Println(cmd, fmt.Sprintf("Organization is currently linked to %s Marketplace account.", marketplace.GetPartner()))
 	}
 
 	if card == nil {
