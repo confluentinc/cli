@@ -155,20 +155,18 @@ endif
 .PHONY: unit-test
 unit-test:
 ifdef CI
-	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 else
-	@go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: int-test
 int-test:
 ifdef CI
-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
 	cat integration-test-report.xml
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
-	@go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
+	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif
 
 .PHONY: test

@@ -63,10 +63,6 @@ blocks:
             # Run tests
             - go install gotest.tools/gotestsum@v1.8.2
             - make test
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "darwin/amd64"
 
 after_pipeline:
   task:
