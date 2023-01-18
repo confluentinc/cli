@@ -1,27 +1,15 @@
 package iam
 
 import (
-	"fmt"
-
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	"github.com/spf13/cobra"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-var statusMap = map[flowv1.UserStatus]string{
-	flowv1.UserStatus_USER_STATUS_UNKNOWN:     "Unknown",
-	flowv1.UserStatus_USER_STATUS_UNVERIFIED:  "Unverified",
-	flowv1.UserStatus_USER_STATUS_ACTIVE:      "Active",
-	flowv1.UserStatus_USER_STATUS_DEACTIVATED: "Deactivated",
-}
-
-var authMethodFormats = map[orgv1.AuthMethod]string{
-	orgv1.AuthMethod_AUTH_METHOD_UNKNOWN:      "Unknown",
-	orgv1.AuthMethod_AUTH_METHOD_USERNAME_PWD: "Username/Password",
-	orgv1.AuthMethod_AUTH_METHOD_SSO:          "SSO",
+var authMethodFormats = map[string]string{
+	"AUTH_TYPE_LOCAL":   "Username/Password",
+	"AUTH_TYPE_SSO":     "SSO",
+	"AUTH_TYPE_UNKNOWN": "Unknown",
 }
 
 type userCommand struct {
@@ -32,7 +20,6 @@ type userOut struct {
 	Id                   string `human:"ID" serialized:"id"`
 	Name                 string `human:"Name" serialized:"name"`
 	Email                string `human:"Email" serialized:"email"`
-	Status               string `human:"Status" serialized:"status"`
 	AuthenticationMethod string `human:"Authentication Method" serialized:"authentication_method"`
 }
 
@@ -52,12 +39,4 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.AddCommand(c.newUpdateCommand())
 
 	return c.Command
-}
-
-func getName(user *flowv1.UserProfile) string {
-	name := user.GetFirstName()
-	if last := user.GetLastName(); last != "" {
-		name += fmt.Sprintf(" %s", last)
-	}
-	return name
 }

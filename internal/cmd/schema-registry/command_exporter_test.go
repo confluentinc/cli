@@ -100,7 +100,7 @@ func (suite *ExporterTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	return New(suite.conf, climock.NewPreRunnerMock(nil, client, nil, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ExporterTestSuite) TestCreateExporter() {
