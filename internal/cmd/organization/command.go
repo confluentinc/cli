@@ -24,15 +24,3 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	return c.Command
 }
-
-func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
-	if len(args) > 0 {
-		return nil
-	}
-
-	if err := c.PersistentPreRunE(cmd, args); err != nil {
-		return nil
-	}
-
-	return pcmd.AutocompleteEnvironments(c.PrivateClient, c.V2Client, c.Context)
-}
