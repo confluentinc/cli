@@ -1,6 +1,6 @@
---- cli/Makefile	2023-01-04 11:35:24.000000000 -0600
-+++ debian/Makefile	2022-12-12 19:29:13.000000000 -0600
-@@ -1,209 +1,130 @@
+--- cli/Makefile	2023-01-18 10:45:13.000000000 -0800
++++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
+@@ -1,177 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -41,7 +41,7 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -81,6 +81,11 @@
 +# when the values aren't overridden by the script invoking the Makefile
 +
 +APPLY_PATCHES?=yes
++
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
++endif
  
 -.PHONY: deps
 -deps:
@@ -89,39 +94,8 @@
 -	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 -	go install gotest.tools/gotestsum@v1.8.2
 -
--.PHONY: jenkins-deps
--jenkins-deps:
--	go install github.com/goreleaser/goreleaser@v1.14.1
--
--.PHONY: semaphore-deps
--semaphore-deps:
--	go install github.com/goreleaser/goreleaser@v1.14.1 && \
--	go install gotest.tools/gotestsum@v1.8.2
--
 -show-args:
 -	@echo "VERSION: $(VERSION)"
--
--#
--# START DEVELOPMENT HELPERS
--# Usage: make run -- version
--#        make run -- --version
--#
--
--# If the first argument is "run"...
--ifeq (run,$(firstword $(MAKECMDGOALS)))
--  # use the rest as arguments for "run"
--  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
--  # ...and turn them into do-nothing targets
--  $(eval $(RUN_ARGS):;@:)
--endif
--
--.PHONY: run
--run:
--	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
--
--#
--# END DEVELOPMENT HELPERS
--#
 -
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
@@ -203,18 +177,12 @@
 -.PHONY: unit-test
 -unit-test:
 -ifdef CI
--	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
--	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
-+endif
-+
+-	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+-	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
 +endif
@@ -229,13 +197,8 @@
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
- endif
- 
--.PHONY: int-test
--int-test:
--ifdef CI
--	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v -timeout 10m $$(go list ./... | grep test)
--	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
++endif
++
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -275,8 +238,13 @@
 +ifneq ($(PACKAGE_TYPE),deb)
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
-+endif
-+
+ endif
+ 
+-.PHONY: int-test
+-int-test:
+-ifdef CI
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
+-	cat integration-test-report.xml
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
@@ -291,7 +259,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
+-	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
