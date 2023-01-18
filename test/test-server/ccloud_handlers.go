@@ -88,6 +88,11 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			}
 		}
 
+		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
+		if isOrgOnMarketplace {
+			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
+		}
+
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
 			User: &ccloudv1.User{
 				Id:         23,

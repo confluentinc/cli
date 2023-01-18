@@ -336,3 +336,7 @@ func binaryPath(t *testing.T, binaryName string) string {
 func unsetFreeTrialEnv() {
 	os.Unsetenv("IS_ON_FREE_TRIAL")
 }
+
+func unsetMarketplaceOrgEnv() {
+	os.Unsetenv("IS_ORG_ON_MARKETPLACE")
+}
