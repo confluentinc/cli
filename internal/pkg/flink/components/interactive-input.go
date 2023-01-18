@@ -22,9 +22,10 @@ func completer(in prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
-func promptInput() string {
+func promptInput(value string) string {
 	return prompt.Input(">>> ", completer,
 		prompt.OptionTitle("sql-prompt"),
+		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory([]string{"SELECT * FROM users;"}),
 		prompt.SwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
@@ -41,12 +42,11 @@ func promptInput() string {
 		prompt.OptionSuggestionBGColor(prompt.DarkGray))
 }
 
-func InteractiveInput() {
+func InteractiveInput(value string) string {
 	fmt.Print("flinkSQL")
-	prompt.NewStdoutWriter().WriteRawStr("testt")
+	//prompt.NewStdoutWriter().WriteRawStr("testt")
 
-	var in = promptInput()
-	fmt.Println("Your input: " + in)
+	var in = promptInput(value)
 
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
@@ -57,4 +57,5 @@ func InteractiveInput() {
 	}
 
 	table.Render() // Send output
+	return in
 }
