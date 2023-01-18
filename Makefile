@@ -165,6 +165,7 @@ endif
 int-test:
 ifdef CI
 	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
+	cat integration-test-report.xml
 	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
 else
 	@go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
