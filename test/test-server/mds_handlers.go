@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/stretchr/testify/require"
 )
 

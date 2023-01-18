@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/client9/gospell"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
@@ -25,7 +25,7 @@ var commandRules = []linter.CommandRule{
 
 	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
-	linter.Filter(linter.RequireNotTitleCase("Short", properNouns), linter.ExcludeCommandContains("ksql app")),
+	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
 	linter.RequireStartWithCapital("Short"),
 
 	linter.Filter(linter.RequireEndWithPunctuation("Long", true), linter.ExcludeCommand("prompt")),
@@ -88,14 +88,18 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"azure-subscription-id",
 			"destination-bootstrap-server",
-			"destination-cluster-id",
+			"destination-cluster",
 			"destination-api-key",
 			"destination-api-secret",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
 			"request-required-acks",
-			"schema-registry-cluster-id",
+			"schema-registry-api-key",
+			"schema-registry-api-secret",
+			"schema-registry-cluster",
+			"schema-registry-context",
+			"schema-registry-endpoint",
 			"schema-registry-subjects",
 			"skip-message-on-error",
 			"source-bootstrap-server",
@@ -110,16 +114,12 @@ var flagRules = []linter.FlagRule{
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
-			"connect-cluster-id",
 			"destination-bootstrap-server",
 			"destination-api-key",
 			"destination-api-secret",
-			"destination-cluster-id",
 			"enable-systest-events",
 			"log-exclude-rows",
 			"if-not-exists",
-			"kafka-cluster-id",
-			"ksql-cluster-id",
 			"local-secrets-file",
 			"max-block-ms",
 			"max-memory-bytes",
@@ -130,16 +130,18 @@ var flagRules = []linter.FlagRule{
 			"request-required-acks",
 			"request-timeout-ms",
 			"retry-backoff-ms",
-			"schema-registry-cluster-id",
+			"schema-registry-api-key",
+			"schema-registry-api-secret",
+			"schema-registry-cluster",
+			"schema-registry-context",
+			"schema-registry-endpoint",
 			"schema-registry-subjects",
 			"skip-message-on-error",
 			"socket-buffer-size",
 			"source-api-key",
 			"source-api-secret",
 			"source-bootstrap-server",
-			"source-cluster-id",
-			"sr-api-key",
-			"sr-api-secret",
+			"kafka-api-key",
 		),
 	),
 }
@@ -194,8 +196,6 @@ var vocabWords = []string{
 	"acls",
 	"apac",
 	"api",
-	"apikey",
-	"apisecret",
 	"asyncapi",
 	"auth",
 	"avro",
@@ -245,7 +245,6 @@ var vocabWords = []string{
 	"schemas",
 	"signup",
 	"sql",
-	"sr",
 	"ssl",
 	"sso",
 	"stdin",
@@ -307,7 +306,7 @@ func main() {
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{CurrentContext: "No Context"},
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &orgv1.Organization{}}}}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &ccloudv1.Organization{}}}}}},
 		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 

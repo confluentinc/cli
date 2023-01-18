@@ -1,10 +1,10 @@
 package v1
 
 import (
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
-func GetAuditLog(context *Context) *orgv1.AuditLog {
+func GetAuditLog(context *Context) *ccloudv1.AuditLog {
 	if auditLog := context.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
 		return auditLog
 	}
