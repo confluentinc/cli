@@ -3,10 +3,10 @@ package iam
 import (
 	"context"
 	"fmt"
-	"github.com/antihax/optional"
 	"os"
 	"strings"
 
+	"github.com/antihax/optional"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
 	"github.com/spf13/cobra"

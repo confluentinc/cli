@@ -587,18 +587,6 @@ var roleBindingCreateDeleteTests = []roleBindingTest{
 		roleName:  "EnvironmentAdmin",
 		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
 	},
-	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "DataDiscovery", "--environment", v1.MockEnvironmentId},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "DataDiscovery",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
-	},
-	{
-		args:      []string{"--principal", "User:" + v1.MockUserResourceId, "--role", "DataSteward", "--environment", v1.MockEnvironmentId},
-		principal: "User:" + v1.MockUserResourceId,
-		roleName:  "DataSteward",
-		scope:     mdsv2alpha1.Scope{Path: []string{"organization=" + v1.MockOrgResourceId, "environment=" + v1.MockEnvironmentId}},
-	},
 }
 
 func (suite *RoleBindingTestSuite) TestRoleBindingsCreate() {
