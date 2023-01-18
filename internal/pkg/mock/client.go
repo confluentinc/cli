@@ -1,9 +1,8 @@
 package mock
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -12,26 +11,16 @@ import (
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	quotasmock "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
-func NewPrivateClientMock() *ccloud.Client {
-	return &ccloud.Client{
-		Auth:           &mock.Auth{},
-		Account:        &mock.Account{},
-		Billing:        &mock.Billing{},
-		Kafka:          &mock.Kafka{},
-		SchemaRegistry: &mock.SchemaRegistry{},
-		Connect:        &mock.Connect{},
-		User:           &mock.User{},
-		APIKey:         &mock.APIKey{},
-		KSQL:           &mock.KSQL{},
-		UsageLimits:    &mock.UsageLimits{},
-	}
-}
-
 func NewClientMock() *ccloudv1.Client {
-	return &ccloudv1.Client{}
+	return &ccloudv1.Client{
+		Billing:        &ccloudv1mock.Billing{},
+		SchemaRegistry: &ccloudv1mock.SchemaRegistry{},
+		User:           &ccloudv1mock.UserInterface{},
+	}
 }
 
 func NewV2ClientMock() *ccloudv2.Client {

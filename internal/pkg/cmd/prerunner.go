@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
@@ -65,7 +64,6 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	PrivateClient     *ccloud.Client
 	Client            *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
@@ -198,7 +196,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil, nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
 			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -225,7 +223,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 			ctx := command.Config.Context()
 			err := r.ValidateToken(command.Config, unsafeTrace)
 			switch err.(type) {
-			case *ccloud.ExpiredTokenError:
+			case *ccloudv1.ExpiredTokenError:
 				if err := ctx.DeleteUserAuth(); err != nil {
 					return err
 				}
@@ -327,7 +325,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		if command.Context.GetEnvironment() == nil {
 			noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-			utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n" + noEnvSuggestions + "\n")
+			utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n"+noEnvSuggestions+"\n")
 		}
 
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -343,18 +341,14 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		if err := r.setCCloudClient(command); err != nil {
-			return err
-		}
-
-		return r.setPrivateCCloudClient(command)
+		return r.setCCloudClient(command)
 	}
 }
 
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.PrivateClient)
+		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
 }
 
@@ -392,8 +386,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return nil
 	}
 
-	privateClient := r.CCloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, privateClient, pauth.CCloudURL, credentials)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
 	if err != nil {
 		return err
 	}
@@ -430,16 +424,16 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*
 	return credentials, nil
 }
 
-func (r *PreRun) setPrivateCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 
-	ccloudClient, err := r.createPrivateCCloudClient(ctx, cliCmd.Version)
+	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
 	if err != nil {
 		return err
 	}
-	cliCmd.PrivateClient = ccloudClient
-	cliCmd.Context.PrivateClient = ccloudClient
-	cliCmd.Config.PrivateClient = ccloudClient
+	cliCmd.Client = ccloudClient
+	cliCmd.Context.Client = ccloudClient
+	cliCmd.Config.Client = ccloudClient
 
 	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -487,20 +481,6 @@ func (r *PreRun) setPrivateCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx := cliCmd.Config.Context()
-
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
-	if err != nil {
-		return err
-	}
-	cliCmd.Client = ccloudClient
-	cliCmd.Context.Client = ccloudClient
-	cliCmd.Config.Client = ccloudClient
-
-	return nil
-}
-
 func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	ctx := cliCmd.Config.Context()
 	if ctx == nil {
@@ -530,10 +510,6 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
-	if os.Getenv("XX_CCLOUD_USE_KAFKA_API") != "" {
-		return "", "", nil
-	}
-
 	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", "", err
@@ -555,24 +531,6 @@ func ConvertToMetricsBaseURL(baseURL string) string {
 	}
 	// if no matches, then use original URL
 	return baseURL
-}
-
-func (r *PreRun) createPrivateCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloud.Client, error) {
-	var baseURL string
-	var authToken string
-	var userAgent string
-	if ctx != nil {
-		baseURL = ctx.Platform.Server
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return nil, err
-		}
-		authToken = state.AuthToken
-		userAgent = ver.UserAgent
-	}
-	return ccloud.NewClientWithJWT(context.Background(), authToken, &ccloud.Params{
-		BaseURL: baseURL, Logger: log.CliLogger, UserAgent: userAgent, MetricsBaseURL: ConvertToMetricsBaseURL(baseURL),
-	}), nil
 }
 
 func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *version.Version) (*ccloudv1.Client, error) {
@@ -805,7 +763,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
-	noAuth, _ := cmd.Flags().GetBool("no-auth")
+	noAuth, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
@@ -879,19 +837,18 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			privateClient, err := r.createPrivateCCloudClient(ctx, command.Version)
+			client, err := r.createCCloudClient(ctx, command.Version)
 			if err != nil {
 				return err
 			}
-
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
-			ctx.PrivateClient = privateClient
-			command.Config.PrivateClient = privateClient
+			ctx.Client = client
+			command.Config.Client = client
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.PrivateClient); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
 				return err
 			}
 
@@ -944,10 +901,10 @@ func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace 
 		return nil
 	}
 	switch err.(type) {
-	case *ccloud.InvalidTokenError:
-		return r.updateToken(new(ccloud.InvalidTokenError), ctx, unsafeTrace)
-	case *ccloud.ExpiredTokenError:
-		return r.updateToken(new(ccloud.ExpiredTokenError), ctx, unsafeTrace)
+	case *ccloudv1.InvalidTokenError:
+		return r.updateToken(new(ccloudv1.InvalidTokenError), ctx, unsafeTrace)
+	case *ccloudv1.ExpiredTokenError:
+		return r.updateToken(new(ccloudv1.ExpiredTokenError), ctx, unsafeTrace)
 	}
 	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
 		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx, unsafeTrace)
@@ -1047,8 +1004,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		//nolint
-		utils.ErrPrint(cmd, errors.LocalCommandDevOnlyMsg)
+		utils.ErrPrintln(cmd, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		utils.ErrPrintln(cmd, "As of Confluent Platform 8.0, Java 8 is no longer supported.")
+		utils.ErrPrintln(cmd)
 	}
 }
 

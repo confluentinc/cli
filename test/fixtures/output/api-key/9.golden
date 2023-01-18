@@ -1,4 +1,4 @@
-       Key      | Description | Owner Resource ID |     Owner Email      | Resource Type | Resource ID |       Created         
-----------------+-------------+-------------------+----------------------+---------------+-------------+-----------------------
-    UIAPIKEY100 |             | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
-    UIAPIKEY103 |             | u-22bbb           | u-22bbb@confluent.io | kafka         | lkc-cool1   | 1999-02-24T00:00:00Z  
+  Current |     Key     | Description |  Owner  |     Owner Email      | Resource Type | Resource  |       Created         
+----------+-------------+-------------+---------+----------------------+---------------+-----------+-----------------------
+          | UIAPIKEY100 |             | u-22bbb | u-22bbb@confluent.io | kafka         | lkc-cool1 | 1999-02-24T00:00:00Z  
+          | UIAPIKEY103 |             | u-22bbb | u-22bbb@confluent.io | kafka         | lkc-cool1 | 1999-02-24T00:00:00Z  
