@@ -8,7 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
@@ -131,7 +130,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// able to log in.
 	if err != nil && !isEndOfFreeTrialErr {
 		// for orgs that are suspended due to other reason, they shouldn't be able to log in and should return error immediately.
-		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+		if err, ok := err.(*ccloudv1.SuspendedOrganizationError); ok {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
 		}
 		return err

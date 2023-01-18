@@ -1,1 +1,1 @@
-Error: Confluent Cloud backend error: error getting user profile: user not found
+Error: resource not found: 403 Forbidden

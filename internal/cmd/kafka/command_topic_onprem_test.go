@@ -247,7 +247,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := climock.NewPreRunnerMock(nil, nil, nil, nil, &provider, conf)
+	testPrerunner := climock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
 	return newTopicCommand(conf, testPrerunner, "")
 }
 
