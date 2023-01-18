@@ -37,6 +37,10 @@ func promptInput(value string) string {
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
 		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlQ,
+			Fn:  func(b *prompt.Buffer) { os.Exit(0) },
+		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
@@ -45,6 +49,11 @@ func promptInput(value string) string {
 }
 
 func InteractiveInput(value string) string {
+	fmt.Print("Flink SQL Client \n")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlQ]", "Quit")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlS]", "Smart Completion ")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlM]", "Multiline")
+
 	fmt.Print("flinkSQL")
 	//prompt.NewStdoutWriter().WriteRawStr("testt")
 
