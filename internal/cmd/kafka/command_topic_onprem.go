@@ -14,22 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-type PartitionData struct {
-	TopicName              string  `json:"topic" yaml:"topic"`
-	PartitionId            int32   `json:"partition" yaml:"partition"`
-	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
-	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
-	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
-}
-
-type TopicData struct {
-	TopicName         string            `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []PartitionData   `json:"partitions" yaml:"partitions"`
-	Configs           map[string]string `json:"config" yaml:"config"`
-}
-
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
 	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
 	if err != nil {

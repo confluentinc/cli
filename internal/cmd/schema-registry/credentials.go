@@ -75,7 +75,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 	ctx := cfg.Context()
 
 	srCluster := &v1.SchemaRegistryCluster{}
-	endpoint, _ := cmd.Flags().GetString("sr-endpoint")
+	endpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
 	if len(endpoint) == 0 {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
@@ -176,7 +176,7 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 	if caCertPath == "" {
 		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 	}
-	endpoint, err := cmd.Flags().GetString("sr-endpoint")
+	endpoint, err := cmd.Flags().GetString("schema-registry-endpoint")
 	if err != nil {
 		return nil, nil, err
 	}
