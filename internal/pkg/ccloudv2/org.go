@@ -70,9 +70,14 @@ func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2Environme
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }
 
-func (c *Client) GetOrgOrganization(envId string) (orgv2.OrgV2Organization, *http.Response, error) {
-	req := c.OrgClient.OrganizationsOrgV2Api.GetOrgV2Organization(c.orgApiContext(), envId)
+func (c *Client) GetOrgOrganization(orgId string) (orgv2.OrgV2Organization, *http.Response, error) {
+	req := c.OrgClient.OrganizationsOrgV2Api.GetOrgV2Organization(c.orgApiContext(), orgId)
 	return c.OrgClient.OrganizationsOrgV2Api.GetOrgV2OrganizationExecute(req)
+}
+
+func (c *Client) UpdateOrgOrganization(orgId string, updateOrganization orgv2.OrgV2Organization) (orgv2.OrgV2Organization, *http.Response, error) {
+	req := c.OrgClient.OrganizationsOrgV2Api.UpdateOrgV2Organization(c.orgApiContext(), orgId).OrgV2Organization(updateOrganization)
+	return c.OrgClient.OrganizationsOrgV2Api.UpdateOrgV2OrganizationExecute(req)
 }
 
 func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {

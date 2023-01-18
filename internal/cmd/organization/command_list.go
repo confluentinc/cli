@@ -7,6 +7,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type listOut struct {
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Id        string `human:"ID" serialized:"id"`
+	Name      string `human:"Name" serialized:"name"`
+}
+
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -29,7 +35,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, organization := range organizations {
-		list.Add(&out{
+		list.Add(&listOut{
 			IsCurrent: *organization.Id == c.Context.GetOrganization().GetResourceId(),
 			Id:        *organization.Id,
 			Name:      *organization.DisplayName,

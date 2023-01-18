@@ -3,6 +3,7 @@ package organization
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"testing"
@@ -24,10 +25,11 @@ import (
 )
 
 const (
-	firstOrganizationID    = "abc-123"
-	firstOrganizationName  = "test-org"
-	secondOrganizationID   = "abc-456"
-	secondOrganizationName = "test-org-2"
+	firstOrganizationID     = "org-resource-id"
+	firstOrganizationName   = "test-org"
+	secondOrganizationID    = "org-resource-id-2"
+	secondOrganizationName  = "test-org-2"
+	organizationNameUpdated = "test-org-updated"
 )
 
 type OrganizationTestSuite struct {
@@ -49,6 +51,11 @@ var orgOrganization = orgv2.OrgV2Organization{
 var orgOrganizationTwo = orgv2.OrgV2Organization{
 	Id:          orgv2.PtrString(secondOrganizationID),
 	DisplayName: orgv2.PtrString(secondOrganizationName),
+}
+
+var orgOrganizationUpdated = orgv2.OrgV2Organization{
+	Id:          orgv2.PtrString(firstOrganizationID),
+	DisplayName: orgv2.PtrString(organizationNameUpdated),
 }
 
 func TestOrganizationTestSuite(t *testing.T) {
@@ -78,6 +85,12 @@ func (suite *OrganizationTestSuite) SetupTest() {
 		ListOrgV2OrganizationsExecuteFunc: func(_ orgv2.ApiListOrgV2OrganizationsRequest) (orgv2.OrgV2OrganizationList, *http.Response, error) {
 			return orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{orgOrganization, orgOrganizationTwo}}, nil, nil
 		},
+		UpdateOrgV2OrganizationFunc: func(_ context.Context, _ string) orgv2.ApiUpdateOrgV2OrganizationRequest {
+			return orgv2.ApiUpdateOrgV2OrganizationRequest{}
+		},
+		UpdateOrgV2OrganizationExecuteFunc: func(_ orgv2.ApiUpdateOrgV2OrganizationRequest) (orgv2.OrgV2Organization, *http.Response, error) {
+			return orgOrganizationUpdated, nil, nil
+		},
 	}
 	suite.V2ClientMock = &V2ClientMock{orgClientMock: orgClientMock}
 }
@@ -104,7 +117,7 @@ func (suite *OrganizationTestSuite) newCmd() *cobra.Command {
 
 func (suite *OrganizationTestSuite) TestDescribeOrganizations() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"describe", firstOrganizationID})
+	cmd.SetArgs([]string{"describe"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -127,4 +140,17 @@ func (suite *OrganizationTestSuite) TestListOrganizations() {
 	req.Contains(got, secondOrganizationName)
 	req.True(suite.V2ClientMock.orgClientMock.ListOrgV2OrganizationsCalled())
 	req.True(suite.V2ClientMock.orgClientMock.ListOrgV2OrganizationsExecuteCalled())
+}
+
+func (suite *OrganizationTestSuite) TestUpdateOrganization() {
+	cmd := suite.newCmd()
+	var buf bytes.Buffer
+	cmd.SetOut(&buf)
+	cmd.SetArgs([]string{"update", "--name", organizationNameUpdated})
+	err := cmd.Execute()
+	req := require.New(suite.T())
+	req.Nil(err)
+	req.Equal([]byte(fmt.Sprintf("Updated the name of organization \"%s\" to \"%s\".\n", firstOrganizationID, organizationNameUpdated)), buf.Bytes())
+	req.True(suite.V2ClientMock.orgClientMock.UpdateOrgV2OrganizationCalled())
+	req.True(suite.V2ClientMock.orgClientMock.UpdateOrgV2OrganizationExecuteCalled())
 }
