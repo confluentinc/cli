@@ -27,6 +27,6 @@ func (c *command) unregister(cmd *cobra.Command, args []string) error {
 		return errors.CatchByokKeyNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.ByokKey, id)
+	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ByokKey, id)
 	return nil
 }
