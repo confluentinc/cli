@@ -29,11 +29,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	var keyString string
+	var roles []string
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		keyString = key.Key.ByokV1AwsKey.KeyArn
+		roles = key.Key.ByokV1AwsKey.GetRoles()
 	case key.Key.ByokV1AzureKey != nil:
 		keyString = key.Key.ByokV1AzureKey.KeyId
+		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
 		return errors.New("unknown key type")
 	}
@@ -53,6 +56,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	describeByokKey := &byokKey{
 		Id:        *key.Id,
 		Key:       keyString,
+		Roles:     roles,
 		Provider:  *key.Provider,
 		State:     *key.State,
 		CreatedAt: key.Metadata.CreatedAt.String(),
