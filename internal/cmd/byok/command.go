@@ -13,6 +13,7 @@ type command struct {
 type byokKey struct {
 	Id        string
 	Key       string
+	Roles     []string
 	Provider  string
 	State     string
 	CreatedAt string
