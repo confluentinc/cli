@@ -21,7 +21,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
@@ -30,7 +30,7 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

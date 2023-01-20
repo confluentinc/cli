@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -86,7 +86,7 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 	req := require.New(t)
 
 	c := &Command{
-		ch: &mock.MockConfluentHome{
+		ch: &climock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return true, nil
 			},
@@ -100,7 +100,7 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 				return []byte("plugin.path=share/java"), nil
 			},
 		},
-		cc: &mock.MockConfluentCurrent{
+		cc: &climock.MockConfluentCurrent{
 			GetDataDirFunc: func(service string) (string, error) {
 				return exampleDir, nil
 			},
@@ -117,7 +117,7 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 	req := require.New(t)
 
 	c := &Command{
-		ch: &mock.MockConfluentHome{
+		ch: &climock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return true, nil
 			},
@@ -143,7 +143,7 @@ func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
 	req := require.New(t)
 
 	c := &Command{
-		ch: &mock.MockConfluentHome{
+		ch: &climock.MockConfluentHome{
 			IsConfluentPlatformFunc: func() (bool, error) {
 				return false, nil
 			},

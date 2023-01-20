@@ -42,27 +42,21 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		return nil, err
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		registerSchemaResponse := &registerSchemaResponse{Id: response.Id}
-		err = output.StructuredOutput(outputFormat, registerSchemaResponse)
+	if output.GetFormat(cmd).IsSerialized() {
+		err = output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id})
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	}
 
-	metaInfo := GetMetaInfoFromSchemaId(response.Id)
-	return metaInfo, nil
+	return GetMetaInfoFromSchemaId(response.Id), nil
 }
 
 func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	refPath, err := cmd.Flags().GetString("references")
 	if err != nil {
 		return nil, err
 	}

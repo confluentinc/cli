@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
@@ -23,7 +23,7 @@ type ACLConfiguration struct {
 
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
+	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
 		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
@@ -76,7 +76,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
 			setResourcePattern(conf, "cluster", "kafka-cluster")
-		case "kafka-cluster-id":
+		case "kafka-cluster":
 			conf.Scope.Clusters.KafkaCluster = v
 		case "topic":
 			fallthrough
@@ -156,7 +156,7 @@ func convertToFlags(operations ...interface{}) string {
 		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprintf("%v", v)
+		s := fmt.Sprint(v)
 		s = strings.ReplaceAll(s, "_", "-")
 		ops = append(ops, strings.ToLower(s))
 	}

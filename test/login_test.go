@@ -8,8 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -56,7 +58,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	s.T().Run("suspended organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, new(ccloudv1.SuspendedOrganizationError).Error())
 		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
 	})
 
@@ -142,6 +144,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			wantErrCode: 1,
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
 		},
 		{
 			name:        "error if using unknown kafka",

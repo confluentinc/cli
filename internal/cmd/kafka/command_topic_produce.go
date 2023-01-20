@@ -39,14 +39,14 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
-	cmd.Flags().String("sr-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("sr-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("sr-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	cmd.Flags().String("api-key", "", "API key.")
 	cmd.Flags().String("api-secret", "", "API key secret.")
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
@@ -173,11 +173,11 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
-	srAPIKey, err := cmd.Flags().GetString("sr-api-key")
+	srAPIKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, nil, err
 	}
-	srAPISecret, err := cmd.Flags().GetString("sr-api-secret")
+	srAPISecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, nil, err
 	}
