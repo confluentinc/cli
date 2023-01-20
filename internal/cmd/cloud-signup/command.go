@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	"github.com/confluentinc/countrycode"
 	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/countrycode"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -72,7 +72,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloudv
 	)
 
 	fCountry := form.New(
-		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/countrycode/blob/master/codes.go)", Regex: "^[a-zA-Z]{2}$"},
+		form.Field{ID: "country", Prompt: "Two-letter country code (https://github.com/confluentinc/cli/blob/main/internal/pkg/countrycode/codes.go)", Regex: "^[a-zA-Z]{2}$"},
 	)
 
 	fPasswordTosPrivacy := form.New(
