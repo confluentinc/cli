@@ -1,6 +1,6 @@
 DOCS_BASE_BRANCH=unset
-MINOR_BRANCH=$(shell echo $(CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
-BUMPED_MINOR_BRANCH=$(shell echo $(BUMPED_CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
+STAGING_BRANCH=$(shell echo $(CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
+BUMPED_STAGING_BRANCH=$(shell echo $(BUMPED_CLEAN_VERSION) | sed 's/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/')
 ifeq ($(BUMP),auto)
 DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), major)
@@ -8,7 +8,7 @@ DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), minor)
 DOCS_BASE_BRANCH=master
 else ifeq ($(BUMP), patch)
-DOCS_BASE_BRANCH=$(BUMPED_MINOR_BRANCH)
+DOCS_BASE_BRANCH=$(BUMPED_STAGING_BRANCH)
 endif
 
 OLDEST_BRANCH=1.16.3-post
@@ -61,14 +61,14 @@ cut-docs-branches:
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
 	if [[ "$(BUMP)" == "patch" ]]; then \
-		git checkout $(MINOR_BRANCH); \
+		git checkout $(STAGING_BRANCH); \
 	else \
 		git checkout $(DOCS_BASE_BRANCH) && \
-		git checkout -b $(MINOR_BRANCH) && \
-		git push -u origin $(MINOR_BRANCH); \
+		git checkout -b $(STAGING_BRANCH) && \
+		echo "git push -u origin $(STAGING_BRANCH)"; \
 	fi && \
 	git checkout -b $(CLEAN_VERSION)-post && \
-	git push -u origin $(CLEAN_VERSION)-post
+	echo "git push -u origin $(CLEAN_VERSION)-post"
 
 # NB: If BUMP is patch, we don't have to update master
 .PHONY: update-settings-and-conf
@@ -78,20 +78,23 @@ update-settings-and-conf:
 	if [[ "$(BUMP)" != "patch" ]]; then \
 		git checkout master && \
 		sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
+		sed -i '' 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
 		sed -i '' "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
 		sed -i '' "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-		git push; \
+		echo 'git push'; \
 	fi && \
-	git checkout $(MINOR_BRANCH) && \
+	git checkout $(STAGING_BRANCH) && \
 	sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
+	sed -i '' 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
 	sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	sed -i '' "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git push; \
-	git checkout $(CLEAN_VERSION)-post && \
+	echo 'git push'; \
+	git checkout $(CURRENT_SHORT_MINOR_VERSION)-post && \
 	sed -i '' 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
+	sed -i '' 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
 	sed -i '' "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	sed -i '' "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git push
+	echo 'git push'
