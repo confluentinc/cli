@@ -1,8 +1,6 @@
-+-----------------------+------------------------+
-| ID                    | u-17                   |
-| Email                 | mtodzo@confluent.io    |
-| First Name            | Miles                  |
-| Last Name             | Todzo                  |
-| Status                | Unverified             |
-| Authentication Method | Username/Password, SSO |
-+-----------------------+------------------------+
++-----------------------+-------------------+
+| ID                    | u-17              |
+| Name                  | Muwei He          |
+| Email                 | mhe@confluent.io  |
+| Authentication Method | Username/Password |
++-----------------------+-------------------+

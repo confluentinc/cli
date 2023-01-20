@@ -32,8 +32,8 @@ def job = {
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
-                                wget "https://golang.org/dl/go1.19.linux-amd64.tar.gz" --quiet --output-document go1.19.tar.gz
-                                tar -C $(pwd) -xzf go1.19.tar.gz
+                                wget "https://golang.org/dl/go1.19.5.linux-amd64.tar.gz" --quiet --output-document go1.19.5.tar.gz
+                                tar -C $(pwd) -xzf go1.19.5.tar.gz
                                 export GOROOT=$(pwd)/go
                                 export GOPATH=$(pwd)/go/path
                                 export GOBIN=$(pwd)/go/bin
@@ -42,7 +42,7 @@ def job = {
                                 mkdir -p $GOROOT/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                make jenkins-deps
+                                go install github.com/goreleaser/goreleaser@v1.14.1
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64
@@ -70,7 +70,7 @@ def job = {
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
                                 git clone git@github.com:confluentinc/muckrake.git
                                 cd muckrake
-                                git checkout 7.3.x
+                                git checkout v3
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -91,7 +91,7 @@ def job = {
                     ["github/confluent_jenkins", "user", "GIT_USER"],
                     ["github/confluent_jenkins", "access_token", "GIT_TOKEN"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
+                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=v3"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
