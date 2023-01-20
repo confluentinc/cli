@@ -1,16 +1,20 @@
 package main
 
 import (
+	"os"
 	"strings"
 
 	clipboard "github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
+	"github.com/olekukonko/tablewriter"
 	"github.com/rivo/tview"
 )
 
 var table *tview.Table
 
 type TableController struct {
+	table        *tview.Table
+	setData      func(data string)
 	basic        func()
 	separator    func()
 	borders      func()
@@ -31,7 +35,60 @@ func TableControllerInit(tableRef *tview.Table, appControler *ApplicationControl
 		borders: false,
 	}
 
+	// Internal Functions
+	printOutputModeTable := func(newData string) {
+		for row, line := range strings.Split(newData, "\n") {
+			for column, cell := range strings.Split(line, "|") {
+				color := tcell.ColorWhite
+				if row == 0 {
+					color = tcell.ColorYellow
+				} else if column == 0 {
+					color = tcell.ColorDarkCyan
+				}
+				align := tview.AlignLeft
+				if row == 0 {
+					align = tview.AlignCenter
+				} else if column == 0 || column >= 4 {
+					align = tview.AlignRight
+				}
+				tableCell := tview.NewTableCell(cell).
+					SetTextColor(color).
+					SetAlign(align).
+					SetSelectable(row != 0 && column != 0)
+				if column >= 1 && column <= 3 {
+					tableCell.SetExpansion(1)
+				}
+				table.SetCell(row, column, tableCell)
+			}
+		}
+	}
+
+	printInputModeTable := func(newData string) {
+		table := tablewriter.NewWriter(os.Stdout)
+		table.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
+
+		for _, tableRow := range strings.Split(newData, "\n") {
+			row := strings.Split(tableRow, "|")
+			table.Append(row)
+		}
+
+		table.Render() // Send output
+	}
+
 	// Actions
+	setData := func(newData string) {
+		table.Clear()
+
+		if appControler.getView() == "outputMode" {
+			// Print interactive text table
+			printOutputModeTable(newData)
+		} else {
+			// Print raw text table
+			printInputModeTable(newData)
+		}
+
+	}
+
 	basic := func() {
 		table.SetBorders(false).
 			SetSelectable(false, false).
@@ -96,6 +153,8 @@ func TableControllerInit(tableRef *tview.Table, appControler *ApplicationControl
 	})
 
 	return TableController{
+		table:        table,
+		setData:      setData,
 		basic:        basic,
 		separator:    separator,
 		borders:      borders,

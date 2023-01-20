@@ -20,7 +20,7 @@ type Shortcut struct {
 
 // Keyboard shortcuts shown at the bottom.
 var appShortcuts = []Shortcut{
-	{Key: tcell.KeyCtrlS, KeyText: "Q", Text: "Quit"},
+	{Key: tcell.KeyCtrlQ, KeyText: "Q", Text: "Quit"},
 	{Key: tcell.KeyCtrlS, KeyText: "S", Text: "Smart Completion"},
 	{Key: tcell.KeyCtrlM, KeyText: "M", Text: "Multiline"},
 	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"},

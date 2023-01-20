@@ -3,11 +3,8 @@ package components
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
-
-	"github.com/olekukonko/tablewriter"
 )
 
 func completer(in prompt.Document) []prompt.Suggest {
@@ -59,20 +56,8 @@ func printPrefix() {
 
 func InteractiveInput(value string) string {
 	printPrefix()
-
 	fmt.Print("flinkSQL")
-	//prompt.NewStdoutWriter().WriteRawStr("testt")
-
 	var in = promptInput(value)
 
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
-
-	for _, tableRow := range strings.Split(tableData, "\n") {
-		row := strings.Split(tableRow, "|")
-		table.Append(row)
-	}
-
-	table.Render() // Send output
 	return in
 }

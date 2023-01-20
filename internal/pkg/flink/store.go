@@ -11,19 +11,29 @@ type MockData struct {
 	Data []string `json:"data"`
 }
 
-func test() {
+type Store struct {
+	fetchData func() string
+}
+
+func store() Store {
+	i := -1
+
+	// Opening mock data
 	jsonFile, err := os.Open("mock-data.json")
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened mock-data.json")
 	defer jsonFile.Close()
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	var mockData MockData
 	json.Unmarshal(byteValue, &mockData)
 
-	for i := 0; i < len(mockData.Data); i++ {
-		fmt.Printf("%d %s \n", i, mockData.Data[i])
+	// Actions
+	fetchData := func() string {
+		i++
+		return mockData.Data[i%len(mockData.Data)]
 	}
+
+	return Store{fetchData}
 }
