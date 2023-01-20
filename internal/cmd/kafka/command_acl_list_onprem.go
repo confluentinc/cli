@@ -21,7 +21,7 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka acl list --url http://localhost:8090/kafka",
 			},
 			examples.Example{
-				Text: `List all the local ACLs for the Kafka cluster (providing Kafka REST Proxy endpoint).`,
+				Text: "List all the local ACLs for the Kafka cluster (providing Kafka REST Proxy endpoint).",
 				Code: "confluent kafka acl list --url http://localhost:8082",
 			},
 			examples.Example{
