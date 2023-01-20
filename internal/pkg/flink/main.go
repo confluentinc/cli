@@ -10,6 +10,9 @@ import (
 var app = tview.NewApplication()
 
 func main() {
+	// Create temp store
+	store := store()
+
 	// Create Components
 	table := components.CreateTable()
 	input := components.InputField()
@@ -22,11 +25,11 @@ func main() {
 	shortcutsController := ShortcutsControllerInit(shortcuts, tableController)
 
 	// Instatiate Application Controller
-	appController = ApplicationControllerInit(tableController, inputController, shortcutsController)
+	appController = ApplicationControllerInit(store, tableController, inputController, shortcutsController)
 
 	// Instantiate interactive components
-	inputController.runInteractiveInput()
 	interactiveOutput := components.InteractiveOutput(input, table, shortcuts)
+	inputController.supendOutputModeAndRunInputMode()
 	rootLayout := components.RootLayout(interactiveOutput)
 
 	// Start the application.
