@@ -34,7 +34,7 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if c.cfg.DisablePlugins {
-		return errors.NewErrorWithSuggestions("plugins are disabled", `Set "disable_plugins": false in ~/.confluent.config.json.`)
+		return errors.NewErrorWithSuggestions("plugins are disabled", `Set "disable_plugins": false in ~/.confluent/config.json.`)
 	}
 
 	pluginMap := plugin.SearchPath(c.cfg)
