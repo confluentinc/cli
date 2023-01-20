@@ -7,12 +7,23 @@ import (
 
 	"github.com/spf13/cobra"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+type out struct {
+	KafkaClusterId string                `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
+	Principal      string                `human:"Principal" serialized:"principal"`
+	Permission     mds.AclPermissionType `human:"Permission" serialized:"permission"`
+	Operation      mds.AclOperation      `human:"Operation" serialized:"operation"`
+	Host           string                `human:"Host" serialized:"host"`
+	ResourceType   mds.AclResourceType   `human:"Resource Type" serialized:"resource_type"`
+	ResourceName   string                `human:"Resource Name" serialized:"resource_name"`
+	PatternType    mds.PatternType       `human:"Pattern Type" serialized:"pattern_type"`
+}
 
 type aclCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
@@ -89,46 +100,20 @@ func convertToACLFilterRequest(request *mds.CreateAclRequest) mds.AclFilterReque
 }
 
 func printACLs(cmd *cobra.Command, kafkaClusterId string, aclBindings []mds.AclBinding) error {
-	var (
-		listFields       = []string{"KafkaClusterId", "Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-		humanLabels      = []string{"Kafka Cluster ID", "Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
-		structuredLabels = []string{"kafka_cluster_id", "principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
-	)
-
-	// delete also uses this function but doesn't have -o flag defined, -o flag is needed for NewListOutputWriter initializers
-	_, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		pcmd.AddOutputFlag(cmd)
+	list := output.NewList(cmd)
+	for _, binding := range aclBindings {
+		list.Add(&out{
+			KafkaClusterId: kafkaClusterId,
+			Principal:      binding.Entry.Principal,
+			Permission:     binding.Entry.PermissionType,
+			Operation:      binding.Entry.Operation,
+			Host:           binding.Entry.Host,
+			ResourceType:   binding.Pattern.ResourceType,
+			ResourceName:   binding.Pattern.Name,
+			PatternType:    binding.Pattern.PatternType,
+		})
 	}
-
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
-	for _, aclBinding := range aclBindings {
-		record := &struct {
-			KafkaClusterId string
-			Principal      string
-			Permission     mds.AclPermissionType
-			Operation      mds.AclOperation
-			Host           string
-			ResourceType   mds.AclResourceType
-			ResourceName   string
-			PatternType    mds.PatternType
-		}{
-			kafkaClusterId,
-			aclBinding.Entry.Principal,
-			aclBinding.Entry.PermissionType,
-			aclBinding.Entry.Operation,
-			aclBinding.Entry.Host,
-			aclBinding.Pattern.ResourceType,
-			aclBinding.Pattern.Name,
-			aclBinding.Pattern.PatternType,
-		}
-		outputWriter.AddElement(record)
-	}
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func (c *aclCommand) createContext() context.Context {

@@ -61,7 +61,7 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	cluster.Package = packageInternalName
-	_, err = c.PrivateClient.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster)
+	_, err = c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster)
 	if err != nil {
 		return err
 	}

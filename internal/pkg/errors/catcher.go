@@ -9,10 +9,9 @@ import (
 	"regexp"
 	"strings"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/pkg/errors"
 )
@@ -99,11 +98,11 @@ func catchMDSErrors(err error) error {
 	return err
 }
 
-// All errors from CCloud backend services will be of corev1.Error type
+// All errors from CCloud backend services will be of ccloudv1.Error type
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
-func catchCoreV1Errors(err error) error {
-	if err, ok := err.(*corev1.Error); ok {
+func catchCcloudV1Errors(err error) error {
+	if err, ok := err.(*ccloudv1.Error); ok {
 		return Wrap(err, CCloudBackendErrorPrefix)
 	}
 	return err
@@ -111,11 +110,11 @@ func catchCoreV1Errors(err error) error {
 
 func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
-	case *ccloud.InvalidLoginError:
+	case *ccloudv1.InvalidLoginError:
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
-	case *ccloud.InvalidTokenError:
+	case *ccloudv1.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
-	case *ccloud.ExpiredTokenError:
+	case *ccloudv1.ExpiredTokenError:
 		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
 	}
 	return err
@@ -130,9 +129,10 @@ func catchOpenAPIError(err error) error {
 
 /*
 Error: 1 error occurred:
-	* error creating ACLs: reply error: invalid character 'C' looking for beginning of value
+  - error creating ACLs: reply error: invalid character 'C' looking for beginning of value
+
 Error: 1 error occurred:
-	* error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
+  - error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
 	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
@@ -308,7 +308,7 @@ func isResourceNotFoundError(err error) bool {
 
 /*
 Error: 1 error occurred:
-	* error creating topic bob: Topic 'bob' already exists.
+  - error creating topic bob: Topic 'bob' already exists.
 */
 func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
 	if err == nil {
@@ -339,23 +339,6 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
 	}
 	return false, err
-}
-
-/*
-Error: 1 error occurred:
-	* error listing topics: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
-Error: 1 error occurred:
-	* error creating topic test-topic: Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed
-*/
-func CatchClusterNotReadyError(err error, clusterId string) error {
-	if err == nil {
-		return nil
-	}
-	if strings.Contains(err.Error(), "Authentication failed: 1 extensions are invalid! They are: logicalCluster: Authentication failed") {
-		errorMsg := fmt.Sprintf(KafkaNotReadyErrorMsg, clusterId)
-		return NewErrorWithSuggestions(errorMsg, KafkaNotReadySuggestions)
-	}
-	return err
 }
 
 func CatchSchemaNotFoundError(err error, r *http.Response) error {

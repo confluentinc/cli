@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,7 +28,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 
 	c.AddCommand(newDescribeCommand(prerunner))
-	c.AddCommand(newMigrateCommand(prerunner))
 	c.AddCommand(newConfigCommand(prerunner))
 	c.AddCommand(newRouteCommand(prerunner))
 

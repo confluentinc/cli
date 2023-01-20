@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"strings"
 
 	"github.com/confluentinc/bincover"
@@ -10,6 +11,20 @@ func (s *CLITestSuite) TestAdminPaymentDescribe() {
 	tests := []CLITest{
 		{args: "admin payment describe", fixture: "admin/payment/describe.golden"},
 	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestAdminPaymentDescribeMarketplaceOrg() {
+	tests := []CLITest{
+		{args: "admin payment describe", fixture: "admin/payment/describe-marketplace-org.golden"},
+	}
+
+	os.Setenv("IS_ORG_ON_MARKETPLACE", "true")
+	defer unsetMarketplaceOrgEnv()
 
 	for _, test := range tests {
 		test.login = "cloud"

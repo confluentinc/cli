@@ -7,7 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 func TestVersion(t *testing.T) {
@@ -15,7 +15,7 @@ func TestVersion(t *testing.T) {
 
 	root := pcmd.BuildRootCommand()
 	v := version.NewVersion("1.2.3", "abc1234", "Fri Feb 22 20:55:53 UTC 2019")
-	cmd := New(cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, nil), v)
+	cmd := New(climock.NewPreRunnerMock(nil, nil, nil, nil, nil), v)
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "version")
@@ -31,7 +31,7 @@ func TestDevelopmentVersion_v0(t *testing.T) {
 
 	root := pcmd.BuildRootCommand()
 	v := version.NewVersion("0.0.0", "abc1234", "01/23/45")
-	cmd := New(cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, nil), v)
+	cmd := New(climock.NewPreRunnerMock(nil, nil, nil, nil, nil), v)
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "version")
@@ -46,7 +46,7 @@ func TestDevelopmentVersion_Dirty(t *testing.T) {
 
 	root := pcmd.BuildRootCommand()
 	v := version.NewVersion("1.2.3-dirty-timmy", "abc1234", "01/23/45")
-	cmd := New(cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, nil), v)
+	cmd := New(climock.NewPreRunnerMock(nil, nil, nil, nil, nil), v)
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "version")
@@ -61,7 +61,7 @@ func TestDevelopmentVersion_Unmerged(t *testing.T) {
 
 	root := pcmd.BuildRootCommand()
 	v := version.NewVersion("1.2.3-g16dd476", "abc1234", "01/23/45")
-	cmd := New(cliMock.NewPreRunnerMock(nil, nil, nil, nil, nil, nil), v)
+	cmd := New(climock.NewPreRunnerMock(nil, nil, nil, nil, nil), v)
 	root.AddCommand(cmd)
 
 	output, err := pcmd.ExecuteCommand(root, "version")

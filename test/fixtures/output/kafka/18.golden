@@ -1,4 +1,5 @@
 {
+  "is_current": true,
   "id": "lkc-describe",
   "name": "kafka-cluster",
   "type": "BASIC",
