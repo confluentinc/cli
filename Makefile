@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -68,42 +68,12 @@ clean:
 .PHONY: deps
 deps:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
-	go install github.com/google/go-licenses@v1.4.0 && \
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
-	go install gotest.tools/gotestsum@v1.8.2
-
-.PHONY: jenkins-deps
-jenkins-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2
-
-semaphore-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
+	go install github.com/google/go-licenses@v1.5.0 && \
+	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
-
-#
-# START DEVELOPMENT HELPERS
-# Usage: make run -- version
-#        make run -- --version
-#
-
-# If the first argument is "run"...
-ifeq (run,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run"
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(RUN_ARGS):;@:)
-endif
-
-.PHONY: run
-run:
-	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
-
-#
-# END DEVELOPMENT HELPERS
-#
 
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
@@ -185,19 +155,18 @@ endif
 .PHONY: unit-test
 unit-test:
 ifdef CI
-	@gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg $$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile unit_coverage.txt $$(go list ./... | grep -v test) -ldflags '-buildmode=exe'
-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 else
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg ./... $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
+	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: int-test
 int-test:
 ifdef CI
-	@INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep test)
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
+	cat integration-test-report.xml
 else
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS) -timeout 45m
+	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif
 
 .PHONY: test

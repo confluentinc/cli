@@ -11,16 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	orgmock "github.com/confluentinc/ccloud-sdk-go-v2/org/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -32,7 +31,7 @@ const (
 type EnvironmentTestSuite struct {
 	suite.Suite
 	conf              *v1.Config
-	accountClientMock *ccsdkmock.Account
+	accountClientMock *ccloudv1mock.AccountInterface
 	V2ClientMock      *V2ClientMock
 }
 
@@ -56,9 +55,9 @@ func TestEnvironmentTestSuite(t *testing.T) {
 
 func (suite *EnvironmentTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.accountClientMock = &ccsdkmock.Account{
-		CreateFunc: func(arg0 context.Context, arg1 *orgv1.Account) (account *orgv1.Account, e error) {
-			return &orgv1.Account{
+	suite.accountClientMock = &ccloudv1mock.AccountInterface{
+		CreateFunc: func(arg0 context.Context, arg1 *ccloudv1.Account) (account *ccloudv1.Account, e error) {
+			return &ccloudv1.Account{
 				Id:   environmentID,
 				Name: environmentName,
 			}, nil
@@ -94,7 +93,7 @@ func (suite *EnvironmentTestSuite) SetupTest() {
 }
 
 func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
-	privateClient := &ccloud.Client{
+	client := &ccloudv1.Client{
 		Account: suite.accountClientMock,
 	}
 	orgClient := &orgv2.APIClient{
@@ -103,12 +102,12 @@ func (suite *EnvironmentTestSuite) newCmd() *cobra.Command {
 	resolverMock := &pcmd.FlagResolverImpl{
 		Out: os.Stdout,
 	}
-	prerunner := &cliMock.Commander{
-		FlagResolver:  resolverMock,
-		PrivateClient: privateClient,
-		MDSClient:     nil,
-		V2Client:      &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
-		Config:        suite.conf,
+	prerunner := &climock.Commander{
+		FlagResolver: resolverMock,
+		Client:       client,
+		MDSClient:    nil,
+		V2Client:     &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
+		Config:       suite.conf,
 	}
 	return New(prerunner)
 }

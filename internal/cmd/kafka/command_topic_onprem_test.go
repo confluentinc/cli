@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	kafkarestv3mock "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3/mock"
@@ -247,7 +247,7 @@ func (suite *KafkaTopicOnPremTestSuite) createCommand() *cobra.Command {
 	}
 	conf = v1.AuthenticatedOnPremConfigMock()
 	provider := suite.getRestProvider()
-	testPrerunner := cliMock.NewPreRunnerMock(nil, nil, nil, nil, &provider, conf)
+	testPrerunner := climock.NewPreRunnerMock(nil, nil, nil, &provider, conf)
 	return newTopicCommand(conf, testPrerunner, "")
 }
 

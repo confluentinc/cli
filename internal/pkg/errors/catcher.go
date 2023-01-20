@@ -9,11 +9,9 @@ import (
 	"regexp"
 	"strings"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/pkg/errors"
 )
@@ -100,11 +98,11 @@ func catchMDSErrors(err error) error {
 	return err
 }
 
-// All errors from CCloud backend services will be of corev1.Error type
+// All errors from CCloud backend services will be of ccloudv1.Error type
 // This catcher function should then be used last to not accidentally convert errors that
 // are supposed to be caught by more specific catchers.
-func catchCoreV1Errors(err error) error {
-	if err, ok := err.(*corev1.Error); ok {
+func catchCcloudV1Errors(err error) error {
+	if err, ok := err.(*ccloudv1.Error); ok {
 		return Wrap(err, CCloudBackendErrorPrefix)
 	}
 	return err
@@ -114,11 +112,9 @@ func catchCCloudTokenErrors(err error) error {
 	switch err.(type) {
 	case *ccloudv1.InvalidLoginError:
 		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
-	case *ccloud.InvalidLoginError:
-		return NewErrorWithSuggestions(InvalidLoginErrorMsg, InvalidLoginErrorSuggestions)
-	case *ccloud.InvalidTokenError:
+	case *ccloudv1.InvalidTokenError:
 		return NewErrorWithSuggestions(CorruptedTokenErrorMsg, CorruptedTokenSuggestions)
-	case *ccloud.ExpiredTokenError:
+	case *ccloudv1.ExpiredTokenError:
 		return NewErrorWithSuggestions(ExpiredTokenErrorMsg, ExpiredTokenSuggestions)
 	}
 	return err

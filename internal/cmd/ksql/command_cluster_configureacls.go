@@ -7,11 +7,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -95,7 +95,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return "", err
 	}
@@ -110,78 +110,78 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 	return "", errors.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, cluster.GetId())
 }
 
-func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*schedv1.ACLBinding {
-	var bindings []*schedv1.ACLBinding
+func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {
+	var bindings []*ccstructs.ACLBinding
 
-	for _, operation := range []schedv1.ACLOperations_ACLOperation{
-		schedv1.ACLOperations_DESCRIBE,
-		schedv1.ACLOperations_DESCRIBE_CONFIGS,
+	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
+		ccstructs.ACLOperations_DESCRIBE,
+		ccstructs.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_CLUSTER, "kafka-cluster", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_CLUSTER, "kafka-cluster", ccstructs.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
 
 	topicPrefix := cluster.Status.GetTopicPrefix()
 
-	for _, operation := range []schedv1.ACLOperations_ACLOperation{
-		schedv1.ACLOperations_CREATE,
-		schedv1.ACLOperations_DESCRIBE,
-		schedv1.ACLOperations_ALTER,
-		schedv1.ACLOperations_DESCRIBE_CONFIGS,
-		schedv1.ACLOperations_ALTER_CONFIGS,
-		schedv1.ACLOperations_READ,
-		schedv1.ACLOperations_WRITE,
-		schedv1.ACLOperations_DELETE,
+	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
+		ccstructs.ACLOperations_CREATE,
+		ccstructs.ACLOperations_DESCRIBE,
+		ccstructs.ACLOperations_ALTER,
+		ccstructs.ACLOperations_DESCRIBE_CONFIGS,
+		ccstructs.ACLOperations_ALTER_CONFIGS,
+		ccstructs.ACLOperations_READ,
+		ccstructs.ACLOperations_WRITE,
+		ccstructs.ACLOperations_DELETE,
 	} {
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, topicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, "_confluent-ksql-"+topicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_GROUP, "_confluent-ksql-"+topicPrefix, schedv1.PatternTypes_PREFIXED, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_TOPIC, topicPrefix, ccstructs.PatternTypes_PREFIXED, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_TOPIC, "_confluent-ksql-"+topicPrefix, ccstructs.PatternTypes_PREFIXED, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_GROUP, "_confluent-ksql-"+topicPrefix, ccstructs.PatternTypes_PREFIXED, serviceAccountId, operation))
 	}
 
-	for _, operation := range []schedv1.ACLOperations_ACLOperation{
-		schedv1.ACLOperations_DESCRIBE,
-		schedv1.ACLOperations_DESCRIBE_CONFIGS,
+	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
+		ccstructs.ACLOperations_DESCRIBE,
+		ccstructs.ACLOperations_DESCRIBE_CONFIGS,
 	} {
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, "*", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_GROUP, "*", schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_TOPIC, "*", ccstructs.PatternTypes_LITERAL, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_GROUP, "*", ccstructs.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
 
-	for _, operation := range []schedv1.ACLOperations_ACLOperation{
-		schedv1.ACLOperations_DESCRIBE,
-		schedv1.ACLOperations_DESCRIBE_CONFIGS,
-		schedv1.ACLOperations_READ,
+	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
+		ccstructs.ACLOperations_DESCRIBE,
+		ccstructs.ACLOperations_DESCRIBE_CONFIGS,
+		ccstructs.ACLOperations_READ,
 	} {
 		for _, topic := range topics {
-			bindings = append(bindings, createACL(schedv1.ResourceTypes_TOPIC, topic, schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
+			bindings = append(bindings, createACL(ccstructs.ResourceTypes_TOPIC, topic, ccstructs.PatternTypes_LITERAL, serviceAccountId, operation))
 		}
 	}
 
-	for _, operation := range []schedv1.ACLOperations_ACLOperation{
-		schedv1.ACLOperations_DESCRIBE,
-		schedv1.ACLOperations_WRITE,
+	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
+		ccstructs.ACLOperations_DESCRIBE,
+		ccstructs.ACLOperations_WRITE,
 	} {
-		bindings = append(bindings, createACL(schedv1.ResourceTypes_TRANSACTIONAL_ID, topicPrefix, schedv1.PatternTypes_LITERAL, serviceAccountId, operation))
+		bindings = append(bindings, createACL(ccstructs.ResourceTypes_TRANSACTIONAL_ID, topicPrefix, ccstructs.PatternTypes_LITERAL, serviceAccountId, operation))
 	}
 
 	return bindings
 }
 
-func createACL(resourceType schedv1.ResourceTypes_ResourceType, name string, patternType schedv1.PatternTypes_PatternType, serviceAccountId string, operation schedv1.ACLOperations_ACLOperation) *schedv1.ACLBinding {
-	return &schedv1.ACLBinding{
-		Pattern: &schedv1.ResourcePatternConfig{
+func createACL(resourceType ccstructs.ResourceTypes_ResourceType, name string, patternType ccstructs.PatternTypes_PatternType, serviceAccountId string, operation ccstructs.ACLOperations_ACLOperation) *ccstructs.ACLBinding {
+	return &ccstructs.ACLBinding{
+		Pattern: &ccstructs.ResourcePatternConfig{
 			ResourceType: resourceType,
 			Name:         name,
 			PatternType:  patternType,
 		},
-		Entry: &schedv1.AccessControlEntryConfig{
+		Entry: &ccstructs.AccessControlEntryConfig{
 			Principal:      "User:" + serviceAccountId,
 			Operation:      operation,
 			Host:           "*",
-			PermissionType: schedv1.ACLPermissionTypes_ALLOW,
+			PermissionType: ccstructs.ACLPermissionTypes_ALLOW,
 		},
 	}
 }
 
-func getCreateAclRequestDataList(bindings []*schedv1.ACLBinding) kafkarestv3.CreateAclRequestDataList {
+func getCreateAclRequestDataList(bindings []*ccstructs.ACLBinding) kafkarestv3.CreateAclRequestDataList {
 	data := make([]kafkarestv3.CreateAclRequestData, len(bindings))
 	for i, binding := range bindings {
 		data[i] = acl.GetCreateAclRequestData(binding)

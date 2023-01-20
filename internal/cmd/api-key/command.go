@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -82,21 +80,21 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
 }
 
-func (c *command) getAllUsers() ([]*orgv1.User, error) {
-	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
-		serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
 			return nil, err
 		}
 		users = append(users, serviceAccount)
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +103,7 @@ func (c *command) getAllUsers() ([]*orgv1.User, error) {
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v2Client *ccloudv2.Client) (string, string, string, error) {
+func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
 	resourceId, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return "", "", "", err
@@ -149,12 +147,4 @@ func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client, v
 	}
 
 	return resourceType, clusterId, apiKey, nil
-}
-
-func isSchemaRegistryOrKsqlApiKey(key apikeysv2.IamV2ApiKey) bool {
-	var kind string
-	if key.Spec.HasResource() && key.Spec.Resource.HasKind() {
-		kind = key.Spec.Resource.GetKind()
-	}
-	return kind == "SchemaRegistry" || kind == "ksqlDB"
 }

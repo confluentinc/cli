@@ -44,7 +44,7 @@ func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
 
 	auditLog := c.Context.GetOrganization().GetAuditLog()
 
-	serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}

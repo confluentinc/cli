@@ -14,7 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -64,7 +64,7 @@ func (suite *ServiceAccountTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 	iamClient := &iamv2.APIClient{
 		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(nil, nil, &ccloudv2.Client{IamClient: iamClient, AuthToken: "auth-token"}, nil, nil, conf)
+	prerunner := climock.NewPreRunnerMock(nil, &ccloudv2.Client{IamClient: iamClient, AuthToken: "auth-token"}, nil, nil, conf)
 	return newServiceAccountCommand(prerunner)
 }
 

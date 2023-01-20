@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 func (s *CLITestSuite) TestAuditLogDescribe() {

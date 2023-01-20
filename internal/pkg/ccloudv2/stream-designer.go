@@ -2,7 +2,9 @@ package ccloudv2
 
 import (
 	"context"
+
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 

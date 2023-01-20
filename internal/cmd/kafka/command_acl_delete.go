@@ -3,9 +3,9 @@ package kafka
 import (
 	"fmt"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -47,7 +47,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var filters []*schedv1.ACLFilter
+	var filters []*ccstructs.ACLFilter
 	for _, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
