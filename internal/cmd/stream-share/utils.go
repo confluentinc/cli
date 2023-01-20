@@ -8,10 +8,11 @@ import (
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+	"github.com/confluentinc/crn"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/crn"
 )
 
 const CrnCcloudAuthority = "confluent.cloud"
