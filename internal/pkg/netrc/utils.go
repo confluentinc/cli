@@ -49,8 +49,6 @@ func extractCredentialType(nameSubstring string) (credType string, rest string, 
 		credType = mdsUsernamePasswordString
 	} else if strings.HasPrefix(nameSubstring, ccloudUsernamePasswordString) {
 		credType = ccloudUsernamePasswordString
-	} else if strings.HasPrefix(nameSubstring, ccloudSSORefreshTokenString) {
-		credType = ccloudSSORefreshTokenString
 	} else {
 		return "", "", errors.New("Incorrect machine name format")
 	}

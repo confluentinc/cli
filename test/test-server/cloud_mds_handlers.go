@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/stretchr/testify/require"
 )
 

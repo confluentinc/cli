@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -49,26 +48,19 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, roles)
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		for _, role := range roles {
-			roleDisplay, err := createPrettyRoleV2(role)
-			if err != nil {
-				return err
-			}
-			data = append(data, printer.ToRow(roleDisplay, roleFields))
+	list := output.NewList(cmd)
+	for _, role := range roles {
+		roleDisplay, err := createPrettyRoleV2(role)
+		if err != nil {
+			return err
 		}
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, roles)
+		list.Add(roleDisplay)
 	}
-
-	return nil
+	return list.PrintWithAutoWrap(false)
 }
 
 func (c *roleCommand) confluentList(cmd *cobra.Command) error {
@@ -77,23 +69,17 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, roles)
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		for _, role := range roles {
-			roleDisplay, err := createPrettyRole(role)
-			if err != nil {
-				return err
-			}
-			data = append(data, printer.ToRow(roleDisplay, roleFields))
+	list := output.NewList(cmd)
+	for _, role := range roles {
+		roleDisplay, err := createPrettyRole(role)
+		if err != nil {
+			return err
 		}
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, roles)
+		list.Add(roleDisplay)
 	}
-	return nil
+	return list.PrintWithAutoWrap(false)
 }

@@ -17,11 +17,15 @@ func (c *aclCommand) newListCommandOnPrem() *cobra.Command {
 		RunE:  c.listOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all the local ACLs for the Kafka cluster:",
-				Code: "confluent kafka acl list",
+				Text: "List all the local ACLs for the Kafka cluster (providing embedded Kafka REST Proxy endpoint).",
+				Code: "confluent kafka acl list --url http://localhost:8090/kafka",
 			},
 			examples.Example{
-				Text: "List all the ACLs for the Kafka cluster that include allow permissions for the user Jane:",
+				Text: "List all the local ACLs for the Kafka cluster (providing Kafka REST Proxy endpoint).",
+				Code: "confluent kafka acl list --url http://localhost:8082",
+			},
+			examples.Example{
+				Text: `List all the ACLs for the Kafka cluster that include allow permissions for the user "Jane":`,
 				Code: "confluent kafka acl list --allow --principal User:Jane",
 			},
 		),
@@ -57,5 +61,5 @@ func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data)
 }

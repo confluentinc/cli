@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluentinc.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=f6c470c4-296b-4d7f-b550-0a169f85f767)](https://confluentinc.semaphoreci.com/projects/cli)
+[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/master.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
@@ -56,15 +56,15 @@ To list all available versions:
 
 For example, to list all available packages for version v2.3.1:
 
-    VERSION=v2.3.1 # or latest
+    VERSION=v3.0.0 # or latest
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
 For example, to download a tarball for Darwin/amd64:
 
-    VERSION=v2.3.1 # or latest
+    VERSION=v3.0.0 # or latest
     OS=darwin
     ARCH=amd64
-    FILE=confluent_${VERSION}_${OS}_${ARCH}.tar.gz
+    FILE=confluent_${VERSION#v}_${OS}_${ARCH}.tar.gz
     curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
 
 To install the CLI from a tarball:

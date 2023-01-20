@@ -1,1 +1,1 @@
-Are you sure you want to permanently delete the Schema Registry cluster for environment "env-srUpdate", along with all of its data? (y/n): Deleted Schema Registry cluster for environment "env-srUpdate".
+Are you sure you want to delete Schema Registry cluster "lsrc-1234" for environment "env-srUpdate"? (y/n): Deleted Schema Registry cluster for environment "env-srUpdate".

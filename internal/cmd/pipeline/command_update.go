@@ -2,16 +2,17 @@ package pipeline
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
+func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <pipeline-id>",
 		Short: "Update an existing pipeline.",
@@ -42,7 +43,7 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
-	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to active this pipeline.")
+	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -93,23 +94,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
 	}
 
-	// call api
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}
 
-	element := &Pipeline{
-		Id:                  *pipeline.Id,
-		Name:                *pipeline.Spec.DisplayName,
-		Description:         *pipeline.Spec.Description,
-		KsqlCluster:         pipeline.Spec.KsqlCluster.Id,
-		SecretNames:         getOrderedSecretNames(pipeline.Spec.Secrets),
-		ActivationPrivilege: *pipeline.Spec.ActivationPrivilege,
-		State:               *pipeline.Status.State,
-		CreatedAt:           *pipeline.Metadata.CreatedAt,
-		UpdatedAt:           *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	return print(cmd, pipeline)
 }

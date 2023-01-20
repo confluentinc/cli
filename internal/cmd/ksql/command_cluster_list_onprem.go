@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const clusterType = "ksql-cluster"
@@ -38,10 +37,5 @@ func (c *ksqlCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return pcluster.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return pcluster.PrintCluster(clusterInfos, format)
+	return pcluster.PrintClusters(cmd, clusterInfos)
 }

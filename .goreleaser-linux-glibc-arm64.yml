@@ -32,7 +32,7 @@ archives:
   - id: binary
     format: binary
   - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format: tar.gz
     wrap_in_directory: "{{ .ProjectName }}"
     files:
