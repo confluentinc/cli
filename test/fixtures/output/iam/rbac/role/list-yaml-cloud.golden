@@ -297,3 +297,50 @@
       - Contribute
       - DescribeAccess
       - Terminate
+- name: DataDiscovery
+  policies:
+  - bindingscope: environment
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CatalogTagDefinition
+      operations:
+      - Read
+    - resourcetype: Topic
+      operations:
+      - ReadCatalog
+    - resourcetype: Subject
+      operations:
+      - Read
+      - ReadCatalog
+      - ReadCompatibility
+    - resourcetype: CatalogBusinessMetadataDefinition
+      operations:
+      - Read
+- name: DataSteward
+  policies:
+  - bindingscope: environment
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CatalogTagDefinition
+      operations:
+      - Read
+      - Write
+      - Delete
+    - resourcetype: Topic
+      operations:
+      - ReadCatalog
+      - WriteCatalog
+    - resourcetype: Subject
+      operations:
+      - Delete
+      - Read
+      - ReadCatalog
+      - ReadCompatibility
+      - Write
+      - WriteCatalog
+      - WriteCompatibility
+    - resourcetype: CatalogBusinessMetadataDefinition
+      operations:
+      - Read
+      - Write
+      - Delete

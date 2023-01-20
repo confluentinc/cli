@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"os"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -38,21 +37,16 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	// add public, dataplane, datagovernance, and ksql roles
-	namespaces := []string{publicNamespace.Value(), dataplaneNamespace.Value(), dataGovernanceNamespace.Value(), ksqlNamespace.Value()}
+	// add public, dataplane, datagovernance, ksql, and streamcatalog roles
+	namespaces := []string{publicNamespace.Value(),
+		dataplaneNamespace.Value(),
+		dataGovernanceNamespace.Value(),
+		ksqlNamespace.Value(),
+		streamCatalogNamespace.Value()}
 	opt := optional.NewString(strings.Join(namespaces, ","))
 	roles, err := c.namespaceRoles(opt)
 	if err != nil {
 		return err
-	}
-
-	// add streamcatalog roles
-	if os.Getenv("XX_STREAMCATALOG_ENABLE") != "" {
-		streamCatalogRoles, err := c.namespaceRoles(streamCatalogNamespace)
-		if err != nil {
-			return err
-		}
-		roles = append(roles, streamCatalogRoles...)
 	}
 
 	format, err := cmd.Flags().GetString(output.FlagName)
