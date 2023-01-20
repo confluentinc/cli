@@ -116,8 +116,6 @@ github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0 h1:PPX84ol90CmVw
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3 h1:urDeBIsNr0hgRf3nZn66SHtdBO/4DmEDSsMWquaolmo=
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3/go.mod h1:NlSjbxG73kJM0iKUC6/CDbMnY3H4WF6e+YFBlfLffi8=
-github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0 h1:alq2+x8Bgy+Ej07oWGTffInQCIkOmAZHBsklJuKJBBs=
-github.com/confluentinc/countrycode v0.0.0-20211121160605-23262b771ab0/go.mod h1:M1v2LPUtSndRkYwk0I8rIl8l0N4+eRYjbgUEhXxuQEw=
 github.com/confluentinc/go-editor v0.10.0 h1:b8wxzw/578LN2rzDR6wg6dwIsS6CcvTkcPWN036hBFg=
 github.com/confluentinc/go-editor v0.10.0/go.mod h1:bn0eyXtw4IuiQhc7uGqGdlfr6ywNSbXjkNhOR4M3rnc=
 github.com/confluentinc/go-netrc v0.0.0-20211121160620-ec37f663ea18 h1:5EBie/kVOqHGDA2PJbG26xmQQDL3yRIQIZQGIkubf+U=
