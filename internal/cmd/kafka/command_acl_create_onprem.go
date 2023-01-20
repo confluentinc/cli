@@ -32,7 +32,7 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 				Code: `confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation READ --operation DESCRIBE --topic "*"`,
 			},
 			examples.Example{
-				Text: `You can also run the example above without logging in if you provide the Kafka REST proxy endpoint with the --url flag.`,
+				Text: "You can also run the example above without logging in if you provide the Kafka REST proxy endpoint with the `--url` flag.",
 				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
 			},
 			examples.Example{
