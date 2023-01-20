@@ -36,7 +36,7 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --topic '*'",
+				Code: `confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --topic "*"`,
 			},			
 		),
 	}
