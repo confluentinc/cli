@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
@@ -32,6 +33,10 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
+	if c.cfg.DisablePlugins {
+		return errors.NewErrorWithSuggestions("plugins are disabled", `Set "disable_plugins": false in ~/.confluent/config.json.`)
+	}
+
 	pluginMap := plugin.SearchPath(c.cfg)
 
 	if len(pluginMap) == 0 && output.GetFormat(cmd) == output.Human {
