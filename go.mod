@@ -43,7 +43,7 @@ require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.50.1
-	github.com/google/go-licenses v1.4.0
+	github.com/google/go-licenses v1.5.0
 	github.com/google/uuid v1.3.0
 	github.com/goreleaser/goreleaser v1.14.1
 	github.com/gorilla/mux v1.8.0

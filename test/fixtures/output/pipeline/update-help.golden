@@ -24,7 +24,7 @@ Flags:
                                This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
                                where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
                                If <secret-value> is empty, the named secret will be removed from Stream Designer.
-      --activation-privilege   Grant or revoke the privilege to active this pipeline. (default true)
+      --activation-privilege   Grant or revoke the privilege to activate this pipeline. (default true)
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string         Kafka cluster ID.
       --environment string     Environment ID.
