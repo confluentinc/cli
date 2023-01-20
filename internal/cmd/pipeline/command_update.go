@@ -43,7 +43,7 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
-	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to active this pipeline.")
+	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
