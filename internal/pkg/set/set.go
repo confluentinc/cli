@@ -2,8 +2,12 @@ package set
 
 type Set map[string]bool
 
-func New() Set {
-	return make(map[string]bool)
+func New(keys ...string) Set {
+	s := make(Set)
+	for _, key := range keys {
+		s.Add(key)
+	}
+	return s
 }
 
 func (s Set) Add(key string) {

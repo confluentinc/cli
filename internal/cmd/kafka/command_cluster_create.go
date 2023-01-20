@@ -8,12 +8,12 @@ import (
 	"strings"
 	"text/template"
 
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -321,13 +321,13 @@ func stringToAvailability(s string) (string, error) {
 		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
-func stringToSku(skuType string) (productv1.Sku, error) {
-	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(skuType)])
+func stringToSku(skuType string) (ccstructs.Sku, error) {
+	sku := ccstructs.Sku(ccstructs.Sku_value[strings.ToUpper(skuType)])
 	switch sku {
-	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
+	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
+		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
@@ -358,11 +358,11 @@ func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
 	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
 }
 
-func getKafkaProvisionEstimate(sku productv1.Sku) string {
+func getKafkaProvisionEstimate(sku ccstructs.Sku) string {
 	fmtEstimate := "It may take up to %s for the Kafka cluster to be ready."
 
 	switch sku {
-	case productv1.Sku_DEDICATED:
+	case ccstructs.Sku_DEDICATED:
 		return fmt.Sprintf(fmtEstimate, "1 hour") + " The organization admin will receive an email once the dedicated cluster is provisioned."
 	default:
 		return fmt.Sprintf(fmtEstimate, "5 minutes")

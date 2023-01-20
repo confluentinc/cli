@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Display pipelines in the current environment and cluster.",
@@ -35,13 +35,23 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, pipeline := range pipelines {
-		list.Add(&out{
-			Id:          pipeline.GetId(),
-			Name:        pipeline.Spec.GetDisplayName(),
-			Description: pipeline.Spec.GetDescription(),
-			KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-			State:       pipeline.Status.GetState(),
-		})
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Id:          pipeline.GetId(),
+				Name:        pipeline.Spec.GetDisplayName(),
+				Description: pipeline.Spec.GetDescription(),
+				KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+				State:       pipeline.Status.GetState(),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Id:          pipeline.GetId(),
+				Name:        pipeline.Spec.GetDisplayName(),
+				Description: pipeline.Spec.GetDescription(),
+				KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+				State:       pipeline.Status.GetState(),
+			})
+		}
 	}
 	list.Filter([]string{"Id", "Name", "Description", "KsqlCluster", "State"})
 	return list.Print()

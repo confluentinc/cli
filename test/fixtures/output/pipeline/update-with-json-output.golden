@@ -1,0 +1,11 @@
+{
+  "id": "pipe-12345",
+  "name": "newName",
+  "description": "newDescription",
+  "ksql_cluster": "lksqlc-12345",
+  "secret_names": ["name1", "name2", "name3"],
+  "activation_privilege": false,
+  "state": "draft",
+  "created_at": "2022-10-04T06:00:00Z",
+  "updated_at": "2022-10-06T06:00:00Z"
+}

@@ -11,9 +11,9 @@ import (
 
 	"github.com/antihax/optional"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	climock "github.com/confluentinc/cli/mock"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -196,7 +196,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
-	return New(cliMock.NewPreRunnerMock(nil, nil, nil, mdsClient, nil, suite.conf))
+	return New(climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {

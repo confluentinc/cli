@@ -12,7 +12,7 @@ import (
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -98,7 +98,7 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 
 	cfg := v1.AuthenticatedCloudConfigMock()
 
-	return New(mock.NewPreRunnerMock(nil, client, nil, nil, nil, cfg))
+	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg))
 }
 
 func TestFormatPrice(t *testing.T) {

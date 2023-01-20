@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
@@ -18,20 +16,18 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	PrivateClient *ccloud.Client
-	Client        *ccloudv1.Client
-	V2Client      *ccloudv2.Client
+	Client   *ccloudv1.Client
+	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, privateClient *ccloud.Client, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
-		Context:       context,
-		PrivateClient: privateClient,
-		Client:        client,
-		V2Client:      v2Client,
+		Context:  context,
+		Client:   client,
+		V2Client: v2Client,
 	}
 }
 
@@ -300,10 +296,10 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *schedv1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
+func makeSRCluster(cluster *ccloudv1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
 	return &v1.SchemaRegistryCluster{
-		Id:                     cluster.Id,
-		SchemaRegistryEndpoint: cluster.Endpoint,
+		Id:                     cluster.GetId(),
+		SchemaRegistryEndpoint: cluster.GetEndpoint(),
 		SrCredentials:          nil, // For now.
 	}
 }

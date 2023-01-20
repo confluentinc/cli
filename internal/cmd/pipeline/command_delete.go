@@ -7,13 +7,13 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <pipeline-id>",
 		Short: "Delete a pipeline.",

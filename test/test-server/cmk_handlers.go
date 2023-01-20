@@ -6,11 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	utilv1 "github.com/confluentinc/cc-structs/kafka/util/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	"github.com/gogo/protobuf/proto"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
@@ -58,32 +54,7 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 
 // Handler for "/cmk/v2/clusters"
 func handleCmkClusters(t *testing.T) http.HandlerFunc {
-	write := func(w http.ResponseWriter, resp proto.Message) {
-		type errorer interface {
-			GetError() *corev1.Error
-		}
-
-		if r, ok := resp.(errorer); ok {
-			w.WriteHeader(int(r.GetError().Code))
-		}
-
-		b, err := utilv1.MarshalJSONToBytes(resp)
-		require.NoError(t, err)
-
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
-	}
-
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Header.Get("Authorization") {
-		case "Bearer expired":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "token is expired", Code: http.StatusUnauthorized}})
-		case "Bearer malformed":
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "malformed token", Code: http.StatusBadRequest}})
-		case "Bearer invalid":
-			// TODO: The response for an invalid token should be 4xx, not 500 (e.g., if you take a working token from devel and try in stag)
-			write(w, &schedv1.GetKafkaClustersReply{Error: &corev1.Error{Message: "Token parsing error: crypto/rsa: verification error", Code: http.StatusInternalServerError}})
-		}
 		if r.Method == http.MethodPost {
 			handleCmkKafkaClusterCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {

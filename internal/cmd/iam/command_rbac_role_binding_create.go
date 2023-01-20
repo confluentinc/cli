@@ -32,6 +32,22 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 				Text: `Grant the role "MetricsViewer" to service account "sa-123456":`,
 				Code: "confluent iam rbac role-binding create --principal User:sa-123456 --role MetricsViewer",
 			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects for Schema Registry cluster "lsrc-123456" in environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:*"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" for the Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject:test"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and all subjects in schema context "schema_context" for Schema Registry cluster "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:*"`,
+			},
+			examples.Example{
+				Text: `Grant the "ResourceOwner" role to principal "User:u-123456" and subject "test" in schema context "schema_context" for Schema Registry "lsrc-123456" in the environment "env-12345":`,
+				Code: `confluent iam rbac role-binding create --principal User:u-123456 --role ResourceOwner --environment env-12345 --schema-registry-cluster lsrc-123456 --resource "Subject::.schema_context:test"`,
+			},
 		)
 	} else {
 		cmd.Example = examples.BuildExampleString(
@@ -56,58 +72,35 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
-	options, err := c.parseCommon(cmd)
-	if err != nil {
-		return err
-	}
-
 	isCloud := c.cfg.IsCloudLogin()
 
-	var httpResp *http.Response
 	if isCloud {
 		createRoleBinding, err := c.parseV2RoleBinding(cmd)
 		if err != nil {
 			return err
 		}
-		if isSchemaRegistryOrKsqlRoleBinding(createRoleBinding) {
-			httpResp, err = c.ccloudCreate(options)
-		} else {
-			_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
-		}
+
+		_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
 		if err != nil {
 			return err
 		}
+
+		return c.displayCCloudCreateAndDeleteOutput(cmd, createRoleBinding)
 	} else {
-		httpResp, err = c.confluentCreate(options)
+		options, err := c.parseCommon(cmd)
 		if err != nil {
 			return err
 		}
-	}
+		httpResp, err := c.confluentCreate(options)
+		if err != nil {
+			return err
+		}
 
-	if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
-	}
+		if httpResp != nil && httpResp.StatusCode != http.StatusOK && httpResp.StatusCode != http.StatusCreated && httpResp.StatusCode != http.StatusNoContent {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.HTTPStatusCodeErrorMsg, httpResp.StatusCode), errors.HTTPStatusCodeSuggestions)
+		}
 
-	if isCloud {
-		return c.displayCCloudCreateAndDeleteOutput(cmd, options)
-	} else {
 		return displayCreateAndDeleteOutput(cmd, options)
-	}
-}
-
-func (c *roleBindingCommand) ccloudCreate(options *roleBindingOptions) (*http.Response, error) {
-	if options.resource != "" {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleResourcesForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.resourcesRequestV2)
-	} else {
-		return c.MDSv2Client.RBACRoleBindingCRUDApi.AddRoleForPrincipal(
-			c.createContext(),
-			options.principal,
-			options.role,
-			options.scopeV2)
 	}
 }
 

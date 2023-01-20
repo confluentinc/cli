@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
@@ -176,7 +174,7 @@ func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteEnvironments(command.PrivateClient, command.V2Client, command.Context)
+		return AutocompleteEnvironments(command.Client, command.V2Client, command.Context)
 	})
 }
 
@@ -191,7 +189,7 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 	})
 }
 
-func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
+func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Client, ctx *dynamicconfig.DynamicContext) []string {
 	environments, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return nil
@@ -203,7 +201,7 @@ func AutocompleteEnvironments(v1Client *ccloud.Client, v2Client *ccloudv2.Client
 	}
 
 	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &orgv1.Account{Id: auditLog.GetAccountId()})
+		auditLogAccount, err := v1Client.Account.Get(context.Background(), &ccloudv1.Account{Id: auditLog.GetAccountId()})
 		if err != nil {
 			return nil
 		}

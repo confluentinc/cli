@@ -46,7 +46,6 @@ func (s *CLITestSuite) TestIAMRBACRoleCloud() {
 		{args: "iam rbac role list -o json", fixture: "iam/rbac/role/list-json-cloud.golden"},
 		{args: "iam rbac role list -o yaml", fixture: "iam/rbac/role/list-yaml-cloud.golden"},
 		{args: "iam rbac role list", fixture: "iam/rbac/role/list-cloud.golden"},
-		{args: "iam rbac role list", env: []string{"XX_DATAPLANE_3_ENABLE=1"}, fixture: "iam/rbac/role/list-dataplane-stage3-cloud.golden"},
 	}
 
 	for _, tt := range tests {
@@ -90,7 +89,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-44ddd", fixture: "iam/rbac/role-binding/list-user-4-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-55eee", fixture: "iam/rbac/role-binding/list-user-5-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-66fff", fixture: "iam/rbac/role-binding/list-user-6-cloud.golden"},
-		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --principal User:u-77ggg", fixture: "iam/rbac/role-binding/list-user-7-cloud.golden"},
+		{args: "iam rbac role-binding list --environment a-595 --principal User:u-77ggg", fixture: "iam/rbac/role-binding/list-user-7-cloud.golden"},
 		{args: "iam rbac role-binding list --role OrganizationAdmin", fixture: "iam/rbac/role-binding/list-user-orgadmin-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --role EnvironmentAdmin", fixture: "iam/rbac/role-binding/list-user-envadmin-cloud.golden"},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa --role CloudClusterAdmin", fixture: "iam/rbac/role-binding/list-user-clusteradmin-cloud.golden"},

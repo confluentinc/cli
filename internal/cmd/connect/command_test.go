@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"testing"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -64,17 +62,16 @@ var (
 type ConnectTestSuite struct {
 	suite.Suite
 	conf           *v1.Config
-	kafkaCluster   *schedv1.KafkaCluster
+	kafkaCluster   *ccstructs.KafkaCluster
 	connectorsMock *connectmock.ConnectorsV1Api
 	lifecycleMock  *connectmock.LifecycleV1Api
 	pluginMock     *connectmock.PluginsV1Api
-	kafkaMock      *ccsdkmock.Kafka
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Name:       "KafkaMock",
 		AccountId:  "testAccount",
@@ -83,15 +80,6 @@ func (suite *ConnectTestSuite) SetupSuite() {
 }
 
 func (suite *ConnectTestSuite) SetupTest() {
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return suite.kafkaCluster, nil
-		},
-		ListFunc: func(_ context.Context, _ *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
-		},
-	}
-
 	suite.connectorsMock = &connectmock.ConnectorsV1Api{
 		CreateConnectv1ConnectorFunc: func(_ context.Context, _, _ string) connectv1.ApiCreateConnectv1ConnectorRequest {
 			return connectv1.ApiCreateConnectv1ConnectorRequest{}
@@ -156,7 +144,7 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 		LifecycleV1Api:  suite.lifecycleMock,
 		PluginsV1Api:    suite.pluginMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock}, nil,
+	prerunner := climock.NewPreRunnerMock(nil,
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
 	return New(suite.conf, prerunner)
 }
