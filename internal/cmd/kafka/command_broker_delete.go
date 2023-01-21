@@ -17,9 +17,9 @@ import (
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id>",
+		Short: "Delete a Kafka broker.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
-		Short: "Delete a Kafka broker.",
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())

@@ -45,7 +45,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, args []string) error {
 	quotaScope := args[0]
 
-	kafkaCluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, kafkaCluster, environment, network, quotaCode)
+	quotas, err := c.V2Client.ListServiceQuotas(quotaScope, cluster, environment, network, quotaCode)
 	if err != nil {
 		return err
 	}

@@ -43,7 +43,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
+	dryRun, err := cmd.Flags().GetBool(dryrunFlagName)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 
 	failoverMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsFailoverOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
-		ValidateOnly:            optional.NewBool(validateOnly),
+		ValidateOnly:            optional.NewBool(dryRun),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)

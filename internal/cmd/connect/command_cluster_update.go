@@ -36,11 +36,11 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 	var userConfigs *map[string]string
 	if cmd.Flags().Changed("config") {
-		configList, err := cmd.Flags().GetStringSlice("config")
+		configs, err := cmd.Flags().GetStringSlice("config")
 		if err != nil {
 			return err
 		}
-		configMap, err := properties.ConfigFlagToMap(configList)
+		configMap, err := properties.ConfigFlagToMap(configs)
 		if err != nil {
 			return err
 		}

@@ -27,13 +27,13 @@ type configOut struct {
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.describe,
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the `min.insync.replicas` configuration for broker 1.",
+				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
 				Code: "confluent kafka broker describe 1 --config-name min.insync.replicas",
 			},
 			examples.Example{

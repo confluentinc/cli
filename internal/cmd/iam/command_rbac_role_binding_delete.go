@@ -94,7 +94,7 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 	}
 
 	if roleBindingToDelete == nil {
-		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundFoundErrorMsg, errors.RoleBindingNotFoundFoundSuggestions)
+		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 
 	if ok, err := form.ConfirmDeletion(cmd, rbacPromptMsg, ""); err != nil || !ok {

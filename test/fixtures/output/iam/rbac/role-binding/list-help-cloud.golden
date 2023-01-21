@@ -22,7 +22,7 @@ List the role bindings for user "u-123456" with role "CloudClusterAdmin":
 
 Flags:
       --principal string                 Principal whose role bindings should be listed.
-      --current-user                     Show role bindings belonging to current user.
+      --current-user                     Show role bindings belonging to the current user.
       --role string                      List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.
       --environment string               Environment ID for scope of role binding listings.
       --current-environment              Use current environment ID for scope.

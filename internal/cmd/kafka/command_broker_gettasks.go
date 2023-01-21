@@ -31,9 +31,9 @@ type brokerTaskData struct {
 func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-tasks [id]",
+		Short: "List broker tasks.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.getTasks,
-		Short: "List broker tasks.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List remove-broker tasks for broker 1.",
@@ -60,12 +60,12 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	taskName, err := cmd.Flags().GetString("task-type")
+	taskType, err := cmd.Flags().GetString("task-type")
 	if err != nil {
 		return err
 	}
 
-	taskType, err := getBrokerTaskType(taskName)
+	brokerTaskType, err := getBrokerTaskType(taskType)
 	if err != nil {
 		return err
 	}
@@ -82,12 +82,12 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 
 	var taskData kafkarestv3.BrokerTaskDataList
 	if all { // get BrokerTasks for the cluster
-		taskData, err = getBrokerTasksForCluster(restClient, restContext, clusterId, taskType)
+		taskData, err = getBrokerTasksForCluster(restClient, restContext, clusterId, brokerTaskType)
 		if err != nil {
 			return err
 		}
 	} else { // fetch individual broker configs
-		taskData, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, taskType)
+		taskData, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, brokerTaskType)
 		if err != nil {
 			return err
 		}
