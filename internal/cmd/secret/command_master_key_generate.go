@@ -44,12 +44,12 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsPath)
+	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
 		return err
 	}

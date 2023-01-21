@@ -522,11 +522,11 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 	if cmd.Flags().Changed("current-environment") {
 		crnPattern += "/environment=" + c.EnvironmentId()
 	} else if cmd.Flags().Changed("environment") {
-		env, err := cmd.Flags().GetString("environment")
+		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/environment=" + env
+		crnPattern += "/environment=" + environment
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {

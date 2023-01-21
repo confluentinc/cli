@@ -59,20 +59,19 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	// Collect the parameters
-	serviceProvider, err := cmd.Flags().GetString("cloud")
+	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
 	}
 
-	locationFlag, err := cmd.Flags().GetString("geo")
+	geo, err := cmd.Flags().GetString("geo")
 	if err != nil {
 		return err
 	}
 
 	// Trust the API will handle CCP/CCE
-	location := ccloudv1.GlobalSchemaRegistryLocation(ccloudv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
-	err = c.validateLocation(location)
-	if err != nil {
+	location := ccloudv1.GlobalSchemaRegistryLocation(ccloudv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(geo)])
+	if err := c.validateLocation(location); err != nil {
 		return err
 	}
 
@@ -90,7 +89,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Location:        location,
-		ServiceProvider: serviceProvider,
+		ServiceProvider: cloud,
 		Package:         packageInternalName,
 		// Name is a special string that everyone expects. Originally, this field was added to support
 		// multiple SR instances, but for now there's a contract between our services that it will be

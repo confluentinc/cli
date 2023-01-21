@@ -69,7 +69,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	schemaCfg := &sr.RegisterSchemaConfigs{
 		SchemaDir:   dir,
-		SchemaPath:  &schemaPath,
+		SchemaPath:  &schema,
 		Subject:     subject,
 		ValueFormat: valueFormat,
 		SchemaType:  serializationProvider.GetSchemaName(),
@@ -94,7 +94,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	err = serializationProvider.LoadSchema(schema, referencePathMap)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
 	}
@@ -212,16 +212,16 @@ func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, se
 }
 
 func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
-	srAPIKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, nil, err
 	}
-	srAPISecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
 	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
 		err = new(errors.SRNotAuthenticatedError)
 	}

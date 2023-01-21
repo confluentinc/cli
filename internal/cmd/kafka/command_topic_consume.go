@@ -161,16 +161,16 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
-		srAPIKey, err := cmd.Flags().GetString("schema-registry-api-key")
+		schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 		if err != nil {
 			return err
 		}
-		srAPISecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+		schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 		if err != nil {
 			return err
 		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
+		srClient, ctx, err = sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -189,12 +189,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}()
 
 	subject := topicNameStrategy(topic)
-	contextName, err := cmd.Flags().GetString("schema-registry-context")
+	schemaRegistryContext, err := cmd.Flags().GetString("schema-registry-context")
 	if err != nil {
 		return err
 	}
-	if contextName != "" {
-		subject = contextName
+	if schemaRegistryContext != "" {
+		subject = schemaRegistryContext
 	}
 
 	groupHandler := &GroupHandler{

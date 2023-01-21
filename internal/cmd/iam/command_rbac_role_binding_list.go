@@ -274,21 +274,21 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 
 	var principals []string
 	if cmd.Flags().Changed("resource") {
-		r, err := cmd.Flags().GetString("resource")
+		resource, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
 		}
 
-		resource, err := parseAndValidateResourcePattern(r, false)
+		resourcePattern, err := parseAndValidateResourcePattern(resource, false)
 		if err != nil {
 			return err
 		}
 
-		if err := c.validateRoleAndResourceTypeV1(role, resource.ResourceType); err != nil {
+		if err := c.validateRoleAndResourceTypeV1(role, resourcePattern.ResourceType); err != nil {
 			return err
 		}
 
-		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resource.ResourceType, resource.Name, *scope)
+		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resourcePattern.ResourceType, resourcePattern.Name, *scope)
 		if err != nil {
 			return err
 		}

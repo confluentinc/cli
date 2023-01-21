@@ -142,12 +142,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
+	encryptionKey, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
 		return err
 	}
 
-	if encryptionKeyID != "" {
+	if encryptionKey != "" {
 		input := validateEncryptionKeyInput{
 			Cloud:          cloud,
 			MetadataClouds: clouds,
@@ -167,7 +167,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(clusterType, 1, encryptionKeyID),
+			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
 		},
 	}
 

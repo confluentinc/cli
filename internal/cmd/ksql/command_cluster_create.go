@@ -39,7 +39,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	csus, err := cmd.Flags().GetInt32("csu")
+	csu, err := cmd.Flags().GetInt32("csu")
 	if err != nil {
 		return err
 	}
@@ -56,7 +56,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csus, !logExcludeRows)
+	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csu, !logExcludeRows)
 	if err != nil {
 		return err
 	}

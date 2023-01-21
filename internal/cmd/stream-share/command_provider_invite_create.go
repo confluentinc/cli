@@ -46,7 +46,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kafkaCluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	deliveryMethod := "Email"
 	resources := []string{
 		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
-			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, kafkaCluster, topic),
+			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, cluster, topic),
 	}
 	for _, subject := range schemaRegistrySubjects {
 		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",

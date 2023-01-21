@@ -16,20 +16,20 @@ const (
 )
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
-	fileName, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return nil, err
 	}
 
-	options, err := parseConfigFile(fileName)
+	options, err := parseConfigFile(configFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse config %s", fileName)
+		return nil, errors.Wrapf(err, "unable to parse config %s", configFile)
 	}
 
 	_, nameExists := options[name]
 	_, classExists := options[connectorClass]
 	if !nameExists || !classExists {
-		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, fileName)
+		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
 
 	return &options, nil

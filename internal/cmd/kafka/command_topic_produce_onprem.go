@@ -98,7 +98,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -120,14 +120,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schemaPath,
+		SchemaPath:  &schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	err = serializationProvider.LoadSchema(schema, referencePathMap)
 	if err != nil {
 		return err
 	}

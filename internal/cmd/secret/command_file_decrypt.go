@@ -31,20 +31,20 @@ func (c *command) decrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	outputPath, err := cmd.Flags().GetString("output-file")
+	outputFile, err := cmd.Flags().GetString("output-file")
 	if err != nil {
 		return err
 	}
 
-	return c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
+	return c.plugin.DecryptConfigFileSecrets(configFile, localSecretsFile, outputFile, configs)
 }
