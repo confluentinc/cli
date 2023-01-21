@@ -27,13 +27,8 @@ type pluginInfo struct {
 func SearchPath(cfg *v1.Config) map[string][]string {
 	log.CliLogger.Debugf("Recursively searching $PATH for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
-	delimiter := ":"
-	if runtime.GOOS == "windows" {
-		delimiter = ";"
-	}
-
 	plugins := make(map[string][]string)
-	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			log.CliLogger.Warnf("unable to read directory from $PATH: %s", dir)
