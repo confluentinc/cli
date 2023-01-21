@@ -530,19 +530,19 @@ func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, 
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {
-		cluster, err := cmd.Flags().GetString("cloud-cluster")
+		cloudCluster, err := cmd.Flags().GetString("cloud-cluster")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/cloud-cluster=" + cluster
+		crnPattern += "/cloud-cluster=" + cloudCluster
 	}
 
 	if cmd.Flags().Changed("schema-registry-cluster") { // route not implemented yet
-		srCluster, err := cmd.Flags().GetString("schema-registry-cluster")
+		schemaRegistryCluster, err := cmd.Flags().GetString("schema-registry-cluster")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/schema-registry=" + srCluster
+		crnPattern += "/schema-registry=" + schemaRegistryCluster
 	}
 
 	if cmd.Flags().Changed("ksql-cluster") { // route not implemented yet

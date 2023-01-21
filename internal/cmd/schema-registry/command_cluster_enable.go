@@ -102,7 +102,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err

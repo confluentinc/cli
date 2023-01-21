@@ -82,7 +82,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByAccountId(context.Background(), c.EnvironmentId())
+	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId())
 	if srCluster != nil {
 		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}

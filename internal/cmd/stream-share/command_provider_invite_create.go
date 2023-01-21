@@ -66,7 +66,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	srCluster, err := c.Context.FetchSchemaRegistryByAccountId(cmd.Context(), environment)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(cmd.Context(), environment)
 	if err != nil {
 		return err
 	}

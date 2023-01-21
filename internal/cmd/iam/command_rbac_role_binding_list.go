@@ -79,7 +79,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("principal", "", "Principal whose role bindings should be listed.")
-	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
+	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to the current user.")
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
 	if c.cfg.IsCloudLogin() {

@@ -198,7 +198,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByAccountId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resourceId)
 			}
