@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -41,7 +40,7 @@ func SearchPath(cfg *v1.Config) map[string][]string {
 			continue
 		}
 
-		if home, err := homedir.Dir(); err == nil {
+		if home, err := os.UserHomeDir(); err == nil {
 			if strings.HasPrefix(dir, home) {
 				dir = filepath.Join("~", strings.TrimPrefix(dir, home))
 			}
