@@ -79,18 +79,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
-	github.com/codyaray/retag v0.0.0-20180529164156-4f3c7e6dfbe2 // indirect
-	github.com/confluentinc/cc-structs/common v0.1390.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/auth v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/authz v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/connect v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/marketplace v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/metrics v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/streamgovernance v0.1390.0 // indirect
-	github.com/confluentinc/cc-structs/kafka/support v0.1373.0 // indirect
-	github.com/confluentinc/cc-structs/operator v0.1390.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5
-	github.com/confluentinc/cire-obelisk v0.422.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
