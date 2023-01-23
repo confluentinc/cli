@@ -10,14 +10,14 @@ import (
 )
 
 type describeStruct struct {
-	Id        string   `human:"ID" serialzed:"id"`
-	Key       string   `human:"Key" serialzed:"key"`
-	Roles     []string `human:"Roles" serialzed:"roles"`
-	Provider  string   `human:"Provider" serialzed:"provider"`
-	State     string   `human:"State" serialzed:"state"`
-	CreatedAt string   `human:"Created At" serialzed:"created_at"`
-	UpdatedAt string   `human:"Updated At" serialzed:"updated_at"`
-	DeletedAt string   `human:"Deleted At" serialzed:"deleted_at"`
+	Id        string   `human:"Id" serialized:"id"`
+	Key       string   `human:"Key" serialized:"key"`
+	Roles     []string `human:"Roles" serialized:"roles"`
+	Provider  string   `human:"Provider" serialized:"provider"`
+	State     string   `human:"State" serialized:"state"`
+	CreatedAt string   `human:"Created At" serialized:"created_at"`
+	UpdatedAt string   `human:"Updated At" serialized:"updated_at"`
+	DeletedAt string   `human:"Deleted At" serialized:"deleted_at"`
 }
 
 func (c *command) newDescribeCommand() *cobra.Command {
