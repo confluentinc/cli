@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -17,6 +18,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	cmd.Flags().Bool("show-policy-command", false, "Print post-creation step to grant Confluent access to the key.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -64,5 +66,22 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		DeletedAt: deletedAt,
 	}
 
-	return output.DescribeObject(cmd, describeByokKey, fields, humanRenames, structuredRenames)
+	output.DescribeObject(cmd, describeByokKey, fields, humanRenames, structuredRenames)
+
+	// If the user has specified the --show-policy-command flag, print the post-creation step to grant Confluent access to the key.
+	showPolicyCommand, err := cmd.Flags().GetBool("show-policy-command")
+	if err != nil {
+		return err
+	}
+
+	if showPolicyCommand {
+		postCreationStepInstructions, err := renderPostCreationStepInstructions(&key)
+		if err != nil {
+			return err
+		}
+
+		utils.Println(cmd, postCreationStepInstructions)
+	}
+
+	return nil
 }
