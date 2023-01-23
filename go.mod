@@ -79,6 +79,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.5
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -138,6 +139,7 @@ require (
 
 replace (
 	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
+	github.com/confluentinc/ccloud-sdk-go-v2/byok => github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5
 	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
 	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
 )
