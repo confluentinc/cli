@@ -1,1 +1,1 @@
-Error: must specify cloud-cluster flag to indicate role binding scope
+Error: must specify `--cloud-cluster` to indicate role binding scope

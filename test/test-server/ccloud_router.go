@@ -40,16 +40,9 @@ type CloudRouter struct {
 
 // New CloudRouter with all cloud handlers
 func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
-	c := NewEmptyCloudRouter()
+	c := &CloudRouter{Router: mux.NewRouter()}
 	c.buildCcloudRouter(t, isAuditLogEnabled)
 	return c
-}
-
-// New CloudRouter with no predefined handlers
-func NewEmptyCloudRouter() *CloudRouter {
-	return &CloudRouter{
-		Router: mux.NewRouter(),
-	}
 }
 
 // Add handlers for cloud endpoints

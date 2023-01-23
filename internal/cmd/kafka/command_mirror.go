@@ -35,7 +35,7 @@ type mirrorCommand struct {
 func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "mirror",
-		Short:       "Manages cluster linking mirror topics.",
+		Short:       "Manage cluster linking mirror topics.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

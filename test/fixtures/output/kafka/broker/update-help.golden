@@ -1,4 +1,4 @@
-Update per-broker or cluster-wide Kafka broker configs.
+Update per-broker or cluster-wide Kafka broker configurations.
 
 Usage:
   confluent kafka broker update [id] [flags]

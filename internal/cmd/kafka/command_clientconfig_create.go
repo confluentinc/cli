@@ -290,19 +290,19 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 	}
 
 	// get SR key pair from flag
-	apiKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
-	apiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
 
 	// set SR key pair
 	srCluster.SrCredentials = &v1.APIKeyPair{
-		Key:    apiKey,
-		Secret: apiSecret,
+		Key:    schemaRegistryApiKey,
+		Secret: schemaRegistryApiSecret,
 	}
 	return srCluster, nil
 }

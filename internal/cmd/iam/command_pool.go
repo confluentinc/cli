@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type identityPoolCommand struct {
@@ -19,7 +18,7 @@ type identityPoolOut struct {
 	Filter        string `human:"Filter" serialized:"filter"`
 }
 
-func newPoolCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pool",
 		Short:       "Manage identity pools.",

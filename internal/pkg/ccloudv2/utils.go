@@ -28,7 +28,7 @@ func IsCCloudURL(url string, isTest bool) bool {
 		}
 	}
 	if isTest {
-		return strings.Contains(url, testserver.TestCloudURL.Host) || strings.Contains(url, testserver.TestV2CloudURL.Host)
+		return strings.Contains(url, testserver.TestCloudUrl.Host) || strings.Contains(url, testserver.TestV2CloudUrl.Host)
 	}
 	return false
 }

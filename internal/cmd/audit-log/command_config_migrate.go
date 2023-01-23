@@ -39,7 +39,7 @@ func (c *configCommand) newMigrateCommand() *cobra.Command {
 }
 
 func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
-	crnAuthority, err := cmd.Flags().GetString("authority")
+	authority, err := cmd.Flags().GetString("authority")
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, crnAuthority)
+	combinedSpec, warnings, err := AuditLogConfigTranslation(clusterConfigs, bootstrapServers, authority)
 	if err != nil {
 		return err
 	}
