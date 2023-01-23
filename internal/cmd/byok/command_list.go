@@ -9,16 +9,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields           = []string{"Id", "Key", "Provider", "State", "CreatedAt", "UpdatedAt", "DeletedAt"}
-	listHumanLabels      = []string{"Id", "Key", "Provider", "State", "Created At", "Updated At", "Deleted At"}
-	listStructuredLabels = []string{"id", "Key", "provider", "state", "created_at", "updated_at", "deleted_at"}
-)
+var listFields = []string{"Id", "Key", "Provider", "State", "CreatedAt", "UpdatedAt", "DeletedAt"}
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List registered self-managed keys.",
+		Short: "List self-managed keys.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
@@ -36,11 +32,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, key := range keys {
 		var keyString string
 		switch {
@@ -66,7 +58,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			deletedAt = key.Metadata.DeletedAt.String()
 		}
 
-		elem := &byokKey{
+		list.Add(&describeStruct{
 			Id:        *key.Id,
 			Key:       keyString,
 			Provider:  *key.Provider,
@@ -74,9 +66,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			CreatedAt: key.Metadata.CreatedAt.String(),
 			UpdatedAt: updatedAt,
 			DeletedAt: deletedAt,
-		}
-		outputWriter.AddElement(elem)
+		})
+
 	}
 
-	return outputWriter.Out()
+	list.Filter(listFields)
+	return list.Print()
+
 }

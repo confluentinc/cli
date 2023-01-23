@@ -9,6 +9,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type describeStruct struct {
+	Id        string   `human:"ID" serialzed:"id"`
+	Key       string   `human:"Key" serialzed:"key"`
+	Roles     []string `human:"Roles" serialzed:"roles"`
+	Provider  string   `human:"Provider" serialzed:"provider"`
+	State     string   `human:"State" serialzed:"state"`
+	CreatedAt string   `human:"Created At" serialzed:"created_at"`
+	UpdatedAt string   `human:"Updated At" serialzed:"updated_at"`
+	DeletedAt string   `human:"Deleted At" serialzed:"deleted_at"`
+}
+
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
@@ -55,7 +66,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		deletedAt = key.Metadata.DeletedAt.String()
 	}
 
-	describeByokKey := &byokKey{
+	table := output.NewTable(cmd)
+	table.Add(&describeStruct{
 		Id:        *key.Id,
 		Key:       keyString,
 		Roles:     roles,
@@ -64,9 +76,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		CreatedAt: key.Metadata.CreatedAt.String(),
 		UpdatedAt: updatedAt,
 		DeletedAt: deletedAt,
-	}
-
-	output.DescribeObject(cmd, describeByokKey, fields, humanRenames, structuredRenames)
+	})
+	table.Print()
 
 	// If the user has specified the --show-policy-command flag, print the post-creation step to grant Confluent access to the key.
 	showPolicyCommand, err := cmd.Flags().GetBool("show-policy-command")
