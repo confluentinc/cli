@@ -68,7 +68,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
 	}
 
-	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(topic, cmd)
+	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(cmd, topic)
 	if err != nil {
 		return err
 	}
@@ -191,7 +191,7 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 
 func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// Registering schema and fill metaInfo array.
-	var metaInfo []byte
+	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
 
 	if len(*schemaCfg.SchemaPath) > 0 {
@@ -257,7 +257,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	return key, value, nil
 }
 
-func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(topic string, cmd *cobra.Command) (serdes.SerializationProvider, []byte, error) {
+func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes.SerializationProvider, []byte, error) {
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return nil, nil, err
@@ -305,7 +305,6 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(topic string, cmd *cobra.Co
 		}
 
 		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
-
 	} else {
 		valueFormat, err = cmd.Flags().GetString("value-format")
 		if err != nil {
@@ -332,7 +331,6 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(topic string, cmd *cobra.Co
 			return nil, nil, err
 		}
 		schemaCfg.Refs = refs
-		// Meta info contains a magic byte and schema ID (4 bytes).
 		metaInfo, referencePathMap, err = c.registerSchema(cmd, schemaCfg)
 		if err != nil {
 			return nil, nil, err
