@@ -60,7 +60,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		clusterId = resource.Cloud
 	}
 
-	ownerResourceId, err := cmd.Flags().GetString("service-account")
+	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -75,13 +75,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 	resourceIdToUserIdMap := mapResourceIdToUserId(allUsers)
 
-	if ownerResourceId != "" {
-		if resource.LookupType(ownerResourceId) != resource.ServiceAccount {
+	if serviceAccount != "" {
+		if resource.LookupType(serviceAccount) != resource.ServiceAccount {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
-		_, ok := resourceIdToUserIdMap[ownerResourceId]
+		_, ok := resourceIdToUserIdMap[serviceAccount]
 		if !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, ownerResourceId), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount), errors.ServiceAccountNotFoundSuggestions)
 		}
 	}
 
@@ -90,16 +90,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if ownerResourceId != "" {
+		if serviceAccount != "" {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		ownerResourceId, err = c.getCurrentUserId()
+		serviceAccount, err = c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
 	}
 
-	apiKeys, err := c.V2Client.ListApiKeys(ownerResourceId, clusterId)
+	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId)
 	if err != nil {
 		return err
 	}

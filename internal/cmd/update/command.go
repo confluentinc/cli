@@ -75,7 +75,7 @@ func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	updateYes, err := cmd.Flags().GetBool("yes")
+	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
@@ -126,7 +126,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !updateYes) {
+	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !yes) {
 		return nil
 	}
 

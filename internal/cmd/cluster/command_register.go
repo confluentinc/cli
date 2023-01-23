@@ -48,7 +48,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
-	name, err := cmd.Flags().GetString("cluster-name")
+	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 	}
 
 	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
-	clusterInfo := mds.ClusterInfo{ClusterName: name, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
+	clusterInfo := mds.ClusterInfo{ClusterName: clusterName, Scope: mds.Scope{Clusters: *scopeClusters}, Hosts: hosts, Protocol: protocol}
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})
 	if err != nil {
@@ -117,13 +117,13 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 }
 
 func (c *registerCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error) {
-	hostStr, err := cmd.Flags().GetString("hosts")
+	hosts, err := cmd.Flags().GetString("hosts")
 	if err != nil {
 		return nil, err
 	}
 
 	var hostInfos []mds.HostInfo
-	for _, host := range strings.Split(hostStr, ",") {
+	for _, host := range strings.Split(hosts, ",") {
 		hostInfo := strings.Split(host, ":")
 		port := int64(0)
 		if len(hostInfo) > 1 {

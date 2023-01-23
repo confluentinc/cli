@@ -16,8 +16,8 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -62,7 +62,7 @@ type launchDarklyManager struct {
 func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if isTest {
-		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudURL.String(), "1234")
+		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")
 	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
 		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
 	}
@@ -182,7 +182,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 		log.CliLogger.Debug(resp)
 		if !ld.timeoutSuggestionPrinted {
 			timeoutSuggestions := errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`)
-			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n" + timeoutSuggestions + "\n")
+			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n"+timeoutSuggestions+"\n")
 			ld.timeoutSuggestionPrinted = true
 		}
 

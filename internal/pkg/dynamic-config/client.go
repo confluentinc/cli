@@ -52,7 +52,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByAccountId(context context.Context, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
+func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
 	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &ccloudv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",

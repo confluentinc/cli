@@ -75,6 +75,11 @@ func autocompleteMechanisms(protocol string) []string {
 	}
 }
 
+func AddAvailabilityFlag(cmd *cobra.Command) {
+	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities)))
+	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
+}
+
 func AddCloudFlag(cmd *cobra.Command) {
 	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds)))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
@@ -216,7 +221,7 @@ func AddOutputFlag(cmd *cobra.Command) {
 }
 
 func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
-	cmd.Flags().StringP(output.FlagName, "o", defaultValue, `Specify the output format as "human", "json", or "yaml".`)
+	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues)))
 
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string {
 		return output.ValidFlagValues
@@ -272,6 +277,11 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", *serviceAccount.Id, description)
 	}
 	return suggestions
+}
+
+func AddTypeFlag(cmd *cobra.Command) {
+	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types)))
+	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

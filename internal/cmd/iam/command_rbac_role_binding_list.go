@@ -79,7 +79,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("principal", "", "Principal whose role bindings should be listed.")
-	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to current user.")
+	cmd.Flags().Bool("current-user", false, "Show role bindings belonging to the current user.")
 	cmd.Flags().String("role", "", "List role bindings under a specific role given to a principal. Or if no principal is specified, list principals with the role.")
 
 	if c.cfg.IsCloudLogin() {
@@ -274,21 +274,21 @@ func (c *roleBindingCommand) confluentListRolePrincipals(cmd *cobra.Command, opt
 
 	var principals []string
 	if cmd.Flags().Changed("resource") {
-		r, err := cmd.Flags().GetString("resource")
+		resource, err := cmd.Flags().GetString("resource")
 		if err != nil {
 			return err
 		}
 
-		resource, err := parseAndValidateResourcePattern(r, false)
+		resourcePattern, err := parseAndValidateResourcePattern(resource, false)
 		if err != nil {
 			return err
 		}
 
-		if err := c.validateRoleAndResourceTypeV1(role, resource.ResourceType); err != nil {
+		if err := c.validateRoleAndResourceTypeV1(role, resourcePattern.ResourceType); err != nil {
 			return err
 		}
 
-		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resource.ResourceType, resource.Name, *scope)
+		principals, _, err = c.MDSClient.RBACRoleBindingSummariesApi.LookupPrincipalsWithRoleOnResource(c.createContext(), role, resourcePattern.ResourceType, resourcePattern.Name, *scope)
 		if err != nil {
 			return err
 		}

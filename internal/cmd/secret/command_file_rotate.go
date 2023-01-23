@@ -33,38 +33,38 @@ func (c *command) newRotateCommand() *cobra.Command {
 }
 
 func (c *command) rotate(cmd *cobra.Command, _ []string) error {
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	rotateMEK, err := cmd.Flags().GetBool("master-key")
+	masterKey, err := cmd.Flags().GetBool("master-key")
 	if err != nil {
 		return err
 	}
 
-	if rotateMEK {
-		oldPassphraseSource, err := cmd.Flags().GetString("passphrase")
+	if masterKey {
+		passphrase, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
 			return err
 		}
 
-		oldPassphrase, err := c.getConfigs(oldPassphraseSource, "passphrase", "Old Master Key Passphrase: ", true)
+		oldPassphrase, err := c.getConfigs(passphrase, "passphrase", "Old Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
 
-		newPassphraseSource, err := cmd.Flags().GetString("passphrase-new")
+		passphraseNew, err := cmd.Flags().GetString("passphrase-new")
 		if err != nil {
 			return err
 		}
 
-		newPassphrase, err := c.getConfigs(newPassphraseSource, "passphrase-new", "New Master Key Passphrase: ", true)
+		newPassphrase, err := c.getConfigs(passphraseNew, "passphrase-new", "New Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
 
-		masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsPath)
+		masterKey, err := c.plugin.RotateMasterKey(oldPassphrase, newPassphrase, localSecretsFile)
 		if err != nil {
 			return err
 		}
@@ -74,16 +74,16 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 		table.Add(&rotateOut{MasterKey: masterKey})
 		return table.Print()
 	} else {
-		passphraseSource, err := cmd.Flags().GetString("passphrase")
+		passphrase, err := cmd.Flags().GetString("passphrase")
 		if err != nil {
 			return err
 		}
 
-		passphrase, err := c.getConfigs(passphraseSource, "passphrase", "Master Key Passphrase: ", true)
+		configs, err := c.getConfigs(passphrase, "passphrase", "Master Key Passphrase: ", true)
 		if err != nil {
 			return err
 		}
 
-		return c.plugin.RotateDataKey(passphrase, localSecretsPath)
+		return c.plugin.RotateDataKey(configs, localSecretsFile)
 	}
 }

@@ -263,8 +263,8 @@ func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
 		return false
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
-	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(urlFlag, isTest)
+	url, _ := command.Flags().GetString("url")
+	return (url == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(url, isTest)
 }
 
 func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
@@ -272,8 +272,8 @@ func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
 		return false
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
-	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(urlFlag, isTest)
+	url, _ := command.Flags().GetString("url")
+	return (url == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(url, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
@@ -763,7 +763,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
-	noAuth, _ := cmd.Flags().GetBool("no-authentication")
+	noAuthentication, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
@@ -775,7 +775,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 		caCertPath:     caCertPath,
 		clientCertPath: clientCertPath,
 		clientKeyPath:  clientKeyPath,
-		noAuth:         noAuth,
+		noAuth:         noAuthentication,
 		prompt:         prompt,
 	}
 

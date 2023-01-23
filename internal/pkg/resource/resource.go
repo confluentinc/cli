@@ -17,7 +17,7 @@ const (
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
 	KafkaCluster          = "Kafka cluster"
-	KsqlCluster           = "kSQL cluster"
+	KsqlCluster           = "KSQL cluster"
 	MirrorTopic           = "mirror topic"
 	ProviderShare         = "provider share"
 	Pipeline              = "pipeline"
