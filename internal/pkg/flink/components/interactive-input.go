@@ -3,9 +3,18 @@ package components
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
 )
+
+var LivePrefixState struct {
+	LivePrefix string
+	IsEnable   bool
+}
+
+var lastStatement = ""
+var allStatements = ""
 
 func completer(in prompt.Document) []prompt.Suggest {
 
@@ -18,14 +27,46 @@ func completer(in prompt.Document) []prompt.Suggest {
 	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
 }
 
+func executor(in string) {
+	if strings.HasSuffix(in, ";") {
+		lastStatement = lastStatement + in
+		LivePrefixState.IsEnable = false
+		LivePrefixState.LivePrefix = in
+		allStatements = allStatements + lastStatement + "\n "
+		lastStatement = ""
+		return
+	}
+	lastStatement = lastStatement + in + " "
+	LivePrefixState.LivePrefix = ""
+	LivePrefixState.IsEnable = true
+}
+
+func changeLivePrefix() (string, bool) {
+	return LivePrefixState.LivePrefix, LivePrefixState.IsEnable
+}
+func isInputClosingSelect(input string) bool {
+	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
+}
+
 func promptInput(value string) string {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
 
-	return prompt.Input(">>> ", completer,
+	p := prompt.New(
+		executor,
+		completer,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory([]string{"SELECT * FROM users;"}),
 		prompt.SwitchKeyBindMode(prompt.EmacsKeyBind),
+		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
+			if input == "" {
+				return false
+			} else if isInputClosingSelect(input) && breakline {
+				return true
+			} else {
+				return false
+			}
+		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			ASCIICode: []byte{0x1b, 0x62},
 			Fn:        prompt.GoLeftWord,
@@ -44,7 +85,12 @@ func promptInput(value string) string {
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
+		prompt.OptionLivePrefix(changeLivePrefix),
 	)
+
+	p.Run()
+
+	return allStatements
 }
 
 func printPrefix() {
