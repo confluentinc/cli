@@ -19,32 +19,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 )
 
-var encryptionKeyPolicyAWS = template.Must(template.New("encryptionKey").Parse(`{{range  $i, $accountID := .}}{{if $i}},{{end}}{
-    "Sid" : "Allow Confluent accounts to use the key",
-    "Effect" : "Allow",
-    "Principal" : {
-      "AWS" : ["{{$accountID}}"]
-    },
-    "Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
-    "Resource" : "*"
-  }, {
-    "Sid" : "Allow Confluent accounts to attach persistent resources",
-    "Effect" : "Allow",
-    "Principal" : {
-      "AWS" : ["{{$accountID}}"]
-    },
-    "Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
-    "Resource" : "*"
-}{{end}}`))
+var encryptionKeyPolicyAWS = template.Must(template.New("encryptionKeyPolicyAWS").Parse(`{
+	"Sid" : "Allow Confluent accounts to use the key",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [{{range $i, $e := .}}{{if $i}},{{end}}
+			"{{$e}}"{{end}}
+		]
+	},
+	"Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
+	"Resource" : "*"
+}, {
+	"Sid" : "Allow Confluent accounts to attach persistent resources",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [{{range $i, $e := .}}{{if $i}},{{end}}
+			"{{$e}}"{{end}}
+		]
+	},
+	"Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
+	"Resource" : "*"
+}`))
 
-var keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6" //TODO: to const somewhere
-var keyVaultReader = "21090545-7ca7-4776-b22c-e363652d74d2"                      //TODO: to const somewhere
-
-var (
-	fields            = []string{"Id", "Key", "Roles", "Provider", "State", "CreatedAt", "UpdatedAt", "DeletedAt"}
-	humanRenames      = map[string]string{"Id": "ID", "Key": "Key", "Roles": "Roles", "Provider": "Provider", "State": "State", "CreatedAt": "Created At", "UpdatedAt": "Updated At", "DeletedAt": "Deleted At"}
-	structuredRenames = map[string]string{"Id": "id", "Key": "key", "Roles": "roles", "Provider": "provider", "State": "state", "CreatedAt": "created_at", "UpdatedAt": "updated_at", "DeletedAt": "deleted_at"}
-)
+const keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6"
+const keyVaultReader = "21090545-7ca7-4776-b22c-e363652d74d2"
 
 func (c *command) newRegisterCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -122,11 +120,12 @@ func (c *command) registerAzure(cmd *cobra.Command, keyString string) (*byokv1.B
 
 func (c *command) register(cmd *cobra.Command, args []string) error {
 	keyString := args[0]
+	var err error
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	/* outputFormat, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
-	}
+	} */
 
 	var postCreationStepInstructions string
 	var key *byokv1.ByokV1Key
@@ -150,12 +149,11 @@ func (c *command) register(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if outputFormat == output.Human.String() {
+	if output.GetFormat(cmd) == output.Human {
 		utils.Printf(cmd, errors.CreatedResourceMsg, resource.ByokKey, *key.Id)
-		utils.Printf(cmd, postCreationStepInstructions)
-	} else {
-		return output.StructuredOutput(outputFormat, postCreationStepInstructions) // TODO: output structured output
 	}
+
+	utils.Printf(cmd, postCreationStepInstructions)
 
 	return nil
 }
