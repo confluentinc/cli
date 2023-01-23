@@ -1,9 +1,7 @@
 {
   "id": "cck-003",
   "key": "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000",
-  "roles": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "roles": ["00000000-0000-0000-0000-000000000000"],
   "provider": "Azure",
   "state": "AVAILABLE",
   "created_at": "1999-02-24 00:00:00 +0000 UTC",
