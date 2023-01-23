@@ -28,8 +28,9 @@ func main() {
 	appController = ApplicationControllerInit(store, tableController, inputController, shortcutsController)
 
 	// Instantiate interactive components
+	inputController.runInteractiveInput()
 	interactiveOutput := components.InteractiveOutput(input, table, shortcuts)
-	inputController.supendOutputModeAndRunInputMode()
+
 	rootLayout := components.RootLayout(interactiveOutput)
 
 	// Start the application.

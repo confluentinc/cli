@@ -10,6 +10,7 @@ import (
 var input *tview.InputField
 
 type InputController struct {
+	runInteractiveInput             func()
 	supendOutputModeAndRunInputMode func()
 }
 
@@ -23,10 +24,13 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	// This will be run after tview.App gets suspended
 	// Upon returning tview.App will be resumed.
 	runInteractiveInput := func() {
+		// This prints again the last fetched data as a raw text table to the inputMode
+		if value != "" {
+			appController.printTable()
+		}
+
 		// Executed after tview.App is suspended and before go-prompt takes over
 		value = input.GetText()
-		// This prints again the last fetched data as a raw text table to the inputMode
-		appController.printTable()
 
 		// Run interactive input and take over terminal
 		value = components.InteractiveInput(value)
@@ -56,6 +60,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	})
 
 	return InputController{
+		runInteractiveInput:             runInteractiveInput,
 		supendOutputModeAndRunInputMode: supendOutputModeAndRunInputMode,
 	}
 }
