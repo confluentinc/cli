@@ -128,16 +128,11 @@ func (c *command) register(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var policyInstructions string
+	var postCreationStepInstructions string
 	var key *byokv1.ByokV1Key
 
 	if cmd.Flags().Changed("key_vault_id") && cmd.Flags().Changed("tenant_id") {
 		key, err = c.registerAzure(cmd, keyString)
-		if err != nil {
-			return err
-		}
-
-		policyInstructions, err = renderAzureEncryptionPolicy(key)
 		if err != nil {
 			return err
 		}
@@ -146,20 +141,20 @@ func (c *command) register(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-
-		policyInstructions, err = renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey.Roles)
-		if err != nil {
-			return err
-		}
 	} else {
 		return errors.New(fmt.Sprintf("invalid key format: %s", keyString))
 	}
 
+	postCreationStepInstructions, err = renderPostCreationStepInstructions(key)
+	if err != nil {
+		return err
+	}
+
 	if outputFormat == output.Human.String() {
 		utils.Printf(cmd, errors.CreatedResourceMsg, resource.ByokKey, *key.Id)
-		utils.Printf(cmd, policyInstructions)
+		utils.Printf(cmd, postCreationStepInstructions)
 	} else {
-		return output.StructuredOutput(outputFormat, policyInstructions) // TODO: output structured output
+		return output.StructuredOutput(outputFormat, postCreationStepInstructions) // TODO: output structured output
 	}
 
 	return nil
@@ -172,6 +167,24 @@ func isAWSKey(key string) bool {
 	}
 
 	return keyArn.Service == "kms" && keyArn.Resource[:4] == "key/"
+}
+
+func renderPostCreationStepInstructions(key *byokv1.ByokV1Key) (string, error) {
+	var instructions string
+	var err error
+	switch {
+	case key.Key.ByokV1AwsKey != nil:
+		instructions, err = renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey.Roles)
+		if err != nil {
+			return "", err
+		}
+	case key.Key.ByokV1AzureKey != nil:
+		instructions, err = renderAzureEncryptionPolicy(key)
+		if err != nil {
+			return "", err
+		}
+	}
+	return instructions, nil
 }
 
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
