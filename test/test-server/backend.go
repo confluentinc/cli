@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	// TestCloudURL is used to hardcode a specific port (1024) so tests can identify CCloud URLs
-	TestCloudURL          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
+	// TestCloudUrl is used to hardcode a specific port (1024) so tests can identify CCloud URLs
+	TestCloudUrl          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
 	TestKafkaRestProxyUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
-	TestV2CloudURL        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
+	TestV2CloudUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
 )
 
 // TestBackend consists of the servers for necessary mocked backend services
@@ -33,20 +33,22 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	srRouter := NewSRRouter(t)
 
 	backend := &TestBackend{
-		cloud:          newTestCloudServer(cloudRouter, TestCloudURL.Host),
-		v2Api:          newTestCloudServer(v2Router, TestV2CloudURL.Host),
+		cloud:          newTestCloudServer(cloudRouter, TestCloudUrl.Host),
+		v2Api:          newTestCloudServer(v2Router, TestV2CloudUrl.Host),
 		kafkaRestProxy: newTestCloudServer(kafkaRestProxyRouter, TestKafkaRestProxyUrl.Host),
 		mds:            httptest.NewServer(mdsRouter),
 		sr:             httptest.NewServer(srRouter),
 	}
+
 	cloudRouter.srApiUrl = backend.sr.URL
 	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
+
 	return backend
 }
 
 func StartTestCloudServer(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	router := NewCloudRouter(t, isAuditLogEnabled)
-	return &TestBackend{cloud: newTestCloudServer(router, TestCloudURL.Host)}
+	return &TestBackend{cloud: newTestCloudServer(router, TestCloudUrl.Host)}
 }
 
 func newTestCloudServer(handler http.Handler, address string) *httptest.Server {

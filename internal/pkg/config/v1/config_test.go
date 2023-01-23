@@ -74,7 +74,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Server: "http://test",
 	}
 	if isCloud {
-		platform.Name = testserver.TestCloudURL.String()
+		platform.Name = testserver.TestCloudUrl.String()
 	}
 	apiCredential := &Credential{
 		Name:     "api-key-abc-key-123",
