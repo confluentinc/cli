@@ -79,6 +79,10 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 				Code: `confluent kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
 			},
 			examples.Example{
+				Text: "Create a new dedicated cluster that uses a previously registered encryption key in AWS:",
+				Code: `confluent kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --byok "cck-a123z"`,
+			},
+			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
 			},
 		),
@@ -90,6 +94,8 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
 	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
 	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
+	cmd.Flags().String("byok", "", "ID of a registered customer-managed key.")
+	cmd.MarkFlagsMutuallyExclusive("encryption-key", "byok")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
