@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -196,6 +197,19 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	}
 	close(deliveryChan)
 	return scanErr
+}
+
+func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return "", "", nil, err
+	}
+	subject := topicNameStrategy(topicName)
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return "", "", nil, err
+	}
+	return valueFormat, subject, serializationProvider, nil
 }
 
 func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
