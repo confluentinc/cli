@@ -79,6 +79,8 @@ github.com/confluentinc/bincover v0.2.0 h1:WSS3MqzwJbosCLMOuF3tJ0pMpALzBfrm80Tb+
 github.com/confluentinc/bincover v0.2.0/go.mod h1:qeI1wx0RxdGTZtrJY0HVlgJ4NqC/X2Z+fHbvy87tgHE=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56 h1:d3jtqZj617ioF5uNhUV5IDd+b1dRBbDSFSuvhJ5R/pw=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56/go.mod h1:OM2gcXproU7isl/sSp9v8yiOY7zKrhk9F65j78pz33Y=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5 h1:HhEp4l9BiHqudoVlj9RwGtzQ5iP2p4Y6EOdYGykhKAo=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5/go.mod h1:nnO790V3cZFoV1lCGp7j8YOA5u/q/j9R04nbpxFIeO4=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
 github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5 h1:w0Z2hFxg8ng8gycWKRZFdus1R+q8D/I5AmN06NZso5s=
