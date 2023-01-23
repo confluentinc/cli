@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/byok/v1"
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
