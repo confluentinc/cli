@@ -25,7 +25,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	runInteractiveInput := func() {
 		r := func() {
 			// This prints again the last fetched data as a raw text table to the inputMode
-			if value != "" {
+			if value != "" && appController.getOutputMode() == "interactive" {
 				appController.printTable()
 			}
 
@@ -41,7 +41,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 
 		r()
 
-		if appController.getOutputMode() == "static" {
+		for appController.getOutputMode() == "static" {
 			appController.fetchDataAndPrintTable()
 			r()
 		}

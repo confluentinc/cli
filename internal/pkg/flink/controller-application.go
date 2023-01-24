@@ -7,13 +7,14 @@ import (
 )
 
 type ApplicationController struct {
-	focus                  func(component string)
-	printTable             func()
-	fetchDataAndPrintTable func()
-	suspendOutputMode      func(f func())
-	toggleOutputMode       func()
-	getView                func() string
-	getOutputMode          func() string
+	initInteractiveOutputMode func()
+	focus                     func(component string)
+	printTable                func()
+	fetchDataAndPrintTable    func()
+	suspendOutputMode         func(f func())
+	toggleOutputMode          func()
+	getView                   func() string
+	getOutputMode             func() string
 }
 
 var quit = func() {
@@ -23,15 +24,21 @@ var quit = func() {
 
 func ApplicationControllerInit(store Store, tableController TableController, inputController InputController, shortcutsController ShortcutsController) ApplicationController {
 	var data string
-	tAppSuspended := false
-	var outputMode = "interactive" // interactive or static
+	tAppSuspended := true
+	var outputMode = "static" // interactive or static
 
 	// Actions
+	initInteractiveOutputMode := func() {
+		tAppSuspended = false
+	}
+
 	suspendOutputMode := func(f func()) {
 		tAppSuspended = true
 		app.Suspend(f)
 		tAppSuspended = false
+
 	}
+
 	toggleOutputMode := func() {
 		if outputMode == "interactive" {
 			outputMode = "static"
@@ -97,5 +104,5 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	// Set Input Capture for the whole application
 	app.SetInputCapture(appInputCapture(tableController))
 
-	return ApplicationController{focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, getView, getOutputMode}
+	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, getView, getOutputMode}
 }
