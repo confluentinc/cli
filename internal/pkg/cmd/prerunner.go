@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -377,7 +376,13 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	url := regexp.MustCompile(`\w+:\/\/[\w.]+`).FindString(netrcMachineName)
+	url := pauth.CCloudURL
+	if ctx := r.Config.Context(); ctx != nil {
+		if ctxUrl := ctx.GetPlatformServer(); ctxUrl != "" {
+			url = ctxUrl
+		}
+	}
+
 	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
 	if err != nil {
 		return err
