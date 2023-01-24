@@ -20,28 +20,36 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	var value = ""
 
 	// Actions
-
 	// This will be run after tview.App gets suspended
 	// Upon returning tview.App will be resumed.
 	runInteractiveInput := func() {
-		// This prints again the last fetched data as a raw text table to the inputMode
-		if value != "" {
-			appController.printTable()
+		r := func() {
+			// This prints again the last fetched data as a raw text table to the inputMode
+			if value != "" {
+				appController.printTable()
+			}
+
+			// Executed after tview.App is suspended and before go-prompt takes over
+			value = input.GetText()
+
+			// Run interactive input and take over terminal
+			value = components.InteractiveInput(value, appController.toggleOutputMode)
+
+			// Executed still while tview.App is suspended and after go-prompt has finished
+			input.SetText(value)
 		}
 
-		// Executed after tview.App is suspended and before go-prompt takes over
-		value = input.GetText()
+		r()
 
-		// Run interactive input and take over terminal
-		value = components.InteractiveInput(value)
-
-		// Executed still while tview.App is suspended and after go-prompt has finished
-		input.SetText(value)
+		if appController.getOutputMode() == "static" {
+			appController.fetchDataAndPrintTable()
+			r()
+		}
 	}
 
 	supendOutputModeAndRunInputMode := func() {
 		appController.suspendOutputMode(runInteractiveInput)
-		appController.fetchData()
+		appController.fetchDataAndPrintTable()
 	}
 
 	// Event handlers

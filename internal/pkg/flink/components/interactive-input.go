@@ -48,8 +48,32 @@ func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func promptInput(value string) (string, []string) {
+func promptInput(value string, toggleOutputMode func()) (string, []string) {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
+
+	prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+		ASCIICode: []byte{0x1b, 0x62},
+		Fn:        prompt.GoLeftWord,
+	})
+
+	prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+		ASCIICode: []byte{0x1b, 0x66},
+		Fn:        prompt.GoRightWord,
+	})
+
+	t := func() []prompt.Option {
+		return []prompt.Option{prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			ASCIICode: []byte{0x1b, 0x62},
+			Fn:        prompt.GoLeftWord,
+		}), prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			ASCIICode: []byte{0x1b, 0x62},
+			Fn:        prompt.GoLeftWord,
+		}),
+		}
+	}
+
+	//opts := t()
+	t()
 
 	p := prompt.New(
 		executor,
@@ -67,6 +91,19 @@ func promptInput(value string) (string, []string) {
 				return false
 			}
 		}),
+		prompt.OptionAddASCIICodeBind(),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlQ,
+			Fn: func(b *prompt.Buffer) {
+				os.Exit(0)
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlO,
+			Fn: func(b *prompt.Buffer) {
+				toggleOutputMode()
+			},
+		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			ASCIICode: []byte{0x1b, 0x62},
 			Fn:        prompt.GoLeftWord,
@@ -74,12 +111,6 @@ func promptInput(value string) (string, []string) {
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlQ,
-			Fn: func(b *prompt.Buffer) {
-				os.Exit(0)
-			},
 		}),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
@@ -101,13 +132,13 @@ func printPrefix() {
 	fmt.Print("Flink SQL Client \n")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlQ]", "Quit")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlS]", "Smart Completion ")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlM]", "Interactive Output ON/OFF")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
-func InteractiveInput(value string) string {
+func InteractiveInput(value string, toggleOutputMode func()) string {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var in, _ = promptInput(value)
+	var in, _ = promptInput(value, toggleOutputMode)
 
 	return in
 }
