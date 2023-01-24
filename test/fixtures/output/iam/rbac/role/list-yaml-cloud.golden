@@ -1,3 +1,76 @@
+- name: DeveloperManage
+  policies:
+  - bindingscope: cloud-cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: CloudCluster
+      operations:
+      - Describe
+  - bindingscope: cluster
+    bindwithresource: false
+    allowedoperations:
+    - resourcetype: Cluster
+      operations:
+      - View
+      - AccessWithToken
+    - resourcetype: OwnKafkaClusterApiKey
+      operations:
+      - Describe
+      - Alter
+      - Delete
+      - Create
+    - resourcetype: OwnClusterApiKey
+      operations:
+      - Describe
+      - Alter
+      - Delete
+      - Create
+  - bindingscope: cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Topic
+      operations:
+      - Delete
+      - Describe
+      - Create
+      - DescribeConfigs
+    - resourcetype: Cluster
+      operations:
+      - Create
+      - DescribeConfigs
+    - resourcetype: TransactionalId
+      operations:
+      - Describe
+    - resourcetype: Group
+      operations:
+      - Describe
+      - Delete
+- name: ResourceOwner
+  policies:
+  - bindingscope: schema-registry-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: Subject
+      operations:
+      - Delete
+      - Read
+      - Write
+      - ReadCompatibility
+      - AlterAccess
+      - WriteCompatibility
+      - DescribeAccess
+- name: ResourceOwner
+  policies:
+  - bindingscope: ksql-cluster
+    bindwithresource: true
+    allowedoperations:
+    - resourcetype: KsqlCluster
+      operations:
+      - Describe
+      - AlterAccess
+      - Contribute
+      - DescribeAccess
+      - Terminate
 - name: CCloudRoleBindingAdmin
   policies:
   - bindingscope: root
@@ -224,79 +297,6 @@
       - Delete
       - DescribeAccess
       - AlterAccess
-- name: DeveloperManage
-  policies:
-  - bindingscope: cloud-cluster
-    bindwithresource: false
-    allowedoperations:
-    - resourcetype: CloudCluster
-      operations:
-      - Describe
-  - bindingscope: cluster
-    bindwithresource: false
-    allowedoperations:
-    - resourcetype: Cluster
-      operations:
-      - View
-      - AccessWithToken
-    - resourcetype: OwnKafkaClusterApiKey
-      operations:
-      - Describe
-      - Alter
-      - Delete
-      - Create
-    - resourcetype: OwnClusterApiKey
-      operations:
-      - Describe
-      - Alter
-      - Delete
-      - Create
-  - bindingscope: cluster
-    bindwithresource: true
-    allowedoperations:
-    - resourcetype: Topic
-      operations:
-      - Delete
-      - Describe
-      - Create
-      - DescribeConfigs
-    - resourcetype: Cluster
-      operations:
-      - Create
-      - DescribeConfigs
-    - resourcetype: TransactionalId
-      operations:
-      - Describe
-    - resourcetype: Group
-      operations:
-      - Describe
-      - Delete
-- name: ResourceOwner
-  policies:
-  - bindingscope: schema-registry-cluster
-    bindwithresource: true
-    allowedoperations:
-    - resourcetype: Subject
-      operations:
-      - Delete
-      - Read
-      - Write
-      - ReadCompatibility
-      - AlterAccess
-      - WriteCompatibility
-      - DescribeAccess
-- name: ResourceOwner
-  policies:
-  - bindingscope: ksql-cluster
-    bindwithresource: true
-    allowedoperations:
-    - resourcetype: KsqlCluster
-      operations:
-      - Describe
-      - AlterAccess
-      - Contribute
-      - DescribeAccess
-      - Terminate
 - name: DataDiscovery
   policies:
   - bindingscope: environment
