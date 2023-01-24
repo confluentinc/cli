@@ -101,7 +101,7 @@ func printPrefix() {
 	fmt.Print("Flink SQL Client \n")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlQ]", "Quit")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlS]", "Smart Completion ")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlM]", "Multiline")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlM]", "Interactive Output ON/OFF")
 }
 
 func InteractiveInput(value string) string {

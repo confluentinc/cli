@@ -34,7 +34,3 @@ As an example, I've added [option + arrow navigation](./main.go#L29) in the curr
 
 https://github.com/rivo/tview/pull/441
 https://github.com/rivo/tview/pull/5/
-
-#### Inspiration for multiline support
-
-https://github.com/c-bata/go-prompt/issues/25
