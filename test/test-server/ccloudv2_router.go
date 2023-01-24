@@ -7,7 +7,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var ccloudV2Handlers = map[string]func(*testing.T) http.HandlerFunc{
+var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
+	"/byok/v1/keys":                                  handleByokKeys,
+	"/byok/v1/keys/{id}":                             handleByokKey,
 	"/cdx/v1/consumer-shared-resources":              handleConsumerSharedResources,
 	"/cdx/v1/consumer-shared-resources/{id}:network": handlePrivateLinkNetworkConfig,
 	"/cdx/v1/consumer-shares":                        handleStreamSharingConsumerShares,
