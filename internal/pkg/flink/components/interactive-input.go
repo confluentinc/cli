@@ -32,7 +32,7 @@ func executor(in string) {
 		lastStatement = lastStatement + in
 		LivePrefixState.IsEnable = false
 		LivePrefixState.LivePrefix = in
-		allStatements = allStatements + lastStatement + "\n "
+		allStatements = allStatements + lastStatement
 		lastStatement = ""
 		return
 	}
@@ -48,7 +48,7 @@ func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func promptInput(value string) string {
+func promptInput(value string) (string, []string) {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
 
 	p := prompt.New(
@@ -90,7 +90,11 @@ func promptInput(value string) string {
 
 	p.Run()
 
-	return allStatements
+	// We need to remove the trailing empty string from the split
+	var statements = strings.Split(allStatements, ";")
+	statements = statements[:len(statements)-1]
+	finalStatement := statements[len(statements)-1]
+	return finalStatement, statements
 }
 
 func printPrefix() {
@@ -103,7 +107,7 @@ func printPrefix() {
 func InteractiveInput(value string) string {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var in = promptInput(value)
+	var in, _ = promptInput(value)
 
 	return in
 }
