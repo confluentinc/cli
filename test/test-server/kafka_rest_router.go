@@ -16,52 +16,57 @@ import (
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
-var kafkaRestHandlers = map[string]func(t *testing.T) http.HandlerFunc{
-	"/kafka/v3/clusters":                                                                                              handleKafkaRPClusters,
-	"/kafka/v3/clusters/{cluster_id}/acls:batch":                                                                      handleKafkaRPACLsBatch,
-	"/kafka/v3/clusters/{cluster_id}/broker-configs":                                                                  handleKafkaBrokerConfigs,
-	"/kafka/v3/clusters/{cluster_id}/broker-configs/{name}":                                                           handleKafkaBrokerConfigsName,
-	"/kafka/v3/clusters/{cluster_id}/broker-configs:alter":                                                            handleKafkaBrokerConfigsAlter,
-	"/kafka/v3/clusters/{cluster_id}/brokers":                                                                         handleKafkaBrokers,
-	"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks":                                                                 handleKafkaClustersClusterIdBrokersTasksGet,
-	"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}":                                                     handleKafkaClustersClusterIdBrokersTasksTaskTypeGet,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id:[^-].*}/tasks":                                                handleKafkaClustersClusterIdBrokersBrokerIdTasksGet,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id:[^-].*}/tasks/{task_type}":                                    handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}":                                                             handleKafkaBrokersBrokerId,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs":                                                     handleKafkaBrokerIdConfigs,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs/{name}":                                              handleKafkaBrokerIdConfigsName,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter":                                               handleKafkaBrokerIdConfigsAlter,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups":                                                                 handleKafkaRPConsumerGroups,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}":                                             handleKafkaRPConsumerGroup,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers":                                   handleKafkaRPConsumers,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary":                                 handleKafkaRPLagSummary,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags":                                        handleKafkaRPLags,
-	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}": handleKafkaRPLag,
-	"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions":                                                  handleKafkaTopicPartitions,
-	"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}":                                   handleKafkaTopicPartitionId,
-	"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment":                      handleKafkaTopicPartitionIdReassignment,
-	"/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status":                                      handleKafkaRPReplicaStatus,
-	"/kafka/v3/clusters/{cluster}/acls":                                                                               handleKafkaRPACLs,
-	"/kafka/v3/clusters/{cluster}/links":                                                                              handleKafkaRPLinks,
-	"/kafka/v3/clusters/{cluster}/links/-/mirrors":                                                                    handleKafkaRPAllMirrors,
-	"/kafka/v3/clusters/{cluster}/links/{link}":                                                                       handleKafkaRPLink,
-	"/kafka/v3/clusters/{cluster}/links/{link}/configs":                                                               handleKafkaRPLinkConfigs,
-	"/kafka/v3/clusters/{cluster}/links/{link:[^-].*}/mirrors":                                                        handleKafkaRPMirrors,
-	"/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}":                                           handleKafkaRPMirror,
-	"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote":                                                       handleKafkaRPMirrorsPromote,
-	"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status":                                          handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus,
-	"/kafka/v3/clusters/{cluster}/topics":                                                                             handleKafkaRPTopics,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}":                                                                     handleKafkaRPTopic,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}/configs":                                                             handleKafkaRPTopicConfigs,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter":                                                       handleKafkaRPConfigsAlter,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status":                               handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas":                                     handleKafkaRPPartitionReplicas,
+type route struct {
+	path    string
+	handler func(t *testing.T) http.HandlerFunc
+}
+
+var kafkaRestRoutes = []route{
+	{"/kafka/v3/clusters", handleKafkaRPClusters},
+	{"/kafka/v3/clusters/{cluster_id}/acls:batch", handleKafkaRPACLsBatch},
+	{"/kafka/v3/clusters/{cluster_id}/broker-configs", handleKafkaBrokerConfigs},
+	{"/kafka/v3/clusters/{cluster_id}/broker-configs/{name}", handleKafkaBrokerConfigsName},
+	{"/kafka/v3/clusters/{cluster_id}/broker-configs:alter", handleKafkaBrokerConfigsAlter},
+	{"/kafka/v3/clusters/{cluster_id}/brokers", handleKafkaBrokers},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks", handleKafkaClustersClusterIdBrokersTasksGet},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}", handleKafkaClustersClusterIdBrokersTasksTaskTypeGet},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}", handleKafkaBrokersBrokerId},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs", handleKafkaBrokerIdConfigs},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs/{name}", handleKafkaBrokerIdConfigsName},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter", handleKafkaBrokerIdConfigsAlter},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks", handleKafkaClustersClusterIdBrokersBrokerIdTasksGet},
+	{"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}", handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups", handleKafkaRPConsumerGroups},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}", handleKafkaRPConsumerGroup},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers", handleKafkaRPConsumers},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lag-summary", handleKafkaRPLagSummary},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags", handleKafkaRPLags},
+	{"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/lags/{topic_name}/partitions/{partition_id}", handleKafkaRPLag},
+	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions", handleKafkaTopicPartitions},
+	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}", handleKafkaTopicPartitionId},
+	{"/kafka/v3/clusters/{cluster_id}/topics/{topic_name}/partitions/{partition_id}/reassignment", handleKafkaTopicPartitionIdReassignment},
+	{"/kafka/v3/clusters/{cluster_id}/topics/{topic}/partitions/-/replica-status", handleKafkaRPReplicaStatus},
+	{"/kafka/v3/clusters/{cluster}/acls", handleKafkaRPACLs},
+	{"/kafka/v3/clusters/{cluster}/links", handleKafkaRPLinks},
+	{"/kafka/v3/clusters/{cluster}/links/-/mirrors", handleKafkaRPAllMirrors},
+	{"/kafka/v3/clusters/{cluster}/links/{link}", handleKafkaRPLink},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/configs", handleKafkaRPLinkConfigs},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors", handleKafkaRPMirrors},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}", handleKafkaRPMirror},
+	{"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote", handleKafkaRPMirrorsPromote},
+	{"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status", handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus},
+	{"/kafka/v3/clusters/{cluster}/topics", handleKafkaRPTopics},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}", handleKafkaRPTopic},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs", handleKafkaRPTopicConfigs},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter", handleKafkaRPConfigsAlter},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status", handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus},
+	{"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas", handleKafkaRPPartitionReplicas},
 }
 
 func NewKafkaRestProxyRouter(t *testing.T) *mux.Router {
 	router := mux.NewRouter()
-	for path, f := range kafkaRestHandlers {
-		router.HandleFunc(path, f(t))
+	for _, route := range kafkaRestRoutes {
+		router.HandleFunc(route.path, route.handler(t))
 	}
 	return router
 }
