@@ -31,6 +31,7 @@ func main() {
 	inputController.runInteractiveInput()
 	appController.initInteractiveOutputMode()
 	interactiveOutput := components.InteractiveOutput(input, table, shortcuts)
+	appController.printTable()
 
 	rootLayout := components.RootLayout(interactiveOutput)
 
