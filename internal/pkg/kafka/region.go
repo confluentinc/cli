@@ -13,8 +13,6 @@ type region struct {
 	RegionName string `human:"Region Name" serialized:"region_name"`
 }
 
-var Clouds = []string{"aws", "azure", "gcp"}
-
 func ListRegions(client *ccloudv1.Client, cloud string) ([]*region, error) {
 	metadataList, err := client.EnvironmentMetadata.Get(context.Background())
 	if err != nil {

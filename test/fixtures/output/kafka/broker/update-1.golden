@@ -1,4 +1,4 @@
-Updated the following configs for broker "1":
+Updated the following configurations for broker "1":
         Name       |   Value     
 -------------------+-------------
   compression.type | zip         

@@ -51,7 +51,7 @@ func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Confi
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
 		username:       mockEmail,
-		url:            testserver.TestCloudURL.String(),
+		url:            testserver.TestCloudUrl.String(),
 		envId:          MockEnvironmentId,
 		orgId:          orgId,
 		orgResourceId:  orgResourceId,

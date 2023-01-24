@@ -82,7 +82,7 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
-	} else if authURL == testserver.TestCloudURL.String() {
+	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
 		return nil, fmt.Errorf("unrecognized auth url: %s", authURL)

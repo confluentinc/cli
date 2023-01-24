@@ -24,21 +24,21 @@ type getReassignmentOut struct {
 func (c *partitionCommand) newReassignmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [id]",
-		Short: "List ongoing replica reassignments.",
-		Long:  "List ongoing replica reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
+		Short: "List ongoing partition reassignments.",
+		Long:  "List ongoing partition reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.reassignmentList,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all replica reassignments for the Kafka cluster.",
+				Text: "List all partition reassignments for the Kafka cluster.",
 				Code: "confluent kafka partition reassignment list",
 			},
 			examples.Example{
-				Text: `List replica reassignments for topic "my_topic".`,
+				Text: `List partition reassignments for topic "my_topic".`,
 				Code: "confluent kafka partition reassignment list --topic my_topic",
 			},
 			examples.Example{
-				Text: `List replica reassignments for partition "1" of topic "my_topic".`,
+				Text: `List partition reassignments for partition "1" of topic "my_topic".`,
 				Code: "confluent kafka partition reassignment list 1 --topic my_topic",
 			},
 		),

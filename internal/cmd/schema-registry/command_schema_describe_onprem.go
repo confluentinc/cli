@@ -45,7 +45,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-references")
+	showReferences, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		id = args[0]
 	}
 
-	if showRefs {
+	if showReferences {
 		return describeGraph(cmd, id, srClient, ctx)
 	}
 

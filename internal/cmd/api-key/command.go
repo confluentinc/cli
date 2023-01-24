@@ -13,7 +13,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type command struct {
@@ -104,46 +104,46 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 }
 
 func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
-	resourceId, err := cmd.Flags().GetString("resource")
+	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return "", "", "", err
 	}
-	if resourceId == "" {
+	if resource == "" {
 		return "", "", "", nil
 	}
 
-	resourceType := resource.LookupType(resourceId)
+	resourceType := presource.LookupType(resource)
 
 	var clusterId string
 	var apiKey string
 
 	switch resourceType {
-	case resource.Cloud:
+	case presource.Cloud:
 		break
-	case resource.KafkaCluster:
-		cluster, err := c.Context.FindKafkaCluster(resourceId)
+	case presource.KafkaCluster:
+		cluster, err := c.Context.FindKafkaCluster(resource)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
-	case resource.KsqlCluster:
-		cluster, err := v2Client.DescribeKsqlCluster(resourceId, c.EnvironmentId())
+	case presource.KsqlCluster:
+		cluster, err := v2Client.DescribeKsqlCluster(resource, c.EnvironmentId())
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.GetId()
-	case resource.SchemaRegistryCluster:
+	case presource.SchemaRegistryCluster:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
 			apiKey = cluster.SrCredentials.Key
 		}
 	default:
-		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resourceId)
+		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
 	}
 
 	return resourceType, clusterId, apiKey, nil

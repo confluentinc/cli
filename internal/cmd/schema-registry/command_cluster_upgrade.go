@@ -50,7 +50,7 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
