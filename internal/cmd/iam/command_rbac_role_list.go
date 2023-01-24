@@ -37,11 +37,13 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	// add public, dataplane, datagovernance, ksql, and streamcatalog roles
-	namespaces := []string{publicNamespace.Value(),
+	namespaces := []string{
 		dataplaneNamespace.Value(),
 		dataGovernanceNamespace.Value(),
 		ksqlNamespace.Value(),
-		streamCatalogNamespace.Value()}
+		publicNamespace.Value(),
+		streamCatalogNamespace.Value(),
+	}
 	opt := optional.NewString(strings.Join(namespaces, ","))
 	roles, err := c.namespaceRoles(opt)
 	if err != nil {

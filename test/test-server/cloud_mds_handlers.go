@@ -262,10 +262,22 @@ func rbacStreamCatalogRoles() []mdsv2alpha1.Role {
 				BindingScope:     "environment",
 				BindWithResource: false,
 				AllowedOperations: []mdsv2alpha1.Operation{
-					{ResourceType: "CatalogTagDefinition", Operations: []string{"Read", "Write", "Delete"}},
-					{ResourceType: "Topic", Operations: []string{"ReadCatalog", "WriteCatalog"}},
-					{ResourceType: "Subject", Operations: []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"}},
-					{ResourceType: "CatalogBusinessMetadataDefinition", Operations: []string{"Read", "Write", "Delete"}},
+					{
+						ResourceType: "CatalogTagDefinition",
+						Operations: []string{"Read", "Write", "Delete"},
+					},
+					{
+						ResourceType: "Topic",
+						Operations: []string{"ReadCatalog", "WriteCatalog"},
+					},
+					{
+						ResourceType: "Subject",
+						Operations: []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"},
+					},
+					{
+						ResourceType: "CatalogBusinessMetadataDefinition",
+						Operations: []string{"Read", "Write", "Delete"},
+					},
 				},
 			},
 		},
