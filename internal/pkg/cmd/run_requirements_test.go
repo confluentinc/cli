@@ -35,7 +35,7 @@ var (
 	cloudCfg = func(contextState *v1.ContextState) *v1.Config {
 		return &v1.Config{
 			Contexts: map[string]*v1.Context{"cloud": {
-				PlatformName: testserver.TestCloudURL.String(),
+				PlatformName: testserver.TestCloudUrl.String(),
 				State:        contextState,
 			}},
 			CurrentContext: "cloud",
@@ -45,7 +45,7 @@ var (
 
 	apiKeyCloudCfg = &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
-			PlatformName: testserver.TestCloudURL.String(),
+			PlatformName: testserver.TestCloudUrl.String(),
 			Credential:   &v1.Credential{CredentialType: v1.APIKey},
 			State:        regularOrgContextState,
 		}},
@@ -55,7 +55,7 @@ var (
 
 	nonAPIKeyCloudCfg = &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
-			PlatformName: testserver.TestCloudURL.String(),
+			PlatformName: testserver.TestCloudUrl.String(),
 			Credential:   &v1.Credential{CredentialType: v1.Username},
 			State:        regularOrgContextState,
 		}},

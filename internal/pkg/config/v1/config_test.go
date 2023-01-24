@@ -10,7 +10,6 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
-	"github.com/mitchellh/go-homedir"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -75,7 +74,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Server: "http://test",
 	}
 	if isCloud {
-		platform.Name = testserver.TestCloudURL.String()
+		platform.Name = testserver.TestCloudUrl.String()
 	}
 	apiCredential := &Credential{
 		Name:     "api-key-abc-key-123",
@@ -574,7 +573,7 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	require.NoError(t, err)
 	path := filepath.Join(home, ".confluent", "config.json")
 	require.Equal(t, path, New().GetFilename())

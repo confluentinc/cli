@@ -28,8 +28,8 @@ func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
 func (c *linkCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List previously created cluster links.",
-		Long:  "List previously created cluster links if the provided cluster is a destination cluster.",
+		Short: "List cluster links.",
+		Long:  "List cluster links if the provided cluster is a destination cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listOnPrem,
 	}

@@ -194,11 +194,11 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
 	c.loginCredentialsManager.SetCloudClient(client)
 
-	promptOnly, err := cmd.Flags().GetBool("prompt")
+	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
-	if promptOnly {
+	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
 
@@ -283,8 +283,8 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
-	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
-		return path, err
+	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
+		return caCertPath, err
 	}
 
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
@@ -293,11 +293,11 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
-	promptOnly, err := cmd.Flags().GetBool("prompt")
+	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
-	if promptOnly {
+	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd))
 	}
 

@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// schema registry urls
+// Schema Registry URLs
 const (
 	get                  = "/"
 	updateTopLevelConfig = "/config"

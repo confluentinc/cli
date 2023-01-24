@@ -48,7 +48,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
-	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")

@@ -65,11 +65,11 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 	if err != nil {
 		return err
 	}
-	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
+	saslMechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return err
 	}
-	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
+	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)

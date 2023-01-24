@@ -46,7 +46,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
-	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
@@ -98,7 +98,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -120,14 +120,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schemaPath,
+		SchemaPath:  &schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	err = serializationProvider.LoadSchema(schema, referencePathMap)
 	if err != nil {
 		return err
 	}
