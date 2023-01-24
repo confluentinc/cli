@@ -25,12 +25,12 @@ var kafkaRestHandlers = map[string]func(t *testing.T) http.HandlerFunc{
 	"/kafka/v3/clusters/{cluster_id}/brokers":                                                                         handleKafkaBrokers,
 	"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks":                                                                 handleKafkaClustersClusterIdBrokersTasksGet,
 	"/kafka/v3/clusters/{cluster_id}/brokers/-/tasks/{task_type}":                                                     handleKafkaClustersClusterIdBrokersTasksTaskTypeGet,
+	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id:[^-].*}/tasks":                                                handleKafkaClustersClusterIdBrokersBrokerIdTasksGet,
+	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id:[^-].*}/tasks/{task_type}":                                    handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet,
 	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}":                                                             handleKafkaBrokersBrokerId,
 	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs":                                                     handleKafkaBrokerIdConfigs,
 	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs/{name}":                                              handleKafkaBrokerIdConfigsName,
 	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/configs:alter":                                               handleKafkaBrokerIdConfigsAlter,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks":                                                       handleKafkaClustersClusterIdBrokersBrokerIdTasksGet,
-	"/kafka/v3/clusters/{cluster_id}/brokers/{broker_id}/tasks/{task_type}":                                           handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet,
 	"/kafka/v3/clusters/{cluster_id}/consumer-groups":                                                                 handleKafkaRPConsumerGroups,
 	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}":                                             handleKafkaRPConsumerGroup,
 	"/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers":                                   handleKafkaRPConsumers,
@@ -46,15 +46,15 @@ var kafkaRestHandlers = map[string]func(t *testing.T) http.HandlerFunc{
 	"/kafka/v3/clusters/{cluster}/links/-/mirrors":                                                                    handleKafkaRPAllMirrors,
 	"/kafka/v3/clusters/{cluster}/links/{link}":                                                                       handleKafkaRPLink,
 	"/kafka/v3/clusters/{cluster}/links/{link}/configs":                                                               handleKafkaRPLinkConfigs,
-	"/kafka/v3/clusters/{cluster}/links/{link}/mirrors":                                                               handleKafkaRPMirrors,
+	"/kafka/v3/clusters/{cluster}/links/{link:[^-].*}/mirrors":                                                        handleKafkaRPMirrors,
 	"/kafka/v3/clusters/{cluster}/links/{link}/mirrors/{mirror_topic_name}":                                           handleKafkaRPMirror,
 	"/kafka/v3/clusters/{cluster}/links/{link}/mirrors:promote":                                                       handleKafkaRPMirrorsPromote,
-	"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status":                                          HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus,
+	"/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status":                                          handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus,
 	"/kafka/v3/clusters/{cluster}/topics":                                                                             handleKafkaRPTopics,
 	"/kafka/v3/clusters/{cluster}/topics/{topic}":                                                                     handleKafkaRPTopic,
 	"/kafka/v3/clusters/{cluster}/topics/{topic}/configs":                                                             handleKafkaRPTopicConfigs,
 	"/kafka/v3/clusters/{cluster}/topics/{topic}/configs:alter":                                                       handleKafkaRPConfigsAlter,
-	"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status":                               HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus,
+	"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status":                               handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus,
 	"/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replicas":                                     handleKafkaRPPartitionReplicas,
 }
 
@@ -1558,7 +1558,7 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/partitions/{partition}/replica-status"
-func HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t *testing.T) http.HandlerFunc {
+func handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		partitionId, err := strconv.ParseInt(vars["partition"], 10, 32)
@@ -1602,7 +1602,7 @@ func HandleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t 
 }
 
 // Handler for: "/kafka/v3/clusters/{cluster}/topic/{topic}/partitions/-/replica-status"
-func HandleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T) http.HandlerFunc {
+func handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		w.Header().Set("Content-Type", "application/json")
