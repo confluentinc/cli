@@ -100,8 +100,8 @@ func promptInput(value string, history []string, toggleOutputMode func()) (strin
 	// We need to remove the trailing empty string from the split
 	var statements = strings.Split(allStatements, ";")
 	statements = statements[:len(statements)-1]
-	finalStatement := statements[len(statements)-1]
-	return finalStatement, statements
+	lastStatement = statements[len(statements)-1]
+	return lastStatement, statements
 }
 
 func printPrefix() {
@@ -111,10 +111,10 @@ func printPrefix() {
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
-func InteractiveInput(value string, history []string, toggleOutputMode func()) string {
+func InteractiveInput(value string, history []string, toggleOutputMode func()) (string, []string) {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var in, _ = promptInput(value, history, toggleOutputMode)
+	var lastStatement, statements = promptInput(value, history, toggleOutputMode)
 
-	return in
+	return lastStatement, statements
 }

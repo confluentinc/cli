@@ -17,7 +17,7 @@ type InputController struct {
 func InputControllerInit(inputRef *tview.InputField, appController *ApplicationController) InputController {
 	// Variables
 	input = inputRef
-	var value = ""
+	var lastStatement, statements = "", []string{}
 
 	// Initialization
 	history := loadHistory()
@@ -26,27 +26,29 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	// This will be run after tview.App gets suspended
 	// Upon returning tview.App will be resumed.
 	runInteractiveInput := func() {
-		r := func() {
+		run := func() {
 			// This prints again the last fetched data as a raw text table to the inputMode
-			if value != "" && appController.getOutputMode() == "interactive" {
+			if lastStatement != "" && appController.getOutputMode() == "interactive" {
 				appController.printTable()
 			}
 
 			// Executed after tview.App is suspended and before go-prompt takes over
-			value = input.GetText()
+			lastStatement = input.GetText()
 
 			// Run interactive input and take over terminal
-			value = components.InteractiveInput(value, history, appController.toggleOutputMode)
+			lastStatement, statements = components.InteractiveInput(lastStatement, history, appController.toggleOutputMode)
 
 			// Executed still while tview.App is suspended and after go-prompt has finished
-			input.SetText(value)
+			input.SetText(lastStatement)
+			history = append(history, statements...)
 		}
 
-		r()
+		// Run interactive input, take over terminal and save output to lastStatement and statements
+		run()
 
 		for appController.getOutputMode() == "static" {
 			appController.fetchDataAndPrintTable()
-			r()
+			run()
 		}
 	}
 
