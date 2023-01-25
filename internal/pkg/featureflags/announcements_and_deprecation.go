@@ -34,14 +34,24 @@ func NewMessages() *Messages {
 func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
 	commandToMessages := make(map[string]*Messages)
 
-	pairs, ok := resp.([]map[string]string)
+	list, ok := resp.([]interface{})
 	if !ok {
 		return commandToMessages
 	}
 
-	for _, pair := range pairs {
-		message := pair["message"]
-		pattern := pair["pattern"]
+	for _, data := range list {
+		pair, ok := data.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		message, ok := pair["message"].(string)
+		if !ok {
+			continue
+		}
+		pattern, ok := pair["pattern"].(string)
+		if !ok {
+			continue
+		}
 
 		subpatterns := strings.Split(pattern, " ")
 
@@ -112,21 +122,22 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
-					var msg string
-					if len(flag) == 1 {
-						flag = cmd.Flags().ShorthandLookup(flag).Name
+					if !cmd.Flags().Changed(flag) {
+						continue
 					}
-					if cmd.Flags().Changed(flag) {
-						if featureFlag == DeprecationNotices {
-							msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
-						}
+
+					var msg string
+					if featureFlag == DeprecationNotices {
+						msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
 						if flagsAndMsg.FlagMessages[i] == "" {
 							msg = fmt.Sprintf("%s.", msg)
 						} else {
 							msg = fmt.Sprintf("%s: %s", msg, flagsAndMsg.FlagMessages[i])
 						}
-						utils.ErrPrintln(cmd, msg)
+					} else {
+						msg = flagsAndMsg.FlagMessages[i]
 					}
+					utils.ErrPrintln(cmd, msg)
 				}
 			}
 		}
