@@ -52,7 +52,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
-		ByokClient:             newByokv1Client(url, userAgent, unsafeTrace),
+		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
