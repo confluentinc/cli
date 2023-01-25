@@ -13,7 +13,7 @@ type ApplicationController struct {
 	fetchDataAndPrintTable    func()
 	suspendOutputMode         func(f func())
 	toggleOutputMode          func()
-	quit                      func()
+	exitApplication           func()
 	getView                   func() string
 	getOutputMode             func() string
 }
@@ -60,7 +60,7 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	}
 
 	// This function should be used to proparly stop the application, cache saving, cleanup and so on
-	quit := func() {
+	exitApplication := func() {
 		app.Stop()
 		os.Exit(0)
 	}
@@ -82,7 +82,7 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	appInputCapture := func(tableController TableController) func(event *tcell.EventKey) *tcell.EventKey {
 		return func(event *tcell.EventKey) *tcell.EventKey {
 			if event.Key() == tcell.KeyCtrlQ {
-				quit()
+				exitApplication()
 				return nil
 			} else if event.Key() == tcell.KeyCtrlT {
 				tableController.borders()
@@ -94,7 +94,7 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 			} else if event.Key() == tcell.KeyCtrlC {
 				if !table.HasFocus() {
 					// TODO move this to appController stop
-					quit()
+					exitApplication()
 				} else {
 					tableController.onCtrlC()
 				}
@@ -107,5 +107,5 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	// Set Input Capture for the whole application
 	app.SetInputCapture(appInputCapture(tableController))
 
-	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, quit, getView, getOutputMode}
+	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, exitApplication, getView, getOutputMode}
 }

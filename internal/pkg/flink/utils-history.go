@@ -27,6 +27,22 @@ func loadHistory() []string {
 	return history.Data
 }
 
-func saveHistory() {
+func saveHistory(history []string) {
+	// Convert struct to JSON
+	b, err := json.Marshal(History{history})
+	if err != nil {
+		panic(err)
+	}
 
+	// Write JSON to file
+	f, err := os.Create("test.json")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	_, err = f.Write(b)
+	if err != nil {
+		panic(err)
+	}
 }

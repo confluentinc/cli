@@ -42,7 +42,7 @@ func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController Table
 		case "Toggle Display Mode":
 			tableController.borders()
 		case "Quit":
-			appControler.quit()
+			appControler.exitApplication()
 		}
 	}
 
