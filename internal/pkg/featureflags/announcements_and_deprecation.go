@@ -18,43 +18,59 @@ const (
 	DeprecationNotices = "cli.deprecation_notices"
 )
 
-type FlagsAndMsg struct {
-	Flags        []string
-	FlagMessages []string
-	CmdMessage   string
+type Messages struct {
+	CommandMessage string
+	Flags          []string
+	FlagMessages   []string
 }
 
-func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
-	cmdToFlagsAndMsg := make(map[string]*FlagsAndMsg)
-	for _, val := range ld.([]interface{}) {
-		if len(val.(map[string]interface{})) == 0 {
-			break
-		}
-		var flags []string
-		var msg = val.(map[string]interface{})["message"].(string)
-		var command = val.(map[string]interface{})["pattern"].(string)
-		if idx := strings.Index(command, "-"); idx != -1 {
-			flags = strings.Split(command[idx:], " ")
-			for i := range flags {
-				flags[i] = strings.TrimLeft(flags[i], "-")
+func NewMessages() *Messages {
+	return &Messages{
+		Flags:        []string{},
+		FlagMessages: []string{},
+	}
+}
+
+func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
+	commandToMessages := make(map[string]*Messages)
+
+	pairs, ok := resp.([]map[string]string)
+	if !ok {
+		return commandToMessages
+	}
+
+	for _, pair := range pairs {
+		message := pair["message"]
+		pattern := pair["pattern"]
+
+		subpatterns := strings.Split(pattern, " ")
+
+		idx := 0
+		for _, subpattern := range subpatterns {
+			if strings.HasPrefix(subpattern, "-") {
+				break
 			}
-			command = command[:idx-1]
+			idx++
 		}
-		if len(flags) == 0 {
-			cmdToFlagsAndMsg[command] = &FlagsAndMsg{CmdMessage: msg}
+
+		command := strings.Join(subpatterns[:idx], " ")
+
+		if _, ok := commandToMessages[command]; !ok {
+			commandToMessages[command] = NewMessages()
+		}
+
+		if idx == len(subpatterns) {
+			commandToMessages[command].CommandMessage = message
 		} else {
-			msgs := make([]string, len(flags))
-			for i := range msgs {
-				msgs[i] = msg
+			for _, subpattern := range subpatterns[idx:] {
+				flag := strings.TrimLeft(subpattern, "-")
+				commandToMessages[command].Flags = append(commandToMessages[command].Flags, flag)
+				commandToMessages[command].FlagMessages = append(commandToMessages[command].FlagMessages, message)
 			}
-			if _, ok := cmdToFlagsAndMsg[command]; !ok {
-				cmdToFlagsAndMsg[command] = &FlagsAndMsg{Flags: []string{}, FlagMessages: []string{}}
-			}
-			cmdToFlagsAndMsg[command].Flags = append(cmdToFlagsAndMsg[command].Flags, flags...)
-			cmdToFlagsAndMsg[command].FlagMessages = append(cmdToFlagsAndMsg[command].FlagMessages, msgs...)
 		}
 	}
-	return cmdToFlagsAndMsg
+
+	return commandToMessages
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
@@ -90,9 +106,9 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
 				if featureFlag == DeprecationNotices {
-					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CmdMessage))
+					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CommandMessage))
 				} else {
-					utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+					utils.ErrPrintln(cmd, flagsAndMsg.CommandMessage)
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
