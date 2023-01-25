@@ -1,0 +1,3 @@
+{
+  "data": ["SELECT * FROM users;", "SET CONFIG=TEST;", "DESCRIBE users;"]
+}
