@@ -524,6 +524,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	}
 
 	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
+	cfg.Context().Platform = &v1.Platform{Name: "confluent.cloud", Server: "https://confluent.cloud"}
 	err := cfg.Context().DeleteUserAuth()
 	require.NoError(t, err)
 	r.Config = cfg
