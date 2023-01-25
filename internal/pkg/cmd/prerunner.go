@@ -376,6 +376,7 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
+
 	url := pauth.CCloudURL
 	if ctxUrl := r.Config.Context().GetPlatformServer(); ctxUrl != "" {
 		url = ctxUrl
