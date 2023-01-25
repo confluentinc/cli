@@ -28,6 +28,12 @@ func loadHistory() []string {
 }
 
 func saveHistory(history []string) {
+	// Limit history to 500 entries
+	length := len(history)
+	if length > 500 {
+		history = history[length-500:]
+	}
+
 	// Convert struct to JSON
 	b, err := json.Marshal(History{history})
 	if err != nil {
