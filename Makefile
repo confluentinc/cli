@@ -53,7 +53,6 @@ include ./mk-files/utils.mk
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_VERSION = 1.9.3-RC3
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -144,13 +143,7 @@ cmd/lint/en_US.dic:
 
 .PHONY: lint-licenses
 lint-licenses:
-	go-licenses report ./...
-
-.PHONY: test-prep
-test-prep:
-ifdef CI
-	@echo "mode: atomic" > coverage.txt
-endif
+	go-licenses check ./...
 
 .PHONY: unit-test
 unit-test:
@@ -170,7 +163,7 @@ else
 endif
 
 .PHONY: test
-test: test-prep unit-test int-test
+test: unit-test int-test
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

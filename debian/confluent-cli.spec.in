@@ -46,7 +46,7 @@ You can use the Confluent command line interface (CLI) to manage Confluent Platf
 /usr/share/doc/cli/
 
 %clean
-#used to cleanup things outside the build area and possibly inside.
+#used to clean up things outside the build area and possibly inside.
 [ "%{buildroot}" != "/" ] && %{__rm} -rf %{buildroot}
 
 %changelog

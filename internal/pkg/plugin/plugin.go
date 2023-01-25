@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -28,20 +27,15 @@ type pluginInfo struct {
 func SearchPath(cfg *v1.Config) map[string][]string {
 	log.CliLogger.Debugf("Recursively searching $PATH for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
-	delimiter := ":"
-	if runtime.GOOS == "windows" {
-		delimiter = ";"
-	}
-
 	plugins := make(map[string][]string)
-	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			log.CliLogger.Warnf("unable to read directory from $PATH: %s", dir)
 			continue
 		}
 
-		if home, err := homedir.Dir(); err == nil {
+		if home, err := os.UserHomeDir(); err == nil {
 			if strings.HasPrefix(dir, home) {
 				dir = filepath.Join("~", strings.TrimPrefix(dir, home))
 			}

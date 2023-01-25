@@ -16,7 +16,7 @@ import (
 func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <link>",
-		Short: "Delete a previously created cluster link.",
+		Short: "Delete a cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.delete,
 	}

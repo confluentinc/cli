@@ -173,16 +173,16 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 }
 
 func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
-	srAPIKey, err := cmd.Flags().GetString("schema-registry-api-key")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, nil, err
 	}
-	srAPISecret, err := cmd.Flags().GetString("schema-registry-api-secret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, nil, err
 	}
 
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, srAPIKey, srAPISecret)
+	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
 	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
 		err = new(errors.SRNotAuthenticatedError)
 	}

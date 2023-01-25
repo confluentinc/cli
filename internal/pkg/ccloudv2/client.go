@@ -43,7 +43,7 @@ type Client struct {
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
 	url := getServerUrl(baseUrl)
 	if isTest {
-		url = testserver.TestV2CloudURL.String()
+		url = testserver.TestV2CloudUrl.String()
 	}
 
 	return &Client{

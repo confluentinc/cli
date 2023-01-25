@@ -25,13 +25,13 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	listAllClusters, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
 	var clusters []cmkv2.CmkV2Cluster
-	if listAllClusters {
+	if all {
 		environments, err := c.V2Client.ListOrgEnvironments()
 		if err != nil {
 			return err
