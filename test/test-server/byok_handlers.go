@@ -113,7 +113,6 @@ func handleByokKeysCreate(t *testing.T) http.HandlerFunc {
 		byokStoreV1[*byokKey.Id] = byokKey
 		err = json.NewEncoder(w).Encode(byokKey)
 		require.NoError(t, err)
-
 	}
 }
 
