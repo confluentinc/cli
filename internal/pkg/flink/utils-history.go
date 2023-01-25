@@ -46,3 +46,21 @@ func saveHistory(history []string) {
 		panic(err)
 	}
 }
+
+func appendToHistory(history []string, statements []string) []string {
+	formattedStatements := formatStatements(statements)
+
+	history = append(history, formattedStatements...)
+	return history
+}
+
+func formatStatements(statements []string) []string {
+	var formattedStatements []string
+
+	for _, statement := range statements {
+		if statement != "" {
+			formattedStatements = append(formattedStatements, statement+";")
+		}
+	}
+	return formattedStatements
+}

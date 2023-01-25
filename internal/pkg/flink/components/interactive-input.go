@@ -57,6 +57,7 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory(history),
+		// TODO - Decide if we want to use the emacs keybind mode, or basic, or make it customizable
 		prompt.SwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			if input == "" {

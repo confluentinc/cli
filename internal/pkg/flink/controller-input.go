@@ -41,7 +41,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 
 			// Executed still while tview.App is suspended and after go-prompt has finished
 			input.SetText(lastStatement)
-			history = append(history, statements...)
+			history = appendToHistory(history, statements)
 		}
 
 		// Run interactive input, take over terminal and save output to lastStatement and statements
