@@ -13,13 +13,9 @@ type ApplicationController struct {
 	fetchDataAndPrintTable    func()
 	suspendOutputMode         func(f func())
 	toggleOutputMode          func()
+	quit                      func()
 	getView                   func() string
 	getOutputMode             func() string
-}
-
-var quit = func() {
-	app.Stop()
-	os.Exit(0)
 }
 
 func ApplicationControllerInit(store Store, tableController TableController, inputController InputController, shortcutsController ShortcutsController) ApplicationController {
@@ -63,6 +59,13 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 		printTable()
 	}
 
+	// This function should be used to proparly stop the application, cache saving, cleanup and so on
+	quit := func() {
+		app.Stop()
+		os.Exit(0)
+	}
+
+	// Getters
 	getView := func() string {
 		if tAppSuspended {
 			return "inputMode"
@@ -104,5 +107,5 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	// Set Input Capture for the whole application
 	app.SetInputCapture(appInputCapture(tableController))
 
-	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, getView, getOutputMode}
+	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, quit, getView, getOutputMode}
 }

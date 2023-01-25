@@ -22,7 +22,7 @@ func main() {
 	var appController ApplicationController
 	tableController := TableControllerInit(table, &appController)
 	inputController := InputControllerInit(input, &appController)
-	shortcutsController := ShortcutsControllerInit(shortcuts, tableController)
+	shortcutsController := ShortcutsControllerInit(shortcuts, tableController, &appController)
 
 	// Instatiate Application Controller
 	appController = ApplicationControllerInit(store, tableController, inputController, shortcutsController)

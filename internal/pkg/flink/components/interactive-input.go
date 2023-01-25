@@ -48,7 +48,7 @@ func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func promptInput(value string, history []string, toggleOutputMode func()) (string, []string) {
+func promptInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
 
 	p := prompt.New(
@@ -71,7 +71,7 @@ func promptInput(value string, history []string, toggleOutputMode func()) (strin
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlQ,
 			Fn: func(b *prompt.Buffer) {
-				os.Exit(0)
+				exitApplication()
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -111,10 +111,10 @@ func printPrefix() {
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
-func InteractiveInput(value string, history []string, toggleOutputMode func()) (string, []string) {
+func InteractiveInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var lastStatement, statements = promptInput(value, history, toggleOutputMode)
+	var lastStatement, statements = promptInput(value, history, toggleOutputMode, exitApplication)
 
 	return lastStatement, statements
 }

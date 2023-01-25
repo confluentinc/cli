@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 
 	"github.com/gdamore/tcell/v2"
@@ -30,7 +29,7 @@ var appShortcuts = []Shortcut{
 
 var shortcuts *tview.TextView
 
-func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController TableController) ShortcutsController {
+func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController TableController, appControler *ApplicationController) ShortcutsController {
 	shortcuts = shortcutsRef
 
 	for index, shortcut := range appShortcuts {
@@ -43,14 +42,11 @@ func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController Table
 		case "Toggle Display Mode":
 			tableController.borders()
 		case "Quit":
-			// TODO import appController and intputController and call appController.stop
-			app.Stop()
-			os.Exit(0)
+			appControler.quit()
 		}
 	}
 
 	shortcuts.SetHighlightedFunc(shortcutHighlighted)
-	//shortcuts.Highlight("0")
 
 	return ShortcutsController{}
 }

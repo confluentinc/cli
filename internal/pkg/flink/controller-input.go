@@ -36,7 +36,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 			lastStatement = input.GetText()
 
 			// Run interactive input and take over terminal
-			lastStatement, statements = components.InteractiveInput(lastStatement, history, appController.toggleOutputMode)
+			lastStatement, statements = components.InteractiveInput(lastStatement, history, appController.toggleOutputMode, appController.quit)
 
 			// Executed still while tview.App is suspended and after go-prompt has finished
 			input.SetText(lastStatement)
