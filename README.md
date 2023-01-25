@@ -101,7 +101,3 @@ For detailed documentation, refer to [How to Build the CLI with confluent-kafka-
 #### Troubleshooting
 
 Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
-
-If `make deps` fails with an "unknown revision" error, you probably need to put your username and a [GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
-in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829).
-The access token needs to be [authorized for SSO](https://docs.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on).
