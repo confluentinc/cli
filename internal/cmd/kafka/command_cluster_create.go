@@ -80,7 +80,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a previously registered encryption key in AWS:",
-				Code: `confluent kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --byok "cck-a123z"`,
+				Code: `confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z`,
 			},
 			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
