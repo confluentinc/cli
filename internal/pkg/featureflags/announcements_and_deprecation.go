@@ -55,19 +55,15 @@ func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
 
 		command := strings.Join(subpatterns[:idx], " ")
 
-		flags := make([]string, len(subpatterns)-idx)
-		for i, subpattern := range subpatterns[idx:] {
-			flags[i] = strings.TrimLeft(subpattern, "-")
-		}
-
 		if _, ok := commandToMessages[command]; !ok {
 			commandToMessages[command] = NewMessages()
 		}
 
-		if len(flags) == 0 {
+		if idx == len(subpatterns) {
 			commandToMessages[command].CommandMessage = message
 		} else {
-			for _, flag := range flags {
+			for _, subpattern := range subpatterns[idx:] {
+				flag := strings.TrimLeft(subpattern, "-")
 				commandToMessages[command].Flags = append(commandToMessages[command].Flags, flag)
 				commandToMessages[command].FlagMessages = append(commandToMessages[command].FlagMessages, message)
 			}
