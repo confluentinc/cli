@@ -45,11 +45,12 @@ func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
 
 		subpatterns := strings.Split(pattern, " ")
 
-		idx := len(subpatterns)
-		for i, subpattern := range subpatterns {
+		idx := 0
+		for _, subpattern := range subpatterns {
 			if strings.HasPrefix(subpattern, "-") {
-				idx = i
+				break
 			}
+			idx++
 		}
 
 		command := strings.Join(subpatterns[:idx], " ")

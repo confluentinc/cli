@@ -29,6 +29,10 @@ func TestGetAnnouncementsOrDeprecation(t *testing.T) {
 			"pattern": "--flag-only",
 			"message": "3",
 		},
+		{
+			"pattern": "--multiple --flags",
+			"message": "4",
+		},
 	}
 
 	expected := map[string]*Messages{
@@ -43,8 +47,8 @@ func TestGetAnnouncementsOrDeprecation(t *testing.T) {
 			FlagMessages:   []string{},
 		},
 		"": {
-			Flags:        []string{"flag-only"},
-			FlagMessages: []string{"3"},
+			Flags:        []string{"flag-only", "multiple", "flags"},
+			FlagMessages: []string{"3", "4", "4"},
 		},
 	}
 
