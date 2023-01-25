@@ -96,7 +96,6 @@ To build for Windows/amd64, install `mingw-w64` compilers with homebrew:
     GOOS=windows make cross-build
 
 Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
-For detailed documentation, refer to [How to Build the CLI with confluent-kafka-go for All Platforms](https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2610299218/How+to+Build+CLI+with+Confluent-Kafka-go+for+All+Platforms)
 
 #### Troubleshooting
 

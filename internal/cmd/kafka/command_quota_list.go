@@ -41,7 +41,6 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// TODO use API for filtering by principal when it becomes available: https://confluentinc.atlassian.net/browse/KPLATFORM-733
 	if cmd.Flags().Changed("principal") {
 		principal, err := cmd.Flags().GetString("principal")
 		if err != nil {
