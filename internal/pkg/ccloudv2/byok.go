@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func newByokv1Client(url, userAgent string, unsafeTrace bool) *byokv1.APIClient {
+func newByokV1Client(url, userAgent string, unsafeTrace bool) *byokv1.APIClient {
 	cfg := byokv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
