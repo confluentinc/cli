@@ -44,9 +44,9 @@ To list all available versions:
 
     curl -sL https://cnfl.io/cli | sh -s -- -l
 
-For example, to install version `v2.3.1`:
+For example, to install version `v3.0.0`:
 
-    curl -sL https://cnfl.io/cli | sh -s -- v2.3.1
+    curl -sL https://cnfl.io/cli | sh -s -- v3.0.0
 
 ### Download a Tarball from S3
 
@@ -54,7 +54,7 @@ To list all available versions:
 
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
-For example, to list all available packages for version v2.3.1:
+For example, to list all available packages for version v3.0.0:
 
     VERSION=v3.0.0 # or latest
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
