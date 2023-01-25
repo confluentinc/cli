@@ -12,6 +12,7 @@ var input *tview.InputField
 type InputController struct {
 	runInteractiveInput             func()
 	supendOutputModeAndRunInputMode func()
+	getHistory                      func() []string
 }
 
 func InputControllerInit(inputRef *tview.InputField, appController *ApplicationController) InputController {
@@ -57,6 +58,11 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 		appController.fetchDataAndPrintTable()
 	}
 
+	// Getters
+	getHistory := func() []string {
+		return history
+	}
+
 	// Event handlers
 	input.SetDoneFunc(func(key tcell.Key) {
 		appController.focus("table")
@@ -75,5 +81,6 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	return InputController{
 		runInteractiveInput:             runInteractiveInput,
 		supendOutputModeAndRunInputMode: supendOutputModeAndRunInputMode,
+		getHistory:                      getHistory,
 	}
 }

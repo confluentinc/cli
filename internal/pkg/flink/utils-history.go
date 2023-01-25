@@ -35,7 +35,7 @@ func saveHistory(history []string) {
 	}
 
 	// Write JSON to file
-	f, err := os.Create("test.json")
+	f, err := os.Create(".cache/history.json")
 	if err != nil {
 		panic(err)
 	}

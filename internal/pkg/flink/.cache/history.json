@@ -1,3 +1,11 @@
 {
-  "data": ["SELECT * FROM users;", "SET CONFIG=TEST;", "DESCRIBE users;"]
+  "data": [
+    "SELECT * FROM users;",
+    "SET CONFIG=TEST;",
+    "DESCRIBE users;",
+    "asdasd",
+    "select",
+    "new",
+    "select"
+  ]
 }

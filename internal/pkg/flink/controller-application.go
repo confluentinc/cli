@@ -61,6 +61,7 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 
 	// This function should be used to proparly stop the application, cache saving, cleanup and so on
 	exitApplication := func() {
+		saveHistory(inputController.getHistory())
 		app.Stop()
 		os.Exit(0)
 	}
