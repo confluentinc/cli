@@ -376,7 +376,14 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	credentials, err := r.getCCloudCredentials(netrcMachineName, orgResourceId)
+	url := pauth.CCloudURL
+	if ctx := r.Config.Context(); ctx != nil {
+		if ctxUrl := ctx.GetPlatformServer(); ctxUrl != "" {
+			url = ctxUrl
+		}
+	}
+
+	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -386,8 +393,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return nil
 	}
 
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, url)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -399,10 +406,11 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
+		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
@@ -414,7 +422,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*
 		return nil, err
 	}
 
-	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
+	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, orgResourceId)
 	if err != nil {
 		return nil, err
 	}
