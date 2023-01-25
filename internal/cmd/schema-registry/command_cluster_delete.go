@@ -47,7 +47,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
 	ctx := context.Background()
 
-	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}

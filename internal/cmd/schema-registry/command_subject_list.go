@@ -57,14 +57,14 @@ func listSubjects(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
-	subjectPrefix, err := cmd.Flags().GetString("prefix")
+	prefix, err := cmd.Flags().GetString("prefix")
 	if err != nil {
 		return err
 	}
 
 	listOpts := srsdk.ListOpts{
 		Deleted:       optional.NewBool(deleted),
-		SubjectPrefix: optional.NewString(subjectPrefix),
+		SubjectPrefix: optional.NewString(prefix),
 	}
 	subjects, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {

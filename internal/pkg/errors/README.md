@@ -67,7 +67,7 @@ return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ResolvingConfigPath
 ```
 
 ```
-LookUpRoleErrorMsg              = "failed to lookup role \"%s\""
+LookUpRoleErrorMsg              = "failed to look up role \"%s\""
 LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
 
 return errors.NewWrapErrorWithSuggestions(err, fmt.Sprintf(errors.LookUpRoleErrorMsg, roleName), errors.LookUpRoleSuggestions)

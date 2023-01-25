@@ -26,22 +26,22 @@ func (c *command) newFileCommand() *cobra.Command {
 }
 
 func (c *command) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	remoteSecretsPath, err := cmd.Flags().GetString("remote-secrets-file")
+	remoteSecretsFile, err := cmd.Flags().GetString("remote-secrets-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	return configPath, localSecretsPath, remoteSecretsPath, nil
+	return configFile, localSecretsFile, remoteSecretsFile, nil
 }
 
 func (c *command) getConfigs(configSource string, inputType string, prompt string, secure bool) (string, error) {

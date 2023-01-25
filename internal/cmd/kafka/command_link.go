@@ -20,7 +20,7 @@ type linkCommand struct {
 func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "link",
-		Short:       "Manages inter-cluster links.",
+		Short:       "Manage inter-cluster links.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 

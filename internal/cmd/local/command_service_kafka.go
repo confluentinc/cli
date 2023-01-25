@@ -219,7 +219,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		}
 	}
 
-	format, err := command.Flags().GetString("value-format")
+	valueFormat, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
@@ -227,21 +227,21 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	// "consume" -> "consumer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
-	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
+	scriptFile, err := c.ch.GetKafkaScript(valueFormat, modeNoun)
 	if err != nil {
 		return err
 	}
 
-	var cloudConfigFile string
+	var config string
 	var cloudServer string
 
 	if cloud {
-		cloudConfigFile, err = command.Flags().GetString("config")
+		config, err = command.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
 
-		data, err := os.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(config)
 		if err != nil {
 			return err
 		}
@@ -262,7 +262,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
 	if cloud {
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
-		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
+		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
 	} else {
 		if !utils.Contains(kafkaArgs, "--bootstrap-server") {

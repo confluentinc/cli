@@ -16,9 +16,10 @@ import (
 func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
+		Short: "Update Kafka broker configurations.",
+		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.update,
-		Short: "Update per-broker or cluster-wide Kafka broker configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -87,9 +88,9 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		if all {
-			utils.Printf(c.Command, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
+			utils.Printf(c.Command, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
 		} else {
-			utils.Printf(c.Command, "Updated the following configs for broker \"%d\":\n", brokerId)
+			utils.Printf(c.Command, "Updated the following configurations for broker \"%d\":\n", brokerId)
 		}
 	}
 

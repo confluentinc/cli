@@ -128,7 +128,7 @@ func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
-	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+	if isTest && c.PlatformName == testserver.TestCloudUrl.String() {
 		return true
 	}
 

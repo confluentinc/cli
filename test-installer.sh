@@ -43,7 +43,5 @@ ls "${tmpdir}" | grep -q "LICENSE" || ( echo "License file not found" && exit 1 
 
 ./bin/${binary} -h 2>&1 >/dev/null | grep -q "Manage your .*" || ( echo "Unable to execute installed ${binary} CLI" && exit 1 )
 
-#rm -rf ${tmpdir}  # too scary for now
-
 echo "All tests passed!"
 
