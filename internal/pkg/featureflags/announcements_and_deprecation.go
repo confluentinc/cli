@@ -36,6 +36,7 @@ func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
 
 	list, ok := resp.([]interface{})
 	if !ok {
+		fmt.Println("A")
 		return commandToMessages
 	}
 
