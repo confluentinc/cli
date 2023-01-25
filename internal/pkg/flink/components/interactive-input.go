@@ -51,30 +51,6 @@ func isInputClosingSelect(input string) bool {
 func promptInput(value string, history []string, toggleOutputMode func()) (string, []string) {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
 
-	prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-		ASCIICode: []byte{0x1b, 0x62},
-		Fn:        prompt.GoLeftWord,
-	})
-
-	prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-		ASCIICode: []byte{0x1b, 0x66},
-		Fn:        prompt.GoRightWord,
-	})
-
-	t := func() []prompt.Option {
-		return []prompt.Option{prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			ASCIICode: []byte{0x1b, 0x62},
-			Fn:        prompt.GoLeftWord,
-		}), prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			ASCIICode: []byte{0x1b, 0x62},
-			Fn:        prompt.GoLeftWord,
-		}),
-		}
-	}
-
-	//opts := t()
-	t()
-
 	p := prompt.New(
 		executor,
 		completer,
