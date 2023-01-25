@@ -48,7 +48,7 @@ func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func promptInput(value string, toggleOutputMode func()) (string, []string) {
+func promptInput(value string, history []string, toggleOutputMode func()) (string, []string) {
 	prompt.NewStdoutWriter().WriteRawStr("completer")
 
 	prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
@@ -80,7 +80,7 @@ func promptInput(value string, toggleOutputMode func()) (string, []string) {
 		completer,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
-		prompt.OptionHistory([]string{"SELECT * FROM users;"}),
+		prompt.OptionHistory(history),
 		prompt.SwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			if input == "" {
@@ -135,10 +135,10 @@ func printPrefix() {
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
-func InteractiveInput(value string, toggleOutputMode func()) string {
+func InteractiveInput(value string, history []string, toggleOutputMode func()) string {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var in, _ = promptInput(value, toggleOutputMode)
+	var in, _ = promptInput(value, history, toggleOutputMode)
 
 	return in
 }

@@ -19,6 +19,9 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 	input = inputRef
 	var value = ""
 
+	// Initialization
+	history := loadHistory()
+
 	// Actions
 	// This will be run after tview.App gets suspended
 	// Upon returning tview.App will be resumed.
@@ -33,7 +36,7 @@ func InputControllerInit(inputRef *tview.InputField, appController *ApplicationC
 			value = input.GetText()
 
 			// Run interactive input and take over terminal
-			value = components.InteractiveInput(value, appController.toggleOutputMode)
+			value = components.InteractiveInput(value, history, appController.toggleOutputMode)
 
 			// Executed still while tview.App is suspended and after go-prompt has finished
 			input.SetText(value)
