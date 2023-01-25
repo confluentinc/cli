@@ -187,7 +187,7 @@ func renderPostCreationStepInstructions(key *byokv1.ByokV1Key) (string, error) {
 
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
+	buf.WriteString(errors.CopyByokAwsPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicyAWS.Execute(buf, roles); err != nil {
 		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
@@ -204,7 +204,7 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	vaultName := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)[1]
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.RunBYOKAzurePermissionsHeaderMsg)
+	buf.WriteString(errors.RunByokAzurePermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	buf.WriteString("az role assignment create \\\n")
 	buf.WriteString(fmt.Sprintf("    --role \"%s\" \\\n", keyVaultCryptoServiceEncryptionUser))

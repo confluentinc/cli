@@ -280,7 +280,7 @@ func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt for
 	accounts := getEnvironmentsForCloud(input.Cloud, input.MetadataClouds)
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
+	buf.WriteString(errors.CopyByokAwsPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
