@@ -166,7 +166,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment: &cmkv2.ObjectReference{
+			Environment: &cmkv2.EnvScopedObjectReference{
 				Id: c.EnvironmentId(),
 			},
 			DisplayName:  cmkv2.PtrString(args[0]),
