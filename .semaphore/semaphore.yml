@@ -33,6 +33,7 @@ blocks:
             - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
             - make lint
             - go install gotest.tools/gotestsum@v1.8.2
+            - git status
             - make test
             - make test-installer
 
