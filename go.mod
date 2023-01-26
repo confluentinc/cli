@@ -2,6 +2,11 @@ module github.com/confluentinc/cli
 
 go 1.19
 
+replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/byok => github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk => ../ccloud-sdk-go-v2/cmk
+)
+
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.44.189
@@ -138,7 +143,6 @@ require (
 
 replace (
 	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
-	github.com/confluentinc/ccloud-sdk-go-v2/byok => github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5
 	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
 	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
 )
