@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -39,15 +39,6 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
-		return err
-	}
-
-	userIdMap, err := c.mapResourceIdToUserId()
-	if err != nil {
-		return err
-	}
-
-	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
 	}
 
