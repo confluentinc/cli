@@ -83,25 +83,27 @@ func print(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&humanOut{
-			Id:          pipeline.GetId(),
-			Name:        pipeline.Spec.GetDisplayName(),
-			Description: pipeline.Spec.GetDescription(),
-			KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-			SecretNames: strings.Join(secrets, ", "),
-			State:       pipeline.Status.GetState(),
-			CreatedAt:   pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
+			Id:                  pipeline.GetId(),
+			Name:                pipeline.Spec.GetDisplayName(),
+			Description:         pipeline.Spec.GetDescription(),
+			KsqlCluster:         pipeline.Spec.KsqlCluster.GetId(),
+			SecretNames:         strings.Join(secrets, ", "),
+			ActivationPrivilege: pipeline.Spec.GetActivationPrivilege(),
+			State:               pipeline.Status.GetState(),
+			CreatedAt:           pipeline.Metadata.GetCreatedAt(),
+			UpdatedAt:           pipeline.Metadata.GetUpdatedAt(),
 		})
 	} else {
 		table.Add(&serializedOut{
-			Id:          pipeline.GetId(),
-			Name:        pipeline.Spec.GetDisplayName(),
-			Description: pipeline.Spec.GetDescription(),
-			KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
-			SecretNames: secrets,
-			State:       pipeline.Status.GetState(),
-			CreatedAt:   pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:   pipeline.Metadata.GetUpdatedAt(),
+			Id:                  pipeline.GetId(),
+			Name:                pipeline.Spec.GetDisplayName(),
+			Description:         pipeline.Spec.GetDescription(),
+			KsqlCluster:         pipeline.Spec.KsqlCluster.GetId(),
+			SecretNames:         secrets,
+			ActivationPrivilege: pipeline.Spec.GetActivationPrivilege(),
+			State:               pipeline.Status.GetState(),
+			CreatedAt:           pipeline.Metadata.GetCreatedAt(),
+			UpdatedAt:           pipeline.Metadata.GetUpdatedAt(),
 		})
 	}
 
