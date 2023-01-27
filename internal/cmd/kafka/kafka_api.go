@@ -20,12 +20,10 @@ type ACLConfiguration struct {
 	errors error
 }
 
-func NewACLConfig() *ACLConfiguration {
+func NewACLConfiguration() *ACLConfiguration {
 	return &ACLConfiguration{
 		ACLBinding: &ccstructs.ACLBinding{
-			Entry: &ccstructs.AccessControlEntryConfig{
-				Host: "*",
-			},
+			Entry:   &ccstructs.AccessControlEntryConfig{Host: "*"},
 			Pattern: &ccstructs.ResourcePatternConfig{},
 		},
 	}
@@ -71,7 +69,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	var aclConfigs []*ACLConfiguration
 
 	if cmd.Name() == "list" {
-		aclConfig := NewACLConfig()
+		aclConfig := NewACLConfiguration()
 		cmd.Flags().Visit(fromArgs(aclConfig))
 		aclConfigs = append(aclConfigs, aclConfig)
 		return aclConfigs, nil
@@ -82,7 +80,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 		return nil, err
 	}
 	for _, operation := range operations {
-		aclConfig := NewACLConfig()
+		aclConfig := NewACLConfiguration()
 		op, err := getACLOperation(operation)
 		if err != nil {
 			return nil, err

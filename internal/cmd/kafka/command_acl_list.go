@@ -33,15 +33,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
-	if err != nil {
-		return err
-	}
-
-	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
-		return err
-	}
-
 	if acl[0].errors != nil {
 		return acl[0].errors
 	}
