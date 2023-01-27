@@ -80,9 +80,9 @@ func (c *command) registerAWS(cmd *cobra.Command, keyString string) (*byokv1.Byo
 		},
 	}
 
-	keyResp, _, err := c.V2Client.CreateByokKey(keyReq)
+	keyResp, httpResp, err := c.V2Client.CreateByokKey(keyReq)
 	if err != nil {
-		return nil, err
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return &keyResp, nil
@@ -109,9 +109,9 @@ func (c *command) registerAzure(cmd *cobra.Command, keyString string) (*byokv1.B
 		},
 	}
 
-	keyResp, _, err := c.V2Client.CreateByokKey(keyReq)
+	keyResp, httpResp, err := c.V2Client.CreateByokKey(keyReq)
 	if err != nil {
-		return nil, err
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
 
 	return &keyResp, err
