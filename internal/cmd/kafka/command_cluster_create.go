@@ -164,6 +164,22 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		}
 	}
 
+	byok, err := cmd.Flags().GetString("byok")
+	if err != nil {
+		return err
+	}
+
+	var keyGlobalObjectReference *cmkv2.GlobalObjectReference
+	if byok != "" {
+		key, httpResp, err := c.V2Client.GetByokKey(byok)
+		if err != nil {
+			return errors.CatchByokKeyNotFoundError(err, httpResp)
+		}
+		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{
+			Id: *key.Id,
+		}
+	}
+
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			Environment: &cmkv2.EnvScopedObjectReference{
@@ -174,6 +190,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
 			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
+			Byok:         keyGlobalObjectReference,
 		},
 	}
 
