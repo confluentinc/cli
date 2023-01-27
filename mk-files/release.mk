@@ -113,7 +113,7 @@ define copy-archives-files-to-latest
 	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
 	latest_folder=$2/confluent-cli/archives/latest; \
 	for suffix in $(ARCHIVE_TYPES); do \
-		aws s3 cp $${archives_folder}/confluent_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
+		aws s3 cp $${archives_folder}/confluent_$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
 	done
 endef
 
@@ -124,11 +124,11 @@ endef
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(aws-authenticate); \
-	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
+	version_checksums=confluent_$(CLEAN_VERSION)_checksums.txt; \
 	latest_checksums=confluent_latest_checksums.txt; \
 	cd $(TEMP_DIR) ; \
 	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
-	cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
+	cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
 	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
 	rm -rf $(TEMP_DIR)
 endef
