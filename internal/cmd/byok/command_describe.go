@@ -53,17 +53,15 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	default:
 		return errors.New("unknown key type")
 	}
-	var updatedAt string
-	if key.Metadata.UpdatedAt == nil || key.Metadata.UpdatedAt.IsZero() {
-		updatedAt = ""
-	} else {
-		updatedAt = key.Metadata.UpdatedAt.String()
+
+	updatedAt := ""
+	if !key.Metadata.GetUpdatedAt().IsZero() {
+		updatedAt = key.Metadata.GetUpdatedAt().String()
 	}
-	var deletedAt string
-	if key.Metadata.DeletedAt == nil || key.Metadata.UpdatedAt.IsZero() {
-		deletedAt = ""
-	} else {
-		deletedAt = key.Metadata.DeletedAt.String()
+
+	deletedAt := ""
+	if !key.Metadata.GetDeletedAt().IsZero() {
+		deletedAt = key.Metadata.GetDeletedAt().String()
 	}
 
 	table := output.NewTable(cmd)

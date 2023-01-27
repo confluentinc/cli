@@ -44,18 +44,14 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			return errors.New("unknown key type")
 		}
 
-		var updatedAt string
-		if key.Metadata.UpdatedAt == nil || key.Metadata.UpdatedAt.IsZero() {
-			updatedAt = ""
-		} else {
-			updatedAt = key.Metadata.UpdatedAt.String()
+		updatedAt := ""
+		if !key.Metadata.GetUpdatedAt().IsZero() {
+			updatedAt = key.Metadata.GetUpdatedAt().String()
 		}
 
-		var deletedAt string
-		if key.Metadata.DeletedAt == nil || key.Metadata.DeletedAt.IsZero() {
-			deletedAt = ""
-		} else {
-			deletedAt = key.Metadata.DeletedAt.String()
+		deletedAt := ""
+		if !key.Metadata.GetDeletedAt().IsZero() {
+			deletedAt = key.Metadata.GetDeletedAt().String()
 		}
 
 		list.Add(&describeStruct{
