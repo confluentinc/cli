@@ -57,14 +57,14 @@ func (c *command) newRegisterCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Register a new self-managed encryption key for Azure:",
-				Code: `confluent byok register "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000" --tenant_id "00000000-0000-0000-0000-000000000000" --key_vault_id "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault"`,
+				Code: `confluent byok register "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000" --tenantid "00000000-0000-0000-0000-000000000000" --key-vault-id "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault"`,
 			},
 		),
 	}
 
-	cmd.Flags().String("key_vault_id", "", "The ID of the Azure Key Vault where the key is stored.")
-	cmd.Flags().String("tenant_id", "", "The ID of the Azure Active Directory tenant that the key vault belongs to.")
-	cmd.MarkFlagsRequiredTogether("key_vault_id", "tenant_id")
+	cmd.Flags().String("key-vault-id", "", "The ID of the Azure Key Vault where the key is stored.")
+	cmd.Flags().String("tenant-id", "", "The ID of the Azure Active Directory tenant that the key vault belongs to.")
+	cmd.MarkFlagsRequiredTogether("key-vault-id", "tenant-id")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -91,11 +91,11 @@ func (c *command) registerAWS(cmd *cobra.Command, keyString string) (*byokv1.Byo
 func (c *command) registerAzure(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {
 	keyReq := byokv1.ByokV1Key{}
 
-	keyVaultID, err := cmd.Flags().GetString("key_vault_id")
+	keyVaultID, err := cmd.Flags().GetString("key-vault-id")
 	if err != nil {
 		return nil, err
 	}
-	tenantID, err := cmd.Flags().GetString("tenant_id")
+	tenantID, err := cmd.Flags().GetString("tenant-id")
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (c *command) register(cmd *cobra.Command, args []string) error {
 	var postCreationStepInstructions string
 	var key *byokv1.ByokV1Key
 
-	if cmd.Flags().Changed("key_vault_id") && cmd.Flags().Changed("tenant_id") {
+	if cmd.Flags().Changed("key-vault-id") && cmd.Flags().Changed("tenant-id") {
 		key, err = c.registerAzure(cmd, keyString)
 		if err != nil {
 			return err
