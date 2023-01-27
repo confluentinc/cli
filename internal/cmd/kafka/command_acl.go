@@ -14,7 +14,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type aclCommand struct {
@@ -104,27 +103,6 @@ func convertToFilter(binding *ccstructs.ACLBinding) *ccstructs.ACLFilter {
 	}
 }
 
-func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
-	for i := 0; i < len(acl); i++ {
-		principal := acl[i].ACLBinding.Entry.Principal
-		if principal != "" {
-			resourceId, err := parsePrincipal(principal)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse principal")
-			}
-			if resource.LookupType(resourceId) == resource.User || resource.LookupType(resourceId) == resource.ServiceAccount {
-				userId, ok := idMap[resourceId]
-				if !ok {
-					return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
-				}
-				resourceId = strconv.Itoa(int(userId))
-			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%s", resourceId)
-		}
-	}
-	return nil
-}
-
 func parsePrincipal(principal string) (string, error) {
 	if !strings.HasPrefix(principal, "User:") {
 		return "", fmt.Errorf(`principal must begin with "User:"`)
@@ -155,26 +133,6 @@ func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
 	idMap := make(map[int32]string)
 	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
-	}
-	return idMap, nil
-}
-
-func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	adminUsers, err := c.Client.User.List(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	users := append(serviceAccounts, adminUsers...)
-
-	idMap := make(map[string]int32)
-	for _, sa := range users {
-		idMap[sa.ResourceId] = sa.Id
 	}
 	return idMap, nil
 }
