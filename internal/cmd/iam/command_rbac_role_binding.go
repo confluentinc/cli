@@ -350,7 +350,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
-	userResourceId := strings.TrimLeft(roleBinding.GetPrincipal(), "User:")
+	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
 	user, err := c.V2Client.GetIamUserById(userResourceId)
 	if err != nil {
 		return err
@@ -461,7 +461,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 	}
 
 	if strings.HasPrefix(principal, "User:") {
-		principalValue := strings.TrimLeft(principal, "User:")
+		principalValue := strings.TrimPrefix(principal, "User:")
 		if strings.Contains(principalValue, "@") {
 			user, err := c.V2Client.GetIamUserByEmail(principalValue)
 			if err != nil {
@@ -515,7 +515,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.State.Auth.Organization.GetResourceId()
+	orgResourceId := c.State.Auth.Account.GetOrgResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
 	if cmd.Flags().Changed("current-environment") {
