@@ -1,7 +1,7 @@
 # Confluent CLI
 
 [![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/master.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
+[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
@@ -44,9 +44,9 @@ To list all available versions:
 
     curl -sL https://cnfl.io/cli | sh -s -- -l
 
-For example, to install version `v2.3.1`:
+For example, to install version `v3.0.0`:
 
-    curl -sL https://cnfl.io/cli | sh -s -- v2.3.1
+    curl -sL https://cnfl.io/cli | sh -s -- v3.0.0
 
 ### Download a Tarball from S3
 
@@ -54,7 +54,7 @@ To list all available versions:
 
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
 
-For example, to list all available packages for version v2.3.1:
+For example, to list all available packages for version v3.0.0:
 
     VERSION=v3.0.0 # or latest
     curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
@@ -96,12 +96,7 @@ To build for Windows/amd64, install `mingw-w64` compilers with homebrew:
     GOOS=windows make cross-build
 
 Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
-For detailed documentation, refer to [How to Build the CLI with confluent-kafka-go for All Platforms](https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2610299218/How+to+Build+CLI+with+Confluent-Kafka-go+for+All+Platforms)
 
 #### Troubleshooting
 
 Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
-
-If `make deps` fails with an "unknown revision" error, you probably need to put your username and a [GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
-in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829).
-The access token needs to be [authorized for SSO](https://docs.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on).

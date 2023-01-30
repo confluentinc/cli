@@ -110,7 +110,7 @@ func SelfSignedCertClient(caCertReader io.Reader, clientCert tls.Certificate) (*
 		}
 		log.CliLogger.Tracef("Successfully appended new certificate to the pool")
 		// Trust the updated cert pool in our client
-		transport.TLSClientConfig = &tls.Config{RootCAs: caCertPool}
+		transport.TLSClientConfig.RootCAs = caCertPool
 		log.CliLogger.Tracef("Successfully created TLS config using certificate pool")
 	}
 
