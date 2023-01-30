@@ -11,6 +11,7 @@ import (
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const (
@@ -35,7 +36,7 @@ func (c netrcCredentialType) String() string {
 }
 
 type NetrcHandler interface {
-	WriteNetrcCredentials(isCloud bool, ctxName string, username string, password string) error
+	WriteNetrcCredentials(isCloud bool, ctxName string, username string, password string, salt string) error
 	RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error)
 	CheckCredentialExist(isCloud bool, ctxName string) (bool, error)
 	GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error)
@@ -63,7 +64,7 @@ type NetrcHandlerImpl struct {
 	FileName string
 }
 
-func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username, password string) error {
+func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username, password, salt string) error {
 	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
@@ -71,12 +72,17 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username
 
 	machineName := getNetrcMachineName(isCloud, ctxName)
 
+	encryptedPassword, err := secret.Encrypt(password, salt)
+	if err != nil {
+		return err
+	}
+
 	machine := netrcFile.FindMachine(machineName)
 	if machine == nil {
-		netrcFile.NewMachine(machineName, username, password, "")
+		netrcFile.NewMachine(machineName, username, encryptedPassword, "")
 	} else {
 		machine.UpdateLogin(username)
-		machine.UpdatePassword(password)
+		machine.UpdatePassword(encryptedPassword)
 	}
 
 	netrcBytes, err := netrcFile.MarshalText()
