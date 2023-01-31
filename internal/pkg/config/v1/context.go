@@ -228,9 +228,9 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 
 	switch client {

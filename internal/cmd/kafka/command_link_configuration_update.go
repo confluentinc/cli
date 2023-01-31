@@ -20,7 +20,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 		RunE:  c.configurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update configuration values for the cluster link `my-link`.",
+				Text: `Update configuration values for the cluster link "my-link".`,
 				Code: "confluent kafka link configuration update my-link --config-file my-config.txt",
 			},
 		),

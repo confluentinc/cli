@@ -41,7 +41,7 @@ func WriteHelpTemplate(cmd *cobra.Command) error {
 }
 
 // tmpl executes the given template text on data, writing the result to w.
-func tmpl(w io.Writer, text string, data interface{}) error {
+func tmpl(w io.Writer, text string, data any) error {
 	t := template.New("top")
 	t.Funcs(templateFuncs)
 	template.Must(t.Parse(text))

@@ -463,7 +463,7 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaACL() {
+func (s *CLITestSuite) TestKafkaAcl() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// error case: bad operation, specified more than one resource type

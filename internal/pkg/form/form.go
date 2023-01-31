@@ -33,13 +33,13 @@ Save file as: (file.txt) other.txt
 
 type Form struct {
 	Fields    []Field
-	Responses map[string]interface{}
+	Responses map[string]any
 }
 
 type Field struct {
 	ID           string
 	Prompt       string
-	DefaultValue interface{}
+	DefaultValue any
 	IsYesOrNo    bool
 	IsHidden     bool
 	Regex        string
@@ -49,7 +49,7 @@ type Field struct {
 func New(fields ...Field) *Form {
 	return &Form{
 		Fields:    fields,
-		Responses: make(map[string]interface{}),
+		Responses: make(map[string]any),
 	}
 }
 
@@ -140,7 +140,7 @@ func read(field Field, prompt Prompt) (string, error) {
 	return val, nil
 }
 
-func validate(field Field, val string) (interface{}, error) {
+func validate(field Field, val string) (any, error) {
 	if field.IsYesOrNo {
 		switch strings.ToUpper(val) {
 		case "Y", "YES":
@@ -165,7 +165,7 @@ func validate(field Field, val string) (interface{}, error) {
 	return val, nil
 }
 
-func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
+func checkRequiredYes(cmd *cobra.Command, field Field, res any) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
 		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
