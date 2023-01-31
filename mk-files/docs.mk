@@ -68,7 +68,7 @@ clean-docs:
 .PHONY: release-docs
 release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
 
-# NB: When releasing a new version, the -post branch is updated to the current state of the .x branch, 
+# NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
 .PHONY: cut-docs-branches
 cut-docs-branches:
@@ -111,6 +111,6 @@ update-settings-and-conf:
 	sed $(SED_OPTION_INPLACE) "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
 	sed $(SED_OPTION_INPLACE) "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
-	git checkout checkout $(STAGING_BRANCH) && \
-	git merge -s ours $(CURRENT_SHORT_MINOR_VERSION)-post && \
+	git checkout $(STAGING_BRANCH) && \
+	git merge -s ours -m "Merge branch '$(CURRENT_SHORT_MINOR_VERSION)-post' into $(STAGING_BRANCH)" $(CURRENT_SHORT_MINOR_VERSION)-post && \
 	git push origin $(GIT_DRY_RUN_ARGS) "$(CURRENT_SHORT_MINOR_VERSION)-post:$(CURRENT_SHORT_MINOR_VERSION)-post" "$(STAGING_BRANCH):$(STAGING_BRANCH)"
