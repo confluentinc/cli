@@ -1,5 +1,5 @@
-//go:build linux
-// +build linux
+//go:build linux || darwin
+// +build linux darwin
 
 package secret
 
@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/denisbrodbeck/machineid"
+
 	"golang.org/x/crypto/pbkdf2"
 )
 
@@ -46,7 +47,7 @@ func Encrypt(password, salt string) (string, error) {
 	return base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
 }
 
-func Decrypt(encrypted string, salt string) (string, error) {
+func Decrypt(encrypted, salt string) (string, error) {
 	encryptionKey, err := DeriveEncryptionKey(salt)
 	if err != nil {
 		return "", err

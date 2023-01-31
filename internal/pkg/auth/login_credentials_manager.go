@@ -13,6 +13,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/secret"
@@ -65,6 +66,7 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetCredentialsFromKeychain(cfg *v1.Config, ctxName string, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
@@ -186,6 +188,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
+		fmt.Printf("%+v\n", filterParams)
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
@@ -199,7 +202,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc
 		if err != nil {
 			return nil, err
 		}
-
+		fmt.Println("warning! using creds read from netrc!")
 		return &Credentials{Username: netrcMachine.User, Password: decryptedPassword}, nil
 	}
 }
@@ -324,4 +327,11 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 
 func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
+}
+
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config, ctxName, url string) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		username, password, err := keychain.ReadCredentialsFromKeychain(ctxName, url)
+		return &Credentials{Username: username, Password: password}, err
+	}
 }

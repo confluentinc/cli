@@ -97,6 +97,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
