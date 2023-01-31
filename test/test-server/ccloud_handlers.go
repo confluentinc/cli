@@ -443,12 +443,12 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
 
 		w.Header().Set("Content-Type", "application/json")
-		flags := map[string]interface{}{
+		flags := map[string]any{
 			"testBool":                               true,
 			"testString":                             "string",
 			"testInt":                                1,
-			"testJson":                               map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices":                []map[string]interface{}{},
+			"testJson":                               map[string]any{"key": "val"},
+			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,
 			"cli.stream_designer.source_code.enable": true,
 		}

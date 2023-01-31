@@ -97,8 +97,8 @@ const (
 
 type MockCall struct {
 	Func   ApiFunc
-	Input  interface{}
-	Result interface{}
+	Input  any
+	Result any
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
@@ -108,7 +108,7 @@ func (suite *AuditConfigTestSuite) SetupSuite() {
 func (suite *AuditConfigTestSuite) TearDownSuite() {
 }
 
-func StripTimestamp(obj interface{}) interface{} {
+func StripTimestamp(obj any) any {
 	spec, castOk := obj.(mds.AuditLogConfigSpec)
 	if castOk {
 		return mds.AuditLogConfigSpec{
@@ -125,7 +125,7 @@ func StripTimestamp(obj interface{}) interface{} {
 	}
 }
 
-func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput interface{}) (interface{}, error) {
+func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput any) (any, error) {
 	if !assert.Greater(suite.T(), len(expect), 0) {
 		return nil, fmt.Errorf("unexpected call to %#v", expectedFunc)
 	}

@@ -23,10 +23,10 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update top level compatibility or mode of Schema Registry.",
-				Code: "confluent schema-registry cluster update --compatibility=BACKWARD",
+				Code: "confluent schema-registry cluster update --compatibility BACKWARD",
 			},
 			examples.Example{
-				Code: "confluent schema-registry cluster update --mode=READWRITE",
+				Code: "confluent schema-registry cluster update --mode READWRITE",
 			},
 		),
 	}

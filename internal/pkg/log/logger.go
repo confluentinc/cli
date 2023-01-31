@@ -66,7 +66,7 @@ func (l *Logger) SetVerbosity(verbosity int) {
 	l.logger.SetLevel(mapToHclogLevel(level))
 }
 
-func (l *Logger) Trace(args ...interface{}) {
+func (l *Logger) Trace(args ...any) {
 	message := fmt.Sprint(args...)
 	if l.logger.IsTrace() {
 		l.logger.Trace(message)
@@ -75,11 +75,11 @@ func (l *Logger) Trace(args ...interface{}) {
 	}
 }
 
-func (l *Logger) Tracef(format string, args ...interface{}) {
+func (l *Logger) Tracef(format string, args ...any) {
 	l.Trace(fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) Debug(args ...interface{}) {
+func (l *Logger) Debug(args ...any) {
 	message := fmt.Sprint(args...)
 	if l.logger.IsDebug() {
 		l.logger.Debug(message)
@@ -88,11 +88,11 @@ func (l *Logger) Debug(args ...interface{}) {
 	}
 }
 
-func (l *Logger) Debugf(format string, args ...interface{}) {
+func (l *Logger) Debugf(format string, args ...any) {
 	l.Debug(fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) Info(args ...interface{}) {
+func (l *Logger) Info(args ...any) {
 	message := fmt.Sprint(args...)
 	if l.logger.IsInfo() {
 		l.logger.Info(message)
@@ -101,11 +101,11 @@ func (l *Logger) Info(args ...interface{}) {
 	}
 }
 
-func (l *Logger) Infof(format string, args ...interface{}) {
+func (l *Logger) Infof(format string, args ...any) {
 	l.Info(fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) Warn(args ...interface{}) {
+func (l *Logger) Warn(args ...any) {
 	message := fmt.Sprint(args...)
 	if l.logger.IsWarn() {
 		l.logger.Warn(message)
@@ -114,11 +114,11 @@ func (l *Logger) Warn(args ...interface{}) {
 	}
 }
 
-func (l *Logger) Warnf(format string, args ...interface{}) {
+func (l *Logger) Warnf(format string, args ...any) {
 	l.Warn(fmt.Sprintf(format, args...))
 }
 
-func (l *Logger) Error(args ...interface{}) {
+func (l *Logger) Error(args ...any) {
 	message := fmt.Sprint(args...)
 	if l.logger.IsError() {
 		l.logger.Error(message)
@@ -127,7 +127,7 @@ func (l *Logger) Error(args ...interface{}) {
 	}
 }
 
-func (l *Logger) Errorf(format string, args ...interface{}) {
+func (l *Logger) Errorf(format string, args ...any) {
 	l.Error(fmt.Sprintf(format, args...))
 }
 
@@ -160,7 +160,7 @@ func (l *Logger) Flush() {
 
 // Log logs a "msg" and key-value pairs.
 // Example: Log("msg", "hello", "key1", "val1", "key2", "val2")
-func (l *Logger) Log(args ...interface{}) {
+func (l *Logger) Log(args ...any) {
 	if l.logger.IsDebug() {
 		if args[0] != "msg" {
 			l.logger.Debug(`unexpected logging call, first key should be "msg": ` + fmt.Sprint(args...))
