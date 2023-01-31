@@ -40,7 +40,7 @@ var shouldPrompt bool
 
 var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
@@ -58,7 +58,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 
 var cmkExpandCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
