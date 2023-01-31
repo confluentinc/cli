@@ -307,22 +307,10 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 			ConfluentValueSchemaValidation: "true",
 		},
 	}
-	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{
-		Schema: map[string]any{
-			"type": "string",
-		},
-	},
-	}}
+	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
-		GroupID: &spec.KafkaOperationGroupID{
-			Schema: map[string]any{
-				"type": "string",
-			},
-		},
-		ClientID: &spec.KafkaOperationClientID{
-			Schema: map[string]any{
-				"type": "string"},
-		},
+		GroupID:  &spec.KafkaOperationGroupID{Schema: map[string]any{"type": "string"}},
+		ClientID: &spec.KafkaOperationClientID{Schema: map[string]any{"type": "string"}},
 	}}
 	bindings := &bindings{
 		messageBinding:   messageBindings,
