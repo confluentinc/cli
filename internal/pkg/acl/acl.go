@@ -197,9 +197,8 @@ func convertToFlags(operations ...interface{}) string {
 		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprint(v)
-		s = strings.ReplaceAll(s, "_", "-")
-		ops = append(ops, strings.ToLower(s))
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops = append(ops, fmt.Sprintf("`--%s`", s))
 	}
 
 	sort.Strings(ops)
