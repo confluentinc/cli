@@ -73,7 +73,7 @@ func ReadCredentialsFromKeychain(ctxName, url string) (string, string, error) { 
 	item.SetAccessGroup(accessGroup)
 	item.SetReturnData(true)
 
-	if ctxName != "" { // TODO: test what is ctx is nil. can it be deleted correctly? what's the behavior of normal confluent?
+	if ctxName != "" {
 		service := netrc.GetLocalCredentialName(isCloud, ctxName)
 		item.SetService(service)
 	}
