@@ -270,7 +270,7 @@ func getAllFlags(flags *pflag.FlagSet) []string {
 	return all
 }
 
-func getValueByName(obj interface{}, name string) string {
+func getValueByName(obj any, name string) string {
 	return reflect.Indirect(reflect.ValueOf(obj)).FieldByName(name).String()
 }
 

@@ -186,7 +186,7 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	conf.ResourceName = v
 }
 
-func convertToFlags(operations ...interface{}) string {
+func convertToFlags(operations ...any) string {
 	var ops []string
 
 	for _, v := range operations {

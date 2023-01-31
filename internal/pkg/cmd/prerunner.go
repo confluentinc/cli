@@ -239,7 +239,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
 	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
-	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	ldDisable, ok := ldDisableJson.(map[string]any)
 	if !ok {
 		return nil
 	}

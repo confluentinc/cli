@@ -39,6 +39,6 @@ func (f *FileInfo) IsDir() bool {
 	panic("implement me")
 }
 
-func (f *FileInfo) Sys() interface{} {
+func (f *FileInfo) Sys() any {
 	panic("implement me")
 }

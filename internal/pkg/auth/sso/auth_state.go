@@ -166,7 +166,7 @@ func (s *authState) refreshOAuthToken() error {
 	return s.saveOAuthTokenResponse(data)
 }
 
-func (s *authState) saveOAuthTokenResponse(data map[string]interface{}) error {
+func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 	if token, ok := data["id_token"]; ok {
 		s.SSOProviderIDToken = token.(string)
 	} else {
@@ -182,7 +182,7 @@ func (s *authState) saveOAuthTokenResponse(data map[string]interface{}) error {
 	return nil
 }
 
-func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]interface{}, error) {
+func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
 	url := s.SSOProviderHost + "/oauth/token"
 	log.CliLogger.Debugf("Oauth token request URL: %s", url)
 	log.CliLogger.Debug("Oauth token request payload: ", payload)
@@ -197,7 +197,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]i
 	}
 	defer res.Body.Close()
 	errorResponseBody, _ := io.ReadAll(res.Body)
-	var data map[string]interface{}
+	var data map[string]any
 	err = json.Unmarshal(errorResponseBody, &data)
 	if err != nil {
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)

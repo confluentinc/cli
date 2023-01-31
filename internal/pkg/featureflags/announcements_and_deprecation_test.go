@@ -12,24 +12,24 @@ func TestGetAnnouncementsOrDeprecation_BadFormat(t *testing.T) {
 }
 
 func TestGetAnnouncementsOrDeprecation(t *testing.T) {
-	resp := []interface{}{
-		map[string]interface{}{
+	resp := []any{
+		map[string]any{
 			"pattern": "command",
 			"message": "0",
 		},
-		map[string]interface{}{
+		map[string]any{
 			"pattern": "command --flag",
 			"message": "1",
 		},
-		map[string]interface{}{
+		map[string]any{
 			"pattern": "command-with-dashes",
 			"message": "2",
 		},
-		map[string]interface{}{
+		map[string]any{
 			"pattern": "--flag-only",
 			"message": "3",
 		},
-		map[string]interface{}{
+		map[string]any{
 			"pattern": "--multiple --flags",
 			"message": "4",
 		},

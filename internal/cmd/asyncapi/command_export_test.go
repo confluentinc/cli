@@ -39,7 +39,7 @@ var details = &accountDetails{
 		DefaultApi: &srMock.DefaultApi{
 			GetByUniqueAttributesFunc: func(_ context.Context, typeName string, qualifiedName string, localVarOptionals *srsdk.GetByUniqueAttributesOpts) (srsdk.AtlasEntityWithExtInfo, *http.Response, error) {
 				if typeName == "kafka_topic" {
-					return srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{Attributes: map[string]interface{}{"description": "kafka topic description"}}}, nil, nil
+					return srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{Attributes: map[string]any{"description": "kafka topic description"}}}, nil, nil
 				}
 				return srsdk.AtlasEntityWithExtInfo{}, nil, nil
 			},

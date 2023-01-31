@@ -231,7 +231,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (interface{}, error) {
+func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	err := consumer.Subscribe(topicName, nil)
 	if err != nil {
@@ -300,7 +300,7 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 			}
 		}
 	}
-	var channelBindings interface{} = confluentBinding{
+	var channelBindings any = confluentBinding{
 		Configs: Configs{
 			CleanupPolicy:                  cleanupPolicy,
 			DeleteRetentionMs:              deleteRetentionMsValue,
@@ -308,19 +308,19 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 		},
 	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{
-		Schema: map[string]interface{}{
+		Schema: map[string]any{
 			"type": "string",
 		},
 	},
 	}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
 		GroupID: &spec.KafkaOperationGroupID{
-			Schema: map[string]interface{}{
+			Schema: map[string]any{
 				"type": "string",
 			},
 		},
 		ClientID: &spec.KafkaOperationClientID{
-			Schema: map[string]interface{}{
+			Schema: map[string]any{
 				"type": "string"},
 		},
 	}}
@@ -485,9 +485,9 @@ func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersi
 	}
 }
 
-func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]interface{}, error) {
+func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]any, error) {
 	var config schemaregistry.Config
-	mapOfMessageCompat := make(map[string]interface{})
+	mapOfMessageCompat := make(map[string]any)
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 	if err != nil {
 		log.CliLogger.Warnf("failed to get subject level configuration: %v", err)
@@ -496,7 +496,7 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
 		}
 	}
-	mapOfMessageCompat["x-messageCompatibility"] = interface{}(config.CompatibilityLevel)
+	mapOfMessageCompat["x-messageCompatibility"] = any(config.CompatibilityLevel)
 	return mapOfMessageCompat, nil
 }
 
@@ -528,8 +528,8 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 				"confluentSchemaRegistry": {
 					SecurityScheme: &spec.SecurityScheme{
 						UserPassword: &spec.UserPassword{
-							MapOfAnything: map[string]interface{}{
-								"x-configs": interface{}(map[string]string{
+							MapOfAnything: map[string]any{
+								"x-configs": any(map[string]string{
 									"basic.auth.user.info": "{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}",
 								}),
 							},
@@ -539,8 +539,8 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 				"confluentBroker": {
 					SecurityScheme: &spec.SecurityScheme{
 						UserPassword: &spec.UserPassword{
-							MapOfAnything: map[string]interface{}{
-								"x-configs": interface{}(map[string]string{
+							MapOfAnything: map[string]any{
+								"x-configs": any(map[string]string{
 									"security.protocol": "sasl_ssl",
 									"sasl.mechanisms":   "PLAIN",
 									"sasl.username":     "{{CLUSTER_API_KEY}}",
