@@ -36,6 +36,7 @@ const (
 
 	// byok commands
 	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
 
 	// login command
 	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"

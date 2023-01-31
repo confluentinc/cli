@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	errorMsg "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -51,7 +52,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return errors.New("unknown key type")
+		return errors.New(errorMsg.ByokUnknownKeyTypeErrorMsg)
 	}
 
 	updatedAt := ""
