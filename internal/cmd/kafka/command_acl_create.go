@@ -1,11 +1,13 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -22,16 +24,27 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 				Code: "confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --topic '*'",
+				Code: `confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --topic "*"`,
 			},
 		),
 	}
 
-	cmd.Flags().AddFlagSet(aclConfigFlags())
+	cmd.Flags().StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
+	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
+	cmd.Flags().String("service-account", "", "The service account ID.")
+	cmd.Flags().Bool("allow", false, "Access to the resource is allowed.")
+	cmd.Flags().Bool("deny", false, "Access to the resource is denied.")
+	cmd.Flags().Bool("cluster-scope", false, "Modify ACLs for the cluster.")
+	cmd.Flags().String("topic", "", "Modify ACLs for the specified topic resource.")
+	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
+	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
+	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	_ = cmd.MarkFlagRequired("operations")
 
 	return cmd
 }
