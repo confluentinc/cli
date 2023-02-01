@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
@@ -183,11 +184,13 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 	return false
 }
 
-func fillByokStoreV1() {
+func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
+	byokStoreV1 := map[string]*byokv1.ByokV1Key{}
+
 	byokStoreV1["cck-001"] = &byokv1.ByokV1Key{
 		Id: byokv1.PtrString("cck-001"),
 		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokTime,
+			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC)),
 		},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
@@ -202,7 +205,7 @@ func fillByokStoreV1() {
 	byokStoreV1["cck-002"] = &byokv1.ByokV1Key{
 		Id: byokv1.PtrString("cck-002"),
 		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokTime,
+			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC)),
 		},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
@@ -217,7 +220,7 @@ func fillByokStoreV1() {
 	byokStoreV1["cck-003"] = &byokv1.ByokV1Key{
 		Id: byokv1.PtrString("cck-003"),
 		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokTime,
+			CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC)),
 		},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
@@ -231,6 +234,8 @@ func fillByokStoreV1() {
 		Provider: byokv1.PtrString("Azure"),
 		State:    byokv1.PtrString("AVAILABLE"),
 	}
+
+	return byokStoreV1
 }
 
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {

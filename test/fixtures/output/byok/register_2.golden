@@ -1,4 +1,4 @@
-Created self-managed key "cck-005".
+Created self-managed key "cck-004".
 To ensure the key vault has the correct role assignments, please run:
 
 az role assignment create \
