@@ -16,17 +16,6 @@ var LivePrefixState struct {
 var lastStatement = ""
 var allStatements = ""
 
-func completer(in prompt.Document) []prompt.Suggest {
-
-	s := []prompt.Suggest{
-		{Text: "SELECT", Description: "Select data from a database"},
-		{Text: "INSERT", Description: "Add rows to a table"},
-		{Text: "DESCRIBE", Description: "Describe the schema of a table or a view"},
-		{Text: "SET", Description: "Set current database or catalog"},
-	}
-	return prompt.FilterHasPrefix(s, in.GetWordBeforeCursor(), true)
-}
-
 func executor(in string) {
 	if strings.HasSuffix(in, ";") {
 		lastStatement = lastStatement + in
@@ -58,7 +47,7 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory(history),
 		// TODO - Decide if we want to use the emacs keybind mode, or basic, or make it customizable
-		prompt.SwitchKeyBindMode(prompt.EmacsKeyBind),
+		prompt.SwitchKeyBindMode(prompt.CommonKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			if input == "" {
 				return false
