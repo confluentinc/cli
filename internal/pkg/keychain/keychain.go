@@ -1,6 +1,3 @@
-//go:build linux || windows
-// +build linux windows
-
 package keychain
 
 func WriteKeychainItem(_, _, _, _ string) error {

@@ -11,6 +11,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/denisbrodbeck/machineid"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -65,12 +66,12 @@ func Decrypt(encrypted, salt string) (string, error) {
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to decode encrypted string")
 	}
 
 	decryptedPassword, err := aesgcm.Open(nil, encryptionKey[:12], cipherText, nil)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to decrypt credentials")
 	}
 
 	return string(decryptedPassword), nil

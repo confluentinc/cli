@@ -113,14 +113,22 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
-		return err
+		if strings.Contains(err.Error(), "failed") || strings.Contains(err.Error(), "found no netrc machine") { // decryption failed is expected when trying on unencrypted creds
+			log.CliLogger.Debugf("First try to get creds failed: %s", err.Error())
+			credentials, err = c.getCcloudCredentialsUnencrypted(cmd, url, orgResourceId)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
@@ -208,7 +216,6 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	}
 	ctx := c.Config.Config.Context()
 	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		fmt.Println("ctx.CredentialName", ctx.CredentialName)
 		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
@@ -216,7 +223,22 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams, c.Config.Salt),
+		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
+	)
+}
+
+func (c *command) getCcloudCredentialsUnencrypted(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
+	netrcFilterParams := netrc.NetrcMachineParams{
+		IsCloud: true,
+		URL:     url,
+	}
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
+	}
+
+	return pauth.GetLoginCredentials(
+		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
@@ -224,7 +246,15 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	credentials, err := c.getConfluentCredentials(cmd, url)
 	if err != nil {
-		return err
+		if strings.Contains(err.Error(), "failed") || strings.Contains(err.Error(), "found no netrc machine") { // decryption failed is expected when trying on unencrypted creds
+			log.CliLogger.Debugf("First try to get creds failed: %s", err.Error())
+			credentials, err = c.getConfluentCredentialsUnencrypted(cmd, url)
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
 	}
 
 	// Current functionality:
@@ -314,7 +344,22 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams, c.Config.Salt),
+		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
+	)
+}
+
+func (c *command) getConfluentCredentialsUnencrypted(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
+	netrcFilterParams := netrc.NetrcMachineParams{
+		IgnoreCert: true,
+		URL:        url,
+	}
+	ctx := c.Config.Config.Context()
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
+	}
+
+	return pauth.GetLoginCredentials(
+		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
 }
@@ -356,7 +401,6 @@ func (c *command) saveLoginToLocal(cmd *cobra.Command, isCloud bool, url string,
 			return nil
 		}
 		ctxName := c.Config.Config.Context().NetrcMachineName // after login, this must be not nil
-		fmt.Println("netrc machine name, which is also the ctxName:", ctxName)
 		if err := keychain.WriteKeychainItem(ctxName, url, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
