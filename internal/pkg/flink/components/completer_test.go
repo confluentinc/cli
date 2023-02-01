@@ -16,10 +16,12 @@ func containsSuggestion(suggestions []prompt.Suggest, s prompt.Suggest) bool {
 	return false
 }
 
-func TestBasicAutoCompletion(t *testing.T) {
+func TestBasicSelectAutoCompletion(t *testing.T) {
+	input := "select"
 	buffer := prompt.NewBuffer()
+	buffer.InsertText(input, false, true)
 
-	expected := prompt.Suggest{Text: "SELECT", Description: "Select data from a database"}
+	expected := prompt.Suggest{Text: "SELECT * FROM Orders WHERE amount = 2;", Description: "Select data from a database"}
 	actual := completer(*buffer.Document())
 
 	if !containsSuggestion(actual, expected) {
