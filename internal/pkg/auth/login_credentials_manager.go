@@ -13,8 +13,10 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -64,7 +66,9 @@ type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
-	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromKeychain(cfg *v1.Config, ctxName string, url string) func() (*Credentials, error)
+	GetCredentialsFromNetrcWithSalt(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error)
+	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
@@ -183,7 +187,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrcWithSalt(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
@@ -192,6 +196,31 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc
 		}
 
 		log.CliLogger.Debugf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+
+		encryptedPassword := netrcMachine.Password
+		decryptedPassword, err := secret.Decrypt(encryptedPassword, salt)
+		if err != nil {
+			return nil, err
+		}
+
+		return &Credentials{Username: netrcMachine.User, Password: decryptedPassword}, nil
+	}
+}
+
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		netrcMachine, err := h.getNetrcMachine(filterParams)
+		if err != nil {
+			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
+			return nil, err
+		}
+
+		err = cmd.Flags().Set("save", "true") // overwrite the plaintext credentials
+		if err != nil {
+			return nil, err
+		}
+
+		log.CliLogger.Warnf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 	}
@@ -316,4 +345,11 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 
 func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
+}
+
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config, ctxName, url string) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		username, password, err := keychain.ReadCredentialsFromKeychain(ctxName, url)
+		return &Credentials{Username: username, Password: password}, err
+	}
 }

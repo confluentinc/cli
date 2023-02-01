@@ -394,7 +394,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, url)
 	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, url, credentials)
-	if err != nil {
+	if err != nil { // if err == invalid creds
+		fmt.Println("failed here.")
 		return err
 	}
 
@@ -414,7 +415,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		r.LoginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, r.Config.Salt),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
@@ -945,7 +946,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(params),
+		r.LoginCredentialsManager.GetCredentialsFromNetrcWithSalt(params, r.Config.Salt),
 	)
 	if err != nil {
 		return "", "", err
