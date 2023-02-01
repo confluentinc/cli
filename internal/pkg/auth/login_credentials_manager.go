@@ -215,7 +215,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			return nil, err
 		}
 
-		// overwrite the plaintext credentials when executing the remaining of `confluent login`
+		// will overwrite the plaintext credentials when executing the remaining of `confluent login`
 		err = cmd.Flags().Set("save", "true")
 		if err != nil {
 			return nil, err
