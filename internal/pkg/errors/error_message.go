@@ -260,6 +260,7 @@ const (
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
 
 	// cmd package
 	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`

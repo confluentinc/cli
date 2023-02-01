@@ -84,6 +84,7 @@ type Config struct {
 	ContextStates       map[string]*ContextState `json:"context_states,omitempty"`
 	CurrentContext      string                   `json:"current_context"`
 	AnonymousId         string                   `json:"anonymous_id,omitempty"`
+	Salt                string                   `json:"salt,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -127,6 +128,7 @@ func New() *Config {
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
+		Salt:          uuid.New().String(),
 		Version:       new(pversion.Version),
 	}
 }
@@ -155,7 +157,7 @@ func (c *Config) Load() error {
 			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
 			c.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
 			for name := range c.Contexts {
-				c.Contexts[name].NetrcMachineName = name
+				c.Contexts[name].LoginContextName = name
 			}
 		} else {
 			return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
@@ -502,6 +504,11 @@ func (c *Config) HasBasicLogin() bool {
 
 func (c *Config) ResetAnonymousId() error {
 	c.AnonymousId = uuid.New().String()
+	return c.Save()
+}
+
+func (c *Config) ResetSalt() error {
+	c.Salt = uuid.New().String()
 	return c.Save()
 }
 
