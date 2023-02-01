@@ -1,5 +1,4 @@
 //go:build linux || darwin
-// +build linux darwin
 
 package secret
 
@@ -11,7 +10,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/denisbrodbeck/machineid"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -66,12 +64,12 @@ func Decrypt(encrypted, salt string) (string, error) {
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to decode encrypted string")
+		return "", err
 	}
 
 	decryptedPassword, err := aesgcm.Open(nil, encryptionKey[:12], cipherText, nil)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to decrypt credentials")
+		return "", err
 	}
 
 	return string(decryptedPassword), nil

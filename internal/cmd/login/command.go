@@ -120,15 +120,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 
 	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
-		if strings.Contains(err.Error(), "failed") || strings.Contains(err.Error(), "found no netrc machine") { // decryption failed is expected when trying on unencrypted creds
-			log.CliLogger.Debugf("First try to get creds failed: %s", err.Error())
-			credentials, err = c.getCcloudCredentialsUnencrypted(cmd, url, orgResourceId)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
+		return err
 	}
 
 	token, refreshToken, err := c.authTokenHandler.GetCCloudTokens(c.ccloudClientFactory, url, credentials, noBrowser, orgResourceId)
@@ -215,8 +207,8 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+	if ctx != nil && strings.Contains(ctx.LoginContextName, url) {
+		netrcFilterParams.Name = ctx.LoginContextName
 	}
 
 	return pauth.GetLoginCredentials(
@@ -224,20 +216,6 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
-	)
-}
-
-func (c *command) getCcloudCredentialsUnencrypted(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
-	netrcFilterParams := netrc.NetrcMachineParams{
-		IsCloud: true,
-		URL:     url,
-	}
-	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
-	}
-
-	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
@@ -246,15 +224,7 @@ func (c *command) getCcloudCredentialsUnencrypted(cmd *cobra.Command, url, orgRe
 func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	credentials, err := c.getConfluentCredentials(cmd, url)
 	if err != nil {
-		if strings.Contains(err.Error(), "failed") || strings.Contains(err.Error(), "found no netrc machine") { // decryption failed is expected when trying on unencrypted creds
-			log.CliLogger.Debugf("First try to get creds failed: %s", err.Error())
-			credentials, err = c.getConfluentCredentialsUnencrypted(cmd, url)
-			if err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
+		return err
 	}
 
 	// Current functionality:
@@ -338,27 +308,13 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+	if ctx != nil && strings.Contains(ctx.LoginContextName, url) {
+		netrcFilterParams.Name = ctx.LoginContextName
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
-	)
-}
-
-func (c *command) getConfluentCredentialsUnencrypted(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
-	netrcFilterParams := netrc.NetrcMachineParams{
-		IgnoreCert: true,
-		URL:        url,
-	}
-	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
-	}
-
-	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
@@ -400,8 +356,8 @@ func (c *command) saveLoginToLocal(cmd *cobra.Command, isCloud bool, url string,
 			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 			return nil
 		}
-		ctxName := c.Config.Config.Context().NetrcMachineName // after login, this must be not nil
-		if err := keychain.WriteKeychainItem(ctxName, url, credentials.Username, credentials.Password); err != nil {
+		ctxName := c.Config.Config.Context().LoginContextName // after login, this must be not nil
+		if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
 			return err
 		}
 

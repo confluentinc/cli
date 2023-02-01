@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.44.189
+	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -35,6 +36,7 @@ require (
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.18
 	github.com/davecgh/go-spew v1.1.1
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.14.1
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -52,6 +54,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/jhump/protoreflect v1.14.1
 	github.com/jonboulle/clockwork v0.3.0
+	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b
 	github.com/linkedin/goavro/v2 v2.12.0
 	github.com/mattn/go-isatty v0.0.17
 	github.com/olekukonko/tablewriter v0.0.5
@@ -75,12 +78,10 @@ require (
 )
 
 require (
-	github.com/billgraziano/dpapi v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
-	github.com/denisbrodbeck/machineid v1.0.1 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gobwas/httphead v0.1.0 // indirect
@@ -97,7 +98,6 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

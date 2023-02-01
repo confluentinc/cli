@@ -157,7 +157,7 @@ func (c *Config) Load() error {
 			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
 			c.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
 			for name := range c.Contexts {
-				c.Contexts[name].NetrcMachineName = name
+				c.Contexts[name].LoginContextName = name
 			}
 		} else {
 			return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)

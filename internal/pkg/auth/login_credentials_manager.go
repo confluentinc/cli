@@ -215,7 +215,8 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 			return nil, err
 		}
 
-		err = cmd.Flags().Set("save", "true") // overwrite the plaintext credentials
+		// overwrite the plaintext credentials when executing the remaining of `confluent login`
+		err = cmd.Flags().Set("save", "true")
 		if err != nil {
 			return nil, err
 		}
@@ -334,7 +335,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		machineContextInfo, err := netrc.ParseNetrcMachineName(netrcMachine.Name)
+		machineContextInfo, err := netrc.ParseLoginContextName(netrcMachine.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -344,13 +345,13 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
-	h.client = client
-}
-
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config, ctxName, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		username, password, err := keychain.ReadCredentialsFromKeychain(ctxName, url)
+		username, password, err := keychain.Read(ctxName, url)
 		return &Credentials{Username: username, Password: password}, err
 	}
+}
+
+func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
+	h.client = client
 }

@@ -13,7 +13,7 @@ type MachineContextInfo struct {
 	CaCertPath     string
 }
 
-func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
+func ParseLoginContextName(machineName string) (*MachineContextInfo, error) {
 	if !strings.HasPrefix(machineName, localCredentialsPrefix) {
 		return nil, errors.New("Incorrect machine name format")
 	}
