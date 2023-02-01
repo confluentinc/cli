@@ -205,6 +205,18 @@ func convertToFlags(operations ...any) string {
 	return strings.Join(ops, ", ")
 }
 
+func ConvertToLower(operations ...any) string {
+	var ops []string
+
+	for _, v := range operations {
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops = append(ops, s)
+	}
+
+	sort.Strings(ops)
+	return strings.Join(ops, ", ")
+}
+
 func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
 	// delete is deliberately less powerful in the cli than in the API to prevent accidental
 	// deletion of too many acls at once. Expectation is that multi delete will be done via
