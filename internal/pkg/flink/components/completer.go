@@ -14,8 +14,11 @@ func CombineCompleters(completers ...prompt.Completer) prompt.Completer {
 	}
 }
 
-// Not currently used in favor of completerWithHistory, but could be used to provide a
-// completer without history if we want to give the user the possibility of disabling that
+func completerWithHistory(history []string) prompt.Completer {
+	HISTORYCompleter := generateHISTORYCompleter(history)
+	return CombineCompleters(completer, HISTORYCompleter)
+}
+
 func completer(in prompt.Document) []prompt.Suggest {
 	return CombineCompleters(EXAMPLESCompleter, SETCompleter, SHOWCompleter)(in)
 }

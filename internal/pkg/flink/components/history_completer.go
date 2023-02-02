@@ -14,8 +14,3 @@ func generateHISTORYCompleter(history []string) prompt.Completer {
 		return prompt.FilterHasPrefix(historyCompletions, in.TextBeforeCursor(), true)
 	}
 }
-
-func completerWithHistory(history []string) prompt.Completer {
-	HISTORYCompleter := generateHISTORYCompleter(history)
-	return CombineCompleters(EXAMPLESCompleter, SETCompleter, SHOWCompleter, HISTORYCompleter)
-}
