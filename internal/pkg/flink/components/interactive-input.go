@@ -38,11 +38,11 @@ func isInputClosingSelect(input string) bool {
 }
 
 func promptInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
-	prompt.NewStdoutWriter().WriteRawStr("completer")
+	completerWithHistory := completerWithHistory(history)
 
 	p := prompt.New(
 		executor,
-		completer,
+		completerWithHistory,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory(history),

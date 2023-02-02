@@ -4,9 +4,7 @@ import (
 	prompt "github.com/c-bata/go-prompt"
 )
 
-type CompleterFunc func(prompt.Document) []prompt.Suggest
-
-func CombineCompleters(completers ...CompleterFunc) CompleterFunc {
+func CombineCompleters(completers ...prompt.Completer) prompt.Completer {
 	return func(d prompt.Document) []prompt.Suggest {
 		var suggestions []prompt.Suggest
 		for _, c := range completers {
@@ -16,6 +14,8 @@ func CombineCompleters(completers ...CompleterFunc) CompleterFunc {
 	}
 }
 
+// Not currently used in favor of completerWithHistory, but could be used to provide a
+// completer without history if we want to give the user the possibility of disabling that
 func completer(in prompt.Document) []prompt.Suggest {
 	return CombineCompleters(EXAMPLESCompleter, SETCompleter, SHOWCompleter)(in)
 }
