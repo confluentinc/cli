@@ -150,6 +150,13 @@ func getCmkClusterPendingSize(cluster *cmkv2.CmkV2Cluster) int32 {
 	return -1
 }
 
+func getCmkByokId(cluster *cmkv2.CmkV2Cluster) string {
+	if isDedicated(cluster) && cluster.Spec.Byok != nil {
+		return cluster.Spec.Byok.Id
+	}
+	return ""
+}
+
 func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
 	if isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.EncryptionKey != nil {
 		return *cluster.Spec.Config.CmkV2Dedicated.EncryptionKey

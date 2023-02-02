@@ -255,6 +255,18 @@ func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Respon
 	return CatchCCloudV2Error(err, r)
 }
 
+func CatchByokKeyNotFoundError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusNotFound {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Self-managed key not found or access forbidden", ByokKeyNotFoundSuggestions)
+	}
+
+	return CatchCCloudV2Error(err, r)
+}
+
 func CatchKSQLNotFoundError(err error, clusterId string) error {
 	if err == nil {
 		return nil
