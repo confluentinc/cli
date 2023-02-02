@@ -21,10 +21,10 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"READ\" and \"DESCRIBE\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --consumer-group java_example_group_1",
+				Code: "confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: `confluent kafka acl create --allow --service-account sa-55555 --operations READ,DESCRIBE --topic "*"`,
+				Code: `confluent kafka acl create --allow --service-account sa-55555 --operation READ --operation DESCRIBE --topic "*"`,
 			},
 		),
 	}
