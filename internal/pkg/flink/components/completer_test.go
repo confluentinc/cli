@@ -56,3 +56,17 @@ func TestAutoCompletionWithHistory(t *testing.T) {
 		t.Errorf("prompt.Run() = %q, want %q", actual, expected)
 	}
 }
+
+func TestFailingAutoCompletionWithHistory(t *testing.T) {
+	input := "non-existing-statement"
+	buffer := prompt.NewBuffer()
+	buffer.InsertText(input, false, true)
+
+	expected := prompt.Suggest{Text: "SELECT * FROM YESTERDAY;", Description: "History entry"}
+	completerWithHistory := completerWithHistory([]string{"SELECT * FROM YESTERDAY;"})
+	actual := completerWithHistory(*buffer.Document())
+
+	if containsSuggestion(actual, expected) {
+		t.Errorf("prompt.Run() = %q, want %q", actual, expected)
+	}
+}
