@@ -206,7 +206,7 @@ func convertToFlags(operations ...any) string {
 }
 
 func ConvertToLower(operations ...any) string {
-	var ops []string
+	ops := make([]string, len(operations))
 
 	for _, v := range operations {
 		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
