@@ -157,6 +157,18 @@ func (s *CLITestSuite) TestKafka() {
 		tt.workflow = true
 		s.runIntegrationTest(tt)
 	}
+
+	tests = []CLITest{
+		{args: "kafka acl create -h", fixture: "kafka/acl/onprem-create-help.golden"},
+		{args: "kafka acl list -h", fixture: "kafka/acl/onprem-list-help.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, tt := range tests {
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
+	}
 }
 
 func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
