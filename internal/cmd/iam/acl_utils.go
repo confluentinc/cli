@@ -148,9 +148,9 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 }
 
 func convertToFlags(operations ...any) string {
-	var ops []string
+	ops := make([]string, len(operations))
 
-	for _, v := range operations {
+	for i, v := range operations {
 		if v == mds.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
@@ -158,7 +158,7 @@ func convertToFlags(operations ...any) string {
 			v = "cluster-scope"
 		}
 		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops = append(ops, fmt.Sprintf("`--%s`", s))
+		ops[i] = fmt.Sprintf("`--%s`", s)
 	}
 
 	sort.Strings(ops)

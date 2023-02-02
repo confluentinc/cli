@@ -187,9 +187,9 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 }
 
 func convertToFlags(operations ...any) string {
-	var ops []string
+	ops := make([]string, len(operations))
 
-	for _, v := range operations {
+	for i, v := range operations {
 		// clean the resources that don't map directly to flag name
 		if v == cpkafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
@@ -198,7 +198,7 @@ func convertToFlags(operations ...any) string {
 			v = "cluster-scope"
 		}
 		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops = append(ops, fmt.Sprintf("`--%s`", s))
+		ops[i] = fmt.Sprintf("`--%s`", s)
 	}
 
 	sort.Strings(ops)
@@ -208,13 +208,12 @@ func convertToFlags(operations ...any) string {
 func ConvertToLower(operations ...any) string {
 	ops := make([]string, len(operations))
 
-	for _, v := range operations {
-		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops = append(ops, s)
+	for i, v := range operations {
+		ops[i] = strings.ReplaceAll(fmt.Sprint(v), "_", "-")
 	}
 
 	sort.Strings(ops)
-	return strings.Join(ops, ", ")
+	return strings.ToLower(strings.Join(ops, ", "))
 }
 
 func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
