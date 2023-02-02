@@ -42,6 +42,9 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 			if *req.Spec.DisplayName == "gcp-byok-test" {
 				cluster.Spec.Config.CmkV2Dedicated.EncryptionKey = cmkv2.PtrString("xyz")
 			}
+			if *req.Spec.DisplayName == "cck-byok-test" {
+				cluster.Spec.Byok = req.Spec.Byok
+			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 		} else {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}

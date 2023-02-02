@@ -7,9 +7,11 @@ import (
 	"net/url"
 	"sort"
 	"strings"
+	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
@@ -180,6 +182,60 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 		}
 	}
 	return false
+}
+
+func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
+	byokStoreV1 := map[string]*byokv1.ByokV1Key{}
+
+	byokStoreV1["cck-001"] = &byokv1.ByokV1Key{
+		Id: byokv1.PtrString("cck-001"),
+		Metadata: &byokv1.ObjectMeta{
+			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC)),
+		},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+				Kind:   "AwsKey",
+			},
+		},
+		Provider: byokv1.PtrString("AWS"),
+		State:    byokv1.PtrString("IN_USE"),
+	}
+
+	byokStoreV1["cck-002"] = &byokv1.ByokV1Key{
+		Id: byokv1.PtrString("cck-002"),
+		Metadata: &byokv1.ObjectMeta{
+			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC)),
+		},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+				Kind:   "AwsKey",
+			},
+		},
+		Provider: byokv1.PtrString("AWS"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	byokStoreV1["cck-003"] = &byokv1.ByokV1Key{
+		Id: byokv1.PtrString("cck-003"),
+		Metadata: &byokv1.ObjectMeta{
+			CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC)),
+		},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
+				ApplicationId: byokv1.PtrString("00000000-0000-0000-0000-000000000000"),
+				KeyId:         "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000",
+				KeyVaultId:    "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault",
+				Kind:          "AzureKey",
+				TenantId:      "00000000-0000-0000-0000-000000000000",
+			},
+		},
+		Provider: byokv1.PtrString("Azure"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	return byokStoreV1
 }
 
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
