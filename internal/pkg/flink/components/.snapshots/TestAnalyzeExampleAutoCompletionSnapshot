@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=40) "ANALYZE TABLE Orders COMPUTE STATISTICS;",
+    Description: (string) (len=78) "Used to collect statistics for existing tables and store the result to catalog"
+  }
+}

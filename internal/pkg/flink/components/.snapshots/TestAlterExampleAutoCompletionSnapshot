@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=39) "ALTER TABLE Orders RENAME TO NewOrders;",
+    Description: (string) (len=65) "Modify a registered table/view/function definition in the Catalog"
+  }
+}

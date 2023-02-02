@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=21) "EXPLAIN PLAN FOR ...;",
+    Description: (string) (len=87) "Used to explain the logical and optimized query plans of a query or an INSERT statement"
+  }
+}
