@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/hashicorp/go-multierror"
@@ -26,7 +27,7 @@ func aclFlags() *pflag.FlagSet {
 	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
 	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
+		acl.ConvertToLower(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
 			mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE, mds.ACLOPERATION_ALTER,
 			mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_CLUSTER_ACTION,
 			mds.ACLOPERATION_DESCRIBE_CONFIGS, mds.ACLOPERATION_ALTER_CONFIGS,
@@ -156,9 +157,8 @@ func convertToFlags(operations ...any) string {
 		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprint(v)
-		s = strings.ReplaceAll(s, "_", "-")
-		ops = append(ops, strings.ToLower(s))
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops = append(ops, fmt.Sprintf("`--%s`", s))
 	}
 
 	sort.Strings(ops)

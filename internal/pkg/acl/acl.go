@@ -79,7 +79,7 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -199,6 +199,18 @@ func convertToFlags(operations ...any) string {
 		}
 		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
 		ops = append(ops, fmt.Sprintf("`--%s`", s))
+	}
+
+	sort.Strings(ops)
+	return strings.Join(ops, ", ")
+}
+
+func ConvertToLower(operations ...any) string {
+	var ops []string
+
+	for _, v := range operations {
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops = append(ops, s)
 	}
 
 	sort.Strings(ops)
