@@ -20,6 +20,9 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
+	cmd.Flags().String("provider", "", "Filter by provider (AWS or Azure)")
+	cmd.Flags().String("state", "", "Filter by state (IN_USE or AVAILABLE)")
+
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
@@ -28,7 +31,17 @@ func (c *command) newListCommand() *cobra.Command {
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 
-	keys, err := c.V2Client.ListByokKeys()
+	provider, err := cmd.Flags().GetString("provider")
+	if err != nil {
+		return err
+	}
+
+	state, err := cmd.Flags().GetString("state")
+	if err != nil {
+		return err
+	}
+
+	keys, err := c.V2Client.ListByokKeys(provider, state)
 	if err != nil {
 		return err
 	}
