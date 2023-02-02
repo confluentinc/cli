@@ -17,5 +17,5 @@ func CombineCompleters(completers ...CompleterFunc) CompleterFunc {
 }
 
 func completer(in prompt.Document) []prompt.Suggest {
-	return CombineCompleters(basicCompleter, SETCompleter)(in)
+	return CombineCompleters(EXAMPLESCompleter, SETCompleter, SHOWCompleter)(in)
 }
