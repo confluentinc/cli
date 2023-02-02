@@ -10,17 +10,6 @@ type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-type byokKey struct {
-	Id        string
-	Key       string
-	Roles     []string
-	Provider  string
-	State     string
-	CreatedAt string
-	UpdatedAt string
-	DeletedAt string
-}
-
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "byok",
