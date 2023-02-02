@@ -79,7 +79,7 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -187,9 +187,9 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 }
 
 func convertToFlags(operations ...any) string {
-	var ops []string
+	ops := make([]string, len(operations))
 
-	for _, v := range operations {
+	for i, v := range operations {
 		// clean the resources that don't map directly to flag name
 		if v == cpkafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
@@ -198,11 +198,22 @@ func convertToFlags(operations ...any) string {
 			v = "cluster-scope"
 		}
 		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
-		ops = append(ops, fmt.Sprintf("`--%s`", s))
+		ops[i] = fmt.Sprintf("`--%s`", s)
 	}
 
 	sort.Strings(ops)
 	return strings.Join(ops, ", ")
+}
+
+func ConvertToLower(operations ...any) string {
+	ops := make([]string, len(operations))
+
+	for i, v := range operations {
+		ops[i] = strings.ReplaceAll(fmt.Sprint(v), "_", "-")
+	}
+
+	sort.Strings(ops)
+	return strings.ToLower(strings.Join(ops, ", "))
 }
 
 func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {
