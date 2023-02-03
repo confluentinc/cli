@@ -361,12 +361,12 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	// The err is ignored here since the --prefix flag is not defined by the list subcommand
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
-	res, err := cmd.Flags().GetString("resource")
+	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return err
 	}
-	if res != "" {
-		parts := strings.SplitN(res, ":", 2)
+	if resource != "" {
+		parts := strings.SplitN(resource, ":", 2)
 		if len(parts) != 2 {
 			return errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 		}
@@ -385,14 +385,14 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if resource.LookupType(userResourceId) == resource.ServiceAccount {
-		if res != "" {
+	if presource.LookupType(userResourceId) == presource.ServiceAccount {
+		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
 			fields = []string{"Principal", "Role"}
 		}
 	} else {
-		if res != "" {
+		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
 			if user, err := c.V2Client.GetIamUserById(userResourceId); err != nil {
