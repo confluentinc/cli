@@ -17,3 +17,24 @@ type FeatureFlags struct {
 	LastUpdateTime int64                  `json:"last_update_time" hcl:"last_update_time"`
 	User           lduser.User            `json:"user" hcl:"user"`
 }
+
+// ResolveToLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in. It
+// defaults to CliLaunchDarklyClient (CLI LaunchDarkly project).
+func ResolveToLaunchDarklyClient(platformName string) LaunchDarklyClient {
+	switch platformName {
+	case "confluent.cloud":
+		return CcloudProdLaunchDarklyClient
+	case "stag.cpdev.cloud":
+		return CcloudStagLaunchDarklyClient
+	case "devel.cpdev.cloud":
+		return CcloudDevelLaunchDarklyClient
+	default:
+		return CliLaunchDarklyClient
+	}
+}
+
+func (c LaunchDarklyClient) IsCcloudLaunchDarklyClient() bool {
+	return c == CcloudProdLaunchDarklyClient ||
+		c == CcloudStagLaunchDarklyClient ||
+		c == CcloudDevelLaunchDarklyClient
+}
