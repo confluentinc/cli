@@ -15,6 +15,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -351,10 +352,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
-	user, err := c.V2Client.GetIamUserById(userResourceId)
-	if err != nil {
-		return err
-	}
+
 	out := &roleBindingOut{
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
@@ -363,12 +361,12 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	// The err is ignored here since the --prefix flag is not defined by the list subcommand
 	prefix, _ := cmd.Flags().GetBool("prefix")
 
-	resource, err := cmd.Flags().GetString("resource")
+	res, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return err
 	}
-	if resource != "" {
-		parts := strings.SplitN(resource, ":", 2)
+	if res != "" {
+		parts := strings.SplitN(res, ":", 2)
 		if len(parts) != 2 {
 			return errors.NewErrorWithSuggestions(errors.ResourceFormatErrorMsg, errors.ResourceFormatSuggestions)
 		}
@@ -387,17 +385,21 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if err != nil {
-		if resource != "" {
+	if resource.LookupType(userResourceId) == resource.ServiceAccount {
+		if res != "" {
 			fields = resourcePatternListFields
 		} else {
 			fields = []string{"Principal", "Role"}
 		}
 	} else {
-		if resource != "" {
+		if res != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
-			out.Email = user.GetEmail()
+			if user, err := c.V2Client.GetIamUserById(userResourceId); err != nil {
+				return err
+			} else {
+				out.Email = user.GetEmail()
+			}
 			fields = []string{"Principal", "Email", "Role"}
 		}
 	}
