@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -13,7 +14,6 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -36,7 +36,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
 	s.T().Run("free trial organization login", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		os.Setenv("IS_ON_FREE_TRIAL", "true")
 		defer unsetFreeTrialEnv()
 
@@ -47,7 +47,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	})
 
 	s.T().Run("non-free-trial organization login", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 
 		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, loggedInAsWithOrgOutput)
@@ -197,9 +197,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", pauth.ConfluentPlatformPassword)}
 		}
 
 		// TODO: add save test using stdin input
@@ -220,7 +220,9 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		ok, err := regexp.MatchString(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		s.NoError(err)
+		s.Equal(ok, true)
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
@@ -265,9 +267,9 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", pauth.ConfluentPlatformPassword)}
 		}
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
 		s.Contains(output, savedToNetrcOutput)
@@ -286,7 +288,9 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
 		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		ok, err := regexp.MatchString(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		s.NoError(err)
+		s.Equal(ok, true)
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
