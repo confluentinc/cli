@@ -366,7 +366,7 @@ func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
 
 	err := cmd.Execute()
 	assert.NotNil(suite.T(), err)
-	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "`--cluster-scope`, `--consumer-group`, `--topic`, `--transactional-id`")
 	assert.Contains(suite.T(), err.Error(), expect)
 }
 
