@@ -395,11 +395,11 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
-			if user, err := c.V2Client.GetIamUserById(userResourceId); err != nil {
+			user, err := c.V2Client.GetIamUserById(userResourceId)
+			if err != nil {
 				return err
-			} else {
-				out.Email = user.GetEmail()
 			}
+			out.Email = user.GetEmail()
 			fields = []string{"Principal", "Email", "Role"}
 		}
 	}
