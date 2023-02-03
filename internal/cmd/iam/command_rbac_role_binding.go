@@ -15,6 +15,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -351,10 +352,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
 	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
-	user, err := c.V2Client.GetIamUserById(userResourceId)
-	if err != nil {
-		return err
-	}
+
 	out := &roleBindingOut{
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
@@ -387,7 +385,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if err != nil {
+	if presource.LookupType(userResourceId) == presource.ServiceAccount {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
@@ -397,6 +395,10 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
+			user, err := c.V2Client.GetIamUserById(userResourceId)
+			if err != nil {
+				return err
+			}
 			out.Email = user.GetEmail()
 			fields = []string{"Principal", "Email", "Role"}
 		}
