@@ -2,6 +2,7 @@ package logout
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -57,8 +58,10 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		if err := keychain.Delete(c.Config.Config.Context().LoginContextName); err != nil {
-			return err
+		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
+			if err := keychain.Delete(c.Config.Config.Context().LoginContextName); err != nil {
+				return err
+			}
 		}
 	}
 

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -356,9 +357,12 @@ func (c *command) saveLoginToLocal(cmd *cobra.Command, isCloud bool, url string,
 			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 			return nil
 		}
-		ctxName := c.Config.Config.Context().LoginContextName // after login, this must be not nil
-		if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
-			return err
+
+		ctxName := c.Config.Config.Context().LoginContextName
+		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
+			if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
+				return err
+			}
 		}
 
 		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, ctxName, credentials.Username, credentials.Password, c.Config.Salt); err != nil {

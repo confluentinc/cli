@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
@@ -347,8 +348,12 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config, ctxName, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		username, password, err := keychain.Read(ctxName, url)
-		return &Credentials{Username: username, Password: password}, err
+		if runtime.GOOS == "darwin" {
+			username, password, err := keychain.Read(ctxName, url)
+			return &Credentials{Username: username, Password: password}, err
+		}
+		return &Credentials{}, errors.New("keychain not available on platforms other than darwin")
+
 	}
 }
 
