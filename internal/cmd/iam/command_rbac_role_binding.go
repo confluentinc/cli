@@ -15,7 +15,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
