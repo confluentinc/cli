@@ -33,7 +33,7 @@ func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
 	if context != nil {
 		authToken = context.State.AuthToken
 	}
-	var claims map[string]interface{}
+	var claims map[string]any
 	token, err := jwt.ParseSigned(authToken)
 	if err != nil {
 		return new(ccloudv1.InvalidTokenError)

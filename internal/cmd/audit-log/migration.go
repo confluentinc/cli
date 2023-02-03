@@ -419,7 +419,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 					routeName := generateCRNPath(clusterId, newCRNAuthority, resource.extension, subcluster.name)
 
 					// Create a map of field name to default topics
-					categoriesToRoutes := map[string]interface{}{}
+					categoriesToRoutes := map[string]any{}
 					for _, category := range resource.categories {
 						categoriesToRoutes[category] = &oldDefaultTopics
 					}

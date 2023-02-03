@@ -13,6 +13,7 @@ import (
 
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -22,6 +23,20 @@ import (
 )
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+
+var AclOperations = []mds.AclOperation{
+	mds.ACLOPERATION_ALL,
+	mds.ACLOPERATION_ALTER,
+	mds.ACLOPERATION_ALTER_CONFIGS,
+	mds.ACLOPERATION_CLUSTER_ACTION,
+	mds.ACLOPERATION_CREATE,
+	mds.ACLOPERATION_DELETE,
+	mds.ACLOPERATION_DESCRIBE,
+	mds.ACLOPERATION_DESCRIBE_CONFIGS,
+	mds.ACLOPERATION_IDEMPOTENT_WRITE,
+	mds.ACLOPERATION_READ,
+	mds.ACLOPERATION_WRITE,
+}
 
 type out struct {
 	Principal    string `human:"Principal" serialized:"principal"`
@@ -79,7 +94,7 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", convertToFlags("ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE")))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(AclOperations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -186,10 +201,10 @@ func setAclRequestResourcePattern(conf *AclRequestDataWithError, n, v string) {
 	conf.ResourceName = v
 }
 
-func convertToFlags(operations ...interface{}) string {
-	var ops []string
+func convertToFlags(operations ...any) string {
+	ops := make([]string, len(operations))
 
-	for _, v := range operations {
+	for i, v := range operations {
 		// clean the resources that don't map directly to flag name
 		if v == cpkafkarestv3.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
@@ -197,13 +212,22 @@ func convertToFlags(operations ...interface{}) string {
 		if v == cpkafkarestv3.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprint(v)
-		s = strings.ReplaceAll(s, "_", "-")
-		ops = append(ops, strings.ToLower(s))
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops[i] = fmt.Sprintf("`--%s`", s)
 	}
 
 	sort.Strings(ops)
 	return strings.Join(ops, ", ")
+}
+
+func ConvertToLower[T any](operations []T) string {
+	ops := make([]string, len(operations))
+
+	for i, v := range operations {
+		ops[i] = strings.ReplaceAll(fmt.Sprint(v), "_", "-")
+	}
+
+	return strings.ToLower(strings.Join(ops, ", "))
 }
 
 func ValidateCreateDeleteAclRequestData(aclConfiguration *AclRequestDataWithError) *AclRequestDataWithError {

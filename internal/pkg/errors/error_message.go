@@ -66,8 +66,8 @@ const (
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetAllowOrDenyErrorMsg    = "`--allow` or `--deny` must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only `--allow` or `--deny` may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
@@ -131,7 +131,6 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"

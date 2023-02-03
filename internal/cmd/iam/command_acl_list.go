@@ -20,7 +20,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
+				Text: `List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:`,
 				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),

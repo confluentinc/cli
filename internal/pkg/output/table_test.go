@@ -293,7 +293,7 @@ func TestList(t *testing.T) {
 		},
 	}
 
-	objects := []interface{}{
+	objects := []any{
 		&out{
 			Id:          2,
 			Name:        "lkc-222222",
@@ -325,11 +325,11 @@ func TestList_Empty(t *testing.T) {
 	}
 
 	for format, expected := range tests {
-		testList(t, format, []interface{}{}, expected)
+		testList(t, format, []any{}, expected)
 	}
 }
 
-func testList(t *testing.T, format string, objects []interface{}, expected []string) {
+func testList(t *testing.T, format string, objects []any, expected []string) {
 	buf := new(bytes.Buffer)
 	cmd := &cobra.Command{}
 	cmd.Flags().String("output", format, "")

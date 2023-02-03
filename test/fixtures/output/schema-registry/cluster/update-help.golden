@@ -6,9 +6,9 @@ Usage:
 Examples:
 Update top level compatibility or mode of Schema Registry.
 
-  $ confluent schema-registry cluster update --compatibility=BACKWARD
+  $ confluent schema-registry cluster update --compatibility BACKWARD
 
-  $ confluent schema-registry cluster update --mode=READWRITE
+  $ confluent schema-registry cluster update --mode READWRITE
 
 Flags:
       --compatibility string   Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.

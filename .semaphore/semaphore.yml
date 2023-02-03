@@ -8,7 +8,7 @@ agent:
 
 auto_cancel:
   running:
-    when: "true"
+    when: "branch != 'main'"
 
 execution_time_limit:
   hours: 1

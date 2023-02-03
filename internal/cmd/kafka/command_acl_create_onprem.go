@@ -18,25 +18,25 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		RunE:  c.createOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"READ\" and \"DESCRIBE\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"read\" and \"describe\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
+				Code: "confluent kafka acl create --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: `confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --topic "*"`,
+				Code: `confluent kafka acl create --allow --principal User:Jane --operation read --operation describe --topic "*"`,
 			},
 			examples.Example{
 				Text: "You can run the previous example without logging in if you provide the embedded Kafka REST Proxy endpoint with the `--url` flag.",
-				Code: "confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+				Code: "confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: `confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation READ --operation DESCRIBE --topic "*"`,
+				Code: `confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --operation describe --topic "*"`,
 			},
 			examples.Example{
 				Text: "You can also run the example above without logging in if you provide the Kafka REST proxy endpoint with the `--url` flag.",
-				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: `confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation READ --operation DESCRIBE --topic "*"`,
+				Code: `confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --operation describe --topic "*"`,
 			},			
 		),
 	}
