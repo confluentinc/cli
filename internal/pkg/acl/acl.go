@@ -13,6 +13,7 @@ import (
 
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -22,6 +23,12 @@ import (
 )
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
+
+var AclOperations = []mds.AclOperation{mds.ACLOPERATION_ALL, mds.ACLOPERATION_ALTER, mds.ACLOPERATION_ALTER_CONFIGS,
+	mds.ACLOPERATION_CLUSTER_ACTION, mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE,
+	mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_DESCRIBE_CONFIGS,
+	mds.ACLOPERATION_IDEMPOTENT_WRITE, mds.ACLOPERATION_READ,
+	mds.ACLOPERATION_WRITE}
 
 type out struct {
 	Principal    string `human:"Principal" serialized:"principal"`
@@ -79,7 +86,7 @@ func PrintACLs(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 func AclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower("ALL", "ALTER", "ALTER_CONFIGS", "CLUSTER_ACTION", "CREATE", "DELETE", "DESCRIBE", "DESCRIBE_CONFIGS", "IDEMPOTENT_WRITE", "READ", "WRITE")))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", ConvertToLower(AclOperations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -205,7 +212,7 @@ func convertToFlags(operations ...any) string {
 	return strings.Join(ops, ", ")
 }
 
-func ConvertToLower(operations ...any) string {
+func ConvertToLower[T any](operations []T) string {
 	ops := make([]string, len(operations))
 
 	for i, v := range operations {
