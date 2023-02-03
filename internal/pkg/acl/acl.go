@@ -24,11 +24,19 @@ import (
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
 
-var AclOperations = []mds.AclOperation{mds.ACLOPERATION_ALL, mds.ACLOPERATION_ALTER, mds.ACLOPERATION_ALTER_CONFIGS,
-	mds.ACLOPERATION_CLUSTER_ACTION, mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE,
-	mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_DESCRIBE_CONFIGS,
-	mds.ACLOPERATION_IDEMPOTENT_WRITE, mds.ACLOPERATION_READ,
-	mds.ACLOPERATION_WRITE}
+var AclOperations = []mds.AclOperation{
+	mds.ACLOPERATION_ALL,
+	mds.ACLOPERATION_ALTER,
+	mds.ACLOPERATION_ALTER_CONFIGS,
+	mds.ACLOPERATION_CLUSTER_ACTION,
+	mds.ACLOPERATION_CREATE,
+	mds.ACLOPERATION_DELETE,
+	mds.ACLOPERATION_DESCRIBE,
+	mds.ACLOPERATION_DESCRIBE_CONFIGS,
+	mds.ACLOPERATION_IDEMPOTENT_WRITE,
+	mds.ACLOPERATION_READ,
+	mds.ACLOPERATION_WRITE,
+}
 
 type out struct {
 	Principal    string `human:"Principal" serialized:"principal"`
