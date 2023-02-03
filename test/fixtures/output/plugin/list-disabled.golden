@@ -1,0 +1,4 @@
+Error: plugins are disabled
+
+Suggestions:
+    Set "disable_plugins": false in ~/.confluent/config.json.
