@@ -239,7 +239,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
 	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
-	ldDisable, ok := ldDisableJson.(map[string]interface{})
+	ldDisable, ok := ldDisableJson.(map[string]any)
 	if !ok {
 		return nil
 	}
@@ -263,8 +263,8 @@ func isOnPremLoginCmd(command *CLICommand, isTest bool) bool {
 		return false
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
-	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(urlFlag, isTest)
+	url, _ := command.Flags().GetString("url")
+	return (url == "" && mdsEnvUrl != "") || !ccloudv2.IsCCloudURL(url, isTest)
 }
 
 func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
@@ -272,8 +272,8 @@ func isCloudLoginCmd(command *CLICommand, isTest bool) bool {
 		return false
 	}
 	mdsEnvUrl := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL)
-	urlFlag, _ := command.Flags().GetString("url")
-	return (urlFlag == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(urlFlag, isTest)
+	url, _ := command.Flags().GetString("url")
+	return (url == "" && mdsEnvUrl == "") || ccloudv2.IsCCloudURL(url, isTest)
 }
 
 func LabelRequiredFlags(cmd *cobra.Command) {
@@ -376,7 +376,13 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	credentials, err := r.getCCloudCredentials(netrcMachineName, orgResourceId)
+
+	url := pauth.CCloudURL
+	if ctxUrl := r.Config.Context().GetPlatformServer(); ctxUrl != "" {
+		url = ctxUrl
+	}
+
+	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -386,8 +392,8 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 		return nil
 	}
 
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, url)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, url, credentials)
 	if err != nil {
 		return err
 	}
@@ -399,10 +405,11 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
+		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
@@ -414,7 +421,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, orgResourceId string) (*
 		return nil, err
 	}
 
-	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, pauth.CCloudURL, credentials, false, orgResourceId)
+	token, refreshToken, err := r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, url, credentials, false, orgResourceId)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +770,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	caCertPath, _ := cmd.Flags().GetString("ca-cert-path")
 	clientCertPath, _ := cmd.Flags().GetString("client-cert-path")
 	clientKeyPath, _ := cmd.Flags().GetString("client-key-path")
-	noAuth, _ := cmd.Flags().GetBool("no-authentication")
+	noAuthentication, _ := cmd.Flags().GetBool("no-authentication")
 	prompt, _ := cmd.Flags().GetBool("prompt")
 
 	if (clientCertPath == "") != (clientKeyPath == "") {
@@ -775,7 +782,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 		caCertPath:     caCertPath,
 		clientCertPath: clientCertPath,
 		clientKeyPath:  clientKeyPath,
-		noAuth:         noAuth,
+		noAuth:         noAuthentication,
 		prompt:         prompt,
 	}
 

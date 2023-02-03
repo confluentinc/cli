@@ -66,8 +66,8 @@ const (
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetAllowOrDenyErrorMsg    = "`--allow` or `--deny` must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only `--allow` or `--deny` may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
@@ -79,27 +79,27 @@ const (
 	UnknownRoleSuggestions = "The available roles are: %s."
 
 	// iam rbac role-binding commands
-	PrincipalFormatErrorMsg             = "incorrect principal format specified"
-	PrincipalFormatSuggestions          = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
-	ResourceFormatErrorMsg              = "incorrect resource format specified"
-	ResourceFormatSuggestions           = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg                  = `failed to lookup role "%s"`
-	LookUpRoleSuggestions               = "To check for valid roles, use `confluent iam rbac role list`."
-	InvalidResourceTypeErrorMsg         = `invalid resource type "%s"`
-	InvalidResourceTypeSuggestions      = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg              = "must also specify a --kafka-cluster to uniquely identify the scope"
-	SpecifyCloudClusterErrorMsg         = "must specify cloud-cluster flag to indicate role binding scope"
-	SpecifyEnvironmentErrorMsg          = "must specify environment flag to indicate role binding scope"
-	BothClusterNameAndScopeErrorMsg     = "cannot specify both cluster name and cluster scope"
-	SpecifyClusterErrorMsg              = "must specify either cluster ID to indicate role binding scope or the cluster name"
-	MoreThanOneNonKafkaErrorMsg         = "cannot specify more than one non-Kafka cluster ID for a scope"
-	PrincipalOrRoleRequiredErrorMsg     = "must specify either principal or role"
-	HTTPStatusCodeErrorMsg              = "no error but received HTTP status code %d"
-	HTTPStatusCodeSuggestions           = "Please file a support ticket with details."
-	UnauthorizedErrorMsg                = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions             = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
-	RoleBindingNotFoundFoundErrorMsg    = "failed to lookup matching rolebinding"
-	RoleBindingNotFoundFoundSuggestions = "To list rolebindings, use `confluent iam rbac role-binding list`."
+	PrincipalFormatErrorMsg         = "incorrect principal format specified"
+	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
+	ResourceFormatErrorMsg          = "incorrect resource format specified"
+	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
+	LookUpRoleErrorMsg              = `failed to look up role "%s"`
+	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
+	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
+	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
+	SpecifyKafkaIDErrorMsg          = "must specify `--kafka-cluster` to uniquely identify the scope"
+	SpecifyCloudClusterErrorMsg     = "must specify `--cloud-cluster` to indicate role binding scope"
+	SpecifyEnvironmentErrorMsg      = "must specify `--environment` to indicate role binding scope"
+	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
+	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
+	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
+	PrincipalOrRoleRequiredErrorMsg = "must specify either principal or role"
+	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
+	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
+	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
+	UnauthorizedSuggestions         = "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`."
+	RoleBindingNotFoundErrorMsg     = "failed to look up matching role binding"
+	RoleBindingNotFoundSuggestions  = "To list role bindings, use `confluent iam rbac role-binding list`."
 
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
@@ -131,7 +131,6 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
@@ -221,7 +220,7 @@ const (
 	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg                    = `invalid schema ID "%s"`
 	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
-	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
+	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
@@ -251,7 +250,7 @@ const (
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
 	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
-	SRCaCertSuggestions              = "Please specify `--ca-location` to enable schema registry client."
+	SRCaCertSuggestions              = "Please specify `--ca-location` to enable Schema Registry client."
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
 	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
@@ -383,7 +382,6 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	FlagRequiredErrorMsg              = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
 
 	// catcher
@@ -431,13 +429,13 @@ const (
 	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg      = "not logged in"
 	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
-		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry."
+		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
 	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
 		AvoidTimeoutSuggestions
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token"
+	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
 	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--schema-registry-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		AvoidTimeoutSuggestions
 	CorruptedTokenErrorMsg    = "corrupted auth token"

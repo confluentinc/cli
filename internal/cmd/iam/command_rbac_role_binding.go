@@ -15,6 +15,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var (
@@ -23,7 +24,6 @@ var (
 	// ccloud has Email as additional field
 	ccloudResourcePatternListFields = []string{"Principal", "Email", "Role", "Environment", "CloudCluster", "ClusterType", "LogicalCluster", "ResourceType", "Name", "PatternType"}
 
-	//TODO: please move this to a backend route (https://confluentinc.atlassian.net/browse/CIAM-890)
 	clusterScopedRoles = map[string]bool{
 		"SystemAdmin":   true,
 		"ClusterAdmin":  true,
@@ -351,11 +351,8 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 }
 
 func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Command, roleBinding *mdsv2.IamV2RoleBinding) error {
-	userResourceId := strings.TrimLeft(roleBinding.GetPrincipal(), "User:")
-	user, err := c.V2Client.GetIamUserById(userResourceId)
-	if err != nil {
-		return err
-	}
+	userResourceId := strings.TrimPrefix(roleBinding.GetPrincipal(), "User:")
+
 	out := &roleBindingOut{
 		Principal: roleBinding.GetPrincipal(),
 		Role:      roleBinding.GetRoleName(),
@@ -388,7 +385,7 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if err != nil {
+	if presource.LookupType(userResourceId) == presource.ServiceAccount {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
@@ -398,6 +395,10 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 		if resource != "" {
 			fields = ccloudResourcePatternListFields
 		} else {
+			user, err := c.V2Client.GetIamUserById(userResourceId)
+			if err != nil {
+				return err
+			}
 			out.Email = user.GetEmail()
 			fields = []string{"Principal", "Email", "Role"}
 		}
@@ -462,7 +463,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 	}
 
 	if strings.HasPrefix(principal, "User:") {
-		principalValue := strings.TrimLeft(principal, "User:")
+		principalValue := strings.TrimPrefix(principal, "User:")
 		if strings.Contains(principalValue, "@") {
 			user, err := c.V2Client.GetIamUserByEmail(principalValue)
 			if err != nil {
@@ -516,33 +517,33 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.State.Auth.Organization.GetResourceId()
+	orgResourceId := c.State.Auth.Account.GetOrgResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
 	if cmd.Flags().Changed("current-environment") {
 		crnPattern += "/environment=" + c.EnvironmentId()
 	} else if cmd.Flags().Changed("environment") {
-		env, err := cmd.Flags().GetString("environment")
+		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/environment=" + env
+		crnPattern += "/environment=" + environment
 	}
 
 	if cmd.Flags().Changed("cloud-cluster") {
-		cluster, err := cmd.Flags().GetString("cloud-cluster")
+		cloudCluster, err := cmd.Flags().GetString("cloud-cluster")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/cloud-cluster=" + cluster
+		crnPattern += "/cloud-cluster=" + cloudCluster
 	}
 
 	if cmd.Flags().Changed("schema-registry-cluster") { // route not implemented yet
-		srCluster, err := cmd.Flags().GetString("schema-registry-cluster")
+		schemaRegistryCluster, err := cmd.Flags().GetString("schema-registry-cluster")
 		if err != nil {
 			return "", err
 		}
-		crnPattern += "/schema-registry=" + srCluster
+		crnPattern += "/schema-registry=" + schemaRegistryCluster
 	}
 
 	if cmd.Flags().Changed("ksql-cluster") { // route not implemented yet

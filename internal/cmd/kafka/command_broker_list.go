@@ -18,10 +18,10 @@ type brokerOut struct {
 func (c *brokerCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Args:  cobra.NoArgs,
-		RunE:  c.list,
 		Short: "List Kafka brokers.",
 		Long:  "List Kafka brokers using Confluent Kafka REST.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())

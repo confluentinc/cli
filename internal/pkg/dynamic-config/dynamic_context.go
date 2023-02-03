@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type DynamicContext struct {
@@ -108,7 +108,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if resource.LookupType(clusterId) != resource.KafkaCluster {
+	if presource.LookupType(clusterId) != presource.KafkaCluster {
 		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
@@ -171,8 +171,8 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 // or an empty SchemaRegistryCluster if there is none set,
 // or an ErrNotLoggedIn if the user is not logged in.
 func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
-	resourceId, _ := cmd.Flags().GetString("resource")
-	resourceType := resource.LookupType(resourceId)
+	resource, _ := cmd.Flags().GetString("resource")
+	resourceType := presource.LookupType(resource)
 
 	envId, err := d.AuthenticatedEnvId()
 	if err != nil {
@@ -181,16 +181,16 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
-	if resourceType == resource.SchemaRegistryCluster {
+	if resourceType == presource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
-			if srCluster.Id == resourceId {
+			if srCluster.Id == resource {
 				cluster = srCluster
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resourceId, envId)
+			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resource, envId)
 			if err != nil {
-				return nil, errors.CatchResourceNotFoundError(err, resourceId)
+				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
 			cluster = makeSRCluster(srCluster)
 			clusterChanged = true
@@ -198,9 +198,9 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByAccountId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), envId)
 			if err != nil {
-				return nil, errors.CatchResourceNotFoundError(err, resourceId)
+				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
 			cluster = makeSRCluster(srCluster)
 			clusterChanged = true
@@ -275,21 +275,21 @@ func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, 
 	if cmd.Flag("api-key") == nil || cmd.Flag("api-secret") == nil {
 		return "", "", nil
 	}
-	key, err := cmd.Flags().GetString("api-key")
+	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return "", "", err
 	}
 
-	secret, err := cmd.Flags().GetString("api-secret")
+	apiSecret, err := cmd.Flags().GetString("api-secret")
 	if err != nil {
 		return "", "", err
 	}
 
-	if key == "" && secret != "" {
+	if apiKey == "" && apiSecret != "" {
 		return "", "", errors.NewErrorWithSuggestions(errors.PassedSecretButNotKeyErrorMsg, errors.PassedSecretButNotKeySuggestions)
 	}
 
-	return key, secret, nil
+	return apiKey, apiSecret, nil
 }
 
 func missingDetails(cluster *v1.SchemaRegistryCluster) bool {

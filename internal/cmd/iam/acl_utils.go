@@ -146,7 +146,7 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	conf.AclBinding.Pattern.Name = v
 }
 
-func convertToFlags(operations ...interface{}) string {
+func convertToFlags(operations ...any) string {
 	var ops []string
 
 	for _, v := range operations {

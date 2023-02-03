@@ -67,7 +67,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ownerResourceId, err := cmd.Flags().GetString("service-account")
+	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -77,8 +77,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if ownerResourceId == "" {
-		ownerResourceId, err = c.getCurrentUserId()
+	if serviceAccount == "" {
+		serviceAccount, err = c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	key := apikeysv2.IamV2ApiKey{
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Description: apikeysv2.PtrString(description),
-			Owner:       &apikeysv2.ObjectReference{Id: ownerResourceId},
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccount},
 			Resource: &apikeysv2.ObjectReference{
 				Id:   clusterId,
 				Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
@@ -100,7 +100,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 	if err != nil {
-		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, ownerResourceId)
+		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
 	}
 
 	userKey := &v1.APIKeyPair{

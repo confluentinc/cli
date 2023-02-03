@@ -81,25 +81,25 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.GlobalObjectReference) (*[]kafkaquotas.GlobalObjectReference, error) {
 	if cmd.Flags().Changed("add-principals") {
-		serviceAccountsToAdd, err := cmd.Flags().GetStringSlice("add-principals")
+		addPrincipals, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
 			return nil, err
 		}
-		principalsToAdd := sliceToObjRefArray(serviceAccountsToAdd)
+		principalsToAdd := sliceToObjRefArray(addPrincipals)
 		updatePrincipals = append(updatePrincipals, *principalsToAdd...)
 	}
 	if cmd.Flags().Changed("remove-principals") {
-		principalsToRemove, err := cmd.Flags().GetStringSlice("remove-principals")
+		removePrincipals, err := cmd.Flags().GetStringSlice("remove-principals")
 		if err != nil {
 			return nil, err
 		}
-		removePrincipals := set.New()
-		for _, p := range principalsToRemove {
-			removePrincipals.Add(p)
+		remove := set.New()
+		for _, p := range removePrincipals {
+			remove.Add(p)
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if contains := removePrincipals.Contains(principal.Id); !contains {
+			if contains := remove.Contains(principal.Id); !contains {
 				updatePrincipals[i] = principal
 				i++
 			}
@@ -111,18 +111,18 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 
 func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
 	if cmd.Flags().Changed("ingress") {
-		updatedIngress, err := cmd.Flags().GetString("ingress")
+		ingress, err := cmd.Flags().GetString("ingress")
 		if err != nil {
 			return throughput, err
 		}
-		throughput.SetIngressByteRate(updatedIngress)
+		throughput.SetIngressByteRate(ingress)
 	}
 	if cmd.Flags().Changed("egress") {
-		updatedEgress, err := cmd.Flags().GetString("egress")
+		egress, err := cmd.Flags().GetString("egress")
 		if err != nil {
 			return throughput, err
 		}
-		throughput.SetEgressByteRate(updatedEgress)
+		throughput.SetEgressByteRate(egress)
 	}
 	return throughput, nil
 }

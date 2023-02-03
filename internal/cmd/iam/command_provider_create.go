@@ -48,7 +48,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	jwksuri, err := cmd.Flags().GetString("jwks-uri")
+	jwksUri, err := cmd.Flags().GetString("jwks-uri")
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		DisplayName: identityproviderv2.PtrString(name),
 		Description: identityproviderv2.PtrString(description),
 		Issuer:      identityproviderv2.PtrString(issuerUri),
-		JwksUri:     identityproviderv2.PtrString(jwksuri),
+		JwksUri:     identityproviderv2.PtrString(jwksUri),
 	}
 	provider, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {

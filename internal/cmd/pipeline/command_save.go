@@ -2,8 +2,8 @@ package pipeline
 
 import (
 	"os"
+	"strings"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -39,8 +39,6 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 }
 
 func (c *command) save(cmd *cobra.Command, args []string) error {
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -52,10 +50,10 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 	}
 
 	path := args[0] + ".sql"
+
+	sqlFile, _ := cmd.Flags().GetString("sql-file")
 	if sqlFile != "" {
-		if path, err = homedir.Expand(sqlFile); err != nil {
-			path = sqlFile
-		}
+		path = getPath(sqlFile)
 	}
 
 	if err := os.WriteFile(path, []byte(pipeline.Spec.SourceCode.GetSql()), 0644); err != nil {
@@ -64,4 +62,13 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 
 	utils.Printf(cmd, "Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
 	return nil
+}
+
+func getPath(sqlFile string) string {
+	if strings.HasPrefix(sqlFile, "~") {
+		if home, err := os.UserHomeDir(); err == nil {
+			return strings.Replace(sqlFile, "~", home, 1)
+		}
+	}
+	return sqlFile
 }

@@ -22,7 +22,12 @@ import (
 )
 
 var (
-	environments  = []*ccloudv1.Account{{Id: "a-595", Name: "default"}, {Id: "not-595", Name: "other"}, {Id: "env-123", Name: "env123"}, {Id: SRApiEnvId, Name: "srUpdate"}}
+	environments = []*ccloudv1.Account{
+		{Id: "a-595", Name: "default", OrgResourceId: "abc-123"},
+		{Id: "not-595", Name: "other"},
+		{Id: "env-123", Name: "env123"},
+		{Id: SRApiEnvId, Name: "srUpdate"},
+	}
 	keyIndex      = int32(3)
 	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
 
@@ -438,12 +443,12 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
 
 		w.Header().Set("Content-Type", "application/json")
-		flags := map[string]interface{}{
+		flags := map[string]any{
 			"testBool":                               true,
 			"testString":                             "string",
 			"testInt":                                1,
-			"testJson":                               map[string]interface{}{"key": "val"},
-			"cli.deprecation_notices":                []map[string]interface{}{},
+			"testJson":                               map[string]any{"key": "val"},
+			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,
 			"cli.stream_designer.source_code.enable": true,
 		}

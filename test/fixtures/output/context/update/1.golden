@@ -1,1 +1,1 @@
-Error: must use at least one of the following flags: --name, --kafka-cluster
+Error: must use at least one of the following flags: `--name`, `--kafka-cluster`

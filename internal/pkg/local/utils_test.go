@@ -20,7 +20,7 @@ func TestExtractConfig(t *testing.T) {
 
 	in := []byte("key1=val1\nkey2=val2\n#commented=val\n")
 
-	out := map[string]interface{}{
+	out := map[string]any{
 		"key1": "val1",
 		"key2": "val2",
 	}
@@ -41,7 +41,7 @@ func TestCollectFlags(t *testing.T) {
 	flags.StringSlice("string-array-skip", []string{}, "")
 	flags.StringSlice("string-array-use", []string{"A", "B"}, "")
 
-	defaults := map[string]interface{}{
+	defaults := map[string]any{
 		"bool-skip":         false,
 		"bool-use":          false,
 		"int-skip":          0,

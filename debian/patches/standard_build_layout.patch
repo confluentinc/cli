@@ -1,6 +1,6 @@
---- cli/Makefile	2023-01-20 11:18:14.000000000 -0800
+--- cli/Makefile	2023-01-20 16:06:29.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,177 +1,130 @@
+@@ -1,170 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -56,7 +56,6 @@
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 -RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
--RDKAFKA_VERSION = 1.9.3-RC3
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
@@ -166,13 +165,7 @@
 -
 -.PHONY: lint-licenses
 -lint-licenses:
--	go-licenses report ./...
--
--.PHONY: test-prep
--test-prep:
--ifdef CI
--	@echo "mode: atomic" > coverage.txt
--endif
+-	go-licenses check ./...
 -
 -.PHONY: unit-test
 -unit-test:
@@ -264,7 +257,7 @@
  endif
  
 -.PHONY: test
--test: test-prep unit-test int-test
+-test: unit-test int-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<

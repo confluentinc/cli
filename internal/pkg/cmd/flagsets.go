@@ -29,8 +29,8 @@ func OnPremAuthenticationSet() *pflag.FlagSet {
 
 func OnPremSchemaRegistrySet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-schemaregistry", pflag.ExitOnError)
-	set.String("ca-location", "", "File or directory path to CA certificate(s) to authenticate the schema registry client.")
-	set.String("schema-registry-endpoint", "", "The URL of the schema registry cluster.")
+	set.String("ca-location", "", "File or directory path to CA certificate(s) to authenticate the Schema Registry client.")
+	set.String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	set.SortFlags = false
 	return set
 }

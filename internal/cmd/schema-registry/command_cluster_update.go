@@ -23,10 +23,10 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update top level compatibility or mode of Schema Registry.",
-				Code: "confluent schema-registry cluster update --compatibility=BACKWARD",
+				Code: "confluent schema-registry cluster update --compatibility BACKWARD",
 			},
 			examples.Example{
-				Code: "confluent schema-registry cluster update --mode=READWRITE",
+				Code: "confluent schema-registry cluster update --mode READWRITE",
 			},
 		),
 	}
@@ -44,11 +44,11 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, _ []string) error {
-	compat, err := cmd.Flags().GetString("compatibility")
+	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
 	}
-	if compat != "" {
+	if compatibility != "" {
 		return c.updateCompatibility(cmd)
 	}
 
@@ -69,12 +69,12 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	compat, err := cmd.Flags().GetString("compatibility")
+	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
 		return err
 	}
 
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: strings.ToUpper(compat)}
+	updateReq := srsdk.ConfigUpdateRequest{Compatibility: strings.ToUpper(compatibility)}
 
 	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
 		return err

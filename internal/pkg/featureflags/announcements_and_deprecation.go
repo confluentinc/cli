@@ -18,43 +18,70 @@ const (
 	DeprecationNotices = "cli.deprecation_notices"
 )
 
-type FlagsAndMsg struct {
-	Flags        []string
-	FlagMessages []string
-	CmdMessage   string
+type Messages struct {
+	CommandMessage string
+	Flags          []string
+	FlagMessages   []string
 }
 
-func GetAnnouncementsOrDeprecation(ld interface{}) map[string]*FlagsAndMsg {
-	cmdToFlagsAndMsg := make(map[string]*FlagsAndMsg)
-	for _, val := range ld.([]interface{}) {
-		if len(val.(map[string]interface{})) == 0 {
-			break
+func NewMessages() *Messages {
+	return &Messages{
+		Flags:        []string{},
+		FlagMessages: []string{},
+	}
+}
+
+func GetAnnouncementsOrDeprecation(resp any) map[string]*Messages {
+	commandToMessages := make(map[string]*Messages)
+
+	list, ok := resp.([]any)
+	if !ok {
+		fmt.Println("A")
+		return commandToMessages
+	}
+
+	for _, data := range list {
+		pair, ok := data.(map[string]any)
+		if !ok {
+			continue
 		}
-		var flags []string
-		var msg = val.(map[string]interface{})["message"].(string)
-		var command = val.(map[string]interface{})["pattern"].(string)
-		if idx := strings.Index(command, "-"); idx != -1 {
-			flags = strings.Split(command[idx:], " ")
-			for i := range flags {
-				flags[i] = strings.TrimLeft(flags[i], "-")
+		message, ok := pair["message"].(string)
+		if !ok {
+			continue
+		}
+		pattern, ok := pair["pattern"].(string)
+		if !ok {
+			continue
+		}
+
+		subpatterns := strings.Split(pattern, " ")
+
+		idx := 0
+		for _, subpattern := range subpatterns {
+			if strings.HasPrefix(subpattern, "-") {
+				break
 			}
-			command = command[:idx-1]
+			idx++
 		}
-		if len(flags) == 0 {
-			cmdToFlagsAndMsg[command] = &FlagsAndMsg{CmdMessage: msg}
+
+		command := strings.Join(subpatterns[:idx], " ")
+
+		if _, ok := commandToMessages[command]; !ok {
+			commandToMessages[command] = NewMessages()
+		}
+
+		if idx == len(subpatterns) {
+			commandToMessages[command].CommandMessage = message
 		} else {
-			msgs := make([]string, len(flags))
-			for i := range msgs {
-				msgs[i] = msg
+			for _, subpattern := range subpatterns[idx:] {
+				flag := strings.TrimLeft(subpattern, "-")
+				commandToMessages[command].Flags = append(commandToMessages[command].Flags, flag)
+				commandToMessages[command].FlagMessages = append(commandToMessages[command].FlagMessages, message)
 			}
-			if _, ok := cmdToFlagsAndMsg[command]; !ok {
-				cmdToFlagsAndMsg[command] = &FlagsAndMsg{Flags: []string{}, FlagMessages: []string{}}
-			}
-			cmdToFlagsAndMsg[command].Flags = append(cmdToFlagsAndMsg[command].Flags, flags...)
-			cmdToFlagsAndMsg[command].FlagMessages = append(cmdToFlagsAndMsg[command].FlagMessages, msgs...)
 		}
 	}
-	return cmdToFlagsAndMsg
+
+	return commandToMessages
 }
 
 func DeprecateCommandTree(cmd *cobra.Command) {
@@ -84,33 +111,34 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 }
 
 func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
-	flagResponse := Manager.JsonVariation(featureFlag, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	flagResponse := Manager.JsonVariation(featureFlag, ctx, v1.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(flagResponse)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
 				if featureFlag == DeprecationNotices {
-					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CmdMessage))
+					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CommandMessage))
 				} else {
-					utils.ErrPrintln(cmd, flagsAndMsg.CmdMessage)
+					utils.ErrPrintln(cmd, flagsAndMsg.CommandMessage)
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
-					var msg string
-					if len(flag) == 1 {
-						flag = cmd.Flags().ShorthandLookup(flag).Name
+					if !cmd.Flags().Changed(flag) {
+						continue
 					}
-					if cmd.Flags().Changed(flag) {
-						if featureFlag == DeprecationNotices {
-							msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
-						}
+
+					var msg string
+					if featureFlag == DeprecationNotices {
+						msg = fmt.Sprintf("The `--%s` flag is deprecated", flag)
 						if flagsAndMsg.FlagMessages[i] == "" {
 							msg = fmt.Sprintf("%s.", msg)
 						} else {
 							msg = fmt.Sprintf("%s: %s", msg, flagsAndMsg.FlagMessages[i])
 						}
-						utils.ErrPrintln(cmd, msg)
+					} else {
+						msg = flagsAndMsg.FlagMessages[i]
 					}
+					utils.ErrPrintln(cmd, msg)
 				}
 			}
 		}

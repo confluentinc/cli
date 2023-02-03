@@ -128,7 +128,7 @@ func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
-	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+	if isTest && c.PlatformName == testserver.TestCloudUrl.String() {
 		return true
 	}
 
@@ -228,9 +228,9 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 
 	switch client {

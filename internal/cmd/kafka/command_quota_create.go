@@ -51,7 +51,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	principals := sliceToObjRefArray(serviceAccounts)
 
-	displayName, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
@@ -73,8 +73,8 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
-			DisplayName: &displayName,
-			Description: &description,
+			DisplayName: kafkaquotasv1.PtrString(name),
+			Description: kafkaquotasv1.PtrString(description),
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
 			Principals:  principals,
