@@ -216,7 +216,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
+		c.loginCredentialsManager.GetCredentialsFromNetrcEncrypted(netrcFilterParams, c.Config.Salt, c.Config.Nonce),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
@@ -315,7 +315,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, c.Config.Salt),
+		c.loginCredentialsManager.GetCredentialsFromNetrcEncrypted(netrcFilterParams, c.Config.Salt, c.Config.Nonce),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
@@ -365,7 +365,7 @@ func (c *command) saveLoginToLocal(cmd *cobra.Command, isCloud bool, url string,
 			}
 		}
 
-		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, ctxName, credentials.Username, credentials.Password, c.Config.Salt); err != nil {
+		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, ctxName, credentials.Username, credentials.Password, c.Config.Salt, c.Config.Nonce); err != nil {
 			return err
 		}
 

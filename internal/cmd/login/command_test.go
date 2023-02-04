@@ -111,7 +111,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -146,7 +146,7 @@ var (
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(_ bool, _, _, _, _ string) error {
+		WriteNetrcCredentialsFunc: func(_ bool, _, _, _ string, _, _ []byte) error {
 			return nil
 		},
 		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
@@ -203,7 +203,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -458,7 +458,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -604,7 +604,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}

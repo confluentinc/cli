@@ -74,7 +74,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -267,7 +267,7 @@ func Test_UpdateToken(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -287,7 +287,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
-			require.True(t, mockLoginCredentialsManager.GetCredentialsFromNetrcWithSaltCalled())
+			require.True(t, mockLoginCredentialsManager.GetCredentialsFromNetrcEncryptedCalled())
 		})
 	}
 }
@@ -456,7 +456,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
@@ -535,7 +535,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 		},
 	}
 	r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-		GetCredentialsFromNetrcWithSaltFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcWithSaltFunc,
+		GetCredentialsFromNetrcEncryptedFunc: mockLoginCredentialsManager.GetCredentialsFromNetrcEncryptedFunc,
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return ccloudCreds, nil
@@ -609,7 +609,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -786,7 +786,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 					return nil, nil
 				}
 			},
-			GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+			GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}

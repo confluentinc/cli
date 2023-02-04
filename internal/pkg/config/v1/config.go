@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -84,7 +85,8 @@ type Config struct {
 	ContextStates       map[string]*ContextState `json:"context_states,omitempty"`
 	CurrentContext      string                   `json:"current_context"`
 	AnonymousId         string                   `json:"anonymous_id,omitempty"`
-	Salt                string                   `json:"salt,omitempty"`
+	Salt                []byte                   `json:"salt,omitempty"`
+	Nonce               []byte                   `json:"nonce,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -121,6 +123,8 @@ func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
 }
 
 func New() *Config {
+	salt, _ := secret.GenerateRandomBytes(24)
+	nonce, _ := secret.GenerateRandomBytes(12)
 	return &Config{
 		BaseConfig:    config.NewBaseConfig(ver),
 		Platforms:     make(map[string]*Platform),
@@ -128,7 +132,8 @@ func New() *Config {
 		Contexts:      make(map[string]*Context),
 		ContextStates: make(map[string]*ContextState),
 		AnonymousId:   uuid.New().String(),
-		Salt:          uuid.New().String(),
+		Salt:          salt,
+		Nonce:         nonce,
 		Version:       new(pversion.Version),
 	}
 }
@@ -508,7 +513,20 @@ func (c *Config) ResetAnonymousId() error {
 }
 
 func (c *Config) ResetSalt() error {
-	c.Salt = uuid.New().String()
+	salt, err := secret.GenerateRandomBytes(24)
+	if err != nil {
+		return err
+	}
+	c.Salt = salt
+	return c.Save()
+}
+
+func (c *Config) ResetNonce() error {
+	nonce, err := secret.GenerateRandomBytes(12)
+	if err != nil {
+		return err
+	}
+	c.Nonce = nonce
 	return c.Save()
 }
 

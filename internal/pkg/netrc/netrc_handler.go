@@ -36,7 +36,7 @@ func (c netrcCredentialType) String() string {
 }
 
 type NetrcHandler interface {
-	WriteNetrcCredentials(isCloud bool, ctxName string, username string, password string, salt string) error
+	WriteNetrcCredentials(isCloud bool, ctxName string, username string, password string, salt []byte, nonce []byte) error
 	RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error)
 	CheckCredentialExist(isCloud bool, ctxName string) (bool, error)
 	GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error)
@@ -64,7 +64,7 @@ type NetrcHandlerImpl struct {
 	FileName string
 }
 
-func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username, password, salt string) error {
+func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username, password string, salt, nonce []byte) error {
 	netrcFile, err := getOrCreateNetrc(n.FileName)
 	if err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
@@ -72,7 +72,7 @@ func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username
 
 	machineName := GetLocalCredentialName(isCloud, ctxName)
 
-	encryptedPassword, err := secret.Encrypt(password, salt)
+	encryptedPassword, err := secret.Encrypt(password, salt, nonce)
 	if err != nil {
 		return err
 	}

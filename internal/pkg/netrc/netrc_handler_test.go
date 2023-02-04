@@ -1,7 +1,9 @@
 package netrc
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -20,7 +22,6 @@ const (
 	ccloudLoginContext    = "login-ccloud-login-user@confluent.io-http://test"
 	netrcUser             = "jamal@jj"
 	netrcPassword         = "12345"
-	mockSalt              = "salt"
 	specialCharsContext   = `login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one`
 
 	loginURL          = "http://test"
@@ -33,6 +34,9 @@ const (
 )
 
 var (
+	mockSalt  = []byte("random-mock-salt")
+	mockNonce = []byte("random-nonce")
+
 	ccloudMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:" + ccloudLoginContext,
 		User:     ccloudLogin,
@@ -270,7 +274,7 @@ func TestNetrcWriter(t *testing.T) {
 			require.NoError(t, err)
 
 			netrcHandler := NewNetrcHandler(tempFile.Name())
-			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.contextName, netrcUser, netrcPassword, mockSalt)
+			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.contextName, netrcUser, netrcPassword, mockSalt, mockNonce)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
@@ -282,7 +286,9 @@ func TestNetrcWriter(t *testing.T) {
 			require.NoError(t, err)
 			want := utils.NormalizeNewLines(string(wantBytes))
 
-			if got != want {
+			ok, err := regexp.MatchString(want, got)
+			fmt.Println(ok, err)
+			if !ok || err != nil {
 				t.Errorf("got: \n%s\nwant: \n%s\n", got, want)
 			}
 			_ = os.Remove(tempFile.Name())

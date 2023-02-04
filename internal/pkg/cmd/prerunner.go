@@ -414,7 +414,7 @@ func (r *PreRun) getCCloudCredentials(loginContextName, url, orgResourceId strin
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrcWithSalt(netrcFilterParams, r.Config.Salt),
+		r.LoginCredentialsManager.GetCredentialsFromNetrcEncrypted(netrcFilterParams, r.Config.Salt, r.Config.Nonce),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
@@ -945,7 +945,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrcWithSalt(params, r.Config.Salt),
+		r.LoginCredentialsManager.GetCredentialsFromNetrcEncrypted(params, r.Config.Salt, r.Config.Nonce),
 	)
 	if err != nil {
 		return "", "", err

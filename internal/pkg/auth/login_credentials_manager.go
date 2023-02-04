@@ -68,7 +68,7 @@ type LoginCredentialsManager interface {
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, ctxName string, url string) func() (*Credentials, error)
-	GetCredentialsFromNetrcWithSalt(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error)
+	GetCredentialsFromNetrcEncrypted(filterParams netrc.NetrcMachineParams, salt, nonce []byte) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
@@ -188,7 +188,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrcWithSalt(filterParams netrc.NetrcMachineParams, salt string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrcEncrypted(filterParams netrc.NetrcMachineParams, salt, nonce []byte) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
@@ -199,7 +199,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrcWithSalt(filterPara
 		log.CliLogger.Debugf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 
 		encryptedPassword := netrcMachine.Password
-		decryptedPassword, err := secret.Decrypt(encryptedPassword, salt)
+		decryptedPassword, err := secret.Decrypt(encryptedPassword, salt, nonce)
 		if err != nil {
 			return nil, err
 		}

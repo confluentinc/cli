@@ -13,7 +13,7 @@ import (
 // NetrcHandler is a mock of NetrcHandler interface
 type NetrcHandler struct {
 	lockWriteNetrcCredentials sync.Mutex
-	WriteNetrcCredentialsFunc func(isCloud bool, ctxName, username, password, salt string) error
+	WriteNetrcCredentialsFunc func(isCloud bool, ctxName, username, password string, salt, nonce []byte) error
 
 	lockRemoveNetrcCredentials sync.Mutex
 	RemoveNetrcCredentialsFunc func(isCloud bool, ctxName string) (string, error)
@@ -33,7 +33,8 @@ type NetrcHandler struct {
 			CtxName  string
 			Username string
 			Password string
-			Salt     string
+			Salt     []byte
+			Nonce    []byte
 		}
 		RemoveNetrcCredentials []struct {
 			IsCloud bool
@@ -52,7 +53,7 @@ type NetrcHandler struct {
 }
 
 // WriteNetrcCredentials mocks base method by wrapping the associated func.
-func (m *NetrcHandler) WriteNetrcCredentials(isCloud bool, ctxName, username, password, salt string) error {
+func (m *NetrcHandler) WriteNetrcCredentials(isCloud bool, ctxName, username, password string, salt, nonce []byte) error {
 	m.lockWriteNetrcCredentials.Lock()
 	defer m.lockWriteNetrcCredentials.Unlock()
 
@@ -65,18 +66,20 @@ func (m *NetrcHandler) WriteNetrcCredentials(isCloud bool, ctxName, username, pa
 		CtxName  string
 		Username string
 		Password string
-		Salt     string
+		Salt     []byte
+		Nonce    []byte
 	}{
 		IsCloud:  isCloud,
 		CtxName:  ctxName,
 		Username: username,
 		Password: password,
 		Salt:     salt,
+		Nonce:    nonce,
 	}
 
 	m.calls.WriteNetrcCredentials = append(m.calls.WriteNetrcCredentials, call)
 
-	return m.WriteNetrcCredentialsFunc(isCloud, ctxName, username, password, salt)
+	return m.WriteNetrcCredentialsFunc(isCloud, ctxName, username, password, salt, nonce)
 }
 
 // WriteNetrcCredentialsCalled returns true if WriteNetrcCredentials was called at least once.
@@ -93,7 +96,8 @@ func (m *NetrcHandler) WriteNetrcCredentialsCalls() []struct {
 	CtxName  string
 	Username string
 	Password string
-	Salt     string
+	Salt     []byte
+	Nonce    []byte
 } {
 	m.lockWriteNetrcCredentials.Lock()
 	defer m.lockWriteNetrcCredentials.Unlock()

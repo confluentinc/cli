@@ -312,6 +312,7 @@ func TestConfig_Load(t *testing.T) {
 			tt.want.IsTest = cfg.IsTest
 			tt.want.Version = cfg.Version
 			tt.want.Salt = cfg.Salt
+			tt.want.Nonce = cfg.Nonce
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
@@ -646,6 +647,7 @@ func TestConfig_AddContext(t *testing.T) {
 			if tt.want != nil {
 				tt.want.AnonymousId = tt.config.AnonymousId
 				tt.want.Salt = tt.config.Salt
+				tt.want.Nonce = tt.config.Nonce
 			}
 			if !tt.wantErr && !reflect.DeepEqual(tt.want, tt.config) {
 				t.Errorf("AddContext() got = %v, want %v", tt.config, tt.want)

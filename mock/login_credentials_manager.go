@@ -28,8 +28,8 @@ type LoginCredentialsManager struct {
 	lockGetCredentialsFromKeychain sync.Mutex
 	GetCredentialsFromKeychainFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
-	lockGetCredentialsFromNetrcWithSalt sync.Mutex
-	GetCredentialsFromNetrcWithSaltFunc func(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams, salt string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	lockGetCredentialsFromNetrcEncrypted sync.Mutex
+	GetCredentialsFromNetrcEncryptedFunc func(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams, salt, nonce []byte) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromNetrc sync.Mutex
 	GetCredentialsFromNetrcFunc func(cmd *github_com_spf13_cobra.Command, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -66,9 +66,10 @@ type LoginCredentialsManager struct {
 			CtxName string
 			Url     string
 		}
-		GetCredentialsFromNetrcWithSalt []struct {
+		GetCredentialsFromNetrcEncrypted []struct {
 			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
-			Salt         string
+			Salt         []byte
+			Nonce        []byte
 		}
 		GetCredentialsFromNetrc []struct {
 			Cmd          *github_com_spf13_cobra.Command
@@ -250,45 +251,48 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalls() []struct {
 	return m.calls.GetCredentialsFromKeychain
 }
 
-// GetCredentialsFromNetrcWithSalt mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrcWithSalt(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams, salt string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
-	m.lockGetCredentialsFromNetrcWithSalt.Lock()
-	defer m.lockGetCredentialsFromNetrcWithSalt.Unlock()
+// GetCredentialsFromNetrcEncrypted mocks base method by wrapping the associated func.
+func (m *LoginCredentialsManager) GetCredentialsFromNetrcEncrypted(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams, salt, nonce []byte) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+	m.lockGetCredentialsFromNetrcEncrypted.Lock()
+	defer m.lockGetCredentialsFromNetrcEncrypted.Unlock()
 
-	if m.GetCredentialsFromNetrcWithSaltFunc == nil {
-		panic("mocker: LoginCredentialsManager.GetCredentialsFromNetrcWithSaltFunc is nil but LoginCredentialsManager.GetCredentialsFromNetrcWithSalt was called.")
+	if m.GetCredentialsFromNetrcEncryptedFunc == nil {
+		panic("mocker: LoginCredentialsManager.GetCredentialsFromNetrcEncryptedFunc is nil but LoginCredentialsManager.GetCredentialsFromNetrcEncrypted was called.")
 	}
 
 	call := struct {
 		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
-		Salt         string
+		Salt         []byte
+		Nonce        []byte
 	}{
 		FilterParams: filterParams,
 		Salt:         salt,
+		Nonce:        nonce,
 	}
 
-	m.calls.GetCredentialsFromNetrcWithSalt = append(m.calls.GetCredentialsFromNetrcWithSalt, call)
+	m.calls.GetCredentialsFromNetrcEncrypted = append(m.calls.GetCredentialsFromNetrcEncrypted, call)
 
-	return m.GetCredentialsFromNetrcWithSaltFunc(filterParams, salt)
+	return m.GetCredentialsFromNetrcEncryptedFunc(filterParams, salt, nonce)
 }
 
-// GetCredentialsFromNetrcWithSaltCalled returns true if GetCredentialsFromNetrcWithSalt was called at least once.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrcWithSaltCalled() bool {
-	m.lockGetCredentialsFromNetrcWithSalt.Lock()
-	defer m.lockGetCredentialsFromNetrcWithSalt.Unlock()
+// GetCredentialsFromNetrcEncryptedCalled returns true if GetCredentialsFromNetrcEncrypted was called at least once.
+func (m *LoginCredentialsManager) GetCredentialsFromNetrcEncryptedCalled() bool {
+	m.lockGetCredentialsFromNetrcEncrypted.Lock()
+	defer m.lockGetCredentialsFromNetrcEncrypted.Unlock()
 
-	return len(m.calls.GetCredentialsFromNetrcWithSalt) > 0
+	return len(m.calls.GetCredentialsFromNetrcEncrypted) > 0
 }
 
-// GetCredentialsFromNetrcWithSaltCalls returns the calls made to GetCredentialsFromNetrcWithSalt.
-func (m *LoginCredentialsManager) GetCredentialsFromNetrcWithSaltCalls() []struct {
+// GetCredentialsFromNetrcEncryptedCalls returns the calls made to GetCredentialsFromNetrcEncrypted.
+func (m *LoginCredentialsManager) GetCredentialsFromNetrcEncryptedCalls() []struct {
 	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
-	Salt         string
+	Salt         []byte
+	Nonce        []byte
 } {
-	m.lockGetCredentialsFromNetrcWithSalt.Lock()
-	defer m.lockGetCredentialsFromNetrcWithSalt.Unlock()
+	m.lockGetCredentialsFromNetrcEncrypted.Lock()
+	defer m.lockGetCredentialsFromNetrcEncrypted.Unlock()
 
-	return m.calls.GetCredentialsFromNetrcWithSalt
+	return m.calls.GetCredentialsFromNetrcEncrypted
 }
 
 // GetCredentialsFromNetrc mocks base method by wrapping the associated func.
@@ -576,9 +580,9 @@ func (m *LoginCredentialsManager) Reset() {
 	m.lockGetCredentialsFromKeychain.Lock()
 	m.calls.GetCredentialsFromKeychain = nil
 	m.lockGetCredentialsFromKeychain.Unlock()
-	m.lockGetCredentialsFromNetrcWithSalt.Lock()
-	m.calls.GetCredentialsFromNetrcWithSalt = nil
-	m.lockGetCredentialsFromNetrcWithSalt.Unlock()
+	m.lockGetCredentialsFromNetrcEncrypted.Lock()
+	m.calls.GetCredentialsFromNetrcEncrypted = nil
+	m.lockGetCredentialsFromNetrcEncrypted.Unlock()
 	m.lockGetCredentialsFromNetrc.Lock()
 	m.calls.GetCredentialsFromNetrc = nil
 	m.lockGetCredentialsFromNetrc.Unlock()

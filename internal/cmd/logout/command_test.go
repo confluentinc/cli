@@ -75,7 +75,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcWithSaltFunc: func(_ netrc.NetrcMachineParams, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -104,7 +104,7 @@ var (
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(_ bool, _, _, _, _ string) error {
+		WriteNetrcCredentialsFunc: func(_ bool, _, _, _ string, _, _ []byte) error {
 			return nil
 		},
 		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
