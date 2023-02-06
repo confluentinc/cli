@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/confluentinc/flink-sql-client/autocomplete"
 )
 
 var LivePrefixState struct {
@@ -38,7 +39,7 @@ func isInputClosingSelect(input string) bool {
 }
 
 func promptInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
-	completerWithHistory := completerWithHistory(history)
+	completerWithHistory := autocomplete.CompleterWithHistory(history)
 
 	p := prompt.New(
 		executor,
