@@ -1,7 +1,9 @@
 package netrc
 
 import (
+	"fmt"
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -32,6 +34,9 @@ const (
 )
 
 var (
+	mockSalt  = []byte("random-mock-salt")
+	mockNonce = []byte("random-nonce")
+
 	ccloudMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:" + ccloudLoginContext,
 		User:     ccloudLogin,
@@ -55,7 +60,7 @@ var (
 	}
 )
 
-func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
+func TestGetMatchingLoginContextWithContextName(t *testing.T) {
 	tests := []struct {
 		name    string
 		want    *Machine
@@ -115,19 +120,19 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			var machine *Machine
 			var err error
 			if machine, err = netrcHandler.GetMatchingNetrcMachine(tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("GetMatchingNetrcMachine error = %+v, wantErr %+v", err, tt.wantErr)
+				t.Errorf("GetMatchingLoginContext error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 			if !t.Failed() {
 				if tt.want == nil {
 					if machine != nil {
-						t.Error("GetMatchingNetrcMachine expect nil machine but got non nil machine")
+						t.Error("GetMatchingLoginContext expect nil machine but got non nil machine")
 					}
 				} else {
 					if machine == nil {
 						t.Errorf("Expected to find want : %+v but found no machines", machine)
 					}
 					if !isIdenticalMachine(tt.want, machine) {
-						t.Errorf("GetMatchingNetrcMachine mismatch\ngot: %+v \nwant: %+v", machine, tt.want)
+						t.Errorf("GetMatchingLoginContext mismatch\ngot: %+v \nwant: %+v", machine, tt.want)
 					}
 				}
 
@@ -142,7 +147,7 @@ func isIdenticalMachine(expect, actual *Machine) bool {
 		expect.Password == actual.Password
 }
 
-func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
+func TestGetMatchingLoginContextFromURL(t *testing.T) {
 	tests := []struct {
 		name    string
 		want    *Machine
@@ -200,19 +205,19 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			var machine *Machine
 			var err error
 			if machine, err = netrcHandler.GetMatchingNetrcMachine(tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("GetMatchingNetrcMachine error = %+v, wantErr %+v", err, tt.wantErr)
+				t.Errorf("GetMatchingLoginContext error = %+v, wantErr %+v", err, tt.wantErr)
 			}
 			if !t.Failed() {
 				if tt.want == nil {
 					if machine != nil {
-						t.Error("GetMatchingNetrcMachine expect nil machine but got non nil machine")
+						t.Error("GetMatchingLoginContext expect nil machine but got non nil machine")
 					}
 				} else {
 					if machine == nil {
 						t.Errorf("Expected to find want : %+v but found no machines", machine)
 					}
 					if !isIdenticalMachine(tt.want, machine) {
-						t.Errorf("GetMatchingNetrcMachine mismatch \ngot: %+v \nwant: %+v", machine, tt.want)
+						t.Errorf("GetMatchingLoginContext mismatch \ngot: %+v \nwant: %+v", machine, tt.want)
 					}
 				}
 
@@ -269,7 +274,7 @@ func TestNetrcWriter(t *testing.T) {
 			require.NoError(t, err)
 
 			netrcHandler := NewNetrcHandler(tempFile.Name())
-			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.contextName, netrcUser, netrcPassword)
+			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.contextName, netrcUser, netrcPassword, mockSalt, mockNonce)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
@@ -281,7 +286,9 @@ func TestNetrcWriter(t *testing.T) {
 			require.NoError(t, err)
 			want := utils.NormalizeNewLines(string(wantBytes))
 
-			if got != want {
+			ok, err := regexp.MatchString(want, got)
+			fmt.Println(ok, err)
+			if !ok || err != nil {
 				t.Errorf("got: \n%s\nwant: \n%s\n", got, want)
 			}
 			_ = os.Remove(tempFile.Name())
@@ -307,11 +314,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    ccloudCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, ccloudCtxName),
+				GetLocalCredentialName(true, ccloudCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(false, ccloudCtxName),
+				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(false, ccloudCtxName),
 			},
 		},
 		{
@@ -321,11 +328,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -335,11 +342,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    confluentCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, confluentCtxName),
+				GetLocalCredentialName(false, confluentCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(true, confluentCtxName),
+				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(true, confluentCtxName),
 			},
 		},
 		{
@@ -349,11 +356,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName(true, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -363,10 +370,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, specialCharsCtxName),
+				GetLocalCredentialName(true, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, ccloudCtxName),
+				GetLocalCredentialName(true, ccloudCtxName),
 			},
 		},
 		{
@@ -376,10 +383,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, specialCharsCtxName),
+				GetLocalCredentialName(false, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, ccloudCtxName),
+				GetLocalCredentialName(false, ccloudCtxName),
 			},
 		},
 	}
