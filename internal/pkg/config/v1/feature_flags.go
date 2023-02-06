@@ -22,8 +22,7 @@ type FeatureFlags struct {
 	User           lduser.User            `json:"user" hcl:"user"`
 }
 
-// GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in. It
-// defaults to CcloudProdLaunchDarklyClient (Confluent Cloud LaunchDarkly project, prod environment).
+// GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
 func GetCcloudLaunchDarklyClient(platformName string) (LaunchDarklyClient, error) {
 	switch platformName {
 	case "confluent.cloud":
@@ -35,10 +34,4 @@ func GetCcloudLaunchDarklyClient(platformName string) (LaunchDarklyClient, error
 	default:
 		return -1, errors.New(errors.NonCcloudPlatformNameErrorMsg)
 	}
-}
-
-func (c LaunchDarklyClient) IsCcloudLaunchDarklyClient() bool {
-	return c == CcloudProdLaunchDarklyClient ||
-		c == CcloudStagLaunchDarklyClient ||
-		c == CcloudDevelLaunchDarklyClient
 }
