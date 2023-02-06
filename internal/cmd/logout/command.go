@@ -50,7 +50,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandl
 
 func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
-		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().LoginContextName)
+		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().LoginContext)
 		if err == nil {
 			log.CliLogger.Warnf(errors.RemoveNetrcCredentialsMsg, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
@@ -59,7 +59,7 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		}
 
 		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
-			if err := keychain.Delete(c.Config.Config.Context().LoginContextName); err != nil {
+			if err := keychain.Delete(c.Config.Config.Context().LoginContext); err != nil {
 				return err
 			}
 		}

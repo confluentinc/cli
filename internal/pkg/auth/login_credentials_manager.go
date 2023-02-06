@@ -336,7 +336,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		machineContextInfo, err := netrc.ParseLoginContextName(netrcMachine.Name)
+		machineContextInfo, err := netrc.ParseLoginContext(netrcMachine.Name)
 		if err != nil {
 			return nil, err
 		}

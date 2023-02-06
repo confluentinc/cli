@@ -135,7 +135,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()
-	contextName := cfg.Context().LoginContextName
+	contextName := cfg.Context().LoginContext
 	// run login command
 	auth := &ccloudv1Mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {

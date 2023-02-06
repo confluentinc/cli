@@ -15,7 +15,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                   string                            `json:"name" hcl:"name"`
-	LoginContextName       string                            `json:"login_context_name" hcl:"login_context_name"`
+	LoginContext           string                            `json:"login_context" hcl:"login_context"`
 	Platform               *Platform                         `json:"-" hcl:"-"`
 	PlatformName           string                            `json:"platform" hcl:"platform"`
 	Credential             *Credential                       `json:"-" hcl:"-"`
@@ -34,7 +34,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 	orgResourceId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
-		LoginContextName:       name,
+		LoginContext:           name,
 		Platform:               platform,
 		PlatformName:           platform.Name,
 		Credential:             credential,

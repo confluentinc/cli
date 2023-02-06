@@ -299,12 +299,12 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
-				var loginContextName string
+				var loginContext string
 				if ctx := command.Config.Context(); ctx != nil {
-					loginContextName = ctx.LoginContextName
+					loginContext = ctx.LoginContext
 				}
 
-				if err := r.ccloudAutoLogin(loginContextName); err != nil {
+				if err := r.ccloudAutoLogin(loginContext); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedContext(command)
@@ -374,7 +374,7 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 	return nil
 }
 
-func (r *PreRun) ccloudAutoLogin(loginContextName string) error {
+func (r *PreRun) ccloudAutoLogin(loginContext string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
 
 	url := pauth.CCloudURL
@@ -382,7 +382,7 @@ func (r *PreRun) ccloudAutoLogin(loginContextName string) error {
 		url = ctxUrl
 	}
 
-	credentials, err := r.getCCloudCredentials(loginContextName, url, orgResourceId)
+	credentials, err := r.getCCloudCredentials(loginContext, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -405,9 +405,9 @@ func (r *PreRun) ccloudAutoLogin(loginContextName string) error {
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(loginContextName, url, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudCredentials(loginContext, url, orgResourceId string) (*pauth.Credentials, error) {
 	netrcFilterParams := netrc.NetrcMachineParams{
-		Name:    loginContextName,
+		Name:    loginContext,
 		IsCloud: true,
 		URL:     url,
 	}
@@ -568,12 +568,12 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
-				var loginContextName string
+				var loginContext string
 				if ctx := command.Config.Context(); ctx != nil {
-					loginContextName = ctx.LoginContextName
+					loginContext = ctx.LoginContext
 				}
 
-				if err := r.confluentAutoLogin(cmd, loginContextName); err != nil {
+				if err := r.confluentAutoLogin(cmd, loginContext); err != nil {
 					log.CliLogger.Debugf("Auto login failed: %v", err)
 				} else {
 					setContextErr = r.setAuthenticatedWithMDSContext(command)
@@ -618,8 +618,8 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	return nil
 }
 
-func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, loginContextName string) error {
-	token, credentials, err := r.getConfluentTokenAndCredentials(cmd, loginContextName)
+func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, loginContext string) error {
+	token, credentials, err := r.getConfluentTokenAndCredentials(cmd, loginContext)
 	if err != nil {
 		return err
 	}
@@ -636,9 +636,9 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, loginContextName string)
 	return nil
 }
 
-func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, loginContextName string) (string, *pauth.Credentials, error) {
+func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, loginContext string) (string, *pauth.Credentials, error) {
 	netrcMachineParams := netrc.NetrcMachineParams{
-		Name:    loginContextName,
+		Name:    loginContext,
 		IsCloud: false,
 	}
 
@@ -941,7 +941,7 @@ func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext
 func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
 	params := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.LoginContextName,
+		Name:    ctx.LoginContext,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),

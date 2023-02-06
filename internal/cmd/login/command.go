@@ -208,8 +208,8 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.LoginContextName, url) {
-		netrcFilterParams.Name = ctx.LoginContextName
+	if ctx != nil && strings.Contains(ctx.LoginContext, url) {
+		netrcFilterParams.Name = ctx.LoginContext
 	}
 
 	return pauth.GetLoginCredentials(
@@ -309,8 +309,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.LoginContextName, url) {
-		netrcFilterParams.Name = ctx.LoginContextName
+	if ctx != nil && strings.Contains(ctx.LoginContext, url) {
+		netrcFilterParams.Name = ctx.LoginContext
 	}
 
 	return pauth.GetLoginCredentials(
@@ -358,7 +358,7 @@ func (c *command) saveLoginToLocal(cmd *cobra.Command, isCloud bool, url string,
 			return nil
 		}
 
-		ctxName := c.Config.Config.Context().LoginContextName
+		ctxName := c.Config.Config.Context().LoginContext
 		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
 			if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
 				return err
