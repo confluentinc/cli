@@ -38,10 +38,15 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	if card == nil {
 		utils.Println(cmd, "No credit card found. Add one using `confluent admin payment update`.")
 
+		// get ccloud launchdarkly client
+		ldClient, err := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+		if err != nil {
+			return err
+		}
+
 		// if experiment for advertising Marketplace payment option is enabled, then add a copy
-		ldClient := v1.ResolveToLaunchDarklyClient(c.Context.PlatformName)
-		if ldClient.IsCcloudLaunchDarklyClient() && featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
-			utils.Println(cmd, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit `https://confluent.cloud/add-payment`.")
+		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
+			utils.Println(cmd, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
 		}
 
 		return nil

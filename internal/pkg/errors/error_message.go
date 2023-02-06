@@ -301,6 +301,7 @@ const (
 	ContextStateMismatchErrorMsg       = `context state mismatch for context "%s"`
 	ContextStateNotMappedErrorMsg      = `context state mapping error for context "%s"`
 	DeleteUserAuthErrorMsg             = "unable to delete user auth"
+	NonCcloudPlatformNameErrorMsg      = "must be Confluent Cloud platform"
 
 	// local package
 	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
