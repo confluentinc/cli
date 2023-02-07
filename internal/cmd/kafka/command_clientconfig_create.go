@@ -234,7 +234,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		srEndpointTemplate: srCluster.SchemaRegistryEndpoint,
 	})
 
-	// if empty api key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
+	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
 	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
 		// comment out SR and warn users
 		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
@@ -278,7 +278,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	return configFile, nil
 }
 
-// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR api key stored in the context and
+// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
