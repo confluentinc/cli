@@ -82,8 +82,8 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 
 	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
-		if includeTopics && len(*data.TopicsNames) > 0 {
-			for _, topic := range *data.TopicsNames {
+		if includeTopics && len(data.GetTopicsNames()) > 0 {
+			for _, topic := range data.GetTopicsNames() {
 				list.Add(newLink(data, topic))
 			}
 		} else {
