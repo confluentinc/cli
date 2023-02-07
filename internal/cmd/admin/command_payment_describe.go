@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -38,10 +39,10 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	if card == nil {
 		utils.Println(cmd, "No credit card found. Add one using `confluent admin payment update`.")
 
-		// get ccloud launchdarkly client
 		ldClient, err := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 		if err != nil {
-			return err
+			log.CliLogger.Debugf("Skip conditionally advertising Marketplace payment option due to error: %s", err.Error())
+			return nil
 		}
 
 		// if experiment for advertising Marketplace payment option is enabled, then add a copy
