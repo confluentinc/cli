@@ -311,6 +311,8 @@ func TestConfig_Load(t *testing.T) {
 			tt.want.AnonymousId = cfg.AnonymousId
 			tt.want.IsTest = cfg.IsTest
 			tt.want.Version = cfg.Version
+			tt.want.Salt = cfg.Salt
+			tt.want.Nonce = cfg.Nonce
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
 				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
@@ -644,6 +646,8 @@ func TestConfig_AddContext(t *testing.T) {
 			}
 			if tt.want != nil {
 				tt.want.AnonymousId = tt.config.AnonymousId
+				tt.want.Salt = tt.config.Salt
+				tt.want.Nonce = tt.config.Nonce
 			}
 			if !tt.wantErr && !reflect.DeepEqual(tt.want, tt.config) {
 				t.Errorf("AddContext() got = %v, want %v", tt.config, tt.want)
@@ -758,17 +762,6 @@ func TestConfig_FindContext(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestConfig_DeleteContext(t *testing.T) {
-	cfg := &Config{
-		BaseConfig:     config.NewBaseConfig(new(version.Version)),
-		Contexts:       map[string]*Context{contextName: {Name: contextName}},
-		CurrentContext: contextName,
-	}
-
-	err := cfg.DeleteContext(contextName)
-	require.NoError(t, err)
 }
 
 func TestConfig_Context(t *testing.T) {

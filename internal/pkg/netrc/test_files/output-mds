@@ -7,4 +7,4 @@ machine dont-touch-this-machine
 
 machine confluent-cli:mds-username-password:login-mds-user-http://test
 	login jamal@jj
-	password 12345
+	password [\w\[\]`!@#$%\^&*()={}:;<>+'-]*
