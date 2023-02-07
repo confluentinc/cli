@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
