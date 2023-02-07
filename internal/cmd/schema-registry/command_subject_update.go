@@ -3,6 +3,7 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -22,12 +23,12 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 		RunE:  c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update subject level compatibility of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility BACKWARD", version.CLIName),
+				Text: `Update subject-level compatibility of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward", version.CLIName),
 			},
 			examples.Example{
-				Text: `Update subject level mode of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode READWRITE", version.CLIName),
+				Text: `Update subject-level mode of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite", version.CLIName),
 			},
 		),
 	}
@@ -85,7 +86,7 @@ func (c *subjectCommand) updateCompatibility(cmd *cobra.Command, subject, compat
 }
 
 func (c *subjectCommand) updateMode(cmd *cobra.Command, subject, mode string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updatedMode, httpResp, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: mode})
+	updatedMode, httpResp, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
