@@ -2,10 +2,10 @@ package iam
 
 import (
 	"fmt"
-	"github.com/antihax/optional"
 	"net/http"
 	"strings"
 
+	"github.com/antihax/optional"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/spf13/cobra"
 
@@ -57,8 +57,8 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
 
 	if r.StatusCode == http.StatusNotFound {
-		roleNameOpts := &mdsv2alpha1.RolenamesOpts{Namespace: namespaces}
-		roleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), roleNameOpts)
+		opts := &mdsv2alpha1.RolenamesOpts{Namespace: namespaces}
+		roleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
 		if err != nil {
 			return err
 		}
