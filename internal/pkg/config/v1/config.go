@@ -155,7 +155,7 @@ func (c *Config) Load() error {
 			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
 			c.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
 			for name := range c.Contexts {
-				c.Contexts[name].NetrcMachineName = name
+				c.Contexts[name].LoginContext = name
 			}
 		} else {
 			return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
@@ -448,6 +448,14 @@ func (c *Config) SaveCredential(credential *Credential) error {
 		return errors.New(errors.NoNameCredentialErrorMsg)
 	}
 	c.Credentials[credential.Name] = credential
+	return c.Save()
+}
+
+func (c *Config) SaveLoginCredential(stateName string, loginCredential *LoginCredential) error {
+	if stateName == "" {
+		return errors.New("login credentials must belong to a state name")
+	}
+	c.ContextStates[stateName].LoginCredential = loginCredential
 	return c.Save()
 }
 
