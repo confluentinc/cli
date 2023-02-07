@@ -393,7 +393,7 @@ func (r *PreRun) ccloudAutoLogin(loginContext string) error {
 	}
 
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, url)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, url, credentials)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, url, credentials, true)
 	if err != nil {
 		return err
 	}
@@ -406,7 +406,7 @@ func (r *PreRun) ccloudAutoLogin(loginContext string) error {
 }
 
 func (r *PreRun) getCCloudCredentials(loginContext, url, orgResourceId string) (*pauth.Credentials, error) {
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		Name:    loginContext,
 		IsCloud: true,
 		URL:     url,
@@ -414,7 +414,7 @@ func (r *PreRun) getCCloudCredentials(loginContext, url, orgResourceId string) (
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrcEncrypted(netrcFilterParams, r.Config.Salt, r.Config.Nonce),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Auto-login failed to get credentials: %v", err)
@@ -627,7 +627,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, loginContext string) err
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials.Username, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false)
+	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, true)
 	if err != nil {
 		return err
 	}
@@ -945,7 +945,7 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrcEncrypted(params, r.Config.Salt, r.Config.Nonce),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, params),
 	)
 	if err != nil {
 		return "", "", err

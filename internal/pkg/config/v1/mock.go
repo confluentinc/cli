@@ -20,7 +20,6 @@ var (
 	apiKeyCredentialName   = fmt.Sprintf("api-key-%s", kafkaAPIKey)
 	mockContextName        = fmt.Sprintf("login-%s-%s", mockEmail, mockURL)
 	mockAuthToken          = "some.token.here"
-	mockSalt               = []byte("mockSalt")
 
 	// kafka cluster
 	kafkaClusterId     = "lkc-12345"
@@ -57,7 +56,6 @@ func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Confi
 		orgId:          orgId,
 		orgResourceId:  orgResourceId,
 		credentialName: usernameCredentialName,
-		salt:           mockSalt,
 	}
 	return AuthenticatedConfigMock(params)
 }
@@ -73,7 +71,6 @@ func AuthenticatedOnPremConfigMock() *Config {
 		orgId:          mockOrganizationId,
 		orgResourceId:  MockOrgResourceId,
 		credentialName: usernameCredentialName,
-		salt:           mockSalt,
 	}
 	return AuthenticatedConfigMock(params)
 }
@@ -89,7 +86,6 @@ func AuthenticatedConfigMockWithContextName(contextName string) *Config {
 		orgId:          mockOrganizationId,
 		orgResourceId:  MockOrgResourceId,
 		credentialName: usernameCredentialName,
-		salt:           mockSalt,
 	}
 	return AuthenticatedConfigMock(params)
 }
@@ -133,7 +129,6 @@ type mockConfigParams struct {
 	orgId          int32
 	orgResourceId  string
 	credentialName string
-	salt           []byte
 }
 
 func AuthenticatedConfigMock(params mockConfigParams) *Config {
@@ -157,7 +152,6 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 
 	cfg := New()
 	cfg.IsTest = true
-	cfg.Salt = []byte("mockSalt")
 
 	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, cfg, params.orgResourceId)
 	if err != nil {

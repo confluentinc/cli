@@ -11,7 +11,6 @@ import (
 	gonetrc "github.com/confluentinc/go-netrc/netrc"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const (
@@ -36,7 +35,6 @@ func (c netrcCredentialType) String() string {
 }
 
 type NetrcHandler interface {
-	WriteNetrcCredentials(isCloud bool, ctxName string, username string, password string, salt []byte, nonce []byte) error
 	RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error)
 	CheckCredentialExist(isCloud bool, ctxName string) (bool, error)
 	GetMatchingNetrcMachine(params NetrcMachineParams) (*Machine, error)
@@ -62,39 +60,6 @@ func NewNetrcHandler(netrcFilePath string) *NetrcHandlerImpl {
 
 type NetrcHandlerImpl struct {
 	FileName string
-}
-
-func (n *NetrcHandlerImpl) WriteNetrcCredentials(isCloud bool, ctxName, username, password string, salt, nonce []byte) error {
-	netrcFile, err := getOrCreateNetrc(n.FileName)
-	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
-	}
-
-	machineName := GetLocalCredentialName(isCloud, ctxName)
-
-	encryptedPassword, err := secret.Encrypt(password, salt, nonce)
-	if err != nil {
-		return err
-	}
-
-	machine := netrcFile.FindMachine(machineName)
-	if machine == nil {
-		netrcFile.NewMachine(machineName, username, encryptedPassword, "")
-	} else {
-		machine.UpdateLogin(username)
-		machine.UpdatePassword(encryptedPassword)
-	}
-
-	netrcBytes, err := netrcFile.MarshalText()
-	if err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
-	}
-
-	if err := os.WriteFile(n.FileName, netrcBytes, 0600); err != nil {
-		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, n.FileName)
-	}
-
-	return nil
 }
 
 func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) (string, error) {
@@ -170,25 +135,6 @@ func getNetrc(filename string) (*gonetrc.Netrc, error) {
 	return n, nil
 }
 
-func getOrCreateNetrc(filename string) (*gonetrc.Netrc, error) {
-	n, err := gonetrc.ParseFile(filename)
-	if err != nil {
-		if os.IsNotExist(err) {
-			_, err = os.OpenFile(filename, os.O_CREATE, 0600)
-			if err != nil {
-				return nil, errors.Wrapf(err, errors.CreateNetrcFileErrorMsg, filename)
-			}
-			n, err = gonetrc.ParseFile(filename)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
-	return n, nil
-}
-
 func GetLocalCredentialName(isCloud bool, ctxName string) string {
 	credType := mdsUsernamePassword
 	if isCloud {
@@ -245,18 +191,6 @@ func getMachineNameRegex(params NetrcMachineParams) *regexp.Regexp {
 	return regexp.MustCompile(regexString)
 }
 
-func escapeSpecialRegexChars(s string) string {
-	specialChars := `\^${}[]().*+?|<>-&`
-	res := ""
-	for _, c := range s {
-		if strings.ContainsRune(specialChars, c) {
-			res += `\`
-		}
-		res += string(c)
-	}
-	return res
-}
-
 func (n *NetrcHandlerImpl) GetFileName() string {
 	return n.FileName
 }
@@ -281,4 +215,16 @@ func (n *NetrcHandlerImpl) CheckCredentialExist(isCloud bool, ctxName string) (b
 
 	name := GetLocalCredentialName(isCloud, ctxName)
 	return netrcFile.FindMachine(name) != nil, nil
+}
+
+func escapeSpecialRegexChars(s string) string {
+	specialChars := `\^${}[]().*+?|<>-&`
+	res := ""
+	for _, c := range s {
+		if strings.ContainsRune(specialChars, c) {
+			res += `\`
+		}
+		res += string(c)
+	}
+	return res
 }

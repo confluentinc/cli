@@ -116,6 +116,7 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.Auth = nil
 	c.State.AuthToken = ""
 	c.State.AuthRefreshToken = ""
+	c.State.LoginCredential = nil
 
 	err := c.Save()
 	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)
