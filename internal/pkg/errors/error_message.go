@@ -139,7 +139,7 @@ const (
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = `"%s" is not an available cloud provider`
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
-	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your api key does not have the ACLs required to describe it`
+	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your API key does not have the ACLs required to describe it`
 	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
