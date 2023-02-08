@@ -1,9 +1,9 @@
 package secret
 
 import (
+        "crypto/rand"
 	"encoding/base32"
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
