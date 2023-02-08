@@ -30,7 +30,7 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
+            - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1
             - make lint
             - go install gotest.tools/gotestsum@v1.8.2
             - make test

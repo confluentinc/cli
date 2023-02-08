@@ -241,7 +241,7 @@ func (cc *ConfluentCurrentManager) getServiceFile(service, file string) (string,
 }
 
 func getRandomChildDir(parentDir string) string {
-	rand.Seed(time.Now().Unix())
+	rand.NewRand(NewSource(time.Now().Unix()))
 
 	for {
 		childDir := fmt.Sprintf("confluent.%06d", rand.Intn(1000000))
