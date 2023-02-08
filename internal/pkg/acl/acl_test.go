@@ -20,7 +20,7 @@ func TestParseAclRequest(t *testing.T) {
 		expectedAcl AclRequestDataWithError
 	}{
 		{
-			args: []string{"--operation", "READ", "--principal", "User:Alice", "--cluster-scope", "--host", "127.0.0.1", "--allow"},
+			args: []string{"--operation", "read", "--principal", "User:Alice", "--cluster-scope", "--host", "127.0.0.1", "--allow"},
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				ResourceName: "kafka-cluster",
@@ -54,7 +54,7 @@ func TestParseAclRequest(t *testing.T) {
 			},
 		},
 		{
-			args: []string{"--operation", "READ", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
+			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
 				Errors: multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
 			},

@@ -1,6 +1,6 @@
 --- cli/Makefile	2023-02-08 12:17:18.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,170 +1,130 @@
+@@ -1,169 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -237,7 +237,6 @@
 -int-test:
 -ifdef CI
 -	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
--	cat integration-test-report.xml
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of

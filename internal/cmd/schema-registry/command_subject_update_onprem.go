@@ -20,12 +20,12 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update subject level compatibility of subject "payments"`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility BACKWARD %s", version.CLIName, OnPremAuthenticationMsg),
+				Text: `Update subject-level compatibility of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 			examples.Example{
-				Text: `Update subject level mode of subject "payments"`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode READWRITE %s", version.CLIName, OnPremAuthenticationMsg),
+				Text: `Update subject-level mode of subject "payments".`,
+				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite %s", version.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}

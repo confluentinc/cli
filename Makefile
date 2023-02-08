@@ -157,7 +157,6 @@ endif
 int-test:
 ifdef CI
 	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
-	cat integration-test-report.xml
 else
 	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif
