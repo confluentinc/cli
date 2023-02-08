@@ -56,7 +56,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 
 	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
 
-	if r.StatusCode == http.StatusNotFound {
+	if err != nil || r.StatusCode == http.StatusNotFound {
 		opts := &mdsv2alpha1.RolenamesOpts{Namespace: namespaces}
 		roleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
 		if err != nil {
