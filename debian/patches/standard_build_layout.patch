@@ -283,5 +283,11 @@
 +
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
 +
-+RPM_BUILDING/%:
-+	mkdir -p $@
++RPM_BUILDING/%:00:00
++	mkdir -p $@00:00
+ 00:00
+-.PHONY: generate-packaging-patch00:00
+-generate-packaging-patch:00:00
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch00:00
++RELEASE_%:00:00
++	echo 0 > $@00:00
