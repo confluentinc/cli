@@ -4,12 +4,12 @@ go 1.19
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.194
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -92,7 +92,6 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
@@ -137,6 +136,7 @@ require (
 
 replace (
 	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
+	github.com/confluentinc/ccloud-sdk-go-v2-internal => ../ccloud-sdk-go-v2-internal
 	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
 	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
 )
