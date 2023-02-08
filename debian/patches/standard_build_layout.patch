@@ -1,5 +1,5 @@
---- cli/Makefile	2023-02-08 21:01:14.266146283 +0000
-+++ debian/Makefile	2023-02-08 21:01:12.670167121 +0000
+--- cli/Makefile	2023-02-08 21:12:48.678168000 +0000
++++ debian/Makefile	2023-02-08 21:12:47.038168000 +0000
 @@ -1,169 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -283,11 +283,11 @@
 +
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
 +
-+RPM_BUILDING/%:00:00
-+	mkdir -p $@00:00
- 00:00
--.PHONY: generate-packaging-patch00:00
--generate-packaging-patch:00:00
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch00:00
-+RELEASE_%:00:00
-+	echo 0 > $@00:00
++RPM_BUILDING/%:
++	mkdir -p $@
+ 
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++RELEASE_%:
++	echo 0 > $@
