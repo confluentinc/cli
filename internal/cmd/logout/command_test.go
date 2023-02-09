@@ -60,12 +60,12 @@ var (
 				}, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -75,7 +75,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcEncryptedFunc: func(_ netrc.NetrcMachineParams, _, _ []byte) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -104,9 +104,6 @@ var (
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(_ bool, _, _, _ string, _, _ []byte) error {
-			return nil
-		},
 		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
 			return "", nil
 		},
@@ -135,7 +132,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()
-	contextName := cfg.Context().LoginContext
+	contextName := cfg.Context().NetrcMachineName
 	// run login command
 	auth := &ccloudv1Mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {

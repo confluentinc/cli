@@ -12,9 +12,6 @@ import (
 
 // NetrcHandler is a mock of NetrcHandler interface
 type NetrcHandler struct {
-	lockWriteNetrcCredentials sync.Mutex
-	WriteNetrcCredentialsFunc func(isCloud bool, ctxName, username, password string, salt, nonce []byte) error
-
 	lockRemoveNetrcCredentials sync.Mutex
 	RemoveNetrcCredentialsFunc func(isCloud bool, ctxName string) (string, error)
 
@@ -28,14 +25,6 @@ type NetrcHandler struct {
 	GetFileNameFunc func() string
 
 	calls struct {
-		WriteNetrcCredentials []struct {
-			IsCloud  bool
-			CtxName  string
-			Username string
-			Password string
-			Salt     []byte
-			Nonce    []byte
-		}
 		RemoveNetrcCredentials []struct {
 			IsCloud bool
 			CtxName string
@@ -50,59 +39,6 @@ type NetrcHandler struct {
 		GetFileName []struct {
 		}
 	}
-}
-
-// WriteNetrcCredentials mocks base method by wrapping the associated func.
-func (m *NetrcHandler) WriteNetrcCredentials(isCloud bool, ctxName, username, password string, salt, nonce []byte) error {
-	m.lockWriteNetrcCredentials.Lock()
-	defer m.lockWriteNetrcCredentials.Unlock()
-
-	if m.WriteNetrcCredentialsFunc == nil {
-		panic("mocker: NetrcHandler.WriteNetrcCredentialsFunc is nil but NetrcHandler.WriteNetrcCredentials was called.")
-	}
-
-	call := struct {
-		IsCloud  bool
-		CtxName  string
-		Username string
-		Password string
-		Salt     []byte
-		Nonce    []byte
-	}{
-		IsCloud:  isCloud,
-		CtxName:  ctxName,
-		Username: username,
-		Password: password,
-		Salt:     salt,
-		Nonce:    nonce,
-	}
-
-	m.calls.WriteNetrcCredentials = append(m.calls.WriteNetrcCredentials, call)
-
-	return m.WriteNetrcCredentialsFunc(isCloud, ctxName, username, password, salt, nonce)
-}
-
-// WriteNetrcCredentialsCalled returns true if WriteNetrcCredentials was called at least once.
-func (m *NetrcHandler) WriteNetrcCredentialsCalled() bool {
-	m.lockWriteNetrcCredentials.Lock()
-	defer m.lockWriteNetrcCredentials.Unlock()
-
-	return len(m.calls.WriteNetrcCredentials) > 0
-}
-
-// WriteNetrcCredentialsCalls returns the calls made to WriteNetrcCredentials.
-func (m *NetrcHandler) WriteNetrcCredentialsCalls() []struct {
-	IsCloud  bool
-	CtxName  string
-	Username string
-	Password string
-	Salt     []byte
-	Nonce    []byte
-} {
-	m.lockWriteNetrcCredentials.Lock()
-	defer m.lockWriteNetrcCredentials.Unlock()
-
-	return m.calls.WriteNetrcCredentials
 }
 
 // RemoveNetrcCredentials mocks base method by wrapping the associated func.
@@ -261,9 +197,6 @@ func (m *NetrcHandler) GetFileNameCalls() []struct {
 
 // Reset resets the calls made to the mocked methods.
 func (m *NetrcHandler) Reset() {
-	m.lockWriteNetrcCredentials.Lock()
-	m.calls.WriteNetrcCredentials = nil
-	m.lockWriteNetrcCredentials.Unlock()
 	m.lockRemoveNetrcCredentials.Lock()
 	m.calls.RemoveNetrcCredentials = nil
 	m.lockRemoveNetrcCredentials.Unlock()

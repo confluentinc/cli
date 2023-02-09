@@ -213,8 +213,8 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.LoginContext, url) {
-		netrcFilterParams.Name = ctx.LoginContext
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
@@ -222,7 +222,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		c.loginCredentialsManager.GetSSOCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
@@ -319,15 +319,15 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.LoginContext, url) {
-		netrcFilterParams.Name = ctx.LoginContext
+	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
+		netrcFilterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
 }
@@ -364,14 +364,14 @@ func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url stri
 			return nil
 		}
 
-		ctxName := c.Config.Config.Context().LoginContext
+		ctxName := c.Config.Config.Context().NetrcMachineName
 		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
 			if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
 				return err
 			}
 		}
 
-		utils.ErrPrintf(cmd, errors.WroteCredentialsToKeychainMsg, c.netrcHandler.GetFileName())
+		utils.ErrPrintf(cmd, errors.WroteCredentialsToKeychainMsg)
 	}
 
 	return nil

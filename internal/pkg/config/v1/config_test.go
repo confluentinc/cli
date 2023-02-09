@@ -93,6 +93,12 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		APIKeyPair:     nil,
 		CredentialType: 0,
 	}
+	savedCredentials := map[string]*LoginCredential{
+		contextName: &LoginCredential{
+			IsCloud:  true,
+			Username: "test-user",
+			Password: "encrypted-password"},
+	}
 	account2 := &ccloudv1.Account{
 		Id:   "env-flag",
 		Name: "test-env2",
@@ -154,6 +160,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CredentialName:         apiCredential.Name,
 		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
 		State:                  &ContextState{},
+		Config:                 &Config{SavedCredentials: savedCredentials},
 	}
 	twoEnvStatefulContext := &Context{
 		Name:           contextName,
@@ -192,8 +199,9 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		ContextStates: map[string]*ContextState{
 			contextName: regularOrgContextState,
 		},
-		CurrentContext: contextName,
-		IsTest:         true,
+		CurrentContext:   contextName,
+		IsTest:           true,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -213,8 +221,9 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		ContextStates: map[string]*ContextState{
 			contextName: {},
 		},
-		CurrentContext: contextName,
-		IsTest:         true,
+		CurrentContext:   contextName,
+		IsTest:           true,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -292,6 +301,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials:        map[string]*Credential{},
 				Contexts:           map[string]*Context{},
 				ContextStates:      map[string]*ContextState{},
+				SavedCredentials:   map[string]*LoginCredential{},
 			},
 			file: "test_json/load_disable_update.json",
 		},
@@ -311,11 +321,9 @@ func TestConfig_Load(t *testing.T) {
 			tt.want.AnonymousId = cfg.AnonymousId
 			tt.want.IsTest = cfg.IsTest
 			tt.want.Version = cfg.Version
-			tt.want.Salt = cfg.Salt
-			tt.want.Nonce = cfg.Nonce
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
-				t.Errorf("Config.Load() = %+v, want %+v", cfg, tt.want)
+				t.Errorf("Config.Load() =\n %+v, want \n%+v", cfg, tt.want)
 			}
 		})
 	}
@@ -371,6 +379,12 @@ func TestConfig_Save(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
+			tt.config.SavedCredentials = map[string]*LoginCredential{
+				contextName: &LoginCredential{
+					IsCloud:  true,
+					Username: "test-user",
+					Password: "encrypted-password"},
+			}
 			if tt.kafkaOverwrite != "" {
 				tt.config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 				ctx.KafkaClusterContext.SetActiveKafkaCluster(tt.kafkaOverwrite)
@@ -417,6 +431,12 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
+			tt.config.SavedCredentials = map[string]*LoginCredential{
+				contextName: &LoginCredential{
+					IsCloud:  true,
+					Username: "test-user",
+					Password: "encrypted-password"},
+			}
 			if tt.accountOverwrite != nil {
 				tt.config.SetOverwrittenAccount(tt.config.Context().GetEnvironment())
 				tt.config.Context().State.Auth.Account = tt.accountOverwrite
@@ -646,8 +666,6 @@ func TestConfig_AddContext(t *testing.T) {
 			}
 			if tt.want != nil {
 				tt.want.AnonymousId = tt.config.AnonymousId
-				tt.want.Salt = tt.config.Salt
-				tt.want.Nonce = tt.config.Nonce
 			}
 			if !tt.wantErr && !reflect.DeepEqual(tt.want, tt.config) {
 				t.Errorf("AddContext() got = %v, want %v", tt.config, tt.want)

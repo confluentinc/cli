@@ -33,7 +33,7 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "login_context_name": "",
+      "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "api-key-abc-key-123",
       "kafka_cluster_context": {
@@ -66,5 +66,14 @@
       "auth_refresh_token": ""
     }
   },
-  "current_context": "my-context"
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "ignore_cert": false,
+      "url": "",
+      "username": "test-user",
+      "password": "encrypted-password"
+    }
+  }
 }

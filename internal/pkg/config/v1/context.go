@@ -15,7 +15,7 @@ import (
 // Context represents a specific CLI context.
 type Context struct {
 	Name                   string                            `json:"name" hcl:"name"`
-	LoginContext           string                            `json:"login_context" hcl:"login_context"`
+	NetrcMachineName       string                            `json:"netrc_machine_name" hcl:"netrc_machine_name"`
 	Platform               *Platform                         `json:"-" hcl:"-"`
 	PlatformName           string                            `json:"platform" hcl:"platform"`
 	Credential             *Credential                       `json:"-" hcl:"-"`
@@ -34,7 +34,7 @@ func newContext(name string, platform *Platform, credential *Credential,
 	orgResourceId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
-		LoginContext:           name,
+		NetrcMachineName:       name,
 		Platform:               platform,
 		PlatformName:           platform.Name,
 		Credential:             credential,
@@ -116,7 +116,6 @@ func (c *Context) DeleteUserAuth() error {
 	c.State.Auth = nil
 	c.State.AuthToken = ""
 	c.State.AuthRefreshToken = ""
-	c.State.LoginCredential = nil
 
 	err := c.Save()
 	return errors.Wrap(err, errors.DeleteUserAuthErrorMsg)

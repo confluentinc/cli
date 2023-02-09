@@ -35,7 +35,7 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 	return encryptionKey, nil
 }
 
-func Encrypt(password string, salt, nonce []byte) (string, error) {
+func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 	encryptionKey, err := DeriveEncryptionKey(salt)
 	if err != nil {
 		return "", err
@@ -51,12 +51,12 @@ func Encrypt(password string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
-	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), nil)
+	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), []byte(username))
 
 	return base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
 }
 
-func Decrypt(encrypted string, salt, nonce []byte) (string, error) {
+func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	encryptionKey, err := DeriveEncryptionKey(salt)
 	if err != nil {
 		return "", err
@@ -77,7 +77,7 @@ func Decrypt(encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
-	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, nil)
+	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
 		return "", err
 	}

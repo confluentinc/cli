@@ -52,6 +52,7 @@ func PersistLogoutToConfig(config *v1.Config) error {
 	if ctx == nil {
 		return nil
 	}
+	delete(ctx.Config.SavedCredentials, ctx.Name)
 	err := ctx.DeleteUserAuth()
 	if err != nil {
 		return err
@@ -98,7 +99,6 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if save && !credentials.IsSSO {
-		fmt.Println("im saving to config! the creds.")
 		salt, err := secret.GenerateRandomBytes(24)
 		if err != nil {
 			return err
@@ -108,7 +108,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 			return err
 		}
 
-		encryptedPassword, err := secret.Encrypt(credentials.Password, salt, nonce)
+		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,8 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 			Salt:       salt,
 			Nonce:      nonce,
 		}
-		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil { // ctxName is the same as state name?? i think so.
+		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+			fmt.Println("save login cred")
 			return err
 		}
 	}
@@ -136,7 +137,6 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if ctx, ok := config.Contexts[ctxName]; ok {
-		state.LoginCredential = config.ContextStates[ctxName].LoginCredential
 		config.ContextStates[ctxName] = state
 		ctx.State = state
 

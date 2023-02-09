@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestParseLoginContext(t *testing.T) {
+func TestParseNetrcMachineName(t *testing.T) {
 	tests := []struct {
 		name        string
 		machineName string
@@ -46,7 +46,7 @@ func TestParseLoginContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseLoginContext(tt.machineName)
+			got, err := ParseNetrcMachineName(tt.machineName)
 			require.NoError(t, err)
 			compareMachineContextInfo(t, tt.want, got)
 		})

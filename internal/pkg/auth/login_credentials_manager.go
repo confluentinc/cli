@@ -72,7 +72,7 @@ type LoginCredentialsManager interface {
 	GetSSOCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, ctxName string, url string) func() (*Credentials, error)
-	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
@@ -163,24 +163,22 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 		var loginCredential *v1.LoginCredential
 		ctx := cfg.Context()
 		if ctx == nil {
-			// use filter.
-			fmt.Println("using filter to find creds")
-			for _, item := range cfg.ContextStates {
-				if item.LoginCredential != nil && matchLoginCredentialWithFilter(item.LoginCredential, filterParams) {
-					loginCredential = item.LoginCredential
+			for _, item := range cfg.SavedCredentials {
+				if matchLoginCredentialWithFilter(item, filterParams) {
+					loginCredential = item
 				}
 			}
 		} else {
-			fmt.Println("ctx.Name:", ctx.Name)
-			loginCredential = cfg.ContextStates[ctx.Name].LoginCredential
+			if matchLoginCredentialWithFilter(cfg.SavedCredentials[ctx.Name], filterParams) {
+				loginCredential = cfg.SavedCredentials[ctx.Name]
+			}
 		}
 
 		if loginCredential == nil {
-			fmt.Println("didn't found any useful creds from config")
 			return nil, nil
 		}
 
-		password, err := secret.Decrypt(loginCredential.Password, loginCredential.Salt, loginCredential.Nonce)
+		password, err := secret.Decrypt(loginCredential.Username, loginCredential.Password, loginCredential.Salt, loginCredential.Nonce)
 		if err != nil {
 			return nil, err
 		}
@@ -228,7 +226,7 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		netrcMachine, err := h.getNetrcMachine(filterParams)
 		if err != nil {
@@ -237,7 +235,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command
 		}
 
 		log.CliLogger.Warnf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
-
+		fmt.Println("getting from netrc:", netrcMachine.User)
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 	}
 }
@@ -350,7 +348,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 			log.CliLogger.Debugf("Get netrc machine error: %s", err.Error())
 			return nil, err
 		}
-		machineContextInfo, err := netrc.ParseLoginContext(netrcMachine.Name)
+		machineContextInfo, err := netrc.ParseNetrcMachineName(netrcMachine.Name)
 		if err != nil {
 			return nil, err
 		}
@@ -363,6 +361,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 	return func() (*Credentials, error) {
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(ctxName, url)
+			fmt.Println("returning creds in keychain")
 			return &Credentials{Username: username, Password: password}, err
 		}
 		return &Credentials{}, errors.New("keychain not available on platforms other than darwin")
@@ -375,6 +374,9 @@ func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 }
 
 func matchLoginCredentialWithFilter(loginCredential *v1.LoginCredential, filterParams netrc.NetrcMachineParams) bool {
+	if loginCredential == nil {
+		return false
+	}
 	if loginCredential.IgnoreCert != filterParams.IgnoreCert {
 		return false
 	}
