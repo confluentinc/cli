@@ -2,9 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newCliClient(url, userAgent string, unsafeTrace bool) *cliv1.APIClient {
@@ -22,7 +22,8 @@ func (c *Client) cliApiContext() context.Context {
 	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateCliUsage(usage cliv1.CliV1Usage) (*http.Response, error) {
+func (c *Client) CreateCliUsage(usage cliv1.CliV1Usage) error {
 	req := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext()).CliV1Usage(usage)
-	return c.CliClient.UsagesCliV1Api.CreateCliV1UsageExecute(req)
+	r, err := c.CliClient.UsagesCliV1Api.CreateCliV1UsageExecute(req)
+	return errors.CatchCCloudV2Error(err, r)
 }
