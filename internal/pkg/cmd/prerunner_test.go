@@ -69,6 +69,16 @@ var (
 				return nil, nil
 			}
 		},
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 	}
 	AuthTokenHandler = &climock.AuthTokenHandler{
 		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
@@ -252,6 +262,16 @@ func Test_UpdateToken(t *testing.T) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
+				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return &pauth.Credentials{Username: "username", Password: "password"}, nil
+					}
+				},
 			}
 
 			r := getPreRunBase()
@@ -267,7 +287,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
-			require.True(t, mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
+			require.True(t, mockLoginCredentialsManager.GetCredentialsFromConfigCalled())
 		})
 	}
 }
@@ -437,6 +457,16 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
 				},
+				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return tt.envVarReturn.creds, tt.envVarReturn.err
+					}
+				},
+				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return tt.netrcReturn.creds, tt.netrcReturn.err
+					}
+				},
 			}
 
 			root := &cobra.Command{
@@ -521,6 +551,11 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				return nil, nil
 			}
 		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
 	}
 
 	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
@@ -576,6 +611,11 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						netrcCalled = true
+						return nil, nil
+					}
+				},
+				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
@@ -742,6 +782,16 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 				}
 			},
 			GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				return func() (*pauth.Credentials, error) {
+					return nil, nil
+				}
+			},
+			GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
 				}

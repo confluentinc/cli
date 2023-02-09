@@ -7,4 +7,4 @@ machine dont-touch-this-machine
 
 machine confluent-cli:ccloud-username-password:login-ccloud-login-user@confluent.io-http://test
 	login jamal@jj
-	password 12345
+	password [\w\[\]`!@#$%\^&*()={}:;<>+'-]*

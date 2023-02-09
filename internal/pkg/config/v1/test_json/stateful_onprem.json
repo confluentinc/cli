@@ -91,5 +91,14 @@
       "auth_refresh_token": ""
     }
   },
-  "current_context": "my-context"
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "ignore_cert": false,
+      "url": "",
+      "username": "test-user",
+      "password": "encrypted-password"
+    }
+  }
 }
