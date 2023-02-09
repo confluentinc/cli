@@ -455,7 +455,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
 	if ctxName == "" {
-		return errors.New("login credentials must belong to a state name")
+		return errors.New(errors.SavedCredentialNoContextErrorMsg)
 	}
 	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()

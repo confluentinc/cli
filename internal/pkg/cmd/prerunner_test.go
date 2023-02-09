@@ -436,7 +436,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						fmt.Println("netrc returning.")
 						ccloudNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
@@ -460,7 +459,6 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				},
 				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
-						fmt.Println("im returning?")
 						return tt.envVarReturn.creds, tt.envVarReturn.err
 					}
 				},

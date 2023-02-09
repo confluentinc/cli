@@ -14,6 +14,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -219,6 +220,59 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.NoError(err)
 		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].Password, -1)
 		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+	}
+	_ = os.Remove(netrc.NetrcIntegrationTestFile)
+}
+
+func (s *CLITestSuite) TestUpdateNetrcPassword() {
+	tests := []struct {
+		isCloud  bool
+		loginURL string
+		bin      string
+	}{
+		{
+			true,
+			s.TestBackend.GetCloudUrl(),
+			testBin,
+		},
+		{
+			false,
+			s.TestBackend.GetMdsUrl(),
+			testBin,
+		},
+	}
+
+	for _, tt := range tests {
+		// run the login command with --save flag and check output
+		var env []string
+		if tt.isCloud {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+		} else {
+			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
+		}
+
+		configFile := os.Getenv("HOME") + "/.confluent/config.json"
+		old, err := os.ReadFile(configFile)
+		s.NoError(err)
+		oldData := v1.Config{}
+		err = json.Unmarshal(old, &oldData)
+		s.NoError(err)
+
+		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
+		if tt.isCloud {
+			s.Contains(output, loggedInAsWithOrgOutput)
+			s.Contains(output, loggedInEnvOutput)
+		} else {
+			s.Contains(output, loggedInAsOutput)
+		}
+
+		got, err := os.ReadFile(configFile)
+		s.NoError(err)
+		data := v1.Config{}
+		err = json.Unmarshal(got, &data)
+		s.NoError(err)
+
+		s.NotEqual(oldData.SavedCredentials, data.SavedCredentials)
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
