@@ -17,7 +17,7 @@ func newCliClient(url, userAgent string, unsafeTrace bool) *cliv1.APIClient {
 
 	// We do not use a retryable HTTP client so the CLI does not hang if there is a problem with the usage service.
 	cfg.HTTPClient = http.DefaultClient
-	cfg.HTTPClient.Timeout = time.Second
+	cfg.HTTPClient.Timeout = 5 * time.Second
 
 	return cliv1.NewAPIClient(cfg)
 }
