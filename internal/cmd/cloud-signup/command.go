@@ -176,7 +176,7 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloudv
 			AuthToken:        res.GetToken(),
 			AuthRefreshToken: res.GetRefreshToken(),
 		}
-		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials)
+		_, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, authorizedClient, client.BaseURL, credentials, false)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil
