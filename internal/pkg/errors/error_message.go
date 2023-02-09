@@ -295,7 +295,7 @@ const (
 	CredentialNotFoundErrorMsg         = `credential "%s" not found`
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
-	SavedCredentialNoContextErrorMsg   = "saved credential must match to a context name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match to a context"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`

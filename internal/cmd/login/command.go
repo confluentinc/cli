@@ -208,21 +208,21 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
 	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+		filterParams.Name = ctx.NetrcMachineName
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetSSOCredentialsFromConfig(c.cfg),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }

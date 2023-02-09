@@ -98,6 +98,14 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		// don't save password if they entered it interactively.
 	}
 
+	if err := config.SavePlatform(platform); err != nil {
+		return err
+	}
+
+	if err := config.SaveCredential(credential); err != nil {
+		return err
+	}
+
 	if save && !credentials.IsSSO {
 		salt, err := secret.GenerateRandomBytes(24)
 		if err != nil {
@@ -123,17 +131,8 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 			Nonce:      nonce,
 		}
 		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
-			fmt.Println("save login cred")
 			return err
 		}
-	}
-
-	if err := config.SavePlatform(platform); err != nil {
-		return err
-	}
-
-	if err := config.SaveCredential(credential); err != nil {
-		return err
 	}
 
 	if ctx, ok := config.Contexts[ctxName]; ok {

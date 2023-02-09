@@ -365,7 +365,6 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 			return &Credentials{Username: username, Password: password}, err
 		}
 		return &Credentials{}, errors.New("keychain not available on platforms other than darwin")
-
 	}
 }
 
