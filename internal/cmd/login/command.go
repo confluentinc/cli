@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -18,6 +19,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -112,12 +114,12 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -140,7 +142,12 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials)
+	save, err := cmd.Flags().GetBool("save")
+	if err != nil {
+		return err
+	}
+
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
 	if err != nil {
 		return err
 	}
@@ -160,7 +167,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
-	return c.saveLoginToNetrc(cmd, true, credentials)
+	return c.saveLoginToKeychain(cmd, true, url, credentials, save)
 }
 
 func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
@@ -201,7 +208,6 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
 	}
-
 	netrcFilterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
@@ -213,7 +219,9 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetSSOCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
@@ -269,12 +277,17 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(c.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
+	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 
-	if err := c.saveLoginToNetrc(cmd, false, credentials); err != nil {
+	err = pauth.PersistConfluentLoginToConfig(c.Config.Config, credentials, url, token, caCertPath, isLegacyContext, save)
+	if err != nil {
+		return err
+	}
+
+	if err := c.saveLoginToKeychain(cmd, false, url, credentials, save); err != nil {
 		return err
 	}
 
@@ -312,6 +325,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
@@ -342,23 +357,21 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
-	save, err := cmd.Flags().GetBool("save")
-	if err != nil {
-		return err
-	}
-
+func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url string, credentials *pauth.Credentials, save bool) error {
 	if save {
 		if credentials.IsSSO {
 			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 			return nil
 		}
 
-		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
-			return err
+		ctxName := c.Config.Config.Context().NetrcMachineName
+		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
+			if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
+				return err
+			}
 		}
 
-		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, c.netrcHandler.GetFileName())
+		utils.ErrPrintf(cmd, errors.WroteCredentialsToKeychainMsg)
 	}
 
 	return nil
