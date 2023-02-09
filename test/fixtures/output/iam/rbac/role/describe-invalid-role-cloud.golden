@@ -1,4 +1,4 @@
 Error: unknown role "InvalidRole"
 
 Suggestions:
-    The available roles are: CCloudRoleBindingAdmin, CloudClusterAdmin, EnvironmentAdmin, OrganizationAdmin, CCloudRoleBindingAdmin, CloudClusterAdmin, EnvironmentAdmin, OrganizationAdmin.
+    The available roles are: CCloudRoleBindingAdmin, CloudClusterAdmin, EnvironmentAdmin, OrganizationAdmin.
