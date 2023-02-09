@@ -18,12 +18,12 @@ func newCliClient(url, userAgent string, unsafeTrace bool) *cliv1.APIClient {
 	return cliv1.NewAPIClient(cfg)
 }
 
-func (c *Client) cliApiContext() context.Context {
+func (c *Client) cliApiContext(ctx context.Context) context.Context {
 	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateCliUsage(usage cliv1.CliV1Usage) error {
-	req := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext()).CliV1Usage(usage)
+func (c *Client) CreateCliUsage(ctx context.Context, usage cliv1.CliV1Usage) error {
+	req := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext(ctx)).CliV1Usage(usage)
 	r, err := c.CliClient.UsagesCliV1Api.CreateCliV1UsageExecute(req)
 	return errors.CatchCCloudV2Error(err, r)
 }

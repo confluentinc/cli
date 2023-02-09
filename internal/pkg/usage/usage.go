@@ -1,7 +1,9 @@
 package usage
 
 import (
+	"context"
 	"runtime"
+	"time"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/spf13/cobra"
@@ -36,10 +38,10 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 
 // Report sends usage data to cc-cli-usage-service.
 func (u *Usage) Report(client *ccloudv2.Client) {
-	// ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond)
+	defer cancel()
 
-	if err := client.CreateCliUsage(cliv1.CliV1Usage(*u)); err != nil {
+	if err := client.CreateCliUsage(ctx, cliv1.CliV1Usage(*u)); err != nil {
 		log.CliLogger.Warnf("Failed to report CLI usage: %v", err)
 	}
 }
