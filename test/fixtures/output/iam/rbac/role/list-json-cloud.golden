@@ -1,104 +1,5 @@
 [
   {
-    "name": "DeveloperManage",
-    "policies": [
-      {
-        "bindingScope": "cloud-cluster",
-        "bindWithResource": false,
-        "allowedOperations": [
-          {
-            "resourceType": "CloudCluster",
-            "operations": ["Describe"]
-          }
-        ]
-      },
-      {
-        "bindingScope": "cluster",
-        "bindWithResource": false,
-        "allowedOperations": [
-          {
-            "resourceType": "Cluster",
-            "operations": ["View", "AccessWithToken"]
-          },
-          {
-            "resourceType": "OwnKafkaClusterApiKey",
-            "operations": ["Describe", "Alter", "Delete", "Create"]
-          },
-          {
-            "resourceType": "OwnClusterApiKey",
-            "operations": ["Describe", "Alter", "Delete", "Create"]
-          }
-        ]
-      },
-      {
-        "bindingScope": "cluster",
-        "bindWithResource": true,
-        "allowedOperations": [
-          {
-            "resourceType": "Topic",
-            "operations": ["Delete", "Describe", "Create", "DescribeConfigs"]
-          },
-          {
-            "resourceType": "Cluster",
-            "operations": ["Create", "DescribeConfigs"]
-          },
-          {
-            "resourceType": "TransactionalId",
-            "operations": ["Describe"]
-          },
-          {
-            "resourceType": "Group",
-            "operations": ["Describe", "Delete"]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "ResourceOwner",
-    "policies": [
-      {
-        "bindingScope": "schema-registry-cluster",
-        "bindWithResource": true,
-        "allowedOperations": [
-          {
-            "resourceType": "Subject",
-            "operations": [
-              "Delete",
-              "Read",
-              "Write",
-              "ReadCompatibility",
-              "AlterAccess",
-              "WriteCompatibility",
-              "DescribeAccess"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "ResourceOwner",
-    "policies": [
-      {
-        "bindingScope": "ksql-cluster",
-        "bindWithResource": true,
-        "allowedOperations": [
-          {
-            "resourceType": "KsqlCluster",
-            "operations": [
-              "Describe",
-              "AlterAccess",
-              "Contribute",
-              "DescribeAccess",
-              "Terminate"
-            ]
-          }
-        ]
-      }
-    ]
-  },
-  {
     "name": "CCloudRoleBindingAdmin",
     "policies": [
       {
@@ -420,62 +321,99 @@
     ]
   },
   {
-    "name": "DataDiscovery",
+    "name": "DeveloperManage",
     "policies": [
       {
-        "bindingScope": "environment",
+        "bindingScope": "cloud-cluster",
         "bindWithResource": false,
         "allowedOperations": [
           {
-            "resourceType": "CatalogTagDefinition",
-            "operations": ["Read"]
+            "resourceType": "CloudCluster",
+            "operations": ["Describe"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "Cluster",
+            "operations": ["View", "AccessWithToken"]
           },
+          {
+            "resourceType": "OwnKafkaClusterApiKey",
+            "operations": ["Describe", "Alter", "Delete", "Create"]
+          },
+          {
+            "resourceType": "OwnClusterApiKey",
+            "operations": ["Describe", "Alter", "Delete", "Create"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
           {
             "resourceType": "Topic",
-            "operations": ["ReadCatalog"]
+            "operations": ["Delete", "Describe", "Create", "DescribeConfigs"]
           },
           {
-            "resourceType": "Subject",
-            "operations": ["Read", "ReadCatalog", "ReadCompatibility"]
+            "resourceType": "Cluster",
+            "operations": ["Create", "DescribeConfigs"]
           },
           {
-            "resourceType": "CatalogBusinessMetadataDefinition",
-            "operations": ["Read"]
+            "resourceType": "TransactionalId",
+            "operations": ["Describe"]
+          },
+          {
+            "resourceType": "Group",
+            "operations": ["Describe", "Delete"]
           }
         ]
       }
     ]
   },
   {
-    "name": "DataSteward",
+    "name": "ResourceOwner",
     "policies": [
       {
-        "bindingScope": "environment",
-        "bindWithResource": false,
+        "bindingScope": "schema-registry-cluster",
+        "bindWithResource": true,
         "allowedOperations": [
-          {
-            "resourceType": "CatalogTagDefinition",
-            "operations": ["Read", "Write", "Delete"]
-          },
-          {
-            "resourceType": "Topic",
-            "operations": ["ReadCatalog", "WriteCatalog"]
-          },
           {
             "resourceType": "Subject",
             "operations": [
               "Delete",
               "Read",
-              "ReadCatalog",
-              "ReadCompatibility",
               "Write",
-              "WriteCatalog",
-              "WriteCompatibility"
+              "ReadCompatibility",
+              "AlterAccess",
+              "WriteCompatibility",
+              "DescribeAccess"
             ]
-          },
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "ksql-cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
           {
-            "resourceType": "CatalogBusinessMetadataDefinition",
-            "operations": ["Read", "Write", "Delete"]
+            "resourceType": "KsqlCluster",
+            "operations": [
+              "Describe",
+              "AlterAccess",
+              "Contribute",
+              "DescribeAccess",
+              "Terminate"
+            ]
           }
         ]
       }
