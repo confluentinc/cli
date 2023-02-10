@@ -73,17 +73,18 @@ var (
 type Config struct {
 	*config.BaseConfig
 
-	DisableUpdateCheck  bool                     `json:"disable_update_check"`
-	DisableUpdates      bool                     `json:"disable_updates"`
-	DisablePlugins      bool                     `json:"disable_plugins"`
-	DisableFeatureFlags bool                     `json:"disable_feature_flags"`
-	NoBrowser           bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms           map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials         map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts            map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates       map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext      string                   `json:"current_context"`
-	AnonymousId         string                   `json:"anonymous_id,omitempty"`
+	DisableUpdateCheck  bool                        `json:"disable_update_check"`
+	DisableUpdates      bool                        `json:"disable_updates"`
+	DisablePlugins      bool                        `json:"disable_plugins"`
+	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
+	NoBrowser           bool                        `json:"no_browser" hcl:"no_browser"`
+	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
+	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
+	Contexts            map[string]*Context         `json:"contexts,omitempty"`
+	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
+	CurrentContext      string                      `json:"current_context"`
+	AnonymousId         string                      `json:"anonymous_id,omitempty"`
+	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -121,13 +122,14 @@ func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
 
 func New() *Config {
 	return &Config{
-		BaseConfig:    config.NewBaseConfig(ver),
-		Platforms:     make(map[string]*Platform),
-		Credentials:   make(map[string]*Credential),
-		Contexts:      make(map[string]*Context),
-		ContextStates: make(map[string]*ContextState),
-		AnonymousId:   uuid.New().String(),
-		Version:       new(pversion.Version),
+		BaseConfig:       config.NewBaseConfig(ver),
+		Platforms:        make(map[string]*Platform),
+		Credentials:      make(map[string]*Credential),
+		Contexts:         make(map[string]*Context),
+		ContextStates:    make(map[string]*ContextState),
+		SavedCredentials: make(map[string]*LoginCredential),
+		AnonymousId:      uuid.New().String(),
+		Version:          new(pversion.Version),
 	}
 }
 
@@ -448,6 +450,14 @@ func (c *Config) SaveCredential(credential *Credential) error {
 		return errors.New(errors.NoNameCredentialErrorMsg)
 	}
 	c.Credentials[credential.Name] = credential
+	return c.Save()
+}
+
+func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
+	if ctxName == "" {
+		return errors.New(errors.SavedCredentialNoContextErrorMsg)
+	}
+	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
 }
 
