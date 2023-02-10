@@ -31,6 +31,9 @@ const (
 	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
 	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
 	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
+
+	saltLength  = 24
+	nonceLength = 12
 )
 
 // GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
@@ -107,11 +110,11 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(24)
+		salt, err := secret.GenerateRandomBytes(saltLength)
 		if err != nil {
 			return err
 		}
-		nonce, err := secret.GenerateRandomBytes(12)
+		nonce, err := secret.GenerateRandomBytes(nonceLength)
 		if err != nil {
 			return err
 		}
@@ -122,13 +125,12 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 
 		loginCredential := &v1.LoginCredential{
-			IsCloud:    isCloud,
-			IgnoreCert: !isCloud,
-			Url:        url,
-			Username:   credentials.Username,
-			Password:   encryptedPassword,
-			Salt:       salt,
-			Nonce:      nonce,
+			IsCloud:           isCloud,
+			Url:               url,
+			Username:          credentials.Username,
+			EncryptedPassword: encryptedPassword,
+			Salt:              salt,
+			Nonce:             nonce,
 		}
 		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
 			return err

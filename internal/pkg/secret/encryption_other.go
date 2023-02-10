@@ -16,6 +16,11 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+const (
+	iterationNumber = 10000
+	keyLength       = 32
+)
+
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -31,7 +36,7 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	userId := strconv.Itoa(os.Getuid())
-	encryptionKey := pbkdf2.Key([]byte(machineId+userId), salt, 10000, 32, sha256.New)
+	encryptionKey := pbkdf2.Key([]byte(machineId+userId), salt, iterationNumber, keyLength, sha256.New)
 	return encryptionKey, nil
 }
 

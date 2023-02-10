@@ -296,6 +296,8 @@ const (
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
 	SavedCredentialNoContextErrorMsg   = "saved credential must match to a context"
+	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`

@@ -29,7 +29,7 @@ type LoginCredentialsManager struct {
 	GetCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromKeychain sync.Mutex
-	GetCredentialsFromKeychainFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCredentialsFromKeychainFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, isCloud bool, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromNetrc sync.Mutex
 	GetCredentialsFromNetrcFunc func(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -67,6 +67,7 @@ type LoginCredentialsManager struct {
 		}
 		GetCredentialsFromKeychain []struct {
 			Cfg     *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			IsCloud bool
 			CtxName string
 			Url     string
 		}
@@ -247,7 +248,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromConfigCalls() []struct {
 }
 
 // GetCredentialsFromKeychain mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCredentialsFromKeychain(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCredentialsFromKeychain(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, isCloud bool, ctxName, url string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCredentialsFromKeychain.Lock()
 	defer m.lockGetCredentialsFromKeychain.Unlock()
 
@@ -257,17 +258,19 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychain(cfg *github_com_con
 
 	call := struct {
 		Cfg     *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		IsCloud bool
 		CtxName string
 		Url     string
 	}{
 		Cfg:     cfg,
+		IsCloud: isCloud,
 		CtxName: ctxName,
 		Url:     url,
 	}
 
 	m.calls.GetCredentialsFromKeychain = append(m.calls.GetCredentialsFromKeychain, call)
 
-	return m.GetCredentialsFromKeychainFunc(cfg, ctxName, url)
+	return m.GetCredentialsFromKeychainFunc(cfg, isCloud, ctxName, url)
 }
 
 // GetCredentialsFromKeychainCalled returns true if GetCredentialsFromKeychain was called at least once.
@@ -281,6 +284,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalled() bool {
 // GetCredentialsFromKeychainCalls returns the calls made to GetCredentialsFromKeychain.
 func (m *LoginCredentialsManager) GetCredentialsFromKeychainCalls() []struct {
 	Cfg     *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	IsCloud bool
 	CtxName string
 	Url     string
 } {

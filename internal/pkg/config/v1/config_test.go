@@ -95,9 +95,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	savedCredentials := map[string]*LoginCredential{
 		contextName: &LoginCredential{
-			IsCloud:  true,
-			Username: "test-user",
-			Password: "encrypted-password"},
+			IsCloud:           isCloud,
+			Username:          "test-user",
+			EncryptedPassword: "encrypted-password",
+		},
 	}
 	account2 := &ccloudv1.Account{
 		Id:   "env-flag",
@@ -334,6 +335,7 @@ func TestConfig_Save(t *testing.T) {
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
 		name             string
+		isCloud          bool
 		config           *Config
 		wantFile         string
 		wantErr          bool
@@ -343,32 +345,38 @@ func TestConfig_Save(t *testing.T) {
 	}{
 		{
 			name:     "save on-prem config with state to file",
+			isCloud:  false,
 			config:   testConfigsOnPrem.statefulConfig,
 			wantFile: "test_json/stateful_onprem.json",
 		},
 		{
 			name:     "save stateless on-prem config to file",
+			isCloud:  false,
 			config:   testConfigsOnPrem.statelessConfig,
 			wantFile: "test_json/stateless_onprem.json",
 		},
 		{
 			name:     "save cloud config with state to file",
+			isCloud:  true,
 			config:   testConfigsCloud.statefulConfig,
 			wantFile: "test_json/stateful_cloud.json",
 		},
 		{
 			name:     "save stateless cloud config to file",
+			isCloud:  true,
 			config:   testConfigsCloud.statelessConfig,
 			wantFile: "test_json/stateless_cloud.json",
 		},
 		{
 			name:           "save stateless cloud config with kafka overwrite to file",
+			isCloud:        true,
 			config:         testConfigsCloud.statefulConfig,
 			wantFile:       "test_json/stateful_cloud.json",
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 		{
 			name:           "save stateless cloud config with kafka and context overwrite to file",
+			isCloud:        true,
 			config:         testConfigsCloud.statefulConfig,
 			wantFile:       "test_json/stateful_cloud.json",
 			kafkaOverwrite: "lkc-clusterFlag",
@@ -381,9 +389,10 @@ func TestConfig_Save(t *testing.T) {
 			ctx := tt.config.Context()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
 				contextName: &LoginCredential{
-					IsCloud:  true,
-					Username: "test-user",
-					Password: "encrypted-password"},
+					IsCloud:           tt.isCloud,
+					Username:          "test-user",
+					EncryptedPassword: "encrypted-password",
+				},
 			}
 			if tt.kafkaOverwrite != "" {
 				tt.config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
@@ -433,9 +442,10 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			tt.config.Filename = configFile.Name()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
 				contextName: &LoginCredential{
-					IsCloud:  true,
-					Username: "test-user",
-					Password: "encrypted-password"},
+					IsCloud:           true,
+					Username:          "test-user",
+					EncryptedPassword: "encrypted-password",
+				},
 			}
 			if tt.accountOverwrite != nil {
 				tt.config.SetOverwrittenAccount(tt.config.Context().GetEnvironment())

@@ -413,6 +413,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, url),
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
@@ -638,14 +639,14 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 }
 
 func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
-	netrcMachineParams := netrc.NetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: false,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, netrcMachineParams),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, filterParams),
 	)
 	if err != nil {
 		return "", nil, err

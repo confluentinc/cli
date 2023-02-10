@@ -218,7 +218,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		data := v1.Config{}
 		err = json.Unmarshal(got, &data)
 		s.NoError(err)
-		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].Password, -1)
+		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword, -1)
 		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)

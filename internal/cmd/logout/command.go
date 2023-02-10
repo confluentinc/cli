@@ -59,7 +59,7 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		}
 
 		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
-			if err := keychain.Delete(c.Config.Config.Context().NetrcMachineName); err != nil {
+			if err := keychain.Delete(c.cfg.IsCloudLogin(), c.Config.Config.Context().NetrcMachineName); err != nil {
 				return err
 			}
 		}

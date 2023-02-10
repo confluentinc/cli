@@ -167,7 +167,10 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		c.printRemainingFreeCredit(cmd, client, currentOrg)
 	}
 
-	return c.saveLoginToKeychain(cmd, true, url, credentials, save)
+	if save && runtime.GOOS == "darwin" && !c.cfg.IsTest {
+		return c.saveLoginToKeychain(cmd, true, url, credentials)
+	}
+	return nil
 }
 
 func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
@@ -220,7 +223,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
 		c.loginCredentialsManager.GetSSOCredentialsFromConfig(c.cfg),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
@@ -287,8 +290,10 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	if err := c.saveLoginToKeychain(cmd, false, url, credentials, save); err != nil {
-		return err
+	if save && runtime.GOOS == "darwin" && !c.cfg.IsTest {
+		if err := c.saveLoginToKeychain(cmd, false, url, credentials); err != nil {
+			return err
+		}
 	}
 
 	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
@@ -325,7 +330,7 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
-		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, netrcFilterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
@@ -357,22 +362,18 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url string, credentials *pauth.Credentials, save bool) error {
-	if save {
-		if credentials.IsSSO {
-			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
-			return nil
-		}
-
-		ctxName := c.Config.Config.Context().NetrcMachineName
-		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
-			if err := keychain.Write(ctxName, url, credentials.Username, credentials.Password); err != nil {
-				return err
-			}
-		}
-
-		utils.ErrPrintf(cmd, errors.WroteCredentialsToKeychainMsg)
+func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url string, credentials *pauth.Credentials) error {
+	if credentials.IsSSO {
+		utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
+		return nil
 	}
+
+	ctxName := c.Config.Config.Context().NetrcMachineName
+	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
+		return err
+	}
+
+	utils.ErrPrintf(cmd, errors.WroteCredentialsToKeychainMsg)
 
 	return nil
 }

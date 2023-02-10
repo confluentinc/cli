@@ -13,14 +13,13 @@ import (
 
 const (
 	accessGroup = "cli"
-	isCloud     = true
-	sep         = "?"
+	separator   = "?"
 )
 
-func Write(ctxName, url, username, password string) error {
+func Write(isCloud bool, ctxName, url, username, password string) error {
 	service := netrc.GetLocalCredentialName(isCloud, ctxName)
 
-	item := keychain.NewGenericPassword(service, url, username+"-"+url, []byte(username+sep+password), accessGroup)
+	item := keychain.NewGenericPassword(service, url, username+"-"+url, []byte(username+separator+password), accessGroup)
 	item.SetSynchronizable(keychain.SynchronizableNo)
 	item.SetAccessible(keychain.AccessibleWhenUnlocked)
 
@@ -32,7 +31,7 @@ func Write(ctxName, url, username, password string) error {
 	return err
 }
 
-func Delete(ctxName string) error {
+func Delete(isCloud bool, ctxName string) error {
 	service := netrc.GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewItem()
@@ -61,7 +60,7 @@ func Delete(ctxName string) error {
 	return nil
 }
 
-func Read(ctxName, url string) (string, string, error) {
+func Read(isCloud bool, ctxName, url string) (string, string, error) {
 	item := keychain.NewItem()
 	item.SetSecClass(keychain.SecClassGenericPassword)
 	item.SetAccount(url)
@@ -84,7 +83,7 @@ func Read(ctxName, url string) (string, string, error) {
 }
 
 func parseCredentialsFromKeychain(data []byte) (string, string, error) {
-	substrings := strings.Split(string(data), sep)
+	substrings := strings.Split(string(data), separator)
 	if len(substrings) < 2 {
 		return "", "", errors.New(errors.ParseKeychainCredentialsErrorMsg)
 	}

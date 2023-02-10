@@ -70,7 +70,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
