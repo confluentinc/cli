@@ -16,7 +16,7 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <id>",
+		Use:   "describe",
 		Short: "Describe a Confluent Cloud organization.",
 		Args:  cobra.NoArgs,
 		RunE:  c.describe,
