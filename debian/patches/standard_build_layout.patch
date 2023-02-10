@@ -1,5 +1,5 @@
---- cli/Makefile	2023-02-08 21:35:13.253768347 +0000
-+++ debian/Makefile	2023-02-08 21:35:11.813759891 +0000
+--- cli/Makefile	2023-02-10 11:36:31.000000000 -0800
++++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
 @@ -1,169 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -41,7 +41,7 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -90,7 +90,7 @@
 -deps:
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
 -	go install github.com/google/go-licenses@v1.5.0 && \
--	go install github.com/goreleaser/goreleaser@v1.14.1 && \
+-	go install github.com/goreleaser/goreleaser@v1.15.2 && \
 -	go install gotest.tools/gotestsum@v1.8.2
 -
 -show-args:
