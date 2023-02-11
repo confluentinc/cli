@@ -57,7 +57,7 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if err := pauth.PersistLogoutToConfig(c.Config.Config); err != nil {
+	if err := pauth.PersistLogout(c.Config.Config); err != nil {
 		return err
 	}
 

@@ -2,6 +2,7 @@ package test
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/stretchr/testify/require"
 )
@@ -9,7 +10,7 @@ import (
 func (s *CLITestSuite) TestUpdate() {
 	s.T().Skip("Skipping this test until its less flaky")
 
-	configFile := os.Getenv("HOME") + "/.confluent/config.json"
+	configFile := filepath.Join(os.Getenv("HOME"), "/.confluent/config.json")
 
 	// Remove the cache file so we'll see the update prompt
 	path := os.Getenv("HOME") + "/.confluent/update_check"
