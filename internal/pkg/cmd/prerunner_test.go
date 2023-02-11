@@ -414,7 +414,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			} else {
 				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
-			err := pauth.PersistLogoutToConfig(cfg)
+			err := pauth.PersistLogout(cfg)
 			require.NoError(t, err)
 
 			r := getPreRunBase()

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -11,6 +12,7 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
@@ -50,11 +52,18 @@ func GetEnvWithFallback(current, deprecated string) string {
 	return ""
 }
 
-func PersistLogoutToConfig(config *v1.Config) error {
+func PersistLogout(config *v1.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
 		return nil
 	}
+
+	if runtime.GOOS == "darwin" && !config.IsTest {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.NetrcMachineName); err != nil {
+			return err
+		}
+	}
+
 	delete(ctx.Config.SavedCredentials, ctx.Name)
 	err := ctx.DeleteUserAuth()
 	if err != nil {

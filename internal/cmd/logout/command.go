@@ -2,7 +2,6 @@ package logout
 
 import (
 	"fmt"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -11,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -57,15 +55,9 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 			// return err when other than NetrcCredentialsNotFoundErrorMsg or parsing error
 			return err
 		}
-
-		if runtime.GOOS == "darwin" && !c.cfg.IsTest {
-			if err := keychain.Delete(c.cfg.IsCloudLogin(), c.Config.Config.Context().NetrcMachineName); err != nil {
-				return err
-			}
-		}
 	}
 
-	if err := pauth.PersistLogoutToConfig(c.Config.Config); err != nil {
+	if err := pauth.PersistLogout(c.Config.Config); err != nil {
 		return err
 	}
 
