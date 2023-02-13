@@ -51,7 +51,15 @@ func lexer(line string) []prompt.LexerElement {
 		charArr := strings.Split(word.Text, "")
 
 		for _, char := range charArr {
-			lexerElements = append(lexerElements, prompt.LexerElement{Color: word.Color, Text: char})
+			element := prompt.LexerElement{Color: word.Color, Text: char}
+
+			// Replace empty spaces with white empty string or else the lexer doesn't work properly
+			if char == "\t" {
+				element.Text = " "
+				element.Color = prompt.White
+			}
+
+			lexerElements = append(lexerElements, element)
 		}
 	}
 

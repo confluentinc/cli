@@ -1,6 +1,7 @@
 package components
 
 import (
+	"strings"
 	"testing"
 
 	prompt "github.com/c-bata/go-prompt"
@@ -16,11 +17,14 @@ func TestLexer(t *testing.T) {
 
 	// then
 	for i, element := range elements {
-		if i > 0 && i < 6 || i > 12 && i < 17 {
+		if i >= 0 && i < 6 || i > 12 && i < 17 {
 			if element.Color != HIGHLIGHT_COLOR {
 				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
 			}
+		} else if element.Color != prompt.White {
+			t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
 		}
+
 	}
 }
 
@@ -34,12 +38,12 @@ func TestWordLexer(t *testing.T) {
 	// then
 	for _, element := range elements {
 
-		_, isKeyWord := sqlKeywords[element.Text]
+		_, isKeyWord := sqlKeywords[strings.TrimSpace(element.Text)]
 
 		if isKeyWord && element.Color != HIGHLIGHT_COLOR {
-			t.Errorf("lexer() = %q, want %q", element.Color, HIGHLIGHT_COLOR)
+			t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
 		} else if !isKeyWord && element.Color != prompt.White {
-			t.Errorf("lexer() = %q, want %q", element.Color, HIGHLIGHT_COLOR)
+			t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
 		}
 
 	}
