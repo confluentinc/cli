@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/c-bata/go-prompt v0.2.6
+	github.com/confluentinc/flink-sql-client/autocomplete v0.0.0-20230209110725-873ad040e7d4
 	github.com/gdamore/tcell/v2 v2.5.4
-	github.com/olekukonko/tablewriter v0.0.5
 	github.com/rivo/tview v0.0.0-20230104153304-892d1a2eb0da
 )
 
@@ -25,3 +25,5 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.5.0 // indirect
 )
+
+replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.6
