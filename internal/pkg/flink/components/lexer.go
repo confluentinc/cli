@@ -19,16 +19,21 @@ func wordLexer(line string) []prompt.LexerElement {
 
 	words := strings.Split(line, " ")
 
-	for _, word := range words {
-		element := prompt.LexerElement{
-			Text: word,
-		}
+	for i, word := range words {
+		element := prompt.LexerElement{}
 
 		_, isKeyword := sqlKeywords[word]
 		if isKeyword {
 			element.Color = HIGHLIGHT_COLOR
 		} else {
 			element.Color = prompt.White
+		}
+
+		// We have to maintain the spaces between words if not the last word
+		if i != len(words)-1 {
+			element.Text = word + "	"
+		} else {
+			element.Text = word
 		}
 
 		lexerWords = append(lexerWords, element)
@@ -39,24 +44,16 @@ func wordLexer(line string) []prompt.LexerElement {
 
 /* This outputs words all characters in the line with their respective color */
 func lexer(line string) []prompt.LexerElement {
-	var elements []prompt.LexerElement
+	var lexerElements []prompt.LexerElement
+	lexerWords := wordLexer(line)
 
-	strArr := strings.Split(line, "")
+	for _, word := range lexerWords {
+		charArr := strings.Split(word.Text, "")
 
-	for k, v := range strArr {
-		element := prompt.LexerElement{
-			Text: v,
+		for _, char := range charArr {
+			lexerElements = append(lexerElements, prompt.LexerElement{Color: word.Color, Text: char})
 		}
-
-		// every even char must be green.
-		if k > 10 && k < 20 {
-			element.Color = prompt.Green
-		} else {
-			element.Color = prompt.White
-		}
-
-		elements = append(elements, element)
 	}
 
-	return elements
+	return lexerElements
 }

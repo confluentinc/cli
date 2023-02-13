@@ -16,7 +16,7 @@ func TestLexer(t *testing.T) {
 
 	// then
 	for i, element := range elements {
-		if i > 0 && i < 6 {
+		if i > 0 && i < 6 || i > 12 && i < 17 {
 			if element.Color != HIGHLIGHT_COLOR {
 				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
 			}
