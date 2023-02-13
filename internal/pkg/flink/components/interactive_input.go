@@ -84,6 +84,7 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
 		prompt.OptionLivePrefix(changeLivePrefix),
+		prompt.OptionSetLexer(lexer),
 	)
 
 	p.Run()
