@@ -415,7 +415,7 @@ func (suite *APITestSuite) TestStoreApiKeyPipe() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = true
 	cmd := suite.newCmd()
-	// no need to force for new api keys
+	// no need to force for new API keys
 	cmd.SetArgs([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)

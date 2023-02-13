@@ -1,6 +1,6 @@
---- cli/Makefile	2023-01-20 16:06:29.000000000 -0800
-+++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,170 +1,130 @@
+--- cli/Makefile	2023-02-08 21:35:13.253768347 +0000
++++ debian/Makefile	2023-02-08 21:35:11.813759891 +0000
+@@ -1,169 +1,130 @@
 -SHELL           := /bin/bash
 -ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
 -GIT_REMOTE_NAME ?= origin
@@ -41,7 +41,7 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -88,7 +88,7 @@
  
 -.PHONY: deps
 -deps:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
 -	go install github.com/google/go-licenses@v1.5.0 && \
 -	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 -	go install gotest.tools/gotestsum@v1.8.2
@@ -237,7 +237,6 @@
 -int-test:
 -ifdef CI
 -	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
--	cat integration-test-report.xml
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of

@@ -38,7 +38,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -66,7 +66,7 @@ clean:
 
 .PHONY: deps
 deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
 	go install github.com/google/go-licenses@v1.5.0 && \
 	go install github.com/goreleaser/goreleaser@v1.14.1 && \
 	go install gotest.tools/gotestsum@v1.8.2
@@ -157,7 +157,6 @@ endif
 int-test:
 ifdef CI
 	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
-	cat integration-test-report.xml
 else
 	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif

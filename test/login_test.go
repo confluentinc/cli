@@ -133,7 +133,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			authKafka:   "true",
 		},
 		{
-			name:        "error if no api key used",
+			name:        "error if no API key used",
 			args:        "kafka topic produce integ",
 			fixture:     "login/err-no-api-key.golden",
 			wantErrCode: 1,

@@ -57,11 +57,6 @@ const (
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
-	// kafka acl commands
-	DeletedACLsMsg      = "Deleted ACLs.\n"
-	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
-	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
-
 	// kafka REST proxy
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 

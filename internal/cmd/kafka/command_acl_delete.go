@@ -106,7 +106,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 		if err != nil {
 			if i > 0 {
-				printAclsDeleted(cmd, count)
+				utils.ErrPrintln(cmd, printAclsDeleted(count))
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
@@ -114,14 +114,17 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	printAclsDeleted(cmd, count)
+	utils.ErrPrintln(cmd, printAclsDeleted(count))
 	return nil
 }
 
-func printAclsDeleted(cmd *cobra.Command, count int) {
-	if count == 0 {
-		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
-	} else {
-		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
+func printAclsDeleted(count int) string {
+	switch count {
+	case 0:
+		return "ACL not found. ACL may have been misspelled or already deleted."
+	case 1:
+		return "Deleted 1 ACL."
+	default:
+		return fmt.Sprintf("Deleted %d ACLs.", count)
 	}
 }
