@@ -98,9 +98,12 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 
 func printPrefix() {
 	fmt.Print("Flink SQL Client \n")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlQ]", "Quit")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m", "[CtrlS]", "Smart Completion ")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;93m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
+	// The escape sequences below are used to color the text.
+	// Not all colors are compatible with all terminals
+	// Here is a stackoverflow with more details https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlS]", "Smart Completion ")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
 func InteractiveInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {

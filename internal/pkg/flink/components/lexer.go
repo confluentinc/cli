@@ -6,7 +6,7 @@ import (
 	prompt "github.com/c-bata/go-prompt"
 )
 
-var HIGHLIGHT_COLOR = prompt.Yellow
+var HIGHLIGHT_COLOR = prompt.Cyan
 
 /* This outputs words with their colors according to if they are flink sql keywords or not */
 func wordLexer(line string) []prompt.LexerElement {
