@@ -30,21 +30,37 @@ func TestLexer(t *testing.T) {
 
 func TestWordLexer(t *testing.T) {
 	// given
-	line := "SELECT FIELD FROM TABLE WHERE FIELD = 2;"
+	statements := []string{"SELECT FIELD FROM TABLE WHERE FIELD = 2;",
+		"SELECT 'Hello World';",
+		"DROP TABLE Orders;",
+		"ALTER TABLE Orders RENAME TO NewOrders;",
+		"INSERT INTO Orders VALUES ('pen', 2);",
+		"ANALYZE TABLE Orders COMPUTE STATISTICS;",
+		"DESCRIBE Orders;",
+		"EXPLAIN PLAN FOR ...;",
+		"USE db1;",
+		"CREATE TABLE employee_information (    emp_id INT,    name VARCHAR,    dept_id INT) WITH (     'connector' = 'filesystem',    'path' = '/path/to/something.csv',    'format' = 'csv');",
+		"SHOW TABLES;",
+		"SET 'table.local-time-zone;' = 'Europe/Berlin';",
+		"SELECT * from employee_information WHERE dept_id = 1;",
+		"SELECT   dept_id,   COUNT(*) as emp_count FROM employee_information GROUP BY dept_id;",
+	}
 
 	// when
-	elements := wordLexer(line)
+	for _, statement := range statements {
+		elements := wordLexer(statement)
 
-	// then
-	for _, element := range elements {
+		// then
+		for _, element := range elements {
 
-		_, isKeyWord := sqlKeywords[strings.TrimSpace(element.Text)]
+			_, isKeyWord := sqlKeywords[strings.TrimSpace(element.Text)]
 
-		if isKeyWord && element.Color != HIGHLIGHT_COLOR {
-			t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
-		} else if !isKeyWord && element.Color != prompt.White {
-			t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
+			if isKeyWord && element.Color != HIGHLIGHT_COLOR {
+				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
+			} else if !isKeyWord && element.Color != prompt.White {
+				t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
+			}
+
 		}
-
 	}
 }
