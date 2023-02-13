@@ -7,7 +7,7 @@ import (
 )
 
 // property based testing?
-func TextLexer(t *testing.T) {
+func TestLexer(t *testing.T) {
 	// given
 	line := "SELECT FIELD FROM TABLE;"
 
@@ -24,7 +24,7 @@ func TextLexer(t *testing.T) {
 	}
 }
 
-func TextWordLexer(t *testing.T) {
+func TestWordLexer(t *testing.T) {
 	// given
 	line := "SELECT FIELD FROM TABLE WHERE FIELD = 2;"
 
