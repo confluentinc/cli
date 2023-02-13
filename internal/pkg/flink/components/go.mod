@@ -26,4 +26,4 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 )
 
-replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.6
+replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.7

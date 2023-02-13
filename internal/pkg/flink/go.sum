@@ -8,8 +8,8 @@ github.com/gdamore/encoding v1.0.0 h1:+7OoQ1Bc6eTm5niUzBa0Ctsh6JbMW6Ra+YNuAtDBdk
 github.com/gdamore/encoding v1.0.0/go.mod h1:alR0ol34c49FCSBLjhosxzcPHQbf2trDkoo5dl+VrEg=
 github.com/gdamore/tcell/v2 v2.5.4 h1:TGU4tSjD3sCL788vFNeJnTdzpNKIw1H5dgLnJRQVv/k=
 github.com/gdamore/tcell/v2 v2.5.4/go.mod h1:dZgRy5v4iMobMEcWNYBtREnDZAT9DYmfqIkrgEMxLyw=
-github.com/guttz/go-prompt v0.2.6 h1:sbvFWdX/E/tjURgOCoKg2hTjBtHi4xw1mj+8Qwm1T2o=
-github.com/guttz/go-prompt v0.2.6/go.mod h1:/LMAke8wD2FsNu9EXNdHxNLbd9MedkPnCdfpU9wwHfY=
+github.com/guttz/go-prompt v0.2.7 h1:dU19VboSrEWlVJspCM4Dk6dP1q7Z3Szbfu0pKJA9QMA=
+github.com/guttz/go-prompt v0.2.7/go.mod h1:/LMAke8wD2FsNu9EXNdHxNLbd9MedkPnCdfpU9wwHfY=
 github.com/lucasb-eyer/go-colorful v1.2.0 h1:1nnpGOrhyZZuNyfu1QjKiUICQ74+3FNCN69Aj6K7nkY=
 github.com/lucasb-eyer/go-colorful v1.2.0/go.mod h1:R4dSotOR9KMtayYi1e77YzuveK+i7ruzyGqttikkLy0=
 github.com/mattn/go-colorable v0.1.4/go.mod h1:U0ppj6V5qS13XJ6of8GYAs25YV2eR4EVcfRqFIhoBtE=

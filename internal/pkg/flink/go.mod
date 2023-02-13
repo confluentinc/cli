@@ -28,4 +28,4 @@ require (
 
 replace github.com/confluentinc/flink-sql-client/components => ./components
 
-replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.6
+replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.7
