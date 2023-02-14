@@ -1,7 +1,5 @@
 project_name: confluent
 
-# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
-# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   - binary: confluent
     id: confluent-alpine-amd64
