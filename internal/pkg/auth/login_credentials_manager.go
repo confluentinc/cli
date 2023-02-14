@@ -359,9 +359,8 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 			username, password, err := keychain.Read(isCloud, ctxName, url)
 			if err == nil && password != "" {
 				return &Credentials{Username: username, Password: password}, nil
-			} else {
-				return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)
 			}
+			return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)
 		}
 		return nil, errors.New(errors.KeychainNotAvailableErrorMsg)
 	}
