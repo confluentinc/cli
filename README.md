@@ -45,7 +45,6 @@ See the [releases page](https://github.com/confluentinc/cli/releases) for a comp
 
 ### Building from Source
 
-    make deps
     make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 

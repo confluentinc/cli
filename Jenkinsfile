@@ -42,7 +42,6 @@ def job = {
                                 mkdir -p $GOROOT/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                go install github.com/goreleaser/goreleaser@v1.15.2
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64
