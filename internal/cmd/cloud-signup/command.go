@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -36,6 +37,7 @@ func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.C
 }
 
 func (c *command) signup(cmd *cobra.Command, _ []string) error {
+	utils.Println(cmd, "You will now be redirected to the Confluent Cloud sign up page in your browser.")
 	err := form.ConfirmEnter(cmd)
 	if err != nil {
 		return err
