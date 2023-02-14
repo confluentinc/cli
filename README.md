@@ -41,7 +41,7 @@ The Confluent CLI is available to install for macOS, Linux, and Windows.
 
 #### Install a Specific Version
 
-See the releases page for a complete list of versions available for download: https://github.com/confluentinc/cli/releases
+See the [releases page](https://github.com/confluentinc/cli/releases) for a complete list of versions available for download.
 
 ### Building from Source
 
