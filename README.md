@@ -37,7 +37,7 @@ The Confluent CLI is available to install for macOS, Linux, and Windows.
 
 1. Download the latest Windows ZIP file from https://github.com/confluentinc/cli/releases/latest
 2. Unzip `confluent_X.X.X_windows_amd64.zip`
-3. Run the unzipped .exe file
+3. Run `confluent.exe`
 
 #### Install a Specific Version
 
