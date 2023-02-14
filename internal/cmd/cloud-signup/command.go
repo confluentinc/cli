@@ -4,19 +4,10 @@ import (
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
-
-type command struct {
-	*pcmd.CLICommand
-	userAgent     string
-	clientFactory pauth.CCloudClientFactory
-	isTest        bool
-}
 
 func New() *cobra.Command {
 	cmd := &cobra.Command{
