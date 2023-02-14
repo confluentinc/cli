@@ -301,7 +301,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.NetrcMachineName
+					netrcMachineName = ctx.GetNetrcMachineName()
 				}
 
 				if err := r.ccloudAutoLogin(netrcMachineName); err != nil {
@@ -572,7 +572,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.NetrcMachineName
+					netrcMachineName = ctx.GetNetrcMachineName()
 				}
 
 				if err := r.confluentAutoLogin(cmd, netrcMachineName); err != nil {
@@ -943,7 +943,7 @@ func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext
 func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
 	filterParams := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.NetrcMachineName,
+		Name:    ctx.GetNetrcMachineName(),
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),

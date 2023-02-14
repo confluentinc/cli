@@ -59,7 +59,7 @@ func PersistLogout(config *v1.Config) error {
 	}
 
 	if runtime.GOOS == "darwin" && !config.IsTest {
-		if err := keychain.Delete(config.IsCloudLogin(), ctx.NetrcMachineName); err != nil {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetNetrcMachineName()); err != nil {
 			return err
 		}
 	}

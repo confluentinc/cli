@@ -216,8 +216,8 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		filterParams.Name = ctx.NetrcMachineName
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		filterParams.Name = ctx.GetNetrcMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
@@ -324,8 +324,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		netrcFilterParams.Name = ctx.GetNetrcMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
@@ -368,7 +368,7 @@ func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url stri
 		return nil
 	}
 
-	ctxName := c.Config.Config.Context().NetrcMachineName
+	ctxName := c.Config.Config.Context().GetNetrcMachineName()
 	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}
