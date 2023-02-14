@@ -1,7 +1,5 @@
 project_name: confluent
 
-dist: dist
-
 builds:
   - binary: confluent
     main: cmd/confluent/main.go
