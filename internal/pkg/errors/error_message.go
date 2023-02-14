@@ -260,6 +260,7 @@ const (
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
 
 	// cmd package
 	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`
@@ -294,6 +295,9 @@ const (
 	CredentialNotFoundErrorMsg         = `credential "%s" not found`
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`
