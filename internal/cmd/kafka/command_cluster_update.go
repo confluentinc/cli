@@ -85,7 +85,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
-
 	}
 
 	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
@@ -106,7 +105,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCl
 		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 	}
 	// Durability Checks
-	if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {
+	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
 		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
 	}
 	if cku == 0 {
