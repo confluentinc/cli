@@ -34,7 +34,3 @@ As an example, I've added [option + arrow navigation](./main.go#L29) in the curr
 
 https://github.com/rivo/tview/pull/441
 https://github.com/rivo/tview/pull/5/
-
-### Highlighting for go-prompt
-
-Unfortunately, go-prompt doesn't support this out of the box. There's a PR which would add highlighting functionality, but it doesn't seem to receive a lot of attention currently https://github.com/c-bata/go-prompt/pull/246.
