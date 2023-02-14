@@ -74,7 +74,6 @@ To install the CLI from a tarball:
 
 ### Building from Source
 
-    make deps
     make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
