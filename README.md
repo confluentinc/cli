@@ -7,8 +7,7 @@ The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform de
 
 ## Documentation
 
-The [Confluent CLI Documentation Website](https://docs.confluent.io/confluent-cli/current/overview.html) contains
-detailed installation and setup information.
+The [Confluent CLI Overview](https://docs.confluent.io/confluent-cli/current/overview.html) shows how to get started with the Confluent CLI.
 
 The [Confluent CLI Command Reference](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
 contains information on command arguments and flags, and is programmatically generated from this repository.
@@ -20,57 +19,29 @@ When opening a PR, please make sure to follow our [contribution guide](CONTRIBUT
 
 ## Installation
 
-The Confluent CLI is available to install on macOS, Linux, and Windows.
+The Confluent CLI is available to install for macOS, Linux, and Windows.
 
-### One-Liner
+#### macOS
 
-The simplest way to install the Confluent CLI is with this one-liner:
+1. Download the latest macOS tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
+2. Unzip the file: `tar -xvf confluent_X.X.X_darwin_XXXXX.tar.gz`
+3. Move `confluent` to a folder in your `$PATH`, such as `/usr/local/bin`
 
-    curl -sL https://cnfl.io/cli | sh
+#### Linux
 
-(By default, the CLI will be installed in `./bin`)
+1. Download the latest Linux tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
+2. Unzip the file: `tar -xvf confluent_X.X.X_linux_XXXXX.tar.gz`
+3. Move `confluent` to a folder in your `$PATH`
 
-#### Install to a Specific Directory
+#### Windows
 
-For example, to install to `/usr/local/bin`:
-
-    curl -sL https://cnfl.io/cli | sh -s -- -b /usr/local/bin
-
-(If the directory has insufficient permissions, you may need to prefix `sh` with `sudo`)
+1. Download the latest Windows ZIP file from https://github.com/confluentinc/cli/releases/latest
+2. Unzip `confluent_X.X.X_windows_amd64.zip`
+3. Run the unzipped .exe file
 
 #### Install a Specific Version
 
-To list all available versions:
-
-    curl -sL https://cnfl.io/cli | sh -s -- -l
-
-For example, to install version `v3.0.0`:
-
-    curl -sL https://cnfl.io/cli | sh -s -- v3.0.0
-
-### Download a Tarball from S3
-
-To list all available versions:
-
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
-
-For example, to list all available packages for version v3.0.0:
-
-    VERSION=v3.0.0 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
-
-For example, to download a tarball for Darwin/amd64:
-
-    VERSION=v3.0.0 # or latest
-    OS=darwin
-    ARCH=amd64
-    FILE=confluent_${VERSION#v}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
-
-To install the CLI from a tarball:
-
-    tar -xzvf ${FILE}
-    mv confluent/confluent /usr/local/bin
+See the [releases page](https://github.com/confluentinc/cli/releases) for a complete list of versions available for download.
 
 ### Building from Source
 
