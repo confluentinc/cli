@@ -60,7 +60,7 @@ var (
 				}, nil
 			}
 		},
-		GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}

@@ -96,7 +96,7 @@ var (
 				}, nil
 			}
 		},
-		GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -180,7 +180,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -440,7 +440,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -581,7 +581,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetSSOCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}

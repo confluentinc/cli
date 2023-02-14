@@ -69,7 +69,7 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
-	GetSSOCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
@@ -168,10 +168,8 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 					loginCredential = item
 				}
 			}
-		} else {
-			if matchLoginCredentialWithFilter(cfg.SavedCredentials[ctx.Name], filterParams) {
-				loginCredential = cfg.SavedCredentials[ctx.Name]
-			}
+		} else if matchLoginCredentialWithFilter(cfg.SavedCredentials[ctx.Name], filterParams) {
+			loginCredential = cfg.SavedCredentials[ctx.Name]
 		}
 
 		if loginCredential == nil {
@@ -192,7 +190,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetSSOCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
 
@@ -365,7 +363,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 				return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)
 			}
 		}
-		return &Credentials{}, errors.New(errors.KeychainNotAvailableErrorMsg)
+		return nil, errors.New(errors.KeychainNotAvailableErrorMsg)
 	}
 }
 

@@ -222,7 +222,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		c.loginCredentialsManager.GetSSOCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
