@@ -34,7 +34,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
-	cmd.Flags().Int32("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
+	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -76,11 +76,11 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if cmd.Flags().Changed("cku") {
-		cku, err := cmd.Flags().GetInt32("cku")
+		cku, err := cmd.Flags().GetUint32("cku")
 		if err != nil {
 			return err
 		}
-		updatedCku, err := c.validateResize(cmd, cku, &currentCluster, prompt)
+		updatedCku, err := c.validateResize(cmd, int32(cku), &currentCluster, prompt)
 		if err != nil {
 			return err
 		}
@@ -104,20 +104,20 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
 	// Ensure the cluster is a Dedicated Cluster
 	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-		return -1, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
+		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 	}
 	// Durability Checks
 	if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {
-		return -1, errors.New(errors.CKUMoreThanOneErrorMsg)
+		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
 	}
-	if cku <= 0 {
-		return -1, errors.New(errors.CKUMoreThanZeroErrorMsg)
+	if cku == 0 {
+		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
 	}
 	// Cluster can't be resized while it's provisioning or being expanded already.
 	// Name _can_ be changed during these times, though.
 	err := isClusterResizeInProgress(currentCluster)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	//If shrink
 	if cku < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
@@ -130,11 +130,8 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCl
 			promptMessage += fmt.Sprintf("\n%v\n", err)
 		}
 		if promptMessage != "" {
-			ok, err := confirmShrink(cmd, prompt, promptMessage)
-			if !ok || err != nil {
-				return -1, err
-			} else {
-				return cku, nil
+			if ok, err := confirmShrink(cmd, prompt, promptMessage); !ok || err != nil {
+				return 0, err
 			}
 		}
 	}
