@@ -124,12 +124,12 @@ lint:
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --timeout=10m && \
+	golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS) && \
+	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
 	@echo "✅  cmd/lint/main.go"
 
 cmd/lint/en_US.aff:
