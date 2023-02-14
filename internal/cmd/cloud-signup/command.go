@@ -18,25 +18,18 @@ type command struct {
 	isTest        bool
 }
 
-func New(prerunner pcmd.PreRunner, userAgent string, ccloudClientFactory pauth.CCloudClientFactory, isTest bool) *cobra.Command {
+func New() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
 		Args:  cobra.NoArgs,
 	}
-
-	c := &command{
-		CLICommand:    pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		userAgent:     userAgent,
-		clientFactory: ccloudClientFactory,
-		isTest:        isTest,
-	}
-	cmd.RunE = c.signup
+	cmd.RunE = cloudSignup
 
 	return cmd
 }
 
-func (c *command) signup(cmd *cobra.Command, _ []string) error {
+func cloudSignup(cmd *cobra.Command, _ []string) error {
 	utils.Println(cmd, "You will now be redirected to the Confluent Cloud sign up page in your browser.")
 	err := form.ConfirmEnter(cmd)
 	if err != nil {
