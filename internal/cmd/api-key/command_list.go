@@ -180,11 +180,6 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 		return user.Email
 	}
 
-	// Check if API key is owned by the current user
-	if user := c.State.Auth.User; user.ResourceId == resourceId {
-		return user.GetEmail()
-	}
-
 	return "<deactivated user>"
 }
 
