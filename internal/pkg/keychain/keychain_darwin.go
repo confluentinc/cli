@@ -3,6 +3,7 @@
 package keychain
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,7 +20,7 @@ const (
 func Write(isCloud bool, ctxName, url, username, password string) error {
 	service := netrc.GetLocalCredentialName(isCloud, ctxName)
 
-	item := keychain.NewGenericPassword(service, url, username+"-"+url, []byte(username+separator+password), accessGroup)
+	item := keychain.NewGenericPassword(service, url, fmt.Sprintf("%s-%s", username, url), []byte(username+separator+password), accessGroup)
 	item.SetSynchronizable(keychain.SynchronizableNo)
 	item.SetAccessible(keychain.AccessibleWhenUnlocked)
 

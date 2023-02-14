@@ -2,14 +2,14 @@
 
 package keychain
 
-func WriteKeychainItem(_, _, _, _ string) error {
+func Write(isCloud bool, ctxName, url, username, password string) error {
 	return nil
 }
 
-func RemoveKeychainEntry(_ string) error {
+func Delete(isCloud bool, ctxName string) error {
 	return nil
 }
 
-func ReadCredentialsFromKeychain(_, _ string) (string, string, error) {
+func Read(isCloud bool, ctxName, url string) (string, string, error) {
 	return "", "", nil
 }

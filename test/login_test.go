@@ -189,7 +189,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	}
 
 	for _, tt := range tests {
-		configFile := filepath.Join(os.Getenv("HOME"), "/.confluent/config.json")
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.isCloud {
@@ -251,7 +251,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
-		configFile := filepath.Join(os.Getenv("HOME"), "/.confluent/config.json")
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		old, err := os.ReadFile(configFile)
 		s.NoError(err)
 		oldData := v1.Config{}

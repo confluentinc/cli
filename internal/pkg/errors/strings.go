@@ -15,7 +15,7 @@ const (
 	LoggedOutMsg                  = "You are now logged out."
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain access\n"
+	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
 	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
 	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"

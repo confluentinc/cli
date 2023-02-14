@@ -41,7 +41,7 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
-		configFile := filepath.Join(os.Getenv("HOME"), "/.confluent/config.json")
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		// run login to provide context, then logout command and check output
 		output := runCommand(s.T(), tt.bin, env, "login -vvvv --save --url "+tt.loginURL, 0)
 		if tt.isCloud {
@@ -94,7 +94,7 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
 		}
 
-		configFile := filepath.Join(os.Getenv("HOME"), "/.confluent/config.json")
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		got, err := os.ReadFile(configFile)
 		s.NoError(err)
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
