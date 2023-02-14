@@ -84,9 +84,8 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		if err != nil {
 			return err
 		}
-		if updatedCku != -1 {
-			update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
-		}
+		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
+
 	}
 
 	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
@@ -119,7 +118,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCl
 	if err != nil {
 		return 0, err
 	}
-	//If shrink
+	// If shrink
 	if cku < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
 		promptMessage := ""
 		// metrics api auth via jwt
