@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -110,6 +111,18 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 
 	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
 	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+}
+
+func ConfirmEnter(cmd *cobra.Command) error {
+	// Note: this function does not check against any regex;
+	// any string is acceptable
+	utils.Print(cmd, "Press enter to continue or Ctrl-C to cancel:")
+
+	if _, err := terminal.ReadPassword(int(os.Stdin.Fd())); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func show(cmd *cobra.Command, field Field) {
