@@ -233,7 +233,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(filterParams netrc
 			return nil, err
 		}
 
-		log.CliLogger.Warnf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
+		log.CliLogger.Debugf(errors.FoundNetrcCredMsg, netrcMachine.User, h.netrcHandler.GetFileName())
 		return &Credentials{Username: netrcMachine.User, Password: netrcMachine.Password}, nil
 	}
 }
