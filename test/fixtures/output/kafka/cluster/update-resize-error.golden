@@ -1,1 +1,1 @@
-Error: failed to update kafka cluster: cluster resize is only supported on dedicated clusters
+Error: failed to update kafka cluster: cluster resize is only supported for dedicated clusters

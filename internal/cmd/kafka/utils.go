@@ -7,7 +7,6 @@ import (
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -107,9 +106,6 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 }
 
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
-	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-	}
 	if isExpanding(currentCluster) {
 		return errors.New(errors.KafkaClusterExpandingErrorMsg)
 	}
