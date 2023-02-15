@@ -65,8 +65,9 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String("key-vault", "", "The ID of the Azure Key Vault where the key is stored.")
 	cmd.Flags().String("tenant", "", "The ID of the Azure Active Directory tenant that the key vault belongs to.")
-	cmd.MarkFlagsRequiredTogether("key-vault", "tenant")
 	pcmd.AddOutputFlag(cmd)
+
+	cmd.MarkFlagsRequiredTogether("key-vault", "tenant")
 
 	return cmd
 }
