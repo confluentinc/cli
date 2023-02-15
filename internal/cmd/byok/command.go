@@ -12,16 +12,17 @@ type command struct {
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "byok",
-		Short: "Manage your keys in Confluent Cloud.",
+		Use:         "byok",
+		Short:       "Manage your keys in Confluent Cloud.",
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newListCommand())
+	c.AddCommand(c.newCreateCommand())
+	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newRegisterCommand())
-	c.AddCommand(c.newUnregisterCommand())
+	c.AddCommand(c.newListCommand())
 
 	return c.Command
 }
@@ -35,5 +36,5 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteEnvironments(c.Client, c.V2Client, c.Context)
+	return pcmd.AutocompleteByokKeyIds(c.V2Client)
 }

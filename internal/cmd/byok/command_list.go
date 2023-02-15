@@ -10,8 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var listFields = []string{"Id", "Key", "Provider", "State", "CreatedAt", "UpdatedAt", "DeletedAt"}
-
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -20,10 +18,8 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().String("provider", "", "Filter by provider (AWS or Azure)")
-	cmd.Flags().String("state", "", "Filter by state (IN_USE or AVAILABLE)")
-
-	pcmd.AddCloudFlag(cmd)
+	pcmd.AddByokProviderFlag(cmd)
+	pcmd.AddByokStateFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -35,10 +31,22 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	switch provider {
+	case "aws":
+		provider = "AWS"
+	case "azure":
+		provider = "Azure"
+	}
 
 	state, err := cmd.Flags().GetString("state")
 	if err != nil {
 		return err
+	}
+	switch state {
+	case "in-use":
+		state = "IN_USE"
+	case "available":
+		state = "AVAILABLE"
 	}
 
 	keys, err := c.V2Client.ListByokKeys(provider, state)
@@ -47,6 +55,8 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
+	// API returns a list sorted by creation date already
+	list.Sort(false)
 	for _, key := range keys {
 		var keyString string
 		switch {
@@ -69,10 +79,10 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		list.Add(&describeStruct{
-			Id:        *key.Id,
+			Id:        key.GetId(),
 			Key:       keyString,
-			Provider:  *key.Provider,
-			State:     *key.State,
+			Provider:  key.GetProvider(),
+			State:     key.GetState(),
 			CreatedAt: key.Metadata.CreatedAt.String(),
 			UpdatedAt: updatedAt,
 			DeletedAt: deletedAt,
@@ -80,7 +90,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	}
 
-	list.Filter(listFields)
+	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt", "UpdatedAt"})
 	return list.Print()
-
 }

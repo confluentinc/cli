@@ -11,7 +11,7 @@ import (
 )
 
 type describeStruct struct {
-	Id        string   `human:"Id" serialized:"id"`
+	Id        string   `human:"ID" serialized:"id"`
 	Key       string   `human:"Key" serialized:"key"`
 	Roles     []string `human:"Roles" serialized:"roles"`
 	Provider  string   `human:"Provider" serialized:"provider"`
@@ -30,7 +30,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
-	cmd.Flags().Bool("show-policy-command", false, "Print post-creation step to grant Confluent access to the key.")
+	cmd.Flags().Bool("policy-command", false, "Print post-creation step to grant Confluent access to the key.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -67,25 +67,24 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&describeStruct{
-		Id:        *key.Id,
+		Id:        key.GetId(),
 		Key:       keyString,
 		Roles:     roles,
-		Provider:  *key.Provider,
-		State:     *key.State,
+		Provider:  key.GetProvider(),
+		State:     key.GetState(),
 		CreatedAt: key.Metadata.CreatedAt.String(),
 		UpdatedAt: updatedAt,
 		DeletedAt: deletedAt,
 	})
 	table.Print()
 
-	// If the user has specified the --show-policy-command flag, print the post-creation step to grant Confluent access to the key.
-	showPolicyCommand, err := cmd.Flags().GetBool("show-policy-command")
+	showPolicyCommand, err := cmd.Flags().GetBool("policy-command")
 	if err != nil {
 		return err
 	}
 
 	if showPolicyCommand {
-		postCreationStepInstructions, err := renderPostCreationStepInstructions(&key)
+		postCreationStepInstructions, err := getPostCreationStepInstructions(&key)
 		if err != nil {
 			return err
 		}

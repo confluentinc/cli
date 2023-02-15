@@ -80,7 +80,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a previously registered encryption key in AWS:",
-				Code: `confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z`,
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
 			},
 			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
@@ -93,10 +93,10 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
-	cmd.Flags().String("byok", "", "CCK-ID of a registered BYOK  encryption key.")
+	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Google Cloud Platform, the Resource ID of the Cloud KMS key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
+		pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
@@ -178,15 +178,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return errors.CatchByokKeyNotFoundError(err, httpResp)
 		}
 		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{
-			Id: *key.Id,
+			Id: key.GetId(),
 		}
 	}
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment: &cmkv2.EnvScopedObjectReference{
-				Id: c.EnvironmentId(),
-			},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),

@@ -33,7 +33,7 @@ type describeStruct struct {
 	Availability       string `human:"Availability" serialized:"availability"`
 	Status             string `human:"Status" serialized:"status"`
 	Endpoint           string `human:"Endpoint" serialized:"endpoint"`
-	ByokId             string `human:"BYOK Key Id" serialized:"byok_key_id"`
+	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
 	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
@@ -127,7 +127,7 @@ func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *v1.Context
 		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
-		ByokId:             getCmkByokId(cluster),
+		ByokKeyId:          getCmkByokId(cluster),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
 		RestEndpoint:       cluster.Spec.GetHttpEndpoint(),
 	}
