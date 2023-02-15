@@ -3,6 +3,7 @@ package kafka
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
@@ -94,7 +95,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		if availability == "" {
 			return errors.New("`--availability` must not be empty")
 		}
-		update.Spec.SetAvailability(availability)
+		update.Spec.SetAvailability(strings.ToUpper(strings.ReplaceAll(availability, "-", "_")))
 	}
 
 	// Both `--type` and `--cku` require changing the config
