@@ -146,10 +146,9 @@ const (
 	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"
 	InvalidTypeFlagSuggestions                    = "Allowed values for `--type` flag are: %s, %s, %s."
 	KafkaClusterNotFoundErrorMsg                  = `Kafka cluster "%s" not found`
-	KafkaClusterStillProvisioningErrorMsg         = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
-	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
-	KafkaClusterExpandingErrorMsg                 = "your cluster is expanding; please wait for that operation to complete before updating again"
-	KafkaClusterShrinkingErrorMsg                 = "your cluster is shrinking; Please wait for that operation to complete before updating again"
+	KafkaClusterProvisioningErrorMsg              = "can not update cluster while it is provisioning"
+	KafkaClusterExpandingErrorMsg                 = "can not update cluster while it is expanding"
+	KafkaClusterShrinkingErrorMsg                 = "can not update cluster while it is shrinking"
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
