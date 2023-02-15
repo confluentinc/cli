@@ -79,6 +79,10 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 				Code: `confluent kafka cluster create sales092020 --cloud aws --region us-west-2 --type dedicated --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
 			},
 			examples.Example{
+				Text: "Create a new dedicated cluster that uses a previously registered encryption key in AWS:",
+				Code: "confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z",
+			},
+			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
 			},
 		),
@@ -89,9 +93,10 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
+	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Google Cloud Platform, the Resource ID of the Cloud KMS key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
+		pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
@@ -142,32 +147,50 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	encryptionKey, err := cmd.Flags().GetString("encryption-key")
+	var encryptionKey *string
+	if cmd.Flags().Changed("encryption-key") {
+		*encryptionKey, err = cmd.Flags().GetString("encryption-key")
+		if err != nil {
+			return err
+		}
+
+		if *encryptionKey != "" {
+			input := validateEncryptionKeyInput{
+				Cloud:          cloud,
+				MetadataClouds: clouds,
+				AccountID:      c.EnvironmentId(),
+			}
+			if err := c.validateEncryptionKey(cmd, prompt, input); err != nil {
+				return err
+			}
+		}
+	}
+
+	byok, err := cmd.Flags().GetString("byok")
 	if err != nil {
 		return err
 	}
 
-	if encryptionKey != "" {
-		input := validateEncryptionKeyInput{
-			Cloud:          cloud,
-			MetadataClouds: clouds,
-			AccountID:      c.EnvironmentId(),
+	var keyGlobalObjectReference *cmkv2.GlobalObjectReference
+	if byok != "" {
+		key, httpResp, err := c.V2Client.GetByokKey(byok)
+		if err != nil {
+			return errors.CatchByokKeyNotFoundError(err, httpResp)
 		}
-		if err := c.validateEncryptionKey(cmd, prompt, input); err != nil {
-			return err
+		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{
+			Id: key.GetId(),
 		}
 	}
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment: &cmkv2.ObjectReference{
-				Id: c.EnvironmentId(),
-			},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
 			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
+			Byok:         keyGlobalObjectReference,
 		},
 	}
 
@@ -274,7 +297,7 @@ func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt for
 	accounts := getEnvironmentsForCloud(input.Cloud, input.MetadataClouds)
 
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyBYOKAWSPermissionsHeaderMsg)
+	buf.WriteString(errors.CopyByokAwsPermissionsHeaderMsg)
 	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicy.Execute(buf, accounts); err != nil {
 		return errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
@@ -333,7 +356,7 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 	return sku, nil
 }
 
-func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID *string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
@@ -345,7 +368,7 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 		}
 	case skuDedicated:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: &encryptionKeyID},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: encryptionKeyID},
 		}
 	default:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{

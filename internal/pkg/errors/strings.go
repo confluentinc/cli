@@ -40,8 +40,9 @@ const (
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
 	// kafka cluster commands
-	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:`
+	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run:"
 
 	// kafka consumer-group commands
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
