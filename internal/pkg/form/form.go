@@ -114,8 +114,8 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 }
 
 func ConfirmEnter(cmd *cobra.Command) error {
-	// Note: this function does not check against any regex;
-	// any string is acceptable
+	// This function prevents echoing of user input instead of displaying text or *'s
+	// so that the CLI will appear to wait until 'enter' or 'Ctrl-C' are entered.
 	utils.Print(cmd, "Press enter to continue or Ctrl-C to cancel:")
 
 	if _, err := term.ReadPassword(int(os.Stdin.Fd())); err != nil {
