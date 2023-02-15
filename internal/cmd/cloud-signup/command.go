@@ -14,8 +14,8 @@ func New() *cobra.Command {
 		Use:   "cloud-signup",
 		Short: "Sign up for Confluent Cloud.",
 		Args:  cobra.NoArgs,
+		RunE:  cloudSignup,
 	}
-	cmd.RunE = cloudSignup
 
 	return cmd
 }
