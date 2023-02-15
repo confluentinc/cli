@@ -30,6 +30,7 @@ def job = {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
+                            loadNPMCredentials()
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 wget "https://golang.org/dl/go1.20.linux-amd64.tar.gz" --quiet --output-document go1.20.tar.gz
@@ -93,6 +94,7 @@ def job = {
                         "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=v3"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
+                            loadNPMCredentials()
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 . extract-iam-credential.sh
