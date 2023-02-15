@@ -60,6 +60,12 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 		}),
 		prompt.OptionAddASCIICodeBind(),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlC,
+			Fn: func(b *prompt.Buffer) {
+				exitApplication()
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlQ,
 			Fn: func(b *prompt.Buffer) {
 				exitApplication()
