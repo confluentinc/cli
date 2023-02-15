@@ -95,6 +95,7 @@ def job = {
                         "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=v3"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
+                            loadNPMCredentials()
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
                                 . extract-iam-credential.sh
