@@ -1,0 +1,18 @@
+It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
++---------------+---------------------------+
+| Current       | false                     |
+| ID            | lkc-def963                |
+| Name          | cck-byok-test             |
+| Type          | DEDICATED                 |
+| Cluster Size  |                         1 |
+| Ingress       |                        50 |
+| Egress        |                       150 |
+| Storage       | Infinite                  |
+| Provider      | aws                       |
+| Region        | us-east-1                 |
+| Availability  | single-zone               |
+| Status        | PROVISIONING              |
+| Endpoint      | SASL_SSL://kafka-endpoint |
+| BYOK Key Id   | cck-001                   |
+| REST Endpoint | https://pkc-endpoint      |
++---------------+---------------------------+
