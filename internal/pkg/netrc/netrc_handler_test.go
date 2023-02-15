@@ -27,9 +27,6 @@ const (
 )
 
 var (
-	mockSalt  = []byte("random-mock-salt")
-	mockNonce = []byte("random-nonce")
-
 	ccloudMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:" + ccloudNetrcMachineName,
 		User:     ccloudLogin,
