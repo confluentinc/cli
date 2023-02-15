@@ -24,6 +24,12 @@ func executor(in string) {
 		LivePrefixState.LivePrefix = in
 		allStatements = allStatements + lastStatement
 		lastStatement = ""
+
+		if isInputClosingSelect(in) {
+			LivePrefixState.IsEnable = true
+			LivePrefixState.LivePrefix = ""
+		}
+
 		return
 	}
 	lastStatement = lastStatement + in + " "
