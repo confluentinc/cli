@@ -134,7 +134,7 @@ const (
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupportedErrorMsg             = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
+	ClusterResizeNotSupportedErrorMsg             = "failed to update kafka cluster: cluster resize is only supported for dedicated clusters"
 	CloudRegionNotAvailableErrorMsg               = `"%s" is not an available region for "%s"`
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = `"%s" is not an available cloud provider`
@@ -145,8 +145,6 @@ const (
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"
 	InvalidTypeFlagSuggestions                    = "Allowed values for `--type` flag are: %s, %s, %s."
-	NameOrCKUFlagErrorMsg                         = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
-	NonEmptyNameErrorMsg                          = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                  = `Kafka cluster "%s" not found`
 	KafkaClusterStillProvisioningErrorMsg         = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
 	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
