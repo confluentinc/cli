@@ -176,15 +176,15 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 			return nil, nil
 		}
 
-		password, err := secret.Decrypt(loginCredential.Username, loginCredential.EncryptedPassword, loginCredential.Salt, loginCredential.Nonce)
+		password, err := secret.Decrypt(loginCredential.Username, loginCredential.EncryptedPassword, cfg.Secrets.Salt, cfg.Secrets.Nonce)
 		if err != nil {
 			return nil, err
 		}
 		credentials := &Credentials{
 			Username: loginCredential.Username,
 			Password: password,
-			Salt:     loginCredential.Salt,
-			Nonce:    loginCredential.Nonce,
+			Salt:     cfg.Secrets.Salt,
+			Nonce:    cfg.Secrets.Nonce,
 		}
 		return credentials, err
 	}

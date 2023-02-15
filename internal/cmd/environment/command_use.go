@@ -35,7 +35,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	}
 	c.Context.SetEnvironment(environment)
 
-	if err := c.Config.Save(); err != nil {
+	if err := c.Config.Save(""); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
 

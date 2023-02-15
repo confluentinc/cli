@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -85,6 +86,7 @@ type Config struct {
 	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	Secrets             *Secrets                    `json:"secrets,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -141,7 +143,7 @@ func (c *Config) Load() error {
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
-			if err := c.Save(); err != nil {
+			if err := c.Save(""); err != nil {
 				return errors.Wrapf(err, errors.UnableToCreateConfigErrorMsg)
 			}
 			return nil
@@ -177,7 +179,6 @@ func (c *Config) Load() error {
 		if context.PlatformName == "" {
 			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
 		}
-		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
@@ -185,15 +186,42 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
+
+		state := c.ContextStates[context.Name]
+		if secrets := context.Config.Secrets; secrets != nil && state.AuthToken != "" && state.AuthToken != mockAuthToken {
+			decryptedAuthToken, err := secret.Decrypt(context.Name, state.AuthToken, secrets.Salt, secrets.Nonce)
+			if err != nil {
+				fmt.Println("cant decrypt", context.Name, state.AuthToken, secrets.Salt, secrets.Nonce)
+				return err
+			}
+			state.AuthToken = decryptedAuthToken
+		}
+		context.State = state
 	}
 	return c.Validate()
 }
 
 // Save writes the CLI config to disk.
-func (c *Config) Save() error {
+func (c *Config) Save(ctxName string) error {
+	fmt.Println("I'm called in the name of", ctxName)
+	// when using a fake name? how do i encrypt?
 	tempKafka := c.resolveOverwrittenKafka()
 	tempAccount := c.resolveOverwrittenAccount()
 	tempContext := c.resolveOverwrittenContext()
+
+	if ctxName != "" {
+		if secrets := c.Secrets; secrets != nil && c.Context() != nil { // this is nil before login
+			encryptedAuthToken, err := secret.Encrypt(ctxName, c.Context().GetState().AuthToken, secrets.Salt, secrets.Nonce)
+			if err != nil {
+				fmt.Println("can't encrypt again")
+				return err
+			}
+			c.Context().State.AuthToken = encryptedAuthToken
+		}
+	}
+	if c.Context() != nil {
+		fmt.Println(strings.Contains(c.Context().State.AuthToken, "eyJ"))
+	}
 
 	if err := c.Validate(); err != nil {
 		return err
@@ -342,7 +370,7 @@ func (c *Config) DeleteContext(name string) error {
 		c.CurrentContext = ""
 	}
 
-	return c.Save()
+	return c.Save("")
 }
 
 // FindContext finds a context by name, and returns nil if not found.
@@ -380,8 +408,8 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 	if err := c.Validate(); err != nil {
 		return err
 	}
-
-	return c.Save()
+	fmt.Println("im called!!")
+	return c.Save(name)
 }
 
 // CreateContext creates a new context.
@@ -442,7 +470,8 @@ func (c *Config) UseContext(name string) error {
 		return err
 	}
 	c.CurrentContext = name
-	return c.Save()
+	fmt.Println("or is it me!!")
+	return c.Save(name)
 }
 
 func (c *Config) SaveCredential(credential *Credential) error {
@@ -450,7 +479,7 @@ func (c *Config) SaveCredential(credential *Credential) error {
 		return errors.New(errors.NoNameCredentialErrorMsg)
 	}
 	c.Credentials[credential.Name] = credential
-	return c.Save()
+	return c.Save("")
 }
 
 func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCredential) error {
@@ -458,7 +487,12 @@ func (c *Config) SaveLoginCredential(ctxName string, loginCredential *LoginCrede
 		return errors.New(errors.SavedCredentialNoContextErrorMsg)
 	}
 	c.SavedCredentials[ctxName] = loginCredential
-	return c.Save()
+	return c.Save("")
+}
+
+func (c *Config) SaveSecrets(secrets *Secrets) error {
+	c.Secrets = secrets
+	return c.Save("")
 }
 
 func (c *Config) SavePlatform(platform *Platform) error {
@@ -466,7 +500,7 @@ func (c *Config) SavePlatform(platform *Platform) error {
 		return errors.New(errors.NoNamePlatformErrorMsg)
 	}
 	c.Platforms[platform.Name] = platform
-	return c.Save()
+	return c.Save("")
 }
 
 // Context returns the current context.
@@ -512,7 +546,7 @@ func (c *Config) HasBasicLogin() bool {
 
 func (c *Config) ResetAnonymousId() error {
 	c.AnonymousId = uuid.New().String()
-	return c.Save()
+	return c.Save("")
 }
 
 func (c *Config) GetFilename() string {

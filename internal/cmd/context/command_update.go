@@ -59,8 +59,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 		ctx.Config.Contexts[ctx.Name] = ctx.Context
 		ctx.Config.ContextStates[ctx.Name] = ctx.Context.State
-
-		if err := ctx.Config.Save(); err != nil {
+		fmt.Println("not really likely to be you?")
+		if err := ctx.Config.Save(ctx.Name); err != nil {
 			return err
 		}
 	}

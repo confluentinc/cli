@@ -70,7 +70,9 @@ func PersistLogout(config *v1.Config) error {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
-	return config.Save()
+	ctx.Config.Secrets = nil
+	fmt.Println("i guess not you..")
+	return config.Save(ctx.Name)
 }
 
 func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
@@ -118,32 +120,36 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		return err
 	}
 
-	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(saltLength)
-		if err != nil {
-			return err
-		}
-		nonce, err := secret.GenerateRandomBytes(nonceLength)
-		if err != nil {
-			return err
-		}
+	salt, err := secret.GenerateRandomBytes(saltLength)
+	if err != nil {
+		return err
+	}
+	nonce, err := secret.GenerateRandomBytes(nonceLength)
+	if err != nil {
+		return err
+	}
+	secrets := &v1.Secrets{
+		Salt:  salt,
+		Nonce: nonce,
+	}
+	if err := config.SaveSecrets(secrets); err != nil {
+		return err
+	}
 
+	loginCredential := &v1.LoginCredential{
+		IsCloud:  isCloud,
+		Url:      url,
+		Username: credentials.Username,
+	}
+	if save && !credentials.IsSSO {
 		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
 		if err != nil {
 			return err
 		}
-
-		loginCredential := &v1.LoginCredential{
-			IsCloud:           isCloud,
-			Url:               url,
-			Username:          credentials.Username,
-			EncryptedPassword: encryptedPassword,
-			Salt:              salt,
-			Nonce:             nonce,
-		}
-		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
-			return err
-		}
+		loginCredential.EncryptedPassword = encryptedPassword
+	}
+	if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+		return err
 	}
 
 	if ctx, ok := config.Contexts[ctxName]; ok {

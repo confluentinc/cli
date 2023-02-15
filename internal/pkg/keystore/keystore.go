@@ -2,6 +2,8 @@
 package keystore
 
 import (
+	"fmt"
+
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -42,7 +44,8 @@ func (c *ConfigKeyStore) StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
 		return err
 	}
 	kcc.APIKeys[key.Key] = key
-	return c.Config.Save()
+	fmt.Println("it can't be you")
+	return c.Config.Save(ctx.Name)
 }
 
 func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
@@ -51,5 +54,6 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
 		return new(errors.NotLoggedInError)
 	}
 	ctx.KafkaClusterContext.DeleteAPIKey(key)
-	return c.Config.Save()
+	fmt.Println("is it you?")
+	return c.Config.Save(ctx.Name)
 }

@@ -73,7 +73,7 @@ func (c *Context) validate() error {
 }
 
 func (c *Context) Save() error {
-	return c.Config.Save()
+	return c.Config.Save(c.Name)
 }
 
 func (c *Context) HasBasicMDSLogin() bool {
@@ -124,6 +124,7 @@ func (c *Context) DeleteUserAuth() error {
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 	c.State.AuthToken = token
 	c.State.AuthRefreshToken = refreshToken
+	fmt.Println("ok i'm called! here!")
 	return c.Save()
 }
 
