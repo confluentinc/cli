@@ -1,18 +1,13 @@
 package kafka
 
 import (
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	quotaListFields       = []string{"Id", "DisplayName", "Description", "Ingress", "Egress", "Cluster", "Principals", "Environment"}
-	quotaHumanFields      = []string{"ID", "Name", "Description", "Ingress", "Egress", "Cluster", "Principals", "Environment"}
-	quotaStructuredFields = []string{"id", "name", "description", "ingress", "egress", "cluster", "principals", "environment"}
 )
 
 func (c *quotaCommand) newListCommand() *cobra.Command {
@@ -46,12 +41,6 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	w, err := output.NewListOutputWriter(cmd, quotaListFields, quotaHumanFields, quotaStructuredFields)
-	if err != nil {
-		return err
-	}
-
-	// TODO use API for filtering by principal when it becomes available: https://confluentinc.atlassian.net/browse/KPLATFORM-733
 	if cmd.Flags().Changed("principal") {
 		principal, err := cmd.Flags().GetString("principal")
 		if err != nil {
@@ -59,12 +48,13 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 		quotas = filterQuotasByPrincipal(quotas, principal)
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	for _, quota := range quotas {
-		w.AddElement(quotaToPrintable(quota, format))
-	}
 
-	return w.Out()
+	list := output.NewList(cmd)
+	format := output.GetFormat(cmd)
+	for _, quota := range quotas {
+		list.Add(quotaToPrintable(quota, format))
+	}
+	return list.Print()
 }
 
 func filterQuotasByPrincipal(quotas []v1.KafkaQuotasV1ClientQuota, principalId string) []v1.KafkaQuotasV1ClientQuota {

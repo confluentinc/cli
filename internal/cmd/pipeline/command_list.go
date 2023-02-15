@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Display pipelines in the current environment and cluster.",
@@ -28,25 +28,31 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// call api
 	pipelines, err := c.V2Client.ListPipelines(c.EnvironmentId(), cluster.ID)
 	if err != nil {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, pipelineListFields, pipelineListHumanLabels, pipelineListStructuredLabels)
-	if err != nil {
-		return err
-	}
+	list := output.NewList(cmd)
 	for _, pipeline := range pipelines {
-		element := &Pipeline{
-			Id:          *pipeline.Id,
-			Name:        *pipeline.Spec.DisplayName,
-			Description: *pipeline.Spec.Description,
-			KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-			State:       *pipeline.Status.State,
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Id:          pipeline.GetId(),
+				Name:        pipeline.Spec.GetDisplayName(),
+				Description: pipeline.Spec.GetDescription(),
+				KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+				State:       pipeline.Status.GetState(),
+			})
+		} else {
+			list.Add(&serializedOut{
+				Id:          pipeline.GetId(),
+				Name:        pipeline.Spec.GetDisplayName(),
+				Description: pipeline.Spec.GetDescription(),
+				KsqlCluster: pipeline.Spec.KsqlCluster.GetId(),
+				State:       pipeline.Status.GetState(),
+			})
 		}
-		outputWriter.AddElement(element)
 	}
-	return outputWriter.Out()
+	list.Filter([]string{"Id", "Name", "Description", "KsqlCluster", "State"})
+	return list.Print()
 }

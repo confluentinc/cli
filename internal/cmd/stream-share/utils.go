@@ -5,10 +5,17 @@ import (
 	"os"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/spf13/cobra"
 )
+
+type privateLinkNetworkDetails struct {
+	networkKind         string
+	privateLinkDataType string
+	privateLinkData     string
+}
 
 func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetworkDetails {
 	cloud := network.GetCloud()
@@ -20,20 +27,13 @@ func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetwor
 	} else if cloud.CdxV1AzureNetwork != nil {
 		details.networkKind = cloud.CdxV1AzureNetwork.Kind
 		details.privateLinkDataType = "Private Link Service Aliases"
-		details.privateLinkData = cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases()
+		details.privateLinkData = fmt.Sprintf("%v", cloud.CdxV1AzureNetwork.GetPrivateLinkServiceAliases())
 	} else if cloud.CdxV1GcpNetwork != nil {
 		details.networkKind = cloud.CdxV1GcpNetwork.Kind
 		details.privateLinkDataType = "Private Service Connect Service Attachments"
-		details.privateLinkData = cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments()
+		details.privateLinkData = fmt.Sprintf("%v", cloud.CdxV1GcpNetwork.GetPrivateServiceConnectServiceAttachments())
 	}
 	return &details
-}
-
-func combineMaps(m1, m2 map[string]string) map[string]string {
-	for k, v := range m2 {
-		m1[k] = v
-	}
-	return m1
 }
 
 func mapSubdomainsToList(m map[string]string) []string {
@@ -55,7 +55,7 @@ func confirmOptOut(cmd *cobra.Command) (bool, error) {
 		},
 	)
 	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
-		return false, errors.New(errors.FailedToReadOptOutConfirmationErrorMsg)
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil
 }

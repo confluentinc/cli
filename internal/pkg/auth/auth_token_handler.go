@@ -6,14 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 type AuthTokenHandler interface {
@@ -40,12 +40,12 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 			if orgResourceId == "" {
 				orgResourceId = credentials.OrgResourceId
 			}
-			req := &flowv1.AuthenticateRequest{
+			req := &ccloudv1.AuthenticateRequest{
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: orgResourceId,
 			}
 			if res, err := client.Auth.Login(context.Background(), req); err == nil {
-				return res.Token, res.RefreshToken, nil
+				return res.GetToken(), res.GetRefreshToken(), nil
 			}
 		}
 	}
@@ -65,7 +65,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 	client.HttpClient.Timeout = 30 * time.Second
 	log.CliLogger.Debugf("Making login request for %s for org id %s", credentials.Username, orgResourceId)
 
-	req := &flowv1.AuthenticateRequest{
+	req := &ccloudv1.AuthenticateRequest{
 		Email:         credentials.Username,
 		Password:      credentials.Password,
 		OrgResourceId: orgResourceId,
@@ -78,13 +78,13 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 
 	if utils.IsOrgEndOfFreeTrialSuspended(res.GetOrganization().GetSuspensionStatus()) {
 		log.CliLogger.Debugf(errors.EndOfFreeTrialErrorMsg, res.GetOrganization().GetSuspensionStatus())
-		return res.Token, res.RefreshToken, &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
+		return res.GetToken(), res.GetRefreshToken(), &errors.EndOfFreeTrialError{OrgId: res.GetOrganization().GetName()}
 	}
 
-	return res.Token, res.RefreshToken, nil
+	return res.GetToken(), res.GetRefreshToken(), nil
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
 	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 	if err != nil {
 		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
@@ -99,19 +99,19 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloud.Client, noBrowse
 		return "", "", err
 	}
 
-	req := &flowv1.AuthenticateRequest{IdToken: idToken}
+	req := &ccloudv1.AuthenticateRequest{IdToken: idToken}
 
 	res, err := client.Auth.Login(context.Background(), req)
 	if err != nil {
 		return "", "", err
 	}
 
-	return res.Token, refreshToken, err
+	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, orgResourceId string) (string, error) {
+func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloudv1.Client, email, orgResourceId string) (string, error) {
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
-	req := &flowv1.GetLoginRealmRequest{
+	req := &ccloudv1.GetLoginRealmRequest{
 		Email:         email,
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgResourceId,
@@ -126,13 +126,13 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloud.Client, email, or
 	return "", nil
 }
 
-func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refreshToken, orgResourceId string) (string, string, error) {
+func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, refreshToken, orgResourceId string) (string, string, error) {
 	idToken, refreshToken, err := sso.RefreshTokens(client.BaseURL, refreshToken)
 	if err != nil {
 		return "", "", err
 	}
 
-	req := &flowv1.AuthenticateRequest{
+	req := &ccloudv1.AuthenticateRequest{
 		IdToken:       idToken,
 		OrgResourceId: orgResourceId,
 	}
@@ -142,7 +142,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloud.Client, refr
 		return "", "", err
 	}
 
-	return res.Token, refreshToken, err
+	return res.GetToken(), refreshToken, err
 }
 
 func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error) {
@@ -155,13 +155,13 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 	return resp.AuthToken, nil
 }
 
-func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloud.Client, loginEmail string) error {
+func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
 	getMeReply, err := client.Auth.User(context.Background())
 	if err != nil {
 		return err
 	}
-	if getMeReply.User.Email != loginEmail {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.User.Email), errors.SSOCredentialsDoNotMatchSuggestions)
+	if getMeReply.GetUser().GetEmail() != loginEmail {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SSOCredentialsDoNotMatchLoginCredentialsErrorMsg, loginEmail, getMeReply.GetUser().GetEmail()), errors.SSOCredentialsDoNotMatchSuggestions)
 	}
 	return nil
 }

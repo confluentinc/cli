@@ -29,10 +29,10 @@ const (
 	destinationApiKeyFlagName          = "destination-api-key"
 	destinationApiSecretFlagName       = "destination-api-secret"
 	destinationBootstrapServerFlagName = "destination-bootstrap-server"
-	destinationClusterIdFlagName       = "destination-cluster-id"
+	destinationClusterIdFlagName       = "destination-cluster"
 	noValidateFlagName                 = "no-validate"
 	sourceBootstrapServerFlagName      = "source-bootstrap-server"
-	sourceClusterIdFlagName            = "source-cluster-id"
+	sourceClusterIdFlagName            = "source-cluster"
 
 	authHelperMsg = "If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. " +
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
@@ -65,11 +65,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using a configuration file.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt",
+				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --config-file config.txt",
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
+				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
 			},
 		),
 	}

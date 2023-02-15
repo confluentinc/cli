@@ -1,4 +1,4 @@
-Update per-broker or cluster-wide Kafka broker configs.
+Update per-broker or cluster-wide Kafka broker configurations.
 
 Usage:
   confluent kafka broker update [id] [flags]
@@ -19,7 +19,7 @@ Flags:
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
       --client-key-path string    Path to client private key, include for mTLS authentication.
-      --no-auth                   Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --no-authentication         Include if requests should be made without authentication headers, and user will not be prompted for credentials.
       --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 

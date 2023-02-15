@@ -9,12 +9,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
+
+type subjectListOut struct {
+	Subject string `human:"Subject" serialized:"subject"`
+}
 
 func (c *subjectCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -30,7 +32,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -50,44 +52,28 @@ func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func listSubjects(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
-	type listDisplay struct {
-		Subject string
-	}
-
 	deleted, err := cmd.Flags().GetBool("deleted")
 	if err != nil {
 		return err
 	}
 
-	subjectPrefix, err := cmd.Flags().GetString("prefix")
+	prefix, err := cmd.Flags().GetString("prefix")
 	if err != nil {
 		return err
 	}
 
 	listOpts := srsdk.ListOpts{
 		Deleted:       optional.NewBool(deleted),
-		SubjectPrefix: optional.NewString(subjectPrefix),
+		SubjectPrefix: optional.NewString(prefix),
 	}
-	list, _, err := srClient.DefaultApi.List(ctx, &listOpts)
+	subjects, _, err := srClient.DefaultApi.List(ctx, &listOpts)
 	if err != nil {
 		return err
 	}
 
-	if len(list) > 0 {
-		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Subject"}, []string{"Subject"}, []string{"subject"})
-		if err != nil {
-			return err
-		}
-
-		for _, l := range list {
-			outputWriter.AddElement(&listDisplay{
-				Subject: l,
-			})
-		}
-		return outputWriter.Out()
-	} else {
-		utils.Println(cmd, errors.NoSubjectsMsg)
+	list := output.NewList(cmd)
+	for _, subject := range subjects {
+		list.Add(&subjectListOut{Subject: subject})
 	}
-
-	return nil
+	return list.Print()
 }

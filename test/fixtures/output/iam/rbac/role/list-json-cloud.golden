@@ -374,5 +374,49 @@
         ]
       }
     ]
+  },
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "schema-registry-cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "Subject",
+            "operations": [
+              "Delete",
+              "Read",
+              "Write",
+              "ReadCompatibility",
+              "AlterAccess",
+              "WriteCompatibility",
+              "DescribeAccess"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "ksql-cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "KsqlCluster",
+            "operations": [
+              "Describe",
+              "AlterAccess",
+              "Contribute",
+              "DescribeAccess",
+              "Terminate"
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]

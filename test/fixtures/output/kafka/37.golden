@@ -1,4 +1,5 @@
 {
+  "is_current": true,
   "id": "lkc-describe-dedicated-with-encryption",
   "name": "kafka-cluster",
   "type": "DEDICATED",

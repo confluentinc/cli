@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/imdario/mergo"
 
 	warn "github.com/confluentinc/cli/internal/pkg/errors"
@@ -419,7 +419,7 @@ func generateAlternateDefaultTopicRoutes(specs map[string]*mds.AuditLogConfigSpe
 					routeName := generateCRNPath(clusterId, newCRNAuthority, resource.extension, subcluster.name)
 
 					// Create a map of field name to default topics
-					categoriesToRoutes := map[string]interface{}{}
+					categoriesToRoutes := map[string]any{}
 					for _, category := range resource.categories {
 						categoriesToRoutes[category] = &oldDefaultTopics
 					}

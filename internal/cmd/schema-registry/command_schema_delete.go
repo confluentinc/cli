@@ -11,6 +11,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -18,8 +20,8 @@ import (
 func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
-		Short:       "Delete one or more schemas.",
-		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
+		Short:       "Delete one or more schema versions.",
+		Long:        "Delete one or more schema versions. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
 		RunE:        c.delete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -31,11 +33,12 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
-	cmd.Flags().BoolP("permanent", "P", false, "Permanently delete the schema.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
+	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
@@ -65,6 +68,22 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
+	checkVersion := version
+	if version == "all" {
+		// check that at least one version for the input subject exists
+		checkVersion = "latest"
+	}
+	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil)
+	if err != nil {
+		return errors.CatchSchemaNotFoundError(err, httpResp)
+	}
+
+	subjectWithVersion := fmt.Sprintf("%s (version %s)", subject, version)
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, "schema", subjectWithVersion, subject)
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, subject); err != nil {
+		return err
+	}
+
 	permanent, err := cmd.Flags().GetBool("permanent")
 	if err != nil {
 		return err
@@ -74,23 +93,29 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	if permanent {
 		deleteType = "hard"
 	}
+
+	var versions []int32
 	if version == "all" {
-		deleteSubjectOpts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		versions, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, deleteSubjectOpts)
+		opts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
+		v, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, opts)
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
-		printVersions(versions)
-		return nil
+		versions = v
 	} else {
-		deleteVersionOpts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		versionResult, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, deleteVersionOpts)
+		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
+		v, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, opts)
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
 		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
-		printVersions([]int32{versionResult})
-		return nil
+		versions = []int32{v}
 	}
+
+	list := output.NewList(cmd)
+	for _, version := range versions {
+		list.Add(&versionOut{Version: version})
+	}
+	return list.Print()
 }

@@ -14,7 +14,7 @@ func HandleCommon(err error) error {
 	err = catchCCloudBackendUnmarshallingError(err)
 	err = catchTypedErrors(err)
 	err = catchMDSErrors(err)
-	err = catchCoreV1Errors(err)
+	err = catchCcloudV1Errors(err)
 	err = catchOpenAPIError(err)
 
 	return err

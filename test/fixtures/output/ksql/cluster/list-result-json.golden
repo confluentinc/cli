@@ -1,22 +1,22 @@
 [
   {
-    "detailed_processing_log": "true",
-    "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-ksql5",
-    "kafka": "lkc-qwert",
     "name": "account ksql",
+    "topic_prefix": "pksqlc-abcde",
+    "kafka": "lkc-qwert",
+    "storage": 101,
+    "endpoint": "SASL_SSL://ksql-endpoint",
     "status": "PROVISIONING",
-    "storage": "101",
-    "topic_prefix": "pksqlc-abcde"
+    "detailed_processing_log": true
   },
   {
-    "detailed_processing_log": "true",
-    "endpoint": "SASL_SSL://ksql-endpoint",
     "id": "lksqlc-woooo",
-    "kafka": "lkc-zxcvb",
     "name": "kay cee queue elle",
+    "topic_prefix": "pksqlc-ghjkl",
+    "kafka": "lkc-zxcvb",
+    "storage": 123,
+    "endpoint": "SASL_SSL://ksql-endpoint",
     "status": "PROVISIONING",
-    "storage": "123",
-    "topic_prefix": "pksqlc-ghjkl"
+    "detailed_processing_log": true
   }
 ]

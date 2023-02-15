@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"fmt"
 	nethttp "net/http"
 
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -116,10 +117,10 @@ func (m *ACL) CreateKafkaAcls(_ context.Context, _ string, _ *krsdk.CreateKafkaA
 var _ krsdk.ConsumerGroupV3Api = (*ConsumerGroup)(nil)
 
 type ConsumerGroup struct {
-	Expect chan interface{}
+	Expect chan any
 }
 
-func NewConsumerGroupMock(expect chan interface{}) *ConsumerGroup {
+func NewConsumerGroupMock(expect chan any) *ConsumerGroup {
 	return &ConsumerGroup{expect}
 }
 
@@ -302,7 +303,7 @@ func (c ConsumerGroup) ListKafkaConsumerGroups(_ context.Context, clusterId stri
 var _ krsdk.PartitionV3Api = (*Partition)(nil)
 
 type Partition struct {
-	Expect chan interface{}
+	Expect chan any
 }
 
 func (m *Partition) GetKafkaPartition(ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.PartitionData, *nethttp.Response, error) {
@@ -310,7 +311,7 @@ func (m *Partition) GetKafkaPartition(ctx context.Context, clusterId string, top
 	panic("implement me")
 }
 
-func NewPartitionMock(expect chan interface{}) *Partition {
+func NewPartitionMock(expect chan any) *Partition {
 	return &Partition{expect}
 }
 
@@ -591,7 +592,7 @@ func (m *Configs) UpdateKafkaTopicConfigBatch(_ context.Context, _ string, _ str
 var _ krsdk.ClusterLinkingV3Api = (*ClusterLinking)(nil)
 
 type ClusterLinking struct {
-	Expect chan interface{}
+	Expect chan any
 }
 
 func (m *ClusterLinking) ListKafkaMirrorTopics(_ context.Context, _ string, localVarOptionals *krsdk.ListKafkaMirrorTopicsOpts) (krsdk.ListMirrorTopicsResponseDataList, *nethttp.Response, error) {
@@ -656,7 +657,7 @@ func (m *ClusterLinking) ListKafkaMirrorTopics(_ context.Context, _ string, loca
 	}, httpResp, nil
 }
 
-func NewClusterLinkingMock(expect chan interface{}) *ClusterLinking {
+func NewClusterLinkingMock(expect chan any) *ClusterLinking {
 	return &ClusterLinking{expect}
 }
 
@@ -1136,4 +1137,11 @@ func (m *ClusterLinking) AlterMirrorResultResponse() (krsdk.AlterMirrorStatusRes
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func assertEqualValues(actual any, expected any) error {
+	if actual != expected {
+		return fmt.Errorf("actual: %+v\nexpected: %+v", actual, expected)
+	}
+	return nil
 }

@@ -5,22 +5,18 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	climock "github.com/confluentinc/cli/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPromoAdd(t *testing.T) {
-	client := &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			ClaimPromoCodeFunc: func(_ context.Context, _ *orgv1.Organization, _ string) (*billingv1.PromoCodeClaim, error) {
+	client := &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			ClaimPromoCodeFunc: func(_ context.Context, _ *ccloudv1.Organization, _ string) (*ccloudv1.PromoCodeClaim, error) {
 				return nil, nil
 			},
 		},
@@ -35,11 +31,10 @@ func TestPromoAdd(t *testing.T) {
 }
 
 func TestPromoListEmpty(t *testing.T) {
-	client := &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			GetClaimedPromoCodesFunc: func(_ context.Context, _ *orgv1.Organization, _ bool) ([]*billingv1.PromoCodeClaim, error) {
-				var claims []*billingv1.PromoCodeClaim
-				return claims, nil
+	client := &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			GetClaimedPromoCodesFunc: func(_ context.Context, _ *ccloudv1.Organization, _ bool) ([]*ccloudv1.PromoCodeClaim, error) {
+				return []*ccloudv1.PromoCodeClaim{}, nil
 			},
 		},
 	}
@@ -49,7 +44,7 @@ func TestPromoListEmpty(t *testing.T) {
 
 	out, err := pcmd.ExecuteCommand(cmd, "promo", "list")
 	require.NoError(t, err)
-	require.Equal(t, "No promo codes found.\n", out)
+	require.Equal(t, "None found.\n", out)
 }
 
 func TestFormatBalance(t *testing.T) {

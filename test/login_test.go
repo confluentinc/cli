@@ -8,8 +8,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -20,7 +22,7 @@ import (
 
 var (
 	urlPlaceHolder          = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "netrc_test")
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
@@ -33,58 +35,30 @@ func (s *CLITestSuite) TestLogin_Help() {
 func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
-	s.T().Run("good organization with payment method and has codes login", func(tt *testing.T) {
+	s.T().Run("free trial organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
-		os.Setenv("HAS_PAYMENT_METHOD", "true")
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
-		defer unsetPaymentAndPromoEnvs()
+		os.Setenv("IS_ON_FREE_TRIAL", "true")
+		defer unsetFreeTrialEnv()
 
 		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, loggedInAsWithOrgOutput)
 		require.Contains(tt, output, loggedInEnvOutput)
-		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
+		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 40.00))
 	})
 
-	s.T().Run("good organization with payment method and no codes login", func(tt *testing.T) {
+	s.T().Run("non-free-trial organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
-		os.Setenv("HAS_PAYMENT_METHOD", "true")
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
-		defer unsetPaymentAndPromoEnvs()
 
 		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, loggedInAsWithOrgOutput)
 		require.Contains(tt, output, loggedInEnvOutput)
-		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
-	})
-
-	s.T().Run("good organization without payment method and has codes login", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
-		os.Setenv("HAS_PAYMENT_METHOD", "false")
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "true")
-		defer unsetPaymentAndPromoEnvs()
-
-		output := runCommand(tt, testBin, env, args, 0)
-		require.Contains(tt, output, loggedInAsWithOrgOutput)
-		require.Contains(tt, output, loggedInEnvOutput)
-		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 20.00))
-	})
-
-	s.T().Run("good organization without payment method and no codes login", func(tt *testing.T) {
-		env := []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
-		os.Setenv("HAS_PAYMENT_METHOD", "false")
-		os.Setenv("HAS_PROMO_CODE_CLAIMS", "false")
-		defer unsetPaymentAndPromoEnvs()
-
-		output := runCommand(tt, testBin, env, args, 0)
-		require.Contains(tt, output, loggedInAsWithOrgOutput)
-		require.Contains(tt, output, loggedInEnvOutput)
-		require.NotContains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 0.00))
+		require.NotContains(tt, output, "Free credits")
 	})
 
 	s.T().Run("suspended organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(tt, testBin, env, args, 1)
-		require.Contains(tt, output, new(ccloud.SuspendedOrganizationError).Error())
+		require.Contains(tt, output, new(ccloudv1.SuspendedOrganizationError).Error())
 		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
 	})
 
@@ -157,7 +131,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			authKafka:   "true",
 		},
 		{
-			name:        "error if no api key used",
+			name:        "error if no API key used",
 			args:        "kafka topic produce integ",
 			fixture:     "login/err-no-api-key.golden",
 			wantErrCode: 1,
@@ -170,6 +144,7 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 			wantErrCode: 1,
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
+			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
 		},
 		{
 			name:        "error if using unknown kafka",

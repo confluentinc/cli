@@ -17,11 +17,11 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all the ACLs for the specified Kafka cluster:",
-				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id>",
+				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: "List all the ACLs for the specified cluster that include allow permissions for the user Jane:",
-				Code: "confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane",
+				Text: `List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:`,
+				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),
 	}
@@ -30,7 +30,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster-id")
+	_ = cmd.MarkFlagRequired("kafka-cluster")
 
 	return cmd
 }

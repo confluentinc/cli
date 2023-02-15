@@ -1,16 +1,16 @@
 [
   {
-    "name": "drink",
-    "pattern_type": "LITERAL",
     "principal": "Group:hobbits",
+    "role": "DeveloperRead",
     "resource_type": "Topic",
-    "role": "DeveloperRead"
+    "name": "drink",
+    "pattern_type": "LITERAL"
   },
   {
-    "name": "food",
-    "pattern_type": "LITERAL",
     "principal": "Group:hobbits",
+    "role": "DeveloperRead",
     "resource_type": "Topic",
-    "role": "DeveloperRead"
+    "name": "food",
+    "pattern_type": "LITERAL"
   }
 ]

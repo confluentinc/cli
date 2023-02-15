@@ -1,20 +1,19 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafka"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -24,10 +23,22 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
-	cmd.Flags().AddFlagSet(aclConfigFlags())
+	cmd.Flags().StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
+	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
+	cmd.Flags().String("service-account", "", "The service account ID.")
+	cmd.Flags().Bool("allow", false, "Access to the resource is allowed.")
+	cmd.Flags().Bool("deny", false, "Access to the resource is denied.")
+	cmd.Flags().Bool("cluster-scope", false, "Modify ACLs for the cluster.")
+	cmd.Flags().String("topic", "", "Modify ACLs for the specified topic resource.")
+	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
+	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
+	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	_ = cmd.MarkFlagRequired("operations")
 
 	return cmd
 }
@@ -47,7 +58,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var filters []*schedv1.ACLFilter
+	var filters []*ccstructs.ACLFilter
 	for _, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
@@ -56,90 +67,64 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters = append(filters, convertToFilter(acl.ACLBinding))
 	}
 
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		kafkaRestExists := true
-		matchingBindingCount := 0
-		for i, filter := range filters {
-			deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
-			if err != nil && httpResp == nil {
-				if i == 0 {
-					// Kafka REST is not available, fallback to KafkaAPI
-					kafkaRestExists = false
-					break
-				}
-				// i > 0: unlikely
-				printAclsDeleted(cmd, matchingBindingCount)
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-			}
-
-			if err != nil {
-				if i > 0 {
-					// unlikely
-					printAclsDeleted(cmd, matchingBindingCount)
-				}
-				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-			}
-
-			if httpResp.StatusCode == http.StatusOK {
-				matchingBindingCount += len(deleteResp.Data)
-			} else {
-				printAclsDeleted(cmd, matchingBindingCount)
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-		}
-
-		if kafkaRestExists {
-			// Kafka REST is available and at least one ACL was deleted
-			printAclsDeleted(cmd, matchingBindingCount)
-			return nil
-		}
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return err
 	}
 
-	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	matchingBindingCount := 0
+	count := 0
 	for _, acl := range acls {
-		// For the tests it's useful to know that the ListACLs call is coming from the delete call.
-		ctx := context.WithValue(context.Background(), kafka.Requester, "delete")
-
-		resp, err := c.Client.Kafka.ListACLs(ctx, cluster, convertToFilter(acl.ACLBinding))
+		aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
 		if err != nil {
-			return err
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
-		matchingBindingCount += len(resp)
-	}
-	if matchingBindingCount == 0 {
-		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
-		return nil
+		if len(aclDataList.Data) == 0 {
+			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
+		}
+		count += len(aclDataList.Data)
 	}
 
-	if err := c.Client.Kafka.DeleteACLs(context.Background(), cluster, filters); err != nil {
+	promptMsg := errors.DeleteACLConfirmMsg
+	if count > 1 {
+		promptMsg = errors.DeleteACLsConfirmMsg
+	}
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedACLsMsg)
+	count = 0
+	for i, filter := range filters {
+		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
+		if err != nil {
+			if i > 0 {
+				utils.ErrPrintln(cmd, printAclsDeleted(count))
+			}
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		}
+
+		count += len(deleteResp.Data)
+	}
+
+	utils.ErrPrintln(cmd, printAclsDeleted(count))
 	return nil
 }
 
-func printAclsDeleted(cmd *cobra.Command, count int) {
-	if count == 0 {
-		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
-	} else {
-		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
+func printAclsDeleted(count int) string {
+	switch count {
+	case 0:
+		return "ACL not found. ACL may have been misspelled or already deleted."
+	case 1:
+		return "Deleted 1 ACL."
+	default:
+		return fmt.Sprintf("Deleted %d ACLs.", count)
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -13,11 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-)
-
-var (
-	describeFields = []string{"Type", "ID"}
-	describeLabels = []string{"Type", "ID"}
 )
 
 type describeCommand struct {
@@ -29,9 +23,14 @@ type metadata interface {
 	DescribeCluster(url, caCertPath string) (*ScopedId, error)
 }
 
-type element struct {
-	Type string `json:"type" yaml:"type"`
-	ID   string `json:"id" yaml:"id"`
+type out struct {
+	Crn   string     `json:"crn" yaml:"crn"`
+	Scope []scopeOut `json:"scope" yaml:"scope"`
+}
+
+type scopeOut struct {
+	Type string `human:"Type" json:"type" yaml:"type"`
+	ID   string `human:"ID" json:"id" yaml:"id"`
 }
 
 func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
@@ -78,12 +77,7 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return printDescribe(cmd, meta, outputOption)
+	return printDescribe(cmd, meta)
 }
 
 func getURL(cmd *cobra.Command) (string, error) {
@@ -101,49 +95,45 @@ func getURL(cmd *cobra.Command) (string, error) {
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
 	// Order of precedence: flags > env vars
-	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
-		return path, err
+	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
+		return caCertPath, err
 	}
 
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
 }
 
-func printDescribe(cmd *cobra.Command, meta *ScopedId, format string) error {
-	structuredDisplay := &struct {
-		Crn   string    `json:"crn" yaml:"crn"`
-		Scope []element `json:"scope" yaml:"scope"`
-	}{}
-
-	if meta.ID != "" {
-		if format == output.Human.String() {
-			utils.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
-		} else {
-			structuredDisplay.Crn = meta.ID
-		}
-	}
-
+func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	var types []string
 	for name := range meta.Scope.Clusters {
 		types = append(types, name)
 	}
 	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
 
-	var data [][]string
-	for _, name := range types {
-		id := meta.Scope.Clusters[name]
-		element := element{Type: name, ID: id}
-		if format == output.Human.String() {
-			data = append(data, printer.ToRow(&element, describeFields))
-		} else {
-			structuredDisplay.Scope = append(structuredDisplay.Scope, element)
+	if output.GetFormat(cmd).IsSerialized() {
+		out := &out{
+			Crn:   meta.ID,
+			Scope: make([]scopeOut, len(types)),
 		}
+		for i, name := range types {
+			out.Scope[i] = scopeOut{
+				Type: name,
+				ID:   meta.Scope.Clusters[name],
+			}
+		}
+		return output.SerializedOutput(cmd, out)
 	}
 
-	if format == output.Human.String() {
-		utils.Println(cmd, "Scope:")
-		printer.RenderCollectionTable(data, describeLabels)
-	} else {
-		return output.StructuredOutput(format, structuredDisplay)
+	if meta.ID != "" {
+		utils.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
 	}
-	return nil
+
+	utils.Println(cmd, "Scope:")
+	list := output.NewList(cmd)
+	for _, name := range types {
+		list.Add(&scopeOut{
+			Type: name,
+			ID:   meta.Scope.Clusters[name],
+		})
+	}
+	return list.Print()
 }

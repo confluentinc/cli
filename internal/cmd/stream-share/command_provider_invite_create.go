@@ -1,8 +1,11 @@
 package streamshare
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -43,7 +46,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	kafkaCluster, err := cmd.Flags().GetString("cluster")
+	cluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
@@ -63,16 +66,38 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	srCluster, err := c.Context.FetchSchemaRegistryByAccountId(cmd.Context(), c.EnvironmentId())
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(cmd.Context(), environment)
 	if err != nil {
 		return err
 	}
 
-	invite, err := c.V2Client.CreateProviderInvite(environment, kafkaCluster, topic, email, srCluster.Id,
-		c.Config.GetLastUsedOrgId(), schemaRegistrySubjects)
+	deliveryMethod := "Email"
+	resources := []string{
+		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
+			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, cluster, topic),
+	}
+	for _, subject := range schemaRegistrySubjects {
+		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
+			c.Config.GetLastUsedOrgId(), environment, srCluster.Id, subject))
+	}
+
+	shareReq := cdxv1.CdxV1CreateProviderShareRequest{
+		ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
+			CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
+				Kind:  deliveryMethod,
+				Email: email,
+			},
+		},
+		DeliveryMethod: &deliveryMethod,
+		Resources:      &resources,
+	}
+
+	invite, err := c.V2Client.CreateProviderInvite(shareReq)
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, c.buildProviderShare(invite), providerShareListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(c.buildProviderShare(invite))
+	return table.Print()
 }

@@ -5,18 +5,21 @@ Usage:
 Examples:
 Delete the role "ResourceOwner" for the resource "Topic:my-topic" on the Kafka cluster "lkc-123456":
 
-  $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster-id lkc-123456 --resource Topic:my-topic
+  $ confluent iam rbac role-binding delete --principal User:u-123456 --role ResourceOwner --environment env-12345 --kafka-cluster lkc-123456 --resource Topic:my-topic
 
 Flags:
-      --role string               REQUIRED: Role name of the existing role binding.
-      --principal string          REQUIRED: Qualified principal name associated with the role binding.
-      --environment string        Environment ID for scope of role-binding operation.
-      --current-env               Use current environment ID for scope.
-      --cloud-cluster string      Cloud cluster ID for the role binding.
-      --kafka-cluster-id string   Kafka cluster ID for the role binding.
-      --resource string           Qualified resource name for the role binding.
-      --prefix                    Whether the provided resource name is treated as a prefix pattern.
-  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --role string                      REQUIRED: Role name of the existing role binding.
+      --principal string                 REQUIRED: Qualified principal name associated with the role binding.
+      --force                            Skip the deletion confirmation prompt.
+      --environment string               Environment ID for scope of role-binding operation.
+      --current-environment              Use current environment ID for scope.
+      --cloud-cluster string             Cloud cluster ID for the role binding.
+      --kafka-cluster string             Kafka cluster ID for the role binding.
+      --schema-registry-cluster string   Schema Registry cluster ID for the role binding.
+      --ksql-cluster string              ksqlDB cluster name for the role binding.
+      --resource string                  Qualified resource name for the role binding.
+      --prefix                           Whether the provided resource name is treated as a prefix pattern.
+  -o, --output string                    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

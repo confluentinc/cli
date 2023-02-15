@@ -11,19 +11,19 @@ Identity:
 
 Please confirm you've authorized the key for this identity: id-xyz (y/n): It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned.
 +-------------------+---------------------------+
+| Current           | false                     |
 | ID                | lkc-def963                |
 | Name              | gcp-byok-test             |
 | Type              | DEDICATED                 |
+| Cluster Size      |                         1 |
 | Ingress           |                        50 |
 | Egress            |                       150 |
 | Storage           | Infinite                  |
 | Provider          | gcp                       |
-| Availability      | single-zone               |
 | Region            | asia-southeast1           |
+| Availability      | single-zone               |
 | Status            | PROVISIONING              |
 | Endpoint          | SASL_SSL://kafka-endpoint |
-| API Endpoint      | http://kafka-api-url      |
-| REST Endpoint     | https://pkc-endpoint      |
-| Cluster Size      |                         1 |
 | Encryption Key ID | xyz                       |
+| REST Endpoint     | https://pkc-endpoint      |
 +-------------------+---------------------------+

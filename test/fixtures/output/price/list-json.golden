@@ -1,0 +1,9 @@
+[
+  {
+    "metric": "ConnectNumRecords",
+    "cluster_type": "basic",
+    "availability": "low",
+    "network_type": "internet",
+    "price": 1
+  }
+]

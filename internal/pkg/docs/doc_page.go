@@ -27,7 +27,8 @@ func printDocPage(tabs []Tab, depth int) []string {
 	cmd := tabs[0].Command
 
 	return flatten([][]string{
-		printHeader(cmd),
+		printComments(),
+		printHeader(cmd, false),
 		printTitle(cmd, "-"),
 		printWarnings(cmd, depth),
 		printTabbedSection("Description", printDescriptionAndUsage, tabs),
@@ -73,7 +74,7 @@ func printSphinxBlock(key, val string, args map[string]string) []string {
 }
 
 func printDescriptionAndUsage(cmd *cobra.Command) ([]string, bool) {
-	// We need to manually add the -h flag, so the the usage line gets suffixed with "[flags]".
+	// We need to manually add the -h flag so the usage line is suffixed with "[flags]".
 	cmd.InitDefaultHelpFlag()
 
 	rows := []string{

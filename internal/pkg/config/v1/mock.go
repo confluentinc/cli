@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -28,7 +27,6 @@ var (
 	anonymousKafkaName = "anonymous-cluster"
 	kafkaClusterName   = "toby-flenderson"
 	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
-	kafkaApiEndpoint   = "https://pkac-abc123:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
 
@@ -53,7 +51,7 @@ func AuthenticatedToOrgCloudConfigMock(orgId int32, orgResourceId string) *Confi
 		userId:         mockUserId,
 		userResourceId: MockUserResourceId,
 		username:       mockEmail,
-		url:            testserver.TestCloudURL.String(),
+		url:            testserver.TestCloudUrl.String(),
 		envId:          MockEnvironmentId,
 		orgId:          orgId,
 		orgResourceId:  orgResourceId,
@@ -187,17 +185,17 @@ func createPlatform(name, server string) *Platform {
 
 func createAuthConfig(userId int32, email, userResourceId, envId string, organizationId int32, orgResourceId string) *AuthConfig {
 	return &AuthConfig{
-		User: &orgv1.User{
+		User: &ccloudv1.User{
 			Id:         userId,
 			Email:      email,
 			ResourceId: userResourceId,
 		},
-		Account: &orgv1.Account{Id: envId},
-		Organization: &orgv1.Organization{
+		Account: &ccloudv1.Account{Id: envId},
+		Organization: &ccloudv1.Organization{
 			Id:         organizationId,
 			ResourceId: orgResourceId,
 		},
-		Accounts: []*orgv1.Account{{Id: envId}},
+		Accounts: []*ccloudv1.Account{{Id: envId}},
 	}
 }
 
@@ -217,13 +215,12 @@ func createAPIKeyPair(apiKey, apiSecret string) *APIKeyPair {
 
 func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *KafkaClusterConfig {
 	return &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        clusterName,
-		Bootstrap:   bootstrapServer,
-		APIEndpoint: kafkaApiEndpoint,
-		APIKeys:     map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
-		APIKey:      apiKeyPair.Key,
-		LastUpdate:  time.Now(),
+		ID:         clusterID,
+		Name:       clusterName,
+		Bootstrap:  bootstrapServer,
+		APIKeys:    map[string]*APIKeyPair{apiKeyPair.Key: apiKeyPair},
+		APIKey:     apiKeyPair.Key,
+		LastUpdate: time.Now(),
 	}
 }
 
@@ -250,7 +247,7 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 
 func AddEnvironmentToConfigMock(cfg *Config, id, name string) {
 	ctx := cfg.Context()
-	ctx.State.Auth.Accounts = append(ctx.GetEnvironments(), &orgv1.Account{
+	ctx.State.Auth.Accounts = append(ctx.GetEnvironments(), &ccloudv1.Account{
 		Id:   id,
 		Name: name,
 	})

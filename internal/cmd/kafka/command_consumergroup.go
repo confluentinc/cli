@@ -8,84 +8,34 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
-var (
-	lagFields               = []string{"ClusterId", "ConsumerGroupId", "Lag", "LogEndOffset", "CurrentOffset", "ConsumerId", "InstanceId", "ClientId", "TopicName", "PartitionId"}
-	lagListHumanLabels      = []string{"Cluster", "ConsumerGroup", "Lag", "LogEndOffset", "CurrentOffset", "Consumer", "Instance", "Client", "Topic", "Partition"}
-	lagListStructuredLabels = []string{"cluster", "consumer_group", "lag", "log_end_offset", "current_offset", "consumer", "instance", "client", "topic", "partition"}
-	lagGetHumanRenames      = map[string]string{
-		"ClusterId":       "Cluster",
-		"ConsumerGroupId": "ConsumerGroup",
-		"ConsumerId":      "Consumer",
-		"InstanceId":      "Instance",
-		"ClientId":        "Client",
-		"TopicName":       "Topic",
-		"PartitionId":     "Partition"}
-	lagGetStructuredRenames = map[string]string{
-		"ClusterId":       "cluster",
-		"ConsumerGroupId": "consumer_group",
-		"Lag":             "lag",
-		"LogEndOffset":    "log_end_offset",
-		"CurrentOffset":   "current_offset",
-		"ConsumerId":      "consumer",
-		"InstanceId":      "instance",
-		"ClientId":        "client",
-		"TopicName":       "topic",
-		"PartitionId":     "partition"}
-)
-
 type consumerGroupCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
 type consumerData struct {
-	ConsumerGroupId string `json:"consumer_group" yaml:"consumer_group"`
-	ConsumerId      string `json:"consumer" yaml:"consumer"`
-	InstanceId      string `json:"instance" yaml:"instance"`
-	ClientId        string `json:"client" yaml:"client"`
+	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group"`
+	ConsumerId      string `human:"Consumer" serialized:"consumer"`
+	InstanceId      string `human:"Instance" serialized:"instance"`
+	ClientId        string `human:"Client" serialized:"client"`
 }
 
 type groupData struct {
-	ClusterId         string         `json:"cluster" yaml:"cluster"`
-	ConsumerGroupId   string         `json:"consumer_group" yaml:"consumer_group"`
-	Coordinator       string         `json:"coordinator" yaml:"coordinator"`
-	IsSimple          bool           `json:"simple" yaml:"simple"`
-	PartitionAssignor string         `json:"partition_assignor" yaml:"partition_assignor"`
-	State             string         `json:"state" yaml:"state"`
-	Consumers         []consumerData `json:"consumers" yaml:"consumers"`
-}
-
-type groupDescribeStruct struct {
 	ClusterId         string
 	ConsumerGroupId   string
 	Coordinator       string
 	IsSimple          bool
 	PartitionAssignor string
 	State             string
+	Consumers         []consumerData
 }
 
-type lagSummaryStruct struct {
-	ClusterId         string
-	ConsumerGroupId   string
-	TotalLag          int64
-	MaxLag            int64
-	MaxLagConsumerId  string
-	MaxLagInstanceId  string
-	MaxLagClientId    string
-	MaxLagTopicName   string
-	MaxLagPartitionId int32
-}
-
-type lagDataStruct struct {
-	ClusterId       string
-	ConsumerGroupId string
-	Lag             int64
-	LogEndOffset    int64
-	CurrentOffset   int64
-	ConsumerId      string
-	InstanceId      string
-	ClientId        string
-	TopicName       string
-	PartitionId     int32
+type consumerGroupOut struct {
+	ClusterId         string `human:"Cluster" serialized:"cluster"`
+	ConsumerGroupId   string `human:"Consumer Group" serialized:"consumer_group"`
+	Coordinator       string `human:"Coordinator" serialized:"coordinator"`
+	IsSimple          bool   `human:"Simple" serialized:"simple"`
+	PartitionAssignor string `human:"Partition Assignor" serialized:"partition_assignor"`
+	State             string `human:"State" serialized:"state"`
 }
 
 func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {

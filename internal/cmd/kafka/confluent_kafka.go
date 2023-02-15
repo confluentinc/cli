@@ -46,6 +46,7 @@ type ConsumerProperties struct {
 	Delimiter  string
 	FullHeader bool
 	PrintKey   bool
+	Timestamp  bool
 	SchemaPath string
 }
 
@@ -64,11 +65,11 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 	if err != nil {
 		return err
 	}
-	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
+	saslMechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return err
 	}
-	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
+	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
@@ -223,13 +224,17 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
+	if h.Properties.Timestamp {
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
+	}
+
 	_, err = fmt.Fprintln(h.Out, jsonMessage)
 	if err != nil {
 		return err
 	}
 
 	if e.Headers != nil {
-		var headers interface{} = e.Headers
+		var headers any = e.Headers
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(e.Headers)
 		}
@@ -238,6 +243,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
@@ -342,6 +348,6 @@ func getHeaderString(header ckafka.Header) string {
 	} else if len(header.Value) == 0 {
 		return fmt.Sprintf("%s=<empty>", header.Key)
 	} else {
-		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
+		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
 }

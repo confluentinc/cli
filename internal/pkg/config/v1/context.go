@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -128,7 +128,7 @@ func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
-	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+	if isTest && c.PlatformName == testserver.TestCloudUrl.String() {
 		return true
 	}
 
@@ -154,6 +154,13 @@ func (c *Context) GetPlatformServer() string {
 	return ""
 }
 
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuth() *AuthConfig {
 	if c.State != nil {
 		return c.State.Auth
@@ -161,41 +168,48 @@ func (c *Context) GetAuth() *AuthConfig {
 	return nil
 }
 
-func (c *Context) GetUser() *orgv1.User {
+func (c *Context) SetAuth(auth *AuthConfig) {
+	if c.GetState() == nil {
+		c.State = new(ContextState)
+	}
+	c.GetState().Auth = auth
+}
+
+func (c *Context) GetUser() *ccloudv1.User {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.User
 	}
 	return nil
 }
 
-func (c *Context) GetOrganization() *orgv1.Organization {
+func (c *Context) GetOrganization() *ccloudv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
 	}
 	return nil
 }
 
-func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
-func (c *Context) GetEnvironment() *orgv1.Account {
+func (c *Context) GetEnvironment() *ccloudv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account
 	}
 	return nil
 }
 
-func (c *Context) GetEnvironments() []*orgv1.Account {
-	if auth := c.GetAuth(); auth != nil {
-		return auth.Accounts
+func (c *Context) SetEnvironment(environment *ccloudv1.Account) {
+	if c.GetAuth() == nil {
+		c.SetAuth(new(AuthConfig))
 	}
-	return nil
+	c.GetAuth().Account = environment
 }
 
-func (c *Context) GetState() *ContextState {
-	if c != nil {
-		return c.State
+func (c *Context) GetEnvironments() []*ccloudv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Accounts
 	}
 	return nil
 }
@@ -214,9 +228,9 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 
 	switch client {

@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -67,24 +66,18 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		}
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, details)
+	}
+
+	roleDisplay, err := createPrettyRoleV2(details)
 	if err != nil {
 		return err
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		roleDisplay, err := createPrettyRoleV2(details)
-		if err != nil {
-			return err
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, details)
-	}
-
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(roleDisplay)
+	return table.PrintWithAutoWrap(false)
 }
 
 func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
@@ -102,22 +95,16 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, details)
+	}
+
+	roleDisplay, err := createPrettyRole(details)
 	if err != nil {
 		return err
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		roleDisplay, err := createPrettyRole(details)
-		if err != nil {
-			return err
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, details)
-	}
-
-	return nil
+	list := output.NewList(cmd)
+	list.Add(roleDisplay)
+	return list.PrintWithAutoWrap(false)
 }

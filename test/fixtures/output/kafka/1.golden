@@ -5,16 +5,16 @@ Usage:
 Examples:
 Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
 
-  $ confluent kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+  $ confluent kafka cluster create sales092020 --cloud aws --region us-west-2 --type dedicated --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 
 For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
 
 Flags:
       --cloud string            Specify the cloud provider as "aws", "azure", or "gcp".
       --region string           Cloud region ID for cluster (use "confluent kafka region list" to see all).
-      --availability string     Availability of the cluster. Allowed Values: single-zone, multi-zone. (default "single-zone")
-      --type string             Type of the Kafka cluster. Allowed values: basic, standard, dedicated. (default "basic")
-      --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.
+      --availability string     Specify the availability of the cluster as "single-zone" or "multi-zone". (default "single-zone")
+      --type string             Specify the type of the Kafka cluster as "basic", "standard", or "dedicated". (default "basic")
+      --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
       --encryption-key string   Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).
       --context string          CLI context name.
       --environment string      Environment ID.

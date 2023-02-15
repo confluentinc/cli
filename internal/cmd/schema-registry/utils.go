@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -14,7 +13,7 @@ import (
 
 const (
 	SubjectUsage              = "Subject of the schema."
-	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --sr-endpoint <schema-registry-endpoint>"
+	OnPremAuthenticationMsg   = "--ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>"
 	essentialsPackage         = "essentials"
 	advancedPackage           = "advanced"
 	essentialsPackageInternal = "free"
@@ -27,16 +26,6 @@ var packageDisplayNameMapping = map[string]string{
 }
 
 var packageDisplayNames = []string{essentialsPackage, advancedPackage}
-
-func printVersions(versions []int32) {
-	titleRow := []string{"Version"}
-	var entries [][]string
-	for _, v := range versions {
-		record := &struct{ Version int32 }{v}
-		entries = append(entries, printer.ToRow(record, titleRow))
-	}
-	printer.RenderCollectionTable(entries, titleRow)
-}
 
 func convertMapToString(m map[string]string) string {
 	pairs := make([]string, 0, len(m))

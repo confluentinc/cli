@@ -1,1 +1,1 @@
-Error: must also specify a --kafka-cluster-id to uniquely identify the scope
+Error: must specify `--kafka-cluster` to uniquely identify the scope

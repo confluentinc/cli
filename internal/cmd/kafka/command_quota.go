@@ -32,33 +32,33 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 	return c.Command
 }
 
-type printableQuota struct {
-	Id          string
-	DisplayName string
-	Description string
-	Ingress     string
-	Egress      string
-	Principals  string
-	Cluster     string
-	Environment string
+type quotaOut struct {
+	Id          string `human:"ID" serialized:"id"`
+	DisplayName string `human:"Name" serialized:"name"`
+	Description string `human:"Description" serialized:"description"`
+	Ingress     string `human:"Ingress" serialized:"ingress"`
+	Egress      string `human:"Egress" serialized:"egress"`
+	Principals  string `human:"Principals" serialized:"principals"`
+	Cluster     string `human:"Cluster" serialized:"cluster"`
+	Environment string `human:"Environment" serialized:"environment"`
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format string) *printableQuota {
-	s := printableQuota{
-		Id:          *quota.Id,
+func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
+	out := &quotaOut{
+		Id:          quota.GetId(),
 		DisplayName: quota.Spec.GetDisplayName(),
 		Description: quota.Spec.GetDescription(),
 		Ingress:     quota.Spec.Throughput.GetIngressByteRate(),
 		Egress:      quota.Spec.Throughput.GetEgressByteRate(),
-		Principals:  principalsToString(*quota.Spec.Principals),
+		Principals:  principalsToString(quota.Spec.GetPrincipals()),
 		Cluster:     quota.Spec.Cluster.GetId(),
 		Environment: quota.Spec.Environment.GetId(),
 	}
-	if format == output.Human.String() {
-		s.Ingress = s.Ingress + " B/s"
-		s.Egress = s.Egress + " B/s"
+	if format == output.Human {
+		out.Ingress += " B/s"
+		out.Egress += " B/s"
 	}
-	return &s
+	return out
 }
 
 func principalsToString(principals []kafkaquotas.GlobalObjectReference) string {

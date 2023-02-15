@@ -9,6 +9,7 @@ Request to delete Stream Designer pipeline "pipe-12345".
   $ confluent pipeline delete pipe-12345
 
 Flags:
+      --force                Skip the deletion confirmation prompt.
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
 

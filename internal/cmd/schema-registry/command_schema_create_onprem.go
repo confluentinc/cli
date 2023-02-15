@@ -23,15 +23,15 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type AVRO %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type avro %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)

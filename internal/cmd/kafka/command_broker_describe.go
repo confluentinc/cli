@@ -3,9 +3,7 @@ package kafka
 import (
 	"context"
 	"net/http"
-	"sort"
 
-	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -18,24 +16,24 @@ import (
 
 const abbreviationLength = 25
 
-type configData struct {
-	Name        string `json:"name" yaml:"name"`
-	Value       string `json:"value,omitempty" yaml:"value,omitempty"`
-	IsDefault   bool   `json:"is_default" yaml:"is_default"`
-	IsReadOnly  bool   `json:"is_read_only" yaml:"is_read_only"`
-	IsSensitive bool   `json:"is_sensitive" yaml:"is_sensitive"`
+type configOut struct {
+	Name        string `human:"Name" serialized:"name"`
+	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
+	IsDefault   bool   `human:"Default" serialized:"is_default"`
+	IsReadOnly  bool   `human:"Read Only" serialized:"is_read_only"`
+	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
-		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.describe,
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Describe the `min.insync.replicas` configuration for broker 1.",
+				Text: `Describe the "min.insync.replicas" configuration for broker 1.`,
 				Code: "confluent kafka broker describe 1 --config-name min.insync.replicas",
 			},
 			examples.Example{
@@ -64,11 +62,6 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -80,7 +73,7 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get Broker Configs
-	var data []configData
+	var data []*configOut
 	if all { // fetch cluster-wide configs
 		clusterConfig, err := getClusterWideConfigs(restClient, restContext, clusterId, configName)
 		if err != nil {
@@ -95,28 +88,21 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 		data = parseBrokerConfigData(brokerConfig)
 	}
 
-	if format == output.Human.String() {
-		configsTableLabels := []string{"Name", "Value", "Is Default", "Is Read Only", "Is Sensitive"}
-		configsTableEntries := make([][]string, len(data))
-		for i, entry := range data {
+	list := output.NewList(cmd)
+	for _, entry := range data {
+		if output.GetFormat(cmd) == output.Human {
 			entry.Name = utils.Abbreviate(entry.Name, abbreviationLength)
 			entry.Value = utils.Abbreviate(entry.Value, abbreviationLength)
-			configsTableEntries[i] = printer.ToRow(&entry, []string{"Name", "Value", "IsDefault", "IsReadOnly", "IsSensitive"})
 		}
-		sort.Slice(configsTableEntries, func(i, j int) bool {
-			return configsTableEntries[i][0] < configsTableEntries[j][0]
-		})
-		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
-		return nil
+		list.Add(entry)
 	}
-
-	return output.StructuredOutputForCommand(cmd, format, data)
+	return list.Print()
 }
 
-func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []configData {
-	var configs []configData
+func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*configOut {
+	var configs []*configOut
 	for _, data := range brokerConfig.Data {
-		config := configData{
+		config := &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
@@ -124,18 +110,16 @@ func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []conf
 		}
 		if data.Value != nil {
 			config.Value = *data.Value
-		} else {
-			config.Value = ""
 		}
 		configs = append(configs, config)
 	}
 	return configs
 }
 
-func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []configData {
-	var configs []configData
+func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*configOut {
+	var configs []*configOut
 	for _, data := range clusterConfig.Data {
-		config := configData{
+		config := &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,

@@ -20,7 +20,7 @@ const (
 	MetadataKeyDefaultLengthBytes = 32
 	MetadataKeyDefaultIterations  = 10000
 	MetadataPrefix                = "_metadata"
-	MetadataIVLength              = 12 // Recommended for AES GCM https://confluentinc.atlassian.net/l/c/B1N81ozp
+	MetadataIVLength              = 12 // Recommended for AES GCM
 )
 
 const (
@@ -55,8 +55,6 @@ const (
 )
 
 const (
-	AES_CBC = "AES/CBC/PKCS5Padding"
-	AES_GCM = "AES/GCM/NoPadding"
+	AesCbc = "AES/CBC/PKCS5Padding"
+	AesGcm = "AES/GCM/NoPadding"
 )
-
-const MdsFeatureCipherFlag = "secrets.gcm.encryption.1.enabled"

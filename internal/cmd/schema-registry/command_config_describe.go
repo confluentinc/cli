@@ -15,6 +15,10 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
+type configOut struct {
+	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
+}
+
 func (c *configCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
@@ -72,10 +76,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"CompatibilityLevel"}, []string{"Compatibility Level"}, []string{"compatibility_level"})
-	if err != nil {
-		return err
-	}
-	outputWriter.AddElement(&config)
-	return outputWriter.Out()
+	table := output.NewTable(cmd)
+	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
+	return table.Print()
 }

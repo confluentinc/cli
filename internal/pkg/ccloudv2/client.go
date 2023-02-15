@@ -9,6 +9,8 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
@@ -29,7 +31,9 @@ type Client struct {
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
+	KsqlClient             *ksql.APIClient
 	KafkaQuotasClient      *kafkaquotas.APIClient
+	MdsClient              *mdsv2.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
@@ -39,7 +43,7 @@ type Client struct {
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
 	url := getServerUrl(baseUrl)
 	if isTest {
-		url = testserver.TestV2CloudURL.String()
+		url = testserver.TestV2CloudUrl.String()
 	}
 
 	return &Client{
@@ -52,7 +56,9 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
+		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
+		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),

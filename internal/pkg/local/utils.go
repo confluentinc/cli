@@ -18,11 +18,11 @@ func BuildTabbedList(arr []string) string {
 	return list.String()
 }
 
-func ExtractConfig(data []byte) map[string]interface{} {
+func ExtractConfig(data []byte) map[string]any {
 	re := regexp.MustCompile(`(?m)^[^\s#]*=.+`)
 	matches := re.FindAllString(string(data), -1)
 
-	config := make(map[string]interface{})
+	config := make(map[string]any)
 	for _, match := range matches {
 		x := strings.Split(match, "=")
 		key, val := x[0], x[1]
@@ -31,11 +31,11 @@ func ExtractConfig(data []byte) map[string]interface{} {
 	return config
 }
 
-func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]interface{}) ([]string, error) {
+func CollectFlags(flags *pflag.FlagSet, flagTypes map[string]any) ([]string, error) {
 	var args []string
 
 	for key, typeDefault := range flagTypes {
-		var val interface{}
+		var val any
 		var err error
 
 		switch typeDefault.(type) {

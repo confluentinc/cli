@@ -10,7 +10,7 @@ import (
 
 func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
 	l := &link{
-		LinkName:  data.LinkName,
+		Name:      data.LinkName,
 		TopicName: topic,
 	}
 
@@ -28,8 +28,8 @@ func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
 func (c *linkCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List previously created cluster links.",
-		Long:  "List previously created cluster links if the provided cluster is a destination cluster.",
+		Short: "List cluster links.",
+		Long:  "List cluster links if the provided cluster is a destination cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.listOnPrem,
 	}
@@ -63,24 +63,16 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	listFields := getListFieldsOnPrem(includeTopics)
-	humanLabels := camelToSpaced(listFields)
-	structuredLabels := camelToSnake(listFields)
-
-	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics && len(data.TopicsNames) > 0 {
 			for _, topic := range data.TopicsNames {
-				w.AddElement(newLinkOnPrem(data, topic))
+				list.Add(newLinkOnPrem(data, topic))
 			}
 		} else {
-			w.AddElement(newLinkOnPrem(data, ""))
+			list.Add(newLinkOnPrem(data, ""))
 		}
 	}
-
-	return w.Out()
+	list.Filter(getListFieldsOnPrem(includeTopics))
+	return list.Print()
 }

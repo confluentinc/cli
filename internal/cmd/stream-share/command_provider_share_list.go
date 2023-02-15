@@ -40,15 +40,9 @@ func (c *command) listProviderShare(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, providerShareListFields, providerShareListHumanLabels, providerShareListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, share := range providerShares {
-		element := c.buildProviderShare(share)
-		outputWriter.AddElement(element)
+		list.Add(c.buildProviderShare(share))
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

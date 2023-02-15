@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -41,12 +42,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
@@ -98,7 +99,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -120,14 +121,14 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schemaPath,
+		SchemaPath:  &schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
+	err = serializationProvider.LoadSchema(schema, referencePathMap)
 	if err != nil {
 		return err
 	}
@@ -196,6 +197,19 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 	}
 	close(deliveryChan)
 	return scanErr
+}
+
+func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return "", "", nil, err
+	}
+	subject := topicNameStrategy(topicName)
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return "", "", nil, err
+	}
+	return valueFormat, subject, serializationProvider, nil
 }
 
 func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {

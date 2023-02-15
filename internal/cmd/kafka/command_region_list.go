@@ -8,12 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	regionListFields           = []string{"CloudId", "CloudName", "RegionId", "RegionName"}
-	regionListHumanLabels      = []string{"Cloud ID", "Cloud Name", "Region ID", "Region Name"}
-	regionListStructuredLabels = []string{"cloud_id", "cloud_name", "region_id", "region_name"}
-)
-
 func (c *regionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -29,21 +23,19 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 }
 
 func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
-	cloud, _ := cmd.Flags().GetString("cloud")
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return err
+	}
 
 	regions, err := kafka.ListRegions(c.Client, cloud)
 	if err != nil {
 		return err
 	}
 
-	w, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, region := range regions {
-		w.AddElement(region)
+		list.Add(region)
 	}
-
-	return w.Out()
+	return list.Print()
 }

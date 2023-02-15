@@ -1,13 +1,11 @@
 package secret
 
 import (
-	"os"
-
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -46,19 +44,18 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
-	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsPath)
+	masterKey, err := c.plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
 		return err
 	}
 
 	utils.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
-	return printer.RenderTableOut(&struct{ MasterKey string }{MasterKey: masterKey}, []string{"MasterKey"}, map[string]string{"MasterKey": "Master Key"}, os.Stdout)
+	table := output.NewTable(cmd)
+	table.Add(&rotateOut{MasterKey: masterKey})
+	return table.Print()
 }

@@ -42,10 +42,7 @@ func getExporterConfig(cmd *cobra.Command, name string, srClient *srsdk.APIClien
 		return err
 	}
 
-	outputFormat, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return err
-	}
-
-	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
+	table := output.NewTable(cmd)
+	table.Add(configs)
+	return table.Print()
 }

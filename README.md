@@ -1,14 +1,13 @@
 # Confluent CLI
 
 [![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
-[![Build Status](https://confluentinc.semaphoreci.com/badges/cli/branches/master.svg?style=shields&key=f6c470c4-296b-4d7f-b550-0a169f85f767)](https://confluentinc.semaphoreci.com/projects/cli)
+[![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
 
 ## Documentation
 
-The [Confluent CLI Documentation Website](https://docs.confluent.io/confluent-cli/current/overview.html) contains
-detailed installation and setup information.
+The [Confluent CLI Overview](https://docs.confluent.io/confluent-cli/current/overview.html) shows how to get started with the Confluent CLI.
 
 The [Confluent CLI Command Reference](https://docs.confluent.io/confluent-cli/current/command-reference/index.html)
 contains information on command arguments and flags, and is programmatically generated from this repository.
@@ -20,61 +19,32 @@ When opening a PR, please make sure to follow our [contribution guide](CONTRIBUT
 
 ## Installation
 
-The Confluent CLI is available to install on macOS, Linux, and Windows.
+The Confluent CLI is available to install for macOS, Linux, and Windows.
 
-### One-Liner
+#### macOS
 
-The simplest way to install the Confluent CLI is with this one-liner:
+1. Download the latest macOS tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
+2. Unzip the file: `tar -xvf confluent_X.X.X_darwin_XXXXX.tar.gz`
+3. Move `confluent` to a folder in your `$PATH`, such as `/usr/local/bin`
 
-    curl -sL https://cnfl.io/cli | sh
+#### Linux
 
-(By default, the CLI will be installed in `./bin`)
+1. Download the latest Linux tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
+2. Unzip the file: `tar -xvf confluent_X.X.X_linux_XXXXX.tar.gz`
+3. Move `confluent` to a folder in your `$PATH`
 
-#### Install to a Specific Directory
+#### Windows
 
-For example, to install to `/usr/local/bin`:
-
-    curl -sL https://cnfl.io/cli | sh -s -- -b /usr/local/bin
-
-(If the directory has insufficient permissions, you may need to prefix `sh` with `sudo`)
+1. Download the latest Windows ZIP file from https://github.com/confluentinc/cli/releases/latest
+2. Unzip `confluent_X.X.X_windows_amd64.zip`
+3. Run `confluent.exe`
 
 #### Install a Specific Version
 
-To list all available versions:
-
-    curl -sL https://cnfl.io/cli | sh -s -- -l
-
-For example, to install version `v2.3.1`:
-
-    curl -sL https://cnfl.io/cli | sh -s -- v2.3.1
-
-### Download a Tarball from S3
-
-To list all available versions:
-
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
-
-For example, to list all available packages for version v2.3.1:
-
-    VERSION=v2.3.1 # or latest
-    curl -s "https://s3-us-west-2.amazonaws.com/confluent.cloud?prefix=confluent-cli/archives/${VERSION#v}/&delimiter=/" | tidy -xml --wrap 100 -i - 2>/dev/null
-
-For example, to download a tarball for Darwin/amd64:
-
-    VERSION=v2.3.1 # or latest
-    OS=darwin
-    ARCH=amd64
-    FILE=confluent_${VERSION}_${OS}_${ARCH}.tar.gz
-    curl -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/${VERSION#v}/${FILE} -o ${FILE}
-
-To install the CLI from a tarball:
-
-    tar -xzvf ${FILE}
-    mv confluent/confluent /usr/local/bin
+See the [releases page](https://github.com/confluentinc/cli/releases) for a complete list of versions available for download.
 
 ### Building from Source
 
-    make deps
     make build
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
@@ -96,12 +66,7 @@ To build for Windows/amd64, install `mingw-w64` compilers with homebrew:
     GOOS=windows make cross-build
 
 Cross compilation from an M1 Macbook (Darwin/arm64) to other platforms is also supported.
-For detailed documentation, refer to [How to Build the CLI with confluent-kafka-go for All Platforms](https://confluentinc.atlassian.net/wiki/spaces/Foundations/pages/2610299218/How+to+Build+CLI+with+Confluent-Kafka-go+for+All+Platforms)
 
 #### Troubleshooting
 
 Please update your system to MacOS 11.0 or later if you are building on Darwin/arm64.
-
-If `make deps` fails with an "unknown revision" error, you probably need to put your username and a [GitHub personal access token](https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token)
-in your ~/.netrc file as outlined [here](https://gist.github.com/technoweenie/1072829).
-The access token needs to be [authorized for SSO](https://docs.github.com/en/github/authenticating-to-github/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on).

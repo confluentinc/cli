@@ -6,8 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -22,7 +21,7 @@ var (
 			Organization: testserver.RegularOrg,
 		},
 	}
-	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *v1.ContextState {
+	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *v1.ContextState {
 		return &v1.ContextState{
 			Auth: &v1.AuthConfig{
 				Organization: testserver.SuspendedOrg(eventType),
@@ -54,7 +53,7 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
-			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+			State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 		}},
 		CurrentContext: "cloud",
 	}
@@ -78,7 +77,7 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
-			State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+			State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 		}},
 		CurrentContext: "cloud",
 	}

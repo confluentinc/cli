@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 func TestSrAuthFound(t *testing.T) {
 	req := require.New(t)
 
-	cfg := mock.AuthenticatedDynamicConfigMock()
+	cfg := climock.AuthenticatedDynamicConfigMock()
 	cmd := &cobra.Command{}
 
 	ctx := cfg.Context()

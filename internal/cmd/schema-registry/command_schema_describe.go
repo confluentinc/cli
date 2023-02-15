@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -9,14 +10,18 @@ import (
 	"github.com/antihax/optional"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
+
+type schemaOut struct {
+	Schemas []srsdk.Schema `json:"schemas"`
+}
 
 func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -38,9 +43,9 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
-	cmd.Flags().Bool("show-refs", false, "Display the entire schema graph, including references.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
+	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -75,7 +80,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-refs")
+	showReferences, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
@@ -85,7 +90,7 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 		id = args[0]
 	}
 
-	if showRefs {
+	if showReferences {
 		return describeGraph(cmd, id, srClient, ctx)
 	}
 
@@ -162,9 +167,13 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 		schemaGraph = append([]srsdk.Schema{*root}, schemaGraph...)
 	}
 
-	return output.StructuredOutput(output.JSON.String(), &struct {
-		Schemas []srsdk.Schema `json:"schemas"`
-	}{schemaGraph})
+	b, err := json.Marshal(&schemaOut{schemaGraph})
+	if err != nil {
+		return err
+	}
+	utils.Print(cmd, string(pretty.Pretty(b)))
+
+	return nil
 }
 
 func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {

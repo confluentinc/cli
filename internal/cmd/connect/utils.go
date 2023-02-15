@@ -16,20 +16,20 @@ const (
 )
 
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
-	fileName, err := cmd.Flags().GetString(config)
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
-		return nil, errors.Wrap(err, "error reading --config as string")
+		return nil, err
 	}
 
-	options, err := parseConfigFile(fileName)
+	options, err := parseConfigFile(configFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse config %s", fileName)
+		return nil, errors.Wrapf(err, "unable to parse config %s", configFile)
 	}
 
 	_, nameExists := options[name]
 	_, classExists := options[connectorClass]
 	if !nameExists || !classExists {
-		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, fileName)
+		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
 
 	return &options, nil
@@ -45,7 +45,7 @@ func parseConfigFile(fileName string) (map[string]string, error) {
 	}
 
 	kvPairs := make(map[string]string)
-	var options map[string]interface{}
+	var options map[string]any
 
 	if err := json.Unmarshal(jsonFile, &options); err != nil {
 		return nil, errors.Wrapf(err, errors.ParseConfigErrorMsg, fileName)
@@ -60,7 +60,7 @@ func parseConfigFile(fileName string) (map[string]string, error) {
 				return nil, errors.Errorf(`only string values are permitted for the configuration "%s"`, key)
 			}
 
-			configMap, ok := val.(map[string]interface{})
+			configMap, ok := val.(map[string]any)
 			if !ok {
 				return nil, errors.Errorf(`value for the configuration "%s" is malformed`, config)
 			}

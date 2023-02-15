@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,25 +31,25 @@ var (
 		"confluent.cloud",
 		"premium-oryx.gcp.priv.cpdev.cloud",
 	}
-	account = &orgv1.Account{
+	account = &ccloudv1.Account{
 		Id:   accountID,
 		Name: "test-env",
 	}
 	regularOrgContextState = &ContextState{
 		Auth: &AuthConfig{
-			User: &orgv1.User{
+			User: &ccloudv1.User{
 				Id:    123,
 				Email: "test-user@email",
 			},
 			Account: account,
-			Accounts: []*orgv1.Account{
+			Accounts: []*ccloudv1.Account{
 				account,
 			},
 			Organization: testserver.RegularOrg,
 		},
 		AuthToken: "abc123",
 	}
-	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *ContextState {
+	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *ContextState {
 		return &ContextState{
 			Auth: &AuthConfig{
 				Organization: testserver.SuspendedOrg(eventType),
@@ -64,7 +64,7 @@ type TestInputs struct {
 	statefulConfig       *Config
 	statelessConfig      *Config
 	twoEnvStatefulConfig *Config
-	account              *orgv1.Account
+	account              *ccloudv1.Account
 }
 
 func SetupTestInputs(isCloud bool) *TestInputs {
@@ -74,7 +74,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		Server: "http://test",
 	}
 	if isCloud {
-		platform.Name = testserver.TestCloudURL.String()
+		platform.Name = testserver.TestCloudUrl.String()
 	}
 	apiCredential := &Credential{
 		Name:     "api-key-abc-key-123",
@@ -93,23 +93,23 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		APIKeyPair:     nil,
 		CredentialType: 0,
 	}
-	account2 := &orgv1.Account{
+	account2 := &ccloudv1.Account{
 		Id:   "env-flag",
 		Name: "test-env2",
 	}
 	testInputs.account = account
 	twoEnvState := &ContextState{
 		Auth: &AuthConfig{
-			User: &orgv1.User{
+			User: &ccloudv1.User{
 				Id:    123,
 				Email: "test-user@email",
 			},
 			Account: account,
-			Accounts: []*orgv1.Account{
+			Accounts: []*ccloudv1.Account{
 				account,
 				account2,
 			},
-			Organization: &orgv1.Organization{
+			Organization: &ccloudv1.Organization{
 				Id:   321,
 				Name: "test-org",
 			},
@@ -118,10 +118,9 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	}
 	testInputs.kafkaClusters = map[string]*KafkaClusterConfig{
 		kafkaClusterID: {
-			ID:          kafkaClusterID,
-			Name:        "anonymous-cluster",
-			Bootstrap:   "http://test",
-			APIEndpoint: "",
+			ID:        kafkaClusterID,
+			Name:      "anonymous-cluster",
+			Bootstrap: "http://test",
 			APIKeys: map[string]*APIKeyPair{
 				apiKeyString: {
 					Key:    apiKeyString,
@@ -330,7 +329,7 @@ func TestConfig_Save(t *testing.T) {
 		wantErr          bool
 		kafkaOverwrite   string
 		contextOverwrite string
-		accountOverwrite *orgv1.Account
+		accountOverwrite *ccloudv1.Account
 	}{
 		{
 			name:     "save on-prem config with state to file",
@@ -403,13 +402,13 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 		config           *Config
 		wantFile         string
 		wantErr          bool
-		accountOverwrite *orgv1.Account
+		accountOverwrite *ccloudv1.Account
 	}{
 		{
 			name:             "save cloud config with state and account overwrite to file",
 			config:           testConfigsCloud.twoEnvStatefulConfig,
 			wantFile:         "test_json/account_overwrite.json",
-			accountOverwrite: &orgv1.Account{Id: "env-flag"},
+			accountOverwrite: &ccloudv1.Account{Id: "env-flag"},
 		},
 	}
 	for _, tt := range tests {
@@ -532,8 +531,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 	tests := []struct {
 		name           string
 		config         *Config
-		overwrittenVal *orgv1.Account //simulates initial environment (account) value overwritten by a environment flag
-		activeAccount  string         //simulates the environment (account) flag value
+		overwrittenVal *ccloudv1.Account //simulates initial environment (account) value overwritten by a environment flag
+		activeAccount  string            //simulates the environment (account) flag value
 	}{
 		{
 			name:          "test no overwrite value",
@@ -543,7 +542,7 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 		{
 			name:           "test with overwrite value",
 			config:         testConfigsCloud.statefulConfig,
-			overwrittenVal: &orgv1.Account{Id: "env-test"},
+			overwrittenVal: &ccloudv1.Account{Id: "env-test"},
 			activeAccount:  testConfigsCloud.statefulConfig.Context().GetEnvironment().GetId(),
 		},
 		{
@@ -574,12 +573,10 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
-	cfg := New()
-	got := cfg.GetFilename()
-	want := filepath.FromSlash(os.Getenv("HOME") + "/.confluent/config.json")
-	if got != want {
-		t.Errorf("Config.GetFilename() = %v, want %v", got, want)
-	}
+	home, err := os.UserHomeDir()
+	require.NoError(t, err)
+	path := filepath.Join(home, ".confluent", "config.json")
+	require.Equal(t, path, New().GetFilename())
 }
 
 func TestConfig_AddContext(t *testing.T) {
@@ -827,16 +824,15 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 
 	// Creating another environment with another kafka cluster
 	otherAccountId := "other-abc"
-	otherAccount := &orgv1.Account{
+	otherAccount := &ccloudv1.Account{
 		Id:   otherAccountId,
 		Name: "other-account",
 	}
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
-		ID:          otherKafkaClusterId,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        otherKafkaClusterId,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -883,10 +879,9 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 	ctx.Config.Filename = configFile.Name()
 	otherKafkaClusterId := "other-kafka"
 	otherKafkaCluster := &KafkaClusterConfig{
-		ID:          otherKafkaClusterId,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        otherKafkaClusterId,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -918,10 +913,9 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			"akey": {
 				Key:    "akey",
@@ -942,10 +936,9 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
@@ -974,10 +967,9 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
-		ID:          clusterID,
-		Name:        "lit",
-		Bootstrap:   "http://test",
-		APIEndpoint: "",
+		ID:        clusterID,
+		Name:      "lit",
+		Bootstrap: "http://test",
 		APIKeys: map[string]*APIKeyPair{
 			apiKey: {
 				Key:    apiKey,
@@ -1032,7 +1024,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		// test case: org suspended due to normal reason
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1042,7 +1034,7 @@ func TestConfig_IsCloud_False(t *testing.T) {
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1067,7 +1059,7 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
 		// test case: org suspended due to end of free trial
 		cfg = &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1096,7 +1088,7 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
 		// test case: org suspended due to normal reason
 		cfg := &Config{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: platform,
 			}},
 			CurrentContext: "context",
@@ -1130,14 +1122,14 @@ func TestConfig_IsOnPrem_False(t *testing.T) {
 		},
 		{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 				PlatformName: "confluent.cloud",
 			}},
 			CurrentContext: "context",
 		},
 		{
 			Contexts: map[string]*Context{"context": {
-				State:        suspendedOrgContextState(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+				State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 				PlatformName: "confluent.cloud",
 			}},
 			CurrentContext: "context",

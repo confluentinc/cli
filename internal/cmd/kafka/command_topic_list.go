@@ -1,33 +1,24 @@
 package kafka
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+type topicOut struct {
+	Name string `human:"Name" serialized:"name"`
+}
+
 func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka topics.",
-		Args:  cobra.NoArgs,
-		RunE:  c.list,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all topics.",
-				Code: "confluent kafka topic list",
-			},
-		),
+		Use:         "list",
+		Short:       "List Kafka topics.",
+		Args:        cobra.NoArgs,
+		RunE:        c.list,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
@@ -40,63 +31,37 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+	topics, err := c.getTopics()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		topicGetResp, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
-
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but an error occurred
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusOK {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST is available and there was no error
-			outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
-			if err != nil {
-				return err
-			}
-			for _, topicData := range topicGetResp.Data {
-				outputWriter.AddElement(&topicData)
-			}
-			return outputWriter.Out()
-		}
+	list := output.NewList(cmd)
+	for _, topic := range topics {
+		list.Add(&topicOut{Name: topic.GetTopicName()})
 	}
-
-	// Kafka REST is not available, fall back to KafkaAPI
-
-	resp, err := c.getTopics()
-	if err != nil {
-		return err
-	}
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"Name"}, []string{"Name"}, []string{"name"})
-	if err != nil {
-		return err
-	}
-	for _, topic := range resp {
-		outputWriter.AddElement(topic)
-	}
-	return outputWriter.Out()
+	return list.Print()
 }
 
-func (c *authenticatedTopicCommand) getTopics() ([]*schedv1.TopicDescription, error) {
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+func (c *authenticatedTopicCommand) getTopics() ([]kafkarestv3.TopicData, error) {
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return []*schedv1.TopicDescription{}, err
+		return nil, err
 	}
 
-	resp, err := c.Client.Kafka.ListTopics(context.Background(), cluster)
-	return resp, errors.CatchClusterNotReadyError(err, cluster.Id)
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return nil, err
+	}
+
+	kafkaREST, err := c.GetKafkaREST()
+	if err != nil {
+		return nil, err
+	}
+
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	if err != nil {
+		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	}
+
+	return topics.Data, nil
 }

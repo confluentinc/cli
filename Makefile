@@ -1,5 +1,7 @@
-SHELL           := /bin/bash
-ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
+SHELL              := /bin/bash
+ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
+GORELEASER_VERSION := v1.15.2
+
 GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
@@ -38,7 +40,8 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@GOPRIVATE=github.com/confluentinc TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) HOSTNAME=$(HOSTNAME) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -52,9 +55,7 @@ include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
-RDKAFKA_VERSION = 1.9.3-RC3
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -66,69 +67,44 @@ clean:
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
 
-.PHONY: generate
-generate:
-	@go generate ./...
-
-.PHONY: deps
-deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0 && \
-	go install github.com/google/go-licenses@v1.4.0 && \
-	go install github.com/goreleaser/goreleaser@v1.11.2 && \
-	go install gotest.tools/gotestsum@v1.8.2
-
-.PHONY: jenkins-deps
-jenkins-deps:
-	go install github.com/goreleaser/goreleaser@v1.11.2
-
 show-args:
 	@echo "VERSION: $(VERSION)"
 
-#
-# START DEVELOPMENT HELPERS
-# Usage: make run -- version
-#        make run -- --version
-#
-
-# If the first argument is "run"...
-ifeq (run,$(firstword $(MAKECMDGOALS)))
-  # use the rest as arguments for "run"
-  RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  # ...and turn them into do-nothing targets
-  $(eval $(RUN_ARGS):;@:)
-endif
-
-.PHONY: run
-run:
-	@GOPRIVATE=github.com/confluentinc go run cmd/confluent/main.go $(RUN_ARGS)
-
-#
-# END DEVELOPMENT HELPERS
-#
-
 .PHONY: build-integ-nonrace
 build-integ-nonrace:
-	binary="bin/confluent_test" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o $${binexe}
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test
 
 .PHONY: build-integ-race
 build-integ-race:
-	binary="bin/confluent_test_race" ; \
-	[ "$${OS}" = "Windows_NT" ] && binexe=$${binary}.exe || binexe=$${binary} ; \
 	go test ./cmd/confluent -ldflags="-s -w \
 		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).host=$(HOSTNAME) \
 		-X $(RESOLVED_PATH).date=$(DATE) \
 		-X $(RESOLVED_PATH).version=$(VERSION) \
 		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o $${binexe} -race
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
+
+.PHONY: build-integ-nonrace-windows
+build-integ-nonrace-windows:
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=12345678 \
+		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
+
+.PHONY: build-integ-race-windows
+build-integ-race-windows:
+	go test ./cmd/confluent -ldflags="-s -w \
+		-X $(RESOLVED_PATH).commit=12345678 \
+		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
+		-X $(RESOLVED_PATH).version=$(VERSION) \
+		-X $(RESOLVED_PATH).isTest=true" \
+		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -147,12 +123,13 @@ lint:
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
+	golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
 	@echo "✅  cmd/lint/main.go"
 
 cmd/lint/en_US.aff:
@@ -161,45 +138,26 @@ cmd/lint/en_US.aff:
 cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 
-.PHONY: lint-licenses
-lint-licenses:
-	go-licenses report ./...
-
-.PHONY: test-prep
-test-prep:
-ifdef CI
-	@echo "mode: atomic" > coverage.txt
-endif
-
 .PHONY: unit-test
-## disabled -race flag for Windows build because of 'ThreadSanitizer failed to allocate' error: https://github.com/golang/go/issues/46099. Will renable in the future when this issue is resolved.
 unit-test:
 ifdef CI
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc gotestsum --junitfile unit-test-report.xml -- -v -race -coverpkg=$$(go list ./... | grep -v test | grep -v mock | tr '\n' ',' | sed 's/,$$//g') -coverprofile=unit_coverage.txt $$(go list ./... | grep -v vendor | grep -v test) -ldflags '-buildmode=exe'
-  endif
-	@grep -h -v "mode: atomic" unit_coverage.txt >> coverage.txt
+	go install gotest.tools/gotestsum@v1.8.2 && \
+	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 else
-  ifeq "$(OS)" "Windows_NT"
-	@GOPRIVATE=github.com/confluentinc go test -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  else
-	@GOPRIVATE=github.com/confluentinc go test -race -coverpkg=./... $$(go list ./... | grep -v vendor | grep -v test) $(UNIT_TEST_ARGS) -ldflags '-buildmode=exe'
-  endif
+	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: int-test
 int-test:
 ifdef CI
-	@GOPRIVATE=github.com/confluentinc INTEG_COVER=on gotestsum --junitfile integration-test-report.xml -- -v $$(go list ./... | grep cli/test) -timeout 45m
-	@grep -h -v "mode: atomic" integ_coverage.txt >> coverage.txt
+	go install gotest.tools/gotestsum@v1.8.2 && \
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
 else
-	@GOPRIVATE=github.com/confluentinc go test -v -race $$(go list ./... | grep cli/test) $(INT_TEST_ARGS) -timeout 45m
+	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif
 
 .PHONY: test
-test: test-prep unit-test int-test test-installer
+test: unit-test int-test
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

@@ -5,10 +5,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <pipeline-id>",
 		Short: "Describe a Stream Designer pipeline.",
@@ -35,21 +34,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// call api
 	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
 
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	return print(cmd, pipeline)
 }

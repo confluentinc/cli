@@ -1,17 +1,10 @@
 package secret
 
 import (
-	"context"
-	"net/http"
-	"os"
-
 	"github.com/spf13/cobra"
-
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const masterKeyNotSetWarning = "This command fails if a master key has not been set in the environment variable `CONFLUENT_SECURITY_MASTER_KEY`. Create a master key using `confluent secret master-key generate`."
@@ -33,22 +26,22 @@ func (c *command) newFileCommand() *cobra.Command {
 }
 
 func (c *command) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	remoteSecretsPath, err := cmd.Flags().GetString("remote-secrets-file")
+	remoteSecretsFile, err := cmd.Flags().GetString("remote-secrets-file")
 	if err != nil {
 		return "", "", "", err
 	}
 
-	return configPath, localSecretsPath, remoteSecretsPath, nil
+	return configFile, localSecretsFile, remoteSecretsFile, nil
 }
 
 func (c *command) getConfigs(configSource string, inputType string, prompt string, secure bool) (string, error) {
@@ -63,22 +56,4 @@ func (c *command) getConfigs(configSource string, inputType string, prompt strin
 		return "", err
 	}
 	return newConfigs, nil
-}
-
-func (c *command) getCipherMode() string {
-	if os.Getenv("XX_SECRETS_GCM_MODE") != "" {
-		return secret.AES_GCM
-	}
-
-	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
-	featureInfo, response, err := c.MDSClient.MetadataServiceOperationsApi.Features(ctx)
-
-	if err != nil || response.StatusCode == http.StatusNotFound {
-		return secret.AES_CBC
-	}
-
-	if _, ok := featureInfo.Features[secret.MdsFeatureCipherFlag]; ok {
-		return secret.AES_GCM
-	}
-	return secret.AES_CBC
 }

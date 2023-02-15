@@ -1,14 +1,5 @@
 project_name: confluent
 
-dist: dist
-
-before:
-  hooks:
-    # TODO: [CLI-92] we delete the semaphore cache during release to workaround an issue with semaphore and goreleaser
-    - rm -rf $GOPATH/pkg/mod
-
-# NOTE: This will put all builds into the same ./dist folder.  There is no way to configure goreleaser output directories per-build, only per-project.
-# That means that we should probably not rely on the CI's directory layout for publishing binaries to s3 since cloud and rbac will be intermingled.
 builds:
   - binary: confluent
     id: confluent-alpine-amd64
@@ -17,7 +8,7 @@ builds:
       - -mod=readonly
       - -tags=musl
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -38,7 +29,7 @@ builds:
       - -mod=readonly
       - -tags=musl
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -58,7 +49,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}} -buildmode=exe  
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -buildmode=exe  
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -74,6 +65,7 @@ builds:
       - amd64
     hooks:
       pre:
+        - cmd: az login
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
         - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
@@ -85,7 +77,7 @@ builds:
     flags:
       - -mod=readonly
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -107,7 +99,7 @@ builds:
     env:
       - CGO_ENABLED=1
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -123,14 +115,13 @@ builds:
 
 archives:
   - id: binary
-    replacements: 
-      linux: alpine
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "linux" }}alpine{{ else }}{{ .Os }}{{ end }}_{{ .Arch }}'
     format: binary
+    rlcp: true
   - id: archive
-    name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    replacements: 
-      linux: alpine
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "linux" }}alpine{{ else }}{{ .Os }}{{ end }}_{{ .Arch }}'
     format: tar.gz
+    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
@@ -138,7 +129,7 @@ archives:
     files:
       - LICENSE
       - legal/**/*
-
+    
 blobs:
   - ids:
     - binary

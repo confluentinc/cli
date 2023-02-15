@@ -112,7 +112,7 @@ tag_to_version() {
   fi
   REALTAG=$(s3_release "${TAG}") && true
   if test -z "$REALTAG"; then
-    log_crit "unable to find '${TAG}' - use 'latest' or see https://docs.confluent.io/${PROJECT_NAME}/current/release-notes.html for avaialble versions."
+    log_crit "unable to find '${TAG}' - use 'latest' or see https://docs.confluent.io/${PROJECT_NAME}/current/release-notes.html for available versions."
     exit 1
   fi
   # if version starts with 'v', don't remove it
@@ -416,6 +416,11 @@ main() {
 
   log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
 
+  # If < v3, archive version is prefixed with "v"
+  VERSION=${VERSION#v}
+  VERSION=$([ "${VERSION#3.}" = "${VERSION}" ] && echo "v${VERSION}" || echo "${VERSION}")
+  VERSION=$([ "${VERSION}" = "vlatest" ] && echo "latest" || echo "${VERSION}")
+  
   S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
   NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
   TARBALL=${NAME}.${FORMAT}

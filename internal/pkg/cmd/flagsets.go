@@ -8,7 +8,7 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 	set.String("ca-cert-path", "", "Path to a PEM-encoded CA to verify the Confluent REST Proxy.")
 	set.String("client-cert-path", "", "Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.")
 	set.String("client-key-path", "", "Path to client private key, include for mTLS authentication.")
-	set.Bool("no-auth", false, "Include if requests should be made without authentication headers, and user will not be prompted for credentials.")
+	set.Bool("no-authentication", false, "Include if requests should be made without authentication headers, and user will not be prompted for credentials.")
 	set.Bool("prompt", false, "Bypass use of available login credentials and prompt for Kafka Rest credentials.")
 	set.SortFlags = false
 	return set
@@ -29,8 +29,8 @@ func OnPremAuthenticationSet() *pflag.FlagSet {
 
 func OnPremSchemaRegistrySet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-schemaregistry", pflag.ExitOnError)
-	set.String("ca-location", "", "File or directory path to CA certificate(s) to authenticate the schema registry client.")
-	set.String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	set.String("ca-location", "", "File or directory path to CA certificate(s) to authenticate the Schema Registry client.")
+	set.String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	set.SortFlags = false
 	return set
 }

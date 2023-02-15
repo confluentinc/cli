@@ -46,13 +46,18 @@ endef
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-linux-glibc
 gorelease-linux-glibc:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-linux-glibc.yml
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-linux-glibc-arm64.yml
+ifneq (,$(findstring x86_64,$(shell uname -m)))
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+else
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
 # Uploading linux glibc files because its goreleaser file has set release disabled
@@ -61,18 +66,19 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
-	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	GOPRIVATE=github.com/confluentinc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist --timeout 60m -f .goreleaser.yml; \
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto goreleaser release --clean --timeout 60m -f .goreleaser.yml; \
 	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
-	./build_linux_glibc.sh && \
-	aws s3 cp dist/confluent_$(VERSION)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_amd64.tar.gz && \
-	aws s3 cp dist/confluent_$(VERSION)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_linux_arm64.tar.gz && \
+	scripts/build_linux_glibc.sh && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz && \
+	$(aws-authenticate) && \
 	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64 && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION)_checksums.txt && \
+	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
 	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
 	make upload-linux-build-to-github
@@ -111,7 +117,7 @@ define copy-archives-files-to-latest
 	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
 	latest_folder=$2/confluent-cli/archives/latest; \
 	for suffix in $(ARCHIVE_TYPES); do \
-		aws s3 cp $${archives_folder}/confluent_v$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
+		aws s3 cp $${archives_folder}/confluent_$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
 	done
 endef
 
@@ -122,17 +128,18 @@ endef
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
 	$(aws-authenticate); \
-	version_checksums=confluent_v$(CLEAN_VERSION)_checksums.txt; \
+	version_checksums=confluent_$(CLEAN_VERSION)_checksums.txt; \
 	latest_checksums=confluent_latest_checksums.txt; \
 	cd $(TEMP_DIR) ; \
 	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
-	cat $${version_checksums} | grep "v$(CLEAN_VERSION)" | sed 's/v$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
+	cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
 	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
 	rm -rf $(TEMP_DIR)
 endef
 
 .PHONY: download-licenses
 download-licenses:
+	go install github.com/google/go-licenses@v1.5.0 && \
 	go-licenses save ./... --save_path legal/licenses --force || true
 
 .PHONY: publish-installer
@@ -144,8 +151,8 @@ publish-installer:
 .PHONY: upload-linux-build-to-github
 ## upload local copy of glibc linux build to github
 upload-linux-build-to-github:
-	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_amd64.tar.gz && \
-	gh release upload $(VERSION) dist/confluent_$(VERSION)_linux_arm64.tar.gz && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz && \
+	gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
 	gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \

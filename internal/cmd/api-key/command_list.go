@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
@@ -17,12 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-)
-
-var (
-	fields           = []string{"Key", "Description", "OwnerResourceId", "OwnerEmail", "ResourceType", "ResourceId", "Created"}
-	humanLabels      = []string{"Key", "Description", "Owner Resource ID", "Owner Email", "Resource Type", "Resource ID", "Created"}
-	structuredLabels = []string{"key", "description", "owner_resource_id", "owner_email", "resource_type", "resource_id", "created"}
 )
 
 var resourceKindToType = map[string]string{
@@ -58,7 +52,7 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.Client)
+	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -66,7 +60,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		clusterId = resource.Cloud
 	}
 
-	ownerResourceId, err := cmd.Flags().GetString("service-account")
+	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -81,13 +75,13 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	}
 	resourceIdToUserIdMap := mapResourceIdToUserId(allUsers)
 
-	if ownerResourceId != "" {
-		if resource.LookupType(ownerResourceId) != resource.ServiceAccount {
+	if serviceAccount != "" {
+		if resource.LookupType(serviceAccount) != resource.ServiceAccount {
 			return errors.New(errors.BadServiceAccountIDErrorMsg)
 		}
-		_, ok := resourceIdToUserIdMap[ownerResourceId]
+		_, ok := resourceIdToUserIdMap[serviceAccount]
 		if !ok {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, ownerResourceId), errors.ServiceAccountNotFoundSuggestions)
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.ServiceAccountNotFoundErrorMsg, serviceAccount), errors.ServiceAccountNotFoundSuggestions)
 		}
 	}
 
@@ -96,16 +90,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if currentUser {
-		if ownerResourceId != "" {
+		if serviceAccount != "" {
 			return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "service-account", "current-user")
 		}
-		ownerResourceId, err = c.getCurrentUserId()
+		serviceAccount, err = c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
 	}
 
-	apiKeys, err := c.V2Client.ListApiKeys(ownerResourceId, clusterId)
+	apiKeys, err := c.V2Client.ListApiKeys(serviceAccount, clusterId)
 	if err != nil {
 		return err
 	}
@@ -113,25 +107,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	outputWriter, err := output.NewListOutputWriter(cmd, fields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, apiKey := range apiKeys {
 		// ignore keys owned by Confluent-internal user (healthcheck, etc)
 		if !apiKey.Spec.HasOwner() {
 			continue
-		}
-
-		// Add '*' only in the case where we are printing out tables
-		outputKey := apiKey.GetId()
-		if outputWriter.GetOutputFormat() == output.Human {
-			if clusterId != "" && apiKey.GetId() == currentKey {
-				outputKey = fmt.Sprintf("* %s", apiKey.GetId())
-			} else {
-				outputKey = fmt.Sprintf("  %s", apiKey.GetId())
-			}
 		}
 
 		ownerId := apiKey.Spec.Owner.GetId()
@@ -147,19 +127,19 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		// Note that if more resource types are added with no logical clusters, then additional logic
 		// needs to be added here to determine the resource type.
 		for _, res := range resources {
-			outputWriter.AddElement(&row{
-				Key:             outputKey,
-				Description:     apiKey.Spec.GetDescription(),
-				OwnerResourceId: ownerId,
-				OwnerEmail:      email,
-				ResourceType:    resourceKindToType[res.GetKind()],
-				ResourceId:      getApiKeyResourceId(res.GetId()),
-				Created:         apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
+			list.Add(&out{
+				IsCurrent:    clusterId != "" && apiKey.GetId() == currentKey,
+				Key:          apiKey.GetId(),
+				Description:  apiKey.Spec.GetDescription(),
+				OwnerId:      ownerId,
+				OwnerEmail:   email,
+				ResourceType: resourceKindToType[res.GetKind()],
+				ResourceId:   getApiKeyResourceId(res.GetId()),
+				Created:      apiKey.Metadata.GetCreatedAt().Format(time.RFC3339),
 			})
 		}
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[string]bool {
@@ -170,15 +150,15 @@ func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[stri
 	return saMap
 }
 
-func getUsersMap(users []*orgv1.User) map[int32]*orgv1.User {
-	userMap := make(map[int32]*orgv1.User)
+func getUsersMap(users []*ccloudv1.User) map[int32]*ccloudv1.User {
+	userMap := make(map[int32]*ccloudv1.User)
 	for _, user := range users {
 		userMap[user.Id] = user
 	}
 	return userMap
 }
 
-func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
+func mapResourceIdToUserId(users []*ccloudv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
 		idMap[user.ResourceId] = user.Id
@@ -186,7 +166,7 @@ func mapResourceIdToUserId(users []*orgv1.User) map[string]int32 {
 	return idMap
 }
 
-func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*orgv1.User, serviceAccountsMap map[string]bool) string {
+func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*ccloudv1.User, serviceAccountsMap map[string]bool) string {
 	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
 	}

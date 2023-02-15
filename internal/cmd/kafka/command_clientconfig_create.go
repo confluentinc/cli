@@ -40,7 +40,7 @@ const (
 
 	contextExampleFmt = "confluent kafka client-config create %s"
 	flagExampleFmt    = "confluent kafka client-config create %s --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret"
-	srFlagExample     = " --sr-apikey my-sr-key --sr-apisecret my-sr-secret"
+	srFlagExample     = " --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret"
 
 	javaConfig         = "java"
 	javaSRConfig       = "java-sr"
@@ -151,8 +151,8 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 
 	// add sr flags
 	if clientConfig.isSrApiAvailable {
-		cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-		cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	}
 
 	c.AddCommand(cmd)
@@ -193,10 +193,9 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 		return "", err
 	}
 
-	// only validate that the key pair matches with the cluster if it's passed via the flag.
-	// this is because currently "api-key store" does not check if the secret is valid. therefore, if users
+	// Only validate that the key pair matches with the cluster if it's passed via the flag.
+	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	// TODO: always validate key pair after feature enhancement: https://confluentinc.atlassian.net/browse/CLI-1575
 	flagKey, flagSecret, err := c.Config.Context().KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
@@ -235,7 +234,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		srEndpointTemplate: srCluster.SchemaRegistryEndpoint,
 	})
 
-	// if empty api key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
+	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
 	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
 		// comment out SR and warn users
 		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
@@ -279,7 +278,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	return configFile, nil
 }
 
-// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR api key stored in the context and
+// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
@@ -290,19 +289,19 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 	}
 
 	// get SR key pair from flag
-	apiKey, err := cmd.Flags().GetString("sr-apikey")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
-	apiSecret, err := cmd.Flags().GetString("sr-apisecret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
 
 	// set SR key pair
 	srCluster.SrCredentials = &v1.APIKeyPair{
-		Key:    apiKey,
-		Secret: apiSecret,
+		Key:    schemaRegistryApiKey,
+		Secret: schemaRegistryApiSecret,
 	}
 	return srCluster, nil
 }

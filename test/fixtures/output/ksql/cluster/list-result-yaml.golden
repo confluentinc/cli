@@ -1,16 +1,16 @@
-- detailed_processing_log: "true"
-  endpoint: SASL_SSL://ksql-endpoint
-  id: lksqlc-ksql5
-  kafka: lkc-qwert
+- id: lksqlc-ksql5
   name: account ksql
-  status: PROVISIONING
-  storage: "101"
   topic_prefix: pksqlc-abcde
-- detailed_processing_log: "true"
+  kafka: lkc-qwert
+  storage: 101
   endpoint: SASL_SSL://ksql-endpoint
-  id: lksqlc-woooo
-  kafka: lkc-zxcvb
-  name: kay cee queue elle
   status: PROVISIONING
-  storage: "123"
+  detailed_processing_log: true
+- id: lksqlc-woooo
+  name: kay cee queue elle
   topic_prefix: pksqlc-ghjkl
+  kafka: lkc-zxcvb
+  storage: 123
+  endpoint: SASL_SSL://ksql-endpoint
+  status: PROVISIONING
+  detailed_processing_log: true

@@ -10,12 +10,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	mock2 "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 /*************** TEST command_acl ***************/
@@ -176,7 +176,7 @@ func (suite *ACLTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedOnPremConfigMock()
 }
 
-func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string) *cobra.Command {
+func (suite *ACLTestSuite) newMockIamCmd(expect chan any, message string) *cobra.Command {
 	suite.kafkaApi = &mock.KafkaACLManagementApi{
 		AddAclBindingFunc: func(ctx context.Context, createAclRequest mds.CreateAclRequest) (*http.Response, error) {
 			assert.Equal(suite.T(), createAclRequest, <-expect, message)
@@ -193,7 +193,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan interface{}, message string
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.KafkaACLManagementApi = suite.kafkaApi
-	return New(suite.conf, mock2.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
+	return New(suite.conf, climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAclTestSuite(t *testing.T) {
@@ -201,9 +201,9 @@ func TestAclTestSuite(t *testing.T) {
 }
 
 func (suite *ACLTestSuite) TestMdsCreateACL() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "create", "--kafka-cluster-id", "testcluster"},
+		args := append([]string{"acl", "create", "--kafka-cluster", "testcluster"},
 			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsACLEntries {
 			cmd := suite.newMockIamCmd(expect, "")
@@ -227,15 +227,28 @@ func (suite *ACLTestSuite) TestMdsCreateACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsDeleteACL() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "delete", "--kafka-cluster-id", "testcluster", "--host", "*"},
+		args := append([]string{"acl", "delete", "--kafka-cluster", "testcluster", "--host", "*", "--force"},
 			mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsACLEntries {
 			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, mdsAclEntry.args...))
 
 			go func() {
+				expect <- convertToACLFilterRequest(
+					&mds.CreateAclRequest{
+						Scope: mds.KafkaScope{
+							Clusters: mds.KafkaScopeClusters{
+								KafkaCluster: "testcluster",
+							},
+						},
+						AclBinding: mds.AclBinding{
+							Pattern: mdsResourcePattern.pattern,
+							Entry:   mdsAclEntry.entry,
+						},
+					},
+				)
 				expect <- convertToACLFilterRequest(
 					&mds.CreateAclRequest{
 						Scope: mds.KafkaScope{
@@ -258,10 +271,10 @@ func (suite *ACLTestSuite) TestMdsDeleteACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsListACL() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	for _, mdsResourcePattern := range mdsResourcePatterns {
 		cmd := suite.newMockIamCmd(expect, "")
-		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...))
+		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster", "testcluster"}, mdsResourcePattern.args...))
 
 		go func() {
 			expect <- convertToACLFilterRequest(
@@ -285,10 +298,10 @@ func (suite *ACLTestSuite) TestMdsListACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsListPrincipalACL() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	for _, mdsAclEntry := range mdsACLEntries {
 		cmd := suite.newMockIamCmd(expect, "")
-		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster-id", "testcluster", "--principal"}, mdsAclEntry.entry.Principal))
+		cmd.SetArgs(append([]string{"acl", "list", "--kafka-cluster", "testcluster", "--principal"}, mdsAclEntry.entry.Principal))
 
 		go func() {
 			expect <- convertToACLFilterRequest(
@@ -313,9 +326,9 @@ func (suite *ACLTestSuite) TestMdsListPrincipalACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsListPrincipalFilterACL() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	for _, mdsResourcePattern := range mdsResourcePatterns {
-		args := append([]string{"acl", "list", "--kafka-cluster-id", "testcluster"}, mdsResourcePattern.args...)
+		args := append([]string{"acl", "list", "--kafka-cluster", "testcluster"}, mdsResourcePattern.args...)
 		for _, mdsAclEntry := range mdsACLEntries {
 			cmd := suite.newMockIamCmd(expect, "")
 			cmd.SetArgs(append(args, "--principal", mdsAclEntry.entry.Principal))
@@ -344,7 +357,7 @@ func (suite *ACLTestSuite) TestMdsListPrincipalFilterACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
-	args := []string{"acl", "create", "--kafka-cluster-id", "testcluster",
+	args := []string{"acl", "create", "--kafka-cluster", "testcluster",
 		"--allow", "--operation", "read", "--principal", "User:42",
 		"--topic", "resource1", "--consumer-group", "resource2"}
 
@@ -353,14 +366,14 @@ func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
 
 	err := cmd.Execute()
 	assert.NotNil(suite.T(), err)
-	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "cluster-scope, consumer-group, topic, transactional-id")
+	expect := fmt.Sprintf(errors.ExactlyOneSetErrorMsg, "`--cluster-scope`, `--consumer-group`, `--topic`, `--transactional-id`")
 	assert.Contains(suite.T(), err.Error(), expect)
 }
 
 func (suite *ACLTestSuite) TestMdsDefaults() {
-	expect := make(chan interface{})
+	expect := make(chan any)
 	cmd := suite.newMockIamCmd(expect, "Topic PatternType was not set to default value of PatternTypes_LITERAL")
-	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster",
 		"--allow", "--principal", "User:42",
 		"--operation", "read", "--topic", "dan"})
 	go func() {
@@ -390,7 +403,7 @@ func (suite *ACLTestSuite) TestMdsDefaults() {
 	assert.Nil(suite.T(), err)
 	cmd = suite.newMockIamCmd(expect, "Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 
-	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster-id", "testcluster",
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster",
 		"--cluster-scope", "--allow", "--principal", "User:42",
 		"--operation", "read"})
 

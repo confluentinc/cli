@@ -10,14 +10,13 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	climock "github.com/confluentinc/cli/mock"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -98,8 +97,8 @@ const (
 
 type MockCall struct {
 	Func   ApiFunc
-	Input  interface{}
-	Result interface{}
+	Input  any
+	Result any
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
@@ -109,7 +108,7 @@ func (suite *AuditConfigTestSuite) SetupSuite() {
 func (suite *AuditConfigTestSuite) TearDownSuite() {
 }
 
-func StripTimestamp(obj interface{}) interface{} {
+func StripTimestamp(obj any) any {
 	spec, castOk := obj.(mds.AuditLogConfigSpec)
 	if castOk {
 		return mds.AuditLogConfigSpec{
@@ -126,7 +125,7 @@ func StripTimestamp(obj interface{}) interface{} {
 	}
 }
 
-func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput interface{}) (interface{}, error) {
+func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput any) (any, error) {
 	if !assert.Greater(suite.T(), len(expect), 0) {
 		return nil, fmt.Errorf("unexpected call to %#v", expectedFunc)
 	}
@@ -197,7 +196,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
-	return New(cliMock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
+	return New(climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {

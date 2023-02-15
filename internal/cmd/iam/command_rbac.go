@@ -2,7 +2,7 @@ package iam
 
 import (
 	"github.com/antihax/optional"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

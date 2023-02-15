@@ -1,10 +1,11 @@
-The following are required configs:
-connector.class : GcsSink
-kafka.api.key : ["kafka.api.key" is required]
-kafka.api.secret : ["kafka.api.secret" is required]
-topics : ["topics" is required]
-data.format : ["data.format" is required]
-gcs.credentials.config : ["gcs.credentials.config" is required]
-gcs.bucket.name : ["gcs.bucket.name" is required]
-time.interval : ["data.format" is required]
-tasks.max : ["tasks.max" is required]
+          Config         |         Documentation          | Required  
+-------------------------+--------------------------------+-----------
+  data.format            | Sets the input value format.   | true      
+  gcs.bucket.name        | GCS bucket name.               | true      
+  gcs.credentials.config | GCP service account JSON file. | true      
+  kafka.api.key          | Kafka API Key                  | true      
+  kafka.api.secret       | Kafka API Secret               | true      
+  tasks.max              | Tasks                          | true      
+  time.interval          | Partitioning interval of data. | true      
+  topics                 | Identifies the topic name.     | true      
+  flush.size             | Commit file size.              | false     

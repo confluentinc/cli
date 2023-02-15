@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -29,7 +29,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 
 	ld := launchDarklyManager{}
 	suite.ctx.FeatureFlags = &v1.FeatureFlags{
-		Values:         map[string]interface{}{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
+		Values:         map[string]any{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
 		LastUpdateTime: time.Now().Unix(),
 		User:           ld.contextToLDUser(suite.ctx),
 	}
@@ -40,7 +40,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	defer server.Close()
 	ld := launchDarklyManager{
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
-		version:   version.NewVersion("v1.2", "", "", ""),
+		version:   version.NewVersion("v1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 	req := require.New(suite.T())
@@ -55,7 +55,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	req.Equal(1, intFlag)
 
 	jsonFlag := ld.JsonVariation("testJson", ctx, v1.CliLaunchDarklyClient, true, map[string]string{})
-	req.Equal(map[string]interface{}{"key": "val"}, jsonFlag)
+	req.Equal(map[string]any{"key": "val"}, jsonFlag)
 }
 
 // Flag variation tests using cached flag values
@@ -90,7 +90,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
-	ld := launchDarklyManager{version: version.NewVersion("v1.2", "", "", "")}
+	ld := launchDarklyManager{version: version.NewVersion("v1.2", "", "")}
 
 	user := ld.contextToLDUser(suite.ctx)
 	resourceId, _ := user.GetCustom("user.resource_id")

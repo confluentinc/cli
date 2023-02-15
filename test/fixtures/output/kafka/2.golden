@@ -1,5 +1,6 @@
 It may take up to 5 minutes for the Kafka cluster to be ready.
 +---------------+---------------------------+
+| Current       | false                     |
 | ID            | lkc-def963                |
 | Name          | my-new-cluster            |
 | Type          | BASIC                     |
@@ -7,10 +8,9 @@ It may take up to 5 minutes for the Kafka cluster to be ready.
 | Egress        |                       100 |
 | Storage       | 5 TB                      |
 | Provider      | aws                       |
-| Availability  | single-zone               |
 | Region        | us-east-1                 |
+| Availability  | single-zone               |
 | Status        | PROVISIONING              |
 | Endpoint      | SASL_SSL://kafka-endpoint |
-| API Endpoint  | http://kafka-api-url      |
 | REST Endpoint | https://pkc-endpoint      |
 +---------------+---------------------------+

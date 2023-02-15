@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	print "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const kafkaClusterTypeName = "kafka-cluster"
@@ -37,12 +36,7 @@ func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
 		return print.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return print.PrintCluster(clusterInfos, format)
+	return print.PrintClusters(cmd, clusterInfos)
 }
 
 func (c *clusterCommand) createContext() context.Context {

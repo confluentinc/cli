@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -20,7 +20,7 @@ func TestParseAclRequest(t *testing.T) {
 		expectedAcl AclRequestDataWithError
 	}{
 		{
-			args: []string{"--operation", "READ", "--principal", "User:Alice", "--cluster-scope", "--host", "127.0.0.1", "--allow"},
+			args: []string{"--operation", "read", "--principal", "User:Alice", "--cluster-scope", "--host", "127.0.0.1", "--allow"},
 			expectedAcl: AclRequestDataWithError{
 				ResourceType: kafkarestv3.ACLRESOURCETYPE_CLUSTER,
 				ResourceName: "kafka-cluster",
@@ -54,7 +54,7 @@ func TestParseAclRequest(t *testing.T) {
 			},
 		},
 		{
-			args: []string{"--operation", "READ", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
+			args: []string{"--operation", "read", "--principal", "User:Alice", "--transactional-id", "123", "--allow", "--deny"},
 			expectedAcl: AclRequestDataWithError{
 				Errors: multierror.Append(errors.Errorf(errMsgs.OnlySetAllowOrDenyErrorMsg)),
 			},
@@ -148,17 +148,17 @@ func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
 func TestAclBindingToClustersClusterIdAclsPostOpts(t *testing.T) {
 	req := require.New(t)
 
-	binding := &schedv1.ACLBinding{
-		Pattern: &schedv1.ResourcePatternConfig{
-			ResourceType: schedv1.ResourceTypes_CLUSTER,
+	binding := &ccstructs.ACLBinding{
+		Pattern: &ccstructs.ResourcePatternConfig{
+			ResourceType: ccstructs.ResourceTypes_CLUSTER,
 			Name:         "mycluster",
-			PatternType:  schedv1.PatternTypes_LITERAL,
+			PatternType:  ccstructs.PatternTypes_LITERAL,
 		},
-		Entry: &schedv1.AccessControlEntryConfig{
+		Entry: &ccstructs.AccessControlEntryConfig{
 			Principal:      "myprincipal",
-			Operation:      schedv1.ACLOperations_READ,
+			Operation:      ccstructs.ACLOperations_READ,
 			Host:           "myhost",
-			PermissionType: schedv1.ACLPermissionTypes_DENY,
+			PermissionType: ccstructs.ACLPermissionTypes_DENY,
 		},
 	}
 

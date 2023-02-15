@@ -2,12 +2,14 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"strconv"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/log"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
@@ -17,26 +19,25 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
-	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "Compatibility": "Global Compatibility",
-		"ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
-	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "Compatibility": "global_compatibility",
-		"Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
-)
-
-type describeDisplay struct {
-	Name                  string
-	ID                    string
-	URL                   string
-	Used                  string
-	Available             string
-	Compatibility         string
-	Mode                  string
-	ServiceProvider       string
-	ServiceProviderRegion string
-	Package               string
+type clusterOut struct {
+	Name                  string `human:"Name" serialized:"name"`
+	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
+	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit      int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                  string `human:"Mode" serialized:"mode"`
+	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
+	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
+	Package               string `human:"Package" serialized:"package"`
 }
+
+const (
+	defaultSchemaLimitAdvanced            = 20000
+	streamGovernancePriceTableProductName = "stream-governance"
+	schemaRegistryPriceTableName          = "SchemaRegistry"
+)
 
 func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -67,7 +68,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
@@ -110,36 +111,52 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		return unmarshalErr
 	}
 
+	freeSchemasLimit := int(cluster.MaxSchemas)
+	if cluster.Package == essentialsPackageInternal {
+		org := &ccloudv1.Organization{Id: c.State.Auth.Organization.Id}
+		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
+
+		if err == nil {
+			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
+			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
+		}
+	} else {
+		freeSchemasLimit = defaultSchemaLimitAdvanced
+	}
+
 	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || metricsResponse == nil {
 		log.CliLogger.Warn("Could not retrieve Schema Registry Metrics: ", err)
 		numSchemas = ""
 		availableSchemas = ""
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 0 {
 		numSchemas = "0"
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas))
+		availableSchemas = strconv.Itoa(freeSchemasLimit)
 	} else if len(metricsResponse.FlatQueryResponse.GetData()) == 1 {
 		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
-		availableSchemas = strconv.Itoa(int(cluster.MaxSchemas) - numSchemasInt)
+		// Available number of schemas should not be negative
+		availableSchemas = strconv.Itoa(int(math.Max(float64(freeSchemasLimit-numSchemasInt), 0)))
 	} else {
 		log.CliLogger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""
 		availableSchemas = ""
 	}
 
-	data := &describeDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&clusterOut{
 		Name:                  cluster.Name,
-		ID:                    cluster.Id,
-		URL:                   cluster.Endpoint,
+		ClusterId:             cluster.Id,
+		EndpointUrl:           cluster.Endpoint,
 		ServiceProvider:       cluster.ServiceProvider,
 		ServiceProviderRegion: cluster.ServiceProviderRegion,
 		Package:               getPackageDisplayName(cluster.Package),
-		Used:                  numSchemas,
-		Available:             availableSchemas,
-		Compatibility:         compatibility,
+		UsedSchemas:           numSchemas,
+		AvailableSchemas:      availableSchemas,
+		FreeSchemasLimit:      freeSchemasLimit,
+		GlobalCompatibility:   compatibility,
 		Mode:                  mode,
-	}
-	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
+	})
+	return table.Print()
 }
 
 func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
@@ -158,4 +175,8 @@ func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
 	req := metricsv2.NewQueryRequest(aggregations, "ALL", []string{"PT1M/now-2m|m"})
 	req.SetFilter(filter)
 	return *req
+}
+
+func getMaxSchemaLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
+	return fmt.Sprintf("%s:%s:%s:1:max", serviceProvider, serviceProviderRegion, sgPackage)
 }

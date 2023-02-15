@@ -2,7 +2,6 @@ package releasenotes
 
 import (
 	"os"
-	"runtime"
 	"strings"
 )
 
@@ -17,10 +16,7 @@ type DocsUpdateHandler interface {
 	getUpdatedDocsPage(newReleaseNotes string) (string, error)
 }
 
-func NewDocsUpdateHandler(header string, docsFilePath string) DocsUpdateHandler {
-	if runtime.GOOS == "windows" {
-		header = strings.ReplaceAll(header, "\n", "\r\n")
-	}
+func NewDocsUpdateHandler(header, docsFilePath string) DocsUpdateHandler {
 	return &DocsUpdateHandlerImp{
 		pageHeader:   header,
 		docsFilePath: docsFilePath,
@@ -48,7 +44,7 @@ func (h *DocsUpdateHandlerImp) getCurrentDocsPage() (string, error) {
 	return string(b), nil
 }
 
-func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage string, newReleaseNotes string) string {
+func (h *DocsUpdateHandlerImp) addNewReleaseNotesToDocsPage(currentDocsPage, newReleaseNotes string) string {
 	previousReleaseNotes := strings.ReplaceAll(currentDocsPage, h.pageHeader, "")
 	return h.pageHeader + "\n" + newReleaseNotes + "\n" + previousReleaseNotes
 }

@@ -28,7 +28,7 @@ func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
 		env = "devel"
 	} else if baseUrl == "https://stag.cpdev.cloud" {
 		env = "stag"
-	} else if baseUrl == testserver.TestCloudURL.String() {
+	} else if baseUrl == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
 		return ""

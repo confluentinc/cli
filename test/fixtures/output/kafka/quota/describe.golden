@@ -4,7 +4,7 @@
 | Description | quota description |
 | Ingress     | 2000 B/s          |
 | Egress      | 5000 B/s          |
-| Cluster     | lkc-1234          |
 | Principals  | sa-1234,sa-5678   |
+| Cluster     | lkc-1234          |
 | Environment | env-1234          |
 +-------------+-------------------+

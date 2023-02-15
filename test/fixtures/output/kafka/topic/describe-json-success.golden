@@ -1,9 +1,22 @@
-{
-  "topic_name": "topic-exist",
-  "config": {
-    "cleanup.policy": "delete",
-    "compression.type": "producer",
-    "num.partitions": "3",
-    "retention.ms": "604800000"
+[
+  {
+    "name": "cleanup.policy",
+    "value": "delete",
+    "read_only": false
+  },
+  {
+    "name": "compression.type",
+    "value": "producer",
+    "read_only": true
+  },
+  {
+    "name": "num.partitions",
+    "value": "3",
+    "read_only": true
+  },
+  {
+    "name": "retention.ms",
+    "value": "604800000",
+    "read_only": false
   }
-}
+]

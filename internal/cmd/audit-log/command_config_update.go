@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,11 +32,11 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	var data []byte
 	var err error
 	if cmd.Flags().Changed("file") {
-		fileName, err := cmd.Flags().GetString("file")
+		file, err := cmd.Flags().GetString("file")
 		if err != nil {
 			return err
 		}
-		data, err = os.ReadFile(fileName)
+		data, err = os.ReadFile(file)
 		if err != nil {
 			return err
 		}

@@ -7,18 +7,15 @@ import (
 	"net/http"
 	"testing"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	connectmock "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1/mock"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	climock "github.com/confluentinc/cli/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -34,7 +31,12 @@ var (
 	}
 
 	pluginDescribe = connectv1.InlineResponse2003Configs{
-		Value: &connectv1.InlineResponse2003Value{Errors: &[]string{`"name" is required`}},
+		Value: &connectv1.InlineResponse2003Value{
+			Name:   connectv1.PtrString("name"),
+			Errors: &[]string{`"name" is required`}},
+		Definition: &connectv1.InlineResponse2003Definition{
+			Documentation: connectv1.PtrString("Connector Name"),
+			Required:      connectv1.PtrBool(true)},
 	}
 
 	connector = connectv1.ConnectV1Connector{
@@ -60,17 +62,16 @@ var (
 type ConnectTestSuite struct {
 	suite.Suite
 	conf           *v1.Config
-	kafkaCluster   *schedv1.KafkaCluster
+	kafkaCluster   *ccstructs.KafkaCluster
 	connectorsMock *connectmock.ConnectorsV1Api
 	lifecycleMock  *connectmock.LifecycleV1Api
 	pluginMock     *connectmock.PluginsV1Api
-	kafkaMock      *ccsdkmock.Kafka
 }
 
 func (suite *ConnectTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
 		Name:       "KafkaMock",
 		AccountId:  "testAccount",
@@ -79,15 +80,6 @@ func (suite *ConnectTestSuite) SetupSuite() {
 }
 
 func (suite *ConnectTestSuite) SetupTest() {
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(_ context.Context, _ *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return suite.kafkaCluster, nil
-		},
-		ListFunc: func(_ context.Context, _ *schedv1.KafkaCluster) ([]*schedv1.KafkaCluster, error) {
-			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
-		},
-	}
-
 	suite.connectorsMock = &connectmock.ConnectorsV1Api{
 		CreateConnectv1ConnectorFunc: func(_ context.Context, _, _ string) connectv1.ApiCreateConnectv1ConnectorRequest {
 			return connectv1.ApiCreateConnectv1ConnectorRequest{}
@@ -152,14 +144,14 @@ func (suite *ConnectTestSuite) newCmd() *cobra.Command {
 		LifecycleV1Api:  suite.lifecycleMock,
 		PluginsV1Api:    suite.pluginMock,
 	}
-	prerunner := cliMock.NewPreRunnerMock(&ccloud.Client{Kafka: suite.kafkaMock},
+	prerunner := climock.NewPreRunnerMock(nil,
 		&ccloudv2.Client{ConnectClient: connectClient}, nil, nil, suite.conf)
-	return New(prerunner)
+	return New(suite.conf, prerunner)
 }
 
 func (suite *ConnectTestSuite) TestPauseConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"pause", connectorID})
+	cmd.SetArgs([]string{"cluster", "pause", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -169,7 +161,7 @@ func (suite *ConnectTestSuite) TestPauseConnector() {
 
 func (suite *ConnectTestSuite) TestResumeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"resume", connectorID})
+	cmd.SetArgs([]string{"cluster", "resume", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -179,7 +171,7 @@ func (suite *ConnectTestSuite) TestResumeConnector() {
 
 func (suite *ConnectTestSuite) TestDeleteConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", connectorID})
+	cmd.SetArgs([]string{"cluster", "delete", connectorID, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -189,7 +181,7 @@ func (suite *ConnectTestSuite) TestDeleteConnector() {
 
 func (suite *ConnectTestSuite) TestListConnectors() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"list"})
+	cmd.SetArgs([]string{"cluster", "list"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -202,7 +194,7 @@ func (suite *ConnectTestSuite) TestListConnectors() {
 
 func (suite *ConnectTestSuite) TestDescribeConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"describe", connectorID})
+	cmd.SetArgs([]string{"cluster", "describe", connectorID})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -212,7 +204,7 @@ func (suite *ConnectTestSuite) TestDescribeConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config.yaml"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -225,7 +217,7 @@ func (suite *ConnectTestSuite) TestCreateConnector() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-new-format.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-new-format.json"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -238,7 +230,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-malformed-new.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-malformed-new.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -247,7 +239,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedNewFormat() {
 
 func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--config", "../../../test/fixtures/input/connect/config-malformed-old.json"})
+	cmd.SetArgs([]string{"cluster", "create", "--config-file", "../../../test/fixtures/input/connect/config-malformed-old.json"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.NotNil(err)
@@ -256,7 +248,7 @@ func (suite *ConnectTestSuite) TestCreateConnectorMalformedOldFormat() {
 
 func (suite *ConnectTestSuite) TestUpdateConnector() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"update", connectorID, "--config", "../../../test/fixtures/input/connect/config.yaml"})
+	cmd.SetArgs([]string{"cluster", "update", connectorID, "--config-file", "../../../test/fixtures/input/connect/config.yaml"})
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	err := cmd.Execute()
@@ -290,7 +282,6 @@ func (suite *ConnectTestSuite) TestPluginDescribeConnector() {
 	req.NoError(err)
 	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginCalled())
 	req.True(suite.pluginMock.ValidateConnectv1ConnectorPluginExecuteCalled())
-	req.Contains(buf.String(), pluginType)
 }
 
 func TestConnectTestSuite(t *testing.T) {

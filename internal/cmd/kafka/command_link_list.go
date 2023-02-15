@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"strings"
-
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
@@ -15,13 +13,13 @@ import (
 const includeTopicsFlagName = "include-topics"
 
 type link struct {
-	LinkName             string
-	TopicName            string
-	SourceClusterId      string
-	DestinationClusterId string
-	LinkState            string
-	LinkError            string
-	LinkErrorMessage     string
+	Name                 string `human:"Name" serialized:"link_name"`
+	TopicName            string `human:"Topic Name" serialized:"topic_name"`
+	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
+	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	State                string `human:"State" serialized:"state"`
+	Error                string `human:"Error" serialized:"error"`
+	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
 }
 
 func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
@@ -30,21 +28,21 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 		linkError = data.GetLinkError()
 	}
 	return &link{
-		LinkName:             data.LinkName,
+		Name:                 data.LinkName,
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
-		LinkState:            data.GetLinkState(),
-		LinkError:            linkError,
-		LinkErrorMessage:     data.GetLinkErrorMessage(),
+		State:                data.GetLinkState(),
+		Error:                linkError,
+		ErrorMessage:         data.GetLinkErrorMessage(),
 	}
 }
 
 func (c *linkCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List previously created cluster links.",
-		Long:  "List previously created cluster links if the provided cluster is a destination cluster.",
+		Short: "List cluster links.",
+		Long:  "List cluster links if the provided cluster is a destination cluster.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
@@ -82,38 +80,26 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	listFields := getListFields(includeTopics)
-	camelToSpacedListFields := camelToSpaced(listFields)
-	var humanLabels []string
-	for _, humanLabel := range camelToSpacedListFields {
-		humanLabels = append(humanLabels, strings.TrimPrefix(humanLabel, "Link "))
-	}
-	structuredLabels := camelToSnake(listFields)
-
-	w, err := output.NewListOutputWriter(cmd, listFields, humanLabels, structuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
-		if includeTopics && len(*data.TopicsNames) > 0 {
-			for _, topic := range *data.TopicsNames {
-				w.AddElement(newLink(data, topic))
+		if includeTopics && len(data.GetTopicsNames()) > 0 {
+			for _, topic := range data.GetTopicsNames() {
+				list.Add(newLink(data, topic))
 			}
 		} else {
-			w.AddElement(newLink(data, ""))
+			list.Add(newLink(data, ""))
 		}
 	}
-
-	return w.Out()
+	list.Filter(getListFields(includeTopics))
+	return list.Print()
 }
 
 func getListFields(includeTopics bool) []string {
-	x := []string{"LinkName"}
+	x := []string{"Name"}
 
 	if includeTopics {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "LinkState", "LinkError", "LinkErrorMessage")
+	return append(x, "SourceClusterId", "DestinationClusterId", "State", "Error", "ErrorMessage")
 }

@@ -1,10 +1,7 @@
 package kafka
 
 import (
-	"sort"
-
 	"github.com/antihax/optional"
-	"github.com/confluentinc/go-printer"
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 
@@ -19,9 +16,10 @@ import (
 func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update [id]",
+		Short: "Update Kafka broker configurations.",
+		Long:  "Update per-broker or cluster-wide Kafka broker configurations.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.update,
-		Short: "Update per-broker or cluster-wide Kafka broker configs.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update configuration values for broker 1.",
@@ -46,11 +44,6 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 
 func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 	brokerId, all, err := checkAllOrBrokerIdSpecified(cmd, args)
-	if err != nil {
-		return err
-	}
-
-	format, err := cmd.Flags().GetString(output.FlagName)
 	if err != nil {
 		return err
 	}
@@ -93,49 +86,21 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if format == output.Human.String() {
-		c.printHumanUpdate(all, clusterId, brokerId, data)
-		return nil
-	}
-
-	return c.printStructuredUpdate(format, data)
-}
-
-func (c *brokerCommand) printHumanUpdate(all bool, clusterId string, brokerId int32, data kafkarestv3.AlterConfigBatchRequestData) {
-	if all {
-		utils.Printf(c.Command, "Updated the following broker configs for cluster \"%s\":\n", clusterId)
-	} else {
-		utils.Printf(c.Command, "Updated the following configs for broker \"%d\":\n", brokerId)
-	}
-	tableLabels := []string{"Name", "Value"}
-	tableEntries := make([][]string, len(data.Data))
-	for i, config := range data.Data {
-		tableEntries[i] = printer.ToRow(
-			&struct {
-				Name  string
-				Value string
-			}{Name: config.Name, Value: *config.Value}, []string{"Name", "Value"})
-	}
-	sort.Slice(tableEntries, func(i, j int) bool {
-		return tableEntries[i][0] < tableEntries[j][0]
-	})
-	printer.RenderCollectionTable(tableEntries, tableLabels)
-}
-
-func (c *brokerCommand) printStructuredUpdate(format string, data kafkarestv3.AlterConfigBatchRequestData) error {
-	type printConfig struct {
-		Name  string `json:"name" yaml:"name"`
-		Value string `json:"value,omitempty" yaml:"value,omitempty"`
-	}
-	printConfigs := make([]*printConfig, len(data.Data))
-	for i, config := range data.Data {
-		printConfigs[i] = &printConfig{
-			Name:  config.Name,
-			Value: *config.Value,
+	if output.GetFormat(cmd) == output.Human {
+		if all {
+			utils.Printf(c.Command, "Updated the following broker configurations for cluster \"%s\":\n", clusterId)
+		} else {
+			utils.Printf(c.Command, "Updated the following configurations for broker \"%d\":\n", brokerId)
 		}
 	}
-	sort.Slice(printConfigs, func(i, j int) bool {
-		return printConfigs[i].Name < printConfigs[j].Name
-	})
-	return output.StructuredOutput(format, printConfigs)
+
+	list := output.NewList(cmd)
+	for _, config := range data.Data {
+		list.Add(&configOut{
+			Name:  config.Name,
+			Value: *config.Value,
+		})
+	}
+	list.Filter([]string{"Name", "Value"})
+	return list.Print()
 }

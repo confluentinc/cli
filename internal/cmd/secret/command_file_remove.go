@@ -26,30 +26,27 @@ func (c *command) newRemoveCommand() *cobra.Command {
 }
 
 func (c *command) remove(cmd *cobra.Command, _ []string) error {
-	configSource, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	removeConfigs, err := c.getConfigs(configSource, "config properties", "", false)
+	removeConfigs, err := c.getConfigs(config, "config properties", "", false)
 	if err != nil {
 		return err
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
-	if err := c.plugin.RemoveEncryptedPasswords(configPath, localSecretsPath, removeConfigs); err != nil {
+	if err := c.plugin.RemoveEncryptedPasswords(configFile, localSecretsFile, removeConfigs); err != nil {
 		return err
 	}
 

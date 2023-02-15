@@ -46,7 +46,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
+	dryRun, err := cmd.Flags().GetBool(dryrunFlagName)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 	resumeMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsResumeOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
-		ValidateOnly:            optional.NewBool(validateOnly),
+		ValidateOnly:            optional.NewBool(dryRun),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
@@ -78,30 +78,25 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 }
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
-	outputWriter, err := output.NewListOutputWriter(cmd, alterMirrorFields, humanAlterMirrorFields, structuredAlterMirrorFields)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, result := range results.Data {
-		var errMsg = ""
-		var code = ""
-
+		var errorMessage string
 		if result.ErrorMessage != nil {
-			errMsg = *result.ErrorMessage
+			errorMessage = *result.ErrorMessage
 		}
 
+		var errorCode string
 		if result.ErrorCode != nil {
-			code = fmt.Sprint(*result.ErrorCode)
+			errorCode = fmt.Sprint(*result.ErrorCode)
 		}
 
 		// fatal error
-		if errMsg != "" {
-			outputWriter.AddElement(&alterMirrorWrite{
+		if errorMessage != "" {
+			list.Add(&mirrorOut{
 				MirrorTopicName:       result.MirrorTopicName,
 				Partition:             -1,
-				ErrorMessage:          errMsg,
-				ErrorCode:             code,
+				ErrorMessage:          errorMessage,
+				ErrorCode:             errorCode,
 				PartitionMirrorLag:    -1,
 				LastSourceFetchOffset: -1,
 			})
@@ -109,16 +104,16 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 		}
 
 		for _, partitionLag := range result.MirrorLags {
-			outputWriter.AddElement(&alterMirrorWrite{
+			list.Add(&mirrorOut{
 				MirrorTopicName:       result.MirrorTopicName,
 				Partition:             partitionLag.Partition,
-				ErrorMessage:          errMsg,
-				ErrorCode:             code,
-				PartitionMirrorLag:    int64(partitionLag.Lag),
+				ErrorMessage:          errorMessage,
+				ErrorCode:             errorCode,
+				PartitionMirrorLag:    partitionLag.Lag,
 				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 			})
 		}
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"MirrorTopicName", "Partition", "PartitionMirrorLag", "ErrorMessage", "ErrorCode", "LastSourceFetchOffset"})
+	return list.Print()
 }

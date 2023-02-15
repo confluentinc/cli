@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -17,12 +17,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var (
-	enableLabels            = []string{"Id", "SchemaRegistryEndpoint"}
-	enableHumanRenames      = map[string]string{"ID": "Cluster ID", "SchemaRegistryEndpoint": "Endpoint URL"}
-	enableStructuredRenames = map[string]string{"ID": "cluster_id", "SchemaRegistryEndpoint": "endpoint_url"}
-	availableGeos           = []string{"us", "eu", "apac"}
-)
+type enableOut struct {
+	Id          string `human:"ID" serialized:"id"`
+	EndpointUrl string `human:"Endpoint URL" serialized:"endpoint_url"`
+}
+
+var availableGeos = []string{"us", "eu", "apac"}
 
 func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -59,20 +59,19 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	// Collect the parameters
-	serviceProvider, err := cmd.Flags().GetString("cloud")
+	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
 	}
 
-	locationFlag, err := cmd.Flags().GetString("geo")
+	geo, err := cmd.Flags().GetString("geo")
 	if err != nil {
 		return err
 	}
 
 	// Trust the API will handle CCP/CCE
-	location := schedv1.GlobalSchemaRegistryLocation(schedv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(locationFlag)])
-	err = c.validateLocation(location)
-	if err != nil {
+	location := ccloudv1.GlobalSchemaRegistryLocation(ccloudv1.GlobalSchemaRegistryLocation_value[strings.ToUpper(geo)])
+	if err := c.validateLocation(location); err != nil {
 		return err
 	}
 
@@ -87,10 +86,10 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Build the SR instance
-	clusterConfig := &schedv1.SchemaRegistryClusterConfig{
+	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
 		AccountId:       c.EnvironmentId(),
 		Location:        location,
-		ServiceProvider: serviceProvider,
+		ServiceProvider: cloud,
 		Package:         packageInternalName,
 		// Name is a special string that everyone expects. Originally, this field was added to support
 		// multiple SR instances, but for now there's a contract between our services that it will be
@@ -98,32 +97,34 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		Name: "account schema-registry",
 	}
 
+	var out *enableOut
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
-	var clusterOutput *v1.SchemaRegistryCluster
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
 		}
 
-		clusterOutput = &v1.SchemaRegistryCluster{
-			Id:                     existingCluster.Id,
-			SchemaRegistryEndpoint: existingCluster.Endpoint,
+		out = &enableOut{
+			Id:          existingCluster.Id,
+			EndpointUrl: existingCluster.Endpoint,
 		}
 	} else {
-		clusterOutput = &v1.SchemaRegistryCluster{
-			Id:                     newCluster.Id,
-			SchemaRegistryEndpoint: newCluster.Endpoint,
+		out = &enableOut{
+			Id:          newCluster.GetId(),
+			EndpointUrl: newCluster.GetEndpoint(),
 		}
 	}
 
-	return output.DescribeObject(cmd, clusterOutput, enableLabels, enableHumanRenames, enableStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
 }
 
-func (c *clusterCommand) validateLocation(location schedv1.GlobalSchemaRegistryLocation) error {
-	if location == schedv1.GlobalSchemaRegistryLocation_NONE {
+func (c *clusterCommand) validateLocation(location ccloudv1.GlobalSchemaRegistryLocation) error {
+	if location == ccloudv1.GlobalSchemaRegistryLocation_NONE {
 		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
 			errors.InvalidSchemaRegistryLocationSuggestions)
 	}

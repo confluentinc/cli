@@ -12,11 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	humanRenames      = map[string]string{"Id": "ID", "DisplayName": "Name"}
-	structuredRenames = map[string]string{"Id": "id", "DisplayName": "name", "Description": "description", "Ingress": "ingress", "Egress": "egress", "Throughput": "throughput", "Cluster": "cluster", "Principals": "principals", "Environment": "environment"}
-)
-
 func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
@@ -31,7 +26,8 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 			examples.Example{
 				Text: `Create a default client quota for all principals without an explicit quota assignment.`,
 				Code: `confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234`,
-			}),
+			},
+		),
 	}
 
 	cmd.Flags().String("name", "", "Display name for quota.")
@@ -55,7 +51,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 	principals := sliceToObjRefArray(serviceAccounts)
 
-	displayName, err := cmd.Flags().GetString("name")
+	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
@@ -74,23 +70,27 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
-			DisplayName: &displayName,
-			Description: &description,
+			DisplayName: kafkaquotasv1.PtrString(name),
+			Description: kafkaquotasv1.PtrString(description),
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
 			Principals:  principals,
 			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId()},
 		},
 	}
+
 	quota, err := c.V2Client.CreateKafkaQuota(quotaToCreate)
 	if err != nil {
 		return err
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	printableQuota := quotaToPrintable(quota, format)
-	return output.DescribeObject(cmd, printableQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(quota, format))
+	return table.Print()
 }
 
 func sliceToObjRefArray(accounts []string) *[]kafkaquotasv1.GlobalObjectReference {

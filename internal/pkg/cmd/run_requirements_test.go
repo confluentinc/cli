@@ -6,8 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -23,20 +22,20 @@ var (
 
 	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
+			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 		},
 	}
 
 	normalSuspendedOrgContextState = &v1.ContextState{
 		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(orgv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
+			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 		},
 	}
 
 	cloudCfg = func(contextState *v1.ContextState) *v1.Config {
 		return &v1.Config{
 			Contexts: map[string]*v1.Context{"cloud": {
-				PlatformName: testserver.TestCloudURL.String(),
+				PlatformName: testserver.TestCloudUrl.String(),
 				State:        contextState,
 			}},
 			CurrentContext: "cloud",
@@ -46,7 +45,7 @@ var (
 
 	apiKeyCloudCfg = &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
-			PlatformName: testserver.TestCloudURL.String(),
+			PlatformName: testserver.TestCloudUrl.String(),
 			Credential:   &v1.Credential{CredentialType: v1.APIKey},
 			State:        regularOrgContextState,
 		}},
@@ -56,7 +55,7 @@ var (
 
 	nonAPIKeyCloudCfg = &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
-			PlatformName: testserver.TestCloudURL.String(),
+			PlatformName: testserver.TestCloudUrl.String(),
 			Credential:   &v1.Credential{CredentialType: v1.Username},
 			State:        regularOrgContextState,
 		}},

@@ -16,11 +16,11 @@ const (
 	SRInConfigFileWarning     = "created client configuration file but Schema Registry is not fully configured."
 	SRInConfigFileSuggestions = "Alternatively, you can configure Schema Registry manually in the client configuration file before using it."
 	SRKeyNotSetReason         = "no Schema Registry API key specified"
-	SRKeyNotSetSuggestions    = "Pass the `--sr-apikey` flag to specify the Schema Registry API key."
+	SRKeyNotSetSuggestions    = "Pass the `--schema-registry-api-key` flag to specify the Schema Registry API key."
 	SRSecretNotSetReason      = "no Schema Registry API secret for key \"%s\" specified"
-	SRSecretNotSetSuggestions = "Pass the `--sr-apisecret` flag to specify the Schema Registry API secret."
+	SRSecretNotSetSuggestions = "Pass the `--schema-registry-api-secret` flag to specify the Schema Registry API secret."
 	SRCredsNotSetReason       = "no Schema Registry API key or secret specified"
-	SRCredsNotSetSuggestions  = "Pass the `--sr-apikey` and `--sr-apisecret` flags to specify the Schema Registry API key and secret."
+	SRCredsNotSetSuggestions  = "Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret."
 
 	//kafka rest
 	AssumingHttpProtocol  = "Assuming http protocol.\n"
@@ -48,4 +48,8 @@ const (
 	RetentionTimeDiscrepancyWarning = "Retention Time Discrepancy Warning: Topic %q had discrepancies in retention time." +
 		" Using max: %v. Discrepancies in retention time occur when two cluster configurations have the same topic in a" +
 		" router configuration, but different retention times. The maximum specified retention time will be used."
+
+	// ksql cluster create
+	SchemaRegistryRoleBindingRequiredForKsqlWarning = "IMPORTANT: Confirm that the users or service accounts that will interact " +
+		"with this cluster have the required privileges to access Schema Registry."
 )

@@ -14,12 +14,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func initKafkaRest(a *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
+func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
 	url, err := getKafkaRestUrl(cmd)
 	if err != nil { // require the flag
 		return nil, nil, err
 	}
-	kafkaREST, err := a.GetKafkaREST()
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, nil, err
 	}

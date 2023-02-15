@@ -6,10 +6,7 @@ import (
 	"os"
 	"strings"
 
-	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/dghubble/sling"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -73,7 +70,7 @@ func PersistConfluentLoginToConfig(config *v1.Config, username, url, token, caCe
 	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
 }
 
-func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials) (*orgv1.Account, *orgv1.Organization, error) {
+func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client, url string, credentials *Credentials) (*ccloudv1.Account, *ccloudv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
 	user, err := client.Auth.User(context.Background())
 	if err != nil {
@@ -125,7 +122,7 @@ func addOrUpdateContext(config *v1.Config, ctxName, username, url string, state 
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *flowv1.GetMeReply) *v1.ContextState {
+func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *ccloudv1.GetMeReply) *v1.ContextState {
 	state := new(v1.ContextState)
 	if ctx, err := config.FindContext(ctxName); err == nil {
 		state = ctx.State
@@ -140,9 +137,9 @@ func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken strin
 	// Always overwrite the user, organization, and list of accounts when logging in -- but don't necessarily
 	// overwrite `Account` (current/active environment) since we want that to be remembered
 	// between CLI sessions.
-	state.Auth.User = user.User
-	state.Auth.Accounts = user.Accounts
-	state.Auth.Organization = user.Organization
+	state.Auth.User = user.GetUser()
+	state.Auth.Accounts = user.GetAccounts()
+	state.Auth.Organization = user.GetOrganization()
 
 	// Default to 0th environment if no suitable environment is already configured
 	hasGoodEnv := false

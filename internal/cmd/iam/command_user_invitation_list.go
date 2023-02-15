@@ -1,9 +1,6 @@
 package iam
 
 import (
-	"context"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -11,19 +8,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	invitationListFields       = []string{"Id", "Email", "FirstName", "LastName", "UserResourceId", "Status"}
-	invitationHumanLabels      = []string{"ID", "Email", "First Name", "Last Name", "User ID", "Status"}
-	invitationStructuredLabels = []string{"id", "email", "first_name", "last_name", "user_resource_id", "status"}
-)
-
-type invitationStruct struct {
-	Id             string
-	Email          string
-	FirstName      string
-	LastName       string
-	UserResourceId string
-	Status         string
+type invitationOut struct {
+	Id     string `human:"ID" serialized:"id"`
+	Name   string `human:"Name" serialized:"name"`
+	Email  string `human:"Email" serialized:"email"`
+	UserId string `human:"User" serialized:"user_id"`
+	Status string `human:"Status" serialized:"status"`
 }
 
 func (c invitationCommand) newListCommand() *cobra.Command {
@@ -50,29 +40,20 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 		return nil
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, invitationListFields, invitationHumanLabels, invitationStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, invitation := range invitations {
-		user := &orgv1.User{ResourceId: invitation.User.GetId()}
-
-		var firstName, lastName string
-		if user, err = c.Client.User.Describe(context.Background(), user); err == nil {
-			firstName = user.FirstName
-			lastName = user.LastName
+		var name string
+		if user, err := c.V2Client.GetIamUserById(invitation.User.GetId()); err == nil {
+			name = user.GetFullName()
 		}
 
-		outputWriter.AddElement(&invitationStruct{
-			Id:             invitation.GetId(),
-			Email:          invitation.GetEmail(),
-			FirstName:      firstName,
-			LastName:       lastName,
-			UserResourceId: invitation.User.GetId(),
-			Status:         invitation.GetStatus(),
+		list.Add(&invitationOut{
+			Id:     invitation.GetId(),
+			Name:   name,
+			Email:  invitation.GetEmail(),
+			UserId: invitation.User.GetId(),
+			Status: invitation.GetStatus(),
 		})
 	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

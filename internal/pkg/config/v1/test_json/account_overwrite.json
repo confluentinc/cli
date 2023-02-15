@@ -3,6 +3,7 @@
   "disable_update_check": false,
   "disable_updates": false,
   "disable_plugins": false,
+  "disable_feature_flags": false,
   "no_browser": false,
   "platforms": {
     "http://127.0.0.1:1024": {

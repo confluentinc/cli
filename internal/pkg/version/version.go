@@ -13,7 +13,6 @@ type Version struct {
 	Version   string
 	Commit    string
 	BuildDate string
-	BuildHost string
 	UserAgent string // http
 	ClientID  string // kafka
 }
@@ -23,7 +22,7 @@ const (
 	FullCLIName = "Confluent CLI"
 )
 
-func NewVersion(version, commit, buildDate, buildHost string) *Version {
+func NewVersion(version, commit, buildDate string) *Version {
 	dashDelimitedName := strings.ReplaceAll(FullCLIName, " ", "-")
 
 	return &Version{
@@ -32,7 +31,6 @@ func NewVersion(version, commit, buildDate, buildHost string) *Version {
 		Version:   version,
 		Commit:    commit,
 		BuildDate: buildDate,
-		BuildHost: buildHost,
 		UserAgent: fmt.Sprintf("%s/%s (https://confluent.io; support@confluent.io)", dashDelimitedName, version),
 		ClientID:  fmt.Sprintf("%s_%s", dashDelimitedName, version),
 	}

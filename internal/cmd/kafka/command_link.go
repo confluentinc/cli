@@ -20,7 +20,7 @@ type linkCommand struct {
 func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "link",
-		Short:       "Manages inter-cluster links.",
+		Short:       "Manage inter-cluster links.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
@@ -29,20 +29,18 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 
+		c.AddCommand(c.newConfigurationCommand(cfg))
 		c.AddCommand(c.newCreateCommand())
 		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newDescribeCommand())
 		c.AddCommand(c.newListCommand())
-		c.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
+		c.AddCommand(c.newConfigurationCommand(cfg))
 		c.AddCommand(c.newCreateCommandOnPrem())
 		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newDescribeCommandOnPrem())
 		c.AddCommand(c.newListCommandOnPrem())
-		c.AddCommand(c.newUpdateCommandOnPrem())
 	}
 
 	return c.Command

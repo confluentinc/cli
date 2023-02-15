@@ -3,15 +3,14 @@ package mock
 import (
 	"os"
 
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -21,7 +20,7 @@ import (
 
 type Commander struct {
 	FlagResolver      pcmd.FlagResolver
-	Client            *ccloud.Client
+	Client            *ccloudv1.Client
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
@@ -33,7 +32,7 @@ type Commander struct {
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -48,14 +47,13 @@ func NewPreRunnerMock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClien
 	}
 }
 
-func NewPreRunnerMdsV2Mock(client *ccloud.Client, v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v1.Config) *Commander {
+func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v1.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
 	}
 	return &Commander{
 		FlagResolver: flagResolverMock,
-		Client:       client,
 		V2Client:     v2Client,
 		MDSv2Client:  mdsClient,
 		Config:       cfg,
@@ -83,6 +81,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
+		command.Context.Client = c.Client
 		state, err := ctx.AuthenticatedState()
 		if err != nil {
 			return err
@@ -154,6 +153,5 @@ func (c *Commander) setClient(command *pcmd.AuthenticatedCLICommand) {
 	command.V2Client = c.V2Client
 	command.MDSClient = c.MDSClient
 	command.MDSv2Client = c.MDSv2Client
-	command.Config.Client = c.Client
 	command.KafkaRESTProvider = c.KafkaRESTProvider
 }

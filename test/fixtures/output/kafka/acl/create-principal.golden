@@ -1,4 +1,4 @@
     Principal   | Permission | Operation | Resource Type | Resource Name | Pattern Type  
 ----------------+------------+-----------+---------------+---------------+---------------
-  User:sa-12345 | ALLOW      | WRITE     | TOPIC         | test-topic    | LITERAL       
   User:sa-12345 | ALLOW      | ALTER     | TOPIC         | test-topic    | LITERAL       
+  User:sa-12345 | ALLOW      | WRITE     | TOPIC         | test-topic    | LITERAL       

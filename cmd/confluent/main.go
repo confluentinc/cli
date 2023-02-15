@@ -18,7 +18,6 @@ var (
 	version = "v0.0.0"
 	commit  = ""
 	date    = ""
-	host    = ""
 	isTest  = "false"
 )
 
@@ -30,7 +29,7 @@ func main() {
 	cobra.CheckErr(err)
 
 	cfg.IsTest = isTest
-	cfg.Version = pversion.NewVersion(version, commit, date, host)
+	cfg.Version = pversion.NewVersion(version, commit, date)
 
 	cmd := pcmd.NewConfluentCommand(cfg)
 

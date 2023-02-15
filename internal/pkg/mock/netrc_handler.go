@@ -13,7 +13,7 @@ import (
 // MockNetrcHandler is a mock of NetrcHandler interface
 type MockNetrcHandler struct {
 	lockWriteNetrcCredentials sync.Mutex
-	WriteNetrcCredentialsFunc func(isCloud, isSSO bool, ctxName, username, password string) error
+	WriteNetrcCredentialsFunc func(isCloud bool, ctxName, username, password string) error
 
 	lockRemoveNetrcCredentials sync.Mutex
 	RemoveNetrcCredentialsFunc func(isCloud bool, ctxName string) (string, error)
@@ -30,7 +30,6 @@ type MockNetrcHandler struct {
 	calls struct {
 		WriteNetrcCredentials []struct {
 			IsCloud  bool
-			IsSSO    bool
 			CtxName  string
 			Username string
 			Password string
@@ -52,7 +51,7 @@ type MockNetrcHandler struct {
 }
 
 // WriteNetrcCredentials mocks base method by wrapping the associated func.
-func (m *MockNetrcHandler) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, username, password string) error {
+func (m *MockNetrcHandler) WriteNetrcCredentials(isCloud bool, ctxName, username, password string) error {
 	m.lockWriteNetrcCredentials.Lock()
 	defer m.lockWriteNetrcCredentials.Unlock()
 
@@ -62,13 +61,11 @@ func (m *MockNetrcHandler) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, u
 
 	call := struct {
 		IsCloud  bool
-		IsSSO    bool
 		CtxName  string
 		Username string
 		Password string
 	}{
 		IsCloud:  isCloud,
-		IsSSO:    isSSO,
 		CtxName:  ctxName,
 		Username: username,
 		Password: password,
@@ -76,7 +73,7 @@ func (m *MockNetrcHandler) WriteNetrcCredentials(isCloud, isSSO bool, ctxName, u
 
 	m.calls.WriteNetrcCredentials = append(m.calls.WriteNetrcCredentials, call)
 
-	return m.WriteNetrcCredentialsFunc(isCloud, isSSO, ctxName, username, password)
+	return m.WriteNetrcCredentialsFunc(isCloud, ctxName, username, password)
 }
 
 // WriteNetrcCredentialsCalled returns true if WriteNetrcCredentials was called at least once.
@@ -90,7 +87,6 @@ func (m *MockNetrcHandler) WriteNetrcCredentialsCalled() bool {
 // WriteNetrcCredentialsCalls returns the calls made to WriteNetrcCredentials.
 func (m *MockNetrcHandler) WriteNetrcCredentialsCalls() []struct {
 	IsCloud  bool
-	IsSSO    bool
 	CtxName  string
 	Username string
 	Password string

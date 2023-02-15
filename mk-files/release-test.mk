@@ -1,6 +1,7 @@
 .PHONY: verify-stag
 verify-stag:
 	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make verify-archive-installer
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make smoke-tests
 	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) make verify-binaries
 
 .PHONY: verify-prod
@@ -42,3 +43,15 @@ verify-binaries:
 	rm -rf $(TEMP_DIR)	
 	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
 
+# Test username/password login and SSO login in production
+.PHONY: smoke-tests
+smoke-tests:
+	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) bash install.sh && \
+	export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud && \
+	vault login -method=oidc -path=okta && \
+	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
+	email="cli-team+system-tests@confluent.io" && \
+	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
+	go install ./cmd/plugins/confluent-login-headless_sso && \
+	email="cli-team+system-tests+sso@confluent.io" && \
+	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email $${email} --password $${password}

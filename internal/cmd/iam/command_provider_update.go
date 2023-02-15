@@ -57,17 +57,18 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		update.Description = &description
 	}
 
-	resp, err := c.V2Client.UpdateIdentityProvider(update)
+	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
 		return err
 	}
 
-	describeIdentityProvider := &identityProvider{
-		Id:          *resp.Id,
-		Name:        *resp.DisplayName,
-		Description: *resp.Description,
-		IssuerUri:   *resp.Issuer,
-		JwksUri:     *resp.JwksUri,
-	}
-	return output.DescribeObject(cmd, describeIdentityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          identityProvider.GetId(),
+		Name:        identityProvider.GetDisplayName(),
+		Description: identityProvider.GetDescription(),
+		IssuerUri:   identityProvider.GetIssuer(),
+		JwksUri:     identityProvider.GetJwksUri(),
+	})
+	return table.Print()
 }

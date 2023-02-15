@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
@@ -73,28 +73,29 @@ var (
 type Config struct {
 	*config.BaseConfig
 
-	DisableUpdateCheck bool                     `json:"disable_update_check"`
-	DisableUpdates     bool                     `json:"disable_updates"`
-	DisablePlugins     bool                     `json:"disable_plugins"`
-	NoBrowser          bool                     `json:"no_browser" hcl:"no_browser"`
-	Platforms          map[string]*Platform     `json:"platforms,omitempty"`
-	Credentials        map[string]*Credential   `json:"credentials,omitempty"`
-	Contexts           map[string]*Context      `json:"contexts,omitempty"`
-	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
-	CurrentContext     string                   `json:"current_context"`
-	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+	DisableUpdateCheck  bool                     `json:"disable_update_check"`
+	DisableUpdates      bool                     `json:"disable_updates"`
+	DisablePlugins      bool                     `json:"disable_plugins"`
+	DisableFeatureFlags bool                     `json:"disable_feature_flags"`
+	NoBrowser           bool                     `json:"no_browser" hcl:"no_browser"`
+	Platforms           map[string]*Platform     `json:"platforms,omitempty"`
+	Credentials         map[string]*Credential   `json:"credentials,omitempty"`
+	Contexts            map[string]*Context      `json:"contexts,omitempty"`
+	ContextStates       map[string]*ContextState `json:"context_states,omitempty"`
+	CurrentContext      string                   `json:"current_context"`
+	AnonymousId         string                   `json:"anonymous_id,omitempty"`
 
 	// The following configurations are not persisted between runs
 
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenAccount     *orgv1.Account
+	overwrittenAccount     *ccloudv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
 }
 
-func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
+func (c *Config) SetOverwrittenAccount(acct *ccloudv1.Account) {
 	if c.overwrittenAccount == nil {
 		c.overwrittenAccount = acct
 	}
@@ -265,9 +266,9 @@ func (c *Config) restoreOverwrittenContext(tempContext string) {
 
 // Switch the initial config account back into the struct so that it is saved and not the flag value
 // Return the overwriting flag account value so that it can be restored after writing the file
-func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
+func (c *Config) resolveOverwrittenAccount() *ccloudv1.Account {
 	ctx := c.Context()
-	var tempAccount *orgv1.Account
+	var tempAccount *ccloudv1.Account
 	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
 		tempAccount = ctx.GetEnvironment()
 		ctx.State.Auth.Account = c.overwrittenAccount
@@ -276,7 +277,7 @@ func (c *Config) resolveOverwrittenAccount() *orgv1.Account {
 }
 
 // Restore the flag account back into the struct so that it is used for any execution after Save()
-func (c *Config) restoreOverwrittenAccount(tempAccount *orgv1.Account) {
+func (c *Config) restoreOverwrittenAccount(tempAccount *ccloudv1.Account) {
 	ctx := c.Context()
 	if tempAccount != nil {
 		ctx.State.Auth.Account = tempAccount

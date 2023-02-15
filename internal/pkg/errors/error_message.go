@@ -66,13 +66,12 @@ const (
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetAllowOrDenyErrorMsg    = "`--allow` or `--deny` must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only `--allow` or `--deny` may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
-	BadPrincipalErrorMsg          = `ensure principal begins with "User:"`
 	PrincipalNotFoundErrorMsg     = `user or service account "%s" not found`
 
 	// iam rbac role commands
@@ -84,13 +83,13 @@ const (
 	PrincipalFormatSuggestions      = "Principal must be specified in this format: \"<Principal Type>:<Principal Name>\".\nFor example, \"User:u-xxxxxx\" or \"User:sa-xxxxxx\"."
 	ResourceFormatErrorMsg          = "incorrect resource format specified"
 	ResourceFormatSuggestions       = "Resource must be specified in this format: `<Resource Type>:<Resource Name>`."
-	LookUpRoleErrorMsg              = `failed to lookup role "%s"`
+	LookUpRoleErrorMsg              = `failed to look up role "%s"`
 	LookUpRoleSuggestions           = "To check for valid roles, use `confluent iam rbac role list`."
 	InvalidResourceTypeErrorMsg     = `invalid resource type "%s"`
 	InvalidResourceTypeSuggestions  = "The available resource types are: %s."
-	SpecifyKafkaIDErrorMsg          = "must also specify a --kafka-cluster-id to uniquely identify the scope"
-	SpecifyCloudClusterErrorMsg     = "must specify cloud-cluster flag to indicate role binding scope"
-	SpecifyEnvironmentErrorMsg      = "must specify environment flag to indicate role binding scope"
+	SpecifyKafkaIDErrorMsg          = "must specify `--kafka-cluster` to uniquely identify the scope"
+	SpecifyCloudClusterErrorMsg     = "must specify `--cloud-cluster` to indicate role binding scope"
+	SpecifyEnvironmentErrorMsg      = "must specify `--environment` to indicate role binding scope"
 	BothClusterNameAndScopeErrorMsg = "cannot specify both cluster name and cluster scope"
 	SpecifyClusterErrorMsg          = "must specify either cluster ID to indicate role binding scope or the cluster name"
 	MoreThanOneNonKafkaErrorMsg     = "cannot specify more than one non-Kafka cluster ID for a scope"
@@ -98,7 +97,9 @@ const (
 	HTTPStatusCodeErrorMsg          = "no error but received HTTP status code %d"
 	HTTPStatusCodeSuggestions       = "Please file a support ticket with details."
 	UnauthorizedErrorMsg            = "user is unauthorized to perform this action"
-	UnauthorizedSuggestions         = "Check the user's privileges by running `ccloud iam rolebinding list`.\nGive the user the appropriate permissions using `ccloud iam rolebinding create`."
+	UnauthorizedSuggestions         = "Check the user's privileges by running `confluent iam rbac role-binding list`.\nGive the user the appropriate permissions using `confluent iam rbac role-binding create`."
+	RoleBindingNotFoundErrorMsg     = "failed to look up matching role binding"
+	RoleBindingNotFoundSuggestions  = "To list role bindings, use `confluent iam rbac role-binding list`."
 
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
@@ -121,7 +122,7 @@ const (
 		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
 		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
 	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
-	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--sr-apikey` and --sr-apisecret`."
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and --schema-registry-api-secret`."
 
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
@@ -130,7 +131,6 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
@@ -139,7 +139,7 @@ const (
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = `"%s" is not an available cloud provider`
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
-	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your api key does not have the ACLs required to describe it`
+	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your API key does not have the ACLs required to describe it`
 	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
@@ -159,8 +159,9 @@ const (
 		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	UnknownTopicErrorMsg      = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	UnknownTopicErrorMsg              = `unknown topic "%s"`
+	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"
@@ -197,8 +198,8 @@ const (
 	ProtoDocumentInvalidErrorMsg      = "the protobuf document is invalid"
 
 	// ksql commands
-	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB app, "%s", because it was created with user-level access to the Kafka cluster`
-	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB app "%s" due to "%s"`
+	KsqlDBNoServiceAccountErrorMsg = `ACLs do not need to be configured for the ksqlDB cluster, "%s", because it was created with user-level access to the Kafka cluster`
+	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
 	NoServicesRunningErrorMsg = "no services running"
@@ -222,7 +223,7 @@ const (
 	SchemaOrSubjectErrorMsg                  = "must specify either schema ID or subject/version"
 	SchemaIntegerErrorMsg                    = `invalid schema ID "%s"`
 	SchemaIntegerSuggestions                 = "Schema ID must be an integer."
-	SchemaNotFoundErrorMsg                   = "schema registry subject or version not found"
+	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
 	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
@@ -252,7 +253,7 @@ const (
 	NoReaderForCustomCertErrorMsg    = "no reader specified for reading custom certificates"
 	ReadCertErrorMsg                 = "failed to read certificate"
 	CaCertNotSpecifiedErrorMsg       = "no CA certificate specified"
-	SRCaCertSuggestions              = "Please specify `--ca-location` to enable schema registry client."
+	SRCaCertSuggestions              = "Please specify `--ca-location` to enable Schema Registry client."
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
 	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
@@ -384,10 +385,7 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// Flag Errors
-	FlagRequiredErrorMsg              = "must use at least one of the following flags: %s"
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-	InvalidFlagValueErrorMsg          = "invalid value \"%s\" for flag `--%s`"
-	InvalidFlagValueSuggestions       = "The possible values for flag `%s` are: %s."
 
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
@@ -398,10 +396,10 @@ const (
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
 		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
-		"To list KSQL clusters, use `confluent ksql app list`."
+		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
-	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql app list`."
+	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
 	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
@@ -434,14 +432,14 @@ const (
 	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg      = "not logged in"
 	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
-		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and schema registry."
+		"An oauthbearer token is required to authenticate OAUTHBEARER mechanism and Schema Registry."
 	OnPremConfigGuideSuggestions = "See configuration and produce/consume command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html ."
 	NotLoggedInSuggestions       = "You must be logged in to run this command.\n" +
 		AvoidTimeoutSuggestions
 	SRNotAuthenticatedErrorMsg     = "not logged in, or no Schema Registry endpoint specified"
 	SREndpointNotSpecifiedErrorMsg = "no Schema Registry endpoint specified"
-	SRClientNotValidatedErrorMsg   = "failed to validate schema registry client with token"
-	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--sr-endpoint) or be logged in using `confluent login` to run this command.\n" +
+	SRClientNotValidatedErrorMsg   = "failed to validate Schema Registry client with token"
+	SRNotAuthenticatedSuggestions  = "You must specify the endpoint for a Schema Registry cluster (--schema-registry-endpoint) or be logged in using `confluent login` to run this command.\n" +
 		AvoidTimeoutSuggestions
 	CorruptedTokenErrorMsg    = "corrupted auth token"
 	CorruptedTokenSuggestions = "Please log in again.\n" +
@@ -460,15 +458,14 @@ const (
 		"To do so, you must have either already created or stored an API key for the resource.\n" +
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadDeletionConfirmationErrorMsg = "failed to read your deletion confirmation"
-	FailedToReadOptOutConfirmationErrorMsg   = "failed to read your opt out confirmation"
+	FailedToReadInputErrorMsg = "failed to read input"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`
 	ClusterFlagWithApiLoginErrorMsg     = `"cluster" flag should not be passed for API key context, cluster is inferred`
 
 	// Partition command errors
-	SpecifyParitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
+	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
 	// Broker commands
 	MustSpecifyAllOrBrokerIDErrorMsg = "must pass broker ID argument or specify `--all` flag"
@@ -484,7 +481,8 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg       = `failed to delete %s "%s": %v`
-	UpdateResourceErrorMsg       = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg = "must specify both `--%s` and `--%s`"
+	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
+	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
+	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
+	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )

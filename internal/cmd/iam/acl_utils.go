@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/hashicorp/go-multierror"
@@ -12,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
@@ -23,14 +24,9 @@ type ACLConfiguration struct {
 
 func aclFlags() *pflag.FlagSet {
 	flgSet := pflag.NewFlagSet("acl-config", pflag.ExitOnError)
-	flgSet.String("kafka-cluster-id", "", "Kafka cluster ID for scope of ACL commands.")
+	flgSet.String("kafka-cluster", "", "Kafka cluster ID for scope of ACL commands.")
 	flgSet.String("principal", "", "Principal for this operation with User: or Group: prefix.")
-	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).",
-		convertToFlags(mds.ACLOPERATION_ALL, mds.ACLOPERATION_READ, mds.ACLOPERATION_WRITE,
-			mds.ACLOPERATION_CREATE, mds.ACLOPERATION_DELETE, mds.ACLOPERATION_ALTER,
-			mds.ACLOPERATION_DESCRIBE, mds.ACLOPERATION_CLUSTER_ACTION,
-			mds.ACLOPERATION_DESCRIBE_CONFIGS, mds.ACLOPERATION_ALTER_CONFIGS,
-			mds.ACLOPERATION_IDEMPOTENT_WRITE)))
+	flgSet.String("operation", "", fmt.Sprintf("Set ACL Operation to: (%s).", acl.ConvertToLower(acl.AclOperations)))
 	flgSet.String("host", "*", "Set host for access. Only IP addresses are supported.")
 	flgSet.Bool("allow", false, "ACL permission to allow access.")
 	flgSet.Bool("deny", false, "ACL permission to restrict access to resource.")
@@ -76,7 +72,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 			// The only valid name for a cluster is kafka-cluster
 			// https://github.com/confluentinc/cc-kafka/blob/88823c6016ea2e306340938994d9e122abf3c6c0/core/src/main/scala/kafka/security/auth/Resource.scala#L24
 			setResourcePattern(conf, "cluster", "kafka-cluster")
-		case "kafka-cluster-id":
+		case "kafka-cluster":
 			conf.Scope.Clusters.KafkaCluster = v
 		case "topic":
 			fallthrough
@@ -146,19 +142,18 @@ func setResourcePattern(conf *ACLConfiguration, n string, v string) {
 	conf.AclBinding.Pattern.Name = v
 }
 
-func convertToFlags(operations ...interface{}) string {
-	var ops []string
+func convertToFlags(operations ...any) string {
+	ops := make([]string, len(operations))
 
-	for _, v := range operations {
+	for i, v := range operations {
 		if v == mds.ACLRESOURCETYPE_GROUP {
 			v = "consumer-group"
 		}
 		if v == mds.ACLRESOURCETYPE_CLUSTER {
 			v = "cluster-scope"
 		}
-		s := fmt.Sprintf("%v", v)
-		s = strings.ReplaceAll(s, "_", "-")
-		ops = append(ops, strings.ToLower(s))
+		s := strings.ToLower(strings.ReplaceAll(fmt.Sprint(v), "_", "-"))
+		ops[i] = fmt.Sprintf("`--%s`", s)
 	}
 
 	sort.Strings(ops)

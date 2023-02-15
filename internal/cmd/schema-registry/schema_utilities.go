@@ -42,32 +42,26 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		return nil, err
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return nil, err
-	}
-	if outputFormat == output.Human.String() {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
-	} else {
-		registerSchemaResponse := &registerSchemaResponse{Id: response.Id}
-		err = output.StructuredOutput(outputFormat, registerSchemaResponse)
+	if output.GetFormat(cmd).IsSerialized() {
+		err = output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id})
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
 	}
 
-	metaInfo := GetMetaInfoFromSchemaId(response.Id)
-	return metaInfo, nil
+	return GetMetaInfoFromSchemaId(response.Id), nil
 }
 
 func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
-	refPath, err := cmd.Flags().GetString("refs")
+	references, err := cmd.Flags().GetString("references")
 	if err != nil {
 		return nil, err
 	}
-	if refPath != "" {
-		refBlob, err := os.ReadFile(refPath)
+	if references != "" {
+		refBlob, err := os.ReadFile(references)
 		if err != nil {
 			return nil, err
 		}
@@ -102,21 +96,34 @@ func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srCli
 	return referencePathMap, nil
 }
 
-func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
+func GetMetaInfoFromSchemaId(id int32) []byte {
+	metaInfo := []byte{0x0}
+	schemaIdBuffer := make([]byte, 4)
+	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
+	return append(metaInfo, schemaIdBuffer...)
+}
+
+func CreateTempDir() (string, error) {
+	dir := filepath.Join(os.TempDir(), "ccloud-schema")
+	err := os.MkdirAll(dir, 0755)
+	return dir, err
+}
+
+func RequestSchemaWithId(schemaId int32, subject string, srClient *srsdk.APIClient, ctx context.Context) (srsdk.SchemaString, error) {
+	opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
+	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, opts)
+	return schemaString, err
+}
+
+func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
-	tempStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.txt", subject, schemaId))
-	tempRefStorePath := filepath.Join(schemaPath, fmt.Sprintf("%s-%d.ref", subject, schemaId))
+	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
+	tempRefStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.ref", subject, schemaId))
 	var references []srsdk.SchemaReference
+
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{
-			Subject: optional.NewString(subject),
-		}
-		schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, &getSchemaOpts)
-		if err != nil {
-			return "", nil, err
-		}
-		err = os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
+		err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
 		if err != nil {
 			return "", nil, err
 		}
@@ -140,25 +147,9 @@ func RequestSchemaWithId(schemaId int32, schemaPath string, subject string, srCl
 			return "", nil, err
 		}
 	}
-
-	// Store the references in temporary files
-	referencePathMap, err := StoreSchemaReferences(schemaPath, references, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(dir, references, srClient, ctx)
 	if err != nil {
 		return "", nil, err
 	}
-
 	return tempStorePath, referencePathMap, nil
-}
-
-func GetMetaInfoFromSchemaId(id int32) []byte {
-	metaInfo := []byte{0x0}
-	schemaIdBuffer := make([]byte, 4)
-	binary.BigEndian.PutUint32(schemaIdBuffer, uint32(id))
-	return append(metaInfo, schemaIdBuffer...)
-}
-
-func CreateTempDir() (string, error) {
-	dir := filepath.Join(os.TempDir(), "ccloud-schema")
-	err := os.MkdirAll(dir, 0755)
-	return dir, err
 }

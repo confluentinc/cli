@@ -6,19 +6,19 @@ import (
 	"os"
 	"testing"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -31,19 +31,19 @@ type SchemaTestSuite struct {
 	suite.Suite
 	conf             *v1.Config
 	dynamicContext   *dynamicconfig.DynamicConfig
-	kafkaCluster     *schedv1.KafkaCluster
-	srCluster        *schedv1.SchemaRegistryCluster
+	kafkaCluster     *ccstructs.KafkaCluster
+	srCluster        *ccloudv1.SchemaRegistryCluster
 	srClientMock     *srsdk.APIClient
-	srMothershipMock *mock.SchemaRegistry
+	srMothershipMock *ccloudv1mock.SchemaRegistry
 }
 
 func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
@@ -51,13 +51,12 @@ func (suite *SchemaTestSuite) SetupSuite() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 }
@@ -82,14 +81,14 @@ func (suite *SchemaTestSuite) SetupTest() {
 			},
 		},
 	}
-	suite.dynamicContext = cliMock.AuthenticatedDynamicConfigMock()
+	suite.dynamicContext = climock.AuthenticatedDynamicConfigMock()
 }
 
 func (suite *SchemaTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
+	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
 }
 
@@ -122,8 +121,10 @@ func (suite *SchemaTestSuite) TestRegisterSchema() {
 
 func (suite *SchemaTestSuite) TestRequestSchemaById() {
 	tmpdir := suite.T().TempDir()
-	tempStorePath, _, err := RequestSchemaWithId(123, tmpdir, "subject", suite.srClientMock, suite.newCMD().Context())
 	req := require.New(suite.T())
+	schemaString, err := RequestSchemaWithId(123, "subject", suite.srClientMock, suite.newCMD().Context())
+	req.Nil(err)
+	tempStorePath, _, err := SetSchemaPathRef(schemaString, tmpdir, "subject", 123, suite.srClientMock, suite.newCMD().Context())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.GetSchemaCalled())
@@ -148,7 +149,7 @@ func (suite *SchemaTestSuite) TestDescribeById() {
 
 func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", "all", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -160,7 +161,7 @@ func (suite *SchemaTestSuite) TestDeleteAllSchemas() {
 
 func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -173,7 +174,7 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)

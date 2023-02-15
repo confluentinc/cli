@@ -1,3 +1,3 @@
-   Principal   | Email |     Role      | Environment | Cloud Cluster | Cluster Type | Logical Cluster | Resource Type |      Name      | Pattern Type  
----------------+-------+---------------+-------------+---------------+--------------+-----------------+---------------+----------------+---------------
-  User:u-66fff |       | ResourceOwner | a-595       | lkc-1111aaa   | ksqlDB       | lksqlc-2222bbb  | Cluster       | lksqlc-2222bbb | LITERAL       
+   Principal   | Email |     Role      | Environment | Cloud Cluster | Cluster Type |      Logical Cluster      | Resource Type | Name | Pattern Type  
+---------------+-------+---------------+-------------+---------------+--------------+---------------------------+---------------+------+---------------
+  User:u-66fff |       | ResourceOwner | a-595       | lkc-1111aaa   | ksqlDB       | ksql-cluster-name-2222bbb |               |      |               

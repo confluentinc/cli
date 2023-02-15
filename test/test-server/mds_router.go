@@ -25,15 +25,9 @@ type MdsRouter struct {
 }
 
 func NewMdsRouter(t *testing.T) *MdsRouter {
-	router := NewEmptyMdsRouter()
+	router := &MdsRouter{mux.NewRouter()}
 	router.buildMdsHandler(t)
 	return router
-}
-
-func NewEmptyMdsRouter() *MdsRouter {
-	return &MdsRouter{
-		mux.NewRouter(),
-	}
 }
 
 func (m MdsRouter) buildMdsHandler(t *testing.T) {

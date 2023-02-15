@@ -27,12 +27,12 @@ func (c *command) newAddCommand() *cobra.Command {
 }
 
 func (c *command) add(cmd *cobra.Command, _ []string) error {
-	configSource, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	newConfigs, err := c.getConfigs(configSource, "config properties", "", false)
+	newConfigs, err := c.getConfigs(config, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,5 @@ func (c *command) add(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
 	return c.plugin.AddEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 }

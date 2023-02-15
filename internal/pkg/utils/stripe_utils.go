@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/stripe/stripe-go"
-	"github.com/stripe/stripe-go/customer"
 	"github.com/stripe/stripe-go/token"
 )
 
@@ -23,30 +22,6 @@ func setStripeKey(isTest bool) {
 	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
 		Level: 0,
 	}
-}
-
-// hasDefaultPaymentMethod reuses the logic of HasDefaultPaymentMethod defined in https://github.com/confluentinc/cc-billing-worker/blob/master/stripe/customer.go
-func hasDefaultPaymentMethod(stripeCustomerId string, isTest bool) (bool, error) {
-	setStripeKey(isTest)
-
-	stripeCustomer, err := customer.Get(stripeCustomerId, nil)
-	if err != nil {
-		return false, err
-	}
-
-	if stripeCustomer == nil {
-		return false, errors.New("customer is nil")
-	}
-
-	if stripeCustomer.DefaultSource != nil {
-		return true, nil
-	}
-
-	if stripeCustomer.InvoiceSettings != nil && stripeCustomer.InvoiceSettings.DefaultPaymentMethod != nil {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func NewStripeToken(cardNumber, expiration, cvc, name string, isTest bool) (*stripe.Token, error) {

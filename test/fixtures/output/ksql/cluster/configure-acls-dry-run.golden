@@ -1,0 +1,34 @@
+  Principal  | Permission |    Operation     |  Resource Type   |        Resource Name         | Pattern Type  
+-------------+------------+------------------+------------------+------------------------------+---------------
+  User:12345 | ALLOW      | ALTER            | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | ALTER            | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | ALTER            | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | ALTER_CONFIGS    | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | ALTER_CONFIGS    | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | ALTER_CONFIGS    | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | CREATE           | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | CREATE           | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | CREATE           | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | DELETE           | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DELETE           | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DELETE           | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE         | CLUSTER          | kafka-cluster                | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE         | GROUP            | *                            | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE         | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE         | TOPIC            | *                            | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE         | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE         | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE         | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | CLUSTER          | kafka-cluster                | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | GROUP            | *                            | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | *                            | LITERAL       
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | DESCRIBE_CONFIGS | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | READ             | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | READ             | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | READ             | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | WRITE            | GROUP            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | WRITE            | TOPIC            | _confluent-ksql-pksqlc-zxcvb | PREFIXED      
+  User:12345 | ALLOW      | WRITE            | TOPIC            | pksqlc-zxcvb                 | PREFIXED      
+  User:12345 | ALLOW      | WRITE            | TRANSACTIONAL_ID | pksqlc-zxcvb                 | LITERAL       

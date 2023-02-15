@@ -245,9 +245,9 @@ We'll also need to add the new golden file, `test/fixtures/output/config/1.golde
 After running the command manually to ensure the output is correct, the content for the golden file can either be:
 
 1. Copied directly from the terminal.
-2. Updated automatically with `make test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe -update"` (slow).
+2. Updated automatically with `make int-test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe -update"` (slow).
 
-Now, run `make test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
+Now, run `make int-test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
 
 ### Opening a PR
 

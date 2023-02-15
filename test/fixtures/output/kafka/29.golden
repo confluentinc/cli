@@ -1,14 +1,14 @@
-api_endpoint: http://kafka-api-url
-availability: single-zone
-egress: 100
-endpoint: SASL_SSL://kafka-endpoint
+is_current: true
 id: lkc-update
-ingress: 100
 name: lkc-update-name
+type: BASIC
+ingress: 100
+egress: 100
+storage: 5 TB
 provider: aws
 region: us-west-2
-rest_endpoint: http://127.0.0.1:1025
+availability: single-zone
 status: UP
-storage: 5 TB
+endpoint: SASL_SSL://kafka-endpoint
+rest_endpoint: http://127.0.0.1:1025
 topic_count: 2
-type: BASIC

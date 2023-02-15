@@ -1,16 +1,16 @@
-- cluster: lkc-1234
-  description: quota description
-  egress: "5000"
-  environment: env-1234
-  id: cq-1234
-  ingress: "2000"
+- id: cq-1234
   name: quotaName
-  principals: sa-1234,sa-5678
-- cluster: lkc-1234
   description: quota description
-  egress: "5000"
-  environment: env-1234
-  id: cq-4321
   ingress: "2000"
+  egress: "5000"
+  principals: sa-1234,sa-5678
+  cluster: lkc-1234
+  environment: env-1234
+- id: cq-4321
   name: quota2
+  description: quota description
+  ingress: "2000"
+  egress: "5000"
   principals: sa-4321
+  cluster: lkc-1234
+  environment: env-1234

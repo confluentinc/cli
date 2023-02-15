@@ -1,7 +1,5 @@
 project_name: confluent
 
-dist: dist
-
 builds:
   - binary: confluent
     main: cmd/confluent/main.go
@@ -9,7 +7,7 @@ builds:
       - -mod=readonly
       - -tags={{.Env.TAGS}}
     ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.host={{.Env.HOSTNAME}}
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:

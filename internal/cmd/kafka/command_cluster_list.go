@@ -1,19 +1,11 @@
 package kafka
 
 import (
-	"fmt"
-
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-var (
-	listFields           = []string{"Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"}
-	listHumanLabels      = []string{"Id", "Name", "Type", "Provider", "Region", "Availability", "Status"}
-	listStructuredLabels = []string{"id", "name", "type", "provider", "region", "availability", "status"}
 )
 
 func (c *clusterCommand) newListCommand() *cobra.Command {
@@ -33,13 +25,13 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	listAllClusters, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
 
 	var clusters []cmkv2.CmkV2Cluster
-	if listAllClusters {
+	if all {
 		environments, err := c.V2Client.ListOrgEnvironments()
 		if err != nil {
 			return err
@@ -59,22 +51,10 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listFields, listHumanLabels, listStructuredLabels)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, cluster := range clusters {
-		// Add '*' only in the case where we are printing out tables
-		if outputWriter.GetOutputFormat() == output.Human {
-			if *cluster.Id == c.Context.KafkaClusterContext.GetActiveKafkaClusterId() {
-				*cluster.Id = fmt.Sprintf("* %s", *cluster.Id)
-			} else {
-				*cluster.Id = fmt.Sprintf("  %s", *cluster.Id)
-			}
-		}
-		outputWriter.AddElement(convertClusterToDescribeStruct(&cluster))
+		list.Add(convertClusterToDescribeStruct(&cluster, c.Context.Context))
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"IsCurrent", "Id", "Name", "Type", "ServiceProvider", "Region", "Availability", "Status"})
+	return list.Print()
 }

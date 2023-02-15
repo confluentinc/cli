@@ -14,27 +14,20 @@ const (
 	netrcInput            = "test_files/netrc-input"
 	outputFileMds         = "test_files/output-mds"
 	outputFileCcloudLogin = "test_files/output-ccloud-login"
-	outputFileCcloudSSO   = "test_files/output-ccloud-sso"
 	inputFileMds          = "test_files/input-mds"
 	inputFileCcloudLogin  = "test_files/input-ccloud-login"
-	inputFileCcloudSSO    = "test_files/input-ccloud-sso"
 	mdsContext            = "login-mds-user-http://test"
 	ccloudLoginContext    = "login-ccloud-login-user@confluent.io-http://test"
-	ccloudSSOContext      = "login-ccloud-sso-user@confluent.io-http://test"
 	netrcUser             = "jamal@jj"
 	netrcPassword         = "12345"
 	specialCharsContext   = `login-chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io-http://the-special-one`
 
 	loginURL          = "http://test"
-	ssoFirstURL       = "http://ssofirst"
 	ccloudLogin       = "ccloud-login-user@confluent.io"
 	ccloudDiffLogin   = "ccloud-login-user-diff-url@confluent.io"
 	ccloudDiffURL     = "http://differenturl"
-	ccloudSSOLogin    = "ccloud-sso-user@confluent.io"
 	mdsLogin          = "mds-user"
-	ssoFirstLogin     = "sso-first@confluent.io"
 	mockPassword      = "mock-password"
-	refreshToken      = "refresh-token"
 	specialCharsLogin = `chris+chris@[]{}.*&$(chris)?\<>|chris/@confluent.io`
 )
 
@@ -43,38 +36,22 @@ var (
 		Name:     "confluent-cli:ccloud-username-password:" + ccloudLoginContext,
 		User:     ccloudLogin,
 		Password: mockPassword,
-		IsSSO:    false,
 	}
 
 	ccloudDiffURLMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:login-" + ccloudDiffLogin + "-" + ccloudDiffURL,
 		User:     ccloudDiffLogin,
 		Password: mockPassword,
-		IsSSO:    false,
-	}
-	ccloudSSOMachine = &Machine{
-		Name:     "confluent-cli:ccloud-sso-refresh-token:" + ccloudSSOContext,
-		User:     ccloudSSOLogin,
-		Password: refreshToken,
-		IsSSO:    true,
 	}
 	confluentMachine = &Machine{
 		Name:     "confluent-cli:mds-username-password:" + mdsContext,
 		User:     mdsLogin,
 		Password: mockPassword,
-		IsSSO:    false,
-	}
-	ssoFirstMachine = &Machine{
-		Name:     "confluent-cli:ccloud-sso-refresh-token:login-sso-first@confluent.io-" + ssoFirstURL,
-		User:     ssoFirstLogin,
-		Password: refreshToken,
-		IsSSO:    true,
 	}
 	specialCharsMachine = &Machine{
 		Name:     "confluent-cli:ccloud-username-password:" + specialCharsContext,
 		User:     specialCharsLogin,
 		Password: mockPassword,
-		IsSSO:    false,
 	}
 )
 
@@ -101,16 +78,6 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 			params: NetrcMachineParams{
 				IsCloud: true,
 				Name:    ccloudLoginContext,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "ccloud sso context",
-			want: ccloudSSOMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				Name:    ccloudSSOContext,
-				IsSSO:   true,
 			},
 			file: netrcFilePath,
 		},
@@ -171,7 +138,6 @@ func TestGetMatchingNetrcMachineWithContextName(t *testing.T) {
 
 func isIdenticalMachine(expect, actual *Machine) bool {
 	return expect.Name == actual.Name &&
-		expect.IsSSO == actual.IsSSO &&
 		expect.User == actual.User &&
 		expect.Password == actual.Password
 }
@@ -207,25 +173,6 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 			params: NetrcMachineParams{
 				IsCloud: false,
 				URL:     loginURL,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "ccloud sso with url",
-			want: ccloudSSOMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				IsSSO:   true,
-				URL:     loginURL,
-			},
-			file: netrcFilePath,
-		},
-		{
-			name: "no sso specified but sso comes first",
-			want: ssoFirstMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-				URL:     ssoFirstURL,
 			},
 			file: netrcFilePath,
 		},
@@ -280,7 +227,6 @@ func TestNetrcWriter(t *testing.T) {
 		inputFile   string
 		wantFile    string
 		isCloud     bool
-		isSSO       bool
 		contextName string
 		wantErr     bool
 	}{
@@ -299,14 +245,6 @@ func TestNetrcWriter(t *testing.T) {
 			isCloud:     true,
 		},
 		{
-			name:        "add ccloud sso context credential",
-			inputFile:   netrcInput,
-			wantFile:    outputFileCcloudSSO,
-			contextName: ccloudSSOContext,
-			isCloud:     true,
-			isSSO:       true,
-		},
-		{
 			name:        "update mds context credential",
 			inputFile:   inputFileMds,
 			wantFile:    outputFileMds,
@@ -320,14 +258,6 @@ func TestNetrcWriter(t *testing.T) {
 			contextName: ccloudLoginContext,
 			isCloud:     true,
 		},
-		{
-			name:        "update ccloud sso context credential",
-			inputFile:   inputFileCcloudSSO,
-			wantFile:    outputFileCcloudSSO,
-			contextName: ccloudSSOContext,
-			isCloud:     true,
-			isSSO:       true,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -339,7 +269,7 @@ func TestNetrcWriter(t *testing.T) {
 			require.NoError(t, err)
 
 			netrcHandler := NewNetrcHandler(tempFile.Name())
-			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.isSSO, tt.contextName, netrcUser, netrcPassword)
+			err = netrcHandler.WriteNetrcCredentials(tt.isCloud, tt.contextName, netrcUser, netrcPassword)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
 			}
@@ -377,45 +307,25 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    ccloudCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, true, ccloudCtxName),
-				getNetrcMachineName(true, false, ccloudCtxName),
+				getNetrcMachineName(true, ccloudCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(true, true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(false, false, ccloudCtxName),
-			},
-		},
-		{
-			name: "ccloud-sso-regex",
-			params: NetrcMachineParams{
-				IsCloud: true,
-				IsSSO:   true,
-				URL:     url,
-			},
-			matchNames: []string{
-				getNetrcMachineName(true, true, "login-csreesangkom@confleunt.io-"+url),
-			},
-			nonMatchNames: []string{
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+url),
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(false, false, "login-csreesangkom@confleunt.io-"+url),
+				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				getNetrcMachineName(false, ccloudCtxName),
 			},
 		},
 		{
 			name: "ccloud-all-regex",
 			params: NetrcMachineParams{
 				IsCloud: true,
-				IsSSO:   false,
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, true, "login-csreesangkom@confleunt.io-"+url),
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+url),
+				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(false, false, "login-csreesangkom@confleunt.io-"+url),
+				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -425,26 +335,25 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    confluentCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, false, confluentCtxName),
+				getNetrcMachineName(false, confluentCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(true, false, confluentCtxName),
+				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				getNetrcMachineName(true, confluentCtxName),
 			},
 		},
 		{
 			name: "confluent-regex",
 			params: NetrcMachineParams{
 				IsCloud: false,
-				IsSSO:   false,
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, false, "login-csreesangkom@confleunt.io-"+url),
+				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName(true, false, "login-csreesangkom@confleunt.io-"+url),
+				getNetrcMachineName(false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				getNetrcMachineName(true, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -454,12 +363,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(true, false, specialCharsCtxName),
-				getNetrcMachineName(true, true, specialCharsCtxName),
+				getNetrcMachineName(true, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(true, false, ccloudCtxName),
-				getNetrcMachineName(true, true, ccloudCtxName),
+				getNetrcMachineName(true, ccloudCtxName),
 			},
 		},
 		{
@@ -469,10 +376,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 				Name:    specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName(false, false, specialCharsCtxName),
+				getNetrcMachineName(false, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName(false, false, ccloudCtxName),
+				getNetrcMachineName(false, ccloudCtxName),
 			},
 		},
 	}
@@ -484,7 +391,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 					t.Errorf("Got: regex.Match=false Expect: true\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s \n"+
-						"Params: IsCloud=%t IsSSO=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.IsSSO, tt.params.URL)
+						"Params: IsCloud=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.URL)
 				}
 			}
 			for _, machineName := range tt.nonMatchNames {
@@ -492,7 +399,7 @@ func TestGetMachineNameRegex(t *testing.T) {
 					t.Errorf("Got: regex.Match=true Expect: false\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s\n"+
-						"Params: IsCloud=%t IsSSO=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.IsSSO, tt.params.URL)
+						"Params: IsCloud=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.URL)
 				}
 			}
 		})

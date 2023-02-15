@@ -23,9 +23,12 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			pipeline := &streamdesignerv1.SdV1Pipeline{
 				Id: streamdesignerv1.PtrString("pipe-12345"),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: streamdesignerv1.PtrString("testPipeline"),
-					Description: streamdesignerv1.PtrString("description"),
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
+					Secrets:             &map[string]string{"name1": "secret1", "name2": "secret2"},
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{
@@ -48,10 +51,37 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&body)
 			require.NoError(t, err)
 
-			id := "pipe-12345"
-			name := "testPipeline"
+			pipeline := &streamdesignerv1.SdV1Pipeline{
+				Id: streamdesignerv1.PtrString("pipe-12345"),
+				Spec: &streamdesignerv1.SdV1PipelineSpec{
+					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          &streamdesignerv1.SdV1SourceCodeObject{Sql: "CREATE STREAM `upstream` (id INTEGER, name STRING) WITH (kafka_topic = 'topic', partitions=1, value_format='JSON');\n\nCREATE STREAM `downstream` AS SELECT * FROM upstream;"},
+					Secrets:             &map[string]string{"name1": "*****************", "name2": "*****************", "name3": "*****************"},
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
+				},
+
+				Status: &streamdesignerv1.SdV1PipelineStatus{
+					State: streamdesignerv1.PtrString("draft"),
+				},
+
+				Metadata: &streamdesignerv1.ObjectMeta{
+					CreatedAt: &CreatedAt,
+					UpdatedAt: &UpdatedAt,
+				},
+			}
+
 			if body.Spec.DisplayName != nil {
-				name = *body.Spec.DisplayName
+				pipeline.Spec.DisplayName = body.Spec.DisplayName
+			}
+
+			if body.Spec.Description != nil {
+				pipeline.Spec.Description = body.Spec.Description
+			}
+
+			if body.Spec.ActivationPrivilege != nil {
+				pipeline.Spec.ActivationPrivilege = body.Spec.ActivationPrivilege
 			}
 
 			state := "draft"
@@ -62,23 +92,18 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					state = "deactivating"
 				}
 			}
+			pipeline.Status.State = &state
 
-			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id: &id,
-				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: &name,
-					Description: streamdesignerv1.PtrString("description"),
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
-				},
-
-				Status: &streamdesignerv1.SdV1PipelineStatus{
-					State: &state,
-				},
-
-				Metadata: &streamdesignerv1.ObjectMeta{
-					CreatedAt: &CreatedAt,
-					UpdatedAt: &UpdatedAt,
-				},
+			if body.Spec.Secrets != nil {
+				for name := range *body.Spec.Secrets {
+					value := (*body.Spec.Secrets)[name]
+					if len(value) > 0 {
+						(*pipeline.Spec.Secrets)[name] = "*****************"
+					} else {
+						// for PATCH operation, empty secret value will be removed
+						delete(*pipeline.Spec.Secrets, name)
+					}
+				}
 			}
 
 			w.Header().Set("Content-Type", "application/json")
@@ -145,9 +170,12 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 			pipeline := &streamdesignerv1.SdV1Pipeline{
 				Id: streamdesignerv1.PtrString("pipe-12345"),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
-					DisplayName: body.Spec.DisplayName,
-					Description: streamdesignerv1.PtrString("description"),
-					KsqlCluster: &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					DisplayName:         body.Spec.DisplayName,
+					Description:         streamdesignerv1.PtrString("description"),
+					SourceCode:          body.Spec.SourceCode,
+					Secrets:             body.Spec.Secrets,
+					KsqlCluster:         &streamdesignerv1.ObjectReference{Id: "lksqlc-12345"},
+					ActivationPrivilege: streamdesignerv1.PtrBool(false),
 				},
 
 				Status: &streamdesignerv1.SdV1PipelineStatus{

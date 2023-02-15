@@ -132,12 +132,12 @@ func (c *Command) runServiceStartCommand(command *cobra.Command, _ []string) err
 		}
 	}
 
-	configFile, err := command.Flags().GetString("config")
+	config, err := command.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	return c.startService(command, service, configFile)
+	return c.startService(command, service, config)
 }
 
 func NewServiceStatusCommand(service string, prerunner cmd.PreRunner) *cobra.Command {

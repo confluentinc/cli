@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
+var ccloudV2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/cdx/v1/consumer-shared-resources":              handleConsumerSharedResources,
 	"/cdx/v1/consumer-shared-resources/{id}:network": handlePrivateLinkNetworkConfig,
 	"/cdx/v1/consumer-shares":                        handleStreamSharingConsumerShares,
@@ -33,24 +33,28 @@ var ccloudv2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/iam/v2/identity-providers/{provider_id}/identity-pools":      handleIamIdentityPools,
 	"/iam/v2/identity-providers/{provider_id}/identity-pools/{id}": handleIamIdentityPool,
 	"/iam/v2/invitations":                                          handleIamInvitations,
+	"/iam/v2/role-bindings":                                        handleIamRoleBindings,
+	"/iam/v2/role-bindings/{id}":                                   handleIamRoleBinding,
 	"/iam/v2/service-accounts":                                     handleIamServiceAccounts,
 	"/iam/v2/service-accounts/{id}":                                handleIamServiceAccount,
 	"/iam/v2/users":                                                handleIamUsers,
 	"/iam/v2/users/{id}":                                           handleIamUser,
-	"/kafka-quotas/v1/client-quotas/{id}":                          handleKafkaClientQuota,
 	"/kafka-quotas/v1/client-quotas":                               handleKafkaClientQuotas,
+	"/kafka-quotas/v1/client-quotas/{id}":                          handleKafkaClientQuota,
+	"/ksqldbcm/v2/clusters":                                        handleKsqlClusters,
+	"/ksqldbcm/v2/clusters/{id}":                                   handleKsqlCluster,
 	"/org/v2/environments":                                         handleOrgEnvironments,
 	"/org/v2/environments/{id}":                                    handleOrgEnvironment,
+	"/sd/v1/pipelines":                                             handlePipelines,
+	"/sd/v1/pipelines/{id}":                                        handlePipeline,
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
 	"/service-quota/v2/applied-quotas":                             handleAppliedQuotas,
-	"/sd/v1/pipelines/{id}":                                        handlePipeline,
-	"/sd/v1/pipelines":                                             handlePipelines,
 	"/v2/metrics/cloud/query":                                      handleMetricsQuery,
 }
 
 func NewV2Router(t *testing.T) *mux.Router {
 	router := mux.NewRouter()
-	for route, handler := range ccloudv2Handlers {
+	for route, handler := range ccloudV2Handlers {
 		router.HandleFunc(route, handler(t))
 	}
 	return router

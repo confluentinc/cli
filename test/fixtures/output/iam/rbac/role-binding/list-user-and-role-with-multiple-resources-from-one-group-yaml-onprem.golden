@@ -1,10 +1,10 @@
-- name: drink
-  pattern_type: LITERAL
-  principal: Group:hobbits
-  resource_type: Topic
+- principal: Group:hobbits
   role: DeveloperRead
-- name: food
-  pattern_type: LITERAL
-  principal: Group:hobbits
   resource_type: Topic
+  name: drink
+  pattern_type: LITERAL
+- principal: Group:hobbits
   role: DeveloperRead
+  resource_type: Topic
+  name: food
+  pattern_type: LITERAL

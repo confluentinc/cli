@@ -1,4 +1,4 @@
-  Cluster ID | Broker ID | Topic Name  | Partition ID | Leader | Observer | Isr Eligible | In Isr | Caught Up | Log Start Offset | Log End Offset | Last Caught Up Time Ms  |   Last Fetch Time Ms    | Link Name  
--------------+-----------+-------------+--------------+--------+----------+--------------+--------+-----------+------------------+----------------+-------------------------+-------------------------+------------
-  cluster-1  |         1 | topic-exist |            2 | true   | false    | true         | true   | true      |                0 |              1 | 2021-12-20 22:56:36 UTC | 2021-12-20 22:56:36 UTC |            
-  cluster-1  |         2 | topic-exist |            2 | false  | false    | true         | true   | true      |                0 |              0 | 2021-12-20 22:56:36 UTC | 2021-12-20 22:56:36 UTC | link       
+   Cluster  | Topic Name  | Broker ID | Partition ID | Leader | Observer | ISR Eligible | In ISR | Caught Up | Log Start Offset | Log End Offset | Last Caught Up Time (ms) |  Last Fetch Time (ms)   | Link Name  
+------------+-------------+-----------+--------------+--------+----------+--------------+--------+-----------+------------------+----------------+--------------------------+-------------------------+------------
+  cluster-1 | topic-exist |         1 |            2 | true   | false    | true         | true   | true      |                0 |              1 | 2021-12-20 22:56:36 UTC  | 2021-12-20 22:56:36 UTC |            
+  cluster-1 | topic-exist |         2 |            2 | false  | false    | true         | true   | true      |                0 |              0 | 2021-12-20 22:56:36 UTC  | 2021-12-20 22:56:36 UTC | link       

@@ -24,16 +24,6 @@ func TestParseNetrcMachineName(t *testing.T) {
 			},
 		},
 		{
-			name:        "ccloud sso login",
-			machineName: "confluent-cli:ccloud-sso-refresh-token:login-lbennett+3@confluent.io-https://devel.cpdev.cloud",
-			want: &MachineContextInfo{
-				CredentialType: ccloudSSORefreshTokenString,
-				Username:       "lbennett+3@confluent.io",
-				URL:            "https://devel.cpdev.cloud",
-				CaCertPath:     "",
-			},
-		},
-		{
 			name:        "confluent username password login no ca-cert-path",
 			machineName: "confluent-cli:mds-username-password:login-alice-http://localhost:8090",
 			want: &MachineContextInfo{

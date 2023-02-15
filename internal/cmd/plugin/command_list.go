@@ -6,20 +6,16 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	poutput "github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
+	"github.com/confluentinc/cli/internal/pkg/set"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	listFields       = []string{"pluginName", "filePath"}
-	humanLabels      = []string{"Plugin Name", "File Path"}
-	structuredLabels = []string{"plugin_name", "file_path"}
-)
-
-type row struct {
-	pluginName string
-	filePath   string
+type out struct {
+	PluginName string `human:"Plugin Name" serialized:"plugin_name"`
+	FilePath   string `human:"File Path" serialized:"file_path"`
 }
 
 func (c *command) newListCommand() *cobra.Command {
@@ -37,53 +33,50 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	pluginMap := plugin.SearchPath(c.cfg)
-	output, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return err
+	if c.cfg.DisablePlugins {
+		return errors.NewErrorWithSuggestions("plugins are disabled", `Set "disable_plugins": false in ~/.confluent/config.json.`)
 	}
-	if len(pluginMap) == 0 && output == "human" {
+
+	pluginMap := plugin.SearchPath(c.cfg)
+
+	if len(pluginMap) == 0 && output.GetFormat(cmd) == output.Human {
 		utils.ErrPrintln(cmd, "Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
-	var pluginList, overshadowedPlugins, nameConflictPlugins []row
-	for name, pathList := range pluginMap {
-		pluginInfo := row{
-			pluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
-			filePath:   pathList[0],
+
+	list := output.NewList(cmd)
+	var overshadowedPlugins, nameConflictPlugins []*out
+	for name, paths := range pluginMap {
+		pluginInfo := &out{
+			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
+			FilePath:   paths[0],
 		}
-		args := strings.Split(pluginInfo.pluginName, " ")
-		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.pluginName {
+		args := strings.Split(pluginInfo.PluginName, " ")
+		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.PluginName {
 			nameConflictPlugins = append(nameConflictPlugins, pluginInfo)
 		} else {
-			pluginList = append(pluginList, pluginInfo)
+			list.Add(pluginInfo)
 		}
-		for i := 1; i < len(pathList); i++ {
-			overshadowedPlugins = append(overshadowedPlugins, row{pluginName: pluginInfo.pluginName, filePath: pathList[i]})
+
+		visitedPaths := set.New(paths[0])
+		for _, path := range paths[1:] {
+			if visitedPaths.Contains(path) {
+				continue
+			}
+			overshadowedPlugins = append(overshadowedPlugins, &out{PluginName: pluginInfo.PluginName, FilePath: path})
+			visitedPaths.Add(path)
 		}
 	}
 
-	if err := printTable(cmd, pluginList); err != nil {
+	if err := list.Print(); err != nil {
 		return err
 	}
+
 	for _, pluginInfo := range nameConflictPlugins {
-		utils.ErrPrintf(cmd, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
+		utils.ErrPrintf(cmd, "[WARN] The built-in command `%s` will be run instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
 	for _, pluginInfo := range overshadowedPlugins {
-		utils.ErrPrintf(cmd, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.pluginName, pluginInfo.filePath)
+		utils.ErrPrintf(cmd, "[WARN] The command `%s` will run the plugin listed above instead of the duplicate plugin at %s.\n", pluginInfo.PluginName, pluginInfo.FilePath)
 	}
+
 	return nil
-}
-
-func printTable(cmd *cobra.Command, rows []row) error {
-	w, err := poutput.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, cmd.OutOrStdout())
-	if err != nil {
-		return err
-	}
-
-	for _, row := range rows {
-		w.AddElement(&row)
-	}
-
-	w.StableSort()
-	return w.Out()
 }

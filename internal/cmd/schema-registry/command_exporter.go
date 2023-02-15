@@ -1,9 +1,10 @@
 package schemaregistry
 
 import (
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -11,23 +12,6 @@ import (
 type exporterCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	srClient *srsdk.APIClient
-}
-
-type exporterInfoDisplay struct {
-	Name          string
-	Subjects      string
-	SubjectFormat string
-	ContextType   string
-	Context       string
-	Config        string
-}
-
-type exporterStatusDisplay struct {
-	Name      string
-	State     string
-	Offset    string
-	Timestamp string
-	Trace     string
 }
 
 func newExporterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {

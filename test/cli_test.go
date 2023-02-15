@@ -124,6 +124,9 @@ func (s *CLITestSuite) SetupSuite() {
 		} else {
 			makeArgs = "build-integ-nonrace"
 		}
+		if runtime.GOOS == "windows" {
+			makeArgs += "-windows"
+		}
 		makeCmd := exec.Command("make", makeArgs)
 		output, err := makeCmd.CombinedOutput()
 		if err != nil {
@@ -330,7 +333,10 @@ func binaryPath(t *testing.T, binaryName string) string {
 	return path.Join(dir, binaryName)
 }
 
-func unsetPaymentAndPromoEnvs() {
-	os.Unsetenv("HAS_PAYMENT_METHOD")
-	os.Unsetenv("HAS_PROMO_CODE_CLAIMS")
+func unsetFreeTrialEnv() {
+	os.Unsetenv("IS_ON_FREE_TRIAL")
+}
+
+func unsetMarketplaceOrgEnv() {
+	os.Unsetenv("IS_ORG_ON_MARKETPLACE")
 }

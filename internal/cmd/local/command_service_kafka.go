@@ -45,7 +45,7 @@ var (
 		"value-deserializer":    "",
 		"whitelist":             "Regular expression specifying whitelist of topics to include for consumption.",
 	}
-	kafkaConsumeDefaultValues = map[string]interface{}{
+	kafkaConsumeDefaultValues = map[string]any{
 		"bootstrap-server":      defaultString,
 		"consumer-property":     defaultString,
 		"consumer.config":       defaultString,
@@ -85,7 +85,7 @@ var (
 		"sync":                       "If set, message send requests to brokers arrive synchronously.",
 		"timeout":                    "If set and the producer is running in asynchronous mode, this gives the maximum amount of time a message will queue awaiting sufficient batch size. The value is given in ms. (default 1000)",
 	}
-	kafkaProduceDefaultValues = map[string]interface{}{
+	kafkaProduceDefaultValues = map[string]any{
 		"batch-size":                 defaultInt,
 		"bootstrap-server":           defaultString,
 		"compression-codec":          defaultString,
@@ -200,7 +200,7 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
 	cloud, err := command.Flags().GetBool("cloud")
 	if err != nil {
 		return err
@@ -219,7 +219,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		}
 	}
 
-	format, err := command.Flags().GetString("value-format")
+	valueFormat, err := command.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
@@ -227,21 +227,21 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	// "consume" -> "consumer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
-	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
+	scriptFile, err := c.ch.GetKafkaScript(valueFormat, modeNoun)
 	if err != nil {
 		return err
 	}
 
-	var cloudConfigFile string
+	var config string
 	var cloudServer string
 
 	if cloud {
-		cloudConfigFile, err = command.Flags().GetString("config")
+		config, err = command.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
 
-		data, err := os.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(config)
 		if err != nil {
 			return err
 		}
@@ -262,7 +262,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
 	if cloud {
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
-		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
+		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
 	} else {
 		if !utils.Contains(kafkaArgs, "--bootstrap-server") {
@@ -276,7 +276,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		utils.Println(command, "Exit with Ctrl+D")
+		utils.Println(command, "Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

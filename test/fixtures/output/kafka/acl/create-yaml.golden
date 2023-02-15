@@ -1,7 +1,7 @@
-- host: '*'
-  operation: ALL
-  pattern_type: LITERAL
+- principal: User:Alice
   permission: ALLOW
-  principal: User:Alice
-  resource_name: Test
+  operation: ALL
+  host: '*'
   resource_type: TOPIC
+  resource_name: Test
+  pattern_type: LITERAL

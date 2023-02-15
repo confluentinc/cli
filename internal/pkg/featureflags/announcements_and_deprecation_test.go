@@ -7,25 +7,52 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestGetAnnouncementsOrDeprecation_BadFormat(t *testing.T) {
+	require.Empty(t, GetAnnouncementsOrDeprecation(""))
+}
+
 func TestGetAnnouncementsOrDeprecation(t *testing.T) {
-	ldResp := []map[string]interface{}{
-		{"message": "DEPRECATED", "pattern": "ksql app"},
-		{"message": "DEPRECATED", "pattern": "kafka cluster list --all --context"},
+	resp := []any{
+		map[string]any{
+			"pattern": "command",
+			"message": "0",
+		},
+		map[string]any{
+			"pattern": "command --flag",
+			"message": "1",
+		},
+		map[string]any{
+			"pattern": "command-with-dashes",
+			"message": "2",
+		},
+		map[string]any{
+			"pattern": "--flag-only",
+			"message": "3",
+		},
+		map[string]any{
+			"pattern": "--multiple --flags",
+			"message": "4",
+		},
 	}
-	ld := make([]interface{}, len(ldResp))
-	for i := range ldResp {
-		ld[i] = ldResp[i]
+
+	expected := map[string]*Messages{
+		"command": {
+			CommandMessage: "0",
+			Flags:          []string{"flag"},
+			FlagMessages:   []string{"1"},
+		},
+		"command-with-dashes": {
+			CommandMessage: "2",
+			Flags:          []string{},
+			FlagMessages:   []string{},
+		},
+		"": {
+			Flags:        []string{"flag-only", "multiple", "flags"},
+			FlagMessages: []string{"3", "4", "4"},
+		},
 	}
-	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(ld)
-	expected := map[string]*FlagsAndMsg{}
-	expected["ksql app"] = &FlagsAndMsg{CmdMessage: "DEPRECATED"}
-	expected["kafka cluster list"] = &FlagsAndMsg{
-		Flags:        []string{"all", "context"},
-		FlagMessages: []string{"DEPRECATED", "DEPRECATED"},
-	}
-	for cmd, flagsAndMsg := range cmdToFlagsAndMsg {
-		require.Equal(t, expected[cmd], flagsAndMsg)
-	}
+
+	require.Equal(t, expected, GetAnnouncementsOrDeprecation(resp))
 }
 
 func TestDeprecateCommandTree(t *testing.T) {

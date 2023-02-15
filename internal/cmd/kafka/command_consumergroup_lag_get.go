@@ -42,12 +42,12 @@ func (c *lagCommand) newGetCommand() *cobra.Command {
 func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	topicName, err := cmd.Flags().GetString("topic")
+	topic, err := cmd.Flags().GetString("topic")
 	if err != nil {
 		return err
 	}
 
-	partitionId, err := cmd.Flags().GetInt32("partition")
+	partition, err := cmd.Flags().GetInt32("partition")
 	if err != nil {
 		return err
 	}
@@ -57,10 +57,12 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	lagGetResp, httpResp, err := kafkaREST.CloudClient.GetKafkaConsumerLag(lkc, consumerGroupId, topicName, partitionId)
+	lagGetResp, httpResp, err := kafkaREST.CloudClient.GetKafkaConsumerLag(lkc, consumerGroupId, topic, partition)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	return output.DescribeObject(cmd, convertLagToStruct(lagGetResp), lagFields, lagGetHumanRenames, lagGetStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(convertLagToStruct(lagGetResp))
+	return table.Print()
 }

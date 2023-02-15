@@ -24,15 +24,16 @@ func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
 func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error {
 	serviceAccountId := args[0]
 
-	sa, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
+	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
 	if err != nil {
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	saOut := &serviceAccount{
-		ResourceId:  *sa.Id,
-		Name:		 *sa.DisplayName,
-		Description: *sa.Description,
-	}
-	return output.DescribeObject(cmd, saOut, describeFields, describeHumanRenames, describeStructuredRenames)
+	table := output.NewTable(cmd)
+	table.Add(&serviceAccountOut{
+		ResourceId:  serviceAccount.GetId(),
+		Name:        serviceAccount.GetDisplayName(),
+		Description: serviceAccount.GetDescription(),
+	})
+	return table.Print()
 }

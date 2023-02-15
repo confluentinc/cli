@@ -8,12 +8,12 @@ import (
 	"strings"
 	"text/template"
 
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -59,7 +59,7 @@ Identity:
 
 type validateEncryptionKeyInput struct {
 	Cloud          string
-	MetadataClouds []*schedv1.CloudMetadata
+	MetadataClouds []*ccloudv1.CloudMetadata
 	AccountID      string
 }
 
@@ -76,7 +76,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
-				Code: `confluent kafka cluster create sales092020 --cloud "aws" --region "us-west-2" --type "dedicated" --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
+				Code: `confluent kafka cluster create sales092020 --cloud aws --region us-west-2 --type dedicated --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
 			},
 			examples.Example{
 				Text: "For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.",
@@ -86,9 +86,9 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("availability", singleZone, fmt.Sprintf("Availability of the cluster. Allowed Values: %s, %s.", singleZone, multiZone))
-	cmd.Flags().String("type", skuBasic, fmt.Sprintf("Type of the Kafka cluster. Allowed values: %s, %s, %s.", skuBasic, skuStandard, skuDedicated))
-	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type 'dedicated'.")
+	pcmd.AddAvailabilityFlag(cmd)
+	pcmd.AddTypeFlag(cmd)
+	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
 	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Amazon Web Services, the Amazon Resource Name of the key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -142,12 +142,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	encryptionKeyID, err := cmd.Flags().GetString("encryption-key")
+	encryptionKey, err := cmd.Flags().GetString("encryption-key")
 	if err != nil {
 		return err
 	}
 
-	if encryptionKeyID != "" {
+	if encryptionKey != "" {
 		input := validateEncryptionKeyInput{
 			Cloud:          cloud,
 			MetadataClouds: clouds,
@@ -167,7 +167,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(clusterType, 1, encryptionKeyID),
+			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
 		},
 	}
 
@@ -177,7 +177,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 		if clusterType != skuDedicated {
-			return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
+			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
 		}
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
@@ -202,12 +202,12 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*schedv1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.CloudMetadata) error {
 	for _, cloud := range clouds {
-		if cloudId == cloud.Id {
-			for _, region := range cloud.Regions {
-				if regionId == region.Id {
-					if region.IsSchedulable {
+		if cloudId == cloud.GetId() {
+			for _, region := range cloud.GetRegions() {
+				if regionId == region.GetId() {
+					if region.GetIsSchedulable() {
 						return nil
 					} else {
 						break
@@ -300,7 +300,7 @@ func (c *clusterCommand) validateAWSEncryptionKey(cmd *cobra.Command, prompt for
 	}
 }
 
-func getEnvironmentsForCloud(cloudId string, clouds []*schedv1.CloudMetadata) []string {
+func getEnvironmentsForCloud(cloudId string, clouds []*ccloudv1.CloudMetadata) []string {
 	var environments []string
 	for _, cloud := range clouds {
 		if cloudId == cloud.Id {
@@ -321,13 +321,13 @@ func stringToAvailability(s string) (string, error) {
 		fmt.Sprintf(errors.InvalidAvailableFlagSuggestions, singleZone, multiZone))
 }
 
-func stringToSku(skuType string) (productv1.Sku, error) {
-	sku := productv1.Sku(productv1.Sku_value[strings.ToUpper(skuType)])
+func stringToSku(skuType string) (ccstructs.Sku, error) {
+	sku := ccstructs.Sku(ccstructs.Sku_value[strings.ToUpper(skuType)])
 	switch sku {
-	case productv1.Sku_BASIC, productv1.Sku_STANDARD, productv1.Sku_DEDICATED:
+	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_DEDICATED:
 		break
 	default:
-		return productv1.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
+		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
 			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
 	}
 	return sku, nil
@@ -358,11 +358,11 @@ func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
 	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
 }
 
-func getKafkaProvisionEstimate(sku productv1.Sku) string {
+func getKafkaProvisionEstimate(sku ccstructs.Sku) string {
 	fmtEstimate := "It may take up to %s for the Kafka cluster to be ready."
 
 	switch sku {
-	case productv1.Sku_DEDICATED:
+	case ccstructs.Sku_DEDICATED:
 		return fmt.Sprintf(fmtEstimate, "1 hour") + " The organization admin will receive an email once the dedicated cluster is provisioned."
 	default:
 		return fmt.Sprintf(fmtEstimate, "5 minutes")

@@ -1,6 +1,6 @@
 Error: 3 errors occurred:
 	* invalid operation value: FAKE
-	* exactly one of cluster-scope, consumer-group, topic, transactional-id must be set
-	* --allow or --deny must be set when adding or deleting an ACL
+	* exactly one of `--cluster-scope`, `--consumer-group`, `--topic`, `--transactional-id` must be set
+	* `--allow` or `--deny` must be set when adding or deleting an ACL
 
 

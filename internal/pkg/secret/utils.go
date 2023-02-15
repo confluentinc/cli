@@ -393,6 +393,6 @@ func WriteFile(path string, data []byte) error {
 func GenerateConfigKey(path string, key string) string {
 	fileName := filepath.Base(path)
 	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
-	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
+	// the server-side version will be running on a *nix variant and will thus have forward slashes to look up the correct path
 	return fileName + "/" + key
 }

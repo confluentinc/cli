@@ -2,8 +2,10 @@ package test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -25,47 +27,48 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list -o json", fixture: "api-key/7.golden"},
 		{args: "api-key list -o yaml", fixture: "api-key/8.golden"},
 
-		// create api key for kafka cluster
+		// create API key for kafka cluster
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/9.golden"},
 		{args: "api-key create --description my-cool-app --resource lkc-cool1", fixture: "api-key/10.golden"}, // MYKEY4
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/11.golden"},
 
-		// create api key for other kafka cluster
+		// create API key for other kafka cluster
 		{args: "api-key create --description my-other-app --resource lkc-other1", fixture: "api-key/12.golden"}, // MYKEY5
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/11.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/13.golden"},
 
-		// create api key for ksql cluster
+		// create API key for KSQL cluster
 		{args: "api-key create --description my-ksql-app --resource lksqlc-ksql1", fixture: "api-key/14.golden"}, // MYKEY6
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/11.golden"},
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "api-key/15.golden"},
 
-		// create api key for schema registry cluster
+		// create API key for schema registry cluster
 		{args: "api-key create --resource lsrc-1", fixture: "api-key/16.golden"}, // MYKEY7
 		{args: "api-key list --resource lsrc-1", fixture: "api-key/17.golden"},
 
-		// create cloud api key
+		// create cloud API key
 		{args: "api-key create --resource cloud", fixture: "api-key/18.golden"}, // MYKEY8
 		{args: "api-key list --resource cloud", fixture: "api-key/19.golden"},
 
-		// use an api key for kafka cluster
+		// use an API key for kafka cluster
 		{args: "api-key use MYKEY4 --resource lkc-cool1", fixture: "api-key/20.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 
-		// use an api key for other kafka cluster
+		// use an API key for other kafka cluster
 		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "api-key/22.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/23.golden"},
 
-		// delete api key that is in use
-		{args: "api-key delete MYKEY5", fixture: "api-key/24.golden"},
+		// delete API key that is in use
+		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
+		{args: "api-key delete MYKEY5", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "api-key/24-prompt.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
-		// store an api-key for kafka cluster
+		// store an API key for kafka cluster
 		{args: "api-key store UIAPIKEY100 @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 
-		// store an api-key for other kafka cluster
+		// store an API key for other kafka cluster
 		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/27.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/28.golden"},
@@ -73,7 +76,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		// store exists already error
 		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/override-error.golden", wantErrCode: 1},
 
-		// store an api-key for ksql cluster (not yet supported)
+		// store an API key for ksql cluster (not yet supported)
 		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		//{args: "api-key list --resource lksqlc-ksql1", fixture: "api-key/10.golden"},
 		// TODO: change test back once api-key store and use command allows for non kafka clusters
@@ -95,7 +98,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --resource lkc-cool1 --service-account sa-12345", fixture: "api-key/36.golden"},
 		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "api-key/37.golden"}, // MYKEY10
 		{args: "api-key list --service-account sa-12345", fixture: "api-key/38.golden"},
-		{name: "error listing api keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "api-key/39.golden"},
+		{name: "error listing API keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "api-key/39.golden"},
 
 		// create api-key for audit log
 		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/40.golden"}, // MYKEY11
@@ -109,8 +112,8 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --description yaml-output --resource lkc-other1 -o yaml", fixture: "api-key/46.golden"},
 
 		// store: error handling
-		{name: "error if storing unknown api key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden"},
-		{name: "error if storing api key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
+		{name: "error if storing unknown API key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden"},
+		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
 				cfg := v1.New()
@@ -136,10 +139,10 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
 
 		// test multicluster keys
-		{name: "listing multicluster api keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
-		{name: "listing multicluster api keys with --resource field", args: "api-key list --resource lsrc-abc", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
-		{name: "listing multicluster api keys with --current-user field", args: "api-key list --current-user", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/58.golden"},
-		{name: "listing multicluster api keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/59.golden"},
+		{name: "listing multicluster API keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
+		{name: "listing multicluster API keys with --resource field", args: "api-key list --resource lsrc-abc", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/57.golden"},
+		{name: "listing multicluster API keys with --current-user field", args: "api-key list --current-user", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/58.golden"},
+		{name: "listing multicluster API keys with --service-account field", args: "api-key list --service-account sa-12345", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/59.golden"},
 	}
 
 	resetConfiguration(s.T(), false)

@@ -7,10 +7,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type listOut struct {
+	Exporter string `human:"Exporter" serialized:"exporter"`
+}
 
 func (c *exporterCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -39,29 +41,14 @@ func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func listExporters(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
-	type listDisplay struct {
-		Exporter string
-	}
-
 	exporters, _, err := srClient.DefaultApi.GetExporters(ctx)
 	if err != nil {
 		return err
 	}
 
-	if len(exporters) > 0 {
-		outputWriter, err := output.NewListOutputWriter(cmd, []string{"Exporter"}, []string{"Exporter"}, []string{"Exporter"})
-		if err != nil {
-			return err
-		}
-		for _, exporter := range exporters {
-			outputWriter.AddElement(&listDisplay{
-				Exporter: exporter,
-			})
-		}
-		return outputWriter.Out()
-	} else {
-		utils.Println(cmd, errors.NoExporterMsg)
+	list := output.NewList(cmd)
+	for _, exporter := range exporters {
+		list.Add(&listOut{Exporter: exporter})
 	}
-
-	return nil
+	return list.Print()
 }
