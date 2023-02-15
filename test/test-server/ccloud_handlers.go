@@ -101,9 +101,9 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
 			User: &ccloudv1.User{
 				Id:         23,
-				Email:      "cody@confluent.io",
-				FirstName:  "Cody",
-				ResourceId: "u-11aaa",
+				Email:      "mhe@confluent.io",
+				FirstName:  "Muwei",
+				ResourceId: "u-44ddd",
 			},
 			Accounts:     environments,
 			Organization: org,
