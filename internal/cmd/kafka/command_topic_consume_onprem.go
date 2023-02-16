@@ -30,15 +30,15 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic consume my-topic --url http://localhost:8090/kafka",
 			},
 			examples.Example{
-				Text: `Consume message from topic "my_topic" providing Kafka REST Proxy endpoint.`,
-				Code: "confluent kafka topic consume my_topic --url http://localhost:8082",
+				Text: `Consume message from topic "my-topic" providing Kafka REST Proxy endpoint.`,
+				Code: "confluent kafka topic consume my-topic --url http://localhost:8082",
 			},
 			examples.Example{
-				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
+				Text: `Consume message from topic "my-topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
+				Code: `confluent kafka topic consume my-topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
 			examples.Example{
-				Text: `Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
-				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
+				Text: `Consume message from topic "my-topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
+				Code: `confluent kafka topic consume my-topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
 		),
 	}
 
