@@ -14,6 +14,7 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List self-managed keys.",
+		Long:  "List self-managed keys registered in Confluent Cloud.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

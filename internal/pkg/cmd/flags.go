@@ -347,7 +347,7 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 }
 
 func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("byok", "", "Confluent Cloud Key ID (CCK-ID) of a registered BYOK encryption key.")
+	cmd.Flags().String("byok", "", `Confluent Cloud Key ID (CCK-ID) of a data-at-rest encryption key (use "confluent byok create" to register a key with Confluent Cloud).`)
 
 	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {

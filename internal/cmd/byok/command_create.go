@@ -48,7 +48,8 @@ const keyVaultReader = "21090545-7ca7-4776-b22c-e363652d74d2"
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <key>",
-		Short: "Create a self-managed key in Confluent Cloud.",
+		Short: "Register a self-managed encryption key",
+		Long:  "Bring your own key to Confluent Cloud for data at rest encryption.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
