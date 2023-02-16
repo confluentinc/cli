@@ -27,7 +27,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Produce message to topic "my-topic" providing embedded Kafka REST Proxy endpoint.`,
+				Text: `Produce messages to topic "my-topic" providing embedded Kafka REST Proxy endpoint.`,
 				Code: "confluent kafka topic produce my-topic --url http://localhost:8090/kafka",
 			},
 			examples.Example{
