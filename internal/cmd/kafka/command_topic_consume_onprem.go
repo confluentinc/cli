@@ -26,7 +26,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume message from topic "my-topic" providing embedded Kafka REST Proxy endpoint.`,
+				Text: `Consume messages from topic "my-topic", providing embedded Kafka REST Proxy endpoint.`,
 				Code: "confluent kafka topic consume my-topic --url http://localhost:8090/kafka",
 			},
 			examples.Example{
