@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -25,7 +24,9 @@ import (
 const (
 	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
-	tokenRegex           = `(^[\w-]*\.[\w-]*\.[\w-]*$)`
+
+	SaltLength  = 24
+	NonceLength = 12
 )
 
 var (
@@ -191,23 +192,9 @@ func (c *Config) Load() error {
 
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			reg, err := regexp.Compile(tokenRegex)
+			err = state.DecryptContextStateTokens(context.Name)
 			if err != nil {
 				return err
-			}
-			if match := reg.MatchString(state.AuthToken); !match && state.AuthToken != mockAuthToken && state.AuthToken != "" { // it's encrypted and not empty
-				decryptedAuthToken, err := secret.Decrypt(context.Name, state.AuthToken, state.Salt, state.Nonce)
-				if err != nil {
-					return err
-				}
-				state.AuthToken = decryptedAuthToken
-			}
-			if state.AuthRefreshToken != "" && !strings.HasPrefix(state.AuthRefreshToken, "v1.") { // encrypted
-				decryptedAuthRefreshToken, err := secret.Decrypt(context.Name, state.AuthRefreshToken, state.Salt, state.Nonce)
-				if err != nil {
-					return err
-				}
-				state.AuthRefreshToken = decryptedAuthRefreshToken
 			}
 		}
 
@@ -227,19 +214,9 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().State.AuthToken
 		tempAuthRefreshToken = c.Context().State.AuthRefreshToken
-		if tempAuthToken != "" {
-			encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
-			if err != nil {
-				return err
-			}
-			c.Context().State.AuthToken = encryptedAuthToken
-		}
-		if tempAuthRefreshToken != "" {
-			encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
-			if err != nil {
-				return err
-			}
-			c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -268,6 +245,36 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
 
+	return nil
+}
+
+func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
+	if c.Context().State.Salt == nil || c.Context().State.Nonce == nil {
+		salt, err := secret.GenerateRandomBytes(SaltLength)
+		if err != nil {
+			return err
+		}
+		nonce, err := secret.GenerateRandomBytes(NonceLength)
+		if err != nil {
+			return err
+		}
+		c.Context().State.Salt = salt
+		c.Context().State.Nonce = nonce
+	}
+	if tempAuthToken != "" {
+		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthToken = encryptedAuthToken
+	}
+	if tempAuthRefreshToken != "" {
+		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+	}
 	return nil
 }
 

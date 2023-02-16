@@ -33,9 +33,6 @@ const (
 	DeprecatedConfluentPlatformPassword   = "CONFLUENT_PASSWORD"
 	DeprecatedConfluentPlatformMDSURL     = "CONFLUENT_MDS_URL"
 	DeprecatedConfluentPlatformCACertPath = "CONFLUENT_CA_CERT_PATH"
-
-	saltLength  = 24
-	nonceLength = 12
 )
 
 // GetEnvWithFallback calls os.GetEnv() twice, once for the current var and once for the deprecated var.
@@ -119,11 +116,11 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(saltLength)
+		salt, err := secret.GenerateRandomBytes(v1.SaltLength)
 		if err != nil {
 			return err
 		}
-		nonce, err := secret.GenerateRandomBytes(nonceLength)
+		nonce, err := secret.GenerateRandomBytes(v1.NonceLength)
 		if err != nil {
 			return err
 		}
@@ -146,11 +143,11 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 	}
 
-	stateSalt, err := secret.GenerateRandomBytes(saltLength)
+	stateSalt, err := secret.GenerateRandomBytes(v1.SaltLength)
 	if err != nil {
 		return err
 	}
-	stateNonce, err := secret.GenerateRandomBytes(nonceLength)
+	stateNonce, err := secret.GenerateRandomBytes(v1.NonceLength)
 	if err != nil {
 		return err
 	}
