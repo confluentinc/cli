@@ -47,6 +47,47 @@ func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
 	return suggestions
 }
 
+func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("byok", "", "Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use `confluent byok create` to register a key).")
+
+	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteByokKeyIds(command.V2Client)
+	})
+}
+
+func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
+	keys, err := client.ListByokKeys("", "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(keys))
+	for i, key := range keys {
+		suggestions[i] = key.GetId()
+	}
+	return suggestions
+}
+
+func AddByokProviderFlag(cmd *cobra.Command) {
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"})))
+
+	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
+		return []string{"aws", "azure"}
+	})
+}
+
+func AddByokStateFlag(cmd *cobra.Command) {
+	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"})))
+
+	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
+		return []string{"in-use", "available"}
+	})
+}
+
 func AddProtocolFlag(cmd *cobra.Command) {
 	cmd.Flags().String("protocol", "SSL", "Security protocol used to communicate with brokers.")
 	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return kafka.Protocols })
@@ -229,7 +270,7 @@ func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
 }
 
 func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
+	cmd.Flags().String("region", "", "Cloud region ID for cluster (use `confluent kafka region list` to see all).")
 	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -343,46 +384,5 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 
 	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
 		return arr
-	})
-}
-
-func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).`)
-
-	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
-			return nil
-		}
-
-		return AutocompleteByokKeyIds(command.V2Client)
-	})
-}
-
-func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
-	keys, err := client.ListByokKeys("", "")
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(keys))
-	for i, key := range keys {
-		suggestions[i] = key.GetId()
-	}
-	return suggestions
-}
-
-func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"})))
-
-	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
-		return []string{"aws", "azure"}
-	})
-}
-
-func AddByokStateFlag(cmd *cobra.Command) {
-	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"})))
-
-	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
-		return []string{"in-use", "available"}
 	})
 }
