@@ -8,7 +8,7 @@ import (
 
 const (
 	authTokenRegex        = `^[\w-]*\.[\w-]*\.[\w-]*$`
-	authRefreshTokenRegex = `^(v1.*)$`
+	authRefreshTokenRegex = `^(v1\..*)$`
 )
 
 type ContextState struct {
@@ -19,9 +19,9 @@ type ContextState struct {
 	Nonce            []byte      `json:"nonce,omitempty"`
 }
 
-func (c *ContextState) DecryptContextStateTokens(ctxName string) error {
-	reg1 := regexp.MustCompile(authTokenRegex)
-	if match := reg1.MatchString(c.AuthToken); !match && c.AuthToken != "" {
+func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
+	reg := regexp.MustCompile(authTokenRegex)
+	if match := reg.MatchString(c.AuthToken); !match && c.AuthToken != "" {
 		decryptedAuthToken, err := secret.Decrypt(ctxName, c.AuthToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
@@ -29,8 +29,12 @@ func (c *ContextState) DecryptContextStateTokens(ctxName string) error {
 		c.AuthToken = decryptedAuthToken
 	}
 
-	reg2 := regexp.MustCompile(authRefreshTokenRegex)
-	if match := reg2.MatchString(c.AuthRefreshToken); !match && c.AuthRefreshToken != "" {
+	return nil
+}
+
+func (c *ContextState) DecryptContextStateAuthRefreshToken(ctxName string) error {
+	reg := regexp.MustCompile(authRefreshTokenRegex)
+	if match := reg.MatchString(c.AuthRefreshToken); !match && c.AuthRefreshToken != "" {
 		decryptedAuthRefreshToken, err := secret.Decrypt(ctxName, c.AuthRefreshToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err

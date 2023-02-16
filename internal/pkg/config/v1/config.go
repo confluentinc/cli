@@ -192,7 +192,11 @@ func (c *Config) Load() error {
 
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			err = state.DecryptContextStateTokens(context.Name)
+			err = state.DecryptContextStateAuthToken(context.Name)
+			if err != nil {
+				return err
+			}
+			err = state.DecryptContextStateAuthRefreshToken(context.Name)
 			if err != nil {
 				return err
 			}
@@ -253,7 +257,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		return nil
 	}
 
-	if c.Context().State.Salt == nil || c.Context().State.Nonce == nil {
+	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
 		salt, err := secret.GenerateRandomBytes(SaltLength)
 		if err != nil {
 			return err
@@ -262,18 +266,18 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		if err != nil {
 			return err
 		}
-		c.Context().State.Salt = salt
-		c.Context().State.Nonce = nonce
+		c.Context().GetState().Salt = salt
+		c.Context().GetState().Nonce = nonce
 	}
 	if tempAuthToken != "" {
-		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
+		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
-		c.Context().State.AuthToken = encryptedAuthToken
+		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 	if tempAuthRefreshToken != "" {
-		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
+		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
