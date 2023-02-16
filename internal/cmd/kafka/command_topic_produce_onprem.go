@@ -31,7 +31,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic produce my-topic --url http://localhost:8090/kafka",
 			},
 			examples.Example{
-				Text: `Produce message to topic "my-topic" providing Kafka REST Proxy endpoint.`,
+				Text: `Produce messages to topic "my-topic" providing Kafka REST Proxy endpoint.`,
 				Code: "confluent kafka topic produce my-topic --url http://localhost:8082",
 			},
 			examples.Example{
