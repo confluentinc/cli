@@ -30,7 +30,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic consume my-topic --url http://localhost:8090/kafka",
 			},
 			examples.Example{
-				Text: `Consume message from topic "my-topic" providing Kafka REST Proxy endpoint.`,
+				Text: `Consume messages from topic "my-topic" providing Kafka REST Proxy endpoint.`,
 				Code: "confluent kafka topic consume my-topic --url http://localhost:8082",
 			},
 			examples.Example{
