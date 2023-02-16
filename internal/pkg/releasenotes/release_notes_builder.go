@@ -6,12 +6,12 @@ import (
 	"time"
 )
 
+const titleFormat = "[%s] %s v%s Release Notes"
+
 const (
-	breakingChangesSectionTitle = "Breaking Changes"
-	newFeaturesSectionTitle     = "New Features"
-	bugFixesSectionTitle        = "Bug Fixes"
-	noChangeContentFormat       = "No changes relating to %s for this version."
-	bulletPointFormat           = "  - %s"
+	majorSectionTitle = "Breaking Changes"
+	minorSectionTitle = "New Features"
+	patchSectionTitle = "Bug Fixes"
 )
 
 type ReleaseNotesBuilderParams struct {
@@ -33,25 +33,25 @@ func NewReleaseNotesBuilder(version string, params *ReleaseNotesBuilderParams) *
 	}
 }
 
-func (b *ReleaseNotesBuilder) buildS3ReleaseNotes(content *ReleaseNotesContent) string {
+func (b *ReleaseNotesBuilder) buildS3ReleaseNotes(content *ReleaseNotes) string {
 	title := fmt.Sprintf(titleFormat, b.buildDate(), b.cliDisplayName, b.version)
 	underline := strings.Repeat("=", len(title))
 	title = "\n" + underline + "\n" + title + "\n" + underline + "\n"
 
-	breakingChangesSection := b.buildSection(breakingChangesSectionTitle, content.breakingChanges)
-	newFeaturesSection := b.buildSection(newFeaturesSectionTitle, content.newFeatures)
-	bugFixesSection := b.buildSection(bugFixesSectionTitle, content.bugFixes)
-	return title + "\n" + b.getReleaseNotesContent(breakingChangesSection, newFeaturesSection, bugFixesSection)
+	majorSection := b.buildSection(majorSectionTitle, content.major)
+	minorSection := b.buildSection(minorSectionTitle, content.minor)
+	patchSection := b.buildSection(patchSectionTitle, content.patch)
+	return title + "\n" + b.getReleaseNotesContent(majorSection, minorSection, patchSection)
 }
 
-func (b *ReleaseNotesBuilder) buildDocsReleaseNotes(content *ReleaseNotesContent) string {
+func (b *ReleaseNotesBuilder) buildDocsReleaseNotes(content *ReleaseNotes) string {
 	title := fmt.Sprintf(titleFormat, b.buildDate(), b.cliDisplayName, b.version)
 	underline := strings.Repeat("=", len(title))
 	title = "\n" + title + "\n" + underline
 
-	breakingChangesSection := b.buildSection(breakingChangesSectionTitle, content.breakingChanges)
-	newFeaturesSection := b.buildSection(newFeaturesSectionTitle, content.newFeatures)
-	bugFixesSection := b.buildSection(bugFixesSectionTitle, content.bugFixes)
+	breakingChangesSection := b.buildSection(majorSectionTitle, content.major)
+	newFeaturesSection := b.buildSection(minorSectionTitle, content.minor)
+	bugFixesSection := b.buildSection(patchSectionTitle, content.patch)
 	return title + "\n" + b.getReleaseNotesContent(breakingChangesSection, newFeaturesSection, bugFixesSection)
 }
 
@@ -71,7 +71,7 @@ func (b *ReleaseNotesBuilder) buildSection(sectionTitle string, sectionElements 
 func (b *ReleaseNotesBuilder) buildBulletPoints(elements []string) string {
 	var bulletPointList []string
 	for _, element := range elements {
-		bulletPointList = append(bulletPointList, fmt.Sprintf(bulletPointFormat, element))
+		bulletPointList = append(bulletPointList, fmt.Sprintf("  - %s", element))
 	}
 	return strings.Join(bulletPointList, "\n")
 }
@@ -85,7 +85,7 @@ func (b *ReleaseNotesBuilder) getReleaseNotesContent(sections ...string) string 
 	}
 
 	if len(fullSections) == 0 {
-		return fmt.Sprintf(noChangeContentFormat, b.cliDisplayName)
+		return fmt.Sprintf("No changes relating to %s for this version.", b.cliDisplayName)
 	}
 
 	return strings.Join(fullSections, "\n\n")
