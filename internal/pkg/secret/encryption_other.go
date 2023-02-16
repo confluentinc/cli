@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
 	"os"
 	"strconv"
 
@@ -42,7 +41,6 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 }
 
 func Encrypt(username, password string, salt, nonce []byte) (string, error) {
-	fmt.Println("in en", password[:3])
 	encryptionKey, err := DeriveEncryptionKey(salt)
 	if err != nil {
 		return "", err
@@ -64,7 +62,6 @@ func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 }
 
 func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
-	fmt.Println("in de", encrypted[:3])
 	encryptionKey, err := DeriveEncryptionKey(salt)
 	if err != nil {
 		return "", err

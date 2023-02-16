@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -24,7 +25,7 @@ import (
 const (
 	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
-	tokenRegex           = `/^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)/gm`
+	tokenRegex           = `(^[\w-]*\.[\w-]*\.[\w-]*$)`
 )
 
 var (
@@ -189,19 +190,25 @@ func (c *Config) Load() error {
 		context.KafkaClusterContext.Context = context
 
 		state := c.ContextStates[context.Name]
-		if state != nil && state.AuthToken != mockAuthToken && state.AuthToken != "" {
-			decryptedAuthToken, err := secret.Decrypt(context.Name, state.AuthToken, state.Salt, state.Nonce)
+		if state != nil {
+			reg, err := regexp.Compile(tokenRegex)
 			if err != nil {
 				return err
 			}
-			state.AuthToken = decryptedAuthToken
-		}
-		if state != nil && state.AuthRefreshToken != "" {
-			decryptedAuthRefreshToken, err := secret.Decrypt(context.Name, state.AuthRefreshToken, state.Salt, state.Nonce)
-			if err != nil {
-				return err
+			if match := reg.MatchString(state.AuthToken); !match && state.AuthToken != mockAuthToken && state.AuthToken != "" { // it's encrypted and not empty
+				decryptedAuthToken, err := secret.Decrypt(context.Name, state.AuthToken, state.Salt, state.Nonce)
+				if err != nil {
+					return err
+				}
+				state.AuthToken = decryptedAuthToken
 			}
-			state.AuthRefreshToken = decryptedAuthRefreshToken
+			if state.AuthRefreshToken != "" && !strings.HasPrefix(state.AuthRefreshToken, "v1.") { // encrypted
+				decryptedAuthRefreshToken, err := secret.Decrypt(context.Name, state.AuthRefreshToken, state.Salt, state.Nonce)
+				if err != nil {
+					return err
+				}
+				state.AuthRefreshToken = decryptedAuthRefreshToken
+			}
 		}
 
 		context.State = state
@@ -220,17 +227,20 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().State.AuthToken
 		tempAuthRefreshToken = c.Context().State.AuthRefreshToken
-		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
-		if err != nil {
-			return err
+		if tempAuthToken != "" {
+			encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
+			if err != nil {
+				return err
+			}
+			c.Context().State.AuthToken = encryptedAuthToken
 		}
-		c.Context().State.AuthToken = encryptedAuthToken
-
-		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
-		if err != nil {
-			return err
+		if tempAuthRefreshToken != "" {
+			encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
+			if err != nil {
+				return err
+			}
+			c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 		}
-		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 	}
 
 	if err := c.Validate(); err != nil {
