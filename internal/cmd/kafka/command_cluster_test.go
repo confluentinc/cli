@@ -40,13 +40,13 @@ var shouldPrompt bool
 
 var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", 1, "xyz"),
+		Config:       setCmkClusterConfig("dedicated", 1, cmkv2.PtrString("xyz")),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),
@@ -58,13 +58,13 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 
 var cmkExpandCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
 		Cloud:        cmkv2.PtrString("gcp"),
 		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", 3, ""),
+		Config:       setCmkClusterConfig("dedicated", 3, cmkv2.PtrString("")),
 		Availability: cmkv2.PtrString(lowAvailability),
 	},
 	Id: cmkv2.PtrString("lkc-xyz"),

@@ -1,0 +1,27 @@
+Created self-managed key "cck-004".
+Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:
+
+{
+	"Sid" : "Allow Confluent accounts to use the key",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [
+			"arn:aws:iam::123456789012:role/role1",
+			"arn:aws:iam::123456789012:role/role2"
+		]
+	},
+	"Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
+	"Resource" : "*"
+}, {
+	"Sid" : "Allow Confluent accounts to attach persistent resources",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [
+			"arn:aws:iam::123456789012:role/role1",
+			"arn:aws:iam::123456789012:role/role2"
+		]
+	},
+	"Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
+	"Resource" : "*"
+}
+

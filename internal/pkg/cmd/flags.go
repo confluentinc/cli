@@ -345,3 +345,44 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 		return arr
 	})
 }
+
+func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("byok", "", `Confluent Cloud Key ID (CCK-ID) of a data-at-rest encryption key (use "confluent byok create" to register a key with Confluent Cloud).`)
+
+	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteByokKeyIds(command.V2Client)
+	})
+}
+
+func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
+	keys, err := client.ListByokKeys("", "")
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(keys))
+	for i, key := range keys {
+		suggestions[i] = key.GetId()
+	}
+	return suggestions
+}
+
+func AddByokProviderFlag(cmd *cobra.Command) {
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"})))
+
+	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
+		return []string{"aws", "azure"}
+	})
+}
+
+func AddByokStateFlag(cmd *cobra.Command) {
+	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"})))
+
+	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
+		return []string{"in-use", "available"}
+	})
+}
