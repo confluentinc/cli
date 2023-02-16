@@ -47,7 +47,8 @@ var (
 			},
 			Organization: testserver.RegularOrg,
 		},
-		AuthToken: "abc123",
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
 	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *ContextState {
 		return &ContextState{
@@ -347,7 +348,7 @@ func TestConfig_Save(t *testing.T) {
 			name:     "save on-prem config with state to file",
 			isCloud:  false,
 			config:   testConfigsOnPrem.statefulConfig,
-			wantFile: "test_json/stateful_onprem.json",
+			wantFile: "test_json/stateful_onprem_save.json",
 		},
 		{
 			name:     "save stateless on-prem config to file",
@@ -359,7 +360,7 @@ func TestConfig_Save(t *testing.T) {
 			name:     "save cloud config with state to file",
 			isCloud:  true,
 			config:   testConfigsCloud.statefulConfig,
-			wantFile: "test_json/stateful_cloud.json",
+			wantFile: "test_json/stateful_cloud_save.json",
 		},
 		{
 			name:     "save stateless cloud config to file",
@@ -371,14 +372,14 @@ func TestConfig_Save(t *testing.T) {
 			name:           "save stateless cloud config with kafka overwrite to file",
 			isCloud:        true,
 			config:         testConfigsCloud.statefulConfig,
-			wantFile:       "test_json/stateful_cloud.json",
+			wantFile:       "test_json/stateful_cloud_save.json",
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 		{
 			name:           "save stateless cloud config with kafka and context overwrite to file",
 			isCloud:        true,
 			config:         testConfigsCloud.statefulConfig,
-			wantFile:       "test_json/stateful_cloud.json",
+			wantFile:       "test_json/stateful_cloud_save.json",
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 	}
