@@ -146,6 +146,18 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 	}
 
+	stateSalt, err := secret.GenerateRandomBytes(saltLength)
+	if err != nil {
+		return err
+	}
+	stateNonce, err := secret.GenerateRandomBytes(nonceLength)
+	if err != nil {
+		return err
+	}
+
+	state.Salt = stateSalt
+	state.Nonce = stateNonce
+
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
 		ctx.State = state
