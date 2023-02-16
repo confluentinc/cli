@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -15,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -22,6 +24,7 @@ import (
 const (
 	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
+	tokenRegex           = `/^([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_=]+)\.([a-zA-Z0-9_\-\+\/=]*)/gm`
 )
 
 var (
@@ -177,7 +180,6 @@ func (c *Config) Load() error {
 		if context.PlatformName == "" {
 			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.Filename)
 		}
-		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Config = c
@@ -185,6 +187,24 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
+
+		state := c.ContextStates[context.Name]
+		if state != nil && state.AuthToken != mockAuthToken && state.AuthToken != "" {
+			decryptedAuthToken, err := secret.Decrypt(context.Name, state.AuthToken, state.Salt, state.Nonce)
+			if err != nil {
+				return err
+			}
+			state.AuthToken = decryptedAuthToken
+		}
+		if state != nil && state.AuthRefreshToken != "" {
+			decryptedAuthRefreshToken, err := secret.Decrypt(context.Name, state.AuthRefreshToken, state.Salt, state.Nonce)
+			if err != nil {
+				return err
+			}
+			state.AuthRefreshToken = decryptedAuthRefreshToken
+		}
+
+		context.State = state
 	}
 	return c.Validate()
 }
@@ -194,6 +214,24 @@ func (c *Config) Save() error {
 	tempKafka := c.resolveOverwrittenKafka()
 	tempAccount := c.resolveOverwrittenAccount()
 	tempContext := c.resolveOverwrittenContext()
+	var tempAuthToken string
+	var tempAuthRefreshToken string
+
+	if c.Context() != nil {
+		tempAuthToken = c.Context().State.AuthToken
+		tempAuthRefreshToken = c.Context().State.AuthRefreshToken
+		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().State.Salt, c.Context().State.Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthToken = encryptedAuthToken
+
+		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().State.Salt, c.Context().State.Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+	}
 
 	if err := c.Validate(); err != nil {
 		return err
@@ -217,6 +255,8 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenAccount(tempAccount)
 	c.restoreOverwrittenKafka(tempKafka)
+	c.restoreOverwrittenAuthToken(tempAuthToken)
+	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
 
 	return nil
 }
@@ -242,6 +282,20 @@ func (c *Config) restoreOverwrittenKafka(tempKafka string) {
 	ctx := c.Context()
 	if tempKafka != "" {
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+	}
+}
+
+func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
+	ctx := c.Context()
+	if tempAuthToken != "" {
+		ctx.GetState().AuthToken = tempAuthToken
+	}
+}
+
+func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
+	ctx := c.Context()
+	if tempAuthRefreshToken != "" {
+		ctx.GetState().AuthRefreshToken = tempAuthRefreshToken
 	}
 }
 
@@ -314,7 +368,7 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
-		if *c.ContextStates[context.Name] != *context.State {
+		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
