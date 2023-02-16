@@ -21,7 +21,7 @@ type ContextState struct {
 
 func (c *ContextState) DecryptContextStateTokens(ctxName string) error {
 	reg1 := regexp.MustCompile(authTokenRegex)
-	if match := reg1.MatchString(c.AuthToken); !match && c.AuthToken != mockAuthToken && c.AuthToken != "" { // it's encrypted and not empty
+	if match := reg1.MatchString(c.AuthToken); !match && c.AuthToken != "" { // it's encrypted and not empty
 		decryptedAuthToken, err := secret.Decrypt(ctxName, c.AuthToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
