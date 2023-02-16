@@ -49,7 +49,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <key>",
 		Short: "Register a self-managed encryption key",
-		Long:  "Bring your own key to Confluent Cloud for data at rest encryption.",
+		Long:  "Bring your own key to Confluent Cloud for data at rest encryption (AWS and Azure only).",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,
 		Example: examples.BuildExampleString(

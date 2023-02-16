@@ -76,7 +76,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a customer-managed encryption key in AWS:",
-				Code: `confluent kafka cluster create sales092020 --cloud aws --region us-west-2 --type dedicated --cku 1 --encryption-key "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"`,
+				Code: `confluent kafka cluster create sales092020 --cloud aws --region us-west-2 --type dedicated --cku 1 --encryption-key "projects/PROJECT_NAME/locations/LOCATION/keyRings/KEY_RING/cryptoKeys/KEY_NAME"`,
 			},
 			examples.Example{
 				Text: "Create a new dedicated cluster that uses a previously registered encryption key in AWS:",
@@ -93,10 +93,10 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("encryption-key", "", "Encryption Key ID (e.g. for Google Cloud Platform, the Resource ID of the Cloud KMS key).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cmd.Flags().String("encryption-key", "", `Resource ID of the Cloud KMS key (GCP only).`)
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	}
 	pcmd.AddOutputFlag(cmd)
