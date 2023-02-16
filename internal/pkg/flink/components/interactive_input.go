@@ -44,8 +44,11 @@ func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func promptInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
-	completerWithHistory := autocomplete.CompleterWithHistory(history)
+func promptInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
+	completerWithHistory := autocomplete.CompleterWithHistory(history, getSmartCompletion)
+	
+	// We need to disable the live prefix, in case we just submited a statement
+	LivePrefixState.IsEnable = false
 
 	p := prompt.New(
 		executor,
@@ -75,6 +78,12 @@ func promptInput(value string, history []string, toggleOutputMode func(), exitAp
 			Key: prompt.ControlQ,
 			Fn: func(b *prompt.Buffer) {
 				exitApplication()
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlS,
+			Fn: func(b *prompt.Buffer) {
+				toggleSmartCompletion()
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -118,10 +127,10 @@ func printPrefix() {
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
-func InteractiveInput(value string, history []string, toggleOutputMode func(), exitApplication func()) (string, []string) {
+func InteractiveInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
 	printPrefix()
 	fmt.Print("flinkSQL")
-	var lastStatement, statements = promptInput(value, history, toggleOutputMode, exitApplication)
+	var lastStatement, statements = promptInput(value, history, getSmartCompletion, toggleSmartCompletion, toggleOutputMode, exitApplication)
 
 	return lastStatement, statements
 }

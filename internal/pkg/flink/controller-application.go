@@ -12,15 +12,18 @@ type ApplicationController struct {
 	printTable                func()
 	fetchDataAndPrintTable    func()
 	suspendOutputMode         func(f func())
+	toggleSmartCompletion     func()
 	toggleOutputMode          func()
 	exitApplication           func()
 	getView                   func() string
+	getSmartCompletion        func() bool
 	getOutputMode             func() string
 }
 
 func ApplicationControllerInit(store Store, tableController TableController, inputController InputController, shortcutsController ShortcutsController) ApplicationController {
 	var data string
 	tAppSuspended := true
+	var smartCompletion = true
 	var outputMode = "static" // interactive or static
 
 	// Actions
@@ -33,6 +36,10 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 		app.Suspend(f)
 		tAppSuspended = false
 
+	}
+
+	toggleSmartCompletion := func() {
+		smartCompletion = !smartCompletion
 	}
 
 	toggleOutputMode := func() {
@@ -79,6 +86,10 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 		return outputMode
 	}
 
+	getSmartCompletion := func() bool {
+		return smartCompletion
+	}
+
 	// Function to handle shortcuts and keybindings for the whole app
 	appInputCapture := func(tableController TableController) func(event *tcell.EventKey) *tcell.EventKey {
 		return func(event *tcell.EventKey) *tcell.EventKey {
@@ -108,5 +119,5 @@ func ApplicationControllerInit(store Store, tableController TableController, inp
 	// Set Input Capture for the whole application
 	app.SetInputCapture(appInputCapture(tableController))
 
-	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleOutputMode, exitApplication, getView, getOutputMode}
+	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleSmartCompletion, toggleOutputMode, exitApplication, getView, getSmartCompletion, getOutputMode}
 }
