@@ -35,7 +35,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic produce my-topic --url http://localhost:8082",
 			},
 			examples.Example{
-				Text: `Produce message to topic "my-topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
+				Text: `Produce messages to topic "my-topic" with SASL_SSL/PLAIN protocol (providing username and password).`,
 				Code: `confluent kafka topic produce my-topic --protocol SASL_SSL --sasl-mechanism PLAIN --bootstrap "localhost:19091" --username user --password secret --ca-location my-cert.crt`,
 			},
 			examples.Example{
