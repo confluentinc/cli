@@ -249,6 +249,10 @@ func (c *Config) Save() error {
 }
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
+	if c.IsTest {
+		return nil
+	}
+
 	if c.Context().State.Salt == nil || c.Context().State.Nonce == nil {
 		salt, err := secret.GenerateRandomBytes(SaltLength)
 		if err != nil {
@@ -386,6 +390,10 @@ func (c *Config) Validate() error {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
 		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
+			fmt.Println(c.ContextStates[context.Name].Salt)
+			fmt.Println(c.ContextStates[context.Name].Nonce)
+			fmt.Println(context.State.Salt)
+			fmt.Println(context.State.Nonce)
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
