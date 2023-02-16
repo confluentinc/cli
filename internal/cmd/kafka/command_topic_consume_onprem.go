@@ -34,7 +34,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic consume my-topic --url http://localhost:8082",
 			},
 			examples.Example{
-				Text: `Consume message from topic "my-topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
+				Text: `Consume messages from topic "my-topic" with SSL protocol and SSL verification enabled, providing certificate and private key.`,
 				Code: `confluent kafka topic consume my-topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
 			examples.Example{
 				Text: `Consume message from topic "my-topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
