@@ -13,6 +13,5 @@ It may take up to 1 hour for the Kafka cluster to be ready. The organization adm
 | Availability  | single-zone               |
 | Status        | PROVISIONING              |
 | Endpoint      | SASL_SSL://kafka-endpoint |
-| BYOK Key Id   | cck-001                   |
 | REST Endpoint | https://pkc-endpoint      |
 +---------------+---------------------------+
