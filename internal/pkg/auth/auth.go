@@ -82,7 +82,7 @@ func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, 
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, false, credentials, ctxName, url, state, caCertPath, "", save)
+	return addOrUpdateEncryptedContext(config, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
 func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (*ccloudv1.Account, *ccloudv1.Organization, error) {
@@ -91,13 +91,13 @@ func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client
 	if err != nil {
 		return nil, nil, err
 	}
-	state := getCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
+	state := getUnencryptedCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	err = addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
+	err = addOrUpdateEncryptedContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
 	return state.Auth.Account, user.GetOrganization(), err
 }
 
-func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
+func addOrUpdateEncryptedContext(config *v1.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
 	credName := generateCredentialName(credentials.Username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -118,33 +118,41 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		return err
 	}
 
-	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(saltLength)
-		if err != nil {
-			return err
-		}
-		nonce, err := secret.GenerateRandomBytes(nonceLength)
-		if err != nil {
-			return err
-		}
+	salt, err := secret.GenerateRandomBytes(saltLength)
+	if err != nil {
+		return err
+	}
+	nonce, err := secret.GenerateRandomBytes(nonceLength)
+	if err != nil {
+		return err
+	}
 
+	loginCredential := &v1.LoginCredential{
+		IsCloud:  isCloud,
+		Url:      url,
+		Username: credentials.Username,
+		Salt:     salt,
+		Nonce:    nonce,
+	}
+
+	if save && !credentials.IsSSO {
 		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
 		if err != nil {
 			return err
 		}
-
-		loginCredential := &v1.LoginCredential{
-			IsCloud:           isCloud,
-			Url:               url,
-			Username:          credentials.Username,
-			EncryptedPassword: encryptedPassword,
-			Salt:              salt,
-			Nonce:             nonce,
-		}
-		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
-			return err
-		}
+		loginCredential.EncryptedPassword = encryptedPassword
 	}
+
+	if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+		return err
+	}
+
+	// encrypt the token in state
+	encryptedAuthToken, err := secret.Encrypt(credential.Username, state.AuthToken, salt, nonce)
+	if err != nil {
+		return err
+	}
+	state.AuthToken = encryptedAuthToken
 
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
@@ -165,7 +173,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	return config.UseContext(ctxName)
 }
 
-func getCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *ccloudv1.GetMeReply) *v1.ContextState {
+func getUnencryptedCCloudContextState(config *v1.Config, ctxName, token, refreshToken string, user *ccloudv1.GetMeReply) *v1.ContextState {
 	state := new(v1.ContextState)
 	if ctx, err := config.FindContext(ctxName); err == nil {
 		state = ctx.State

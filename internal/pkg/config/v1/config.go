@@ -368,7 +368,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 	if !ok {
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
-
+	fmt.Println("here 371,", strings.Contains(state.AuthToken, "eyJ"))
 	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId)
 	if err != nil {
 		return err

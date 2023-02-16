@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -122,6 +123,7 @@ func (c *Context) DeleteUserAuth() error {
 }
 
 func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
+	fmt.Println("here token:", token)
 	c.State.AuthToken = token
 	c.State.AuthRefreshToken = refreshToken
 	return c.Save()
@@ -216,7 +218,14 @@ func (c *Context) GetEnvironments() []*ccloudv1.Account {
 
 func (c *Context) GetAuthToken() string {
 	if state := c.GetState(); state != nil {
-		return state.AuthToken
+		// return state.AuthToken
+		savedCredential := c.Config.SavedCredentials[c.Name]
+		decryptedAuthToken, err := secret.Decrypt(c.Credential.Username, state.AuthToken, savedCredential.Salt, savedCredential.Nonce)
+		if err != nil || decryptedAuthToken == "" {
+			fmt.Println("something went wrong in decryption. err:", err)
+			fmt.Println(c.Credential.Username, strings.Contains(state.AuthToken, "eyJ"), savedCredential.Salt, savedCredential.Nonce)
+		}
+		return decryptedAuthToken
 	}
 	return ""
 }

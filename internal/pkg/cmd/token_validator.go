@@ -31,7 +31,7 @@ func NewJWTValidator() *JWTValidatorImpl {
 func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
 	var authToken string
 	if context != nil {
-		authToken = context.State.AuthToken
+		authToken = context.GetAuthToken()
 	}
 	var claims map[string]any
 	token, err := jwt.ParseSigned(authToken)

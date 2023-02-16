@@ -370,7 +370,7 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 		return err
 	}
 	cliCommand.State = state
-
+	fmt.Println("here,", strings.Contains(state.AuthToken, "eyJ"))
 	return nil
 }
 
@@ -610,6 +610,7 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 	}
 	cliCommand.Context = ctx
 	cliCommand.State = ctx.State
+	fmt.Println("there 613,", strings.Contains(ctx.State.AuthToken, "eyJ"))
 
 	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
 	if err != nil {

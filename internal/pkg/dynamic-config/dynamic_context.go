@@ -12,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 type DynamicContext struct {
@@ -242,7 +243,14 @@ func (d *DynamicContext) AuthenticatedState() (*v1.ContextState, error) {
 	if !d.HasLogin() {
 		return nil, new(errors.NotLoggedInError)
 	}
-	return d.State, nil
+	// return d.State, nil
+	state := d.State
+	// decrypted authtoken
+	savedCredential := d.Config.SavedCredentials[d.Name]
+	decryptedAuthToken, err := secret.Decrypt(d.Credential.Username, state.AuthToken, savedCredential.Salt, savedCredential.Nonce)
+	state.AuthToken = decryptedAuthToken
+	return state, err
+
 }
 
 func (d *DynamicContext) HasAPIKey(clusterId string) (bool, error) {
