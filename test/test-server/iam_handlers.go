@@ -111,6 +111,8 @@ func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
+
+		fmt.Printf("%+v\n", r)
 		if r.Method == http.MethodPost {
 			handleIamApiKeysCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
