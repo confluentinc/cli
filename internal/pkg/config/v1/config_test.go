@@ -419,16 +419,7 @@ func TestConfig_Save(t *testing.T) {
 
 			got, _ := os.ReadFile(configFile.Name())
 			want, _ := os.ReadFile(tt.wantFile)
-			data := Config{}
-			err := json.Unmarshal(got, &data)
-			require.NoError(t, err)
-			wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
-			wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
-			saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
-			wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
-			nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
-			wantString = strings.Replace(wantString, noncePlaceholder, nonceString, -1)
-
+			wantString := replacePlaceholdersInWant(t, got, want)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
 			}
@@ -479,15 +470,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			got, _ := os.ReadFile(configFile.Name())
 			got = append(got, '\n') //account for extra newline at the end of the json file
 			want, _ := os.ReadFile(tt.wantFile)
-			data := Config{}
-			err := json.Unmarshal(got, &data)
-			require.NoError(t, err)
-			wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
-			wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
-			saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
-			wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
-			nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
-			wantString = strings.Replace(wantString, noncePlaceholder, nonceString, -1)
+			wantString := replacePlaceholdersInWant(t, got, want)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
 				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
 			}
@@ -499,6 +482,18 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			os.Remove(configFile.Name())
 		})
 	}
+}
+
+func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
+	data := Config{}
+	err := json.Unmarshal(got, &data)
+	require.NoError(t, err)
+	wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
+	wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
+	saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
+	wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
+	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
+	return strings.Replace(wantString, noncePlaceholder, nonceString, -1)
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {

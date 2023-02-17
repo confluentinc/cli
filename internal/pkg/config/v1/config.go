@@ -388,11 +388,8 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
-		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
+		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			log.CliLogger.Tracef("state of context %s in config does not match actual state of context", context.Name)
-			if c.IsTest {
-				return nil
-			}
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
