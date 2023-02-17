@@ -27,6 +27,8 @@ func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 				allRoles = append(allRoles, rbacDataPlaneRoles()...)
 			case "public":
 				allRoles = append(allRoles, rbacPublicRoles()...)
+			case "streamcatalog":
+				allRoles = append(allRoles, rbacStreamCatalogRoles()...)
 			default:
 				allRoles = append(allRoles, rbacPublicRoles()...)
 			}
@@ -234,6 +236,54 @@ func rbacPublicRoles() []mdsv2alpha1.Role {
 	}
 
 	return []mdsv2alpha1.Role{ccloudRoleBindingAdminRole, cloudClusterAdminRole, environmentAdminRole, organizationAdminRole, resourceOwnerRole}
+}
+
+func rbacStreamCatalogRoles() []mdsv2alpha1.Role {
+	dataDiscoveryRole := mdsv2alpha1.Role{
+		Name: "DataDiscovery",
+		Policies: []mdsv2alpha1.AccessPolicy{
+			{
+				BindingScope:     "environment",
+				BindWithResource: false,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{ResourceType: "CatalogTagDefinition", Operations: []string{"Read"}},
+					{ResourceType: "Topic", Operations: []string{"ReadCatalog"}},
+					{ResourceType: "Subject", Operations: []string{"Read", "ReadCatalog", "ReadCompatibility"}},
+					{ResourceType: "CatalogBusinessMetadataDefinition", Operations: []string{"Read"}},
+				},
+			},
+		},
+	}
+
+	dataStewardRole := mdsv2alpha1.Role{
+		Name: "DataSteward",
+		Policies: []mdsv2alpha1.AccessPolicy{
+			{
+				BindingScope:     "environment",
+				BindWithResource: false,
+				AllowedOperations: []mdsv2alpha1.Operation{
+					{
+						ResourceType: "CatalogTagDefinition",
+						Operations: []string{"Read", "Write", "Delete"},
+					},
+					{
+						ResourceType: "Topic",
+						Operations: []string{"ReadCatalog", "WriteCatalog"},
+					},
+					{
+						ResourceType: "Subject",
+						Operations: []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"},
+					},
+					{
+						ResourceType: "CatalogBusinessMetadataDefinition",
+						Operations: []string{"Read", "Write", "Delete"},
+					},
+				},
+			},
+		},
+	}
+
+	return []mdsv2alpha1.Role{dataDiscoveryRole, dataStewardRole}
 }
 
 func rolesListToJsonMap(roles []mdsv2alpha1.Role) map[string]string {

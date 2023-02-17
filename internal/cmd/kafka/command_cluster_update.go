@@ -34,7 +34,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
-	cmd.Flags().Int("cku", 0, "Number of Confluent Kafka Units (non-negative). For Kafka clusters of type 'dedicated' only. When shrinking a cluster, you can reduce capacity one CKU at a time.")
+	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -50,6 +50,11 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	clusterID := args[0]
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, c.EnvironmentId())
+	if err != nil {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+	}
+
 	update := cmkv2.CmkV2ClusterUpdate{
 		Id: cmkv2.PtrString(clusterID),
 		Spec: &cmkv2.CmkV2ClusterSpecUpdate{
@@ -57,10 +62,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 				Id: c.EnvironmentId(),
 			},
 		},
-	}
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, c.EnvironmentId())
-	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 
 	if cmd.Flags().Changed("name") {
@@ -72,15 +73,17 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			return errors.New(errors.NonEmptyNameErrorMsg)
 		}
 		update.Spec.SetDisplayName(name)
-	} else {
-		update.Spec.SetDisplayName(*currentCluster.GetSpec().DisplayName)
 	}
 
-	updatedCku, err := c.validateResize(cmd, &currentCluster, prompt)
-	if err != nil {
-		return err
-	}
-	if updatedCku != -1 {
+	if cmd.Flags().Changed("cku") {
+		cku, err := cmd.Flags().GetUint32("cku")
+		if err != nil {
+			return err
+		}
+		updatedCku, err := c.validateResize(cmd, int32(cku), &currentCluster, prompt)
+		if err != nil {
+			return err
+		}
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
@@ -96,52 +99,41 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
-func (c *clusterCommand) validateResize(cmd *cobra.Command, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
-	// returning -1 when error or unchanged
-	if cmd.Flags().Changed("cku") {
-		cku, err := cmd.Flags().GetInt("cku")
-		if err != nil {
-			return -1, err
-		}
-		// Ensure the cluster is a Dedicated Cluster
-		if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-			return -1, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
-		}
-		// Durability Checks
-		if *currentCluster.GetSpec().Availability == highAvailability && cku <= 1 {
-			return -1, errors.New(errors.CKUMoreThanOneErrorMsg)
-		}
-		if cku <= 0 {
-			return -1, errors.New(errors.CKUMoreThanZeroErrorMsg)
-		}
-		// Cluster can't be resized while it's provisioning or being expanded already.
-		// Name _can_ be changed during these times, though.
-		err = isClusterResizeInProgress(currentCluster)
-		if err != nil {
-			return -1, err
-		}
-		//If shrink
-		if int32(cku) < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
-			promptMessage := ""
-			// metrics api auth via jwt
-			if err := c.validateKafkaClusterMetrics(currentCluster, true); err != nil {
-				promptMessage += fmt.Sprintf("\n%v\n", err)
-			}
-			if err := c.validateKafkaClusterMetrics(currentCluster, false); err != nil {
-				promptMessage += fmt.Sprintf("\n%v\n", err)
-			}
-			if promptMessage != "" {
-				ok, err := confirmShrink(cmd, prompt, promptMessage)
-				if !ok || err != nil {
-					return -1, err
-				} else {
-					return int32(cku), nil
-				}
-			}
-		}
-		return int32(cku), nil
+func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
+	// Ensure the cluster is a Dedicated Cluster
+	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
+		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 	}
-	return -1, nil
+	// Durability Checks
+	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
+		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
+	}
+	if cku == 0 {
+		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
+	}
+	// Cluster can't be resized while it's provisioning or being expanded already.
+	// Name _can_ be changed during these times, though.
+	err := isClusterResizeInProgress(currentCluster)
+	if err != nil {
+		return 0, err
+	}
+	// If shrink
+	if cku < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
+		promptMessage := ""
+		// metrics api auth via jwt
+		if err := c.validateKafkaClusterMetrics(currentCluster, true); err != nil {
+			promptMessage += fmt.Sprintf("\n%v\n", err)
+		}
+		if err := c.validateKafkaClusterMetrics(currentCluster, false); err != nil {
+			promptMessage += fmt.Sprintf("\n%v\n", err)
+		}
+		if promptMessage != "" {
+			if ok, err := confirmShrink(cmd, prompt, promptMessage); !ok || err != nil {
+				return 0, err
+			}
+		}
+	}
+	return cku, nil
 }
 
 func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2Cluster, isLatestMetric bool) error {

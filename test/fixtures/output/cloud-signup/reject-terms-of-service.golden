@@ -1,5 +1,0 @@
-Sign up for Confluent Cloud. Use Ctrl-C to quit at any time.
-Full name: Company: Company email: Two-letter country code (https://github.com/confluentinc/cli/blob/main/internal/pkg/countrycode/codes.go): You entered US for United States of America / USA. Is that correct? (y/n): Password (must contain at least 8 characters, including 1 lowercase character, 1 uppercase character, and 1 number): I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/) (y/n): You must accept to continue. To abandon flow, use Ctrl-C.
-I have read and agree to the Terms of Service (https://www.confluent.io/confluent-cloud-tos/) (y/n): By entering "y" to submit this form, you agree that your personal data will be processed in accordance with our Privacy Policy (https://www.confluent.io/confluent-privacy-statement/) (y/n): A verification email has been sent to bstrauch@confluent.io.
-Type "y" once verified, or type "n" to resend. (y/n): Success! Welcome to Confluent Cloud.
-Logged in as "bstrauch@confluent.io" for organization "abc-123" ("Confluent").

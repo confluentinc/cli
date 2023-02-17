@@ -35,7 +35,7 @@
       "name": "my-context",
       "netrc_machine_name": "",
       "platform": "http://test",
-      "credential": "api-key-abc-key-123",
+      "credential": "username-test-user",
       "kafka_cluster_context": {
         "environment_context": false,
         "active_kafka": "anonymous-id",
@@ -55,15 +55,42 @@
           }
         }
       },
-      "schema_registry_clusters": {},
+      "schema_registry_clusters": {
+        "acc-123": {
+          "id": "lsrc-123",
+          "schema_registry_endpoint": "http://some-lsrc-endpoint",
+          "schema_registry_credentials": null
+        }
+      },
       "last_org_id": ""
     }
   },
   "context_states": {
     "my-context": {
-      "auth": null,
-      "auth_token": "",
-      "auth_refresh_token": ""
+      "auth": {
+        "user": {
+          "id": 123,
+          "email": "test-user@email"
+        },
+        "account": {
+          "id": "acc-123",
+          "name": "test-env"
+        },
+        "accounts": [
+          {
+            "id": "acc-123",
+            "name": "test-env"
+          }
+        ],
+        "organization": {
+          "id": 321,
+          "name": "test-org"
+        }
+      },
+      "auth_token": "AUTH_TOKEN_PLACEHOLDER",
+      "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
+      "salt": "SALT_PLACEHOLDER",
+      "nonce": "NONCE_PLACEHOLDER"
     }
   },
   "current_context": "my-context",

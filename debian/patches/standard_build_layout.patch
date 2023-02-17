@@ -1,8 +1,10 @@
---- cli/Makefile	2023-02-08 21:35:13.253768347 +0000
-+++ debian/Makefile	2023-02-08 21:35:11.813759891 +0000
-@@ -1,169 +1,130 @@
--SHELL           := /bin/bash
--ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
+--- cli/Makefile	2023-02-13 17:44:54.000000000 -0800
++++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
+@@ -1,164 +1,130 @@
+-SHELL              := /bin/bash
+-ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
+-GORELEASER_VERSION := v1.15.2
+-
 -GIT_REMOTE_NAME ?= origin
 -MAIN_BRANCH     ?= main
 -RELEASE_BRANCH  ?= main
@@ -41,7 +43,8 @@
 -
 -.PHONY: cli-builder
 -cli-builder:
--	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 -
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
@@ -70,7 +73,9 @@
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
 +endif
-+
+ 
+-show-args:
+-	@echo "VERSION: $(VERSION)"
 +export PACKAGE_TITLE=cli
 +export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 +export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
@@ -86,16 +91,6 @@
 +DESTDIR=$(CURDIR)/BUILD/
 +endif
  
--.PHONY: deps
--deps:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
--	go install github.com/google/go-licenses@v1.5.0 && \
--	go install github.com/goreleaser/goreleaser@v1.14.1 && \
--	go install gotest.tools/gotestsum@v1.8.2
--
--show-args:
--	@echo "VERSION: $(VERSION)"
--
 -.PHONY: build-integ-nonrace
 -build-integ-nonrace:
 -	go test ./cmd/confluent -ldflags="-s -w \
@@ -149,12 +144,13 @@
 -
 -.PHONY: lint-go
 -lint-go:
--	@golangci-lint run --timeout=10m
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
+-	golangci-lint run --timeout=10m
 -	@echo "✅  golangci-lint"
 -
 -.PHONY: lint-cli
 -lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
 -	@echo "✅  cmd/lint/main.go"
 -
 -cmd/lint/en_US.aff:
@@ -163,13 +159,10 @@
 -cmd/lint/en_US.dic:
 -	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 -
--.PHONY: lint-licenses
--lint-licenses:
--	go-licenses check ./...
--
 -.PHONY: unit-test
 -unit-test:
 -ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
 -	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
@@ -178,8 +171,13 @@
 -	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
-+endif
-+
+ endif
+ 
+-.PHONY: int-test
+-int-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
 +all: install
 +
 +archive: install
@@ -231,12 +229,8 @@
 +ifneq ($(PACKAGE_TYPE),deb)
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
- endif
- 
--.PHONY: int-test
--int-test:
--ifdef CI
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
++endif
++
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
