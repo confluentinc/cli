@@ -98,6 +98,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		output := runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+
 		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
