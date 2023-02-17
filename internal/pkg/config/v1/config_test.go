@@ -1,11 +1,14 @@
 package v1
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -17,6 +20,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
+)
+
+const (
+	authTokenPlaceholder        = "AUTH_TOKEN_PLACEHOLDER"
+	authRefreshTokenPlaceholder = "AUTH_REFRESH_TOKEN_PLACEHOLDER"
+	saltPlaceholder             = "SALT_PLACEHOLDER"
+	noncePlaceholder            = "NONCE_PLACEHOLDER"
 )
 
 var (
@@ -406,10 +416,21 @@ func TestConfig_Save(t *testing.T) {
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
+
 			got, _ := os.ReadFile(configFile.Name())
 			want, _ := os.ReadFile(tt.wantFile)
-			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
-				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+			data := Config{}
+			err := json.Unmarshal(got, &data)
+			require.NoError(t, err)
+			wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
+			wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
+			saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
+			wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
+			nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
+			wantString = strings.Replace(wantString, noncePlaceholder, nonceString, -1)
+
+			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
+				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
 			}
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
@@ -458,8 +479,17 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			got, _ := os.ReadFile(configFile.Name())
 			got = append(got, '\n') //account for extra newline at the end of the json file
 			want, _ := os.ReadFile(tt.wantFile)
-			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
-				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+			data := Config{}
+			err := json.Unmarshal(got, &data)
+			require.NoError(t, err)
+			wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
+			wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
+			saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
+			wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
+			nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
+			wantString = strings.Replace(wantString, noncePlaceholder, nonceString, -1)
+			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
+				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
 			}
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
