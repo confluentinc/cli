@@ -6,8 +6,8 @@
   "disable_feature_flags": false,
   "no_browser": false,
   "platforms": {
-    "http://127.0.0.1:1024": {
-      "name": "http://127.0.0.1:1024",
+    "http://test": {
+      "name": "http://test",
       "server": "http://test"
     }
   },
@@ -34,28 +34,24 @@
     "my-context": {
       "name": "my-context",
       "netrc_machine_name": "",
-      "platform": "http://127.0.0.1:1024",
+      "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
-        "environment_context": true,
-        "kafka_environment_contexts": {
-          "acc-123": {
-            "active_kafka": "anonymous-id",
-            "kafka_cluster_infos": {
-              "anonymous-id": {
-                "id": "anonymous-id",
-                "name": "anonymous-cluster",
-                "bootstrap_servers": "http://test",
-                "api_keys": {
-                  "abc-key-123": {
-                    "api_key": "abc-key-123",
-                    "api_secret": "def-secret-456"
-                  }
-                },
+        "environment_context": false,
+        "active_kafka": "anonymous-id",
+        "kafka_cluster_configs": {
+          "anonymous-id": {
+            "id": "anonymous-id",
+            "name": "anonymous-cluster",
+            "bootstrap_servers": "http://test",
+            "api_keys": {
+              "abc-key-123": {
                 "api_key": "abc-key-123",
-                "last_update": "0001-01-01T00:00:00Z"
+                "api_secret": "def-secret-456"
               }
-            }
+            },
+            "api_key": "abc-key-123",
+            "last_update": "0001-01-01T00:00:00Z"
           }
         }
       },
@@ -84,10 +80,6 @@
           {
             "id": "acc-123",
             "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
           }
         ],
         "organization": {
@@ -104,7 +96,7 @@
   "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
-      "is_cloud": true,
+      "is_cloud": false,
       "url": "",
       "username": "test-user",
       "encrypted_password": "encrypted-password"
