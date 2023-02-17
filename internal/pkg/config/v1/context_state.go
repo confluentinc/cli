@@ -21,7 +21,7 @@ type ContextState struct {
 
 func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
 	reg := regexp.MustCompile(authTokenRegex)
-	if match := reg.MatchString(c.AuthToken); !match && c.AuthToken != "" {
+	if !reg.MatchString(c.AuthToken) && c.AuthToken != "" {
 		decryptedAuthToken, err := secret.Decrypt(ctxName, c.AuthToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
@@ -34,7 +34,7 @@ func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
 
 func (c *ContextState) DecryptContextStateAuthRefreshToken(ctxName string) error {
 	reg := regexp.MustCompile(authRefreshTokenRegex)
-	if match := reg.MatchString(c.AuthRefreshToken); !match && c.AuthRefreshToken != "" {
+	if !reg.MatchString(c.AuthRefreshToken) && c.AuthRefreshToken != "" {
 		decryptedAuthRefreshToken, err := secret.Decrypt(ctxName, c.AuthRefreshToken, c.Salt, c.Nonce)
 		if err != nil {
 			return err
