@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
