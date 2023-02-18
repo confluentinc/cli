@@ -1,3 +1,19 @@
+Release Notes
+-------------
+<!--
+If this PR introduces any user-facing changes, please document them below. You may delete or ignore any unused sections.
+Please match the style of previous release notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
+-->
+
+Breaking Changes
+- <PLACEHOLDER>
+
+New Features
+- <PLACEHOLDER>
+
+Bug Fixes
+- <PLACEHOLDER>
+
 Checklist
 ---------
 1. [CRUCIAL] Is the change for features that are already live in prod?

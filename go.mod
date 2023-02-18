@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/antihax/optional v1.0.0
+	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -34,6 +35,7 @@ require (
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.19
 	github.com/davecgh/go-spew v1.1.1
+	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.14.1
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -51,6 +53,7 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/jhump/protoreflect v1.14.1
 	github.com/jonboulle/clockwork v0.3.0
+	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b
 	github.com/linkedin/goavro/v2 v2.12.0
 	github.com/mattn/go-isatty v0.0.17
 	github.com/olekukonko/tablewriter v0.0.5
