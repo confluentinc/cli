@@ -27,6 +27,9 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Go workspace file
+go.work
+
 #
 # Global/macOS Gitignore
 #
@@ -37,8 +40,7 @@
 .LSOverride
 
 # Icon must end with two \r
-Icon
-
+Icon
 
 # Thumbnails
 ._*
@@ -224,5 +226,3 @@ flycheck_*.el
 
 !/.github/
 !/.github/**
-
-__debug_bin
