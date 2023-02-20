@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 
@@ -46,7 +47,7 @@ func isInputClosingSelect(input string) bool {
 
 func promptInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
 	completerWithHistory := autocomplete.CompleterWithHistory(history, getSmartCompletion)
-	
+
 	// We need to disable the live prefix, in case we just submited a statement
 	LivePrefixState.IsEnable = false
 
@@ -118,18 +119,24 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 }
 
 func printPrefix() {
-	fmt.Print("Flink SQL Client \n")
-	// The escape sequences below are used to color the text.
-	// Not all colors are compatible with all terminals
-	// Here is a stackoverflow with more details https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+	// Print Flink's ASCII Art
+	b, err := ioutil.ReadFile("components/flink_ascii_60_with_text.txt")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(b))
+
+	// Print welcome message
+	fmt.Fprintf(os.Stdout, "Welcome! \033[0m%s \033[0;36m%s. \033[0m \n \n", "Flink SQL Client powered", "by Confluent")
+
+	// Print shortcuts
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlS]", "Smart Completion ")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n \n", "[CtrlO]", "Interactive Output ON/OFF")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlO]", "Interactive Output ON/OFF")
 }
 
 func InteractiveInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
 	printPrefix()
-	fmt.Print("flinkSQL")
 	var lastStatement, statements = promptInput(value, history, getSmartCompletion, toggleSmartCompletion, toggleOutputMode, exitApplication)
 
 	return lastStatement, statements
