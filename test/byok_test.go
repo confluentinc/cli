@@ -38,7 +38,7 @@ func (s *CLITestSuite) TestBYOKDescribe() {
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},
 		{args: "byok describe cck-003", fixture: "byok/describe-azure.golden"},
-		{args: "byok describe cck-003 -o json --policy-command", fixture: "byok/describe-azure-json.golden"},
+		{args: "byok describe cck-003 -o json", fixture: "byok/describe-azure-json.golden"},
 	}
 
 	for _, tt := range tests {

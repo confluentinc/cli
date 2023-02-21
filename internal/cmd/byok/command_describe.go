@@ -1,6 +1,8 @@
 package byok
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,7 +33,6 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
-	cmd.Flags().Bool("policy-command", false, "Print post-creation step to grant Confluent access to the key.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -66,8 +67,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		deletedAt = key.Metadata.GetDeletedAt().String()
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&describeStruct{
+	postCreationStepInstructions, err := getPolicyCommand(&key)
+	if err != nil {
+		return err
+	}
+
+	describeKey := &describeStruct{
 		Id:        key.GetId(),
 		Key:       keyString,
 		Roles:     roles,
@@ -76,21 +81,18 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		CreatedAt: key.Metadata.CreatedAt.String(),
 		UpdatedAt: updatedAt,
 		DeletedAt: deletedAt,
-	})
-	table.Print()
-
-	showPolicyCommand, err := cmd.Flags().GetBool("policy-command")
-	if err != nil {
-		return err
 	}
 
-	if showPolicyCommand {
-		postCreationStepInstructions, err := getPostCreationStepInstructions(&key)
-		if err != nil {
-			return err
-		}
-
+	if output.GetFormat(cmd) == output.Human {
+		table := output.NewTable(cmd)
+		table.Add(describeKey)
+		table.Filter([]string{"Id", "Key", "Roles", "Provider", "State", "CreatedAt"})
+		table.Print()
+		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(&key)))
 		utils.Println(cmd, postCreationStepInstructions)
+
+	} else {
+		output.SerializedOutput(cmd, describeKey)
 	}
 
 	return nil

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -136,16 +137,18 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	postCreationStepInstructions, err := getPostCreationStepInstructions(&key)
+	policyCommand, err := getPolicyCommand(&key)
 	if err != nil {
 		return err
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.Printf(cmd, errors.CreatedResourceMsg, resource.ByokKey, key.GetId())
+		utils.ErrPrintf(cmd, errors.CreatedResourceMsg, resource.ByokKey, key.GetId())
+		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(&key)))
+		utils.Println(cmd, policyCommand)
+	} else {
+		output.SerializedOutput(cmd, &key)
 	}
-
-	utils.Printf(cmd, postCreationStepInstructions)
 
 	return nil
 }
@@ -159,10 +162,10 @@ func isAWSKey(key string) bool {
 	return keyArn.Service == "kms" && strings.HasPrefix(keyArn.Resource, "key/")
 }
 
-func getPostCreationStepInstructions(key *byokv1.ByokV1Key) (string, error) {
+func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
-		return renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey.Roles)
+		return renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey..Roles)
 	case key.Key.ByokV1AzureKey != nil:
 		return renderAzureEncryptionPolicy(key)
 	default:
@@ -172,8 +175,6 @@ func getPostCreationStepInstructions(key *byokv1.ByokV1Key) (string, error) {
 
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
-	buf.WriteString(errors.CopyByokAwsPermissionsHeaderMsg)
-	buf.WriteString("\n\n")
 	if err := encryptionKeyPolicyAWS.Execute(buf, roles); err != nil {
 		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
@@ -188,8 +189,6 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	vaultName := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)[1]
 
 	az := []string{
-		errors.RunByokAzurePermissionsHeaderMsg,
-		"\n",
 		"az role assignment create \\",
 		fmt.Sprintf("    --role \"%s\" \\", keyVaultCryptoServiceEncryptionUser),
 		fmt.Sprintf("    --scope \"$(az keyvault show --name \"%s\" --query id --output tsv)\" \\", vaultName),
@@ -203,6 +202,17 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	}
 
 	return strings.Join(az, "\n"), nil
+}
+
+func getPostCreateStepInstruction(key *byokv1.ByokV1Key) string {
+	switch {
+	case key.Key.ByokV1AwsKey != nil:
+		return errors.CopyByokAwsPermissionsHeaderMsg
+	case key.Key.ByokV1AzureKey != nil:
+		return errors.RunByokAzurePermissionsHeaderMsg
+	default:
+		return ""
+	}
 }
 
 // Best effort to remove the key version from the Azure Key ID if it is present

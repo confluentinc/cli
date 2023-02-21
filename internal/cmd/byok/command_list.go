@@ -91,6 +91,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 
 	}
 
-	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt", "UpdatedAt"})
+	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
 	return list.Print()
 }

@@ -1,5 +1,6 @@
 Created self-managed key "cck-004".
-Copy and append these permissions to the existing "Statements" array field in the key policy of your ARN to authorize access for Confluent:
+
+Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.
 
 {
 	"Sid" : "Allow Confluent accounts to use the key",
@@ -24,4 +25,5 @@ Copy and append these permissions to the existing "Statements" array field in th
 	"Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
 	"Resource" : "*"
 }
+
 

@@ -196,6 +196,10 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
 				Kind:   "AwsKey",
+				Roles: &[]string{
+					"arn:aws:iam::123456789012:role/role1",
+					"arn:aws:iam::123456789012:role/role2",
+				},
 			},
 		},
 		Provider: byokv1.PtrString("AWS"),
@@ -211,6 +215,10 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
 				Kind:   "AwsKey",
+				Roles: &[]string{
+					"arn:aws:iam::123456789012:role/role1",
+					"arn:aws:iam::123456789012:role/role2",
+				},
 			},
 		},
 		Provider: byokv1.PtrString("AWS"),
