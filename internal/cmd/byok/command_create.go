@@ -116,6 +116,8 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	var keyReq *byokv1.ByokV1Key
 
 	if cmd.Flags().Changed("key-vault") && cmd.Flags().Changed("tenant") {
+		keyString = removeKeyVersionFromAzureKeyId(keyString)
+
 		keyReq, err = c.createAzureKeyRequest(cmd, keyString)
 		if err != nil {
 			return err
@@ -201,4 +203,17 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	}
 
 	return strings.Join(az, "\n"), nil
+}
+
+// Best effort to remove the key version from the Azure Key ID if it is present
+// For any errors, return the original key ID as is
+// All further validation of the key ID is done by the BYOK API
+func removeKeyVersionFromAzureKeyId(keyId string) string {
+	path, err := url.Parse(keyId)
+	if err != nil || len(strings.Split(path.Path, "/")) != 4 {
+		return keyId
+	}
+
+	pathSegments := strings.Split(path.Path, "/")
+	return keyId[:len(keyId)-len(pathSegments[3])-1]
 }
