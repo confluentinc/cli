@@ -118,7 +118,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
-				if err.Error() == "protobuf" {
+				if err != nil && err.Error() == "protobuf" {
 					continue
 				}
 				if err != nil {
