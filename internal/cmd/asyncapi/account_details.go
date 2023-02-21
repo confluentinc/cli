@@ -130,7 +130,9 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	if d.channelDetails.example != nil {
 		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+	if d.channelDetails.bindings != nil {
+		(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+	}
 	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
 	return entityProducer
 }
