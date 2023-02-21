@@ -118,6 +118,9 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
+				if err != nil && err.Error() == "protobuf" {
+					continue
+				}
 				if err != nil {
 					return err
 				}
@@ -154,8 +157,8 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
-		log.CliLogger.Log("Protobuf is not supported.")
-		return nil
+		log.CliLogger.Info("Protobuf is not supported.")
+		return fmt.Errorf("protobuf")
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get schema details: %v", err)
