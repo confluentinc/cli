@@ -58,7 +58,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	update := cmkv2.CmkV2ClusterUpdate{
 		Id: cmkv2.PtrString(clusterID),
 		Spec: &cmkv2.CmkV2ClusterSpecUpdate{
-			Environment: &cmkv2.ObjectReference{
+			Environment: &cmkv2.EnvScopedObjectReference{
 				Id: c.EnvironmentId(),
 			},
 		},
