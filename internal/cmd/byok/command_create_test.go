@@ -6,7 +6,6 @@ import (
 
 func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
 
-	// table driven tests
 	tests := []struct {
 		name     string
 		input    string
