@@ -35,7 +35,6 @@ require (
 	github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787
 	github.com/confluentinc/schema-registry-sdk-go v0.0.19
 	github.com/davecgh/go-spew v1.1.1
-	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.14.1
 	github.com/go-yaml/yaml v2.1.0+incompatible
@@ -104,6 +103,7 @@ require (
 	github.com/mattn/go-tty v0.0.4 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/panta/machineid v1.0.2 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
