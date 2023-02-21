@@ -2,7 +2,7 @@ package components
 
 import (
 	"fmt"
-	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 
@@ -120,9 +120,9 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 
 func printPrefix() {
 	// Print Flink's ASCII Art
-	b, err := ioutil.ReadFile("components/flink_ascii_60_with_text.txt")
+	b, err := os.ReadFile("components/flink_ascii_60_with_text.txt")
 	if err != nil {
-		panic(err)
+		log.Printf("Couldn't read flink's ascii art. Error: %v\n", err)
 	}
 	fmt.Println(string(b))
 
