@@ -1,0 +1,10 @@
+{
+  "Id": "cck-003",
+  "Key": "https://a-vault.vault.azure.net/keys/a-key",
+  "Roles": ["00000000-0000-0000-0000-000000000000"],
+  "Provider": "Azure",
+  "State": "AVAILABLE",
+  "CreatedAt": "2023-01-01 12:00:30 +0000 UTC",
+  "UpdatedAt": "",
+  "DeletedAt": ""
+}
