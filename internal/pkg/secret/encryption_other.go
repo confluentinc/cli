@@ -11,7 +11,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/denisbrodbeck/machineid"
+	"github.com/panta/machineid"
 
 	"golang.org/x/crypto/pbkdf2"
 )

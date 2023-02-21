@@ -24,7 +24,7 @@ endif
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux)
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
     else # build for darwin/arm64
 		CGO_ENABLED=1 make cli-builder
     endif
@@ -41,7 +41,7 @@ endif
 .PHONY: cli-builder
 cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CGO_ENABLED=1  CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
