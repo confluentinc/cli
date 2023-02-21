@@ -26,11 +26,19 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
+				Text: `Consume messages from topic "my-topic" providing embedded Kafka REST Proxy endpoint.`,
+				Code: `confluent kafka topic consume my-topic --url http://localhost:8090/kafka --bootstrap "localhost:19091" --ca-location my-cert.crt`,
+			},
 			examples.Example{
-				Text: `Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
-				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
+				Text: `Consume messages from topic "my-topic" providing Kafka REST Proxy endpoint.`,
+				Code: `confluent kafka topic consume my-topic --url http://localhost:8082 --bootstrap "localhost:19091" --ca-location my-cert.crt`,
+			},
+			examples.Example{
+				Text: `Consume messags from topic "my-topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
+				Code: `confluent kafka topic consume my-topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
+			examples.Example{
+				Text: `Consume messages from topic "my-topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
+				Code: `confluent kafka topic consume my-topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
 		),
 	}
 
