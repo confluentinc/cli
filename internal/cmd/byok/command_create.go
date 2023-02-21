@@ -59,7 +59,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Register a new self-managed encryption key for Azure:",
-				Code: `confluent byok create "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000" --tenant "00000000-0000-0000-0000-000000000000" --key-vault "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault"`,
+				Code: `confluent byok create "https://vault-name.vault.azure.net/keys/key-name" --tenant "00000000-0000-0000-0000-000000000000" --key-vault "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resourcegroup-name/providers/Microsoft.KeyVault/vaults/vault-name"`,
 			},
 		),
 	}

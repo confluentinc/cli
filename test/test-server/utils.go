@@ -225,7 +225,7 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
 				ApplicationId: byokv1.PtrString("00000000-0000-0000-0000-000000000000"),
-				KeyId:         "https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000",
+				KeyId:         "https://a-vault.vault.azure.net/keys/a-key",
 				KeyVaultId:    "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault",
 				Kind:          "AzureKey",
 				TenantId:      "00000000-0000-0000-0000-000000000000",
