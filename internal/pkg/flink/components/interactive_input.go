@@ -124,6 +124,16 @@ func printPrefix() {
 	if err != nil {
 		log.Printf("Couldn't read flink's ascii art. Error: %v\n", err)
 	}
+
+	// TODO - After setting up the event loop, we could maybe use tcell to get the
+	// terminal's width so we disable printing the ascii art if the terminal is too small
+	/* screen, _ := tcell.NewScreen()
+	   screen.Init()
+
+	   w, h := screen.Size() */
+	// Right now, go-prompt get's executed first so this isn't possible
+	// But we can always just delete the ascii art - it's just a gimmick
+
 	fmt.Println(string(b))
 
 	// Print welcome message
